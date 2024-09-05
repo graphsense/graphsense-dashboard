@@ -2,7 +2,7 @@ module Generate.Html.HasLayoutTrait exposing (..)
 
 import Api.Raw exposing (..)
 import Elm
-import Gen.Css as Css exposing (minHeight, minWidth)
+import Gen.Css as Css 
 import Generate.Util exposing (..)
 import Tuple exposing (pair)
 
@@ -11,20 +11,38 @@ toStyles : HasLayoutTrait -> List Elm.Expression
 toStyles node =
     [ Css.boxSizing Css.borderBox ]
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
-        |> a2 width node.layoutSizingHorizontal node.size
-        |> a2 height node.layoutSizingVertical node.size
-        |> m (Css.px >> minWidth) node.minWidth
-        |> m (Css.px >> minHeight) node.minHeight
+        |> a2 (width node.minWidth) node.layoutSizingHorizontal node.size
+        |> a2 (height node.minHeight) node.layoutSizingVertical node.size
+        |> a (minWidth) node.minWidth
+        |> a (minHeight) node.minHeight
 
 
-width : LayoutSizingHorizontal -> Vector -> Maybe Elm.Expression
-width sizing { x, y } =
+minWidth : Float -> Maybe Elm.Expression
+minWidth w = 
+    if w == 0  then
+        Nothing
+    else
+        Css.minWidth (Css.px w) |> Just
+
+minHeight : Float -> Maybe Elm.Expression
+minHeight w = 
+    if w == 0  then
+        Nothing
+    else
+        Css.minHeight (Css.px w) |> Just
+
+width : Maybe Float -> LayoutSizingHorizontal -> Vector -> Maybe Elm.Expression
+width minW sizing { x } =
     case sizing of
         LayoutSizingHorizontalFIXED ->
-            x
-                |> Css.px
-                |> Css.width
-                |> Just
+            if minW == Nothing || minW == Just 0 then
+                x
+                    |> Css.px
+                    |> Css.width
+                    |> Just
+
+            else
+                Nothing
 
         LayoutSizingHorizontalFILL ->
             Css.pct 100
@@ -35,14 +53,18 @@ width sizing { x, y } =
             Nothing
 
 
-height : LayoutSizingVertical -> Vector -> Maybe Elm.Expression
-height sizing { x, y } =
+height : Maybe Float -> LayoutSizingVertical -> Vector -> Maybe Elm.Expression
+height minH sizing { y } =
     case sizing of
         LayoutSizingVerticalFIXED ->
-            y
-                |> Css.px
-                |> Css.height
-                |> Just
+            if minH == Nothing || minH == Just 0 then
+                y
+                    |> Css.px
+                    |> Css.height
+                    |> Just
+
+            else
+                Nothing
 
         LayoutSizingVerticalFILL ->
             Css.pct 100

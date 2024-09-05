@@ -463,9 +463,7 @@ detailsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 detailsView vc gc model =
     case model.details of
         Just details ->
-            div
-                [ detailsViewStyle vc |> toAttr ]
-                [ case details of
+                 case details of
                     AddressDetails id state ->
                         RemoteData.unwrap
                             (Util.View.loadingSpinner vc Css.View.loadingSpinner)
@@ -474,7 +472,6 @@ detailsView vc gc model =
 
                     TxDetails id state ->
                         txDetailsContentView vc gc model id state
-                ]
 
         Nothing ->
             none
@@ -765,7 +762,13 @@ addressDetailsContentView vc gc model id viewState =
                 []
     in
     SidePanelComponents.sidePanelComponentWithInstances
-        SidePanelComponents.sidePanelComponentAttributes
+        (SidePanelComponents.sidePanelComponentAttributes
+            |> s_sidePanelComponent 
+                [[ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
+                , Css.overflowY Css.auto
+                , Css.overflowX Css.hidden
+                ] |> css]
+        )
         (SidePanelComponents.sidePanelComponentInstances
             |> s_labelOfTags
                 (Just

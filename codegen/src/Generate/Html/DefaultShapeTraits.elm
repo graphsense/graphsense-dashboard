@@ -7,6 +7,7 @@ import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
+import Generate.Html.HasEffectsTrait as HasEffectsTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.DefaultShapeTraits
 import Generate.Util exposing (..)
@@ -18,6 +19,7 @@ toStyles : DefaultShapeTraits -> List Elm.Expression
 toStyles node =
     HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
         ++ HasGeometryTrait.toStyles node.hasGeometryTrait
+        ++ HasEffectsTrait.toStyles node.hasEffectsTrait
 
 
 toDetails : { a | defaultShapeTraits : DefaultShapeTraits } -> Details

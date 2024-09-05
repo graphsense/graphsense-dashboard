@@ -380,11 +380,6 @@ topRightPanelStyle _ =
     [ position absolute
     , mlGap |> right
     , top (px 70)
-    , minWidth (px 330)
-    , fontSize (px 14)
-    , calc (vh 100) minus (px 150) |> maxHeight
-    , overflowY auto
-    , overflowX hidden
     ]
 
 
@@ -399,11 +394,6 @@ searchBoxStyle vc padding =
 searchBoxMinWidth : Float
 searchBoxMinWidth =
     150
-
-
-detailsViewStyle : View.Config -> List Style
-detailsViewStyle vc =
-    searchBoxStyle vc (Just 0)
 
 
 graphActionsViewStyle : View.Config -> List Style

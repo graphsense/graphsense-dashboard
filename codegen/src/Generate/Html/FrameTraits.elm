@@ -9,6 +9,7 @@ import Generate.Html.HasFramePropertiesTrait as HasFramePropertiesTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
 import Generate.Html.HasLayoutTrait as HasLayoutTrait
 import Types exposing (Details)
+import Generate.Html.HasEffectsTrait as HasEffectsTrait
 
 
 toStyles : FrameTraits -> List Elm.Expression
@@ -18,6 +19,7 @@ toStyles node =
         ++ HasLayoutTrait.toStyles node.hasLayoutTrait
         ++ HasFramePropertiesTrait.toStyles node.hasFramePropertiesTrait
         ++ HasGeometryTrait.toStyles node.hasGeometryTrait
+        ++ HasEffectsTrait.toStyles node.hasEffectsTrait
 
 
 toDetails : { a | frameTraits : FrameTraits } -> Details
