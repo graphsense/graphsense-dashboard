@@ -520,7 +520,14 @@ txDetailsContentView vc _ model id viewState =
             { detailsInstance =
                 case viewState.tx.type_ of
                     Tx.Account tx ->
-                        accountTxDetailsContentView vc tx.raw
+                        SidePanelComponents.sidePanelTxDetails
+                            { titleOfInput = { text = "" }
+                            , titleOfOutput = { text = "" }
+                            , titleOfTimestamp = { text = Locale.string vc.locale "Timestamp" }
+                            , valueOfInput = { firstRowText = "", secondRowText = "", secondRowVisible = False }
+                            , valueOfOutput = { firstRowText = "", secondRowText = "", secondRowVisible = False }
+                            , valueOfTimestamp = timeToCell vc tx.raw.timestamp
+                            }
 
                     Tx.Utxo tx ->
                         SidePanelComponents.sidePanelTxDetails
@@ -1153,7 +1160,7 @@ graphSvg plugins _ vc gc model bbox =
             ]
         , Svg.lazy6 Network.addresses plugins vc gc model.colors model.clusters model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
-        , Svg.lazy4 Network.edges plugins vc gc model.network.txs
+        , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system
@@ -1166,11 +1173,8 @@ showBoundingBox model =
     let
         bb =
             Network.getBoundingBox model.network
-
-        hu =
-            unit / 2
     in
-    rect [ fill "red", width (bb.width * unit + unit |> String.fromFloat), height (bb.height * unit + unit |> String.fromFloat), x (bb.x * unit - hu |> String.fromFloat), y ((bb.y * unit - hu) |> String.fromFloat) ] []
+    rect [ fill "red", width (bb.width * unit + (2 * unit) |> String.fromFloat), height (bb.height * unit + (2 * unit) |> String.fromFloat), x (bb.x * unit - unit |> String.fromFloat), y ((bb.y * unit - unit) |> String.fromFloat) ] []
 
 
 drawDragSelector : View.Config -> Model -> Svg Msg

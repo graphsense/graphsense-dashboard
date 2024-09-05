@@ -26,7 +26,6 @@ multiLineDateTimeFromTimestamp vc d =
         }
 
 
-
 dateFromTimestamp : View.Config -> Int -> Html msg
 dateFromTimestamp vc d =
     let

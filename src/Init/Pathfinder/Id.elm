@@ -1,7 +1,7 @@
 module Init.Pathfinder.Id exposing (init, initClusterId)
 
-import Model.Pathfinder.Id exposing (Id)
 import Hex
+import Model.Pathfinder.Id exposing (Id)
 import Tuple exposing (pair)
 
 
@@ -12,5 +12,5 @@ init network =
 
 initClusterId : String -> Int -> Id
 initClusterId network =
-    Hex.toString 
+    Hex.toString
         >> init network

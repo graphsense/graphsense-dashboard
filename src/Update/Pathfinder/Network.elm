@@ -218,16 +218,11 @@ freeSpaceAroundCoords coords model =
                 |> Dict.values
                 |> List.filterMap
                     (\tx ->
-                        case tx.type_ of
-                            Tx.Utxo t ->
-                                if tx.x > coords.x - 1 && tx.x < coords.x + 1 then
-                                    Just { id = tx.id, x = tx.x, y = tx.y, clock = tx.clock }
+                        if tx.x > coords.x - 1 && tx.x < coords.x + 1 then
+                            Just { id = tx.id, x = tx.x, y = tx.y, clock = tx.clock }
 
-                                else
-                                    Nothing
-
-                            Tx.Account _ ->
-                                Nothing
+                        else
+                            Nothing
                     )
                 |> List.partition
                     (\a -> A.getTo a.y <= coords.y)

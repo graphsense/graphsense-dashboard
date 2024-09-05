@@ -333,19 +333,26 @@ updateByMsg plugins uc msg model =
             let
                 bbox =
                     Network.getBoundingBox model.network
+
+                bboxXUnit =
+                    { x = bbox.x * unit - unit
+                    , y = bbox.y * unit - unit
+                    , width = bbox.width * unit + (2 * unit)
+                    , height = bbox.height * unit + (2 * unit)
+                    }
             in
             n
                 { model
                     | transform =
                         uc.size
                             |> Maybe.map
-                                (\{ width, height } ->
-                                    { width = width
+                                (\{ width, height, x } ->
+                                    { width = width - (x * 4) -- not sure why I need this offset
                                     , height = height
                                     }
                                 )
                             |> Maybe.map
-                                (Coords.addMargin bbox
+                                (bboxXUnit
                                     |> Transform.updateByBoundingBox model.transform
                                 )
                             |> Maybe.withDefault model.transform
@@ -826,18 +833,8 @@ updateByMsg plugins uc msg model =
                 )
 
         UserClickedTxCheckboxInTable tx ->
-            case tx of
-                Api.Data.AddressTxTxAccount t ->
-                    n
-                        { model
-                            | network =
-                                Network.addTx (Api.Data.TxTxAccount t) model.network
-                                    |> second
-                                    |> Network.addAddress (Id.init t.currency t.fromAddress)
-                                    |> Network.addAddress (Id.init t.currency t.toAddress)
-                        }
-
-                Api.Data.AddressTxAddressTxUtxo t ->
+            let
+                addOrRemoveTx t includeIo =
                     let
                         id =
                             Id.init t.currency t.txHash
@@ -852,12 +849,19 @@ updateByMsg plugins uc msg model =
                             |> Api.GetTxEffect
                                 { currency = Id.network id
                                 , txHash = Id.id id
-                                , includeIo = True
+                                , includeIo = False
                                 , tokenTxId = Nothing
                                 }
                             |> ApiEffect
                             |> List.singleton
                             |> pair model
+            in
+            case tx of
+                Api.Data.AddressTxTxAccount t ->
+                    addOrRemoveTx t False
+
+                Api.Data.AddressTxAddressTxUtxo t ->
+                    addOrRemoveTx t True
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model

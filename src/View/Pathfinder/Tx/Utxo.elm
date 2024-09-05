@@ -1,4 +1,4 @@
-module View.Pathfinder.Tx.Utxo exposing (edge, view)
+module View.Pathfinder.Tx.Utxo exposing (TxPos, edge, view)
 
 import Animation as A exposing (Animation, Clock)
 import Config.Pathfinder as Pathfinder

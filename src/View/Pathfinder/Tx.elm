@@ -4,6 +4,7 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict
 import Model.Direction exposing (Direction(..))
+import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
@@ -22,17 +23,21 @@ view plugins vc gc tx =
         Utxo t ->
             Utxo.view plugins vc gc tx.id (tx.selected || tx.hovered) t tx
 
-        Account _ ->
+        Account t ->
             text ""
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Tx -> ( String, Svg Msg )
-edge plugins vc gc tx =
+
+-- AccountTx.view  plugins vc gc tx.id (tx.selected || tx.hovered) t tx
+
+
+edge : Plugins -> View.Config -> Pathfinder.Config -> Dict.Dict Id.Id Address -> Tx -> ( String, Svg Msg )
+edge plugins vc gc addresses tx =
     ( Id.toString tx.id
     , case tx.type_ of
         Utxo t ->
             Svg.lazy6 Utxo.edge plugins vc gc (tx.selected || tx.hovered) t tx
 
         Account t ->
-            AccountTx.edge plugins vc gc Dict.empty t
+            Svg.lazy5 AccountTx.edge plugins vc gc addresses t
     )

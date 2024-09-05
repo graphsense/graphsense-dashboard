@@ -16,7 +16,7 @@ import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import Model.Pathfinder.Tx as Tx
 import RecordSetter exposing (..)
-import Theme.Html.GraphComponents as GraphComponents 
+import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util.Css as Css
 import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)

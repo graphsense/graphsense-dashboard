@@ -77,14 +77,22 @@ truncateLongIdentifierWithLengths : Int -> Int -> String -> String
 truncateLongIdentifierWithLengths start end str =
     if String.length str > 18 then
         let
+            -- sigPart =
+            --     if String.startsWith "0x" str then
+            --         String.right (String.length str - 2) str
+            --     else
+            --         str
             sigPart =
+                str
+
+            startwOffset =
                 if String.startsWith "0x" str then
-                    String.right (String.length str - 2) str
+                    start + 2
 
                 else
-                    str
+                    start
         in
-        String.left start sigPart ++ "…" ++ String.right end sigPart
+        String.left startwOffset sigPart ++ "…" ++ String.right end sigPart
 
     else
         str
