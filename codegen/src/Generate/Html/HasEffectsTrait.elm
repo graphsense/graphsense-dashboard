@@ -35,22 +35,23 @@ effectToStyle effect =
 
 
 baseShadowToStyle : Bool -> BaseShadowEffect -> Maybe Elm.Expression
-baseShadowToStyle inset {color, offset, radius, spread, visible} =
-    if not visible then  
+baseShadowToStyle inset { color, offset, radius, spread, visible } =
+    if not visible then
         Nothing
+
     else
         let
-            boxShadow = 
+            boxShadow =
                 if inset then
-                Css.boxShadow6 Css.inset
+                    Css.boxShadow6 Css.inset
+
                 else
                     Css.boxShadow5
         in
         RGBA.toStyles color
-        |> boxShadow
+            |> boxShadow
                 (Css.px offset.x)
                 (Css.px offset.y)
                 (Css.px radius)
                 (spread |> Maybe.withDefault 0 |> Css.px)
-                |> Just
-
+            |> Just

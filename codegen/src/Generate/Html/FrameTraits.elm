@@ -5,11 +5,11 @@ import Elm
 import Generate.Common.FrameTraits as Common
 import Generate.Html.CornerTrait as CornerTrait
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
+import Generate.Html.HasEffectsTrait as HasEffectsTrait
 import Generate.Html.HasFramePropertiesTrait as HasFramePropertiesTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
 import Generate.Html.HasLayoutTrait as HasLayoutTrait
 import Types exposing (Details)
-import Generate.Html.HasEffectsTrait as HasEffectsTrait
 
 
 toStyles : FrameTraits -> List Elm.Expression
