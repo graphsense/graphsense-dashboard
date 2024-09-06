@@ -24,11 +24,7 @@ view plugins vc gc tx =
             Utxo.view plugins vc gc tx.id (tx.selected || tx.hovered) t tx
 
         Account t ->
-            text ""
-
-
-
--- AccountTx.view  plugins vc gc tx.id (tx.selected || tx.hovered) t tx
+            AccountTx.view plugins vc gc tx.id (tx.selected || tx.hovered) t tx
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> Dict.Dict Id.Id Address -> Tx -> ( String, Svg Msg )
@@ -39,5 +35,5 @@ edge plugins vc gc addresses tx =
             Svg.lazy6 Utxo.edge plugins vc gc (tx.selected || tx.hovered) t tx
 
         Account t ->
-            Svg.lazy5 AccountTx.edge plugins vc gc addresses t
+            Svg.lazy7 AccountTx.edge plugins vc gc (tx.selected || tx.hovered) addresses t tx
     )

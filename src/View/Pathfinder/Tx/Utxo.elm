@@ -1,4 +1,4 @@
-module View.Pathfinder.Tx.Utxo exposing (TxPos, edge, view)
+module View.Pathfinder.Tx.Utxo exposing (edge, view)
 
 import Animation as A exposing (Animation, Clock)
 import Config.Pathfinder as Pathfinder
@@ -26,13 +26,10 @@ import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
+import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
 
 
-type alias TxPos ex =
-    { ex | x : Float, dx : Float, y : Animation, dy : Float, opacity : Animation, clock : Clock }
-
-
-view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> TxPos x -> Svg Msg
+view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> AnimatedPosTrait x -> Svg Msg
 view _ vc pc id highlight tx pos =
     let
         anyIsNotVisible =
@@ -80,7 +77,7 @@ view _ vc pc id highlight tx pos =
         }
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> TxPos x -> Svg Msg
+edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> AnimatedPosTrait x -> Svg Msg
 edge _ vc _ hovered tx pos =
     let
         toValues =
@@ -120,12 +117,8 @@ edge _ vc _ hovered tx pos =
         txRad =
             GraphComponents.txNodeCircleTxNodeDetails.width / 2
 
-        toCoords address =
-            { tx = pos.x + pos.dx
-            , ty = A.animate pos.clock pos.y + pos.dy
-            , ax = address.x + address.dx
-            , ay = A.animate address.clock address.y + address.dy
-            }
+        txPos =
+            pos |> toPosition
 
         txId =
             Id.init tx.raw.currency tx.raw.txHash
@@ -134,15 +127,11 @@ edge _ vc _ hovered tx pos =
         |> List.map
             (\( values, address ) ->
                 let
-                    c =
-                        toCoords address
+                    fromPos =
+                        address |> toPosition
 
                     sign =
-                        if c.ax > c.tx then
-                            -1
-
-                        else
-                            1
+                        signX fromPos txPos
                 in
                 ( Id.toString address.id
                 , Svg.lazy7
@@ -154,10 +143,10 @@ edge _ vc _ hovered tx pos =
                     )
                     vc
                     values
-                    (c.ax * unit + (rad * sign))
-                    (c.ay * unit)
-                    (c.tx * unit - (txRad * sign))
-                    (c.ty * unit)
+                    (fromPos.x * unit + (rad * sign))
+                    (fromPos.y * unit)
+                    (txPos.x * unit - (txRad * sign))
+                    (txPos.y * unit)
                     (A.animate pos.clock pos.opacity)
                 )
             )
@@ -166,15 +155,11 @@ edge _ vc _ hovered tx pos =
                 |> List.map
                     (\( values, address ) ->
                         let
-                            c =
-                                toCoords address
+                            toPos =
+                                address |> toPosition
 
                             sign =
-                                if c.ax < c.tx then
-                                    -1
-
-                                else
-                                    1
+                                signX txPos toPos
                         in
                         ( Id.toString address.id
                         , Svg.lazy7
@@ -186,10 +171,10 @@ edge _ vc _ hovered tx pos =
                             )
                             vc
                             values
-                            (c.tx * unit + (txRad * sign))
-                            (c.ty * unit)
-                            (c.ax * unit - (rad * sign))
-                            (c.ay * unit)
+                            (txPos.x * unit + (txRad * sign))
+                            (txPos.y * unit)
+                            (toPos.x * unit - (rad * sign))
+                            (toPos.y * unit)
                             (A.animate address.clock address.opacity)
                         )
                     )

@@ -463,15 +463,15 @@ detailsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 detailsView vc gc model =
     case model.details of
         Just details ->
-                 case details of
-                    AddressDetails id state ->
-                        RemoteData.unwrap
-                            (Util.View.loadingSpinner vc Css.View.loadingSpinner)
-                            (addressDetailsContentView vc gc model id)
-                            state
+            case details of
+                AddressDetails id state ->
+                    RemoteData.unwrap
+                        (Util.View.loadingSpinner vc Css.View.loadingSpinner)
+                        (addressDetailsContentView vc gc model id)
+                        state
 
-                    TxDetails id state ->
-                        txDetailsContentView vc gc model id state
+                TxDetails id state ->
+                    txDetailsContentView vc gc model id state
 
         Nothing ->
             none
@@ -770,11 +770,13 @@ addressDetailsContentView vc gc model id viewState =
     in
     SidePanelComponents.sidePanelComponentWithInstances
         (SidePanelComponents.sidePanelComponentAttributes
-            |> s_sidePanelComponent 
-                [[ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
-                , Css.overflowY Css.auto
-                , Css.overflowX Css.hidden
-                ] |> css]
+            |> s_sidePanelComponent
+                [ [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
+                  , Css.overflowY Css.auto
+                  , Css.overflowX Css.hidden
+                  ]
+                    |> css
+                ]
         )
         (SidePanelComponents.sidePanelComponentInstances
             |> s_labelOfTags
@@ -890,13 +892,13 @@ addressDetailsContentView vc gc model id viewState =
 
 
 addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> (Id -> Bool) -> Html Msg
-addressTransactionTableView vc _ _ viewState txOnGraphFn =
+addressTransactionTableView vc _ addressId viewState txOnGraphFn =
     let
         data =
             viewState.data
 
         content =
-            transactionTableView vc data.currency txOnGraphFn viewState.txs
+            transactionTableView vc addressId txOnGraphFn viewState.txs
 
         ioIndicatorState =
             Just (inOutIndicator vc "Transactions" (data.noIncomingTxs + data.noOutgoingTxs) data.noIncomingTxs data.noOutgoingTxs)
@@ -1255,11 +1257,9 @@ dateRangePickerSelectionView vc model =
         ]
 
 
-transactionTableView : View.Config -> String -> (Id -> Bool) -> TransactionTable.Model -> Html Msg
-transactionTableView vc currency txOnGraphFn model =
+transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html Msg
+transactionTableView vc addressId txOnGraphFn model =
     let
-        attributes =
-            []
 
         prevMsg =
             \_ -> AddressDetailsMsg AddressDetails.UserClickedPreviousPageTransactionTable
@@ -1272,8 +1272,8 @@ transactionTableView vc currency txOnGraphFn model =
 
         table =
             PagedTable.pagedTableView vc
-                attributes
-                (TransactionTable.config styles vc currency txOnGraphFn)
+                []
+                (TransactionTable.config styles vc addressId txOnGraphFn)
                 model.table
                 prevMsg
                 nextMsg

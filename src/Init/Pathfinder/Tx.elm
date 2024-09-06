@@ -13,25 +13,25 @@ import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..))
 import Util.Data
 
 
-fromTxAccountData : Api.Data.TxAccount -> Tx
-fromTxAccountData tx =
+fromTxAccountData : Api.Data.TxAccount -> Coords -> Tx
+fromTxAccountData tx coords =
     let
         id =
-            Id.init tx.currency tx.txHash
+            Id.init tx.network tx.identifier
     in
     { id = id
     , hovered = False
     , selected = False
-    , x = 0
-    , y = A.static 0
+    , x = coords.x
+    , y = A.static coords.y
     , dx = 0
     , dy = 0
     , opacity = A.static 1
     , clock = 0
     , type_ =
         Account
-            { from = Id.init tx.currency tx.fromAddress
-            , to = Id.init tx.currency tx.toAddress
+            { from = Id.init tx.network tx.fromAddress
+            , to = Id.init tx.network tx.toAddress
             , value = tx.value
             , raw = tx
             }

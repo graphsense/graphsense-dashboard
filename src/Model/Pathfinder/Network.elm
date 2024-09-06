@@ -85,10 +85,10 @@ listTxsForAddress network id =
         |> Dict.values
         |> List.filterMap
             (\tx ->
-                if Tx.hasInput id tx then
+                if Tx.isInFlow id tx then
                     Just ( Incoming, tx )
-
-                else if Tx.hasOutput id tx then
+                    -- TODO: Revise for UTXO, depends on total flow not only if address is on the in side.
+                else if Tx.isOutFlow id tx then
                     Just ( Outgoing, tx )
 
                 else

@@ -1077,7 +1077,7 @@ showTx data accountCurrency model =
                             TxAccount loadable _ table ->
                                 if
                                     matchTxAccountId
-                                        { currency = tx.currency
+                                        { currency = tx.network
                                         , txHash = tx.txHash
                                         , tokenTxId = tx.tokenTxId
                                         }

@@ -20,6 +20,10 @@ dev: $(API_ELM) $(wildcard src/**)
 #$(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
 	#make openapi
 
+clean:
+	rm -rf ./elm-stuff/
+	rm -rf ./dist/
+
 setem:
 	npx setem --output generated
 

@@ -60,6 +60,13 @@ hasAddress id tx =
     hasOutput id tx || hasInput id tx
 
 
+isInFlow : Id -> Tx -> Bool
+isInFlow = hasInput
+
+
+isOutFlow : Id -> Tx -> Bool
+isOutFlow = hasOutput
+
 hasOutput : Id -> Tx -> Bool
 hasOutput id tx =
     case tx.type_ of
@@ -163,7 +170,16 @@ getTxId : Api.Data.Tx -> Id
 getTxId tx =
     case tx of
         Api.Data.TxTxAccount t ->
-            Id.init t.currency t.txHash
+            Id.init t.network t.identifier
 
         Api.Data.TxTxUtxo t ->
+            Id.init t.currency t.txHash
+
+getTxId2 : Api.Data.AddressTx -> Id
+getTxId2 tx =
+    case tx of
+        Api.Data.AddressTxTxAccount t ->
+            Id.init t.network t.identifier
+
+        Api.Data.AddressTxAddressTxUtxo t ->
             Id.init t.currency t.txHash

@@ -169,13 +169,13 @@ checkboxColumn _ { isChecked, onClick } =
         }
 
 
-debitCreditColumn : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-debitCreditColumn =
+debitCreditColumn : (data -> Bool) -> View.Config  -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+debitCreditColumn isOutgoingFn =
     valueColumnWithOptions
         { sortable = False
         , hideCode = False
-        , hideFlowIndicator = True
         , colorFlowDirection = True
+        , isOutgoingFn = isOutgoingFn
         }
 
 
@@ -184,24 +184,24 @@ valueColumn =
     valueColumnWithOptions
         { sortable = True
         , hideCode = True
-        , hideFlowIndicator = True
         , colorFlowDirection = False
+        , isOutgoingFn = \_ -> False
         }
 
 
-type alias ValueColumnOptions =
+type alias ValueColumnOptions data =
     { sortable : Bool
     , hideCode : Bool
-    , hideFlowIndicator : Bool
     , colorFlowDirection : Bool
+    , isOutgoingFn : (data -> Bool)
     }
 
 
-valueColumnWithOptions : ValueColumnOptions -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumnWithOptions { sortable, hideCode, hideFlowIndicator, colorFlowDirection } vc getCoinCode name getValues =
+valueColumnWithOptions : ValueColumnOptions data -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithOptions { sortable, hideCode, colorFlowDirection, isOutgoingFn } vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
-        , viewData = \data -> getValues data |> valuesCell vc hideCode hideFlowIndicator colorFlowDirection (getCoinCode data)
+        , viewData = \data -> getValues data |> valuesCell vc hideCode colorFlowDirection (isOutgoingFn data) (getCoinCode data)
         , sorter =
             if sortable then
                 Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
@@ -212,7 +212,7 @@ valueColumnWithOptions { sortable, hideCode, hideFlowIndicator, colorFlowDirecti
 
 
 valuesCell : View.Config -> Bool -> Bool -> Bool -> AssetIdentifier -> Api.Data.Values -> Table.HtmlDetails msg
-valuesCell vc hideCode hideFlowIndicator colorFlowDirection coinCode values =
+valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
     let
         value =
             (if hideCode then
@@ -224,19 +224,9 @@ valuesCell vc hideCode hideFlowIndicator colorFlowDirection coinCode values =
                 vc.locale
                 [ ( coinCode, values ) ]
 
-        isOutFlow =
-            String.startsWith "-" value
-
-        flowIndicator =
-            if isOutFlow then
-                outIcon
-
-            else
-                inIcon
-
         addCss =
             if colorFlowDirection then
-                inoutStyle isOutFlow
+                inoutStyle isOutgoing
 
             else
                 []

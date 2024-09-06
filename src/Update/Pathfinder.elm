@@ -71,6 +71,7 @@ import Update.Search as Search
 import Util.Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
+import Util.Data as Data
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -194,7 +195,7 @@ updateByMsg plugins uc msg model =
 
                 effwithCluster =
                     eff
-                        ++ (if Dict.member clusterId model.clusters then
+                        ++ (if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
                                 []
 
                             else
@@ -834,22 +835,18 @@ updateByMsg plugins uc msg model =
 
         UserClickedTxCheckboxInTable tx ->
             let
-                addOrRemoveTx t includeIo =
-                    let
-                        id =
-                            Id.init t.currency t.txHash
-                    in
-                    if Dict.member id model.network.txs then
-                        Network.deleteTx id model.network
+                addOrRemoveTx txId includeIo =
+                    if Dict.member txId model.network.txs then
+                        Network.deleteTx txId model.network
                             |> flip s_network model
                             |> n
 
                     else
                         BrowserGotTx
                             |> Api.GetTxEffect
-                                { currency = Id.network id
-                                , txHash = Id.id id
-                                , includeIo = False
+                                { currency = Id.network txId
+                                , txHash = Id.id txId
+                                , includeIo = includeIo
                                 , tokenTxId = Nothing
                                 }
                             |> ApiEffect
@@ -857,11 +854,11 @@ updateByMsg plugins uc msg model =
                             |> pair model
             in
             case tx of
-                Api.Data.AddressTxTxAccount t ->
-                    addOrRemoveTx t False
+                Api.Data.AddressTxTxAccount _ ->
+                    addOrRemoveTx (Tx.getTxId2 tx) False
 
-                Api.Data.AddressTxAddressTxUtxo t ->
-                    addOrRemoveTx t True
+                Api.Data.AddressTxAddressTxUtxo _ ->
+                    addOrRemoveTx (Tx.getTxId2 tx) True
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
@@ -892,6 +889,9 @@ updateByMsg plugins uc msg model =
                     else
                         (src |> Maybe.map Id.id)
                             |> getAddressForDirection tx Outgoing
+
+                _ = Debug.log "" src
+                _ = Debug.log " " dst
             in
             [ src, dst ]
                 |> List.filterMap identity
@@ -1473,7 +1473,7 @@ getAddressForDirection tx direction exceptAddress =
                 Outgoing ->
                     Just t.toAddress
             )
-                |> Maybe.map (Id.init t.currency)
+                |> Maybe.map (Id.init t.network)
 
 
 addTx : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )

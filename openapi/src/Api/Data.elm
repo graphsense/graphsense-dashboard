@@ -595,6 +595,8 @@ type alias TxAccount =
     , currency : String
     , fromAddress : String
     , height : Int
+    , identifier : String
+    , network : String
     , timestamp : Int
     , toAddress : String
     , tokenTxId : Maybe Int
@@ -1750,6 +1752,8 @@ encodeTxAccountPairs model =
             , encode "currency" Json.Encode.string model.currency
             , encode "from_address" Json.Encode.string model.fromAddress
             , encode "height" Json.Encode.int model.height
+            , encode "identifier" Json.Encode.string model.identifier
+            , encode "network" Json.Encode.string model.network
             , encode "timestamp" Json.Encode.int model.timestamp
             , encode "to_address" Json.Encode.string model.toAddress
             , maybeEncode "token_tx_id" Json.Encode.int model.tokenTxId
@@ -2411,6 +2415,8 @@ txAccountDecoder =
         |> decode "currency" Json.Decode.string 
         |> decode "from_address" Json.Decode.string 
         |> decode "height" Json.Decode.int 
+        |> decode "identifier" Json.Decode.string 
+        |> decode "network" Json.Decode.string 
         |> decode "timestamp" Json.Decode.int 
         |> decode "to_address" Json.Decode.string 
         |> maybeDecode "token_tx_id" Json.Decode.int Nothing

@@ -12,135 +12,70 @@ import Set
 import Table
 import View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations)
 import View.Pathfinder.Table.Columns as PT
+import Model.Pathfinder.Id exposing (network)
+import View.Graph.Search exposing (direction)
+import Api.Request.Addresses exposing (Direction)
+import Model.Pathfinder.Tx as Tx
+import View.Graph.Address exposing (address)
 
 
 type alias GenericTx =
-    { currency : String
+    { network : String
     , txHash : String
+    , id : String
     , timestamp : Int
     , value : Api.Data.Values
     , asset : String
+    , isOutgoing : Bool
     }
 
 
-toGerneric : Api.Data.AddressTx -> GenericTx
-toGerneric x =
+toGerneric : Id ->  Api.Data.AddressTx -> GenericTx
+toGerneric addressId x =
     case x of
         Api.Data.AddressTxAddressTxUtxo y ->
-            GenericTx y.currency y.txHash y.timestamp y.value y.currency
+            GenericTx y.currency y.txHash y.txHash y.timestamp y.value y.currency (y.value.value <= 0)
 
         Api.Data.AddressTxTxAccount y ->
-            GenericTx y.currency y.txHash y.timestamp y.value y.currency
+            GenericTx y.network y.txHash y.identifier y.timestamp y.value y.currency (y.fromAddress == Id.id addressId)
 
 
 getId : GenericTx -> Id
-getId { currency, txHash } =
-    Id.init currency txHash
+getId { network, id } =
+    Id.init network id
 
 
-config : Styles -> View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
-config _ vc network isCheckedFn =
+config : Styles -> View.Config ->  Id -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
+config _ vc addressId isCheckedFn =
     let
+
+        network = Id.network addressId
         rightAlignedColumns =
             [ "Value" ]
     in
     Table.customConfig
-        { toId = toGerneric >> getId >> Id.toString
+        { toId = toGerneric addressId >> getId >> Id.toString
         , toMsg = \_ -> NoOp
         , columns =
             [ PT.checkboxColumn vc
-                { isChecked = toGerneric >> getId >> isCheckedFn
+                { isChecked = toGerneric addressId >> getId >> isCheckedFn
                 , onClick = UserClickedTxCheckboxInTable
                 }
             , PT.timestampDateMultiRowColumn vc
                 "Timestamp"
-                (toGerneric >> .timestamp)
+                (toGerneric addressId >> .timestamp)
             , PT.txColumn vc
                 { label = "Hash"
-                , accessor = toGerneric >> .txHash
-                , onClick = Just (toGerneric >> getId >> UserClickedTx)
+                , accessor = toGerneric addressId >> .txHash
+                , onClick = Just (toGerneric addressId >> getId >> UserClickedTx)
                 , tagsPlaceholder = False
                 }
-            , PT.debitCreditColumn vc
-                (toGerneric >> .asset >> asset network)
+            , PT.debitCreditColumn 
+                (toGerneric addressId >> .isOutgoing)
+                vc
+                (toGerneric addressId >> .asset >> asset network)
                 "Value"
-                (toGerneric >> .value)
-
-            {-
-               , View.Graph.Table.htmlColumn
-                   styles
-                   vc
-                   "Timestamp"
-                   (toGerneric >> .timestamp)
-                   (\data ->
-                       let
-                           d =
-                               toGerneric data |> .timestamp
-                       in
-                       SidebarComponents.txListCellTimestampWithInstances
-                           (SidebarComponents.txListCellTimestampAttributes
-                               |> s_txListCellTimestamp [ css [ Css.width Css.auto ] ]
-                           )
-                           (SidebarComponents.txListCellTimestampInstances
-                               |> s_checkboxes (Just none)
-                           )
-                           { checkboxes = {}
-                           , txListCellTimestamp =
-                               { checkbox = False
-                               , date =
-                                   Locale.timestampDateUniform vc.locale d
-                               , time =
-                                   Locale.timestampTimeUniform vc.locale d
-                               }
-                           }
-                           |> List.singleton
-                   )
-               , View.Graph.Table.htmlColumnWithSorter
-                   Table.unsortable
-                   styles
-                   vc
-                   "Hash"
-                   (toGerneric >> .txHash)
-                   (\data ->
-                       let
-                           d =
-                               toGerneric data
-                       in
-                       SidebarComponents.txListCellValue
-                           { txListCellValue =
-                               { txValue = truncateLongIdentifier d.txHash
-                               }
-                           }
-                           |> List.singleton
-                   )
-               , View.Graph.Table.htmlColumnWithSorter
-                   Table.unsortable
-                   styles
-                   vc
-                   "Debit/Credit"
-                   (toGerneric >> .asset >> asset network)
-                   (\data ->
-                       let
-                           d =
-                               toGerneric data
-                       in
-                       SidebarComponents.txListCellValue
-                           { txListCellValue =
-                               { txValue = truncateLongIdentifier d.txHash
-                               }
-                           }
-                           |> List.singleton
-                   )
-               , PT.valueColumnWithOptions
-                   { sortable = False
-                   , hideCode = False
-                   , hideFlowIndicator = False
-                   }
-                   vc
-                   (toGerneric >> .asset >> asset network)
-                   "Debit/Credit"
-                   (toGerneric >> .value)
-            -}
+                (toGerneric addressId >> .value)
             ]
         , customizations =
             customizations vc
