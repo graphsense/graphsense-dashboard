@@ -890,8 +890,6 @@ updateByMsg plugins uc msg model =
                         (src |> Maybe.map Id.id)
                             |> getAddressForDirection tx Outgoing
 
-                _ = Debug.log "" src
-                _ = Debug.log " " dst
             in
             [ src, dst ]
                 |> List.filterMap identity

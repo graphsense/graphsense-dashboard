@@ -129,7 +129,6 @@ findAddressCoordsNextToTx model direction tx =
                                 , A.getTo tx.y
                                 ) |> Just
 
-        _ = Debug.log "sibs" siblings
     in
     siblings
         |> Maybe.map
@@ -142,7 +141,7 @@ findAddressCoordsNextToTx model direction tx =
                         |> Maybe.map ((+) nodeYOffset)
                         |> Maybe.withDefault y
                 }
-            ) |> Debug.log ""
+            )
 
 
 freeSpaceAroundCoords : Coords -> Network -> Network
