@@ -788,7 +788,7 @@ addressDetailsContentView vc gc model id viewState =
                             , Css.flexWrap Css.wrap
                             , Css.property "gap" "1ex"
                             , Css.alignItems Css.center
-                            , Css.maxWidth <| Css.pct 80
+                            , Css.width <| Css.px (SidePanelComponents.sidePanelDetailsDetails.width * 0.8)
                             ]
                         ]
                         ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
