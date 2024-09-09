@@ -26,6 +26,7 @@ clean:
 
 setem:
 	npx setem --output generated
+	cd codegen && mkdir -p codegen/generated && npx setem --output generated
 
 serve:
 	npm run dev
