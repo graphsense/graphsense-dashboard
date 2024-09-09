@@ -18,6 +18,7 @@ import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
 import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, toTranslate, withVisibility)
 import Maybe.Extra
+import RecordSetter exposing (..)
 import Types exposing (Config, Details)
 
 
@@ -102,6 +103,7 @@ subcanvasNodeToDetails node =
         SubcanvasNodeInstanceNode n ->
             withFrameTraitsNodeToDetails n
                 |> uncurry (::)
+                |> List.map (s_instanceName (Generate.Common.FrameTraits.getName n))
 
         SubcanvasNodeRectangleNode n ->
             RectangleNode.toDetails n

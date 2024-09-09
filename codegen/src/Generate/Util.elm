@@ -170,7 +170,7 @@ detailsToDeclaration parentName componentName details =
                         componentName
 
                     else
-                        componentName ++ " " ++ details.name
+                        componentName ++ " " ++ details.instanceName ++ " " ++ details.name
                    )
     in
     [ ( "x", Elm.float details.bbox.x )
@@ -181,7 +181,7 @@ detailsToDeclaration parentName componentName details =
     , ( "styles", Elm.list details.styles )
     ]
         |> Elm.record
-        |> Elm.declaration (prefix ++ " details" |> sanitize)
+        |> Elm.declaration (sanitize prefix ++ "_details")
 
 
 sanitize : String -> String

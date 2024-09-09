@@ -59,6 +59,7 @@ getStrokeWidth node =
 toDetails : List Elm.Expression -> { a | defaultShapeTraits : DefaultShapeTraits } -> Details
 toDetails styles node =
     { name = getName node
+    , instanceName = ""
     , bbox = getBoundingBox node
     , strokeWidth = getStrokeWidth node
     , styles = styles

@@ -29,7 +29,7 @@ import Generate.Svg.DefaultShapeTraits
 import Generate.Svg.FrameTraits
 import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, withVisibility)
 import Maybe.Extra
-import RecordSetter exposing (s_styles)
+import RecordSetter exposing (..)
 import Set
 import String.Case exposing (toCamelCaseUpper)
 import String.Extra
@@ -374,7 +374,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
         (frameTraitsToExpressions config componentNameForChildren node.frameTraits
             |> Elm.list
         )
-        |> withVisibility (componentName) (config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility componentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
 
 
 instanceNodeToExpressions : Config -> String -> InstanceNode -> List Elm.Expression
@@ -384,11 +384,11 @@ instanceNodeToExpressions config parentName node =
             Generate.Common.FrameTraits.getName node
 
         subNameId =
-                if node.componentProperties /= Nothing then
-                    name
+            if node.componentProperties /= Nothing then
+                name
 
-                else
-                    parentName
+            else
+                parentName
     in
     Elm.get name config.instances
         |> Gen.Maybe.withDefault
@@ -443,6 +443,7 @@ subcanvasNodeToDetails node =
         SubcanvasNodeInstanceNode n ->
             withFrameTraitsNodeToDetails n
                 |> uncurry (::)
+                |> List.map (s_instanceName (Generate.Common.FrameTraits.getName n))
 
         SubcanvasNodeRectangleNode n ->
             RectangleNode.toDetails n

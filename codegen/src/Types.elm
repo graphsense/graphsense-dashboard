@@ -15,6 +15,9 @@ type alias Config =
 
 type alias Details =
     { name : String
+
+    -- enclosing instance name 
+    , instanceName : String
     , bbox : Rectangle
     , strokeWidth : Float
     , styles : List Elm.Expression
