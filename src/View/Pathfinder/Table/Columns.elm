@@ -169,7 +169,7 @@ checkboxColumn _ { isChecked, onClick } =
         }
 
 
-debitCreditColumn : (data -> Bool) -> View.Config  -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+debitCreditColumn : (data -> Bool) -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 debitCreditColumn isOutgoingFn =
     valueColumnWithOptions
         { sortable = False
@@ -193,7 +193,7 @@ type alias ValueColumnOptions data =
     { sortable : Bool
     , hideCode : Bool
     , colorFlowDirection : Bool
-    , isOutgoingFn : (data -> Bool)
+    , isOutgoingFn : data -> Bool
     }
 
 

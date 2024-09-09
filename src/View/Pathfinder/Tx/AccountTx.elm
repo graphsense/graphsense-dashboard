@@ -86,7 +86,7 @@ edge _ vc _ hovered addresses tx aTxPos =
         (\fro too ->
             let
                 txId =
-                    Id.init tx.raw.currency tx.raw.identifier
+                    Id.init tx.raw.network tx.raw.identifier
 
                 txPos =
                     aTxPos |> toPosition

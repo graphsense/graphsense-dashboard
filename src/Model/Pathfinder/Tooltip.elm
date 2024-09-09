@@ -14,5 +14,6 @@ type alias Tooltip =
 
 type TooltipType
     = UtxoTx Tx.UtxoTx
+    | AccountTx Tx.AccountTx
     | Address Address.Address
     | TagLabel String TagSummary

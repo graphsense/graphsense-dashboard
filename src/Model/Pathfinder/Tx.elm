@@ -61,11 +61,14 @@ hasAddress id tx =
 
 
 isInFlow : Id -> Tx -> Bool
-isInFlow = hasInput
+isInFlow =
+    hasInput
 
 
 isOutFlow : Id -> Tx -> Bool
-isOutFlow = hasOutput
+isOutFlow =
+    hasOutput
+
 
 hasOutput : Id -> Tx -> Bool
 hasOutput id tx =
@@ -174,6 +177,7 @@ getTxId tx =
 
         Api.Data.TxTxUtxo t ->
             Id.init t.currency t.txHash
+
 
 getTxId2 : Api.Data.AddressTx -> Id
 getTxId2 tx =

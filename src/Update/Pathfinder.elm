@@ -68,10 +68,9 @@ import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
-import Util.Data exposing (timestampToPosix)
+import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-import Util.Data as Data
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -523,8 +522,10 @@ updateByMsg plugins uc msg model =
                                                         |> Tooltip.init hc
                                                         |> Just
 
-                                                _ ->
-                                                    Nothing
+                                                Tx.Account t ->
+                                                    Tooltip.AccountTx t
+                                                        |> Tooltip.init hc
+                                                        |> Just
                                         )
                             , network = Network.updateTx id (s_hovered True) model.network
                             , hovered = HoveredTx id
@@ -889,7 +890,6 @@ updateByMsg plugins uc msg model =
                     else
                         (src |> Maybe.map Id.id)
                             |> getAddressForDirection tx Outgoing
-
             in
             [ src, dst ]
                 |> List.filterMap identity
@@ -1094,7 +1094,7 @@ getNextTxEffects model addressId direction =
                         BrowserGotBlockHeight
                             >> WorkflowNextTxByTime context
                             |> Api.GetBlockByDateEffect
-                                { currency = t.raw.currency
+                                { currency = t.raw.network
                                 , datetime =
                                     t.raw.timestamp
                                         |> timestampToPosix

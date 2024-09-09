@@ -14,7 +14,6 @@ import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
-import Model.Pathfinder.Tx as Tx
 import RecordSetter exposing (..)
 import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
@@ -27,7 +26,10 @@ view : View.Config -> Dict Id.Id HavingTags -> Tooltip -> Html msg
 view vc ts tt =
     (case tt.type_ of
         UtxoTx t ->
-            utxoTx vc t
+            genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }
+
+        AccountTx t ->
+            genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }
 
         Address a ->
             address vc (Dict.get a.id ts) a
@@ -169,14 +171,14 @@ address vc _ adr =
         ]
 
 
-utxoTx : View.Config -> Tx.UtxoTx -> Html msg
-utxoTx vc tx =
+genericTx : View.Config -> { txId : String, timestamp : Int } -> Html msg
+genericTx vc tx =
     div
         []
         [ row
             { tooltipRowLabel = { title = Locale.string vc.locale "Tx hash" }
             , tooltipRowValue =
-                tx.raw.txHash
+                tx.txId
                     |> truncateLongIdentifierWithLengths 8 4
                     |> val vc
             }
@@ -185,10 +187,10 @@ utxoTx vc tx =
             , tooltipRowValue =
                 let
                     date =
-                        Locale.timestampDateUniform vc.locale tx.raw.timestamp
+                        Locale.timestampDateUniform vc.locale tx.timestamp
 
                     time =
-                        Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
+                        Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.timestamp
                 in
                 { firstRow = date
                 , secondRow = time

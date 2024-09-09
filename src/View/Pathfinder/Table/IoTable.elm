@@ -49,7 +49,7 @@ config styles vc network isCheckedFn lblFn =
                 , tagsPlaceholder = True
                 }
                 (lblFn |> Maybe.map (\fn -> \data -> toId data |> Maybe.map fn |> Maybe.withDefault NoTags))
-            , PT.debitCreditColumn 
+            , PT.debitCreditColumn
                 (.value >> .value >> (>=) 0)
                 vc
                 (\_ -> assetFromBase network)

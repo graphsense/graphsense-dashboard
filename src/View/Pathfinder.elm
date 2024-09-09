@@ -1260,7 +1260,6 @@ dateRangePickerSelectionView vc model =
 transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html Msg
 transactionTableView vc addressId txOnGraphFn model =
     let
-
         prevMsg =
             \_ -> AddressDetailsMsg AddressDetails.UserClickedPreviousPageTransactionTable
 

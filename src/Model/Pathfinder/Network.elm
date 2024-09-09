@@ -88,6 +88,7 @@ listTxsForAddress network id =
                 if Tx.isInFlow id tx then
                     Just ( Incoming, tx )
                     -- TODO: Revise for UTXO, depends on total flow not only if address is on the in side.
+
                 else if Tx.isOutFlow id tx then
                     Just ( Outgoing, tx )
 

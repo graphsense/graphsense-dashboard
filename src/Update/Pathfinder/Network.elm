@@ -30,6 +30,7 @@ import Tuple2 exposing (pairTo)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
 import Update.Pathfinder.Tx as Tx
 
+
 clearSelection : Network -> Network
 clearSelection n =
     { n
@@ -117,18 +118,19 @@ findAddressCoordsNextToTx model direction tx =
                         , A.getTo tx.y
                         )
 
-                ( Outgoing, Tx.Account t ) ->                 
-                                ( [ ]
-                                , tx.x
-                                , A.getTo tx.y
-                                )  |> Just
+                ( Outgoing, Tx.Account t ) ->
+                    ( []
+                    , tx.x
+                    , A.getTo tx.y
+                    )
+                        |> Just
 
                 ( Incoming, Tx.Account t ) ->
-                                ( [  ]
-                                , tx.x
-                                , A.getTo tx.y
-                                ) |> Just
-
+                    ( []
+                    , tx.x
+                    , A.getTo tx.y
+                    )
+                        |> Just
     in
     siblings
         |> Maybe.map
@@ -408,14 +410,17 @@ addTxWithPosition position tx network =
                 case tx of
                     Api.Data.TxTxAccount t ->
                         let
-                            coords = findTxCoords network tx
+                            coords =
+                                findTxCoords network tx
+
                             newNetwork =
                                 freeSpaceAroundCoords coords network
                         in
                         Tx.fromTxAccountData t coords
-                            |> insertTx { newNetwork
-                                            | animatedTxs = Set.insert id newNetwork.animatedTxs
-                                        }
+                            |> insertTx
+                                { newNetwork
+                                    | animatedTxs = Set.insert id newNetwork.animatedTxs
+                                }
 
                     Api.Data.TxTxUtxo t ->
                         let
@@ -529,12 +534,19 @@ listInOutputsOfApiTxUtxo network tx =
 
 
 findTxCoords : Network -> Api.Data.Tx -> Coords
-findTxCoords network tx = case tx of
-    Api.Data.TxTxAccount t -> findTxCoordsInternal network ([Dict.get (Id.init t.network t.fromAddress) network.addresses |> Maybe.map (Tuple.pair Direction.Outgoing), Dict.get (Id.init t.network t.toAddress) network.addresses |> Maybe.map (Tuple.pair Direction.Incoming)] |> List.filterMap (identity))
-    Api.Data.TxTxUtxo t -> findUtxoTxCoords network t
+findTxCoords network tx =
+    case tx of
+        Api.Data.TxTxAccount t ->
+            findTxCoordsInternal network ([ Dict.get (Id.init t.network t.fromAddress) network.addresses |> Maybe.map (Tuple.pair Direction.Outgoing), Dict.get (Id.init t.network t.toAddress) network.addresses |> Maybe.map (Tuple.pair Direction.Incoming) ] |> List.filterMap identity)
 
-findTxCoordsInternal : Network -> List (Direction, Address) -> Coords
-findTxCoordsInternal network coords = coords  |> NList.fromList
+        Api.Data.TxTxUtxo t ->
+            findUtxoTxCoords network t
+
+
+findTxCoordsInternal : Network -> List ( Direction, Address ) -> Coords
+findTxCoordsInternal network coords =
+    coords
+        |> NList.fromList
         |> Maybe.map
             (\list ->
                 if NList.length list == 1 then
@@ -553,7 +565,8 @@ findTxCoordsInternal network coords = coords  |> NList.fromList
 
 
 findUtxoTxCoords : Network -> Api.Data.TxUtxo -> Coords
-findUtxoTxCoords network tx = findTxCoordsInternal network (listInOutputsOfApiTxUtxo network tx)
+findUtxoTxCoords network tx =
+    findTxCoordsInternal network (listInOutputsOfApiTxUtxo network tx)
 
 
 findUtxoTxCoordsNextToAddress : Network -> Direction -> Address -> Coords

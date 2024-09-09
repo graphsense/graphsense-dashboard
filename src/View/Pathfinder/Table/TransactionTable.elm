@@ -1,22 +1,21 @@
 module View.Pathfinder.Table.TransactionTable exposing (config, prepareCSV)
 
 import Api.Data
+import Api.Request.Addresses exposing (Direction)
 import Config.View as View
 import Css.Table exposing (Styles)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Locale
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id, network)
+import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder exposing (Msg(..))
 import Set
 import Table
+import View.Graph.Address exposing (address)
+import View.Graph.Search exposing (direction)
 import View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations)
 import View.Pathfinder.Table.Columns as PT
-import Model.Pathfinder.Id exposing (network)
-import View.Graph.Search exposing (direction)
-import Api.Request.Addresses exposing (Direction)
-import Model.Pathfinder.Tx as Tx
-import View.Graph.Address exposing (address)
 
 
 type alias GenericTx =
@@ -30,7 +29,7 @@ type alias GenericTx =
     }
 
 
-toGerneric : Id ->  Api.Data.AddressTx -> GenericTx
+toGerneric : Id -> Api.Data.AddressTx -> GenericTx
 toGerneric addressId x =
     case x of
         Api.Data.AddressTxAddressTxUtxo y ->
@@ -45,11 +44,12 @@ getId { network, id } =
     Id.init network id
 
 
-config : Styles -> View.Config ->  Id -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
+config : Styles -> View.Config -> Id -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
 config _ vc addressId isCheckedFn =
     let
+        network =
+            Id.network addressId
 
-        network = Id.network addressId
         rightAlignedColumns =
             [ "Value" ]
     in
@@ -70,7 +70,7 @@ config _ vc addressId isCheckedFn =
                 , onClick = Just (toGerneric addressId >> getId >> UserClickedTx)
                 , tagsPlaceholder = False
                 }
-            , PT.debitCreditColumn 
+            , PT.debitCreditColumn
                 (toGerneric addressId >> .isOutgoing)
                 vc
                 (toGerneric addressId >> .asset >> asset network)
