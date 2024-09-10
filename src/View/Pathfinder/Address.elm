@@ -202,9 +202,6 @@ toNodeIcon highlight address cluster clusterColor =
 
             else
                 []
-
-        _ =
-            Debug.log "" ( address.exchange, clusterColor, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract )
     in
     case ( address.exchange, clusterColor, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract ) of
         ( _, _, Just True ) ->
