@@ -16,7 +16,7 @@ type alias Config =
 type alias Details =
     { name : String
 
-    -- enclosing instance name 
+    -- enclosing instance name
     , instanceName : String
     , bbox : Rectangle
     , strokeWidth : Float
@@ -30,5 +30,5 @@ type alias OriginAdjust =
     }
 
 
-type alias ComponentPropertyExpressions =
-    Dict String Expression
+type alias ComponentPropertyExpressions
+    = (Dict String Expression)

@@ -9,7 +9,7 @@ import Elm.Op
 import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
-import Generate.Common as Common exposing (adjustBoundingBoxes)
+import Generate.Common as Common exposing (adjustBoundingBoxes, hasMainComponentProperty, hasVariantProperty)
 import Generate.Common.FrameTraits
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.EllipseNode as EllipseNode
@@ -101,9 +101,13 @@ subcanvasNodeToDetails node =
                 |> uncurry (::)
 
         SubcanvasNodeInstanceNode n ->
-            withFrameTraitsNodeToDetails n
-                |> uncurry (::)
-                |> List.map (s_instanceName (Generate.Common.FrameTraits.getName n))
+            if hasVariantProperty n || hasMainComponentProperty n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
+                    |> List.map (s_instanceName (Generate.Common.FrameTraits.getName n))
 
         SubcanvasNodeRectangleNode n ->
             RectangleNode.toDetails n
@@ -461,28 +465,34 @@ instanceNodeToExpressions config parentName node =
             else
                 parentName
     in
-    Elm.get name config.instances
-        |> Gen.Maybe.withDefault
-            (node.frameTraits.isLayerTrait.componentPropertyReferences
-                |> Maybe.andThen (Dict.get "mainComponent")
-                |> Maybe.andThen
-                    (\ref ->
-                        Dict.get parentName config.propertyExpressions
-                            |> Maybe.andThen (Dict.get ref)
-                    )
-                |> Maybe.map
-                    (List.singleton
-                        >> Elm.list
-                        >> Gen.Svg.Styled.call_.g (Elm.list [ coords ])
-                    )
-                |> Maybe.Extra.withDefaultLazy
-                    (\_ ->
-                        Gen.Svg.Styled.call_.g
+    (node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> Maybe.andThen (Dict.get "mainComponent")
+        |> Maybe.andThen
+            (\ref ->
+                Dict.get parentName config.propertyExpressions
+                    |> Maybe.andThen (Dict.get ref)
+            )
+        |> Maybe.Extra.orElseLazy
+            (\_ ->
+                Dict.get (Generate.Common.FrameTraits.getName node |> sanitize) config.propertyExpressions
+                    |> Maybe.andThen (Dict.get "variant")
+            )
+        |> Maybe.map
+            (List.singleton
+                >> Elm.list
+                >> Gen.Svg.Styled.call_.g (Elm.list [ coords ])
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                Elm.get name config.instances
+                    |> Gen.Maybe.withDefault
+                        (Gen.Svg.Styled.call_.g
                             (getElementAttributes config name)
                             (frameTraitsToExpressions config subNameId node.frameTraits
                                 |> Elm.list
                             )
-                    )
+                        )
             )
+    )
         |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton

@@ -15,7 +15,7 @@ import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
-import Generate.Common as Common
+import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty)
 import Generate.Common.ComponentSetNode as ComponentSetNode
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
@@ -390,20 +390,25 @@ instanceNodeToExpressions config parentName node =
             else
                 parentName
     in
-    Elm.get name config.instances
-        |> Gen.Maybe.withDefault
-            (node.frameTraits.isLayerTrait.componentPropertyReferences
-                |> Maybe.andThen (Dict.get "mainComponent")
-                |> Maybe.andThen
-                    (\ref ->
-                        Dict.get parentName config.propertyExpressions
-                            |> Maybe.andThen (Dict.get ref)
-                    )
-                |> Maybe.Extra.withDefaultLazy
-                    (\_ ->
-                        withFrameTraitsNodeToExpression config name subNameId node
-                    )
+    (node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> Maybe.andThen (Dict.get "mainComponent")
+        |> Maybe.andThen
+            (\ref ->
+                Dict.get parentName config.propertyExpressions
+                    |> Maybe.andThen (Dict.get ref)
             )
+        |> Maybe.Extra.orElseLazy
+            (\_ ->
+                Dict.get (Generate.Common.FrameTraits.getName node |> sanitize) config.propertyExpressions
+                    |> Maybe.andThen (Dict.get "variant")
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                Elm.get name config.instances
+                    |> Gen.Maybe.withDefault
+                        (withFrameTraitsNodeToExpression config name subNameId node)
+            )
+    )
         |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
@@ -441,9 +446,13 @@ subcanvasNodeToDetails node =
                 |> uncurry (::)
 
         SubcanvasNodeInstanceNode n ->
-            withFrameTraitsNodeToDetails n
-                |> uncurry (::)
-                |> List.map (s_instanceName (Generate.Common.FrameTraits.getName n))
+            if hasVariantProperty n || hasMainComponentProperty n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
+                    |> List.map (s_instanceName (Generate.Common.FrameTraits.getName n))
 
         SubcanvasNodeRectangleNode n ->
             RectangleNode.toDetails n

@@ -172,8 +172,12 @@ collectComponentSetNames =
 
 
 collectInstanceNames : List String -> InstanceNode -> Dict String (List String) -> Dict String (List String)
-collectInstanceNames =
-    collectNames
+collectInstanceNames names node collected =
+    if hasMainComponentProperty node || hasVariantProperty node then
+        collected
+
+    else
+        collectNames names node collected
 
 
 subcanvasNodeAdjustBoundingBox : OriginAdjust -> SubcanvasNode -> SubcanvasNode
@@ -291,8 +295,12 @@ getOriginAdjust node =
 
 
 formatComponentPropertyName : String -> String
-formatComponentPropertyName =
-    String.Extra.leftOf "#"
+formatComponentPropertyName str =
+    if String.contains "#" str then
+        String.Extra.leftOf "#" str
+
+    else
+        str
 
 
 componentNodeToProperties : String -> ComponentNode -> Dict String (Dict String ComponentPropertyType)
@@ -318,17 +326,34 @@ withFrameTraitsToProperties node =
         |> List.concat
 
 
+hasVariantProperty : InstanceNode -> Bool
+hasVariantProperty n =
+    n.componentProperties
+        |> Maybe.withDefault Dict.empty
+        |> Dict.values
+        |> List.map .type_
+        |> List.any ((==) ComponentPropertyTypeVARIANT)
+
+
+hasMainComponentProperty : InstanceNode -> Bool
+hasMainComponentProperty n =
+    getMainComponentProperty n.frameTraits.isLayerTrait.componentPropertyReferences
+        /= Nothing
+
+
 subcanvasNodeToProperties : SubcanvasNode -> List ( String, Dict String ComponentPropertyType )
 subcanvasNodeToProperties node =
     case node of
         SubcanvasNodeInstanceNode n ->
-            let
-                hasMainComponentProperty =
-                    getMainComponentProperty n.frameTraits.isLayerTrait.componentPropertyReferences
-                        /= Nothing
-            in
-            if hasMainComponentProperty then
+            if hasMainComponentProperty n then
                 []
+
+            else if hasVariantProperty n then
+                [ ( FrameTraits.getName n
+                  , Dict.singleton "variant" ComponentPropertyTypeVARIANT
+                  )
+                    |> Debug.log "123 hasVariantProperty"
+                ]
 
             else
                 n.componentProperties
@@ -379,7 +404,7 @@ propertiesType elementType =
                             Dict.insert k Annotation.string
 
                         ComponentPropertyTypeVARIANT ->
-                            identity
+                            Dict.insert k (elementType (Annotation.var "msg"))
                 )
                 Dict.empty
                 >> Dict.toList
