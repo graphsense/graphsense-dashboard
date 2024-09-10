@@ -82,7 +82,7 @@ view _ vc _ colors address getCluster =
                     ]
 
         fd =
-            GraphComponents.addressNodeNodeFrameDetails
+            GraphComponents.addressNodeNodeFrame_details
 
         adjX =
             fd.x + fd.width / 2
@@ -118,11 +118,11 @@ view _ vc _ colors address getCluster =
         )
         (GraphComponents.addressNodeInstances
             |> s_iconsNodeOpenLeft
-                (GraphComponents.addressNodeIconsNodeOpenLeftDetails
+                (GraphComponents.addressNodeIconsNodeOpenLeft_details
                     |> expandHandleLoadingSpinner vc address Incoming
                 )
             |> s_iconsNodeOpenRight
-                (GraphComponents.addressNodeIconsNodeOpenRightDetails
+                (GraphComponents.addressNodeIconsNodeOpenRight_details
                     |> expandHandleLoadingSpinner vc address Outgoing
                 )
         )

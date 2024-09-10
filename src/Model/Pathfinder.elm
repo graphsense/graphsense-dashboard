@@ -24,7 +24,7 @@ import Time exposing (Posix)
 
 unit : Float
 unit =
-    GraphComponents.addressNodeNodeFrameDetails.width
+    GraphComponents.addressNodeNodeFrame_details.width
 
 
 type alias Model =

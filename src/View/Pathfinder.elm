@@ -578,7 +578,7 @@ txDetailsContentView vc _ model id viewState =
                     --     , valueOfTimestamp = timeToCell vc tx.raw.timestamp
                     --     }
                     Tx.Utxo tx ->
-                        SidePanelComponents.sidePanelTxDetails
+                        SidePanelComponents.sidePanelTx_details
                             { titleOfInput = { text = Locale.string vc.locale "Total input" }
                             , titleOfOutput = { text = Locale.string vc.locale "Total output" }
                             , titleOfTimestamp = { text = Locale.string vc.locale "Timestamp" }
@@ -727,7 +727,7 @@ addressDetailsContentView vc gc model id viewState =
             Id.initClusterId viewState.data.currency viewState.data.entity
 
         tbls =
-            [ SidePanelComponents.sidePanelDetails
+            [ SidePanelComponents.sidePanel_details
                 { balanceTitle = { text = Locale.string vc.locale "Balance" }
                 , balanceValue = valuesToCell vc viewState.data.currency viewState.data.balance
                 , totalReceivedTitle = { text = Locale.string vc.locale "Total received" }
@@ -763,7 +763,7 @@ addressDetailsContentView vc gc model id viewState =
                 , onMouseLeave (UserMovesMouseOutTagLabel tid)
 
                 --, Css.tagLinkButtonStyle vc |> css
-                , HA.css SidePanelComponents.sidePanelComponentLabelOfTagsDetails.styles
+                , HA.css SidePanelComponents.sidePanelComponentLabelOfTags_details.styles
                 , HA.id tid
                 , HA.href link
                 ]
@@ -855,7 +855,7 @@ addressDetailsContentView vc gc model id viewState =
                             in
                             Html.a
                                 [ HA.href link
-                                , css SidePanelComponents.sidePanelComponentLabelOfTagsDetails.styles
+                                , css SidePanelComponents.sidePanelComponentLabelOfTags_details.styles
                                 ]
                                 [ Html.text text
                                 ]
@@ -869,7 +869,7 @@ addressDetailsContentView vc gc model id viewState =
                         (\imgSrc ->
                             let
                                 iconDetails =
-                                    HIcons.iconsAssignDetails
+                                    HIcons.iconsAssign_details
                             in
                             img
                                 [ src imgSrc

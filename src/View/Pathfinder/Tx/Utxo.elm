@@ -37,7 +37,7 @@ view _ vc pc id highlight tx pos =
                 >> List.any (second >> .address >> (==) Nothing)
 
         fd =
-            GraphComponents.txNodeCircleTxNodeDetails
+            GraphComponents.txNodeCircleTxNode_details
 
         adjX =
             fd.x + fd.width / 2
@@ -109,13 +109,13 @@ edge _ vc _ hovered tx pos =
                 |> toValues
 
         fd =
-            GraphComponents.addressNodeNodeFrameDetails
+            GraphComponents.addressNodeNodeFrame_details
 
         rad =
             fd.width / 2
 
         txRad =
-            GraphComponents.txNodeCircleTxNodeDetails.width / 2
+            GraphComponents.txNodeCircleTxNode_details.width / 2
 
         txPos =
             pos |> toPosition

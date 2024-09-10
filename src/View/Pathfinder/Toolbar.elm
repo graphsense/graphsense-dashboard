@@ -85,24 +85,6 @@ view vc config =
                 )
         )
         (SettingsComponents.toolbarInstances
-            |> s_iconsRedo
-                (Just <|
-                    if config.redoDisabled then
-                        Icons.iconsRedoStateDisabledWithAttributes
-                            Icons.iconsRedoStateDisabledAttributes
-                            {}
-
-                    else
-                        Icons.iconsRedoStateActiveWithAttributes
-                            (Icons.iconsRedoStateActiveAttributes
-                                |> s_stateActive
-                                    (onClickWithStop UserClickedRedo
-                                        :: title (Locale.string vc.locale "Redo")
-                                        :: iconsAttr
-                                    )
-                            )
-                            {}
-                )
             |> s_iconsUndo
                 (Just <|
                     if config.undoDisabled then
@@ -127,6 +109,23 @@ view vc config =
                             {}
                 )
         )
-        { iconsRedo = {}
+        { iconsRedo =
+            { variant =
+                if config.redoDisabled then
+                    Icons.iconsRedoStateDisabledWithAttributes
+                        Icons.iconsRedoStateDisabledAttributes
+                        {}
+
+                else
+                    Icons.iconsRedoStateActiveWithAttributes
+                        (Icons.iconsRedoStateActiveAttributes
+                            |> s_stateActive
+                                (onClickWithStop UserClickedRedo
+                                    :: title (Locale.string vc.locale "Redo")
+                                    :: iconsAttr
+                                )
+                        )
+                        {}
+            }
         , toolbar = { highlightVisible = False }
         }

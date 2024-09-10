@@ -139,23 +139,23 @@ coloredPath vc c =
         ( val, _ ) =
             if c.isOutgoing then
                 if dx < 0 then
-                    ( GraphComponents.inputPathInputValueDetails
-                    , GraphComponents.inputPathDetails
+                    ( GraphComponents.inputPathInputValue_details
+                    , GraphComponents.inputPath_details
                     )
 
                 else
-                    ( GraphComponents.outputPathOutputValueDetails
-                    , GraphComponents.outputPathDetails
+                    ( GraphComponents.outputPathOutputValue_details
+                    , GraphComponents.outputPath_details
                     )
 
             else if dx < 0 then
-                ( GraphComponents.outputPathOutputValueDetails
-                , GraphComponents.outputPathDetails
+                ( GraphComponents.outputPathOutputValue_details
+                , GraphComponents.outputPath_details
                 )
 
             else
-                ( GraphComponents.inputPathInputValueDetails
-                , GraphComponents.inputPathDetails
+                ( GraphComponents.inputPathInputValue_details
+                , GraphComponents.inputPath_details
                 )
 
         { p0, p1, p2, p3 } =
@@ -218,10 +218,10 @@ coloredPath vc c =
         let
             det =
                 if c.isOutgoing then
-                    GraphComponents.outputPathHighlightLineDetails
+                    GraphComponents.outputPathHighlightLine_details
 
                 else
-                    GraphComponents.inputPathHighlightLineDetails
+                    GraphComponents.inputPathHighlightLine_details
         in
         Svg.path
             [ p
@@ -236,10 +236,10 @@ coloredPath vc c =
         , let
             det =
                 if c.isOutgoing then
-                    GraphComponents.outputPathMainLineDetails
+                    GraphComponents.outputPathMainLine_details
 
                 else
-                    GraphComponents.inputPathMainLineDetails
+                    GraphComponents.inputPathMainLine_details
           in
           det.styles
             ++ [ "url(#{{ prefix }}{{ direction }}Edge{{ back }})"
@@ -300,7 +300,7 @@ coloredPath vc c =
                         |> Css.property "fill"
                         |> Css.important
                    )
-                :: GraphComponents.outputPathMainLineDetails.styles
+                :: GraphComponents.outputPathMainLine_details.styles
                 |> css
             ]
             []
@@ -364,7 +364,7 @@ bendedPath vc _ label withArrow x1 y1 x2 y2 =
                 let
                     ( mx, my ) =
                         ( x1 + dx / 2
-                        , y1 + Basics.max (dy / 2) (GraphComponents.addressNodeNodeFrameDetails.width / 2)
+                        , y1 + Basics.max (dy / 2) (GraphComponents.addressNodeNodeFrame_details.width / 2)
                         )
 
                     ( c1x, c1y ) =

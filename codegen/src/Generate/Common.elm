@@ -33,8 +33,10 @@ adjustNames node =
     let
         names =
             collectNames [] node Dict.empty
+                |> Debug.log "123 collectNames"
                 |> Dict.map (\_ -> List.map sanitize)
                 |> disambiguateCollectedNames
+                |> Debug.log "123 disamb"
                 |> Dict.map (\_ -> sanitize)
 
         log tit =
@@ -174,7 +176,7 @@ collectComponentSetNames =
 collectInstanceNames : List String -> InstanceNode -> Dict String (List String) -> Dict String (List String)
 collectInstanceNames names node collected =
     if hasMainComponentProperty node || hasVariantProperty node then
-        collected
+        Dict.insert (FrameTraits.getId node) (FrameTraits.getName node :: names) collected
 
     else
         collectNames names node collected

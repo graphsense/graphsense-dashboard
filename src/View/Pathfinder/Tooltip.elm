@@ -43,13 +43,6 @@ view vc ts tt =
 
 
 
-{-
-   tooltipBaseCss : List Css.Style
-   tooltipBaseCss =
-       GraphComponents.tooltipProperty1DownDetails.styles ++ [ Css.width Css.auto, Css.minWidth (Css.px 100) ]
--}
-
-
 getConfidenceIndicator : View.Config -> Float -> Html msg
 getConfidenceIndicator vc x =
     if x >= 0.8 then

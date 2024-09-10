@@ -34,7 +34,7 @@ view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> AccountTx ->
 view _ vc pc id highlight tx pos =
     let
         fd =
-            GraphComponents.txNodeCircleTxNodeDetails
+            GraphComponents.txNodeCircleTxNode_details
 
         adjX =
             fd.x + fd.width / 2
@@ -78,10 +78,10 @@ edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Dict Id Address ->
 edge _ vc _ hovered addresses tx aTxPos =
     let
         radTx =
-            GraphComponents.txNodeCircleTxNodeDetails.width / 2
+            GraphComponents.txNodeCircleTxNode_details.width / 2
 
         radA =
-            GraphComponents.addressNodeNodeFrameDetails.width / 2
+            GraphComponents.addressNodeNodeFrame_details.width / 2
     in
     Maybe.map2
         (\fro too ->
