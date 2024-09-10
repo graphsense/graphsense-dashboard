@@ -110,7 +110,7 @@ type alias ColoredPathConfig =
 
 arrowLength : Float
 arrowLength =
-    5
+    6
 
 
 coloredPath : View.Config -> ColoredPathConfig -> Svg Msg
@@ -273,9 +273,10 @@ coloredPath vc c =
         Svg.path
             [ d <|
                 pathD
-                    [ M ( x2 - arrowLength, y2 - arrowLength )
-                    , l ( arrowLength, arrowLength )
-                    , l ( -arrowLength, arrowLength )
+                    [ M ( x2 - arrowLength, y2 - arrowLength * 0.7 )
+                    , l ( arrowLength, arrowLength * 0.7 )
+                    , l ( -arrowLength, arrowLength * 0.7 )
+                    , Svg.PathD.z
                     ]
             , "rotate("
                 ++ ([ if dx < 0 then
@@ -294,6 +295,11 @@ coloredPath vc c =
                 |> Color.toCssString
                 |> Css.property "stroke"
               )
+                :: (Colors.pathOut
+                        |> Color.toCssString
+                        |> Css.property "fill"
+                        |> Css.important
+                   )
                 :: GraphComponents.outputPathMainLineDetails.styles
                 |> css
             ]
