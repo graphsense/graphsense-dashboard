@@ -2,8 +2,8 @@ module View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations, p
 
 import Config.View as View
 import Css
-import Css.Pathfinder exposing (centerContent, fullWidth, linkButtonStyle, toAttr)
-import Css.Table exposing (loadingSpinner, styles)
+import Css.Pathfinder exposing (centerContent, emptyTableMsg, fullWidth, linkButtonStyle, toAttr)
+import Css.Table exposing (Styles, loadingSpinner, styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Events exposing (..)
@@ -11,13 +11,24 @@ import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
 import RecordSetter exposing (s_rowAttrs, s_tableAttrs, s_thead)
 import Set
 import Table
+import Theme.Html.Icons as HIcons
 import Tuple3
 import Util.View
 import View.Graph.Table exposing (simpleThead, tableHint)
+import View.Locale as Locale
 
 
 type alias PagingMsg data msg =
     PagedTable data -> msg
+
+
+tableHint : Styles -> View.Config -> String -> Html msg
+tableHint styles vc msg =
+    div
+        [ emptyTableMsg |> css
+        ]
+        [ Locale.string vc.locale msg |> text
+        ]
 
 
 alignColumnsRight : View.Config -> Set.Set String -> Table.Customizations data msg -> Table.Customizations data msg
@@ -52,7 +63,7 @@ pageIndicatorView pt =
 
         -- ++ " of " ++ (PT.nrPages pt |> Maybe.map String.fromInt |> Maybe.withDefault "?")
     in
-    span [] [ text pageText ]
+    div [ [ Css.verticalAlign Css.center ] |> toAttr ] [ text pageText ]
 
 
 rawTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> String -> List data -> Html msg
@@ -94,11 +105,9 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
 
                     else
                         [ div [ centerContent |> toAttr ]
-                            [ div []
-                                [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ text "<" ]
-                                , pageIndicatorView tblPaged
-                                , button [ linkButtonStyle vc nextPageAvailable |> toAttr, onClick (nextMsg tblPaged) ] [ text ">" ]
-                                ]
+                            [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ HIcons.iconsChevronLeft {} ]
+                            , pageIndicatorView tblPaged
+                            , button [ linkButtonStyle vc nextPageAvailable |> toAttr, onClick (nextMsg tblPaged) ] [ HIcons.iconsChevronRightThin {} ]
                             ]
                         ]
                    )

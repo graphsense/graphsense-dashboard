@@ -85,7 +85,7 @@ type alias BtnConfig =
 
 inlineExportIcon : Html Msg
 inlineExportIcon =
-    HIcons.iconExportWithAttributes HIcons.iconExportAttributes {}
+    HIcons.iconExportWithAttributes (HIcons.iconExportAttributes |> s_vector [ css (Css.lightGreyColor |> Css.fill |> Css.important |> List.singleton) ]) {}
 
 
 inlineCloseSmallIcon : Html Msg
@@ -422,7 +422,15 @@ graphActionButton vc btn =
 
 iconWithText : View.Config -> Html Msg -> String -> List (Html Msg)
 iconWithText _ faIcon text =
-    [ span [ iconWithTextStyle |> toAttr ] [ faIcon ], Html.text text ]
+    let
+        s =
+            if String.length text > 0 then
+                iconWithTextStyle
+
+            else
+                []
+    in
+    [ span [ s |> toAttr ] [ faIcon ], Html.text text ]
 
 
 searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
@@ -512,7 +520,17 @@ txDetailsContentView vc _ model id viewState =
             Dict.get id_ model.tagSummaries
                 |> Maybe.withDefault NoTags
     in
-    SidePanelComponents.sidePanelComponent
+    SidePanelComponents.sidePanelComponentWithAttributes
+        (SidePanelComponents.sidePanelComponentAttributes
+            |> s_sidePanelComponent
+                [ [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
+                  , Css.overflowY Css.auto
+                  , Css.overflowX Css.hidden
+                  , Css.paddingTop (Css.px 10)
+                  ]
+                    |> css
+                ]
+        )
         { actor = { iconInstance = none, text = "" }
         , leftTab = { tabLabel = "" }
         , rightTab = { tabLabel = "" }
@@ -597,11 +615,6 @@ utxoTxDetailsSectionsView vc network viewState data getLbl =
     collapsibleSection vc "" viewState.ioTableOpen ioIndicatorState content (TxDetailsMsg UserClickedToggleIOTable)
 
 
-accountTxDetailsContentView : View.Config -> Api.Data.TxAccount -> Html Msg
-accountTxDetailsContentView _ _ =
-    div [] [ Html.text "I am a Account TX" ]
-
-
 valuesToCell : View.Config -> String -> Api.Data.Values -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
 valuesToCell vc currency value =
     { firstRowText = Locale.currency vc.locale [ ( assetFromBase currency, value ) ]
@@ -676,8 +689,7 @@ addressDetailsContentView vc gc model id viewState =
             Id.initClusterId viewState.data.currency viewState.data.entity
 
         tbls =
-            [ --detailsFactTableView vc (apiAddressToRows viewState.data)
-              SidePanelComponents.sidePanelDetails
+            [ SidePanelComponents.sidePanelDetails
                 { balanceTitle = { text = Locale.string vc.locale "Balance" }
                 , balanceValue = valuesToCell vc viewState.data.currency viewState.data.balance
                 , totalReceivedTitle = { text = Locale.string vc.locale "Total received" }
@@ -695,7 +707,6 @@ addressDetailsContentView vc gc model id viewState =
             , detailsActionsView vc (getAddressActionBtns id viewState.data)
             ]
 
-        -- addressAnnotationBtns =
         showExchangeTag =
             actorText /= Nothing
 
@@ -774,6 +785,7 @@ addressDetailsContentView vc gc model id viewState =
                 [ [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
                   , Css.overflowY Css.auto
                   , Css.overflowX Css.hidden
+                  , Css.paddingTop (Css.px 10)
                   ]
                     |> css
                 ]
@@ -1286,7 +1298,7 @@ transactionTableView vc addressId txOnGraphFn model =
                     ]
                 ]
                 [ drp
-                , secondaryButton vc (BtnConfig (\_ -> HIcons.iconsFilterWithAttributes { iconsFilter = [ css [ Css.padding Css.no ] ], filter = [] } {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
+                , graphActionButton vc (BtnConfig (\_ -> HIcons.iconsFilterWithAttributes { iconsFilter = [ css [ Css.padding Css.no ] ], filter = [ css [ Css.fill Css.lightGreyColor |> Css.important ] ] } {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
                 ]
 
         showSelectionRow =

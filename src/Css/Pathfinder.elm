@@ -501,7 +501,12 @@ addressDetailsViewActorImageStyle vc =
 
 centerContent : List Style
 centerContent =
-    [ displayFlex, flexDirection column, alignItems center ]
+    [ displayFlex, flexDirection row, alignItems center, justifyContent center ]
+
+
+emptyTableMsg : List Style
+emptyTableMsg =
+    [ margin (px 20), textAlign center ]
 
 
 detailsViewContainerStyle : View.Config -> List Style

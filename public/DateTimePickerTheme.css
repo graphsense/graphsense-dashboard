@@ -12,46 +12,46 @@
     --edtp-duration-calendars-gap: 1rem;
     --edtp-transition: all cubic-bezier(0.4, 0, 0.2, 1) 150ms;
 
-    --edtp-container-color: #22292f;
+    --edtp-container-color: #333333;
     --edtp-container-background-color: #fff;
 
-    --edtp-header-text-color: #22292f;
-    --edtp-header-chevron-color: #22292f;
+    --edtp-header-text-color: #333333;
+    --edtp-header-chevron-color: #333333;
     --edtp-header-chevron-background-color: transparent;
-    --edtp-header-chevron-hover-color: #22292f;
+    --edtp-header-chevron-hover-color: #333333;
     --edtp-header-chevron-hover-background-color: #f1f5f8;
-    --edtp-header-week-color: #a0aec0;
+    --edtp-header-week-color: #626262;
 
     --edtp-day-size: 42px;
-    --edtp-day-color: #22292f;
+    --edtp-day-color: #333333;
     --edtp-day-background-color: transparent;
-    --edtp-day-hover-color: #22292f;
-    --edtp-day-hover-background-color: #a0aec0;
-    --edtp-day-between-color: #22292f;
-    --edtp-day-between-background-color: #d3f0eb;
-    --edtp-day-disabled-color: #8294ab;
+    --edtp-day-hover-color: #333333;
+    --edtp-day-hover-background-color: #626262;
+    --edtp-day-between-color: #333333;
+    --edtp-day-between-background-color: #6BCBBA4D;
+    --edtp-day-disabled-color: #616161;
     --edtp-day-disabled-background-color: transparent;
     --edtp-day-picked-color: #fff;
-    --edtp-day-picked-background-color: #6bcbba;
-    --edtp-day-today-color: #6bcbba;
+    --edtp-day-picked-background-color: #369D8F;
+    --edtp-day-today-color: #369D8F;
     --edtp-day-today-background-color: transparent;
 
     --edtp-week-number-color: #bfc8d4;
     --edtp-week-number-background-color: #f1f5f8;
     
     --edtp-footer-border-width: 1px;
-    --edtp-footer-border-color: #a0aec0;
-    --edtp-footer-color: #22292f;
+    --edtp-footer-border-color: #626262;
+    --edtp-footer-color: #333333;
     --edtp-footer-background-color: transparent;
-    --edtp-footer-empty-color: #a0aec0;
+    --edtp-footer-empty-color: #626262;
     --edtp-footer-font-weight: normal;
 
-    --edtp-footer-toggle-button-color: #6bcbba;
+    --edtp-footer-toggle-button-color: #369D8F;
     --edtp-footer-toggle-button-background-color: transparent;
-    --edtp-footer-toggle-button-hover-color: #6bcbba;
+    --edtp-footer-toggle-button-hover-color: #369D8F;
     --edtp-footer-toggle-button-hover-background-color: #f1f5f8;
 
-    --edtp-footer-select-color: #22292f;
+    --edtp-footer-select-color: #333333;
     --edtp-footer-select-background-color: #fff;
-    --edtp-footer-select-border-color: #a0aec0;
+    --edtp-footer-select-border-color: #626262;
 }
