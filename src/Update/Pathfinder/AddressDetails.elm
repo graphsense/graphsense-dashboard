@@ -185,8 +185,8 @@ update uc pathfinderModel msg id model =
             else
                 n model
 
-        GotTxsForAddressDetails responseId txs ->
-            if responseId == id then
+        GotTxsForAddressDetails responseId ( min, max ) txs ->
+            if responseId == id && model.txs.txMinBlock == min && model.txs.txMaxBlock == max then
                 n
                     { model
                         | txs =
@@ -322,7 +322,7 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
         effects =
             case ( txmin, txmax ) of
                 ( Just min, Just max ) ->
-                    (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                    (GotTxsForAddressDetails id ( Just min, Just max ) >> AddressDetailsMsg)
                         |> Api.GetAddressTxsEffect
                             { currency = Id.network id
                             , address = Id.id id
@@ -337,7 +337,7 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
                         |> List.singleton
 
                 ( Nothing, Nothing ) ->
-                    (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                    (GotTxsForAddressDetails id ( Nothing, Nothing ) >> AddressDetailsMsg)
                         |> Api.GetAddressTxsEffect
                             { currency = Id.network id
                             , address = Id.id id

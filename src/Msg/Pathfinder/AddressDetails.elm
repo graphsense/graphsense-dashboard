@@ -16,7 +16,7 @@ type Msg
     | UserClickedPreviousPageTransactionTable
     | UserClickedNextPageNeighborsTable Direction
     | UserClickedPreviousPageNeighborsTable Direction
-    | GotTxsForAddressDetails Id Api.Data.AddressTxs
+    | GotTxsForAddressDetails Id ( Maybe Int, Maybe Int ) Api.Data.AddressTxs
     | GotNextPageTxsForAddressDetails Id Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Id Direction Api.Data.NeighborAddresses
     | UpdateDateRangePicker DurationDatePicker.Msg

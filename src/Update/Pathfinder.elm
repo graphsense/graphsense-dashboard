@@ -1139,10 +1139,13 @@ updateByRoute_ plugins uc route model =
             let
                 id =
                     Id.init network a
+
+                ( x, b ) =
+                    { model | network = Network.clearSelection model.network }
+                        |> loadAddress plugins id True
+                        |> and (selectAddress uc id)
             in
-            { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins id True
-                |> and (selectAddress uc id)
+            ( x, b )
 
         Route.Network network (Route.Tx a) ->
             let
