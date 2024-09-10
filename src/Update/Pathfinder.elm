@@ -417,6 +417,7 @@ updateByMsg plugins uc msg model =
                             n
                                 { modelS
                                     | dragging = NoDragging
+                                    , pointerTool = Drag
                                 }
 
                         Drag ->
