@@ -7,6 +7,7 @@ import Css
 import Dict exposing (Dict)
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
+import Model.Currency exposing (AssetIdentifier, asset)
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
@@ -66,7 +67,7 @@ view _ vc pc id highlight tx pos =
         { txNodeCircle =
             { hasMultipleInOutputs = False
             , highlightVisible = highlight
-            , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
+            , date = Locale.currency vc.locale [ ( asset tx.raw.network tx.raw.currency, tx.value ) ] ++ " at " ++ Locale.timestampDateUniform vc.locale tx.raw.timestamp
             , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
             , timestampVisible = vc.showTimestampOnTxEdge
             }

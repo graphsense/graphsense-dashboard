@@ -22,7 +22,7 @@ import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Html.Styled.Lazy exposing (..)
 import Init.Pathfinder.Id as Id
 import Json.Decode
-import Model.Currency exposing (Currency(..), assetFromBase)
+import Model.Currency as Asset exposing (Currency(..), assetFromBase)
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
@@ -38,6 +38,7 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails as TxDetails
+import Model.Tx as Tx
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
@@ -67,6 +68,7 @@ import Util.View exposing (copyIconPathfinder, hovercard, none, truncateLongIden
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
+import View.Pathfinder.Address as Address
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
 import View.Pathfinder.PagedTable as PagedTable
@@ -143,9 +145,10 @@ graphActionButtons =
 type ValueType
     = ValueInt Int
     | ValueHex Int
+    | Boolean Bool
     | Text String
-    | Currency Api.Data.Values String
-    | CurrencyWithCode Api.Data.Values String
+    | Currency Api.Data.Values Asset.AssetIdentifier
+    | CurrencyWithCode Api.Data.Values Asset.AssetIdentifier
     | InOut (Maybe Int) Int Int
     | Timestamp Int
     | TimestampWithTime Int
@@ -203,12 +206,12 @@ renderValueTypeValue vc val =
         Text txt ->
             span [] [ Html.text txt ]
 
-        Currency v ticker ->
-            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.currencyWithoutCode2 vc.locale [ ( assetFromBase ticker, v ) ]) ]
+        Currency v asset ->
+            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.currencyWithoutCode2 vc.locale [ ( asset, v ) ]) ]
 
-        CurrencyWithCode v ticker ->
+        CurrencyWithCode v asset ->
             -- span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value ++ " " ++ ticker) ]
-            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.currencyWithoutCode vc.locale [ ( assetFromBase ticker, v ) ]) ]
+            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.currencyWithoutCode vc.locale [ ( asset, v ) ]) ]
 
         CopyIdent ident ->
             Util.View.copyableLongIdentifierPathfinder vc [] ident
@@ -219,17 +222,30 @@ renderValueTypeValue vc val =
         TimestampWithTime ts ->
             span [] [ multiLineDateTimeFromTimestamp vc ts ]
 
+        Boolean tv ->
+            span []
+                [ Html.text
+                    (Locale.string vc.locale
+                        (if tv then
+                            "yes"
+
+                         else
+                            "no"
+                        )
+                    )
+                ]
+
 
 renderValueTypeExtension : View.Config -> ValueType -> Html Msg
 renderValueTypeExtension vc val =
     case val of
-        Currency _ ticker ->
+        Currency _ asset ->
             span []
                 [ Html.text
                     (String.toUpper
                         (case vc.locale.currency of
                             Coin ->
-                                ticker
+                                asset.asset
 
                             Fiat x ->
                                 x
@@ -538,15 +554,33 @@ txDetailsContentView vc _ model id viewState =
             { detailsInstance =
                 case viewState.tx.type_ of
                     Tx.Account tx ->
-                        SidePanelComponents.sidePanelTxDetails
-                            { titleOfInput = { text = "" }
-                            , titleOfOutput = { text = "" }
-                            , titleOfTimestamp = { text = Locale.string vc.locale "Timestamp" }
-                            , valueOfInput = { firstRowText = "", secondRowText = "", secondRowVisible = False }
-                            , valueOfOutput = { firstRowText = "", secondRowText = "", secondRowVisible = False }
-                            , valueOfTimestamp = timeToCell vc tx.raw.timestamp
-                            }
+                        let
+                            rows =
+                                [ Row "Timestamp" (TimestampWithTime tx.raw.timestamp)
+                                , Gap
+                                , Row "From Address" (CopyIdent tx.raw.fromAddress)
+                                , Row "To Address" (CopyIdent tx.raw.toAddress)
+                                , Gap
+                                , Row "Value" (Currency tx.value (Asset.asset tx.raw.network tx.raw.currency))
+                                ]
+                                    ++ (if tx.raw.contractCreation |> Maybe.withDefault False then
+                                            [ Gap, Row "Contract creation" (Boolean True) ]
 
+                                        else
+                                            []
+                                       )
+                        in
+                        div [ css [ Css.fontSize (Css.px 12), Css.color Css.lightGreyColor, Css.marginLeft (Css.px 8) ] ]
+                            [ detailsFactTableView vc rows ]
+
+                    -- SidePanelComponents.sidePanelTxDetails
+                    --     { titleOfInput = { text = "" }
+                    --     , titleOfOutput = { text = "" }
+                    --     , titleOfTimestamp = { text = Locale.string vc.locale "Timestamp" }
+                    --     , valueOfInput = { firstRowText = "", secondRowText = "", secondRowVisible = False }
+                    --     , valueOfOutput = { firstRowText = "", secondRowText = "", secondRowVisible = False }
+                    --     , valueOfTimestamp = timeToCell vc tx.raw.timestamp
+                    --     }
                     Tx.Utxo tx ->
                         SidePanelComponents.sidePanelTxDetails
                             { titleOfInput = { text = Locale.string vc.locale "Total input" }
@@ -572,7 +606,16 @@ txDetailsContentView vc _ model id viewState =
                 SidePanelComponents.sidePanelTxHeader
                     { sidePanelTxHeader =
                         { headerText =
-                            (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
+                            let
+                                txLabel =
+                                    case viewState.tx.type_ of
+                                        Tx.Account atx ->
+                                            atx.raw.identifier |> Tx.parseTxIdentifier |> Maybe.map Tx.txTypeToLabel |> Maybe.withDefault "Transaction"
+
+                                        Tx.Utxo _ ->
+                                            "Transaction"
+                            in
+                            (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale txLabel
                         }
                     , iconText =
                         { iconInstance = Id.id id |> copyIconPathfinder vc
@@ -875,21 +918,7 @@ addressDetailsContentView vc gc model id viewState =
             { headerInstance =
                 SidePanelComponents.sidePanelAddressHeader
                     { sidePanelAddressHeader =
-                        { iconInstance =
-                            if address.exchange /= Nothing then
-                                Icons.iconsExchangeWithAttributesSvg []
-                                    (Icons.iconsExchangeAttributes
-                                        |> s_dollar clusterHighlightAttr
-                                        |> s_arrows clusterHighlightAttr
-                                    )
-                                    {}
-
-                            else
-                                Icons.iconsUntaggedWithAttributesSvg []
-                                    (Icons.iconsUntaggedAttributes
-                                        |> s_ellipse25 clusterHighlightAttr
-                                    )
-                                    {}
+                        { iconInstance = Address.toNodeIconHtml False viewState.address (Dict.get clstrid model.clusters) (Colors.getAssignedColor Colors.Clusters clstrid model.colors |> Maybe.map .color)
                         , headerText =
                             (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
                         }
@@ -918,47 +947,38 @@ addressTransactionTableView vc _ addressId viewState txOnGraphFn =
     collapsibleSection vc "" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
 
 
-addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
-addressNeighborsTableView vc _ _ viewState data =
-    let
-        attributes =
-            []
 
-        prevMsg =
-            \dir _ -> AddressDetailsMsg (AddressDetails.UserClickedPreviousPageNeighborsTable dir)
-
-        nextMsg =
-            \dir _ -> AddressDetailsMsg (AddressDetails.UserClickedNextPageNeighborsTable dir)
-
-        tblCfg =
-            NeighborsTable.config vc data.currency
-
-        content =
-            div []
-                [ h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Outgoing" ]
-                , PagedTable.pagedTableView vc attributes tblCfg viewState.neighborsOutgoing (prevMsg Outgoing) (nextMsg Outgoing)
-                , h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Incoming" ]
-                , PagedTable.pagedTableView vc attributes tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
-                ]
-
-        ioIndicatorState =
-            Just (inOutIndicatorOld vc Nothing data.inDegree data.outDegree)
-    in
-    collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleNeighborsTable)
-
-
-annotationButton : View.Config -> BtnConfig -> Html Msg
-annotationButton vc btn =
-    disableableButton (linkButtonStyle vc) btn [ HA.title btn.text ] [ btn.icon btn.enable ]
+-- addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
+-- addressNeighborsTableView vc _ _ viewState data =
+--     let
+--         attributes =
+--             []
+--         prevMsg =
+--             \dir _ -> AddressDetailsMsg (AddressDetails.UserClickedPreviousPageNeighborsTable dir)
+--         nextMsg =
+--             \dir _ -> AddressDetailsMsg (AddressDetails.UserClickedNextPageNeighborsTable dir)
+--         tblCfg =
+--             NeighborsTable.config vc data.currency
+--         content =
+--             div []
+--                 [ h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Outgoing" ]
+--                 , PagedTable.pagedTableView vc attributes tblCfg viewState.neighborsOutgoing (prevMsg Outgoing) (nextMsg Outgoing)
+--                 , h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Incoming" ]
+--                 , PagedTable.pagedTableView vc attributes tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
+--                 ]
+--         ioIndicatorState =
+--             Just (inOutIndicatorOld vc Nothing data.inDegree data.outDegree)
+--     in
+--     collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleNeighborsTable)
 
 
 apiEntityToRows : Id -> Api.Data.Entity -> List KVTableRow
 apiEntityToRows clstrid clstr =
     [ Gap
     , Row "Number of Addresses" (ValueInt clstr.noAddresses)
-    , Row "Total received" (Currency clstr.totalReceived clstr.currency)
-    , Row "Total sent" (Currency clstr.totalSpent clstr.currency)
-    , Row "Balance" (Currency clstr.balance clstr.currency)
+    , Row "Total received" (Currency clstr.totalReceived (Asset.assetFromBase clstr.currency))
+    , Row "Total sent" (Currency clstr.totalSpent (Asset.assetFromBase clstr.currency))
+    , Row "Balance" (Currency clstr.balance (Asset.assetFromBase clstr.currency))
     , Gap
     , Row "First usage" (Timestamp clstr.firstTx.timestamp)
     , Row "Last usage" (Timestamp clstr.lastTx.timestamp)

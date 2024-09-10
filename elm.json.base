@@ -64,7 +64,8 @@
             "noahzgordon/elm-color-extra": "1.0.2",
             "rtfeldman/elm-css": "18.0.0",
             "rtfeldman/elm-hex": "1.0.0",
-            "rtfeldman/elm-iso8601-date-strings": "1.1.4"
+            "rtfeldman/elm-iso8601-date-strings": "1.1.4",
+            "elm/parser": "1.1.0"
         },
         "indirect": {
             "avh4/elm-fifo": "1.0.4",

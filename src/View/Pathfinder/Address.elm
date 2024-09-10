@@ -1,4 +1,4 @@
-module View.Pathfinder.Address exposing (toNodeIcon, view)
+module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 
 import Animation as A
 import Api.Data
@@ -20,7 +20,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
-import RemoteData
+import RemoteData exposing (WebData)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -174,6 +174,16 @@ expandHandleLoadingSpinner vc address direction details =
         Nothing
 
 
+toNodeIconHtml : Bool -> Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
+toNodeIconHtml highlight address cluster clusterColor =
+    toNodeIcon highlight address cluster clusterColor
+        |> List.singleton
+        |> Svg.Styled.svg
+            [ Svg.width "24"
+            , Svg.height "24"
+            ]
+
+
 toNodeIcon : Bool -> Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
 toNodeIcon highlight address cluster clusterColor =
     let
@@ -187,8 +197,11 @@ toNodeIcon highlight address cluster clusterColor =
             else
                 []
     in
-    case ( address.exchange, clusterColor ) of
-        ( Nothing, Nothing ) ->
+    case ( address.exchange, clusterColor, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract ) of
+        ( _, _, Just True ) ->
+            Icons.iconsSettings {}
+
+        ( Nothing, Nothing, _ ) ->
             {-
                if clstrSize > 1 then
                    Icons.iconsCluster {}
@@ -197,7 +210,7 @@ toNodeIcon highlight address cluster clusterColor =
             -}
             Icons.iconsUntagged {}
 
-        ( Nothing, Just c ) ->
+        ( Nothing, Just c, _ ) ->
             {- if clstrSize > 1 then
                    Icons.iconsClusterWithAttributes (Icons.iconsClusterAttributes |> s_vector (getHighlight c)) {}
 
@@ -205,12 +218,12 @@ toNodeIcon highlight address cluster clusterColor =
             -}
             Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> s_ellipse25 (getHighlight c)) {}
 
-        ( Just _, Just c ) ->
+        ( Just _, Just c, _ ) ->
             let
                 cattr =
                     getHighlight c
             in
             Icons.iconsExchangeWithAttributes (Icons.iconsExchangeAttributes |> s_dollar cattr |> s_arrows cattr) {}
 
-        ( Just _, _ ) ->
+        ( Just _, _, _ ) ->
             Icons.iconsExchange {}
