@@ -212,7 +212,7 @@ update uc pathfinderModel msg id model =
                             ( txMinBlock, startEff ) =
                                 if newPicker.fromDate /= dateRangePicker.fromDate then
                                     ( Nothing
-                                    , TransactionTable.loadFromDateBlock model.address.id newPicker.fromDate
+                                    , TransactionTable.loadFromDateBlock model.addressId newPicker.fromDate
                                         |> List.singleton
                                     )
 
@@ -222,7 +222,7 @@ update uc pathfinderModel msg id model =
                             ( txMaxBlock, endEff ) =
                                 if newPicker.toDate /= dateRangePicker.toDate then
                                     ( Nothing
-                                    , TransactionTable.loadToDateBlock model.address.id newPicker.toDate
+                                    , TransactionTable.loadToDateBlock model.addressId newPicker.toDate
                                         |> List.singleton
                                     )
 
@@ -268,7 +268,7 @@ update uc pathfinderModel msg id model =
                             -- ( m2, eff ) =
                             --     updateDatePickerRangeBlockRange uc pathfinderModel id model Reset Reset
                             ( ft, teff ) =
-                                TransactionTable.initWithoutFilter model.address uc.locale model.data
+                                TransactionTable.initWithoutFilter model.addressId uc.locale model.data
                         in
                         ( { model
                             | txs = ft

@@ -174,9 +174,15 @@ expandHandleLoadingSpinner vc address direction details =
         Nothing
 
 
-toNodeIconHtml : Bool -> Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
+toNodeIconHtml : Bool -> Maybe Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
 toNodeIconHtml highlight address cluster clusterColor =
-    toNodeIcon highlight address cluster clusterColor
+    (case address of
+        Just addr ->
+            toNodeIcon highlight addr cluster clusterColor
+
+        Nothing ->
+            Icons.iconsUntagged {}
+    )
         |> List.singleton
         |> Svg.Styled.svg
             [ Svg.width "24"
@@ -196,6 +202,9 @@ toNodeIcon highlight address cluster clusterColor =
 
             else
                 []
+
+        _ =
+            Debug.log "" ( address.exchange, clusterColor, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract )
     in
     case ( address.exchange, clusterColor, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract ) of
         ( _, _, Just True ) ->

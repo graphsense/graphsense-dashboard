@@ -501,32 +501,28 @@ detailsView vc gc model =
             none
 
 
-closeButton : View.Config -> Msg -> Html Msg
-closeButton vc msg =
-    button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ HIcons.iconsCloseSmall {} ]
 
-
-getAddressAnnotationBtns : View.Config -> Api.Data.Address -> Maybe Api.Data.Actor -> Bool -> List BtnConfig
-getAddressAnnotationBtns vc data _ _ =
-    let
-        isContract x =
-            x.isContract |> Maybe.withDefault False
-    in
-    -- (if hasTags then
-    --     [ BtnConfig FontAwesome.tags (Locale.string vc.locale "has tags") NoOp True ]
-    --  else
-    --     []
-    -- )
-    if isContract data then
-        [ BtnConfig (\_ -> HIcons.iconsSettings {}) (Locale.string vc.locale "is contract") NoOp True ]
-
-    else
-        []
-
-
-getAddressActionBtns : Id -> Api.Data.Address -> List BtnConfig
-getAddressActionBtns _ _ =
-    []
+-- closeButton : View.Config -> Msg -> Html Msg
+-- closeButton vc msg =
+--     button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ HIcons.iconsCloseSmall {} ]
+-- getAddressAnnotationBtns : View.Config -> Api.Data.Address -> Maybe Api.Data.Actor -> Bool -> List BtnConfig
+-- getAddressAnnotationBtns vc data _ _ =
+--     let
+--         isContract x =
+--             x.isContract |> Maybe.withDefault False
+--     in
+--     -- (if hasTags then
+--     --     [ BtnConfig FontAwesome.tags (Locale.string vc.locale "has tags") NoOp True ]
+--     --  else
+--     --     []
+--     -- )
+--     if isContract data then
+--         [ BtnConfig (\_ -> HIcons.iconsSettings {}) (Locale.string vc.locale "is contract") NoOp True ]
+--     else
+--         []
+-- getAddressActionBtns : Id -> Api.Data.Address -> List BtnConfig
+-- getAddressActionBtns _ _ =
+--     []
 
 
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Html Msg
@@ -680,7 +676,6 @@ addressDetailsContentView vc gc model id viewState =
         address =
             model.network.addresses
                 |> Dict.get id
-                |> Maybe.withDefault viewState.address
 
         ts =
             case Dict.get id model.tagSummaries of
@@ -747,7 +742,7 @@ addressDetailsContentView vc gc model id viewState =
             , Dict.get clstrId model.clusters
                 |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
                 |> Maybe.withDefault none
-            , detailsActionsView vc (getAddressActionBtns id viewState.data)
+            , detailsActionsView vc []
             ]
 
         showExchangeTag =
@@ -802,25 +797,21 @@ addressDetailsContentView vc gc model id viewState =
             else
                 none
 
-        clstrid =
-            Id.initClusterId viewState.data.currency viewState.data.entity
-
-        clusterHighlightAttr =
-            if vc.highlightClusterFriends then
-                Colors.getAssignedColor Colors.Clusters clstrid model.colors
-                    |> Maybe.map
-                        (.color
-                            >> Util.View.toCssColor
-                            >> Css.fill
-                            >> Css.important
-                            >> List.singleton
-                            >> css
-                            >> List.singleton
-                        )
-                    |> Maybe.withDefault []
-
-            else
-                []
+        -- clusterHighlightAttr =
+        --     if vc.highlightClusterFriends then
+        --         Colors.getAssignedColor Colors.Clusters clstrid model.colors
+        --             |> Maybe.map
+        --                 (.color
+        --                     >> Util.View.toCssColor
+        --                     >> Css.fill
+        --                     >> Css.important
+        --                     >> List.singleton
+        --                     >> css
+        --                     >> List.singleton
+        --                 )
+        --             |> Maybe.withDefault []
+        --     else
+        --         []
     in
     SidePanelComponents.sidePanelComponentWithInstances
         (SidePanelComponents.sidePanelComponentAttributes
@@ -918,7 +909,7 @@ addressDetailsContentView vc gc model id viewState =
             { headerInstance =
                 SidePanelComponents.sidePanelAddressHeader
                     { sidePanelAddressHeader =
-                        { iconInstance = Address.toNodeIconHtml False viewState.address (Dict.get clstrid model.clusters) (Colors.getAssignedColor Colors.Clusters clstrid model.colors |> Maybe.map .color)
+                        { iconInstance = Address.toNodeIconHtml False address (Dict.get clstrId model.clusters) (Colors.getAssignedColor Colors.Clusters clstrId model.colors |> Maybe.map .color)
                         , headerText =
                             (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
                         }

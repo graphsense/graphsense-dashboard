@@ -165,7 +165,7 @@ updateByMsg plugins uc msg model =
                                     _ ->
                                         Dict.get id net.addresses
                                             |> Maybe.map
-                                                (\address -> AddressDetails.init net uc.locale address data)
+                                                (\address -> AddressDetails.init net uc.locale address.id data)
                                             |> Maybe.map (mapFirst Success)
                                             |> Maybe.map (mapFirst (AddressDetails id))
                                             |> Maybe.map (mapFirst Just)
@@ -1252,7 +1252,7 @@ selectAddress uc id model =
             let
                 newDetails =
                     address.data
-                        |> RemoteData.map (AddressDetails.init model.network uc.locale address)
+                        |> RemoteData.map (AddressDetails.init model.network uc.locale address.id)
 
                 details =
                     case model.details of

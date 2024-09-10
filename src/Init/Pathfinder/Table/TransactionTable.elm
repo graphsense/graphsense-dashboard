@@ -25,8 +25,8 @@ itemsPerPage =
     5
 
 
-init : Network -> Locale.Model -> Address -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
-init network locale address data =
+init : Network -> Locale.Model -> Id.Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
+init network locale addressId data =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -39,7 +39,7 @@ init network locale address data =
             , itemsPerPage = itemsPerPage
             }
     in
-    Network.getRecentTxForAddress network Incoming address.id
+    Network.getRecentTxForAddress network Incoming addressId
         |> Maybe.map
             (\tx ->
                 let
@@ -59,15 +59,15 @@ init network locale address data =
                   , txMinBlock = Just data.firstTx.height
                   , txMaxBlock = Just data.lastTx.height
                   }
-                , loadTxs address.id mn mx
+                , loadTxs addressId mn mx
                 )
             )
         |> Maybe.withDefault
-            (initWithoutFilter address locale data)
+            (initWithoutFilter addressId locale data)
 
 
-initWithoutFilter : Address -> Locale.Model -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
-initWithoutFilter address locale data =
+initWithoutFilter : Id.Id -> Locale.Model -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
+initWithoutFilter addressId locale data =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -89,10 +89,10 @@ initWithoutFilter address locale data =
       , txMinBlock = Nothing
       , txMaxBlock = Nothing
       }
-    , (GotTxsForAddressDetails address.id ( Nothing, Nothing ) >> AddressDetailsMsg)
+    , (GotTxsForAddressDetails addressId ( Nothing, Nothing ) >> AddressDetailsMsg)
         |> Api.GetAddressTxsEffect
-            { currency = Id.network address.id
-            , address = Id.id address.id
+            { currency = Id.network addressId
+            , address = Id.id addressId
             , direction = Nothing
             , pagesize = itemsPerPage
             , nextpage = Nothing
