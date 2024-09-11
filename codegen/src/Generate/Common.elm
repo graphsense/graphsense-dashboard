@@ -33,10 +33,8 @@ adjustNames node =
     let
         names =
             collectNames [] node Dict.empty
-                |> Debug.log "123 collectNames"
                 |> Dict.map (\_ -> List.map sanitize)
                 |> disambiguateCollectedNames
-                |> Debug.log "123 disamb"
                 |> Dict.map (\_ -> sanitize)
 
         log tit =
@@ -354,7 +352,6 @@ subcanvasNodeToProperties node =
                 [ ( FrameTraits.getName n
                   , Dict.singleton "variant" ComponentPropertyTypeVARIANT
                   )
-                    |> Debug.log "123 hasVariantProperty"
                 ]
 
             else
