@@ -550,8 +550,7 @@ txDetailsContentView vc _ model id viewState =
                 , title = { infoLabel = Locale.string vc.locale "Timestamp" }
                 , value = timeToCell vc tx.raw.timestamp
                 , inputsHeader =
-                    { chevronInstance = HIcons.iconsChevronRightThick {}
-                    , titleInstance =
+                    { titleInstance =
                         SidePanelComponents.sidePanelListHeaderTitleInputs
                             { sidePanelListHeaderTitleInputs =
                                 { title = Locale.string vc.locale "Inputs"
@@ -560,8 +559,7 @@ txDetailsContentView vc _ model id viewState =
                             }
                     }
                 , outputsHeader =
-                    { chevronInstance = HIcons.iconsChevronRightThick {}
-                    , titleInstance =
+                    { titleInstance =
                         SidePanelComponents.sidePanelListHeaderTitleOutputs
                             { sidePanelListHeaderTitleOutputs =
                                 { title = Locale.string vc.locale "Outputs"
@@ -824,9 +822,6 @@ addressDetailsContentView vc gc model id viewState =
                 [ sidePanelCss
                     |> css
                 ]
-            |> s_sidePanelListHeader
-                [ onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
-                ]
         )
         (SidePanelComponents.sidePanelAddressInstances
             |> s_labelOfTags
@@ -899,12 +894,38 @@ addressDetailsContentView vc gc model id viewState =
                     |> Maybe.withDefault (Icons.iconsAssignSvg [] {})
             , tabsVisible = False
             , actorAndTagVisible = showExchangeTag || showOtherTag
-            , txTableInstance =
+            , listInstance =
+                let
+                    titleInstance =
+                        { titleInstance = inOutIndicator vc "Transactions" (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs) viewState.data.noIncomingTxs viewState.data.noOutgoingTxs
+                        }
+
+                    event =
+                        [ onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
+                        , css [ Css.width (Css.pct 100) 
+                        , Css.cursor Css.pointer
+                        ]
+                        ]
+                in
                 if viewState.transactionsTableOpen then
-                    transactionTableView vc id txOnGraphFn viewState.txs
+                    SidePanelComponents.sidePanelListOpenWithAttributes
+                        (SidePanelComponents.sidePanelListOpenAttributes
+                            |> s_sidePanelListOpen event
+                        )
+                        { sidePanelListHeaderOpen = titleInstance
+                        , sidePanelListOpen =
+                            { listInstance =
+                                transactionTableView vc id txOnGraphFn viewState.txs
+                            }
+                        }
 
                 else
-                    none
+                    SidePanelComponents.sidePanelListClosedWithAttributes
+                        (SidePanelComponents.sidePanelListClosedAttributes
+                            |> s_sidePanelListClosed event
+                        )
+                        { sidePanelListClosed = titleInstance
+                        }
             , actorVisible = showExchangeTag
             , tagsVisible = showOtherTag
             }
@@ -920,15 +941,6 @@ addressDetailsContentView vc gc model id viewState =
                 Dict.get clstrId model.clusters
                     |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
                     |> Maybe.withDefault none
-            }
-        , sidePanelListHeader =
-            { chevronInstance =
-                if viewState.transactionsTableOpen then
-                    HIcons.iconsChevronDownThick {}
-
-                else
-                    HIcons.iconsChevronRightThick {}
-            , titleInstance = inOutIndicator vc "Transactions" (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs) viewState.data.noIncomingTxs viewState.data.noOutgoingTxs
             }
         , sidePanelAddressHeader =
             { iconInstance =
