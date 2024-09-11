@@ -66,9 +66,9 @@ view _ vc pc id highlight tx pos =
         }
         { txNodeEth =
             { highlightVisible = highlight
-            , date = Locale.currency vc.locale [ ( asset tx.raw.network tx.raw.currency, tx.value ) ] ++ " at " ++ Locale.timestampDateUniform vc.locale tx.raw.timestamp
+            , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
             , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
-            , inputValue = Locale.currency vc.locale [ ( { network = "eth", asset = "eth" }, tx.value ) ]
+            , inputValue = Locale.currency vc.locale [ ( asset tx.raw.network tx.raw.currency, tx.value ) ]
             , timestampVisible = vc.showTimestampOnTxEdge
             }
         }

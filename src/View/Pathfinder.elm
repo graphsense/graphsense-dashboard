@@ -22,7 +22,7 @@ import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Html.Styled.Lazy exposing (..)
 import Init.Pathfinder.Id as Id
 import Json.Decode
-import Model.Currency as Asset exposing (Currency(..), assetFromBase)
+import Model.Currency as Asset exposing (Currency(..), asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
@@ -594,8 +594,8 @@ txDetailsContentView vc _ model id viewState =
                 , rightTab = { variant = none }
                 , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
                 , valueOfTimestamp = timeToCell vc tx.raw.timestamp
-                , titleOfEstimatedValue = { infoLabel = Locale.string vc.locale "Estimated value" }
-                , valueOfEstimatedValue = valuesToCell vc tx.raw.currency tx.value
+                , titleOfEstimatedValue = { infoLabel = Locale.string vc.locale "Value" }
+                , valueOfEstimatedValue = valuesToCell vc (asset tx.raw.network tx.raw.currency) tx.value
                 , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
                 , valueOfSender =
                     { firstRowText = Id.id tx.from |> truncateLongIdentifierWithLengths 8 4
@@ -667,9 +667,9 @@ utxoTxDetailsSectionsView vc network viewState data getLbl =
     collapsibleSection vc "" viewState.ioTableOpen ioIndicatorState content (TxDetailsMsg UserClickedToggleIOTable)
 
 
-valuesToCell : View.Config -> String -> Api.Data.Values -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
-valuesToCell vc currency value =
-    { firstRowText = Locale.currency vc.locale [ ( assetFromBase currency, value ) ]
+valuesToCell : View.Config -> Asset.AssetIdentifier -> Api.Data.Values -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+valuesToCell vc asset value =
+    { firstRowText = Locale.currency vc.locale [ ( asset, value ) ]
     , secondRowText = ""
     , secondRowVisible = False
     }
@@ -815,6 +815,8 @@ addressDetailsContentView vc gc model id viewState =
         --             |> Maybe.withDefault []
         --     else
         --         []
+        assetId =
+            assetFromBase viewState.data.currency
     in
     SidePanelComponents.sidePanelAddressWithInstances
         (SidePanelComponents.sidePanelAddressAttributes
@@ -935,11 +937,11 @@ addressDetailsContentView vc gc model id viewState =
                 (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
             }
         , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
-        , valueOfBalance = valuesToCell vc viewState.data.currency viewState.data.balance
+        , valueOfBalance = valuesToCell vc assetId viewState.data.balance
         , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
-        , valueOfTotalReceived = valuesToCell vc viewState.data.currency viewState.data.totalReceived
+        , valueOfTotalReceived = valuesToCell vc assetId viewState.data.totalReceived
         , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
-        , valueOfTotalSent = valuesToCell vc viewState.data.currency viewState.data.totalSpent
+        , valueOfTotalSent = valuesToCell vc assetId viewState.data.totalSpent
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
         , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }

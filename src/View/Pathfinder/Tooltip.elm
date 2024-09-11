@@ -42,7 +42,6 @@ view vc ts tt =
         |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)
 
 
-
 getConfidenceIndicator : View.Config -> Float -> Html msg
 getConfidenceIndicator vc x =
     if x >= 0.8 then
