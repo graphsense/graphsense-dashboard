@@ -608,27 +608,31 @@ txDetailsContentView vc _ model id viewState =
                     }
                 , sidePanelEthTransaction =
                     { tabsVisible = False
-                    , contractCreationVisible = tx.raw.contractCreation |> Maybe.withDefault False 
+                    }
+                , sidePanelEthTxDetails =
+                    { contractCreationVisible = tx.raw.contractCreation |> Maybe.withDefault False
                     }
                 , sidePanelTxHeader =
                     { headerText =
-                        atx.raw.identifier 
-                        |> Tx.parseTxIdentifier 
-                        |> Maybe.map Tx.txTypeToLabel 
-                        |> Maybe.withDefault "Transaction"
-                        |> Locale.string vc.locale
-                        |> (++) ((String.toUpper <| Id.network id) ++ " " )
+                        tx.raw.identifier
+                            |> Tx.parseTxIdentifier
+                            |> Maybe.map Tx.txTypeToLabel
+                            |> Maybe.withDefault "Transaction"
+                            |> Locale.string vc.locale
+                            |> (++) ((String.toUpper <| Id.network id) ++ " ")
                     }
                 , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
-                , valueOfContractCreation = 
-                    { firstRowText = Locale.string vc.locale <|
-                        if tx.raw.contractCreation |> Maybe.withDefault False then
-                            "yes"
-                        else
-                            "no"
+                , valueOfContractCreation =
+                    { firstRowText =
+                        Locale.string vc.locale <|
+                            if tx.raw.contractCreation |> Maybe.withDefault False then
+                                "yes"
+
+                            else
+                                "no"
                     , secondRowText = ""
                     , secondRowVisible = False
-                }
+                    }
                 }
 
 

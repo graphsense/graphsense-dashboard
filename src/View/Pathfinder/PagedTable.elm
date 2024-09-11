@@ -105,7 +105,7 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
 
                     else
                         [ div [ centerContent |> toAttr ]
-                            [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ HIcons.iconsChevronLeftThick {} ]
+                            [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ HIcons.iconsChevronLeftThin {} ]
                             , pageIndicatorView tblPaged
                             , button [ linkButtonStyle vc nextPageAvailable |> toAttr, onClick (nextMsg tblPaged) ] [ HIcons.iconsChevronRightThin {} ]
                             ]
