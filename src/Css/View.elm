@@ -193,10 +193,7 @@ disabled vc =
 
 copyIcon : Config -> List Style
 copyIcon vc =
-    position relative
-        :: cursor pointer
-        :: left (px 5)
-        :: marginRight (px 10)
+    cursor pointer
         :: vc.theme.copyIcon vc.lightmode
 
 

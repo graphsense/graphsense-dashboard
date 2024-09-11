@@ -21,7 +21,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeCircleAttributes)
+import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeEthAttributes)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (onClickWithStop)
@@ -34,7 +34,7 @@ view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> AccountTx ->
 view _ vc pc id highlight tx pos =
     let
         fd =
-            GraphComponents.txNodeCircleTxNode_details
+            GraphComponents.txNodeEthNodeEllipse_details
 
         adjX =
             fd.x + fd.width / 2
@@ -42,9 +42,9 @@ view _ vc pc id highlight tx pos =
         adjY =
             fd.y + fd.height / 2
     in
-    GraphComponents.txNodeCircleWithAttributes
-        { txNodeCircleAttributes
-            | txNodeCircle =
+    GraphComponents.txNodeEthWithAttributes
+        { txNodeEthAttributes
+            | txNodeEth =
                 [ translate
                     ((pos.x + pos.dx) * unit - adjX)
                     ((A.animate pos.clock pos.y + pos.dy) * unit - adjY)
@@ -64,11 +64,11 @@ view _ vc pc id highlight tx pos =
                     |> Svg.Styled.Attributes.id
                 ]
         }
-        { txNodeCircle =
-            { hasMultipleInOutputs = False
-            , highlightVisible = highlight
+        { txNodeEth =
+            { highlightVisible = highlight
             , date = Locale.currency vc.locale [ ( asset tx.raw.network tx.raw.currency, tx.value ) ] ++ " at " ++ Locale.timestampDateUniform vc.locale tx.raw.timestamp
             , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
+            , inputValue = Locale.currency vc.locale [ ( { network = "eth", asset = "eth" }, tx.value ) ]
             , timestampVisible = vc.showTimestampOnTxEdge
             }
         }
@@ -78,7 +78,7 @@ edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Dict Id Address ->
 edge _ vc _ hovered addresses tx aTxPos =
     let
         radTx =
-            GraphComponents.txNodeCircleTxNode_details.width / 2
+            GraphComponents.txNodeEthNodeEllipse_details.width / 2
 
         radA =
             GraphComponents.addressNodeNodeFrame_details.width / 2

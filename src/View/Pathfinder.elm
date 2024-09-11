@@ -277,8 +277,8 @@ rule =
 
 inOutIndicator : View.Config -> String -> Int -> Int -> Int -> Html Msg
 inOutIndicator vc title mnr inNr outNr =
-    SidePanelComponents.sidePanelListHeaderContent
-        { sidePanelListHeaderContent =
+    SidePanelComponents.sidePanelListHeaderTitleTransactions
+        { sidePanelListHeaderTitleTransactions =
             { totalNumber = Locale.int vc.locale mnr
             , incomingNumber = Locale.int vc.locale inNr
             , outgoingNumber = Locale.int vc.locale outNr
@@ -532,95 +532,104 @@ txDetailsContentView vc _ model id viewState =
             Dict.get id_ model.tagSummaries
                 |> Maybe.withDefault NoTags
     in
-    SidePanelComponents.sidePanelComponentWithAttributes
-        (SidePanelComponents.sidePanelComponentAttributes
-            |> s_sidePanelComponent
-                [ [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
-                  , Css.overflowY Css.auto
-                  , Css.overflowX Css.hidden
-                  , Css.paddingTop (Css.px 10)
-                  ]
-                    |> css
-                ]
-        )
-        { actor = { iconInstance = none, text = "" }
-        , leftTab = { tabLabel = "" }
-        , rightTab = { tabLabel = "" }
-        , sidePanelComponent =
-            { detailsInstance =
-                case viewState.tx.type_ of
-                    Tx.Account tx ->
-                        let
-                            rows =
-                                [ Row "Timestamp" (TimestampWithTime tx.raw.timestamp)
-                                , Gap
-                                , Row "From Address" (CopyIdent tx.raw.fromAddress)
-                                , Row "To Address" (CopyIdent tx.raw.toAddress)
-                                , Gap
-                                , Row "Value" (Currency tx.value (Asset.asset tx.raw.network tx.raw.currency))
-                                ]
-                                    ++ (if tx.raw.contractCreation |> Maybe.withDefault False then
-                                            [ Gap, Row "Contract creation" (Boolean True) ]
-
-                                        else
-                                            []
-                                       )
-                        in
-                        div [ css [ Css.fontSize (Css.px 12), Css.color Css.lightGreyColor, Css.marginLeft (Css.px 8) ] ]
-                            [ detailsFactTableView vc rows ]
-
-                    -- SidePanelComponents.sidePanelTxDetails
-                    --     { titleOfInput = { text = "" }
-                    --     , titleOfOutput = { text = "" }
-                    --     , titleOfTimestamp = { text = Locale.string vc.locale "Timestamp" }
-                    --     , valueOfInput = { firstRowText = "", secondRowText = "", secondRowVisible = False }
-                    --     , valueOfOutput = { firstRowText = "", secondRowText = "", secondRowVisible = False }
-                    --     , valueOfTimestamp = timeToCell vc tx.raw.timestamp
-                    --     }
-                    Tx.Utxo tx ->
-                        SidePanelComponents.sidePanelTx_details
-                            { titleOfInput = { text = Locale.string vc.locale "Total input" }
-                            , titleOfOutput = { text = Locale.string vc.locale "Total output" }
-                            , titleOfTimestamp = { text = Locale.string vc.locale "Timestamp" }
-                            , valueOfInput = valuesToCell vc tx.raw.currency tx.raw.totalInput
-                            , valueOfOutput = valuesToCell vc tx.raw.currency tx.raw.totalOutput
-                            , valueOfTimestamp = timeToCell vc tx.raw.timestamp
-                            }
-            , tableInstance =
-                case viewState.tx.type_ of
-                    Tx.Account _ ->
-                        none
-
-                    Tx.Utxo tx ->
-                        utxoTxDetailsSectionsView vc model.network viewState tx.raw getLbl
-            , tabsVisible = False
-            }
-        , sidePanelHeaderTags = { actorVisible = False, tagsVisible = False }
-        , tags = { iconInstance = none, text = "" }
-        , sidePanelHeader =
-            { headerInstance =
-                SidePanelComponents.sidePanelTxHeader
-                    { sidePanelTxHeader =
-                        { headerText =
-                            let
-                                txLabel =
-                                    case viewState.tx.type_ of
-                                        Tx.Account atx ->
-                                            atx.raw.identifier |> Tx.parseTxIdentifier |> Maybe.map Tx.txTypeToLabel |> Maybe.withDefault "Transaction"
-
-                                        Tx.Utxo _ ->
-                                            "Transaction"
-                            in
-                            (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale txLabel
-                        }
-                    , iconText =
-                        { iconInstance = Id.id id |> copyIconPathfinder vc
-                        , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
-                        }
+    case viewState.tx.type_ of
+        Tx.Utxo tx ->
+            SidePanelComponents.sidePanelTransactionWithAttributes
+                (SidePanelComponents.sidePanelTransactionAttributes
+                    |> s_sidePanelTransaction
+                        [ sidePanelCss
+                            |> css
+                        ]
+                )
+                { identifierWithCopyIcon =
+                    { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
+                    , copyIconInstance = Id.id id |> copyIconPathfinder vc
                     }
-            , tagInfoVisible = False
-            }
-        }
+                , leftTab = { variant = none }
+                , rightTab = { variant = none }
+                , title = { infoLabel = Locale.string vc.locale "Timestamp" }
+                , value = timeToCell vc tx.raw.timestamp
+                , inputsHeader =
+                    { chevronInstance = HIcons.iconsChevronRightThick {}
+                    , titleInstance =
+                        SidePanelComponents.sidePanelListHeaderTitleInputs
+                            { sidePanelListHeaderTitleInputs =
+                                { title = Locale.string vc.locale "Inputs"
+                                , totalNumber = Locale.int vc.locale tx.raw.noInputs
+                                }
+                            }
+                    }
+                , outputsHeader =
+                    { chevronInstance = HIcons.iconsChevronRightThick {}
+                    , titleInstance =
+                        SidePanelComponents.sidePanelListHeaderTitleOutputs
+                            { sidePanelListHeaderTitleOutputs =
+                                { title = Locale.string vc.locale "Outputs"
+                                , totalNumber = Locale.int vc.locale tx.raw.noOutputs
+                                }
+                            }
+                    }
+                , sidePanelTransaction =
+                    { tabsVisible = False
+                    }
+                , sidePanelTxHeader =
+                    { headerText =
+                        (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
+                    }
+                }
+
+        Tx.Account tx ->
+            SidePanelComponents.sidePanelEthTransactionWithAttributes
+                (SidePanelComponents.sidePanelEthTransactionAttributes
+                    |> s_sidePanelEthTransaction
+                        [ sidePanelCss
+                            |> css
+                        ]
+                )
+                { identifierWithCopyIcon =
+                    { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
+                    , copyIconInstance = Id.id id |> copyIconPathfinder vc
+                    }
+                , leftTab = { variant = none }
+                , rightTab = { variant = none }
+                , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
+                , valueOfTimestamp = timeToCell vc tx.raw.timestamp
+                , titleOfEstimatedValue = { infoLabel = Locale.string vc.locale "Estimated value" }
+                , valueOfEstimatedValue = valuesToCell vc tx.raw.currency tx.value
+                , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
+                , valueOfSender =
+                    { firstRowText = Id.id tx.from |> truncateLongIdentifierWithLengths 8 4
+                    , copyIconInstance = Id.id tx.from |> copyIconPathfinder vc
+                    }
+                , titleOfReceiver = { infoLabel = Locale.string vc.locale "Receiver" }
+                , valueOfReceiver =
+                    { firstRowText = Id.id tx.to |> truncateLongIdentifierWithLengths 8 4
+                    , copyIconInstance = Id.id tx.to |> copyIconPathfinder vc
+                    }
+                , sidePanelEthTransaction =
+                    { tabsVisible = False
+                    , contractCreationVisible = tx.raw.contractCreation |> Maybe.withDefault False 
+                    }
+                , sidePanelTxHeader =
+                    { headerText =
+                        atx.raw.identifier 
+                        |> Tx.parseTxIdentifier 
+                        |> Maybe.map Tx.txTypeToLabel 
+                        |> Maybe.withDefault "Transaction"
+                        |> Locale.string vc.locale
+                        |> (++) ((String.toUpper <| Id.network id) ++ " " )
+                    }
+                , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
+                , valueOfContractCreation = 
+                    { firstRowText = Locale.string vc.locale <|
+                        if tx.raw.contractCreation |> Maybe.withDefault False then
+                            "yes"
+                        else
+                            "no"
+                    , secondRowText = ""
+                    , secondRowVisible = False
+                }
+                }
 
 
 ioTableView : View.Config -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> HavingTags) -> Html Msg
@@ -668,6 +677,15 @@ timeToCell vc d =
     , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
     , secondRowVisible = True
     }
+
+
+sidePanelCss : List Css.Style
+sidePanelCss =
+    [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
+    , Css.overflowY Css.auto
+    , Css.overflowX Css.hidden
+    , Css.paddingTop (Css.px 10)
+    ]
 
 
 addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Html Msg
@@ -726,25 +744,6 @@ addressDetailsContentView vc gc model id viewState =
         clstrId =
             Id.initClusterId viewState.data.currency viewState.data.entity
 
-        tbls =
-            [ SidePanelComponents.sidePanel_details
-                { balanceTitle = { text = Locale.string vc.locale "Balance" }
-                , balanceValue = valuesToCell vc viewState.data.currency viewState.data.balance
-                , totalReceivedTitle = { text = Locale.string vc.locale "Total received" }
-                , totalReceivedValue = valuesToCell vc viewState.data.currency viewState.data.totalReceived
-                , totalSentTitle = { text = Locale.string vc.locale "Total sent" }
-                , totalSentValue = valuesToCell vc viewState.data.currency viewState.data.totalSpent
-                , lastUsageTitle = { text = Locale.string vc.locale "Last usage" }
-                , lastUsageValue = timeToCell vc viewState.data.lastTx.timestamp
-                , firstUsageTitle = { text = Locale.string vc.locale "First usage" }
-                , firstUsageValue = timeToCell vc viewState.data.firstTx.timestamp
-                }
-            , Dict.get clstrId model.clusters
-                |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
-                |> Maybe.withDefault none
-            , detailsActionsView vc []
-            ]
-
         showExchangeTag =
             actorText /= Nothing
 
@@ -763,7 +762,7 @@ addressDetailsContentView vc gc model id viewState =
                 , onMouseLeave (UserMovesMouseOutTagLabel tid)
 
                 --, Css.tagLinkButtonStyle vc |> css
-                , HA.css SidePanelComponents.sidePanelComponentLabelOfTags_details.styles
+                , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
                 , HA.id tid
                 , HA.href link
                 ]
@@ -813,18 +812,17 @@ addressDetailsContentView vc gc model id viewState =
         --     else
         --         []
     in
-    SidePanelComponents.sidePanelComponentWithInstances
-        (SidePanelComponents.sidePanelComponentAttributes
-            |> s_sidePanelComponent
-                [ [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
-                  , Css.overflowY Css.auto
-                  , Css.overflowX Css.hidden
-                  , Css.paddingTop (Css.px 10)
-                  ]
+    SidePanelComponents.sidePanelAddressWithInstances
+        (SidePanelComponents.sidePanelAddressAttributes
+            |> s_sidePanelAddress
+                [ sidePanelCss
                     |> css
                 ]
+            |> s_sidePanelListHeader
+                [ onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
+                ]
         )
-        (SidePanelComponents.sidePanelComponentInstances
+        (SidePanelComponents.sidePanelAddressInstances
             |> s_labelOfTags
                 (Just
                     (div
@@ -834,7 +832,7 @@ addressDetailsContentView vc gc model id viewState =
                             , Css.flexWrap Css.wrap
                             , Css.property "gap" "1ex"
                             , Css.alignItems Css.center
-                            , Css.width <| Css.px (SidePanelComponents.sidePanelDetailsDetails.width * 0.8)
+                            , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
                             ]
                         ]
                         ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
@@ -855,15 +853,15 @@ addressDetailsContentView vc gc model id viewState =
                             in
                             Html.a
                                 [ HA.href link
-                                , css SidePanelComponents.sidePanelComponentLabelOfTags_details.styles
+                                , css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
                                 ]
                                 [ Html.text text
                                 ]
                         )
                 )
         )
-        { actor =
-            { iconInstance =
+        { sidePanelAddress =
+            { actorIconInstance =
                 actorImg
                     |> Maybe.map
                         (\imgSrc ->
@@ -893,33 +891,55 @@ addressDetailsContentView vc gc model id viewState =
                                     ]
                         )
                     |> Maybe.withDefault (Icons.iconsAssignSvg [] {})
-            , text = ""
-            }
-        , leftTab = { tabLabel = "" }
-        , rightTab = { tabLabel = "" }
-        , sidePanelComponent =
-            { detailsInstance =
-                div [] tbls
-            , tableInstance = addressTransactionTableView vc gc id viewState txOnGraphFn
             , tabsVisible = False
+            , actorAndTagVisible = showExchangeTag || showOtherTag
+            , txTableInstance =
+                if viewState.transactionsTableOpen then
+                    transactionTableView vc id txOnGraphFn viewState.txs
+
+                else
+                    none
+            , actorVisible = showExchangeTag
+            , tagsVisible = showOtherTag
             }
-        , sidePanelHeaderTags = { actorVisible = showExchangeTag, tagsVisible = showOtherTag }
-        , tags = { iconInstance = Icons.iconsTagLargeSvg [] {}, text = "" }
-        , sidePanelHeader =
-            { headerInstance =
-                SidePanelComponents.sidePanelAddressHeader
-                    { sidePanelAddressHeader =
-                        { iconInstance = Address.toNodeIconHtml False address (Dict.get clstrId model.clusters) (Colors.getAssignedColor Colors.Clusters clstrId model.colors |> Maybe.map .color)
-                        , headerText =
-                            (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
-                        }
-                    , addressLabelCopyIcon =
-                        { iconInstance = Id.id id |> copyIconPathfinder vc
-                        , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
-                        }
-                    }
-            , tagInfoVisible = showOtherTag || showExchangeTag
+        , leftTab = { variant = none }
+        , rightTab = { variant = none }
+        , identifierWithCopyIcon =
+            { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
+            , copyIconInstance = Id.id id |> copyIconPathfinder vc
             }
+        , sidePanelAddressDetails =
+            { clusterInfoVisible = Dict.member clstrId model.clusters
+            , clusterInformationInstance =
+                Dict.get clstrId model.clusters
+                    |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
+                    |> Maybe.withDefault none
+            }
+        , sidePanelListHeader =
+            { chevronInstance =
+                if viewState.transactionsTableOpen then
+                    HIcons.iconsChevronDownThick {}
+
+                else
+                    HIcons.iconsChevronRightThick {}
+            , titleInstance = inOutIndicator vc "Transactions" (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs) viewState.data.noIncomingTxs viewState.data.noOutgoingTxs
+            }
+        , sidePanelAddressHeader =
+            { iconInstance =
+                Address.toNodeIconHtml False address (Dict.get clstrId model.clusters) (Colors.getAssignedColor Colors.Clusters clstrId model.colors |> Maybe.map .color)
+            , headerText =
+                (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
+            }
+        , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
+        , valueOfBalance = valuesToCell vc viewState.data.currency viewState.data.balance
+        , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
+        , valueOfTotalReceived = valuesToCell vc viewState.data.currency viewState.data.totalReceived
+        , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
+        , valueOfTotalSent = valuesToCell vc viewState.data.currency viewState.data.totalSpent
+        , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
+        , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
+        , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
+        , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
         }
 
 
@@ -1345,4 +1365,4 @@ transactionTableView vc addressId txOnGraphFn model =
             , table
             ]
     )
-        |> div []
+        |> div [ css [ Css.width (Css.pct 100) ] ]

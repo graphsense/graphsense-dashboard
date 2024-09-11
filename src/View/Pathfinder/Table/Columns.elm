@@ -38,8 +38,8 @@ timestampDateMultiRowColumn vc name accessor =
                             accessor data
                                 |> Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset
                       in
-                      SidePanelComponents.sidePanelTxListTimeCell
-                        { sidePanelTxListTimeCell =
+                      SidePanelComponents.sidePanelListTimeCell
+                        { sidePanelListTimeCell =
                             { date = date
                             , time = time
                             }
@@ -70,9 +70,9 @@ identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
         { name = label
         , viewData =
             \data ->
-                SidePanelComponents.sidePanelIoListAddressCellWithInstances
-                    SidePanelComponents.sidePanelIoListAddressCellAttributes
-                    (SidePanelComponents.sidePanelIoListAddressCellInstances
+                SidePanelComponents.sidePanelListIdentifierCellWithTagWithInstances
+                    SidePanelComponents.sidePanelListIdentifierCellWithTagAttributes
+                    (SidePanelComponents.sidePanelListIdentifierCellWithTagInstances
                         |> s_iconsTagSmall
                             (case lblfn data of
                                 LoadingTags ->
@@ -88,7 +88,7 @@ identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
                                     Nothing
                             )
                     )
-                    { sidePanelIoListAddressCell =
+                    { sidePanelListIdentifierCellWithTag =
                         { tagIconVisible =
                             case lblfn data of
                                 NoTags ->
@@ -97,10 +97,10 @@ identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
                                 _ ->
                                     True
                         }
-                    , iconText =
-                        { iconInstance =
+                    , sidePanelListIdentifierCell =
+                        { copyIconInstance =
                             accessor data |> copyIconPathfinder vc
-                        , text =
+                        , identifier =
                             accessor data
                                 |> truncateLongIdentifierWithLengths 8 4
                         }
@@ -232,12 +232,12 @@ valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
                 []
     in
     Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
-        [ SidePanelComponents.sidePanelTxListValueCellWithAttributes
-            (SidePanelComponents.sidePanelTxListValueCellAttributes
-                |> s_txValue [ addCss |> List.map Css.important |> css ]
+        [ SidePanelComponents.sidePanelListValueCellWithAttributes
+            (SidePanelComponents.sidePanelListValueCellAttributes
+                |> s_value [ addCss |> List.map Css.important |> css ]
             )
-            { sidePanelTxListValueCell =
-                { txValue = value
+            { sidePanelListValueCell =
+                { value = value
                 }
             }
         ]

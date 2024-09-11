@@ -1,6 +1,6 @@
 module View.Pathfinder.Tx.Utxo exposing (edge, view)
 
-import Animation as A exposing (Animation, Clock)
+import Animation as A
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -20,7 +20,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeCircleAttributes)
+import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeUtxoAttributes)
 import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop)
@@ -30,14 +30,14 @@ import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> AnimatedPosTrait x -> Svg Msg
-view _ vc pc id highlight tx pos =
+view _ vc _ id highlight tx pos =
     let
         anyIsNotVisible =
             Dict.toList
                 >> List.any (second >> .address >> (==) Nothing)
 
         fd =
-            GraphComponents.txNodeCircleTxNode_details
+            GraphComponents.txNodeUtxoTxNode_details
 
         adjX =
             fd.x + fd.width / 2
@@ -45,9 +45,9 @@ view _ vc pc id highlight tx pos =
         adjY =
             fd.y + fd.height / 2
     in
-    GraphComponents.txNodeCircleWithAttributes
-        { txNodeCircleAttributes
-            | txNodeCircle =
+    GraphComponents.txNodeUtxoWithAttributes
+        { txNodeUtxoAttributes
+            | txNodeUtxo =
                 [ translate
                     ((pos.x + pos.dx) * unit - adjX)
                     ((A.animate pos.clock pos.y + pos.dy) * unit - adjY)
@@ -67,7 +67,7 @@ view _ vc pc id highlight tx pos =
                     |> Svg.Styled.Attributes.id
                 ]
         }
-        { txNodeCircle =
+        { txNodeUtxo =
             { hasMultipleInOutputs = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
             , highlightVisible = highlight
             , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
@@ -83,7 +83,7 @@ edge _ vc _ hovered tx pos =
         toValues =
             Dict.toList
                 >> List.filterMap
-                    (\( id, { values, aggregatesN, address } ) ->
+                    (\( id, { values, address } ) ->
                         address
                             |> Maybe.map
                                 (values
@@ -115,7 +115,7 @@ edge _ vc _ hovered tx pos =
             fd.width / 2
 
         txRad =
-            GraphComponents.txNodeCircleTxNode_details.width / 2
+            GraphComponents.txNodeUtxoTxNode_details.width / 2
 
         txPos =
             pos |> toPosition

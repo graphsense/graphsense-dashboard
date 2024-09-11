@@ -7,7 +7,6 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Css.Pathfinder as Css
-import Hex
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
@@ -118,11 +117,11 @@ view _ vc _ colors address getCluster =
         )
         (GraphComponents.addressNodeInstances
             |> s_iconsNodeOpenLeft
-                (GraphComponents.addressNodeIconsNodeOpenLeft_details
+                (GraphComponents.addressNodeIconsNodeOpenLeftIconsNodeOpenLeft_details
                     |> expandHandleLoadingSpinner vc address Incoming
                 )
             |> s_iconsNodeOpenRight
-                (GraphComponents.addressNodeIconsNodeOpenRight_details
+                (GraphComponents.addressNodeIconsNodeOpenRightIconsNodeOpenRight_details
                     |> expandHandleLoadingSpinner vc address Outgoing
                 )
         )
