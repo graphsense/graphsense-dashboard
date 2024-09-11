@@ -204,7 +204,7 @@ toNodeIcon highlight address cluster clusterColor =
     in
     case ( address.exchange, clusterColor, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract ) of
         ( _, _, Just True ) ->
-            Icons.iconsSettings {}
+            Icons.iconsSmartContract {}
 
         ( Nothing, Nothing, _ ) ->
             {-
