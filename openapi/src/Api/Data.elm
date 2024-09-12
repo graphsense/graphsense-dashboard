@@ -366,6 +366,7 @@ type alias LabelSummary =
     , inheritedFrom : Maybe LabelSummaryInheritedFrom
     , label : String
     , lastmod : Int
+    , relevance : Float
     , sources : List (String)
     }
 
@@ -1095,6 +1096,7 @@ encodeLabelSummaryPairs model =
             , maybeEncode "inherited_from" encodeLabelSummaryInheritedFrom model.inheritedFrom
             , encode "label" Json.Encode.string model.label
             , encode "lastmod" Json.Encode.int model.lastmod
+            , encode "relevance" Json.Encode.float model.relevance
             , encode "sources" (Json.Encode.list Json.Encode.string) model.sources
             ]
     in
@@ -2122,6 +2124,7 @@ labelSummaryDecoder =
         |> maybeDecode "inherited_from" labelSummaryInheritedFromDecoder Nothing
         |> decode "label" Json.Decode.string 
         |> decode "lastmod" Json.Decode.int 
+        |> decode "relevance" Json.Decode.float 
         |> decode "sources" (Json.Decode.list Json.Decode.string) 
 
 

@@ -716,7 +716,7 @@ addressDetailsContentView vc gc model id viewState =
                             []
 
                         else
-                            (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .confidence) >> List.reverse) x
+                            (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse) x
                     )
                 |> Maybe.withDefault []
 
@@ -948,7 +948,13 @@ addressDetailsContentView vc gc model id viewState =
             { iconInstance =
                 Address.toNodeIconHtml False address (Dict.get clstrId model.clusters) (Colors.getAssignedColor Colors.Clusters clstrId model.colors |> Maybe.map .color)
             , headerText =
-                (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
+                (String.toUpper <| Id.network id) ++ " "
+                    ++ (if viewState.data.isContract |> Maybe.withDefault False then
+                            Locale.string vc.locale "Smart Contract"
+
+                        else
+                            Locale.string vc.locale "address"
+                       )
             }
         , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
         , valueOfBalance = valuesToCell vc assetId viewState.data.balance

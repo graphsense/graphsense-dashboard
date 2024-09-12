@@ -451,7 +451,7 @@ updateByMsg plugins uc msg model =
                     in
                     n
                         { model
-                            | network = network
+                            | network = network |> Network.snapToGrid
                             , dragging = NoDragging
                         }
 
@@ -1621,7 +1621,7 @@ isIsolatedTx model tx =
             not (List.any (\y -> Dict.member y model.network.addresses) keys)
 
         Tx.Account x ->
-            Dict.member x.from model.network.addresses || Dict.member x.to model.network.addresses
+            not (Dict.member x.from model.network.addresses && Dict.member x.to model.network.addresses)
 
 
 removeIsolatedTransactions : Model -> ( Model, List Effect )

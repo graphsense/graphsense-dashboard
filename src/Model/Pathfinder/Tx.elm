@@ -159,6 +159,16 @@ getUtxoTx { type_ } =
             Nothing
 
 
+getAccountTx : Tx -> Maybe AccountTx
+getAccountTx { type_ } =
+    case type_ of
+        Utxo _ ->
+            Nothing
+
+        Account t ->
+            Just t
+
+
 getRawTimestamp : Tx -> Int
 getRawTimestamp tx =
     case tx.type_ of

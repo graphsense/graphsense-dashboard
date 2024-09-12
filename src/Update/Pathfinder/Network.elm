@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddressWithPosition, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, updateAddress, updateTx)
+module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddressWithPosition, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, snapToGrid, updateAddress, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -20,11 +20,12 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Id.Address as Address
 import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
-import Model.Pathfinder.Tx as Tx exposing (Tx, listAddressesForTx)
+import Model.Pathfinder.Tx as Tx exposing (AccountTx, Tx, listAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Set
+import Svg.Attributes exposing (y)
 import Tuple exposing (first, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
@@ -37,6 +38,21 @@ clearSelection n =
         | addresses = Dict.map (\_ v -> v |> s_selected False) n.addresses
         , txs = Dict.map (\_ v -> v |> s_selected False) n.txs
     }
+
+
+nearestMultiple : Float -> Float -> Float
+nearestMultiple n multi =
+    (round (n / multi) |> toFloat) * multi
+
+
+coordsToInt : { t | x : Float, y : A.Animation, dx : Float, dy : Float } -> { t | x : Float, y : A.Animation, dx : Float, dy : Float }
+coordsToInt item =
+    { item | x = nearestMultiple (item.x + item.dx) nodeXOffset, y = A.static (nearestMultiple (A.getTo item.y + item.dy) nodeYOffset), dx = 0, dy = 0 }
+
+
+snapToGrid : Network -> Network
+snapToGrid n =
+    { n | txs = Dict.map (\k v -> coordsToInt v) n.txs, addresses = Dict.map (\k v -> coordsToInt v) n.addresses }
 
 
 addAddress : Id -> Network -> Network
@@ -537,7 +553,54 @@ findTxCoords : Network -> Api.Data.Tx -> Coords
 findTxCoords network tx =
     case tx of
         Api.Data.TxTxAccount t ->
-            findTxCoordsInternal network ([ Dict.get (Id.init t.network t.fromAddress) network.addresses |> Maybe.map (Tuple.pair Direction.Outgoing), Dict.get (Id.init t.network t.toAddress) network.addresses |> Maybe.map (Tuple.pair Direction.Incoming) ] |> List.filterMap identity)
+            let
+                fromId =
+                    Id.init t.network t.fromAddress
+
+                toId =
+                    Id.init t.network t.toAddress
+
+                minStep =
+                    nodeYOffset / 2
+
+                baseC =
+                    findTxCoordsInternal network ([ Dict.get toId network.addresses |> Maybe.map (Tuple.pair Direction.Incoming), Dict.get fromId network.addresses |> Maybe.map (Tuple.pair Direction.Outgoing) ] |> List.filterMap identity)
+
+                _ =
+                    Debug.log "" baseC
+
+                allTxs =
+                    Dict.values network.txs
+
+                sameParticipantsTxs =
+                    allTxs
+                        |> List.filter
+                            (\x ->
+                                case x.type_ of
+                                    Tx.Account et ->
+                                        et.from == fromId && et.to == toId
+
+                                    _ ->
+                                        False
+                            )
+
+                candidateTxs =
+                    (if List.length sameParticipantsTxs > 0 then
+                        sameParticipantsTxs
+
+                     else
+                        allTxs
+                    )
+                        |> List.filter (.x >> (==) baseC.x)
+
+                yn =
+                    if List.length candidateTxs > 0 then
+                        floor ((candidateTxs |> List.map (.y >> A.getTo) |> List.minimum |> Maybe.withDefault minStep) - minStep) |> toFloat
+
+                    else
+                        baseC.y
+            in
+            { baseC | y = yn } |> avoidOverlappingEdges (Dict.values network.txs)
 
         Api.Data.TxTxUtxo t ->
             findUtxoTxCoords network t
