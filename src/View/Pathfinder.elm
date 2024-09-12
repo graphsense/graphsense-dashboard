@@ -900,17 +900,19 @@ addressDetailsContentView vc gc model id viewState =
                         { titleInstance = inOutIndicator vc "Transactions" (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs) viewState.data.noIncomingTxs viewState.data.noOutgoingTxs
                         }
 
-                    event =
+                    style =
+                        [ css [ Css.width (Css.pct 100) ] ]
+
+                    headerEvent =
                         [ onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
-                        , css [ Css.width (Css.pct 100) 
-                        , Css.cursor Css.pointer
-                        ]
+                        , css [ Css.cursor Css.pointer ]
                         ]
                 in
                 if viewState.transactionsTableOpen then
                     SidePanelComponents.sidePanelListOpenWithAttributes
                         (SidePanelComponents.sidePanelListOpenAttributes
-                            |> s_sidePanelListOpen event
+                            |> s_sidePanelListOpen style
+                            |> s_sidePanelListHeaderOpen headerEvent
                         )
                         { sidePanelListHeaderOpen = titleInstance
                         , sidePanelListOpen =
@@ -922,7 +924,7 @@ addressDetailsContentView vc gc model id viewState =
                 else
                     SidePanelComponents.sidePanelListClosedWithAttributes
                         (SidePanelComponents.sidePanelListClosedAttributes
-                            |> s_sidePanelListClosed event
+                            |> s_sidePanelListClosed (style ++ headerEvent)
                         )
                         { sidePanelListClosed = titleInstance
                         }
@@ -961,22 +963,18 @@ addressDetailsContentView vc gc model id viewState =
         }
 
 
-addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> (Id -> Bool) -> Html Msg
-addressTransactionTableView vc _ addressId viewState txOnGraphFn =
-    let
-        data =
-            viewState.data
 
-        content =
-            transactionTableView vc addressId txOnGraphFn viewState.txs
-
-        ioIndicatorState =
-            Just (inOutIndicator vc "Transactions" (data.noIncomingTxs + data.noOutgoingTxs) data.noIncomingTxs data.noOutgoingTxs)
-    in
-    collapsibleSection vc "" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
-
-
-
+-- addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> (Id -> Bool) -> Html Msg
+-- addressTransactionTableView vc _ addressId viewState txOnGraphFn =
+--     let
+--         data =
+--             viewState.data
+--         content =
+--             transactionTableView vc addressId txOnGraphFn viewState.txs
+--         ioIndicatorState =
+--             Just (inOutIndicator vc "Transactions" (data.noIncomingTxs + data.noOutgoingTxs) data.noIncomingTxs data.noOutgoingTxs)
+--     in
+--     collapsibleSection vc "" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
 -- addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
 -- addressNeighborsTableView vc _ _ viewState data =
 --     let
@@ -1344,6 +1342,8 @@ transactionTableView vc addressId txOnGraphFn model =
                     [ Css.displayFlex
                     , Css.justifyContent Css.spaceBetween
                     , Css.marginBottom Css.lGap
+                    , Css.marginTop Css.mGap
+                    , Css.marginRight Css.sGap
                     ]
                 ]
                 [ drp

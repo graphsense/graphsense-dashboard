@@ -7,6 +7,7 @@ import Css.Table exposing (Styles, loadingSpinner, styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Events exposing (..)
+import Model exposing (Msg(..))
 import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
 import RecordSetter exposing (s_rowAttrs, s_tableAttrs, s_thead)
 import Set
@@ -85,6 +86,13 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
 
         nextPageAvailable =
             PT.hasNextPage tblPaged
+
+        nextEventAttr =
+            if nextPageAvailable then
+                [ onClick (nextMsg tblPaged) ]
+
+            else
+                []
     in
     div
         []
@@ -107,7 +115,7 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
                         [ div [ centerContent |> toAttr ]
                             [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ HIcons.iconsChevronLeftThin {} ]
                             , pageIndicatorView tblPaged
-                            , button [ linkButtonStyle vc nextPageAvailable |> toAttr, onClick (nextMsg tblPaged) ] [ HIcons.iconsChevronRightThin {} ]
+                            , button ((linkButtonStyle vc nextPageAvailable |> toAttr) :: nextEventAttr) [ HIcons.iconsChevronRightThin {} ]
                             ]
                         ]
                    )

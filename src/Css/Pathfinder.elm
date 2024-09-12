@@ -403,8 +403,7 @@ graphActionsViewStyle _ =
 
 graphActionButtonStyle : View.Config -> Bool -> List Style
 graphActionButtonStyle vc _ =
-    [ mGap |> margin
-    , cursor pointer
+    [ cursor pointer
     , padding4 xsGap mlGap xsGap mlGap
     , emphTextColor vc |> color
     , defaultBackgroundColor vc |> backgroundColor
