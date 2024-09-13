@@ -52,9 +52,14 @@ sidebarIcon vc active =
     vc.theme.sidebarIcon vc.lightmode active
 
 
-sidebarIconBottom : Config -> Bool -> List Style
-sidebarIconBottom vc active =
-    vc.theme.sidebarIconBottom vc.lightmode active
+sidebarIconsBottom : Config -> Bool -> List Style
+sidebarIconsBottom vc active =
+    vc.theme.sidebarIconsBottom vc.lightmode active
+
+
+sidebarLink : Config -> List Style
+sidebarLink vc =
+    vc.theme.sidebarLink vc.lightmode
 
 
 sidebarRule : Config -> List Style

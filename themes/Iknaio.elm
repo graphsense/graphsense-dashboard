@@ -145,7 +145,7 @@ theme =
             ]
         |> s_inputRaw (\lightmode -> inputStyleRaw lightmode)
         |> s_headerLogo
-            [ width <| px 190
+            [ width <| px 45, paddingTop <| px 10, paddingLeft <| px 3
             ]
         |> s_headerLogoWrap
             []
@@ -153,16 +153,28 @@ theme =
             (\lightmode ->
                 [ backgroundColorWithLightmode lightmode colors.brandWhite
                 , shadowSm
+                , Css.displayFlex
+                , Css.flexDirection Css.column
+                , Css.alignItems Css.center
+                , Css.property "gap" "3px"
+                , Css.textDecoration Css.none
+                , justifyContent flexStart
                 ]
             )
         |> s_sidebarIcon
             (\lightmode active ->
-                [ colorWithLightmode lightmode iconInactive
+                [ colorWithLightmode lightmode colors.black
                 , scaled 5 |> rem |> fontSize
                 , scaled 4 |> rem |> padding
+                , Css.displayFlex
+                , Css.flexDirection Css.column
+                , Css.alignItems Css.center
+                , Css.property "gap" "3px"
+                , Css.textDecoration Css.none
                 ]
                     ++ (if active then
-                            [ color_backgroundColorWithLightmode lightmode iconActive colors.brandLightest
+                            [ 
+                                switchColor lightmode iconHovered |> toCssColor |> color
                             ]
 
                         else
@@ -172,25 +184,24 @@ theme =
                             ]
                        )
             )
-        |> s_sidebarIconBottom
+        |> s_sidebarIconsBottom
             (\lightmode active ->
-                [ colorWithLightmode lightmode iconInactive
-                , scaled 5 |> rem |> fontSize
-                , scaled 4 |> rem |> padding
-                , position absolute
-                , bottom (px 15)
-                , left (px 0)
+                [ marginTop auto
+                , (px 0)|> padding
                 ]
-                    ++ (if active then
-                            [ color_backgroundColorWithLightmode lightmode iconActive colors.brandLightest
-                            ]
-
-                        else
-                            [ hover
-                                [ switchColor lightmode iconHovered |> toCssColor |> color
-                                ]
-                            ]
-                       )
+            )
+        |> s_sidebarLink
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.brandText
+                , textDecoration none
+                , cursor pointer
+                , hover
+                    [ textDecoration none
+                    ]
+                , fontWeight bold
+                , paddingBottom (px 10)
+                , fontSize (px 11)
+                ]
             )
         |> s_sidebarRule
             (\lightmode ->
@@ -233,7 +244,7 @@ theme =
                 ]
             )
         |> s_loadingSpinner [ loadingSpinner ]
-        |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
+        |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo_without_text.svg]"
         |> s_popup
             (\lightmode ->
                 [ scaled 5 |> rem |> padding
@@ -242,7 +253,7 @@ theme =
                 , borderRadius <| px 5
                 ]
             )
-        |> s_logo_lightmode "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo_light.svg]"
+        |> s_logo_lightmode "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo_without_text_light.svg]"
         |> s_overlay
             [ Color.rgba 0 0 0 0.6 |> toCssColor |> backgroundColor
             ]

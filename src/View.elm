@@ -3,6 +3,7 @@ module View exposing (view)
 import Browser exposing (Document)
 import Config.View exposing (Config)
 import Css
+import Css.Header as Css
 import Css.Reset
 import Css.View
 import FontAwesome
@@ -81,6 +82,23 @@ body plugins vc model =
         )
 
 
+logo : Config -> Html Msg
+logo vc =
+    div
+        [ css [ Css.padding4 (Css.px 5) (Css.px 15) (Css.px 5) (Css.px 15) ] ]
+        [ img
+            [ src <|
+                if vc.lightmode then
+                    vc.theme.logo_lightmode
+
+                else
+                    vc.theme.logo
+            , Css.headerLogo vc |> css
+            ]
+            []
+        ]
+
+
 sidebar : Plugins -> Config -> Model key -> Html Msg
 sidebar plugins vc model =
     let
@@ -90,7 +108,9 @@ sidebar plugins vc model =
     div
         [ Css.View.sidebar vc |> css
         ]
-        ([ FontAwesome.icon FontAwesome.home
+        ([ logo vc
+         , hr [ Css.View.sidebarRule vc |> css ] []
+         , FontAwesome.icon FontAwesome.home
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a
@@ -100,7 +120,7 @@ sidebar plugins vc model =
                     |> Route.toUrl
                     |> href
                 ]
-         , FontAwesome.icon FontAwesome.projectDiagram
+         , FontAwesome.icon FontAwesome.shareAlt
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a
@@ -111,7 +131,7 @@ sidebar plugins vc model =
                     |> Route.toUrl
                     |> href
                 ]
-         , [ FontAwesome.icon FontAwesome.projectDiagram
+         , [ FontAwesome.icon FontAwesome.shareAlt
                 |> Html.Styled.fromUnstyled
            , span
                 [ css [ Css.fontSize <| Css.px 9 ]
@@ -119,7 +139,7 @@ sidebar plugins vc model =
                 [ text "NEW" ]
            ]
             |> a
-                [ model.page == Graph |> Css.View.sidebarIcon vc |> css
+                [ model.page == Pathfinder |> Css.View.sidebarIcon vc |> css
                 , title (Locale.string vc.locale "Pathfinder")
                 , Route.pathfinderRoute Pathfinder.Root
                     |> Route.toUrl
@@ -133,24 +153,42 @@ sidebar plugins vc model =
                     , Css.textDecoration Css.none
                     ]
                 ]
-         ]
-            ++ (if List.length plugin_menu_items > 0 then
-                    [ hr [ Css.View.sidebarRule vc |> css ] [] ]
+         , hr [ Css.View.sidebarRule vc |> css ] []
+         , a [ Css.View.sidebarLink vc |> css ] [ text (Locale.string vc.locale "Profile") ]
+         , a [ Css.View.sidebarLink vc |> css ] [ text (Locale.string vc.locale "Settings") ]
+         , a
+            [ Css.View.sidebarLink vc |> css
+            , Route.statsRoute
+                |> Route.toUrl
+                |> href
+            ]
+            [ text (Locale.string vc.locale "Statistics") ]
+         , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLightmode ]
+            [ text
+                (Locale.string vc.locale
+                    (if vc.lightmode then
+                        "Dark Mode"
 
-                else
-                    []
-               )
+                     else
+                        "Light Mode"
+                    )
+                )
+            ]
+         ]
             ++ plugin_menu_items
-            ++ [ FontAwesome.icon FontAwesome.chartPie
-                    |> Html.Styled.fromUnstyled
-                    |> List.singleton
-                    |> a
-                        [ model.page == Stats |> Css.View.sidebarIconBottom vc |> css
-                        , title (Locale.string vc.locale "Statistics")
-                        , Route.statsRoute
-                            |> Route.toUrl
-                            |> href
-                        ]
+            ++ [ div [ model.page == Stats |> Css.View.sidebarIconsBottom vc |> css ]
+                    [ -- FontAwesome.icon FontAwesome.chartPie
+                      --     |> Html.Styled.fromUnstyled
+                      --     |> List.singleton
+                      --     |> a
+                      --         [ model.page == Stats |> Css.View.sidebarIcon vc |> css
+                      --         , title (Locale.string vc.locale "Statistics")
+                      --         , Route.statsRoute
+                      --             |> Route.toUrl
+                      --             |> href
+                      --         ]
+                      div [ model.page == Stats |> Css.View.sidebarIcon vc |> css ] [ User.user vc model.user ]
+                    ]
                ]
         )
 
