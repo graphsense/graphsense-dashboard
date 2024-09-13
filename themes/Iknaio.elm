@@ -1023,6 +1023,7 @@ theme =
                             [ Css.Transitions.transform 200
                             ]
                         , translateY (pct p) |> transform
+                        , zIndex (int 5)
                         , shadowSm
                         ]
                     )

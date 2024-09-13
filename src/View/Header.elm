@@ -32,7 +32,7 @@ header plugins states vc hc =
             [ Css.position Css.absolute
             , Css.displayFlex
             , Css.position Css.absolute
-            , Css.zIndex (Css.int 20)
+            , Css.zIndex (Css.int 1)
             , Css.px 40 |> Css.top
             , Css.displayFlex
             , Css.alignItems Css.center
