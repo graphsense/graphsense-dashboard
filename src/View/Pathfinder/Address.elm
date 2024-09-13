@@ -112,19 +112,8 @@ view _ vc _ colors address getCluster =
                 [ Id.toString address.id
                     |> Svg.id
                 ]
-         -- |> s_iconsNodeOpenLeft (expand Incoming)
-         -- |> s_iconsNodeOpenRight (expand Outgoing)
         )
-        (GraphComponents.addressNodeInstances
-         -- |> s_iconsNodeOpenLeft
-         --     (GraphComponents.addressNodeIconsNodeOpenLeftIconsNodeOpenLeft_details
-         --         |> expandHandleLoadingSpinner vc address Incoming
-         --     )
-         -- |> s_iconsNodeOpenRight
-         --     (GraphComponents.addressNodeIconsNodeOpenRightIconsNodeOpenRight_details
-         --         |> expandHandleLoadingSpinner vc address Outgoing
-         --     )
-        )
+        GraphComponents.addressNodeInstances
         { addressNode =
             { addressId =
                 address.id
@@ -143,11 +132,24 @@ view _ vc _ colors address getCluster =
             }
         , iconsNodeOpenLeft =
             { variant =
-                Icons.iconsNodeOpenLeftStateActivWithAttributes
-                    (Icons.iconsNodeOpenLeftStateActivAttributes |> s_stateActiv (expand Incoming))
-                    {}
+                expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
+                    |> Maybe.withDefault
+                        (Icons.iconsNodeOpenLeftStateActivWithAttributes
+                            (Icons.iconsNodeOpenLeftStateActivAttributes |> s_stateActiv (expand Incoming))
+                            {}
+                        )
+
+            --     )
             }
-        , iconsNodeOpenRight = { variant = Icons.iconsNodeOpenRightStateActiv {} }
+        , iconsNodeOpenRight =
+            { variant =
+                expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenRightStateActiv_details
+                    |> Maybe.withDefault
+                        (Icons.iconsNodeOpenRightStateActivWithAttributes
+                            (Icons.iconsNodeOpenRightStateActivAttributes |> s_stateActiv (expand Outgoing))
+                            {}
+                        )
+            }
         }
 
 

@@ -1074,8 +1074,8 @@ clusterInfoView vc open colors _ clstr =
                     |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends)
                     |> Maybe.withDefault none
         in
-        div [ css [ Css.color Css.lightGreyColor, Css.cursor Css.pointer ] ]
-            [ div [ css [ Css.paddingLeft (Css.px 8), Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center ], onClick UserClickedToggleClusterDetailsOpen ]
+        div [ css [ Css.color Css.lightGreyColor, Css.width (Css.pct 100) ] ]
+            [ div [ css [ Css.paddingLeft (Css.px 8), Css.paddingBottom Css.mGap, Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center, Css.cursor Css.pointer ], onClick UserClickedToggleClusterDetailsOpen ]
                 [ div
                     [ css
                         [ Css.displayFlex

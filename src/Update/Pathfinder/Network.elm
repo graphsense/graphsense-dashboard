@@ -52,7 +52,22 @@ coordsToInt item =
 
 snapToGrid : Network -> Network
 snapToGrid n =
-    { n | txs = Dict.map (\k v -> coordsToInt v) n.txs, addresses = Dict.map (\k v -> coordsToInt v) n.addresses }
+    let
+        mn =
+            { n | txs = Dict.map (\_ v -> coordsToInt v) n.txs, addresses = Dict.map (\_ v -> coordsToInt v) n.addresses }
+
+        -- for all Utxos reset addresses.
+        updateIoAddresses utxo =
+            let
+                u a =
+                    Dict.get a.id mn.addresses |> Maybe.withDefault a
+            in
+            { utxo | inputs = utxo.inputs |> Dict.map (\_ -> Tx.updateAddress u), outputs = utxo.outputs |> Dict.map (\_ -> Tx.updateAddress u) }
+
+        updateIosAddresses _ =
+            Tx.updateUtxo updateIoAddresses
+    in
+    mn |> s_txs (mn.txs |> Dict.map updateIosAddresses)
 
 
 addAddress : Id -> Network -> Network
