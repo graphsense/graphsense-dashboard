@@ -10,6 +10,7 @@ import Util.View
 import View.Graph as Graph
 import View.Landingpage as Landingpage
 import View.Pathfinder as Pathfinder
+import View.Settings as Settings
 import View.Stats as Stats
 
 
@@ -28,6 +29,9 @@ view plugins vc model =
 
         Stats ->
             Stats.stats vc model.stats model.supportedTokens
+
+        Settings ->
+            Settings.view vc
 
         Graph ->
             Graph.view plugins model.plugins vc model.graph

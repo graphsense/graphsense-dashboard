@@ -1133,6 +1133,14 @@ updateByUrl plugins uc url model =
                                 [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
                         )
 
+                    Route.Settings ->
+                        ( { model
+                            | page = Model.Settings
+                            , url = url
+                          }
+                        , []
+                        )
+
                     Route.Graph graphRoute ->
                         case graphRoute |> Log.log "graphRoute" of
                             Route.Graph.Plugin ( pid, value ) ->

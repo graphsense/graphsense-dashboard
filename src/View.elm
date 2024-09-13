@@ -154,8 +154,20 @@ sidebar plugins vc model =
                     ]
                 ]
          , hr [ Css.View.sidebarRule vc |> css ] []
-         , a [ Css.View.sidebarLink vc |> css ] [ text (Locale.string vc.locale "Profile") ]
-         , a [ Css.View.sidebarLink vc |> css ] [ text (Locale.string vc.locale "Settings") ]
+         , a
+            [ Css.View.sidebarLink vc |> css
+            , Route.settingsRoute
+                |> Route.toUrl
+                |> href
+            ]
+            [ text (Locale.string vc.locale "Profile") ]
+         , a
+            [ Css.View.sidebarLink vc |> css
+            , Route.settingsRoute
+                |> Route.toUrl
+                |> href
+            ]
+            [ text (Locale.string vc.locale "Settings") ]
          , a
             [ Css.View.sidebarLink vc |> css
             , Route.statsRoute

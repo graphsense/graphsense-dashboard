@@ -5,6 +5,7 @@ module Route exposing
     , parse
     , pathfinderRoute
     , pluginRoute
+    , settingsRoute
     , statsRoute
     , toUrl
     )
@@ -29,6 +30,7 @@ type Route
     | Pathfinder Pathfinder.Route
     | Home
     | Stats
+    | Settings
     | Plugin ( Plugin.Model.PluginType, String )
 
 
@@ -47,6 +49,11 @@ statsSegment =
     "stats"
 
 
+settingsSegment : String
+settingsSegment =
+    "settings"
+
+
 parse : Config -> Url -> Maybe Route
 parse c =
     P.parse (parser c)
@@ -58,6 +65,7 @@ parser c =
         [ map Graph (s graphSegment |> slash (Graph.parser c.graph))
         , map Pathfinder (s pathfinderSegment |> slash (Pathfinder.parser c.pathfinder))
         , map Stats (s statsSegment)
+        , map Settings (s settingsSegment)
         , map Home top
         , map Plugin (remainder Plugin.parseUrl)
         ]
@@ -71,6 +79,11 @@ homeRoute =
 statsRoute : Route
 statsRoute =
     Stats
+
+
+settingsRoute : Route
+settingsRoute =
+    Settings
 
 
 graphRoute : Graph.Route -> Route
@@ -108,6 +121,9 @@ toUrl route =
 
         Stats ->
             absolute [ statsSegment ] []
+
+        Settings ->
+            absolute [ settingsSegment ] []
 
         Home ->
             absolute [] []

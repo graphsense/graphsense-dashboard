@@ -65,6 +65,7 @@ type alias Model navigationKey =
 type Page
     = Home
     | Stats
+    | Settings
     | Graph
     | Pathfinder
     | Plugin Plugin.PluginType
