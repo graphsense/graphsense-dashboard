@@ -143,7 +143,7 @@ view _ vc _ colors address getCluster =
             }
         , iconsNodeOpenRight =
             { variant =
-                expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenRightStateActiv_details
+                expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
                     |> Maybe.withDefault
                         (Icons.iconsNodeOpenRightStateActivWithAttributes
                             (Icons.iconsNodeOpenRightStateActivAttributes |> s_stateActiv (expand Outgoing))
