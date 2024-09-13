@@ -112,18 +112,18 @@ view _ vc _ colors address getCluster =
                 [ Id.toString address.id
                     |> Svg.id
                 ]
-            |> s_iconsNodeOpenLeft (expand Incoming)
-            |> s_iconsNodeOpenRight (expand Outgoing)
+         -- |> s_iconsNodeOpenLeft (expand Incoming)
+         -- |> s_iconsNodeOpenRight (expand Outgoing)
         )
         (GraphComponents.addressNodeInstances
-            |> s_iconsNodeOpenLeft
-                (GraphComponents.addressNodeIconsNodeOpenLeftIconsNodeOpenLeft_details
-                    |> expandHandleLoadingSpinner vc address Incoming
-                )
-            |> s_iconsNodeOpenRight
-                (GraphComponents.addressNodeIconsNodeOpenRightIconsNodeOpenRight_details
-                    |> expandHandleLoadingSpinner vc address Outgoing
-                )
+         -- |> s_iconsNodeOpenLeft
+         --     (GraphComponents.addressNodeIconsNodeOpenLeftIconsNodeOpenLeft_details
+         --         |> expandHandleLoadingSpinner vc address Incoming
+         --     )
+         -- |> s_iconsNodeOpenRight
+         --     (GraphComponents.addressNodeIconsNodeOpenRightIconsNodeOpenRight_details
+         --         |> expandHandleLoadingSpinner vc address Outgoing
+         --     )
         )
         { addressNode =
             { addressId =
@@ -141,6 +141,13 @@ view _ vc _ colors address getCluster =
             , isStartingPoint = address.isStartingPoint
             , tagIconVisible = address.hasTags
             }
+        , iconsNodeOpenLeft =
+            { variant =
+                Icons.iconsNodeOpenLeftStateActivWithAttributes
+                    (Icons.iconsNodeOpenLeftStateActivAttributes |> s_stateActiv (expand Incoming))
+                    {}
+            }
+        , iconsNodeOpenRight = { variant = Icons.iconsNodeOpenRightStateActiv {} }
         }
 
 

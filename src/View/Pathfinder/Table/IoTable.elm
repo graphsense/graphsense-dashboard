@@ -9,7 +9,7 @@ import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
-import Msg.Pathfinder exposing (Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter exposing (..)
 import Set
 import Table
@@ -18,8 +18,8 @@ import View.Pathfinder.PagedTable exposing (alignColumnsRight)
 import View.Pathfinder.Table.Columns as PT
 
 
-config : Styles -> View.Config -> String -> (Id -> Bool) -> Maybe (Id -> HavingTags) -> Table.Config Api.Data.TxValue Msg
-config styles vc network isCheckedFn lblFn =
+config : Styles -> View.Config -> IoDirection -> String -> (Id -> Bool) -> Maybe (Id -> HavingTags) -> Table.Config Api.Data.TxValue Msg
+config styles vc ioDirection network isCheckedFn lblFn =
     let
         toId =
             .address
@@ -31,7 +31,7 @@ config styles vc network isCheckedFn lblFn =
     in
     Table.customConfig
         { toId = .address >> String.join ""
-        , toMsg = TableMsg >> TxDetailsMsg
+        , toMsg = TableMsg ioDirection >> TxDetailsMsg
         , columns =
             [ PT.checkboxColumn vc
                 { isChecked =

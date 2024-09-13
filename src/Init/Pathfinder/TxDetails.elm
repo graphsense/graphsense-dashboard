@@ -11,23 +11,26 @@ import Util.Data exposing (negateTxValue)
 init : Tx -> TxDetails.Model
 init tx =
     let
-        data =
+        ( inputs, outputs ) =
             case tx.type_ of
                 Tx.Utxo { raw } ->
-                    (raw.inputs
+                    ( raw.inputs
                         |> Maybe.withDefault []
                         |> List.map negateTxValue
+                    , raw.outputs
+                        |> Maybe.withDefault []
                     )
-                        ++ (raw.outputs
-                                |> Maybe.withDefault []
-                           )
 
                 Tx.Account _ ->
-                    []
+                    ( [], [] )
     in
-    { ioTableOpen = True
-    , table =
+    { inputsTableOpen = False
+    , outputsTableOpen = False
+    , inputsTable =
         Init.Graph.Table.initSorted False IoTable.titleValue
-            |> Update.Graph.Table.setData IoTable.filter data
+            |> Update.Graph.Table.setData IoTable.filter inputs
+    , outputsTable =
+        Init.Graph.Table.initSorted False IoTable.titleValue
+            |> Update.Graph.Table.setData IoTable.filter outputs
     , tx = tx
     }

@@ -85,8 +85,13 @@ type DisplaySettingsMsg
 
 
 type TxDetailsMsg
-    = UserClickedToggleIOTable
-    | TableMsg Table.State
+    = UserClickedToggleIoTable IoDirection
+    | TableMsg IoDirection Table.State
+
+
+type IoDirection
+    = Inputs
+    | Outputs
 
 
 type alias WorkflowNextTxContext =

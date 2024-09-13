@@ -3,15 +3,21 @@ module Update.Pathfinder.TxDetails exposing (update)
 import Effect exposing (n)
 import Effect.Pathfinder exposing (Effect)
 import Model.Pathfinder.TxDetails exposing (..)
-import Msg.Pathfinder exposing (TxDetailsMsg(..))
+import Msg.Pathfinder exposing (IoDirection(..), TxDetailsMsg(..))
 import RecordSetter exposing (s_state)
 
 
 update : TxDetailsMsg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
-        UserClickedToggleIOTable ->
-            n { model | ioTableOpen = not model.ioTableOpen }
+        UserClickedToggleIoTable Inputs ->
+            n { model | inputsTableOpen = not model.inputsTableOpen }
 
-        TableMsg state ->
-            n { model | table = model.table |> s_state state }
+        UserClickedToggleIoTable Outputs ->
+            n { model | outputsTableOpen = not model.outputsTableOpen }
+
+        TableMsg Inputs state ->
+            n { model | inputsTable = model.inputsTable |> s_state state }
+
+        TableMsg Outputs state ->
+            n { model | outputsTable = model.outputsTable |> s_state state }

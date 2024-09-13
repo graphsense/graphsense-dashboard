@@ -39,7 +39,7 @@ import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Tx as Tx
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), TxDetailsMsg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
@@ -534,6 +534,10 @@ txDetailsContentView vc _ model id viewState =
     in
     case viewState.tx.type_ of
         Tx.Utxo tx ->
+            let
+                style =
+                    [ css [ Css.width (Css.pct 100) ] ]
+            in
             SidePanelComponents.sidePanelTransactionWithAttributes
                 (SidePanelComponents.sidePanelTransactionAttributes
                     |> s_sidePanelTransaction
@@ -547,28 +551,60 @@ txDetailsContentView vc _ model id viewState =
                     }
                 , leftTab = { variant = none }
                 , rightTab = { variant = none }
-                , title = { infoLabel = Locale.string vc.locale "Timestamp" }
-                , value = timeToCell vc tx.raw.timestamp
-                , inputsHeader =
-                    { titleInstance =
-                        SidePanelComponents.sidePanelListHeaderTitleInputs
-                            { sidePanelListHeaderTitleInputs =
-                                { title = Locale.string vc.locale "Inputs"
-                                , totalNumber = Locale.int vc.locale tx.raw.noInputs
+                , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
+                , valueOfTimestamp = timeToCell vc tx.raw.timestamp
+                , titleOfTxValue = { infoLabel = Locale.string vc.locale "Value" }
+                , valueOfTxValue = valuesToCell vc (assetFromBase tx.raw.currency) tx.raw.totalOutput
+                , sidePanelTransaction =
+                    { tabsVisible = False
+                    , inputListInstance =
+                        let
+                            headerTitle =
+                                { sidePanelListHeaderTitleInputs =
+                                    { title = Locale.string vc.locale "Inputs"
+                                    , totalNumber = Locale.int vc.locale tx.raw.noInputs
+                                    }
                                 }
-                            }
-                    }
-                , outputsHeader =
-                    { titleInstance =
-                        SidePanelComponents.sidePanelListHeaderTitleOutputs
-                            { sidePanelListHeaderTitleOutputs =
+
+                            headerEvent =
+                                [ onClick (TxDetailsMsg (UserClickedToggleIoTable Inputs))
+                                , css [ Css.cursor Css.pointer ]
+                                ]
+                        in
+                        if viewState.inputsTableOpen then
+                            SidePanelComponents.sidePanelInputListOpenWithAttributes
+                                (SidePanelComponents.sidePanelInputListOpenAttributes |> s_sidePanelInputListOpen style |> s_sidePanelInputListHeaderOpen headerEvent)
+                                { sidePanelInputListOpen = { listInstance = ioTableView vc Inputs model.network tx.raw.currency viewState.inputsTable getLbl }
+                                , sidePanelInputListHeaderOpen = { titleInstance = SidePanelComponents.sidePanelListHeaderTitleInputs headerTitle }
+                                }
+
+                        else
+                            SidePanelComponents.sidePanelInputListHeaderClosedWithAttributes
+                                (SidePanelComponents.sidePanelInputListHeaderClosedAttributes |> s_sidePanelInputListHeaderClosed (headerEvent ++ style))
+                                headerTitle
+                    , outputListInstance =
+                        let
+                            headerTitle =
                                 { title = Locale.string vc.locale "Outputs"
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs
                                 }
-                            }
-                    }
-                , sidePanelTransaction =
-                    { tabsVisible = False
+
+                            headerEvent =
+                                [ onClick (TxDetailsMsg (UserClickedToggleIoTable Outputs))
+                                , css [ Css.cursor Css.pointer ]
+                                ]
+                        in
+                        if viewState.outputsTableOpen then
+                            SidePanelComponents.sidePanelOutputListOpenWithAttributes
+                                (SidePanelComponents.sidePanelOutputListOpenAttributes |> s_sidePanelOutputListOpen style |> s_sidePanelOutputListHeaderOpen headerEvent)
+                                { sidePanelOutputListOpen = { listInstance = ioTableView vc Outputs model.network tx.raw.currency viewState.outputsTable getLbl }
+                                , sidePanelListHeaderTitleOutputs = headerTitle
+                                }
+
+                        else
+                            SidePanelComponents.sidePanelOutputListHeaderClosedWithAttributes
+                                (SidePanelComponents.sidePanelOutputListHeaderClosedAttributes |> s_sidePanelOutputListHeaderClosed (headerEvent ++ style))
+                                { sidePanelListHeaderTitleOutputs = headerTitle }
                     }
                 , sidePanelTxHeader =
                     { headerText =
@@ -634,35 +670,23 @@ txDetailsContentView vc _ model id viewState =
                 }
 
 
-ioTableView : View.Config -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> HavingTags) -> Html Msg
-ioTableView vc network currency table getLbl =
+ioTableView : View.Config -> IoDirection -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> HavingTags) -> Html Msg
+ioTableView vc dir network currency table getLbl =
     let
         isCheckedFn =
             flip Network.hasAddress network
 
         styles =
             Css.Table.styles
-                |> s_root (\vc_ -> Css.Table.styles.root vc_ ++ [ Css.display Css.block ])
+                |> s_root (\vc_ -> Css.Table.styles.root vc_ ++ [ Css.display Css.block, Css.width (Css.pct 100), Css.paddingTop Css.lGap ])
     in
     View.Graph.Table.table
         styles
         vc
         [ css [ Css.overflowY Css.auto, Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 500) * 0.5)) ] ]
         noTools
-        (IoTable.config styles vc currency isCheckedFn (Just getLbl))
+        (IoTable.config styles vc dir currency isCheckedFn (Just getLbl))
         table
-
-
-utxoTxDetailsSectionsView : View.Config -> Network -> TxDetails.Model -> Api.Data.TxUtxo -> (Id -> HavingTags) -> Html Msg
-utxoTxDetailsSectionsView vc network viewState data getLbl =
-    let
-        content =
-            ioTableView vc network data.currency viewState.table getLbl
-
-        ioIndicatorState =
-            Just (inOutIndicator vc "In- and Outputs" (data.noOutputs + data.noInputs) data.noOutputs data.noInputs)
-    in
-    collapsibleSection vc "" viewState.ioTableOpen ioIndicatorState content (TxDetailsMsg UserClickedToggleIOTable)
 
 
 valuesToCell : View.Config -> Asset.AssetIdentifier -> Api.Data.Values -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
@@ -909,24 +933,24 @@ addressDetailsContentView vc gc model id viewState =
                         ]
                 in
                 if viewState.transactionsTableOpen then
-                    SidePanelComponents.sidePanelListOpenWithAttributes
-                        (SidePanelComponents.sidePanelListOpenAttributes
-                            |> s_sidePanelListOpen style
-                            |> s_sidePanelListHeaderOpen headerEvent
+                    SidePanelComponents.sidePanelTxListOpenWithAttributes
+                        (SidePanelComponents.sidePanelTxListOpenAttributes
+                            |> s_sidePanelTxListOpen style
+                            |> s_sidePanelTxListHeaderOpen headerEvent
                         )
-                        { sidePanelListHeaderOpen = titleInstance
-                        , sidePanelListOpen =
+                        { sidePanelTxListHeaderOpen = titleInstance
+                        , sidePanelTxListOpen =
                             { listInstance =
                                 transactionTableView vc id txOnGraphFn viewState.txs
                             }
                         }
 
                 else
-                    SidePanelComponents.sidePanelListClosedWithAttributes
-                        (SidePanelComponents.sidePanelListClosedAttributes
-                            |> s_sidePanelListClosed (style ++ headerEvent)
+                    SidePanelComponents.sidePanelTxListClosedWithAttributes
+                        (SidePanelComponents.sidePanelTxListClosedAttributes
+                            |> s_sidePanelTxListClosed (style ++ headerEvent)
                         )
-                        { sidePanelListClosed = titleInstance
+                        { sidePanelTxListClosed = titleInstance
                         }
             , actorVisible = showExchangeTag
             , tagsVisible = showOtherTag
@@ -939,7 +963,7 @@ addressDetailsContentView vc gc model id viewState =
             }
         , sidePanelAddressDetails =
             { clusterInfoVisible = Dict.member clstrId model.clusters
-            , clusterInformationInstance =
+            , clusterInfoInstance =
                 Dict.get clstrId model.clusters
                     |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
                     |> Maybe.withDefault none
@@ -948,7 +972,8 @@ addressDetailsContentView vc gc model id viewState =
             { iconInstance =
                 Address.toNodeIconHtml False address (Dict.get clstrId model.clusters) (Colors.getAssignedColor Colors.Clusters clstrId model.colors |> Maybe.map .color)
             , headerText =
-                (String.toUpper <| Id.network id) ++ " "
+                (String.toUpper <| Id.network id)
+                    ++ " "
                     ++ (if viewState.data.isContract |> Maybe.withDefault False then
                             Locale.string vc.locale "Smart Contract"
 
