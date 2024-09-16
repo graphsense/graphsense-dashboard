@@ -31,7 +31,7 @@ view plugins vc model =
             Stats.stats vc model.stats model.supportedTokens
 
         Settings ->
-            Settings.view vc
+            Settings.view plugins vc model
 
         Graph ->
             Graph.view plugins model.plugins vc model.graph

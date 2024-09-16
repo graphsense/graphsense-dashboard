@@ -296,38 +296,6 @@ inOutIndicatorOld vc mnr inNr outNr =
     span [ ioOutIndicatorStyle |> toAttr ] [ Html.text prefix, inIcon, Html.text (Locale.int vc.locale inNr), outIcon, Html.text (Locale.int vc.locale outNr), Html.text ")" ]
 
 
-collapsibleSection : View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
-collapsibleSection vc =
-    collapsibleSectionRaw (collapsibleSectionHeadingStyle vc |> toAttr) ([] |> toAttr) vc
-
-
-collapsibleSectionRaw : Html.Attribute Msg -> Html.Attribute Msg -> View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
-collapsibleSectionRaw headingAttr iconAttr vc title open indicator content action =
-    let
-        icon =
-            if open then
-                inlineChevronDownThickIcon
-
-            else
-                inlineChevronRightThickIcon
-
-        data =
-            if open then
-                [ content ]
-
-            else
-                []
-    in
-    div [ css [ Css.width <| Css.pct 100 ] ]
-        (div [ headingAttr, onClick action ]
-            [ span [ iconAttr ] [ icon ]
-            , span [ iconAttr ] [ Html.text (Locale.string vc.locale title) ]
-            , indicator |> Maybe.withDefault none
-            ]
-            :: data
-        )
-
-
 
 -- View
 
@@ -1000,42 +968,6 @@ addressDetailsContentView vc gc model id viewState =
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
         , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
         }
-
-
-
--- addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> (Id -> Bool) -> Html Msg
--- addressTransactionTableView vc _ addressId viewState txOnGraphFn =
---     let
---         data =
---             viewState.data
---         content =
---             transactionTableView vc addressId txOnGraphFn viewState.txs
---         ioIndicatorState =
---             Just (inOutIndicator vc "Transactions" (data.noIncomingTxs + data.noOutgoingTxs) data.noIncomingTxs data.noOutgoingTxs)
---     in
---     collapsibleSection vc "" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
--- addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
--- addressNeighborsTableView vc _ _ viewState data =
---     let
---         attributes =
---             []
---         prevMsg =
---             \dir _ -> AddressDetailsMsg (AddressDetails.UserClickedPreviousPageNeighborsTable dir)
---         nextMsg =
---             \dir _ -> AddressDetailsMsg (AddressDetails.UserClickedNextPageNeighborsTable dir)
---         tblCfg =
---             NeighborsTable.config vc data.currency
---         content =
---             div []
---                 [ h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Outgoing" ]
---                 , PagedTable.pagedTableView vc attributes tblCfg viewState.neighborsOutgoing (prevMsg Outgoing) (nextMsg Outgoing)
---                 , h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Incoming" ]
---                 , PagedTable.pagedTableView vc attributes tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
---                 ]
---         ioIndicatorState =
---             Just (inOutIndicatorOld vc Nothing data.inDegree data.outDegree)
---     in
---     collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleNeighborsTable)
 
 
 apiEntityToRows : Id -> Api.Data.Entity -> List KVTableRow

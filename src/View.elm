@@ -125,7 +125,7 @@ sidebar plugins vc model =
             |> List.singleton
             |> a
                 [ model.page == Graph |> Css.View.sidebarIcon vc |> css
-                , title (Locale.string vc.locale "Aggregated Network")
+                , title (Locale.string vc.locale "Overview Network")
                 , model.graph.route
                     |> Route.graphRoute
                     |> Route.toUrl
@@ -185,6 +185,10 @@ sidebar plugins vc model =
                         "Light Mode"
                     )
                 )
+            ]
+         , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLogout ]
+            [ text
+                (Locale.string vc.locale "Logout")
             ]
          ]
             ++ plugin_menu_items

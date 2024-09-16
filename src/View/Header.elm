@@ -67,7 +67,7 @@ header plugins states vc hc =
                                     ]
                             , multiline = True
                             , resultsAsLink = True
-                            , showIcon = True
+                            , showIcon = False
                             }
                             hc.search
                             |> Html.Styled.map SearchMsg
