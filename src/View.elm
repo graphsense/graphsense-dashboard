@@ -203,7 +203,7 @@ sidebar plugins vc model =
                       --             |> Route.toUrl
                       --             |> href
                       --         ]
-                      div [ model.page == Stats |> Css.View.sidebarIcon vc |> css ] [ User.user vc model.user ]
+                    --   div [ model.page == Stats |> Css.View.sidebarIcon vc |> css ] [ User.user vc model.user ]
                     ]
                ]
         )

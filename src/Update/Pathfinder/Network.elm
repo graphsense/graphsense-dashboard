@@ -498,12 +498,11 @@ addTxWithPosition position tx network =
 
 insertTx : Network -> Tx -> ( Tx, Network )
 insertTx network tx =
-
     let
-        tx_ = 
-            (tx
+        tx_ =
+            tx
                 |> s_isStartingPoint (isEmpty network)
-            )
+
         upd dir addr =
             let
                 ( get, set ) =

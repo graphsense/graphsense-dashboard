@@ -191,7 +191,7 @@ authContent : Config -> UserModel -> List SettingsItem
 authContent vc user =
     case user.auth of
         Authorized auth ->
-            [ Display "Request Limit" (auth.requestLimit |> requestLimit vc)
+            [ Display "Request limit" (auth.requestLimit |> requestLimit vc)
             , Display "Expiration" (auth.expiration |> Maybe.map (expiration vc) |> Maybe.withDefault "none")
             ]
 
