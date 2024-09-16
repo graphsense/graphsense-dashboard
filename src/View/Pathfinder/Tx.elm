@@ -21,10 +21,10 @@ view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Svg Msg
 view plugins vc gc tx =
     case tx.type_ of
         Utxo t ->
-            Utxo.view plugins vc gc tx.id (tx.selected || tx.hovered) t tx
+            Utxo.view plugins vc gc tx t
 
         Account t ->
-            AccountTx.view plugins vc gc tx.id (tx.selected || tx.hovered) t tx
+            AccountTx.view plugins vc gc tx t 
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> Dict.Dict Id.Id Address -> Tx -> ( String, Svg Msg )

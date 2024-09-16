@@ -25,6 +25,7 @@ type alias Tx =
     , dy : Float
     , clock : Clock
     , opacity : Animation
+    , isStartingPoint : Bool
     }
 
 

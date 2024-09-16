@@ -30,8 +30,8 @@ import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPath
 import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> AccountTx -> AnimatedPosTrait x -> Svg Msg
-view _ vc pc id highlight tx pos =
+view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> AccountTx -> Svg Msg
+view _ vc _ tx accTx =
     let
         fd =
             GraphComponents.txNodeEthNodeEllipse_details
@@ -46,30 +46,31 @@ view _ vc pc id highlight tx pos =
         { txNodeEthAttributes
             | txNodeEth =
                 [ translate
-                    ((pos.x + pos.dx) * unit - adjX)
-                    ((A.animate pos.clock pos.y + pos.dy) * unit - adjY)
+                    ((tx.x + tx.dx) * unit - adjX)
+                    ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
                     |> transform
-                , A.animate pos.clock pos.opacity
+                , A.animate tx.clock tx.opacity
                     |> String.fromFloat
                     |> opacity
-                , UserClickedTx id |> onClickWithStop
-                , UserPushesLeftMouseButtonOnUtxoTx id
+                , UserClickedTx tx.id |> onClickWithStop
+                , UserPushesLeftMouseButtonOnUtxoTx tx.id
                     |> Util.Graph.mousedown
-                , UserMovesMouseOverUtxoTx id
+                , UserMovesMouseOverUtxoTx tx.id
                     |> onMouseOver
-                , UserMovesMouseOutUtxoTx id
+                , UserMovesMouseOutUtxoTx tx.id
                     |> onMouseLeave
                 , css [ Css.cursor Css.pointer ]
-                , Id.toString id
+                , Id.toString tx.id
                     |> Svg.Styled.Attributes.id
                 ]
         }
         { txNodeEth =
-            { highlightVisible = highlight
-            , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
-            , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
-            , inputValue = Locale.currency vc.locale [ ( asset tx.raw.network tx.raw.currency, tx.value ) ]
+            { highlightVisible = tx.hovered || tx.selected
+            , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
+            , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
+            , inputValue = Locale.currency vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
             , timestampVisible = vc.showTimestampOnTxEdge
+            , startingPointVisible = tx.isStartingPoint
             }
         }
 

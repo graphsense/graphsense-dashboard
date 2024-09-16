@@ -89,7 +89,7 @@ view _ vc _ colors address getCluster =
         adjY =
             fd.y + fd.height / 2
     in
-    GraphComponents.addressNodeWithInstances
+    GraphComponents.addressNodeWithAttributes
         (GraphComponents.addressNodeAttributes
             |> s_addressNode
                 [ translate
@@ -113,7 +113,6 @@ view _ vc _ colors address getCluster =
                     |> Svg.id
                 ]
         )
-        GraphComponents.addressNodeInstances
         { addressNode =
             { addressId =
                 address.id
@@ -138,8 +137,6 @@ view _ vc _ colors address getCluster =
                             (Icons.iconsNodeOpenLeftStateActivAttributes |> s_stateActiv (expand Incoming))
                             {}
                         )
-
-            --     )
             }
         , iconsNodeOpenRight =
             { variant =

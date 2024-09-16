@@ -29,9 +29,12 @@ import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPath
 import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> AnimatedPosTrait x -> Svg Msg
-view _ vc _ id highlight tx pos =
+view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> UtxoTx -> Svg Msg
+view _ vc _ tx utxo =
     let
+        id =
+            tx.id
+
         anyIsNotVisible =
             Dict.toList
                 >> List.any (second >> .address >> (==) Nothing)
@@ -49,10 +52,10 @@ view _ vc _ id highlight tx pos =
         { txNodeUtxoAttributes
             | txNodeUtxo =
                 [ translate
-                    ((pos.x + pos.dx) * unit - adjX)
-                    ((A.animate pos.clock pos.y + pos.dy) * unit - adjY)
+                    ((tx.x + tx.dx) * unit - adjX)
+                    ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
                     |> transform
-                , A.animate pos.clock pos.opacity
+                , A.animate tx.clock tx.opacity
                     |> String.fromFloat
                     |> opacity
                 , UserClickedTx id |> onClickWithStop
@@ -68,11 +71,12 @@ view _ vc _ id highlight tx pos =
                 ]
         }
         { txNodeUtxo =
-            { hasMultipleInOutputs = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
-            , highlightVisible = highlight
-            , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
-            , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
+            { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
+            , highlightVisible = tx.hovered || tx.selected
+            , date = Locale.timestampDateUniform vc.locale utxo.raw.timestamp
+            , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
             , timestampVisible = vc.showTimestampOnTxEdge
+            , startingPointVisible = tx.isStartingPoint
             }
         }
 

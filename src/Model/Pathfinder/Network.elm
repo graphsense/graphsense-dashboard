@@ -125,3 +125,8 @@ getRecentTxForAddress network direction addressId =
                 >> List.sortBy Tx.getRawTimestamp
                 >> List.Extra.last
             )
+
+
+isEmpty : Network -> Bool
+isEmpty { addresses, txs } =
+    Dict.isEmpty addresses && Dict.isEmpty txs

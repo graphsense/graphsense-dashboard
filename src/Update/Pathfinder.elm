@@ -815,7 +815,7 @@ updateByMsg plugins uc msg model =
                 removeAddress id model
 
             else
-                loadAddress plugins id False model
+                loadAddress plugins id model
 
         UserClickedTx id ->
             if model.ctrlPressed then
@@ -875,7 +875,7 @@ updateByMsg plugins uc msg model =
                         |> List.map first
 
                 aggAddressAdd addressId =
-                    and (loadAddress plugins addressId False)
+                    and (loadAddress plugins addressId)
 
                 src =
                     if List.any ((==) Incoming) addresses then
@@ -1143,7 +1143,7 @@ updateByRoute_ plugins uc route model =
 
                 ( x, b ) =
                     { model | network = Network.clearSelection model.network }
-                        |> loadAddress plugins id True
+                        |> loadAddress plugins id
                         |> and (selectAddress uc id)
             in
             ( x, b )
@@ -1163,13 +1163,13 @@ updateByRoute_ plugins uc route model =
             n model
 
 
-loadAddress : Plugins -> Id -> Bool -> Model -> ( Model, List Effect )
+loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
 loadAddress =
     loadAddressWithPosition Auto
 
 
-loadAddressWithPosition : FindPosition -> Plugins -> Id -> Bool -> Model -> ( Model, List Effect )
-loadAddressWithPosition position _ id starting model =
+loadAddressWithPosition : FindPosition -> Plugins -> Id -> Model -> ( Model, List Effect )
+loadAddressWithPosition position _ id model =
     if Dict.member id model.network.addresses then
         n model
 
@@ -1177,13 +1177,6 @@ loadAddressWithPosition position _ id starting model =
         let
             nw =
                 Network.addAddressWithPosition position id model.network
-                    |> Network.updateAddress id
-                        (\a ->
-                            { a
-                                | data = Loading
-                                , isStartingPoint = starting
-                            }
-                        )
         in
         ( { model | network = nw } |> updateTagDataOnAddress id
         , BrowserGotAddressData id
@@ -1512,7 +1505,7 @@ addTx plugins _ addressId direction tx model =
                     position =
                         NextTo ( direction, newTx.id )
                 in
-                loadAddressWithPosition position plugins (Id.init (Id.network addressId) a) False newmodel
+                loadAddressWithPosition position plugins (Id.init (Id.network addressId) a) newmodel
             )
         |> Maybe.withDefault (n newmodel)
 

@@ -573,14 +573,22 @@ txDetailsContentView vc _ model id viewState =
                         in
                         if viewState.inputsTableOpen then
                             SidePanelComponents.sidePanelInputListOpenWithAttributes
-                                (SidePanelComponents.sidePanelInputListOpenAttributes |> s_sidePanelInputListOpen style |> s_sidePanelInputListHeaderOpen headerEvent)
-                                { sidePanelInputListOpen = { listInstance = ioTableView vc Inputs model.network tx.raw.currency viewState.inputsTable getLbl }
-                                , sidePanelInputListHeaderOpen = { titleInstance = SidePanelComponents.sidePanelListHeaderTitleInputs headerTitle }
+                                (SidePanelComponents.sidePanelInputListOpenAttributes
+                                    |> s_sidePanelInputListOpen style
+                                    |> s_sidePanelInputListHeaderOpen headerEvent
+                                )
+                                { sidePanelInputListOpen =
+                                    { listInstance = ioTableView vc Inputs model.network tx.raw.currency viewState.inputsTable getLbl
+                                    }
+                                , sidePanelInputListHeaderOpen =
+                                    { titleInstance = SidePanelComponents.sidePanelListHeaderTitleInputs headerTitle }
                                 }
 
                         else
                             SidePanelComponents.sidePanelInputListHeaderClosedWithAttributes
-                                (SidePanelComponents.sidePanelInputListHeaderClosedAttributes |> s_sidePanelInputListHeaderClosed (headerEvent ++ style))
+                                (SidePanelComponents.sidePanelInputListHeaderClosedAttributes
+                                    |> s_sidePanelInputListHeaderClosed (headerEvent ++ style)
+                                )
                                 headerTitle
                     , outputListInstance =
                         let

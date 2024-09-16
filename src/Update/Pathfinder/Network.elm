@@ -295,6 +295,7 @@ placeAddress coords id model =
     let
         newAddress =
             Address.init id coords
+                |> s_isStartingPoint (isEmpty model)
 
         ( address, newTxs ) =
             listTxsForAddress model id
@@ -497,7 +498,12 @@ addTxWithPosition position tx network =
 
 insertTx : Network -> Tx -> ( Tx, Network )
 insertTx network tx =
+
     let
+        tx_ = 
+            (tx
+                |> s_isStartingPoint (isEmpty network)
+            )
         upd dir addr =
             let
                 ( get, set ) =
@@ -527,9 +533,9 @@ insertTx network tx =
                 }
             )
             { network
-                | txs = Dict.insert tx.id tx network.txs
+                | txs = Dict.insert tx.id tx_ network.txs
             }
-        |> pair tx
+        |> pair tx_
 
 
 listInOutputsOfApiTxUtxo : Network -> Api.Data.TxUtxo -> List ( Direction, Address )
