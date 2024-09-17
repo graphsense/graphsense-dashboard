@@ -119,11 +119,11 @@ updateByMsg plugins uc msg model =
                     | actors = Dict.insert id data model.actors
                 }
 
-        UserPressedCtrlKey ->
-            n { model | ctrlPressed = True }
+        UserPressedModKey ->
+            n { model | modPressed = True }
 
-        UserReleasedCtrlKey ->
-            n { model | ctrlPressed = False }
+        UserReleasedModKey ->
+            n { model | modPressed = False }
 
         UserReleasedEscape ->
             n (model |> unselect |> s_details Nothing)
@@ -793,7 +793,7 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault (n model)
 
         UserClickedAddress id ->
-            if model.ctrlPressed then
+            if model.modPressed then
                 let
                     ( modelS, _ ) =
                         multiSelect model [ MSelectedAddress id ] True
@@ -818,7 +818,7 @@ updateByMsg plugins uc msg model =
                 loadAddress plugins id model
 
         UserClickedTx id ->
-            if model.ctrlPressed then
+            if model.modPressed then
                 let
                     ( modelS, _ ) =
                         multiSelect model [ MSelectedTx id ] True

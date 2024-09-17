@@ -38,7 +38,7 @@ init us _ =
             }
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag
-      , ctrlPressed = False
+      , modPressed = False
       , isDirty = False
       , tooltip = Nothing
       }

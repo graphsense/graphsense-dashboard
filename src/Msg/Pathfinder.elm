@@ -29,8 +29,8 @@ type Msg
     | UserClickedExportGraph
     | UserClickedImportFile
     | UserClosedDetailsView
-    | UserPressedCtrlKey
-    | UserReleasedCtrlKey
+    | UserPressedModKey
+    | UserReleasedModKey
     | UserReleasedEscape
     | UserPressedNormalKey String
     | UserReleasedNormalKey String

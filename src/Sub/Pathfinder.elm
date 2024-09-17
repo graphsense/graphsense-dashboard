@@ -21,7 +21,10 @@ toKeyDown keyValue =
     case keyValue of
         "Control" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
-            Decode.succeed UserPressedCtrlKey
+            Decode.succeed UserPressedModKey
+
+        "Shift" ->
+            Decode.succeed UserPressedModKey
 
         "z" ->
             UserPressedNormalKey keyValue
@@ -53,8 +56,11 @@ toKeyUp keyValue =
     case keyValue of
         "Control" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
-            UserReleasedCtrlKey
+            UserReleasedModKey
                 |> Decode.succeed
+
+        "Shift" ->
+            Decode.succeed UserReleasedModKey
 
         "z" ->
             UserReleasedNormalKey keyValue
@@ -91,7 +97,7 @@ subscriptions model =
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
-    , Browser.Events.onVisibilityChange (\_ -> UserReleasedCtrlKey)
+    , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)
     , Time.every 60000 Tick
     , if Set.isEmpty model.network.animatedAddresses && Set.isEmpty model.network.animatedTxs then
         Sub.none

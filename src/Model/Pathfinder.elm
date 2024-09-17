@@ -43,7 +43,7 @@ type alias Model =
     , config : Config
     , currentTime : Posix
     , pointerTool : PointerTool
-    , ctrlPressed : Bool
+    , modPressed : Bool
     , isDirty : Bool
     , tooltip : Maybe Tooltip
     }
