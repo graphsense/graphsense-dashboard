@@ -13,7 +13,7 @@ import RecordSetter exposing (..)
 import Set
 import Table
 import Theme.Html.Icons as HIcons
-import Theme.Html.SidePanelComponents exposing (paginationListPartEndAttributes, paginationListPartEndInstances, paginationListPartEndWithInstances, paginationListPartMiddleAttributes, paginationListPartMiddleInstances, paginationListPartMiddleWithInstances, paginationListPartStartAttributes, paginationListPartStartInstances, paginationListPartStartWithInstances)
+import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
 import Util.View
 import View.Graph.Table exposing (simpleThead, tableHint)
@@ -106,14 +106,14 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
         paggingBlockAttributes =
             [ [ Css.width (Css.pct 100) ] |> css ]
 
-        pageNumberInstance =
-            Just (div [] [ text (Locale.string vc.locale "Page" ++ " " ++ (tblPaged.currentPage |> String.fromInt)) ])
-
-        nlabel =
-            Just (div nextActiveAttributes [ text (Locale.string vc.locale "Next") ])
-
-        plabel =
-            Just (div prevActiveAttributes [ text (Locale.string vc.locale "Previous") ])
+        listPart =
+            { nextLabel = Locale.string vc.locale "Next"
+            , previousLabel = Locale.string vc.locale "Previous"
+            , pageNumberLabel =
+                tblPaged.currentPage
+                    |> String.fromInt
+                    |> (++) (Locale.string vc.locale "Page" ++ " ")
+            }
     in
     div
         []
@@ -132,49 +132,40 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
               else
                 Util.View.none
             , if tblPaged.currentPage == 1 && nextPageAvailable then
-                paginationListPartStartWithInstances
-                    (paginationListPartStartAttributes
+                SidePanelComponents.paginationListPartStartWithInstances
+                    (SidePanelComponents.paginationListPartStartAttributes
                         |> s_listPartStart paggingBlockAttributes
                         |> s_iconsChevronRightThin nextActiveAttributes
                     )
-                    (paginationListPartStartInstances
-                        |> s_pageNumber pageNumberInstance
-                        |> s_next nlabel
-                        |> s_previous plabel
+                    (SidePanelComponents.paginationListPartStartInstances
                         |> s_iconsChevronRightEnd (Just Util.View.none)
                     )
-                    {}
+                    { listPartStart = listPart }
 
               else if nextPageAvailable then
-                paginationListPartMiddleWithInstances
-                    (paginationListPartMiddleAttributes
+                SidePanelComponents.paginationListPartMiddleWithInstances
+                    (SidePanelComponents.paginationListPartMiddleAttributes
                         |> s_listPartMiddle paggingBlockAttributes
                         |> s_iconsChevronRightThin nextActiveAttributes
                         |> s_iconsChevronLeftThin prevActiveAttributes
                         |> s_iconsChevronLeftEnd firstActiveAttributes
                     )
-                    (paginationListPartMiddleInstances
-                        |> s_pageNumber pageNumberInstance
-                        |> s_next nlabel
-                        |> s_previous plabel
+                    (SidePanelComponents.paginationListPartMiddleInstances
                         |> s_iconsChevronRightEnd (Just Util.View.none)
                     )
-                    {}
+                    { listPartMiddle = listPart }
 
               else
-                paginationListPartEndWithInstances
-                    (paginationListPartEndAttributes
+                SidePanelComponents.paginationListPartEndWithInstances
+                    (SidePanelComponents.paginationListPartEndAttributes
                         |> s_listPartEnd paggingBlockAttributes
                         |> s_nextCell nextActiveAttributes
                         |> s_iconsChevronLeftThin prevActiveAttributes
                         |> s_iconsChevronLeftEnd firstActiveAttributes
                     )
-                    (paginationListPartEndInstances
-                        |> s_pageNumber pageNumberInstance
-                        |> s_next nlabel
-                        |> s_previous plabel
+                    (SidePanelComponents.paginationListPartEndInstances
                         |> s_iconsChevronRightEnd (Just Util.View.none)
                     )
-                    {}
+                    { listPartEnd = listPart }
             ]
         ]
