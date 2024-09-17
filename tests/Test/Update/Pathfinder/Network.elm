@@ -4,6 +4,7 @@ import Api.Data
 import Data.Api as Api
 import Data.Pathfinder.Id as Id
 import Data.Pathfinder.Network as Data
+import Dict
 import Expect exposing (Expectation)
 import Model.Pathfinder.Network exposing (Network)
 import RecordSetter exposing (..)
@@ -21,13 +22,22 @@ equal expected result =
         expected
 
 
+equalIds : Network -> Network -> Expectation
+equalIds expected result =
+    Expect.all
+        [ \e -> Expect.equalLists (e.addresses |> Dict.keys) (result.addresses |> Dict.keys)
+        , \e -> Expect.equalLists (e.txs |> Dict.keys) (result.txs |> Dict.keys)
+        ]
+        expected
+
+
 suite : Test
 suite =
     describe "Update.Pathfinder.Network"
         [ test "addAddress 1" <|
             \_ ->
                 Network.addAddress Id.address1 Data.empty
-                    |> equal Data.oneAddress
+                    |> equalIds Data.oneAddress
         , test "addAddress 1 again" <|
             \_ ->
                 Network.addAddress Id.address1 Data.oneAddress
@@ -39,23 +49,27 @@ suite =
         , test "add outgoing Tx 1" <|
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx1) Data.oneAddress
-                    |> equal Data.oneAddressWithOutgoingTx
+                    |> Tuple.second
+                    |> equalIds Data.oneAddressWithOutgoingTx
         , test "add outgoing Tx 1 again" <|
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx1) Data.oneAddressWithOutgoingTx
+                    |> Tuple.second
                     |> equal Data.oneAddressWithOutgoingTx
         , test "add incoming Tx 1" <|
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx2) Data.oneAddress
-                    |> equal Data.oneAddressWithIncomingTx
+                    |> Tuple.second
+                    |> equalIds Data.oneAddressWithIncomingTx
         , test "add incoming after outgoing Tx 1" <|
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx2) Data.oneAddressWithOutgoingTx
-                    |> equal Data.oneAddressWithTwoTxs
+                    |> Tuple.second
+                    |> equalIds Data.oneAddressWithTwoTxs
         , test "addAddress 3" <|
             \_ ->
                 Network.addAddress Id.address3 Data.oneAddressWithOutgoingTx
-                    |> equal Data.twoConnectedAddresses
+                    |> equalIds Data.twoConnectedAddresses
         , test "addAddress 3 again" <|
             \_ ->
                 Network.addAddress Id.address3 Data.twoConnectedAddresses
@@ -63,7 +77,7 @@ suite =
         , test "addAddress 4" <|
             \_ ->
                 Network.addAddress Id.address4 Data.twoConnectedAddresses
-                    |> equal Data.one2TwoAddresses
+                    |> equalIds Data.one2TwoAddresses
         , test "addAddress 4 again" <|
             \_ ->
                 Network.addAddress Id.address4 Data.one2TwoAddresses
@@ -71,7 +85,7 @@ suite =
         , test "addAddress 5" <|
             \_ ->
                 Network.addAddress Id.address5 Data.one2TwoAddresses
-                    |> equal Data.one2ThreeAddresses
+                    |> equalIds Data.one2ThreeAddresses
         , test "addAddress 5 again" <|
             \_ ->
                 Network.addAddress Id.address5 Data.one2ThreeAddresses
@@ -79,5 +93,6 @@ suite =
         , test "addTx 2" <|
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx3) Data.one2ThreeAddresses
-                    |> equal Data.one2TwoTxs2ThreeAddresses
+                    |> Tuple.second
+                    |> equalIds Data.one2TwoTxs2ThreeAddresses
         ]

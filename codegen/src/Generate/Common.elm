@@ -39,7 +39,7 @@ adjustNames node =
 
         log tit =
             if FrameTraits.getName node == "Icons/Report" then
-                Debug.log tit
+                identity -- Debug.log tit
 
             else
                 identity
@@ -52,7 +52,7 @@ disambiguateCollectedNames dict =
     let
         log id tit =
             if id == "2914:463" then
-                Debug.log tit
+                identity -- Debug.log tit
 
             else
                 identity

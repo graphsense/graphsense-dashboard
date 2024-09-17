@@ -193,17 +193,17 @@ sidebar plugins vc model =
          ]
             ++ plugin_menu_items
             ++ [ div [ model.page == Stats |> Css.View.sidebarIconsBottom vc |> css ]
-                    [ -- FontAwesome.icon FontAwesome.chartPie
-                      --     |> Html.Styled.fromUnstyled
-                      --     |> List.singleton
-                      --     |> a
-                      --         [ model.page == Stats |> Css.View.sidebarIcon vc |> css
-                      --         , title (Locale.string vc.locale "Statistics")
-                      --         , Route.statsRoute
-                      --             |> Route.toUrl
-                      --             |> href
-                      --         ]
-                    --   div [ model.page == Stats |> Css.View.sidebarIcon vc |> css ] [ User.user vc model.user ]
+                    [-- FontAwesome.icon FontAwesome.chartPie
+                     --     |> Html.Styled.fromUnstyled
+                     --     |> List.singleton
+                     --     |> a
+                     --         [ model.page == Stats |> Css.View.sidebarIcon vc |> css
+                     --         , title (Locale.string vc.locale "Statistics")
+                     --         , Route.statsRoute
+                     --             |> Route.toUrl
+                     --             |> href
+                     --         ]
+                     --   div [ model.page == Stats |> Css.View.sidebarIcon vc |> css ] [ User.user vc model.user ]
                     ]
                ]
         )

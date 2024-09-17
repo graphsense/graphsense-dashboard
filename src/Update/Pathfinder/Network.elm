@@ -586,9 +586,6 @@ findTxCoords network tx =
                 baseC =
                     findTxCoordsInternal network ([ Dict.get toId network.addresses |> Maybe.map (Tuple.pair Direction.Incoming), Dict.get fromId network.addresses |> Maybe.map (Tuple.pair Direction.Outgoing) ] |> List.filterMap identity)
 
-                _ =
-                    Debug.log "" baseC
-
                 allTxs =
                     Dict.values network.txs
 

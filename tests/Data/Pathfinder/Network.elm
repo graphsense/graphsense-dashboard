@@ -7,8 +7,9 @@ import Dict
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Network as Init
 import Model.Direction exposing (Direction(..))
+import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Network exposing (Network)
-import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_visible)
+import RecordSetter exposing (s_address, s_incomingTxs, s_outgoingTxs, s_visible)
 import Set
 import Update.Pathfinder.Tx as Tx
 
@@ -36,7 +37,7 @@ oneAddressWithOutgoingTx =
             Dict.fromList
                 [ ( Id.tx1
                   , Tx.updateUtxo
-                        (Tx.updateUtxoIo Incoming Id.address1 (s_visible True))
+                        (Tx.updateUtxoIo Incoming Id.address1 (s_address (Just Address.address5)))
                         Tx.tx1
                   )
                 ]
@@ -45,7 +46,7 @@ oneAddressWithOutgoingTx =
                 (Maybe.map
                     (\address ->
                         { address
-                            | outgoingTxs = Set.fromList [ Id.tx1 ]
+                            | outgoingTxs = Address.Txs (Set.fromList [ Id.tx1 ])
                         }
                     )
                 )
@@ -60,7 +61,7 @@ oneAddressWithIncomingTx =
             Dict.fromList
                 [ ( Id.tx2
                   , Tx.updateUtxo
-                        (Tx.updateUtxoIo Outgoing Id.address1 (s_visible True))
+                        (Tx.updateUtxoIo Outgoing Id.address1 (s_address (Just Address.address5)))
                         Tx.tx2
                   )
                 ]
@@ -69,7 +70,7 @@ oneAddressWithIncomingTx =
                 (Maybe.map
                     (\address ->
                         { address
-                            | incomingTxs = Set.fromList [ Id.tx2 ]
+                            | incomingTxs = Address.Txs (Set.fromList [ Id.tx2 ])
                         }
                     )
                 )
@@ -89,8 +90,8 @@ oneAddressWithTwoTxs =
                 (Maybe.map
                     (\address ->
                         { address
-                            | outgoingTxs = Set.fromList [ Id.tx1 ]
-                            , incomingTxs = Set.fromList [ Id.tx2 ]
+                            | outgoingTxs = Address.Txs (Set.fromList [ Id.tx1 ])
+                            , incomingTxs = Address.Txs (Set.fromList [ Id.tx2 ])
                         }
                     )
                 )
@@ -110,7 +111,7 @@ twoConnectedAddresses =
     let
         address3 =
             Address.address3
-                |> s_incomingTxs (Set.insert Id.tx1 Address.address3.incomingTxs)
+                |> s_incomingTxs (Address.Txs (Set.insert Id.tx1 (Address.txsToSet Address.address3.incomingTxs)))
     in
     { oneAddressWithOutgoingTx
         | addresses = Dict.insert Id.address3 address3 oneAddressWithOutgoingTx.addresses
@@ -118,7 +119,7 @@ twoConnectedAddresses =
             Dict.update Id.tx1
                 (Maybe.map
                     (Tx.updateUtxo
-                        (Tx.updateUtxoIo Outgoing Id.address3 (s_visible True))
+                        (Tx.updateUtxoIo Outgoing Id.address3 (s_address (Just Address.address5)))
                     )
                 )
                 oneAddressWithOutgoingTx.txs
@@ -130,7 +131,7 @@ one2TwoAddresses =
     let
         address4 =
             Address.address4
-                |> s_incomingTxs (Set.insert Id.tx1 Address.address4.incomingTxs)
+                |> s_incomingTxs (Address.Txs (Set.insert Id.tx1 (Address.txsToSet Address.address4.incomingTxs)))
     in
     { twoConnectedAddresses
         | addresses = Dict.insert Id.address4 address4 twoConnectedAddresses.addresses
@@ -138,7 +139,7 @@ one2TwoAddresses =
             Dict.update Id.tx1
                 (Maybe.map
                     (Tx.updateUtxo
-                        (Tx.updateUtxoIo Outgoing Id.address4 (s_visible True))
+                        (Tx.updateUtxoIo Outgoing Id.address4 (s_address (Just Address.address5)))
                     )
                 )
                 twoConnectedAddresses.txs
@@ -150,7 +151,7 @@ one2ThreeAddresses =
     let
         address5 =
             Address.address5
-                |> s_incomingTxs (Set.insert Id.tx1 Address.address5.incomingTxs)
+                |> s_incomingTxs (Address.Txs (Set.insert Id.tx1 (Address.txsToSet Address.address5.incomingTxs)))
     in
     { one2TwoAddresses
         | addresses = Dict.insert Id.address5 address5 one2TwoAddresses.addresses
@@ -158,7 +159,7 @@ one2ThreeAddresses =
             Dict.update Id.tx1
                 (Maybe.map
                     (Tx.updateUtxo
-                        (Tx.updateUtxoIo Outgoing Id.address5 (s_visible True))
+                        (Tx.updateUtxoIo Outgoing Id.address5 (s_address (Just address5)))
                     )
                 )
                 one2TwoAddresses.txs
@@ -173,7 +174,7 @@ one2TwoTxs2ThreeAddresses =
                 (Maybe.map
                     (\address ->
                         { address
-                            | outgoingTxs = Set.insert Id.tx3 address.outgoingTxs
+                            | outgoingTxs = Address.Txs (Set.insert Id.tx3 (Address.txsToSet address.outgoingTxs))
                         }
                     )
                 )
@@ -183,7 +184,7 @@ one2TwoTxs2ThreeAddresses =
                 |> Dict.update Id.tx3
                     (Maybe.map
                         (Tx.updateUtxo
-                            (Tx.updateUtxoIo Incoming Id.address1 (s_visible True))
+                            (Tx.updateUtxoIo Incoming Id.address1 (s_address (Just Address.address5)))
                         )
                     )
     }

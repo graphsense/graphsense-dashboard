@@ -23,6 +23,11 @@ dev: $(API_ELM) $(wildcard src/**)
 clean:
 	rm -rf ./elm-stuff/
 	rm -rf ./dist/
+	rm -rf ./theme/Theme/
+	rm -rf ./generated/
+	rm -rf ./codegen/generated/
+	rm -rf elm.json
+
 
 setem:
 	npx setem --output generated
@@ -45,18 +50,21 @@ serve-docker: build-docker
 
 format:
 	npx elm-format --yes src
+	npx elm-format --yes tests
 
 ./theme/figma.json:
 	mkdir -p theme
 	curl 'https://api.figma.com/v1/files/$(FIGMA_FILE_ID)?geometry=paths' -H 'X-Figma-Token: $(FIGMA_API_TOKEN)' | jq > theme/figma.json
 
 theme: ./theme/figma.json
-	npx elm-codegen run --debug --flags-from=./theme/figma.json --output theme
+	npx elm-codegen run --flags-from=./theme/figma.json --output theme
 
 gen:
 	rm -rf generated/*
 	node generate.js
+	make setem
 	-make theme
 	make setem
+	
 
 .PHONY: openapi serve test format build build-docker serve-docker gen theme
