@@ -58,13 +58,7 @@ customizations vc =
 
 pageIndicatorView : PagedTable data -> Html msg
 pageIndicatorView pt =
-    let
-        pageText =
-            pt.currentPage |> String.fromInt
-
-        -- ++ " of " ++ (PT.nrPages pt |> Maybe.map String.fromInt |> Maybe.withDefault "?")
-    in
-    div [ [ Css.verticalAlign Css.center ] |> toAttr ] [ text pageText ]
+    div [ [ Css.verticalAlign Css.center ] |> toAttr ] [ text (pt.currentPage |> String.fromInt) ]
 
 
 rawTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> String -> List data -> Html msg
@@ -98,26 +92,22 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
         []
         [ div
             attributes
-            (Table.view config tbl.state filteredData
-                :: (if tbl.loading then
-                        [ Util.View.loadingSpinner vc loadingSpinner
-                        ]
+            [ Table.view config tbl.state filteredData
+            , if tbl.loading then
+                Util.View.loadingSpinner vc loadingSpinner
 
-                    else if List.isEmpty tbl.data then
-                        [ tableHint styles vc "No records found"
-                        ]
+              else if List.isEmpty tbl.data then
+                tableHint styles vc "No records found"
 
-                    else if List.isEmpty filteredData then
-                        [ tableHint styles vc "No rows match your filter criteria"
-                        ]
+              else if List.isEmpty filteredData then
+                tableHint styles vc "No rows match your filter criteria"
 
-                    else
-                        [ div [ centerContent |> toAttr ]
-                            [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ HIcons.iconsChevronLeftThin {} ]
-                            , pageIndicatorView tblPaged
-                            , button ((linkButtonStyle vc nextPageAvailable |> toAttr) :: nextEventAttr) [ HIcons.iconsChevronRightThin {} ]
-                            ]
-                        ]
-                   )
-            )
+              else
+                Util.View.none
+            , div [ centerContent |> toAttr ]
+                [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ HIcons.iconsChevronLeftThin {} ]
+                , pageIndicatorView tblPaged
+                , button ((linkButtonStyle vc nextPageAvailable |> toAttr) :: nextEventAttr) [ HIcons.iconsChevronRightThin {} ]
+                ]
+            ]
         ]

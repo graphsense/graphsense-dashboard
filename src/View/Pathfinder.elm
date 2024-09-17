@@ -73,7 +73,6 @@ import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.IoTable as IoTable
-import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.Tooltip as Tooltip
@@ -98,11 +97,6 @@ inlineCloseSmallIcon =
 inlineDoneSmallIcon : Html Msg
 inlineDoneSmallIcon =
     HIcons.iconsDoneSmallWithAttributes HIcons.iconsDoneSmallAttributes {}
-
-
-inlineTagLargeIcon : Html Msg
-inlineTagLargeIcon =
-    HIcons.iconsTagLargeWithAttributes (HIcons.iconsTagLargeAttributes |> s_iconsTagLarge [ css [ Css.display Css.inline ] ]) {}
 
 
 inlineClusterIcon : Bool -> Color -> Html Msg
