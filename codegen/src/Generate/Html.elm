@@ -324,7 +324,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                         |> Elm.list
                     )
 
-        frame children =
+        frame =
             if hasOnlySvgChildren then
                 Gen.Svg.Styled.call_.svg
                     ([ max 3 bbox.width
@@ -344,7 +344,9 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                      ]
                         |> Elm.list
                     )
-                    children
+                    (Svg.frameTraitsToExpressions config componentNameForChildren node.frameTraits
+                        |> Elm.list
+                    )
                     |> List.singleton
                     |> Elm.list
                     |> Gen.Html.Styled.call_.div
@@ -368,12 +370,11 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                                 |> Elm.list
                             )
                     )
-                    children
+                    (frameTraitsToExpressions config componentNameForChildren node.frameTraits
+                        |> Elm.list
+                    )
     in
     frame
-        (frameTraitsToExpressions config componentNameForChildren node.frameTraits
-            |> Elm.list
-        )
         |> withVisibility componentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
 
 
