@@ -1,4 +1,4 @@
-module Model.Pathfinder.PagedTable exposing (PagedTable, decPage, getPage, hasNextPage, incPage, isNextPageLoaded, nrPages, setLoading)
+module Model.Pathfinder.PagedTable exposing (PagedTable, decPage, getPage, goToFirstPage, hasNextPage, incPage, isNextPageLoaded, nrPages, setLoading)
 
 import Model.Graph.Table exposing (Table)
 import RecordSetter exposing (s_loading)
@@ -33,6 +33,11 @@ decPage pt =
 
     else
         pt
+
+
+goToFirstPage : PagedTable d -> PagedTable d
+goToFirstPage pt =
+    { pt | currentPage = 1 }
 
 
 setLoading : Bool -> PagedTable d -> PagedTable d

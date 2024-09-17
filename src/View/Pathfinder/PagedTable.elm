@@ -9,10 +9,11 @@ import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Events exposing (..)
 import Model exposing (Msg(..))
 import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
-import RecordSetter exposing (s_rowAttrs, s_tableAttrs, s_thead)
+import RecordSetter exposing (..)
 import Set
 import Table
 import Theme.Html.Icons as HIcons
+import Theme.Html.SidePanelComponents exposing (paginationListPartEndAttributes, paginationListPartEndInstances, paginationListPartEndWithInstances, paginationListPartMiddleAttributes, paginationListPartMiddleInstances, paginationListPartMiddleWithInstances, paginationListPartStartAttributes, paginationListPartStartInstances, paginationListPartStartWithInstances)
 import Tuple3
 import Util.View
 import View.Graph.Table exposing (simpleThead, tableHint)
@@ -69,8 +70,8 @@ rawTableView _ attributes config sortColumn data =
         ]
 
 
-pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> PagingMsg data msg -> PagingMsg data msg -> Html msg
-pagedTableView vc attributes config tblPaged prevMsg nextMsg =
+pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> PagingMsg data msg -> PagingMsg data msg -> PagingMsg data msg -> Html msg
+pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
     let
         tbl =
             tblPaged.table
@@ -81,12 +82,38 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
         nextPageAvailable =
             PT.hasNextPage tblPaged
 
-        nextEventAttr =
+        nextActiveAttributes =
             if nextPageAvailable then
-                [ onClick (nextMsg tblPaged) ]
+                [ onClick (nextMsg tblPaged), [ Css.cursor Css.pointer ] |> css ]
 
             else
                 []
+
+        prevActiveAttributes =
+            if tblPaged.currentPage > 1 then
+                [ onClick (prevMsg tblPaged), [ Css.cursor Css.pointer ] |> css ]
+
+            else
+                []
+
+        firstActiveAttributes =
+            if tblPaged.currentPage > 1 then
+                [ onClick (firstMsg tblPaged), [ Css.cursor Css.pointer ] |> css ]
+
+            else
+                []
+
+        paggingBlockAttributes =
+            [ [ Css.width (Css.pct 100) ] |> css ]
+
+        pageNumberInstance =
+            Just (div [] [ text (Locale.string vc.locale "Page" ++ " " ++ (tblPaged.currentPage |> String.fromInt)) ])
+
+        nlabel =
+            Just (div nextActiveAttributes [ text (Locale.string vc.locale "Next") ])
+
+        plabel =
+            Just (div prevActiveAttributes [ text (Locale.string vc.locale "Previous") ])
     in
     div
         []
@@ -104,10 +131,50 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
 
               else
                 Util.View.none
-            , div [ centerContent |> toAttr ]
-                [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ HIcons.iconsChevronLeftThin {} ]
-                , pageIndicatorView tblPaged
-                , button ((linkButtonStyle vc nextPageAvailable |> toAttr) :: nextEventAttr) [ HIcons.iconsChevronRightThin {} ]
-                ]
+            , if tblPaged.currentPage == 1 && nextPageAvailable then
+                paginationListPartStartWithInstances
+                    (paginationListPartStartAttributes
+                        |> s_listPartStart paggingBlockAttributes
+                        |> s_iconsChevronRightThin nextActiveAttributes
+                    )
+                    (paginationListPartStartInstances
+                        |> s_pageNumber pageNumberInstance
+                        |> s_next nlabel
+                        |> s_previous plabel
+                        |> s_iconsChevronRightEnd (Just Util.View.none)
+                    )
+                    {}
+
+              else if nextPageAvailable then
+                paginationListPartMiddleWithInstances
+                    (paginationListPartMiddleAttributes
+                        |> s_listPartMiddle paggingBlockAttributes
+                        |> s_iconsChevronRightThin nextActiveAttributes
+                        |> s_iconsChevronLeftThin prevActiveAttributes
+                        |> s_iconsChevronLeftEnd firstActiveAttributes
+                    )
+                    (paginationListPartMiddleInstances
+                        |> s_pageNumber pageNumberInstance
+                        |> s_next nlabel
+                        |> s_previous plabel
+                        |> s_iconsChevronRightEnd (Just Util.View.none)
+                    )
+                    {}
+
+              else
+                paginationListPartEndWithInstances
+                    (paginationListPartEndAttributes
+                        |> s_listPartEnd paggingBlockAttributes
+                        |> s_nextCell nextActiveAttributes
+                        |> s_iconsChevronLeftThin prevActiveAttributes
+                        |> s_iconsChevronLeftEnd firstActiveAttributes
+                    )
+                    (paginationListPartEndInstances
+                        |> s_pageNumber pageNumberInstance
+                        |> s_next nlabel
+                        |> s_previous plabel
+                        |> s_iconsChevronRightEnd (Just Util.View.none)
+                    )
+                    {}
             ]
         ]

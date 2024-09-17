@@ -14,6 +14,7 @@ type Msg
     | UserClickedToggleTransactionTable
     | UserClickedNextPageTransactionTable
     | UserClickedPreviousPageTransactionTable
+    | UserClickedFirstPageTransactionTable
     | UserClickedNextPageNeighborsTable Direction
     | UserClickedPreviousPageNeighborsTable Direction
     | GotTxsForAddressDetails Id ( Maybe Int, Maybe Int ) Api.Data.AddressTxs

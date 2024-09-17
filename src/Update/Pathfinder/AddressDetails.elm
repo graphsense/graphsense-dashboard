@@ -169,6 +169,9 @@ update uc pathfinderModel msg id model =
         UserClickedPreviousPageTransactionTable ->
             ( { model | txs = PT.decPage model.txs.table |> flip s_table model.txs }, [] )
 
+        UserClickedFirstPageTransactionTable ->
+            ( { model | txs = PT.goToFirstPage model.txs.table |> flip s_table model.txs }, [] )
+
         UserClickedToggleTransactionTable ->
             not model.transactionsTableOpen
                 |> showTransactionsTable model

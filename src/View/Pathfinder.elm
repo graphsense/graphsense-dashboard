@@ -116,16 +116,6 @@ inlineClusterIcon highlight clr =
         {}
 
 
-inlineChevronRightThickIcon : Html Msg
-inlineChevronRightThickIcon =
-    HIcons.iconsChevronRightThick {}
-
-
-inlineChevronDownThickIcon : Html Msg
-inlineChevronDownThickIcon =
-    HIcons.iconsChevronDownThick {}
-
-
 graphActionButtons : List BtnConfig
 graphActionButtons =
     [ BtnConfig (\_ -> inlineExportIcon) "Export" (UserClickedExportGraphAsPNG "graph") True
@@ -262,11 +252,6 @@ disableableButton style btn attrs content =
                 [ HA.disabled True ]
     in
     button (((style btn.enable |> toAttr) :: addattr) ++ attrs) content
-
-
-rule : Html Msg
-rule =
-    hr [ ruleStyle |> toAttr ] []
 
 
 inOutIndicator : View.Config -> String -> Int -> Int -> Int -> Html Msg
@@ -1290,6 +1275,9 @@ transactionTableView vc addressId txOnGraphFn model =
         nextMsg =
             \_ -> AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
 
+        firstMsg =
+            \_ -> AddressDetailsMsg AddressDetails.UserClickedFirstPageTransactionTable
+
         styles =
             Css.Table.styles
 
@@ -1300,6 +1288,7 @@ transactionTableView vc addressId txOnGraphFn model =
                 model.table
                 prevMsg
                 nextMsg
+                firstMsg
 
         filterRow drp =
             div
