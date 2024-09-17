@@ -57,7 +57,7 @@ format:
 	curl 'https://api.figma.com/v1/files/$(FIGMA_FILE_ID)?geometry=paths' -H 'X-Figma-Token: $(FIGMA_API_TOKEN)' | jq > theme/figma.json
 
 theme: ./theme/figma.json
-	npx elm-codegen run --flags-from=./theme/figma.json --output theme
+	npx elm-codegen run --debug --flags-from=./theme/figma.json --output theme
 
 gen:
 	rm -rf generated/*

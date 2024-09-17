@@ -326,14 +326,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                         |> Gen.Svg.Styled.Attributes.viewBox
                      ]
                         |> Elm.list
-                    )
-                    (Svg.frameTraitsToExpressions config componentNameForChildren node.frameTraits
-                        |> Elm.list
-                    )
-                    |> List.singleton
-                    |> Elm.list
-                    |> Gen.Html.Styled.call_.div
-                        (getElementAttributes config name
+                        |> Elm.Op.append (getElementAttributes config name)
                             |> Elm.Op.append
                                 (Generate.Svg.FrameTraits.toStyles node.frameTraits
                                     |> (::) (Css.display Css.inline)
@@ -341,7 +334,10 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                                     |> List.singleton
                                     |> Elm.list
                                 )
-                        )
+                    )
+                    (Svg.frameTraitsToExpressions config componentNameForChildren node.frameTraits
+                        |> Elm.list
+                    )
 
             else
                 Gen.Html.Styled.call_.div
