@@ -153,59 +153,65 @@ sidebar plugins vc model =
                     , Css.textDecoration Css.none
                     ]
                 ]
-         , hr [ Css.View.sidebarRule vc |> css ] []
-         , a
-            [ Css.View.sidebarLink vc |> css
-            , Route.settingsRoute
-                |> Route.toUrl
-                |> href
-            ]
-            [ text (Locale.string vc.locale "Profile") ]
-         , a
-            [ Css.View.sidebarLink vc |> css
-            , Route.settingsRoute
-                |> Route.toUrl
-                |> href
-            ]
-            [ text (Locale.string vc.locale "Settings") ]
-         , a
-            [ Css.View.sidebarLink vc |> css
-            , Route.statsRoute
-                |> Route.toUrl
-                |> href
-            ]
-            [ text (Locale.string vc.locale "Statistics") ]
-         , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLightmode ]
-            [ text
-                (Locale.string vc.locale
-                    (if vc.lightmode then
-                        "Dark Mode"
-
-                     else
-                        "Light Mode"
-                    )
-                )
-            ]
-         , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLogout ]
-            [ text
-                (Locale.string vc.locale "Logout")
-            ]
          ]
-            ++ plugin_menu_items
-            ++ [ div [ model.page == Stats |> Css.View.sidebarIconsBottom vc |> css ]
-                    [-- FontAwesome.icon FontAwesome.chartPie
-                     --     |> Html.Styled.fromUnstyled
-                     --     |> List.singleton
-                     --     |> a
-                     --         [ model.page == Stats |> Css.View.sidebarIcon vc |> css
-                     --         , title (Locale.string vc.locale "Statistics")
-                     --         , Route.statsRoute
-                     --             |> Route.toUrl
-                     --             |> href
-                     --         ]
-                     --   div [ model.page == Stats |> Css.View.sidebarIcon vc |> css ] [ User.user vc model.user ]
+            ++ (if List.length plugin_menu_items > 0 then
+                    plugin_menu_items
+
+                else
+                    []
+               )
+            ++ [ hr [ Css.View.sidebarRule vc |> css ] []
+               , a
+                    [ Css.View.sidebarLink vc |> css
+                    , Route.settingsRoute
+                        |> Route.toUrl
+                        |> href
+                    ]
+                    [ text (Locale.string vc.locale "Profile") ]
+               , a
+                    [ Css.View.sidebarLink vc |> css
+                    , Route.settingsRoute
+                        |> Route.toUrl
+                        |> href
+                    ]
+                    [ text (Locale.string vc.locale "Settings") ]
+               , a
+                    [ Css.View.sidebarLink vc |> css
+                    , Route.statsRoute
+                        |> Route.toUrl
+                        |> href
+                    ]
+                    [ text (Locale.string vc.locale "Statistics") ]
+               , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLightmode ]
+                    [ text
+                        (Locale.string vc.locale
+                            (if vc.lightmode then
+                                "Dark Mode"
+
+                             else
+                                "Light Mode"
+                            )
+                        )
+                    ]
+               , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLogout ]
+                    [ text
+                        (Locale.string vc.locale "Logout")
                     ]
                ]
+         -- ++ [ div [ model.page == Stats |> Css.View.sidebarIconsBottom vc |> css ]
+         --         [-- FontAwesome.icon FontAwesome.chartPie
+         --          --     |> Html.Styled.fromUnstyled
+         --          --     |> List.singleton
+         --          --     |> a
+         --          --         [ model.page == Stats |> Css.View.sidebarIcon vc |> css
+         --          --         , title (Locale.string vc.locale "Statistics")
+         --          --         , Route.statsRoute
+         --          --             |> Route.toUrl
+         --          --             |> href
+         --          --         ]
+         --          --   div [ model.page == Stats |> Css.View.sidebarIcon vc |> css ] [ User.user vc model.user ]
+         --         ]
+         --    ]
         )
 
 
