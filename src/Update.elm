@@ -668,6 +668,29 @@ update plugins uc msg model =
                 |> List.singleton
             )
 
+        PathfinderMsg (Pathfinder.UserClickedSaveGraph time) ->
+                    ( model
+                    , ((case time of
+                            Nothing ->
+                                Time.now
+                                    |> Task.perform (Just >> Pathfinder.UserClickedSaveGraph)
+
+                            Just t ->
+                                Debug.todo """Pathfinder.serialize model.pathfinder
+                                    |> pair
+                                        (makeTimestampFilename model.config.locale t
+                                            |> (\tt -> tt ++ ".gs")
+                                        )
+                                    |> Ports.serialize
+                                    """
+                       )
+                        |> Pathfinder.CmdEffect
+                        |> PathfinderEffect
+                        |> List.singleton
+                      )
+                        ++ [ SetCleanEffect ]
+                    )
+
         PathfinderMsg m ->
             let
                 ( pathfinder, eff ) =

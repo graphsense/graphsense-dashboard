@@ -83,6 +83,11 @@ view vc config =
                     :: title (Locale.string vc.locale "Center graph")
                     :: iconsAttr
                 )
+            |> s_iconsSave
+                (onClickWithStop (UserClickedSaveGraph Nothing)
+                    :: title (Locale.string vc.locale "Save graph")
+                    :: iconsAttr
+                )
         )
         (SettingsComponents.toolbarInstances
             |> s_iconsUndo

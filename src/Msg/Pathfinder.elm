@@ -73,6 +73,7 @@ type Msg
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
     | UserClickedSelectionTool
+    | UserClickedSaveGraph (Maybe Time.Posix)
 
 
 type DisplaySettingsMsg
