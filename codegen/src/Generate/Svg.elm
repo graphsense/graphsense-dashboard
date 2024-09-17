@@ -2,7 +2,7 @@ module Generate.Svg exposing (..)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (uncurry)
-import Dict
+import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
 import Elm.Op
@@ -20,26 +20,6 @@ import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanit
 import Maybe.Extra
 import RecordSetter exposing (..)
 import Types exposing (Config, Details)
-
-
-subcanvasNodeComponentsToDeclarations : String -> SubcanvasNode -> List Elm.Declaration
-subcanvasNodeComponentsToDeclarations parentName node =
-    case node of
-        SubcanvasNodeComponentNode n ->
-            adjustBoundingBoxes n
-                |> Common.adjustNames
-                |> componentNodeToDeclarations parentName
-
-        SubcanvasNodeComponentSetNode n ->
-            n.frameTraits.children
-                |> List.map
-                    (subcanvasNodeComponentsToDeclarations
-                        (Generate.Common.FrameTraits.getName n)
-                    )
-                |> List.concat
-
-        _ ->
-            []
 
 
 subcanvasNodeToExpressions : Config -> String -> SubcanvasNode -> List Elm.Expression
@@ -125,8 +105,8 @@ subcanvasNodeToDetails node =
             []
 
 
-componentNodeToDeclarations : String -> ComponentNode -> List Elm.Declaration
-componentNodeToDeclarations parentName node =
+componentNodeToDeclarations : String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration
+componentNodeToDeclarations parentName parentProperties node =
     let
         ( details, descendantsDetails ) =
             componentNodeToDetails node
@@ -137,6 +117,7 @@ componentNodeToDeclarations parentName node =
 
         properties =
             Common.componentNodeToProperties details.name node
+                |> Dict.union parentProperties
 
         attributesParamName =
             "childrenAttributes"

@@ -3,9 +3,11 @@ module Generate exposing (main)
 {-| -}
 
 import Api.Raw exposing (..)
+import Dict
 import Elm
 import Gen.CodeGen.Generate as Generate
 import Generate.Colors as Colors
+import Generate.Common as Common
 import Generate.Html
 import Generate.Svg
 import Json.Decode
@@ -56,11 +58,11 @@ frameToFiles node =
                             |> (::) themeFolder
                 in
                 [ frameNodeToDeclarations
-                    (Generate.Svg.subcanvasNodeComponentsToDeclarations "")
+                    (Common.subcanvasNodeComponentsToDeclarations Generate.Svg.componentNodeToDeclarations)
                     n
                     |> Elm.file (name "Svg")
                 , frameNodeToDeclarations
-                    (Generate.Html.subcanvasNodeComponentsToDeclarations "")
+                    (Common.subcanvasNodeComponentsToDeclarations Generate.Html.componentNodeToDeclarations)
                     n
                     |> Elm.file (name "Html")
                 ]

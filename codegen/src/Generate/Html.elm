@@ -25,6 +25,7 @@ import Generate.Html.LineNode as LineNode
 import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
 import Generate.Html.VectorNode as VectorNode
+import Generate.Svg as Svg
 import Generate.Svg.DefaultShapeTraits
 import Generate.Svg.FrameTraits
 import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, withVisibility)
@@ -35,26 +36,6 @@ import String.Case exposing (toCamelCaseUpper)
 import String.Extra
 import Tuple exposing (mapBoth, pair)
 import Types exposing (Config, Details)
-
-
-subcanvasNodeComponentsToDeclarations : String -> SubcanvasNode -> List Elm.Declaration
-subcanvasNodeComponentsToDeclarations parentName node =
-    case node of
-        SubcanvasNodeComponentNode n ->
-            Common.adjustBoundingBoxes n
-                |> Common.adjustNames
-                |> componentNodeToDeclarations parentName
-
-        SubcanvasNodeComponentSetNode n ->
-            n.frameTraits.children
-                |> List.map
-                    (subcanvasNodeComponentsToDeclarations
-                        (Generate.Common.FrameTraits.getName n)
-                    )
-                |> List.concat
-
-        _ ->
-            []
 
 
 subcanvasNodeToExpressions : Config -> String -> SubcanvasNode -> List Elm.Expression
@@ -89,8 +70,8 @@ subcanvasNodeToExpressions config name node =
             []
 
 
-componentNodeToDeclarations : String -> ComponentNode -> List Elm.Declaration
-componentNodeToDeclarations parentName node =
+componentNodeToDeclarations : String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration
+componentNodeToDeclarations parentName parentProperties node =
     let
         ( details, descendantsDetails ) =
             componentNodeToDetails node
@@ -101,6 +82,8 @@ componentNodeToDeclarations parentName node =
 
         properties =
             Common.componentNodeToProperties details.name node
+                |> Dict.union parentProperties
+                |> Debug.log "123 properties"
 
         propertiesType =
             properties

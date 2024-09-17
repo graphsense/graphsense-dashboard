@@ -19,6 +19,76 @@ import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Types exposing (ComponentPropertyExpressions, OriginAdjust)
 
 
+subcanvasNodeComponentsToDeclarations : (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration) -> SubcanvasNode -> List Elm.Declaration
+subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
+    let
+        toDeclarations parentName parentProperties n =
+            adjustBoundingBoxes n
+                |> adjustNames
+                |> componentNodeToDeclarations parentName parentProperties
+    in
+    case node of
+        SubcanvasNodeComponentNode n ->
+            toDeclarations "" Dict.empty n
+
+        SubcanvasNodeComponentSetNode n ->
+            let
+                parentName =
+                    FrameTraits.getName n
+            in
+            -- for component sets we need to
+            -- get its properties before
+            -- going deeper down to components of the set
+            n.frameTraits.children
+                |> List.map
+                    (\child ->
+                        case child of
+                            SubcanvasNodeComponentNode nn ->
+                                let
+                                    name =
+                                        FrameTraits.getName nn
+                                            |> sanitize
+
+                                    nothingIfEmpty d =
+                                        if Dict.isEmpty d then
+                                            Nothing
+
+                                        else
+                                            Just d
+
+                                    properties =
+                                        componentNodeToProperties name n
+                                            |> Dict.toList
+                                            |> List.filterMap
+                                                (\( k, types ) ->
+                                                    if k == name then
+                                                        Dict.filter
+                                                            (\_ type_ ->
+                                                                type_ /= ComponentPropertyTypeVARIANT
+                                                            )
+                                                            types
+                                                            |> nothingIfEmpty
+                                                            |> Maybe.map (pair k)
+
+                                                    else
+                                                        Just ( k, types )
+                                                )
+                                            |> Dict.fromList
+                                in
+                                toDeclarations
+                                    parentName
+                                    properties
+                                    nn
+
+                            _ ->
+                                []
+                    )
+                |> List.concat
+
+        _ ->
+            []
+
+
 adjustBoundingBoxes : ComponentNode -> ComponentNode
 adjustBoundingBoxes node =
     let
@@ -303,7 +373,7 @@ formatComponentPropertyName str =
         str
 
 
-componentNodeToProperties : String -> ComponentNode -> Dict String (Dict String ComponentPropertyType)
+componentNodeToProperties : String -> { a | componentPropertiesTrait : ComponentPropertiesTrait, frameTraits : FrameTraits } -> Dict String (Dict String ComponentPropertyType)
 componentNodeToProperties name node =
     node.componentPropertiesTrait.componentPropertyDefinitions
         |> Maybe.map
