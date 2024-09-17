@@ -327,13 +327,13 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                      ]
                         |> Elm.list
                         |> Elm.Op.append (getElementAttributes config name)
-                            |> Elm.Op.append
-                                (Generate.Svg.FrameTraits.toStyles node.frameTraits
-                                    |> (::) (Css.display Css.inline)
-                                    |> Attributes.css
-                                    |> List.singleton
-                                    |> Elm.list
-                                )
+                        |> Elm.Op.append
+                            (Generate.Svg.FrameTraits.toStyles node.frameTraits
+                                |> (::) (Css.display Css.inline)
+                                |> Attributes.css
+                                |> List.singleton
+                                |> Elm.list
+                            )
                     )
                     (Svg.frameTraitsToExpressions config componentNameForChildren node.frameTraits
                         |> Elm.list
