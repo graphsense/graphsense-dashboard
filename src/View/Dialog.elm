@@ -1,7 +1,7 @@
 module View.Dialog exposing (..)
 
 import Config.View exposing (Config)
-import Css.Button
+import Css
 import Css.Dialog as Css
 import Css.View
 import FontAwesome
@@ -13,7 +13,18 @@ import Model exposing (Msg(..))
 import Model.Dialog exposing (..)
 import RecordSetter exposing (..)
 import Theme.Html.Buttons exposing (..)
-import Theme.Html.ErrorMessagesAlerts exposing (dialogConfirmationMessageAttributes, dialogConfirmationMessageWithAttributes, errorMessageComponentProperty1AlertAttributes, errorMessageComponentProperty1AlertWithAttributes, errorMessageComponentProperty1ErrorAttributes, errorMessageComponentProperty1ErrorInstances, errorMessageComponentProperty1ErrorWithInstances)
+import Theme.Html.ErrorMessagesAlerts
+    exposing
+        ( dialogConfirmationMessageAttributes
+        , dialogConfirmationMessageInstances
+        , dialogConfirmationMessageWithAttributes
+        , dialogConfirmationMessageWithInstances
+        , errorMessageComponentProperty1AlertAttributes
+        , errorMessageComponentProperty1AlertWithAttributes
+        , errorMessageComponentProperty1ErrorAttributes
+        , errorMessageComponentProperty1ErrorInstances
+        , errorMessageComponentProperty1ErrorWithInstances
+        )
 import Theme.Html.Icons as Icons
 import Util.View exposing (addDot, none, onClickWithStop)
 import View.Locale as Locale
@@ -65,21 +76,22 @@ confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
 
 options_ : Config -> OptionsConfig Msg -> Html Msg
 options_ vc { message, options } =
-    part vc
-        message
-        [ options
-            |> List.map
-                (\( title, msg ) ->
-                    button
-                        [ Css.Button.primary vc |> css
-                        , onClick <| UserClickedOption msg
-                        ]
-                        [ Locale.string vc.locale title |> text
-                        ]
-                )
-            |> div
-                [ align "center" ]
-        ]
+    let
+        buttonAttrNo =
+            [ css (Css.btnBase vc), onClickWithStop (UserClickedOption NoOp) ]
+
+        btn ( title, msg ) =
+            buttonStyleColoredStateRegularWithAttributes
+                (buttonStyleColoredStateRegularAttributes |> s_button [ css (Css.btnBase vc), onClickWithStop (UserClickedOption msg) ])
+                { styleColoredStateRegular = { buttonText = Locale.string vc.locale title, iconInstance = none, iconVisible = True } }
+
+        btns =
+            options |> List.map btn |> div [ Css.optionsButtonsContainer |> css ]
+    in
+    dialogConfirmationMessageWithInstances
+        (dialogConfirmationMessageAttributes |> s_iconsCloseBlack buttonAttrNo)
+        (dialogConfirmationMessageInstances |> s_buttonsLayout (Just btns))
+        { cancelButton = { variant = none }, confirmButton = { variant = none }, dialogConfirmationMessage = { bodyText = message, headerText = Locale.string vc.locale "Please select..." } }
 
 
 part : Config -> String -> List (Html msg) -> Html msg

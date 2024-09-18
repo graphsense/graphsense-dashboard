@@ -16,7 +16,7 @@ import Http
 import Json.Encode
 import Model.Dialog
 import Model.Graph
-import Model.Locale
+import Model.Notification
 import Model.Pathfinder
 import Model.Search
 import Model.Statusbar
@@ -27,7 +27,6 @@ import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
-import Theme.Hovercard exposing (Hovercard)
 import Time
 import Url exposing (Url)
 
@@ -58,6 +57,7 @@ type alias Model navigationKey =
     , dialog : Maybe (Model.Dialog.Model Msg)
     , supportedTokens : Dict String Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
+    , notifications : Model.Notification.Model
     , dirty : Bool
     }
 
@@ -104,6 +104,7 @@ type Msg
     | PluginMsg Plugin.Msg
     | UserClickedExampleSearch String
     | UserHovercardMsg Hovercard.Msg
+    | UserClosesNotification
 
 
 type RequestLimit

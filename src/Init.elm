@@ -7,6 +7,7 @@ import Dict
 import Effect.Api
 import Init.Graph as Graph
 import Init.Locale as Locale
+import Init.Notification as Notification
 import Init.Pathfinder as Pathfinder
 import Init.Search as Search
 import Init.Statusbar as Statusbar
@@ -66,6 +67,7 @@ init plugins uc flags url key =
       , dialog = Nothing
       , plugins = pluginStates
       , dirty = False
+      , notifications = Notification.init
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy

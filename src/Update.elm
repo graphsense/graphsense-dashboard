@@ -31,6 +31,8 @@ import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
+import Model.Notification as Notification
+import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import Model.Search as Search
 import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
@@ -586,19 +588,19 @@ update plugins uc msg model =
 
         PathfinderMsg Pathfinder.UserClickedRestart ->
             if model.pathfinder.isDirty then
-                { model
-                    | dialog =
-                        { message = Locale.string model.config.locale "You will not be able to recover it."
-                        , confirmText = Just "Yes, delete all"
-                        , cancelText = Just "Cancel"
-                        , title = "Clear dashboard?"
-                        , onYes = PathfinderMsg Pathfinder.UserClickedRestartYes
-                        , onNo = NoOp
-                        }
-                            |> Dialog.confirm
-                            |> Just
-                }
-                    |> n
+                n
+                    { model
+                        | dialog =
+                            { message = Locale.string model.config.locale "You will not be able to recover it."
+                            , confirmText = Just "Yes, delete all"
+                            , cancelText = Just "Cancel"
+                            , title = "Clear dashboard?"
+                            , onYes = PathfinderMsg Pathfinder.UserClickedRestartYes
+                            , onNo = NoOp
+                            }
+                                |> Dialog.confirm
+                                |> Just
+                    }
 
             else
                 n model
@@ -1007,6 +1009,9 @@ update plugins uc msg model =
 
         PluginMsg msgValue ->
             updatePlugins plugins uc msgValue model
+
+        UserClosesNotification ->
+            n { model | notifications = Notification.removeLastNotification model.notifications }
 
 
 updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )

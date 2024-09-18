@@ -24,6 +24,11 @@ btnBase _ =
     [ Css.cursor Css.pointer ]
 
 
+optionsButtonsContainer : List Style
+optionsButtonsContainer =
+    [ Css.displayFlex, Css.flexDirection Css.row, Css.justifyContent Css.spaceAround, Css.width (Css.pct 100) ]
+
+
 singleButton : Config -> List Style
 singleButton vc =
     vc.theme.dialog.singleButton

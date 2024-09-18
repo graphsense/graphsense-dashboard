@@ -7,8 +7,6 @@ import Css.Header as Css
 import Css.Reset
 import Css.View
 import FontAwesome
-import Hovercard
-import Html.Attributes
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
@@ -16,7 +14,6 @@ import Model exposing (Auth(..), Model, Msg(..), Page(..))
 import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
 import Route
-import Route.Graph
 import Route.Pathfinder as Pathfinder
 import Util.Css
 import Util.View exposing (hovercard)
@@ -24,6 +21,7 @@ import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
 import View.Main as Main
+import View.Notification as Notification
 import View.Statusbar as Statusbar
 import View.User as User
 
@@ -79,6 +77,7 @@ body plugins vc model =
          ]
             ++ hovercards plugins vc model
             ++ overlay plugins vc model
+            ++ [ Notification.view vc model.notifications ]
         )
 
 
