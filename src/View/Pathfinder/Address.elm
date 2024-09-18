@@ -102,16 +102,17 @@ view _ vc _ colors address getCluster =
                 , UserClickedAddress address.id |> onClickWithStop
                 , UserPushesLeftMouseButtonOnAddress address.id
                     |> Util.Graph.mousedown
-                , UserMovesMouseOverAddress address.id
-                    |> onMouseOver
-                , UserMovesMouseOutAddress address.id
-                    |> onMouseLeave
                 , css [ Css.cursor Css.pointer ]
                 ]
             |> s_nodeFrame
                 [ Id.toString address.id
                     |> Svg.id
+                , UserMovesMouseOverAddress address.id
+                    |> onMouseOver
+                , UserMovesMouseOutAddress address.id
+                    |> onMouseLeave
                 ]
+            -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
         )
         { addressNode =
             { addressId =

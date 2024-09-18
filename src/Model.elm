@@ -171,4 +171,5 @@ userSettingsFromMainModel model =
     , showTimeZoneOffset = Just model.config.showTimeZoneOffset
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
     , highlightClusterFriends = Just model.config.highlightClusterFriends
+    , snapToGrid = Just model.config.snapToGrid
     }

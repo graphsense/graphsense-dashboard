@@ -14,4 +14,5 @@ type alias Config =
     , showTimeZoneOffset : Bool
     , highlightClusterFriends : Bool
     , showTimestampOnTxEdge : Bool
+    , snapToGrid : Bool
     }

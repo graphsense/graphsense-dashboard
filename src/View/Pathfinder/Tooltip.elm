@@ -37,6 +37,8 @@ view vc ts tt =
         TagLabel lblid x ->
             tagLabel vc lblid x
     )
+        |> List.singleton
+        |> div [ Css.tooltipMargin |> css ]
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)

@@ -613,6 +613,19 @@ update plugins uc msg model =
             in
             ( m, eff ++ neff )
 
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleSnapToGrid) ->
+            let
+                ( pf, pfeff ) =
+                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleSnapToGrid) model.pathfinder
+
+                ( nm, neff ) =
+                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
+
+                ( m, eff ) =
+                    toggleSnapToGrid nm
+            in
+            ( m, eff ++ neff )
+
         PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTimeZoneOffset) ->
             let
                 ( pf, pfeff ) =
@@ -1456,6 +1469,15 @@ toggleShowDatesInUserLocale m =
 
     else
         ( mwUTCtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwUTCtz) |> List.singleton )
+
+
+toggleSnapToGrid : Model key -> ( Model key, List Effect )
+toggleSnapToGrid m =
+    let
+        nm =
+            m |> s_config (m.config |> s_snapToGrid (not m.config.snapToGrid))
+    in
+    ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
 
 
 toggleShowTimeZoneOffset : Model key -> ( Model key, List Effect )

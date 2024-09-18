@@ -82,6 +82,7 @@ type DisplaySettingsMsg
     | UserClickedToggleDatesInUserLocale
     | UserClickedToggleShowTimeZoneOffset
     | UserClickedToggleHighlightClusterFriends
+    | UserClickedToggleSnapToGrid
     | DisplaySettingsHovercardMsg Hovercard.Msg
 
 

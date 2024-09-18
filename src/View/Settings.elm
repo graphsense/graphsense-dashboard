@@ -109,9 +109,8 @@ view p vc m =
         settings =
             [ Section "Profile" (authContent vc m.user)
             , Section "General"
-                [ SubSection "Language"
+                [ SubSection "General"
                 , Custom "Language" (localeSwitch vc)
-                , SubSection "Date"
                 , ToggleSwitch "Show date in user locale" vc.showDatesInUserLocale (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg |> PathfinderMsg)
                 , SubSection "Values"
                 , Select "Change currency" (UserChangesCurrency >> GraphMsg) (currencyOptions vc.locale.currency)
@@ -128,12 +127,15 @@ view p vc m =
                 , ToggleSwitch "for entities" m.graph.config.showEntityShadowLinks (UserClickedShowEntityShadowLinks |> GraphMsg)
                 ]
             , Section "Pathfinder"
-                [ SubSection "Date"
+                [ SubSection "General"
+                , ToggleSwitch "Snap to Grid" vc.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg |> PathfinderMsg)
+                , SubSection "Date"
                 , ToggleSwitch "Show timezone" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg |> PathfinderMsg)
                 , SubSection "Transaction"
                 , ToggleSwitch "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg |> PathfinderMsg)
                 , SubSection "Cluster"
                 , ToggleSwitch "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg |> PathfinderMsg)
+                
                 ]
             ]
     in

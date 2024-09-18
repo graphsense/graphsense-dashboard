@@ -23,6 +23,7 @@ type alias UserSettings =
     , showTimeZoneOffset : Maybe Bool
     , highlightClusterFriends : Maybe Bool
     , showTimestampOnTxEdge : Maybe Bool
+    , snapToGrid : Maybe Bool
     }
 
 
@@ -118,6 +119,7 @@ decoder =
         |> optional "showTimeZoneOffset" (nullable bool |> fromString) Nothing
         |> optional "highlightClusterFriends" (nullable bool |> fromString) Nothing
         |> optional "showTimestampOnTxEdge" (nullable bool |> fromString) Nothing
+        |> optional "snapToGrid" (nullable bool |> fromString) Nothing
 
 
 encoder : UserSettings -> Json.Encode.Value
@@ -136,6 +138,7 @@ encoder settings =
         , ( "showTimeZoneOffset", settings.showTimeZoneOffset |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "highlightClusterFriends", settings.highlightClusterFriends |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showTimestampOnTxEdge", settings.showTimestampOnTxEdge |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "snapToGrid", settings.snapToGrid |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
 
 
@@ -154,4 +157,5 @@ default =
     , showTimeZoneOffset = Nothing
     , highlightClusterFriends = Nothing
     , showTimestampOnTxEdge = Nothing
+    , snapToGrid = Nothing
     }

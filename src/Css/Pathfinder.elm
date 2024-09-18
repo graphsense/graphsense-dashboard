@@ -185,6 +185,11 @@ defaultBackgroundColor vc =
         darkBlue
 
 
+tooltipMargin : List Style
+tooltipMargin =
+    [ margin4 sGap mGap sGap mGap ]
+
+
 boxStyle : View.Config -> Maybe Float -> List Style
 boxStyle vc upadding =
     [ defaultBackgroundColor vc |> backgroundColor

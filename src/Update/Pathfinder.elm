@@ -453,10 +453,17 @@ updateByMsg plugins uc msg model =
 
                                 _ ->
                                     moveNode id model.network
+
+                        nn =
+                            if model.config.snapToGrid then
+                                network |> Network.snapToGrid
+
+                            else
+                                network
                     in
                     n
                         { model
-                            | network = network |> Network.snapToGrid
+                            | network = nn
                             , dragging = NoDragging
                         }
 
@@ -926,6 +933,10 @@ updateByMsg plugins uc msg model =
                         >> flip s_config model
             in
             case submsg of
+                UserClickedToggleSnapToGrid ->
+                    -- handled Upstream
+                    n (model |> s_config (model.config |> s_snapToGrid (not model.config.snapToGrid)))
+
                 UserClickedToggleShowTxTimestamp ->
                     -- handled Upstream
                     n model
@@ -996,7 +1007,7 @@ updateByMsg plugins uc msg model =
             , data.bestActor |> Maybe.map (List.singleton >> flip fetchActors model.actors) |> Maybe.withDefault []
             )
 
-        BrowserGotAddressesTags addressIds data ->
+        BrowserGotAddressesTags _ data ->
             let
                 updateHasTags ( id, tag ) =
                     Dict.update id

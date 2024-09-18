@@ -46,6 +46,7 @@ init plugins uc flags url key =
             , showTimeZoneOffset = settings.showTimeZoneOffset |> Maybe.withDefault False
             , highlightClusterFriends = settings.highlightClusterFriends |> Maybe.withDefault True
             , showTimestampOnTxEdge = settings.showTimestampOnTxEdge |> Maybe.withDefault True
+            , snapToGrid = settings.snapToGrid |> Maybe.withDefault False
             }
       , page = Stats
       , search = Search.init (Search.initSearchAll Nothing)

@@ -35,6 +35,7 @@ init us _ =
             { displaySettingsHovercard = Nothing
             , isClusterDetailsOpen = False
             , displayAllTagsInDetails = False
+            , snapToGrid = us.snapToGrid |> Maybe.withDefault False
             }
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag
