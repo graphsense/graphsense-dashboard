@@ -20,6 +20,7 @@ type alias Config =
     , redoDisabled : Bool
     , deleteDisabled : Bool
     , pointerTool : PointerTool
+    , exportName : String
     }
 
 
@@ -86,6 +87,11 @@ view vc config =
             |> s_iconsSave
                 (onClickWithStop (UserClickedSaveGraph Nothing)
                     :: title (Locale.string vc.locale "Save graph")
+                    :: iconsAttr
+                )
+            |> s_iconsScrennshot
+                (onClickWithStop (UserClickedExportGraphAsPNG config.exportName)
+                    :: title (Locale.string vc.locale "Screenshot")
                     :: iconsAttr
                 )
         )

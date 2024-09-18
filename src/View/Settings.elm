@@ -135,7 +135,6 @@ view p vc m =
                 , ToggleSwitch "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg |> PathfinderMsg)
                 , SubSection "Cluster"
                 , ToggleSwitch "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg |> PathfinderMsg)
-                
                 ]
             ]
     in

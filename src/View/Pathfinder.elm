@@ -116,9 +116,9 @@ inlineClusterIcon highlight clr =
         {}
 
 
-graphActionButtons : List BtnConfig
-graphActionButtons =
-    [ BtnConfig (\_ -> inlineExportIcon) "Export" (UserClickedExportGraphAsPNG "graph") True
+graphActionButtons : String -> List BtnConfig
+graphActionButtons name =
+    [-- BtnConfig (\_ -> inlineExportIcon) "Export" (UserClickedExportGraphAsPNG name) True
     ]
 
 
@@ -326,6 +326,7 @@ topCenterPanel plugins ms vc gc model =
                 , redoDisabled = List.isEmpty model.history.future
                 , deleteDisabled = model.selection == NoSelection
                 , pointerTool = model.pointerTool
+                , exportName = model.name
                 }
             ]
         , div
@@ -373,9 +374,9 @@ topRightPanel _ _ vc gc model =
 
 
 graphActionsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
-graphActionsView vc _ _ =
+graphActionsView vc _ m =
     div [ graphActionsViewStyle vc |> toAttr ]
-        (graphActionButtons |> List.map (graphActionButton vc))
+        (graphActionButtons m.name |> List.map (graphActionButton vc))
 
 
 graphActionButton : View.Config -> BtnConfig -> Html Msg
@@ -446,30 +447,6 @@ detailsView vc gc model =
 
         Nothing ->
             none
-
-
-
--- closeButton : View.Config -> Msg -> Html Msg
--- closeButton vc msg =
---     button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ HIcons.iconsCloseSmall {} ]
--- getAddressAnnotationBtns : View.Config -> Api.Data.Address -> Maybe Api.Data.Actor -> Bool -> List BtnConfig
--- getAddressAnnotationBtns vc data _ _ =
---     let
---         isContract x =
---             x.isContract |> Maybe.withDefault False
---     in
---     -- (if hasTags then
---     --     [ BtnConfig FontAwesome.tags (Locale.string vc.locale "has tags") NoOp True ]
---     --  else
---     --     []
---     -- )
---     if isContract data then
---         [ BtnConfig (\_ -> HIcons.iconsSettings {}) (Locale.string vc.locale "is contract") NoOp True ]
---     else
---         []
--- getAddressActionBtns : Id -> Api.Data.Address -> List BtnConfig
--- getAddressActionBtns _ _ =
---     []
 
 
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Html Msg

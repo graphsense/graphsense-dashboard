@@ -13,7 +13,7 @@ import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter exposing (..)
 import Set
 import Table
-import View.Graph.Table exposing (customizations, simpleThead)
+import View.Graph.Table exposing (customizations)
 import View.Pathfinder.PagedTable exposing (alignColumnsRight)
 import View.Pathfinder.Table.Columns as PT
 

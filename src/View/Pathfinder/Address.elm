@@ -112,7 +112,7 @@ view _ vc _ colors address getCluster =
                 , UserMovesMouseOutAddress address.id
                     |> onMouseLeave
                 ]
-            -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
+         -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
         )
         { addressNode =
             { addressId =

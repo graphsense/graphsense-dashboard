@@ -42,6 +42,7 @@ init us _ =
       , modPressed = False
       , isDirty = False
       , tooltip = Nothing
+      , name = "graph"
       }
     , Task.perform Tick Time.now
     )

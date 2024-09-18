@@ -46,6 +46,7 @@ type alias Model =
     , modPressed : Bool
     , isDirty : Bool
     , tooltip : Maybe Tooltip
+    , name : String
     }
 
 
