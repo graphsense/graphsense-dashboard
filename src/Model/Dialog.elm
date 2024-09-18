@@ -11,7 +11,10 @@ type Model msg
 
 
 type alias ConfirmConfig msg =
-    { message : String
+    { confirmText : Maybe String
+    , cancelText : Maybe String
+    , title : String
+    , message : String
     , onYes : msg
     , onNo : msg
     }
@@ -32,6 +35,7 @@ type alias ErrorConfig msg =
 
 type alias InfoConfig msg =
     { info : String
+    , title : Maybe String
     , variables : List String
     , onOk : msg
     }

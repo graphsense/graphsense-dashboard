@@ -588,7 +588,10 @@ update plugins uc msg model =
             if model.pathfinder.isDirty then
                 { model
                     | dialog =
-                        { message = Locale.string model.config.locale "Do you want to start from scratch?"
+                        { message = Locale.string model.config.locale "You will not be able to recover it."
+                        , confirmText = Just "Yes, delete all"
+                        , cancelText = Just "Cancel"
+                        , title = "Clear dashboard?"
                         , onYes = PathfinderMsg Pathfinder.UserClickedRestartYes
                         , onNo = NoOp
                         }
@@ -671,6 +674,16 @@ update plugins uc msg model =
                     model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model) (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
             in
             ( { model | pathfinder = m }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
+
+        PathfinderMsg Pathfinder.UserReleasedEscape ->
+            let
+                ( pf, pfeff ) =
+                    Pathfinder.update plugins uc Pathfinder.UserReleasedEscape model.pathfinder
+
+                ( nm, neff ) =
+                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
+            in
+            ( nm |> s_dialog Nothing, neff )
 
         PathfinderMsg (Pathfinder.UserClickedExportGraphAsPNG name) ->
             ( model
@@ -937,6 +950,9 @@ update plugins uc msg model =
                         { model
                             | dialog =
                                 { message = Locale.string model.config.locale "Do you want to start from scratch?"
+                                , title = "Clear Graph?"
+                                , confirmText = Nothing
+                                , cancelText = Nothing
                                 , onYes = GraphMsg Graph.UserClickedNewYes
                                 , onNo = NoOp
                                 }

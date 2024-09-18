@@ -64,6 +64,9 @@ mapMsg map model =
     case model of
         Confirm conf ->
             { message = conf.message
+            , title = conf.title
+            , confirmText = conf.confirmText
+            , cancelText = conf.cancelText
             , onYes = map conf.onYes
             , onNo = map conf.onNo
             }
@@ -87,6 +90,7 @@ mapMsg map model =
         Info conf ->
             { info = conf.info
             , variables = conf.variables
+            , title = conf.title
             , onOk = map conf.onOk
             }
                 |> Info

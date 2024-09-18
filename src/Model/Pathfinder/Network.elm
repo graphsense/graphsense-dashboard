@@ -2,7 +2,6 @@ module Model.Pathfinder.Network exposing (..)
 
 import Animation
 import Dict exposing (Dict)
-import Hex
 import Init.Pathfinder.Id as Id
 import List.Extra
 import Model.Direction exposing (Direction(..))

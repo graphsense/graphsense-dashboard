@@ -19,6 +19,11 @@ button vc =
     [ px 100 |> minWidth, pct 50 |> width ]
 
 
+btnBase : Config -> List Style
+btnBase _ =
+    [ Css.cursor Css.pointer ]
+
+
 singleButton : Config -> List Style
 singleButton vc =
     vc.theme.dialog.singleButton

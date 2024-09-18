@@ -11,15 +11,18 @@ import Html.Styled.Events exposing (..)
 import Json.Decode
 import Model exposing (Msg(..))
 import Model.Dialog exposing (..)
-import Util.View exposing (addDot)
+import RecordSetter exposing (..)
+import Theme.Html.Buttons exposing (..)
+import Theme.Html.ErrorMessagesAlerts exposing (dialogConfirmationMessageAttributes, dialogConfirmationMessageWithAttributes, errorMessageComponentProperty1AlertAttributes, errorMessageComponentProperty1AlertWithAttributes, errorMessageComponentProperty1ErrorAttributes, errorMessageComponentProperty1ErrorInstances, errorMessageComponentProperty1ErrorWithInstances)
+import Theme.Html.Icons as Icons
+import Util.View exposing (addDot, none, onClickWithStop)
 import View.Locale as Locale
 
 
 view : Config -> Model Msg -> Html Msg
 view vc model =
     div
-        [ Css.dialog vc |> css
-        , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
+        [ stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         ]
         [ case model of
             Confirm conf ->
@@ -37,26 +40,27 @@ view vc model =
 
 
 confirm : Config -> ConfirmConfig Msg -> Html Msg
-confirm vc { message, onYes, onNo } =
-    part vc
-        message
-        [ div
-            [ Css.buttons vc |> css
-            ]
-            [ button
-                [ (Css.Button.primary vc ++ Css.button vc) |> css
-                , UserClickedConfirm onYes |> onClick
-                ]
-                [ Locale.string vc.locale "Yes" |> text
-                ]
-            , button
-                [ (Css.Button.primary vc ++ Css.button vc) |> css
-                , UserClickedConfirm onNo |> onClick
-                ]
-                [ Locale.string vc.locale "No" |> text
-                ]
-            ]
-        ]
+confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
+    let
+        buttonAttrYes =
+            [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm onYes) ]
+
+        buttonAttrNo =
+            [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm onNo) ]
+
+        ybtn =
+            buttonStyleColoredStateRegularWithAttributes
+                (buttonStyleColoredStateRegularAttributes |> s_button buttonAttrYes)
+                { styleColoredStateRegular = { buttonText = Locale.string vc.locale (confirmText |> Maybe.withDefault "Yes"), iconInstance = none, iconVisible = True } }
+
+        nbtn =
+            buttonStyleOutlineStateRegularWithAttributes
+                (buttonStyleOutlineStateRegularAttributes |> s_button buttonAttrNo)
+                { styleOutlineStateRegular = { buttonText = Locale.string vc.locale (cancelText |> Maybe.withDefault "No"), iconInstance = none, iconVisible = True } }
+    in
+    dialogConfirmationMessageWithAttributes
+        (dialogConfirmationMessageAttributes |> s_iconsCloseBlack buttonAttrNo)
+        { cancelButton = { variant = nbtn }, confirmButton = { variant = ybtn }, dialogConfirmationMessage = { bodyText = message, headerText = title } }
 
 
 options_ : Config -> OptionsConfig Msg -> Html Msg
@@ -229,30 +233,28 @@ error vc err =
                             |> Util.View.p vc []
                         ]
                     ]
+
+        icon =
+            Icons.iconsError {}
+
+        buttonAttrOk =
+            [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm err.onOk) ]
     in
-    part vc title <|
-        details
-            ++ [ button
-                    [ Css.Button.primary vc |> css
-                    , UserClickedConfirm err.onOk |> onClick
-                    ]
-                    [ Locale.string vc.locale "OK" |> text
-                    ]
-               ]
+    errorMessageComponentProperty1ErrorWithInstances
+        (errorMessageComponentProperty1ErrorAttributes |> s_iconsCloseSmall buttonAttrOk)
+        (errorMessageComponentProperty1ErrorInstances |> s_messageText (Just (div [] details)))
+        { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = "" }, property1Error = { bodyText = "", headlineText = "" } }
 
 
 info : Config -> InfoConfig Msg -> Html Msg
 info vc inf =
-    part vc
-        (Locale.interpolated vc.locale inf.info inf.variables)
-        [ div
-            [ Css.singleButton vc |> css
-            ]
-            [ button
-                [ Css.Button.primary vc |> css
-                , UserClickedConfirm inf.onOk |> onClick
-                ]
-                [ Locale.string vc.locale "OK" |> text
-                ]
-            ]
-        ]
+    let
+        buttonAttrOk =
+            [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm inf.onOk) ]
+
+        icon =
+            Icons.iconsAlert {}
+    in
+    errorMessageComponentProperty1AlertWithAttributes
+        (errorMessageComponentProperty1AlertAttributes |> s_iconsCloseSmall buttonAttrOk)
+        { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = inf.info }, property1Alert = { bodyText = "", headlineText = "" } }
