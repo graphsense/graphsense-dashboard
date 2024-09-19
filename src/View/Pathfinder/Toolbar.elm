@@ -94,6 +94,11 @@ view vc config =
                     :: title (Locale.string vc.locale "Screenshot")
                     :: iconsAttr
                 )
+            |> s_iconsOpen
+                (onClickWithStop UserClickedOpenGraph
+                    :: title (Locale.string vc.locale "Open graph")
+                    :: iconsAttr
+                )
         )
         (SettingsComponents.toolbarInstances
             |> s_iconsUndo

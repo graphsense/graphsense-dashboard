@@ -5,6 +5,7 @@ import Hovercard
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
+import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tools exposing (PointerTool)
 import Msg.Graph exposing (Msg(..))
@@ -74,6 +75,9 @@ type Msg
     | UserClickedFitGraph
     | UserClickedSelectionTool
     | UserClickedSaveGraph (Maybe Time.Posix)
+    | UserClickedOpenGraph
+    | BrowserGotBulkAddresses (List Api.Data.Address)
+    | BrowserGotBulkTxs Deserializing (List Api.Data.Tx)
 
 
 type DisplaySettingsMsg

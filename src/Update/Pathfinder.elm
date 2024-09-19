@@ -1,27 +1,29 @@
-module Update.Pathfinder exposing (update, updateByRoute)
+module Update.Pathfinder exposing (deserialize, fromDeserialized, update, updateByRoute)
 
 import Animation as A
 import Api.Data
 import Basics.Extra exposing (flip)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
+import Decode.Pathfinder1
 import Dict
 import Effect exposing (and, n)
-import Effect.Api as Api
+import Effect.Api as Api exposing (Effect(..))
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
-import Hex
 import Hovercard
+import Init.Graph.History as History
 import Init.Graph.Transform as Transform
 import Init.Pathfinder.AddressDetails as AddressDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.Tooltip as Tooltip
 import Init.Pathfinder.TxDetails as TxDetails
+import Json.Decode
 import List.Extra
 import Log
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords as Coords exposing (relativeToGraphZero)
+import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
@@ -29,12 +31,13 @@ import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Txs(..), getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, network)
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tooltip as Tooltip
-import Model.Pathfinder.Tx as Tx
+import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Search as Search
 import Msg.Pathfinder as Msg
     exposing
@@ -48,20 +51,20 @@ import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
 import Plugin.Update as Plugin exposing (Plugins)
+import Ports
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
-import Route.Pathfinder as Route
+import Route.Pathfinder as Route exposing (Route(..))
 import Set exposing (..)
 import Svg.Attributes exposing (x)
-import Tuple exposing (first, mapFirst, mapSecond, pair, second)
+import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
-import Update.Graph.Coords as Coords
 import Update.Graph.History as History
 import Update.Graph.Table exposing (UpdateSearchTerm(..))
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.AddressDetails as AddressDetails
-import Update.Pathfinder.Network as Network exposing (FindPosition(..))
+import Update.Pathfinder.Network as Network exposing (FindPosition(..), ingestAddresses, ingestTxs)
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.Tx as Tx
 import Update.Pathfinder.TxDetails as TxDetails
@@ -634,7 +637,7 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        UserMovesMouseOutTagLabel x ->
+        UserMovesMouseOutTagLabel _ ->
             n { model | tooltip = Nothing }
 
         HovercardMsg hcMsg ->
@@ -849,30 +852,21 @@ updateByMsg plugins uc msg model =
 
         UserClickedTxCheckboxInTable tx ->
             let
-                addOrRemoveTx txId includeIo =
+                addOrRemoveTx txId =
                     if Dict.member txId model.network.txs then
                         Network.deleteTx txId model.network
                             |> flip s_network model
                             |> n
 
                     else
-                        BrowserGotTx
-                            |> Api.GetTxEffect
-                                { currency = Id.network txId
-                                , txHash = Id.id txId
-                                , includeIo = includeIo
-                                , tokenTxId = Nothing
-                                }
-                            |> ApiEffect
-                            |> List.singleton
-                            |> pair model
+                        loadTx plugins txId model
             in
             case tx of
                 Api.Data.AddressTxTxAccount _ ->
-                    addOrRemoveTx (Tx.getTxId2 tx) False
+                    addOrRemoveTx (Tx.getTxId2 tx)
 
                 Api.Data.AddressTxAddressTxUtxo _ ->
-                    addOrRemoveTx (Tx.getTxId2 tx) True
+                    addOrRemoveTx (Tx.getTxId2 tx)
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
@@ -881,33 +875,10 @@ updateByMsg plugins uc msg model =
             let
                 ( newTx, newNetwork ) =
                     Network.addTx tx model.network
-
-                addresses =
-                    Tx.listAddressesForTx newNetwork.addresses newTx
-                        |> List.map first
-
-                aggAddressAdd addressId =
-                    and (loadAddress plugins addressId)
-
-                src =
-                    if List.any ((==) Incoming) addresses then
-                        Nothing
-
-                    else
-                        getAddressForDirection tx Incoming Nothing
-
-                dst =
-                    if List.any ((==) Outgoing) addresses then
-                        Nothing
-
-                    else
-                        (src |> Maybe.map Id.id)
-                            |> getAddressForDirection tx Outgoing
             in
-            [ src, dst ]
-                |> List.filterMap identity
-                |> List.foldl aggAddressAdd (n (model |> s_network newNetwork))
-                |> and (checkSelection uc)
+            (model |> s_network newNetwork)
+                |> checkSelection uc
+                |> and (autoLoadAddresses plugins newTx)
 
         UserClickedSelectionTool ->
             n
@@ -1037,6 +1008,24 @@ updateByMsg plugins uc msg model =
 
         UserClickedToolbarDeleteIcon ->
             deleteSelection model
+
+        BrowserGotBulkAddresses addresses ->
+            addresses
+                |> List.foldl
+                    (\address mod ->
+                        and (updateByMsg plugins uc (BrowserGotAddressData (Id.init address.currency address.address) address)) mod
+                    )
+                    (n model)
+
+        BrowserGotBulkTxs deserializing txs ->
+            n { model | network = ingestTxs model.network deserializing.deserialized.txs txs }
+
+        UserClickedOpenGraph ->
+            ( model
+            , Ports.deserialize ()
+                |> CmdEffect
+                |> List.singleton
+            )
 
 
 deleteSelection : Model -> ( Model, List Effect )
@@ -1463,28 +1452,28 @@ getBiggestIO io exceptAddress =
         |> Maybe.andThen List.head
 
 
-getAddressForDirection : Api.Data.Tx -> Direction -> Maybe String -> Maybe Id
+getAddressForDirection : Tx -> Direction -> Maybe String -> Maybe Id
 getAddressForDirection tx direction exceptAddress =
-    case tx of
-        Api.Data.TxTxUtxo t ->
+    case tx.type_ of
+        Tx.Utxo {raw} ->
             (case direction of
                 Incoming ->
-                    getBiggestIO t.inputs exceptAddress
+                    getBiggestIO raw.inputs exceptAddress
 
                 Outgoing ->
-                    getBiggestIO t.outputs exceptAddress
+                    getBiggestIO raw.outputs exceptAddress
             )
-                |> Maybe.map (Id.init t.currency)
+                |> Maybe.map (Id.init raw.currency)
 
-        Api.Data.TxTxAccount t ->
+        Tx.Account {raw} ->
             (case direction of
                 Incoming ->
-                    Just t.fromAddress
+                    Just raw.fromAddress
 
                 Outgoing ->
-                    Just t.toAddress
+                    Just raw.toAddress
             )
-                |> Maybe.map (Id.init t.network)
+                |> Maybe.map (Id.init raw.network)
 
 
 addTx : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
@@ -1512,7 +1501,7 @@ addTx plugins _ addressId direction tx model =
 
         -- TODO what if multisig?
         firstAddress =
-            getAddressForDirection tx direction (Just address) |> Maybe.map Id.id
+            getAddressForDirection newTx direction (Just address) |> Maybe.map Id.id
     in
     firstAddress
         |> Maybe.map
@@ -1675,3 +1664,104 @@ multiSelect m sel keepOld =
             List.foldl (selectItem True) (Network.clearSelection m.network) newSelection
     in
     ( { m | selection = MultiSelect newSelection, network = nNet }, [] )
+
+
+deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized
+deserialize =
+    Json.Decode.index 0 Json.Decode.string
+        |> Json.Decode.andThen
+            (\str ->
+                if str /= "pathfinder" then
+                    Json.Decode.fail "no pathfinder graph data"
+
+                else
+                    Json.Decode.index 1 Json.Decode.string
+                        |> Json.Decode.andThen deserializeByVersion
+            )
+        |> Json.Decode.decodeValue
+
+
+deserializeByVersion : String -> Json.Decode.Decoder Deserialized
+deserializeByVersion version =
+    if version == "1" then
+        Decode.Pathfinder1.decoder
+
+    else
+        Json.Decode.fail ("unknown version " ++ version)
+
+
+fromDeserialized : Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized deserialized model =
+    let
+        groupByNetwork =
+            List.map .id
+                >> List.Extra.gatherEqualsBy first
+                >> List.map (\( fst, more ) -> ( first fst, second fst :: List.map second more ))
+
+        addressesRequests =
+            deserialized.addresses
+                |> groupByNetwork
+                |> List.map
+                    (\( currency, addresses ) ->
+                        BrowserGotBulkAddresses
+                            |> BulkGetAddressEffect
+                                { currency = currency
+                                , addresses = addresses
+                                }
+                            |> ApiEffect
+                    )
+
+        txsRequests =
+            deserialized.txs
+                |> groupByNetwork
+                |> List.map
+                    (\( currency, txs ) ->
+                        { deserialized = deserialized
+                        , addresses = []
+                        , txs = []
+                        }
+                            |> BrowserGotBulkTxs
+                            |> BulkGetTxEffect
+                                { currency = currency
+                                , txs = txs
+                                }
+                            |> ApiEffect
+                    )
+    in
+    ( { model
+        | network = ingestAddresses Network.init deserialized.addresses
+        , history = History.init
+      }
+    , txsRequests
+        ++ addressesRequests
+    )
+
+
+autoLoadAddresses : Plugins -> Tx -> Model -> ( Model, List Effect )
+autoLoadAddresses plugins tx model =
+    let
+        addresses =
+            Tx.listAddressesForTx model.network.addresses tx
+                |> List.map first
+
+        aggAddressAdd addressId =
+            and (loadAddress plugins addressId)
+
+        src =
+            if List.any ((==) Incoming) addresses then
+                Nothing
+
+            else
+                getAddressForDirection tx Incoming Nothing
+
+        dst =
+            if List.any ((==) Outgoing) addresses then
+                Nothing
+
+            else
+                (src |> Maybe.map Id.id)
+                    |> getAddressForDirection tx Outgoing
+    in
+    [ src, dst ]
+        |> List.filterMap identity
+        |> List.foldl aggAddressAdd (n model)

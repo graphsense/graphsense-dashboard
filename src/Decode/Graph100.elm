@@ -4,7 +4,7 @@ import Color
 import Init.Graph.Id as Id
 import Json.Decode exposing (..)
 import Model.Address as A
-import Model.Graph exposing (..)
+import Model.Graph.Deserialize exposing (..)
 import Model.Graph.Id as Id
 import Model.Graph.Tag as Tag
 import Tuple exposing (..)

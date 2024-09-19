@@ -253,6 +253,11 @@ type Effect msg
         , onlyIds : Bool
         }
         (List ( String, Api.Data.NeighborAddress ) -> msg)
+    | BulkGetTxEffect
+        { currency : String
+        , txs : List String
+        }
+        (List Api.Data.Tx -> msg)
 
 
 getEntityEgonet :
@@ -499,6 +504,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> BulkGetAddressNeighborsEffect eff
+
+        BulkGetTxEffect eff m ->
+            m
+                >> mapMsg
+                |> BulkGetTxEffect eff
 
 
 perform : String -> (Result ( Http.Error, Effect msg ) ( Dict String String, msg ) -> msg) -> Effect msg -> Cmd msg
@@ -788,6 +798,18 @@ perform apiKey wrapMsg effect =
                                 else
                                     []
                                )
+                    )
+                |> send apiKey wrapMsg effect toMsg
+
+        BulkGetTxEffect e toMsg ->
+            listWithMaybes Api.Data.txDecoder
+                |> Api.Request.MyBulk.bulkJson
+                    e.currency
+                    Api.Request.MyBulk.OperationGetTx
+                    (Json.Encode.object
+                        [ ( "tx_hash", Json.Encode.list Json.Encode.string e.txs )
+                        , ( "include_io", Json.Encode.bool True )
+                        ]
                     )
                 |> send apiKey wrapMsg effect toMsg
 

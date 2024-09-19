@@ -10,9 +10,10 @@ import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
-import Model.Graph exposing (Deserializing, Dragging)
+import Model.Graph exposing (Dragging)
 import Model.Graph.Browser as Browser
 import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Deserialize exposing (Deserializing)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Tag as Tag
 import Model.Tx as T

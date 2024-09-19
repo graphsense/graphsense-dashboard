@@ -38,6 +38,7 @@ import Model.Graph exposing (..)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Graph.Deserialize exposing (..)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Highlighter as Highlighter
 import Model.Graph.History as History
@@ -3512,11 +3513,6 @@ fromDeserialized deserialized model =
                     model.config
                         |> s_highlighter False
             }
-
-
-serialize : Model -> Value
-serialize =
-    Encode.encode
 
 
 setEntityConcepts : List Api.Data.Concept -> Model -> Model

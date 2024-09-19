@@ -14,6 +14,8 @@ import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Pathfinder as Pathfinder
+import Encode.Graph as Graph
+import Encode.Pathfinder as Pathfinder
 import File.Download
 import Hovercard
 import Http exposing (Error(..))
@@ -62,6 +64,7 @@ import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import View.Locale as Locale
 import Yaml.Decode
+import Result.Extra
 
 
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
@@ -704,13 +707,12 @@ update plugins uc msg model =
                             |> Task.perform (Just >> Pathfinder.UserClickedSaveGraph)
 
                     Just t ->
-                        Debug.todo """Pathfinder.serialize model.pathfinder
-                                    |> pair
-                                        (makeTimestampFilename model.config.locale t
-                                            |> (\tt -> tt ++ ".gs")
-                                        )
-                                    |> Ports.serialize
-                                    """
+                        Pathfinder.encode model.pathfinder
+                            |> pair
+                                (makeTimestampFilename model.config.locale t
+                                    |> (\tt -> tt ++ ".gs")
+                                )
+                            |> Ports.serialize
                )
                 |> Pathfinder.CmdEffect
                 |> PathfinderEffect
@@ -870,7 +872,7 @@ update plugins uc msg model =
                                     |> Task.perform (Just >> Graph.UserClickedExportGS)
 
                             Just t ->
-                                Graph.serialize model.graph
+                                Graph.encode model.graph
                                     |> pair
                                         (makeTimestampFilename model.config.locale t
                                             |> (\tt -> tt ++ ".gs")
@@ -1110,7 +1112,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                     PluginInterface.GetSerialized toMsg ->
                         let
                             serialized =
-                                Graph.serialize model.graph
+                                Graph.encode model.graph
 
                             ( new, outMsg, cmd ) =
                                 Plugin.update plugins uc (toMsg serialized) model.plugins
@@ -1396,38 +1398,59 @@ clearSearch plugins model =
 
 deserialize : String -> Value -> Model key -> ( Model key, List Effect )
 deserialize filename data model =
-    case Graph.deserialize data of
-        Err err ->
-            ( { model
-                | statusbar =
-                    (case err of
-                        Json.Decode.Failure message _ ->
-                            message
-
-                        _ ->
-                            "could not read"
-                    )
-                        |> Http.BadBody
-                        |> Just
-                        |> Statusbar.add model.statusbar filename []
-              }
-            , Json.Decode.errorToString err
-                |> Ports.console
-                |> CmdEffect
-                |> List.singleton
+    Graph.deserialize data
+        |> Result.map
+            (\deser ->
+                let
+                    ( graph, graphEffects ) =
+                        Graph.fromDeserialized deser model.graph
+                in
+                ( { model
+                    | graph = graph
+                    , page = Graph
+                  }
+                , List.map GraphEffect graphEffects
+                )
             )
-
-        Ok deser ->
-            let
-                ( graph, graphEffects ) =
-                    Graph.fromDeserialized deser model.graph
-            in
-            ( { model
-                | graph = graph
-                , page = Graph
-              }
-            , List.map GraphEffect graphEffects
+        |> Result.Extra.orElseLazy
+            (\_ ->
+                Pathfinder.deserialize data
+                    |> Result.map
+                        (\deser ->
+                            let
+                                ( pathfinder, pathfinderEffects ) =
+                                    Pathfinder.fromDeserialized deser model.pathfinder
+                            in
+                            ( { model
+                                | pathfinder = pathfinder
+                                , page = Pathfinder
+                              }
+                            , List.map PathfinderEffect pathfinderEffects
+                            )
+                        )
             )
+        |> Result.Extra.unpack
+            (\err ->
+                ( { model
+                    | statusbar =
+                        (case err of
+                            Json.Decode.Failure message _ ->
+                                message
+
+                            _ ->
+                                "could not read"
+                        )
+                            |> Http.BadBody
+                            |> Just
+                            |> Statusbar.add model.statusbar filename []
+                  }
+                , Json.Decode.errorToString err
+                    |> Ports.console
+                    |> CmdEffect
+                    |> List.singleton
+                )
+            )
+            identity
 
 
 updatePlugins : Plugins -> Config -> Plugin.Msg -> Model key -> ( Model key, List Effect )

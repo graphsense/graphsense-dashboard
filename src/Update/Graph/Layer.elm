@@ -55,9 +55,9 @@ import IntDict exposing (IntDict)
 import List.Extra
 import Maybe.Extra
 import Model.Entity as E
-import Model.Graph exposing (DeserializedAddress, Deserializing)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Deserialize exposing (DeserializedAddress, Deserializing)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)

@@ -242,12 +242,11 @@ messageFromApiEffect model effect =
 
         Api.SearchEntityNeighborsEffect e _ ->
             ( searchNeighborsKey
-            , [ case e.isOutgoing of
-                    False ->
-                        "for incoming neighbors"
+            , [ if e.isOutgoing then
+                    "for outgoing neighbors"
 
-                    True ->
-                        "for outgoing neighbors"
+                else
+                    "for incoming neighbors"
               , e.entity |> String.fromInt
               , case e.key of
                     Api.Request.Entities.KeyCategory ->
@@ -495,6 +494,14 @@ messageFromApiEffect model effect =
         Api.BulkGetAddressTagsEffect e _ ->
             ( "{1}: loading tags of {0} addresses"
             , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.BulkGetTxEffect e _ ->
+            ( "{1}: loading {0} transactions"
+            , [ List.length e.txs |> String.fromInt
               , e.currency |> String.toUpper
               ]
             )

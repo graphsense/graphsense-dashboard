@@ -1,4 +1,20 @@
-module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddressWithPosition, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, snapToGrid, updateAddress, updateTx)
+module Update.Pathfinder.Network exposing
+    ( FindPosition(..)
+    , addAddress
+    , addAddressWithPosition
+    , addTx
+    , addTxWithPosition
+    , animateAddresses
+    , animateTxs
+    , clearSelection
+    , deleteAddress
+    , deleteTx
+    , ingestAddresses
+    , ingestTxs
+    , snapToGrid
+    , updateAddress
+    , updateTx
+    )
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -15,12 +31,13 @@ import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Id as Id
 import Model.Pathfinder.Address exposing (Address, txsToSet)
+import Model.Pathfinder.Deserialize exposing (DeserializedThing)
 import Model.Pathfinder.Error exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Id.Address as Address
 import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
-import Model.Pathfinder.Tx as Tx exposing (AccountTx, Tx, listAddressesForTx)
+import Model.Pathfinder.Tx as Tx exposing (Tx, listAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
@@ -101,8 +118,8 @@ addAddressWithPosition position id model =
                                         findAddressCoords id model
                                     )
         in
-        freeSpaceAroundCoords coords model
-            |> placeAddress coords id
+        Address.init id coords
+            |> insertAddress (freeSpaceAroundCoords coords model)
 
 
 avoidOverlappingEdges : List { a | y : Animation } -> Coords -> Coords
@@ -149,14 +166,14 @@ findAddressCoordsNextToTx model direction tx =
                         , A.getTo tx.y
                         )
 
-                ( Outgoing, Tx.Account t ) ->
+                ( Outgoing, Tx.Account _ ) ->
                     ( []
                     , tx.x
                     , A.getTo tx.y
                     )
                         |> Just
 
-                ( Incoming, Tx.Account t ) ->
+                ( Incoming, Tx.Account _ ) ->
                     ( []
                     , tx.x
                     , A.getTo tx.y
@@ -290,15 +307,11 @@ freeSpaceAroundCoords coords model =
     }
 
 
-placeAddress : Coords -> Id -> Network -> Network
-placeAddress coords id model =
+insertAddress : Network -> Address -> Network
+insertAddress model newAddress =
     let
-        newAddress =
-            Address.init id coords
-                |> s_isStartingPoint (isEmpty model)
-
         ( address, newTxs ) =
-            listTxsForAddress model id
+            listTxsForAddress model newAddress.id
                 |> List.foldl
                     (\( direction, tx ) ( addr, txs ) ->
                         ( case direction of
@@ -314,7 +327,7 @@ placeAddress coords id model =
                         , Dict.update tx.id
                             (Maybe.map
                                 (Tx.updateUtxo
-                                    (Tx.updateUtxoIo direction id (Tx.setAddress newAddress))
+                                    (Tx.updateUtxoIo direction newAddress.id (Tx.setAddress newAddress))
                                 )
                             )
                             txs
@@ -332,9 +345,9 @@ placeAddress coords id model =
                 address
     in
     { model
-        | addresses = Dict.insert id animAddress model.addresses
+        | addresses = Dict.insert newAddress.id animAddress model.addresses
         , txs = newTxs
-        , animatedAddresses = Set.insert id model.animatedAddresses
+        , animatedAddresses = Set.insert newAddress.id model.animatedAddresses
     }
 
 
@@ -449,6 +462,7 @@ addTxWithPosition position tx network =
                                 freeSpaceAroundCoords coords network
                         in
                         Tx.fromTxAccountData t coords
+                            |> s_isStartingPoint (isEmpty network)
                             |> insertTx
                                 { newNetwork
                                     | animatedTxs = Set.insert id newNetwork.animatedTxs
@@ -489,6 +503,7 @@ addTxWithPosition position tx network =
                                             , clock = 0
                                         }
                                )
+                            |> s_isStartingPoint (isEmpty network)
                             |> insertTx
                                 { newNetwork
                                     | animatedTxs = Set.insert id newNetwork.animatedTxs
@@ -499,10 +514,6 @@ addTxWithPosition position tx network =
 insertTx : Network -> Tx -> ( Tx, Network )
 insertTx network tx =
     let
-        tx_ =
-            tx
-                |> s_isStartingPoint (isEmpty network)
-
         upd dir addr =
             let
                 ( get, set ) =
@@ -532,9 +543,9 @@ insertTx network tx =
                 }
             )
             { network
-                | txs = Dict.insert tx.id tx_ network.txs
+                | txs = Dict.insert tx.id tx network.txs
             }
-        |> pair tx_
+        |> pair tx
 
 
 listInOutputsOfApiTxUtxo : Network -> Api.Data.TxUtxo -> List ( Direction, Address )
@@ -808,3 +819,58 @@ deleteTx id network =
                 }
             )
         |> Maybe.withDefault network
+
+
+ingestTxs : Network -> List DeserializedThing -> List Api.Data.Tx -> Network
+ingestTxs network things txs =
+    let
+        thingsDict =
+            things
+                |> List.map (\th -> ( th.id, th ))
+                |> Dict.fromList
+
+        toUtxo nw tx th =
+            Tx.fromTxUtxoData nw
+                tx
+                { x = th.x
+                , y = th.y
+                }
+                |> s_isStartingPoint th.isStartingPoint
+
+        toAccount tx th =
+            Tx.fromTxAccountData tx
+                { x = th.x
+                , y = th.y
+                }
+                |> s_isStartingPoint th.isStartingPoint
+    in
+    txs
+        |> List.foldl
+            (\tx nw ->
+                (case tx of
+                    Api.Data.TxTxUtxo t ->
+                        Dict.get (Id.init t.currency t.txHash) thingsDict
+                            |> Maybe.map (toUtxo nw t)
+
+                    Api.Data.TxTxAccount t ->
+                        Dict.get (Id.init t.currency t.txHash) thingsDict
+                            |> Maybe.map (toAccount t)
+                )
+                    |> Maybe.map (insertTx nw >> second)
+                    |> Maybe.withDefault nw
+            )
+            network
+
+
+ingestAddresses : Network -> List DeserializedThing -> Network
+ingestAddresses network =
+    List.foldl
+        (\th nw ->
+            Address.init th.id
+                { x = th.x
+                , y = th.y
+                }
+                |> s_isStartingPoint th.isStartingPoint
+                |> insertAddress nw
+        )
+        network
