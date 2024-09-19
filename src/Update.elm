@@ -45,6 +45,7 @@ import PluginInterface.Update as PluginInterface
 import Ports
 import RecordSetter exposing (..)
 import RemoteData as RD
+import Result.Extra
 import Route
 import Route.Graph
 import Route.Pathfinder
@@ -62,7 +63,6 @@ import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import View.Locale as Locale
 import Yaml.Decode
-import Result.Extra
 
 
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
@@ -1447,7 +1447,8 @@ deserialize filename data model =
         |> Result.Extra.unpack
             (\err ->
                 let
-                    httpError =(case err of
+                    httpError =
+                        (case err of
                             Json.Decode.Failure message _ ->
                                 message
 
@@ -1456,13 +1457,12 @@ deserialize filename data model =
                         )
                             |> Http.BadBody
                 in
-                
                 ( { model
                     | statusbar =
                         httpError
                             |> Just
                             |> Statusbar.add model.statusbar filename []
-                        , notifications = Notification.addHttpError model.notifications Nothing httpError
+                    , notifications = Notification.addHttpError model.notifications Nothing httpError
                   }
                 , Json.Decode.errorToString err
                     |> Ports.console

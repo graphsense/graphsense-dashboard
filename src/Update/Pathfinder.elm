@@ -1455,7 +1455,7 @@ getBiggestIO io exceptAddress =
 getAddressForDirection : Tx -> Direction -> Maybe String -> Maybe Id
 getAddressForDirection tx direction exceptAddress =
     case tx.type_ of
-        Tx.Utxo {raw} ->
+        Tx.Utxo { raw } ->
             (case direction of
                 Incoming ->
                     getBiggestIO raw.inputs exceptAddress
@@ -1465,7 +1465,7 @@ getAddressForDirection tx direction exceptAddress =
             )
                 |> Maybe.map (Id.init raw.currency)
 
-        Tx.Account {raw} ->
+        Tx.Account { raw } ->
             (case direction of
                 Incoming ->
                     Just raw.fromAddress
