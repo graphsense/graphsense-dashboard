@@ -22,6 +22,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeEthAttributes)
+import Theme.Svg.Icons as Icons
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (onClickWithStop)
@@ -65,12 +66,24 @@ view _ vc _ tx accTx =
                 ]
         }
         { txNodeEth =
-            { highlightVisible = tx.hovered || tx.selected
+            { highlightVisible = False
             , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
             , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
             , inputValue = Locale.currency vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
             , timestampVisible = vc.showTimestampOnTxEdge
-            , startingPointVisible = tx.isStartingPoint
+            , startingPointVisible = tx.isStartingPoint || tx.selected
+            }
+        , iconsNodeMarker =
+            { variant =
+                case ( tx.selected, tx.isStartingPoint ) of
+                    ( True, _ ) ->
+                        Icons.iconsNodeMarkerPurposeSelectedNode {}
+
+                    ( False, False ) ->
+                        text ""
+
+                    ( False, True ) ->
+                        Icons.iconsNodeMarkerPurposeStartingPoint {}
             }
         }
 

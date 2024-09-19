@@ -19,7 +19,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
-import RemoteData exposing (WebData)
+import RemoteData
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -40,6 +40,12 @@ view _ vc _ colors address getCluster =
 
         clusterColor =
             clusterid |> Maybe.andThen (\x -> Colors.getAssignedColor Colors.Clusters x colors) |> Maybe.map .color
+
+        halfAlpha x =
+            Color.fromRgba { red = x.red, green = x.green, blue = x.blue, alpha = x.alpha / 2 }
+
+        clusterColorLight =
+            clusterColor |> Maybe.map (Color.toRgba >> halfAlpha)
 
         cluster =
             clusterid |> Maybe.andThen getCluster
@@ -104,7 +110,7 @@ view _ vc _ colors address getCluster =
                     |> Util.Graph.mousedown
                 , css [ Css.cursor Css.pointer ]
                 ]
-            |> s_nodeFrame
+            |> s_nodeBody
                 [ Id.toString address.id
                     |> Svg.id
                 , UserMovesMouseOverAddress address.id
@@ -112,6 +118,14 @@ view _ vc _ colors address getCluster =
                 , UserMovesMouseOutAddress address.id
                     |> onMouseLeave
                 ]
+            |> s_clusterColor
+                (case clusterColorLight of
+                    Just c ->
+                        [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
+
+                    _ ->
+                        []
+                )
          -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
         )
         { addressNode =
@@ -119,15 +133,15 @@ view _ vc _ colors address getCluster =
                 address.id
                     |> Id.id
                     |> truncateLongIdentifierWithLengths 8 4
-            , highlightVisible = address.selected
+            , highlightVisible = not (clusterColor == Nothing)
             , expandLeftVisible = expandVisible Incoming
             , expandRightVisible = expandVisible Outgoing
-            , iconInstance = toNodeIcon vc.highlightClusterFriends address cluster clusterColor
+            , iconInstance = toNodeIcon vc.highlightClusterFriends address cluster Nothing
             , exchangeLabel =
                 address.exchange
                     |> Maybe.withDefault ""
             , exchangeLabelVisible = address.exchange /= Nothing
-            , isStartingPoint = address.isStartingPoint
+            , isStartingPoint = address.isStartingPoint || address.selected
             , tagIconVisible = address.hasTags
             }
         , iconsNodeOpenLeft =
@@ -147,6 +161,18 @@ view _ vc _ colors address getCluster =
                             (Icons.iconsNodeOpenRightStateActivAttributes |> s_stateActiv (expand Outgoing))
                             {}
                         )
+            }
+        , iconsNodeMarker =
+            { variant =
+                case ( address.selected, address.isStartingPoint ) of
+                    ( True, _ ) ->
+                        Icons.iconsNodeMarkerPurposeSelectedNode {}
+
+                    ( False, False ) ->
+                        text ""
+
+                    ( False, True ) ->
+                        Icons.iconExport {}
             }
         }
 

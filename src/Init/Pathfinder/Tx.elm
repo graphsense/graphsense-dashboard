@@ -13,8 +13,8 @@ import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..))
 import Util.Data
 
 
-fromTxAccountData : Api.Data.TxAccount -> Coords -> Tx
-fromTxAccountData tx coords =
+fromTxAccountData : Network -> Api.Data.TxAccount -> Coords -> Tx
+fromTxAccountData network tx coords =
     let
         id =
             Id.init tx.network tx.identifier
@@ -22,7 +22,7 @@ fromTxAccountData tx coords =
     { id = id
     , hovered = False
     , selected = False
-    , isStartingPoint = False
+    , isStartingPoint = Dict.isEmpty (Dict.remove id network.addresses)
     , x = coords.x
     , y = A.static coords.y
     , dx = 0
@@ -95,7 +95,7 @@ fromTxUtxoData network tx coords =
     { id = id
     , hovered = False
     , selected = False
-    , isStartingPoint = False
+    , isStartingPoint = Dict.isEmpty (Dict.remove id network.addresses)
     , x = coords.x
     , y = A.static coords.y
     , dx = 0

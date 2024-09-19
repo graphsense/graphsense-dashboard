@@ -9,7 +9,6 @@
         "themes",
         "config",
         "lib/elm-autocomplete/src",
-        "lib/cistring/src",
         "lib/elm-css-sortable-table/src"
     ],
     "elm-version": "0.19.1",

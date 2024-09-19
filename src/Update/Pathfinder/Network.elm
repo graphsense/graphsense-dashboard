@@ -461,7 +461,7 @@ addTxWithPosition position tx network =
                             newNetwork =
                                 freeSpaceAroundCoords coords network
                         in
-                        Tx.fromTxAccountData t coords
+                        Tx.fromTxAccountData newNetwork t coords
                             |> s_isStartingPoint (isEmpty network)
                             |> insertTx
                                 { newNetwork
@@ -838,7 +838,8 @@ ingestTxs network things txs =
                 |> s_isStartingPoint th.isStartingPoint
 
         toAccount tx th =
-            Tx.fromTxAccountData tx
+            Tx.fromTxAccountData network
+                tx
                 { x = th.x
                 , y = th.y
                 }
