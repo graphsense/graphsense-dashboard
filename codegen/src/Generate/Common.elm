@@ -439,6 +439,9 @@ subcanvasNodeToProperties node =
         SubcanvasNodeFrameNode n ->
             withFrameTraitsToProperties n
 
+        SubcanvasNodeGroupNode n ->
+            withFrameTraitsToProperties n
+
         _ ->
             []
 

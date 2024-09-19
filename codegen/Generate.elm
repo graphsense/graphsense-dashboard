@@ -3,6 +3,7 @@ module Generate exposing (main)
 {-| -}
 
 import Api.Raw exposing (..)
+import Basics.Extra exposing (flip)
 import Dict
 import Elm
 import Gen.CodeGen.Generate as Generate
@@ -12,6 +13,12 @@ import Generate.Html
 import Generate.Svg
 import Json.Decode
 import String.Case exposing (toCamelCaseUpper)
+
+
+onlyFrames : List String
+onlyFrames =
+    --[ "side panel components" ]
+    []
 
 
 main : Program Json.Decode.Value () ()
@@ -56,16 +63,27 @@ frameToFiles node =
                             |> List.singleton
                             |> (::) sub
                             |> (::) themeFolder
+
+                    nameLowered =
+                        String.toLower n.frameTraits.isLayerTrait.name
+
+                    matchOnlyFrames =
+                        List.isEmpty onlyFrames
+                            || List.any (flip String.startsWith nameLowered) onlyFrames
                 in
-                [ frameNodeToDeclarations
-                    (Common.subcanvasNodeComponentsToDeclarations Generate.Svg.componentNodeToDeclarations)
-                    n
-                    |> Elm.file (name "Svg")
-                , frameNodeToDeclarations
-                    (Common.subcanvasNodeComponentsToDeclarations Generate.Html.componentNodeToDeclarations)
-                    n
-                    |> Elm.file (name "Html")
-                ]
+                if n.frameTraits.readyForDev && matchOnlyFrames then
+                    [ frameNodeToDeclarations
+                        (Common.subcanvasNodeComponentsToDeclarations Generate.Svg.componentNodeToDeclarations)
+                        n
+                        |> Elm.file (name "Svg")
+                    , frameNodeToDeclarations
+                        (Common.subcanvasNodeComponentsToDeclarations Generate.Html.componentNodeToDeclarations)
+                        n
+                        |> Elm.file (name "Html")
+                    ]
+
+                else
+                    []
 
         _ ->
             []
@@ -73,9 +91,5 @@ frameToFiles node =
 
 frameNodeToDeclarations : (SubcanvasNode -> List Elm.Declaration) -> FrameNode -> List Elm.Declaration
 frameNodeToDeclarations gen node =
-    if node.frameTraits.readyForDev then
-        List.map gen node.frameTraits.children
-            |> List.concat
-
-    else
-        []
+    List.map gen node.frameTraits.children
+        |> List.concat
