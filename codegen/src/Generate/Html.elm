@@ -83,7 +83,6 @@ componentNodeToDeclarations parentName parentProperties node =
         properties =
             Common.componentNodeToProperties details.name node
                 |> Dict.union parentProperties
-                |> Debug.log "123 properties"
 
         propertiesType =
             properties
