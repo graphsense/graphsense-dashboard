@@ -180,9 +180,11 @@ update key error model =
                             model.visible
 
                         else
-                            error
-                                |> Maybe.map (\_ -> True)
-                                |> Maybe.withDefault model.visible
+                            model.visible
+
+                    -- error
+                    --     |> Maybe.map (\_ -> True)
+                    --     |> Maybe.withDefault model.visible
                 }
             )
         |> Maybe.withDefault model
@@ -206,10 +208,11 @@ add : Model -> String -> List String -> Maybe Http.Error -> Model
 add model key values error =
     { model
         | log = ( key, values, error ) :: model.log
-        , visible =
-            error
-                |> Maybe.map (\_ -> True)
-                |> Maybe.withDefault model.visible
+
+        -- , visible =
+        --     error
+        --         |> Maybe.map (\_ -> True)
+        --         |> Maybe.withDefault model.visible
     }
 
 

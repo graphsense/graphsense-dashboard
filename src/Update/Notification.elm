@@ -1,8 +1,10 @@
-module Update.Notification exposing (notificationsFromEffects)
+module Update.Notification exposing (addHttpError, notificationsFromEffects)
 
+import Basics.Extra exposing (flip)
 import Effect.Pathfinder as Pathfinder
+import Http
 import Model
-import Model.Notification exposing (..)
+import Model.Notification as Notify
 import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import RecordSetter exposing (..)
 import Tuple exposing (..)
@@ -13,66 +15,54 @@ notificationsFromEffects model effects =
     let
         notifications =
             effects |> List.filterMap (notificationFromEffect model) |> List.concatMap identity
-
-        nm =
-            model.notifications |> s_messages (List.append model.notifications.messages notifications)
     in
-    ( model |> s_notifications nm, effects )
+    ( model |> s_notifications (model.notifications |> flip Notify.addMany notifications), effects )
 
 
-notificationFromEffect : Model.Model key -> Model.Effect -> Maybe (List Notification)
+notificationFromEffect : Model.Model key -> Model.Effect -> Maybe (List Notify.Notification)
 notificationFromEffect _ effect =
     case effect of
         Model.PathfinderEffect (Pathfinder.ErrorEffect x) ->
-            Just (errorToNotifications x)
+            Just (pathFinderErrorToNotifications x)
 
         _ ->
             Nothing
 
 
-errorToNotifications : Error -> List Notification
-errorToNotifications err =
+pathFinderErrorToNotifications : Error -> List Notify.Notification
+pathFinderErrorToNotifications err =
     case err of
         InternalError (AddressNotFoundInDict _) ->
-            Error "address not found" "Address Not found" |> List.singleton
+            Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
 
         InternalError (TxValuesEmpty _ _) ->
-            Error "tx not found" "Address Not found" |> List.singleton
+            Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
 
         InternalError (NoTxInputsOutputsFoundInDict _) ->
-            Error "tx io not found" "tx io Not found" |> List.singleton
+            Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
 
         Errors x ->
-            x |> List.map errorToNotifications |> List.concatMap identity
+            x |> List.map pathFinderErrorToNotifications |> List.concatMap identity
 
 
+addHttpError : Notify.Model -> Maybe String -> Http.Error -> Notify.Model
+addHttpError m _ error =
+    let
+        nn =
+            case error of
+                Http.NetworkError ->
+                    Notify.Error { title = "Network Issue", message = "There is no network connection...", variables = [] }
 
--- update : String -> Maybe Http.Error -> Model -> Model
--- update key error model =
---     Dict.get key model.messages
---         |> Maybe.map
---             (\msg ->
---                 { model
---                     | messages = Dict.remove key model.messages
---                     , log = addLog ( first msg, second msg, error ) model.log
---                     , visible =
---                         if first msg == loadingAddressKey then
---                             model.visible
---                         else if first msg == loadingAddressEntityKey then
---                             model.visible
---                         else
---                             error
---                                 |> Maybe.map (\_ -> True)
---                                 |> Maybe.withDefault model.visible
---                 }
---             )
---         |> Maybe.withDefault model
--- add : Model -> String -> List String -> Maybe Http.Error -> Model
--- add model key values error =
---     { model
---         | log = ( key, values, error ) :: model.log
---         , visible =
---             error
---                 |> Maybe.map (\_ -> True)
---                 |> Maybe.withDefault model.visible
---     }
+                Http.BadBody _ ->
+                    Notify.Error { title = "Data Error", message = "There was a problem while loading data.", variables = [] }
+
+                Http.BadUrl _ ->
+                    Notify.Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
+
+                Http.BadStatus _ ->
+                    Notify.Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
+
+                Http.Timeout ->
+                    Notify.Error { title = "Request Timeout", message = "There was a problem while loading data.", variables = [] }
+    in
+    m |> flip Notify.add nn

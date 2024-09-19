@@ -1,8 +1,8 @@
 module Init.Notification exposing (init)
 
-import Model.Notification exposing (..)
+import Model.Notification as Notification
 
 
-init : Model
+init : Notification.Model
 init =
-    { messages = [] }
+    Notification.empty

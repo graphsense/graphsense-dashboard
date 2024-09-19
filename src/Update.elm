@@ -1,14 +1,11 @@
 module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 
---import Plugin.Update.Graph
-
 import Api
 import Browser
 import Browser.Dom
 import Config.Update exposing (Config)
 import DateFormat
 import Dict exposing (Dict)
-import DurationDatePicker exposing (Settings)
 import Effect exposing (n)
 import Effect.Api
 import Effect.Graph as Graph
@@ -58,6 +55,7 @@ import Tuple exposing (..)
 import Update.Dialog as Dialog
 import Update.Graph as Graph
 import Update.Locale as Locale
+import Update.Notification as Notification
 import Update.Pathfinder as Pathfinder
 import Update.Search as Search
 import Update.Statusbar as Statusbar
@@ -132,6 +130,10 @@ update plugins uc msg model =
                 |> n
 
         BrowserGotResponseWithHeaders statusbarToken result ->
+            let
+                _ =
+                    Debug.log "" ( statusbarToken, result )
+            in
             { model
                 | statusbar =
                     case statusbarToken of
@@ -184,6 +186,13 @@ update plugins uc msg model =
                                         model.dialog
                             )
                         |> Maybe.Extra.orElse model.dialog
+                , notifications =
+                    case result of
+                        Err ( httpErr, _ ) ->
+                            Notification.addHttpError model.notifications Nothing httpErr
+
+                        _ ->
+                            model.notifications
             }
                 |> handleResponse plugins
                     uc
@@ -688,7 +697,7 @@ update plugins uc msg model =
                 ( nm, neff ) =
                     ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
             in
-            ( nm |> s_dialog Nothing, neff )
+            ( nm |> s_dialog Nothing |> s_notifications (nm.notifications |> Notification.pop), neff )
 
         PathfinderMsg (Pathfinder.UserClickedExportGraphAsPNG name) ->
             ( model
@@ -927,12 +936,17 @@ update plugins uc msg model =
                 Graph.BrowserReadTagPackFile filename result ->
                     case result of
                         Err err ->
-                            { model
-                                | statusbar =
+                            let
+                                httpErr =
                                     Yaml.Decode.errorToString err
                                         |> Http.BadBody
+                            in
+                            { model
+                                | statusbar =
+                                    httpErr
                                         |> Just
                                         |> Statusbar.add model.statusbar filename []
+                                , notifications = Notification.addHttpError model.notifications (Just filename) httpErr
                             }
                                 |> n
 
@@ -1013,7 +1027,7 @@ update plugins uc msg model =
             updatePlugins plugins uc msgValue model
 
         UserClosesNotification ->
-            n { model | notifications = Notification.removeLastNotification model.notifications }
+            n { model | notifications = Notification.pop model.notifications }
 
 
 updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
@@ -1344,6 +1358,7 @@ handleResponse plugins uc result model =
                         Http.BadBody err
                             |> Just
                             |> Statusbar.add model.statusbar "error" []
+                , notifications = Notification.addHttpError model.notifications Nothing (Http.BadBody err)
               }
             , PortsConsoleEffect err
                 |> List.singleton
@@ -1431,9 +1446,8 @@ deserialize filename data model =
             )
         |> Result.Extra.unpack
             (\err ->
-                ( { model
-                    | statusbar =
-                        (case err of
+                let
+                    httpError =(case err of
                             Json.Decode.Failure message _ ->
                                 message
 
@@ -1441,8 +1455,14 @@ deserialize filename data model =
                                 "could not read"
                         )
                             |> Http.BadBody
+                in
+                
+                ( { model
+                    | statusbar =
+                        httpError
                             |> Just
                             |> Statusbar.add model.statusbar filename []
+                        , notifications = Notification.addHttpError model.notifications Nothing httpError
                   }
                 , Json.Decode.errorToString err
                     |> Ports.console
