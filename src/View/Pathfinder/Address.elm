@@ -119,8 +119,8 @@ view _ vc _ colors address getCluster =
                     |> onMouseLeave
                 ]
             |> s_clusterColor
-                (case clusterColorLight of
-                    Just c ->
+                (case (clusterColorLight, vc.highlightClusterFriends) of
+                    (Just c, True) ->
                         [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
 
                     _ ->
@@ -133,7 +133,7 @@ view _ vc _ colors address getCluster =
                 address.id
                     |> Id.id
                     |> truncateLongIdentifierWithLengths 8 4
-            , highlightVisible = not (clusterColor == Nothing)
+            , highlightVisible = not (clusterColor == Nothing) && vc.highlightClusterFriends
             , expandLeftVisible = expandVisible Incoming
             , expandRightVisible = expandVisible Outgoing
             , iconInstance = toNodeIcon vc.highlightClusterFriends address cluster Nothing
