@@ -130,10 +130,6 @@ update plugins uc msg model =
                 |> n
 
         BrowserGotResponseWithHeaders statusbarToken result ->
-            let
-                _ =
-                    Debug.log "" ( statusbarToken, result )
-            in
             { model
                 | statusbar =
                     case statusbarToken of
