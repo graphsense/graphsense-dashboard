@@ -7,7 +7,6 @@ import Basics.Extra exposing (uncurry)
 import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
-import Elm.Case
 import Elm.Op
 import Gen.Css as Css
 import Gen.Html.Styled
@@ -16,7 +15,6 @@ import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
 import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty)
-import Generate.Common.ComponentSetNode as ComponentSetNode
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
@@ -28,13 +26,9 @@ import Generate.Html.VectorNode as VectorNode
 import Generate.Svg as Svg
 import Generate.Svg.DefaultShapeTraits
 import Generate.Svg.FrameTraits
-import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, withVisibility)
+import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (..)
-import Set
-import String.Case exposing (toCamelCaseUpper)
-import String.Extra
-import Tuple exposing (mapBoth, pair)
 import Types exposing (Config, Details)
 
 
@@ -327,8 +321,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                         |> Elm.list
                         |> Elm.Op.append (getElementAttributes config name)
                         |> Elm.Op.append
-                            (Generate.Svg.FrameTraits.toStyles node.frameTraits
-                                |> (::) (Css.display Css.inline)
+                            (FrameTraits.toStyles node.frameTraits
                                 |> Attributes.css
                                 |> List.singleton
                                 |> Elm.list

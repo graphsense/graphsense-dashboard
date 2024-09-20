@@ -10,9 +10,19 @@ import Types exposing (Details, OriginAdjust)
 
 adjustBoundingBox : OriginAdjust -> { a | frameTraits : FrameTraits } -> { a | frameTraits : FrameTraits }
 adjustBoundingBox { x, y } node =
+    let
+        adjust bb =
+            { bb | x = bb.x - x, y = bb.y - y }
+    in
     node.frameTraits.absoluteBoundingBox
-        |> (\bb -> { bb | x = bb.x - x, y = bb.y - y })
+        |> adjust
         |> flip s_absoluteBoundingBox node.frameTraits
+        |> (\frm ->
+                frm.hasLayoutTrait.absoluteBoundingBox
+                    |> Maybe.map adjust
+                    |> flip s_absoluteBoundingBox frm.hasLayoutTrait
+                    |> flip s_hasLayoutTrait frm
+           )
         |> flip s_frameTraits node
 
 

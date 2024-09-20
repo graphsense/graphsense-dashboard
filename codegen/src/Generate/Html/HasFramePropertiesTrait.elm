@@ -80,8 +80,7 @@ layoutMode mode =
             ]
 
         LayoutModeNONE ->
-            [ Css.position Css.relative
-            ]
+            []
 
 
 

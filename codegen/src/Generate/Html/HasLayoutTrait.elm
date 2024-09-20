@@ -11,6 +11,7 @@ toStyles : HasLayoutTrait -> List Elm.Expression
 toStyles node =
     [ Css.boxSizing Css.borderBox ]
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
+        |> mm2 layoutPositioning node.layoutPositioning node.absoluteBoundingBox
         |> a2 (width node.minWidth) node.layoutSizingHorizontal node.size
         |> a2 (height node.minHeight) node.layoutSizingVertical node.size
         |> a minWidth node.minWidth
@@ -90,3 +91,17 @@ layoutSizingHorizontal sizing =
 
         LayoutSizingHorizontalHUG ->
             Css.displayFlex
+
+
+layoutPositioning : LayoutPositioning -> Rectangle -> List Elm.Expression
+layoutPositioning pos { x, y } =
+    case pos of
+        LayoutPositioningAUTO ->
+            [Css.position Css.relative
+            ]
+
+        LayoutPositioningABSOLUTE ->
+            [ Css.position Css.absolute
+            , Css.top <| Css.px y
+            , Css.left <| Css.px x
+            ]

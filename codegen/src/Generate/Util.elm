@@ -26,6 +26,13 @@ mm fun =
     Maybe.map fun >> Maybe.withDefault [] >> (++)
 
 
+mm2 : (a -> b -> List Elm.Expression) -> Maybe a -> Maybe b -> List Elm.Expression -> List Elm.Expression
+mm2 fun a_ b =
+    Maybe.map2 fun a_ b
+        |> Maybe.withDefault []
+        |> (++)
+
+
 aa : (a -> Maybe (List Elm.Expression)) -> Maybe a -> List Elm.Expression -> List Elm.Expression
 aa fun =
     Maybe.andThen fun >> Maybe.withDefault [] >> (++)

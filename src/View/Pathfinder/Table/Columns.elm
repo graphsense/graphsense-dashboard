@@ -3,23 +3,20 @@ module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, de
 import Api.Data
 import Config.View as View
 import Css
-import Css.Pathfinder as PCSS exposing (inoutStyle, toAttr)
+import Css.Pathfinder as PCSS exposing (inoutStyle)
 import Css.Statusbar
-import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Maybe.Extra
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..))
 import RecordSetter exposing (..)
 import Table
-import Theme.Html.Icons
+import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.View exposing (copyIconPathfinder, copyableLongIdentifierPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
-import View.Pathfinder.Icons exposing (inIcon, outIcon)
 
 
 timestampDateMultiRowColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
@@ -65,7 +62,7 @@ addressColumn vc cc lblfn =
 
 
 identifierColumn : (data -> HavingTags) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
-identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
+identifierColumn lblfn vc { label, accessor, onClick } =
     Table.veryCustomColumn
         { name = label
         , viewData =
@@ -77,8 +74,19 @@ identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
                             (case lblfn data of
                                 LoadingTags ->
                                     span
-                                        [ Locale.string vc.locale "Loading tags"
-                                            |> title
+                                        [ Locale.string vc.locale "Loading tags" |> title
+                                        , css SidePanelComponents.sidePanelListIdentifierCellWithTagIconsTagSmallIconsTagSmall_details.styles
+                                        , css
+                                            [ -Icons.iconsTagSmall_details.width
+                                                + Icons.iconsTagSmallTagIcon_details.x
+                                                - 2
+                                                |> Css.px
+                                                |> Css.left
+                                            , Icons.iconsTagSmallTagIcon_details.y
+                                                + 2
+                                                |> Css.px
+                                                |> Css.top
+                                            ]
                                         ]
                                         [ loadingSpinner vc Css.Statusbar.loadingSpinner
                                         ]
@@ -133,7 +141,7 @@ txColumn =
 
 
 stringColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
-stringColumn vc { label, accessor } =
+stringColumn _ { label, accessor } =
     Table.veryCustomColumn
         { name = label
         , viewData =
