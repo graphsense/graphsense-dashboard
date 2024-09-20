@@ -1,4 +1,4 @@
-module Init.Pathfinder.Tooltip exposing (..)
+module Init.Pathfinder.Tooltip exposing (init)
 
 import Hovercard
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType)

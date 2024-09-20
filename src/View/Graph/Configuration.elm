@@ -1,4 +1,4 @@
-module View.Graph.Configuration exposing (..)
+module View.Graph.Configuration exposing (configuration)
 
 import Config.Graph as Graph
 import Config.View as View

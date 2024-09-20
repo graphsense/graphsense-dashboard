@@ -1,4 +1,4 @@
-module View.Graph.Table.EntityAddressesTable exposing (..)
+module View.Graph.Table.EntityAddressesTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View

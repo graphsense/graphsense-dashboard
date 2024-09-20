@@ -1,4 +1,4 @@
-module Theme.SwitchableColor exposing (..)
+module Theme.SwitchableColor exposing (SwitchableColor)
 
 import Color
 

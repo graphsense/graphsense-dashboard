@@ -1,4 +1,4 @@
-module Effect.Graph exposing (..)
+module Effect.Graph exposing (Effect(..), perform)
 
 import Browser.Dom
 import Effect.Api as Api

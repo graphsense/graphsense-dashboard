@@ -1,4 +1,4 @@
-module View.Graph.Navbar exposing (..)
+module View.Graph.Navbar exposing (navbar)
 
 --import Plugin.View.Graph.Navbar
 

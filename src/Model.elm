@@ -1,4 +1,4 @@
-module Model exposing (..)
+module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), Page(..), RequestLimit(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)

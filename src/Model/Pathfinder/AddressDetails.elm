@@ -1,4 +1,4 @@
-module Model.Pathfinder.AddressDetails exposing (..)
+module Model.Pathfinder.AddressDetails exposing (Model)
 
 import Api.Data
 import Model.Pathfinder.Id exposing (Id)

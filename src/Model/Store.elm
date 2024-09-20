@@ -1,4 +1,4 @@
-module Model.Store exposing (..)
+module Model.Store exposing (Model)
 
 import Api.Data
 import Dict exposing (Dict)

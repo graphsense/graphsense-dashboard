@@ -1,4 +1,4 @@
-module Effect.Pathfinder exposing (..)
+module Effect.Pathfinder exposing (Effect(..), perform)
 
 import Effect.Api as Api
 import Effect.Search as Search

@@ -1,4 +1,4 @@
-module Data.Pathfinder.Network exposing (..)
+module Data.Pathfinder.Network exposing (empty, one2ThreeAddresses, one2TwoAddresses, one2TwoTxs2ThreeAddresses, oneAddress, oneAddressWithIncomingTx, oneAddressWithOutgoingTx, oneAddressWithTwoTxs, twoConnectedAddresses, twoIndependentAddresses)
 
 import Data.Pathfinder.Address as Address
 import Data.Pathfinder.Id as Id

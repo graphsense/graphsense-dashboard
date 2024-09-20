@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.IoTable exposing (..)
+module View.Pathfinder.Table.IoTable exposing (config)
 
 import Api.Data
 import Config.View as View

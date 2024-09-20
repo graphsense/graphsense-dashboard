@@ -1,4 +1,4 @@
-module Model.Locale exposing (..)
+module Model.Locale exposing (Flags, Model, State(..), ValueDetail(..), getFiatValue, locales)
 
 import Api.Data
 import DateFormat.Language

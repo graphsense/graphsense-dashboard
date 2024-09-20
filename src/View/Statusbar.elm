@@ -1,4 +1,4 @@
-module View.Statusbar exposing (..)
+module View.Statusbar exposing (view)
 
 import Api
 import Config.View as View

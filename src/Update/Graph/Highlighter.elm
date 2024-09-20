@@ -1,4 +1,4 @@
-module Update.Graph.Highlighter exposing (..)
+module Update.Graph.Highlighter exposing (deselect, removeHighlight, selectColor, selectHighlight, setHighlightTitle)
 
 import Color exposing (Color)
 import List.Extra

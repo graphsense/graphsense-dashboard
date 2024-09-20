@@ -1,4 +1,4 @@
-module Theme.Button exposing (..)
+module Theme.Button exposing (Button, default)
 
 import Css exposing (Style)
 

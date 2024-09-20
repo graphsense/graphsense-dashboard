@@ -1,4 +1,4 @@
-module Util.Pathfinder.History exposing (..)
+module Util.Pathfinder.History exposing (shallPushHistory)
 
 import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))

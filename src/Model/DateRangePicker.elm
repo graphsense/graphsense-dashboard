@@ -1,4 +1,4 @@
-module Model.DateRangePicker exposing (..)
+module Model.DateRangePicker exposing (Model)
 
 import DurationDatePicker
 import Time exposing (Posix)

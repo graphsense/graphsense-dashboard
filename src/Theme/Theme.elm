@@ -1,4 +1,4 @@
-module Theme.Theme exposing (..)
+module Theme.Theme exposing (Theme, default)
 
 import Color
 import Css exposing (Style)

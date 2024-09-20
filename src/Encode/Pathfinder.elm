@@ -1,4 +1,4 @@
-module Encode.Pathfinder exposing (..)
+module Encode.Pathfinder exposing (encode)
 
 import Animation
 import Dict

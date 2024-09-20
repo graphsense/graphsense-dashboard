@@ -1,4 +1,4 @@
-module Model.Graph.Table.AddresslinkTxsUtxoTable exposing (..)
+module Model.Graph.Table.AddresslinkTxsUtxoTable exposing (filter, titleHeight, titleInputValue, titleOutputValue, titleTimestamp, titleTx)
 
 import Api.Data
 import Config.Graph as Graph

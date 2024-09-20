@@ -1,4 +1,4 @@
-module Encode.Graph exposing (..)
+module Encode.Graph exposing (encode)
 
 import Color
 import Json.Encode exposing (..)

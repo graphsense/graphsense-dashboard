@@ -1,4 +1,4 @@
-module Model.Graph.History exposing (..)
+module Model.Graph.History exposing (Model, hasFuture, hasPast, unconsFuture, unconsPast)
 
 import List.Extra
 

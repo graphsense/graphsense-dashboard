@@ -1,4 +1,4 @@
-module Model.Pathfinder.Error exposing (..)
+module Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)

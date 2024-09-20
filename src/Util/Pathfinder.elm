@@ -1,4 +1,4 @@
-module Util.Pathfinder exposing (..)
+module Util.Pathfinder exposing (getAddress)
 
 import Dict exposing (Dict)
 import Model.Pathfinder.Address exposing (Address)

@@ -1,4 +1,4 @@
-module Model.Graph.Transform exposing (..)
+module Model.Graph.Transform exposing (Coords, Model, Transition(..), defaultDuration, equals, getBoundingBox, getCurrent, getZ)
 
 import Bounce exposing (Bounce)
 import Model.Graph.Coords exposing (BBox)

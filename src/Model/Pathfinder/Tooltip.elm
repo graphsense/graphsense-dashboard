@@ -1,4 +1,4 @@
-module Model.Pathfinder.Tooltip exposing (..)
+module Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 
 import Api.Data exposing (TagSummary)
 import Hovercard

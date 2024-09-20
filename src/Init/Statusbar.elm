@@ -1,4 +1,4 @@
-module Init.Statusbar exposing (..)
+module Init.Statusbar exposing (init)
 
 import Dict
 import Model.Statusbar exposing (..)

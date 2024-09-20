@@ -41,8 +41,8 @@ config =
      NoDebug.Log.rule |> Rule.ignoreErrorsForFiles [ "src/Util/Debug.elm" ]
     -- , NoDebug.TodoOrToString.rule
     --     |> Rule.ignoreErrorsForDirectories [ "tests/" ]
-    -- , NoExposingEverything.rule
-    -- , NoImportingEverything.rule []
+    , NoExposingEverything.rule
+    , NoImportingEverything.rule []
     , NoMissingTypeAnnotation.rule
     -- , NoMissingTypeAnnotationInLetIn.rule
     -- , NoMissingTypeExpose.rule

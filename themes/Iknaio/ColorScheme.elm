@@ -1,4 +1,4 @@
-module Iknaio.ColorScheme exposing (..)
+module Iknaio.ColorScheme exposing (color0, color1, color2, color3, color4, color5, color6, color7, color8, color9, colorScheme, colorSchemePathfinder, defaultColor)
 
 import Color exposing (Color, rgb255)
 
@@ -47,6 +47,7 @@ color7 : Color
 color7 =
     rgb255 87 120 164
 
+
 color8 : Color
 color8 =
     rgb255 150 118 98
@@ -55,8 +56,6 @@ color8 =
 color9 : Color
 color9 =
     rgb255 184 176 172
-
-
 
 
 colorScheme : List Color
@@ -75,7 +74,9 @@ colorScheme =
 
 
 color2Pathfinder : Color
-color2Pathfinder = rgb255 59 114 71
+color2Pathfinder =
+    rgb255 59 114 71
+
 
 
 -- color0 = 228 148 68
@@ -91,7 +92,7 @@ color2Pathfinder = rgb255 59 114 71
 
 
 colorSchemePathfinder : List Color
-colorSchemePathfinder = 
+colorSchemePathfinder =
     [ color0
     , color2
     , color2Pathfinder

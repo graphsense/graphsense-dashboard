@@ -1,4 +1,4 @@
-module Css.Search exposing (..)
+module Css.Search exposing (button, form, frame, resultGroup, resultGroupList, resultGroupTitle, resultLine, resultLineHighlighted, resultLineIcon, textarea)
 
 import Config.View exposing (Config)
 import Css exposing (..)

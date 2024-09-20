@@ -1,4 +1,4 @@
-module Init.Graph.Tag exposing (..)
+module Init.Graph.Tag exposing (initAddressTag, initEntityTag)
 
 import Browser.Dom as Dom
 import Hovercard

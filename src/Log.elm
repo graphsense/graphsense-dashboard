@@ -1,4 +1,4 @@
-module Log exposing (..)
+module Log exposing (log, log2, truncate)
 
 
 log : String -> a -> a

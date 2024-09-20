@@ -1,4 +1,4 @@
-module Init.Graph.History exposing (..)
+module Init.Graph.History exposing (init)
 
 import Model.Graph.History exposing (Model)
 

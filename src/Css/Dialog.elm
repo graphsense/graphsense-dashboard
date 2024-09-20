@@ -1,4 +1,4 @@
-module Css.Dialog exposing (..)
+module Css.Dialog exposing (body, btnBase, button, buttons, dialog, headRow, headRowClose, headRowText, heading, optionsButtonsContainer, part, singleButton)
 
 import Config.View exposing (Config)
 import Css exposing (..)

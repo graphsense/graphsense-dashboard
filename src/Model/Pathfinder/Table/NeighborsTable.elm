@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table.NeighborsTable exposing (..)
+module Model.Pathfinder.Table.NeighborsTable exposing (filter)
 
 import Api.Data
 import Model.Graph.Table as Table

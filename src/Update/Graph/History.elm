@@ -1,4 +1,4 @@
-module Update.Graph.History exposing (..)
+module Update.Graph.History exposing (prune, push, redo, undo)
 
 import Config.Graph.History as Config
 import List.Extra

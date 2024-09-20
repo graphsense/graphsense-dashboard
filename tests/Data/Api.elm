@@ -1,4 +1,4 @@
-module Data.Api exposing (..)
+module Data.Api exposing (tx1, tx2, tx3, values)
 
 import Api.Data
 import Data.Pathfinder.Id as Id

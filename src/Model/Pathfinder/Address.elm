@@ -1,4 +1,4 @@
-module Model.Pathfinder.Address exposing (..)
+module Model.Pathfinder.Address exposing (Address, Txs(..), getActivityRange, getBalance, getCoords, getInDegree, getNrTxs, getOutDegree, getTotalReceived, getTxs, txsGetSet, txsSetter, txsToSet)
 
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)

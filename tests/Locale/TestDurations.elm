@@ -1,4 +1,4 @@
-module Locale.TestDurations exposing (..)
+module Locale.TestDurations exposing (suite)
 
 import Expect
 import Locale.Durations as Durations

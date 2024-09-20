@@ -1,4 +1,4 @@
-module Config.Graph.History exposing (..)
+module Config.Graph.History exposing (maxLength)
 
 
 maxLength : Int

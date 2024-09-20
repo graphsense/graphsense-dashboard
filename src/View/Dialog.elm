@@ -1,4 +1,4 @@
-module View.Dialog exposing (..)
+module View.Dialog exposing (body, headRow, part, view)
 
 import Config.View exposing (Config)
 import Css.Dialog as Css

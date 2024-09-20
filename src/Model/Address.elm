@@ -1,4 +1,4 @@
-module Model.Address exposing (..)
+module Model.Address exposing (Address, Addresslink, decoder, encoder, equals, fromId)
 
 import Json.Decode
 import Json.Encode

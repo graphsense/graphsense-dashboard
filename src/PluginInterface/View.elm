@@ -1,4 +1,4 @@
-module PluginInterface.View exposing (..)
+module PluginInterface.View exposing (View, init)
 
 import Config.Graph as Graph
 import Config.View as View

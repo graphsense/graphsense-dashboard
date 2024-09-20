@@ -1,4 +1,4 @@
-module Model.Graph.Tool exposing (..)
+module Model.Graph.Tool exposing (Status(..), Tool, Toolbox(..), isConfiguration, isExport, isHighlighter, isImport, isLegend)
 
 import Color exposing (Color)
 import Config.Graph exposing (Config)

@@ -1,4 +1,4 @@
-module Init.Graph.Table.AllAssetsTable exposing (..)
+module Init.Graph.Table.AllAssetsTable exposing (init)
 
 import Init.Graph.Table
 import Model.Graph.Table exposing (AllAssetsTable, titleValue)

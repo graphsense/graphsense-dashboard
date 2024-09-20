@@ -1,4 +1,4 @@
-module Init.Graph.Table exposing (..)
+module Init.Graph.Table exposing (init, initSorted, initUnsorted)
 
 import Model.Graph.Table exposing (..)
 import Table

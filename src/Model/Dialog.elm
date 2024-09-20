@@ -1,4 +1,4 @@
-module Model.Dialog exposing (..)
+module Model.Dialog exposing (ConfirmConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, defaultMsg)
 
 import Http
 

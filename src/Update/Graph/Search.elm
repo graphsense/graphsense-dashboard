@@ -1,4 +1,4 @@
-module Update.Graph.Search exposing (..)
+module Update.Graph.Search exposing (Config, selectCategory, selectCriterion, selectDirection, submit)
 
 import Api.Data
 import Api.Request.Entities

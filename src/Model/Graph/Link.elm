@@ -1,4 +1,4 @@
-module Model.Graph.Link exposing (..)
+module Model.Graph.Link exposing (Link, LinkActualData, LinkData(..), fromNeighbor)
 
 import Api.Data
 import Dict exposing (Dict)

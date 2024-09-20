@@ -1,4 +1,4 @@
-module Decode.Pathfinder1 exposing (..)
+module Decode.Pathfinder1 exposing (decoder)
 
 import Init.Pathfinder.Id as Id
 import Json.Decode exposing (..)

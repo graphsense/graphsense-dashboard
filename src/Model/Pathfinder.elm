@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (..)
+module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getAddressDetailStats, getLoadedAddress, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Config.Pathfinder exposing (Config)

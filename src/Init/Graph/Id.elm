@@ -1,4 +1,4 @@
-module Init.Graph.Id exposing (..)
+module Init.Graph.Id exposing (initAddressId, initEntityId, initLinkId)
 
 import Model.Graph.Id exposing (..)
 import Tuple exposing (..)

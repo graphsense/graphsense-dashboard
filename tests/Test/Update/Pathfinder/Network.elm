@@ -1,4 +1,4 @@
-module Test.Update.Pathfinder.Network exposing (..)
+module Test.Update.Pathfinder.Network exposing (suite)
 
 import Api.Data
 import Data.Api as Api

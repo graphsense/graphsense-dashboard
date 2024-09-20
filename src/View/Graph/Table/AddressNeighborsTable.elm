@@ -1,4 +1,4 @@
-module View.Graph.Table.AddressNeighborsTable exposing (..)
+module View.Graph.Table.AddressNeighborsTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View

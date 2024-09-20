@@ -1,4 +1,4 @@
-module Util.Pathfinder.TagSummary exposing (..)
+module Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 
 import Api.Data
 import Dict

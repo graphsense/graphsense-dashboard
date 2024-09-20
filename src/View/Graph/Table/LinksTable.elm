@@ -1,4 +1,4 @@
-module View.Graph.Table.LinksTable exposing (..)
+module View.Graph.Table.LinksTable exposing (config)
 
 import Config.View as View
 import Css.Table exposing (styles)

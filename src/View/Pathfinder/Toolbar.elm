@@ -1,4 +1,4 @@
-module View.Pathfinder.Toolbar exposing (..)
+module View.Pathfinder.Toolbar exposing (Config, view)
 
 import Config.View as View
 import Css

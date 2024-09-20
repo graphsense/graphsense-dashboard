@@ -1,4 +1,4 @@
-module Graph.View.TestLabel exposing (..)
+module Graph.View.TestLabel exposing (suite)
 
 import Expect
 import Test exposing (..)

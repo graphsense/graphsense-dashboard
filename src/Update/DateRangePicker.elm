@@ -1,4 +1,4 @@
-module Update.DateRangePicker exposing (..)
+module Update.DateRangePicker exposing (closePicker, openPicker, update)
 
 import DurationDatePicker
 import Model.DateRangePicker exposing (Model)

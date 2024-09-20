@@ -1,4 +1,4 @@
-module Init.Graph.Adding exposing (..)
+module Init.Graph.Adding exposing (addresses, entities, init)
 
 import Dict
 import Model.Graph.Adding exposing (..)

@@ -1,4 +1,4 @@
-module Update.Graph.Tag exposing (..)
+module Update.Graph.Tag exposing (inputAbuse, inputCategory, inputSource, searchMsg)
 
 import Effect.Graph as Graph exposing (Effect)
 import Model.Graph.Tag exposing (..)

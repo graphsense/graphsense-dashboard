@@ -1,4 +1,4 @@
-module Init.Pathfinder.Table.TransactionTable exposing (..)
+module Init.Pathfinder.Table.TransactionTable exposing (init, initWithoutFilter, loadFromDateBlock, loadToDateBlock)
 
 import Api.Data
 import Api.Request.Addresses

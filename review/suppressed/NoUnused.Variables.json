@@ -14,7 +14,6 @@
     { "count": 3, "filePath": "src/View/Graph/Table/TxUtxoTable.elm" },
     { "count": 2, "filePath": "src/Config/Graph.elm" },
     { "count": 2, "filePath": "src/Model/Graph/Table/AddressNeighborsTable.elm" },
-    { "count": 2, "filePath": "src/Route/Graph.elm" },
     { "count": 2, "filePath": "src/Update/Graph/Browser.elm" },
     { "count": 2, "filePath": "src/View/Button.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/AddresslinkTxsUtxoTable.elm" },

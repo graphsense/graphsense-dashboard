@@ -1,4 +1,4 @@
-module View.Graph.Table.AddresslinkTxsUtxoTable exposing (..)
+module View.Graph.Table.AddresslinkTxsUtxoTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View

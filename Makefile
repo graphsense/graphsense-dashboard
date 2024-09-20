@@ -58,6 +58,9 @@ lint:
 lint-fix:
 	npx elm-review --fix-all
 
+lint-ci:
+	npx elm-review --ignore-files src/Util/View.elm,src/View/Box.elm,src/View/Locale.elm,src/Update/Search.elm,src/Route/Graph.elm,src/Route.elm
+
 ./theme/figma.json:
 	mkdir -p theme
 	curl 'https://api.figma.com/v1/files/$(FIGMA_FILE_ID)?geometry=paths' -H 'X-Figma-Token: $(FIGMA_API_TOKEN)' | jq > theme/figma.json
@@ -73,4 +76,4 @@ gen:
 	make setem
 	
 
-.PHONY: openapi serve test format lint lint-fix build build-docker serve-docker gen theme
+.PHONY: openapi serve test format lint lint-fix lint-ci build build-docker serve-docker gen theme

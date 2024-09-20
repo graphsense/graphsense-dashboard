@@ -1,4 +1,4 @@
-module Init.Graph.Transform exposing (..)
+module Init.Graph.Transform exposing (init, initTransitioning, initZ)
 
 import Bounce
 import Model.Graph.Transform exposing (..)

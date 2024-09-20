@@ -1,4 +1,4 @@
-module Init.Pathfinder.Address exposing (..)
+module Init.Pathfinder.Address exposing (init)
 
 import Animation
 import Model.Graph.Coords exposing (Coords)

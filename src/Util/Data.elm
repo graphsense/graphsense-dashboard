@@ -1,4 +1,4 @@
-module Util.Data exposing (..)
+module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, negateTxValue, negateValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Time

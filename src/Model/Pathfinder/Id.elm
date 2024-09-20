@@ -1,4 +1,4 @@
-module Model.Pathfinder.Id exposing (..)
+module Model.Pathfinder.Id exposing (Id, id, network, toString)
 
 import Tuple exposing (first, second)
 

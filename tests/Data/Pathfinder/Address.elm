@@ -1,4 +1,4 @@
-module Data.Pathfinder.Address exposing (..)
+module Data.Pathfinder.Address exposing (address1, address2, address3, address4, address5)
 
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Data.Pathfinder.Id as Id

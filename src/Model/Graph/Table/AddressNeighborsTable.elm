@@ -1,4 +1,4 @@
-module Model.Graph.Table.AddressNeighborsTable exposing (..)
+module Model.Graph.Table.AddressNeighborsTable exposing (filter, titleAddressBalance, titleAddressReceived, titleLabels, titleNoTxs, titleValue)
 
 import Api.Data
 import Config.Graph as Graph

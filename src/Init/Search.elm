@@ -1,4 +1,4 @@
-module Init.Search exposing (..)
+module Init.Search exposing (init, initSearchAddressAndTxs, initSearchAll)
 
 import Api.Data
 import Autocomplete

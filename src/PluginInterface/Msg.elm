@@ -1,4 +1,4 @@
-module PluginInterface.Msg exposing (..)
+module PluginInterface.Msg exposing (OutMsg(..), mapOutMsg)
 
 import Api.Data
 import Browser.Dom

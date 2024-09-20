@@ -1,4 +1,4 @@
-module Msg.Graph exposing (..)
+module Msg.Graph exposing (Msg(..))
 
 import Api.Data
 import Browser.Dom

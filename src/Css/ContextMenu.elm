@@ -1,4 +1,4 @@
-module Css.ContextMenu exposing (..)
+module Css.ContextMenu exposing (option, root)
 
 import Config.View exposing (Config)
 import Css exposing (..)

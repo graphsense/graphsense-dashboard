@@ -1,4 +1,4 @@
-module Model.Graph.Table.TxUtxoTable exposing (..)
+module Model.Graph.Table.TxUtxoTable exposing (columnTitleFromDirection, filter, joinAddresses, titleValue)
 
 import Api.Data
 import Config.Graph as Graph

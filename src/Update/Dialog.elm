@@ -1,4 +1,4 @@
-module Update.Dialog exposing (..)
+module Update.Dialog exposing (addressNotFoundError, confirm, generalError, httpError, info, mapMsg, options)
 
 import Http
 import Model.Dialog exposing (..)

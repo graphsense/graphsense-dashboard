@@ -1,4 +1,4 @@
-module Css.Statusbar exposing (..)
+module Css.Statusbar exposing (close, loadingSpinner, log, logIcon, root)
 
 import Config.View exposing (Config)
 import Css exposing (..)

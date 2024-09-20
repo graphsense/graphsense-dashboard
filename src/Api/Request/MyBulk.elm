@@ -1,4 +1,4 @@
-module Api.Request.MyBulk exposing (..)
+module Api.Request.MyBulk exposing (Operation(..), bulkJson, operationVariants, stringFromOperation)
 
 import Api
 import Json.Decode

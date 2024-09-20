@@ -1,4 +1,4 @@
-module Model.Graph.Table.LabelAddressTagsTable exposing (..)
+module Model.Graph.Table.LabelAddressTagsTable exposing (filter, titleConfidence)
 
 import Api.Data
 import Config.Graph as Graph

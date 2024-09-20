@@ -1,4 +1,4 @@
-module Init.Graph.Table.AddressNeighborsTable exposing (..)
+module Init.Graph.Table.AddressNeighborsTable exposing (init)
 
 import Api.Data
 import Init.Graph.Table

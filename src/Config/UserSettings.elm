@@ -1,4 +1,4 @@
-module Config.UserSettings exposing (..)
+module Config.UserSettings exposing (UserSettings, decoder, default, encoder)
 
 import Config.Graph exposing (AddressLabelType(..), TxLabelType(..), addressLabelToString, stringToAddressLabel)
 import Json.Decode as Decode exposing (Decoder, bool, nullable, string)

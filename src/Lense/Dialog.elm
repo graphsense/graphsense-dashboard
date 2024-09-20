@@ -1,4 +1,4 @@
-module Lense.Dialog exposing (..)
+module Lense.Dialog exposing (dialog2ConfirmConfig)
 
 import Model.Dialog exposing (..)
 import Monocle.Optional exposing (Optional)

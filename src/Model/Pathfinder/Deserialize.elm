@@ -1,4 +1,4 @@
-module Model.Pathfinder.Deserialize exposing (..)
+module Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedThing, Deserializing)
 
 import Api.Data
 import Model.Pathfinder.Id exposing (Id)

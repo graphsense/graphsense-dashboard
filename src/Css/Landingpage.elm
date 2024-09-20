@@ -1,4 +1,4 @@
-module Css.Landingpage exposing (..)
+module Css.Landingpage exposing (exampleLinkBox, frame, loadBox, loadBoxIcon, loadBoxText, root, rule, searchRoot, searchTextarea)
 
 import Config.View exposing (Config)
 import Css exposing (..)

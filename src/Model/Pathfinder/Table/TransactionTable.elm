@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table.TransactionTable exposing (..)
+module Model.Pathfinder.Table.TransactionTable exposing (Model, filter, titleHash, titleTimestamp, titleValue)
 
 import Api.Data
 import Api.Request.Addresses

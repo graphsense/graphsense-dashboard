@@ -1,4 +1,4 @@
-port module Ports exposing (..)
+port module Ports exposing (console, deserialize, deserialized, exportGraphPNG, exportGraphics, newTab, pluginsIn, pluginsOut, saveToLocalStorage, serialize, setDirty)
 
 import Json.Encode exposing (Value)
 

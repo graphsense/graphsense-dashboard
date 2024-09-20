@@ -1,4 +1,4 @@
-module Util.Theme exposing (..)
+module Util.Theme exposing (backgroundColorWithLightmode, borderColorWithLightmode, borderColor_backgroundColorWithLightmode, colorWithLightmode, color_backgroundColorWithLightmode, duration, setAlpha, switchColor)
 
 import Color
 import Css

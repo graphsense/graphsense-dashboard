@@ -1,4 +1,4 @@
-module View.Graph.Table.AllAssetsTable exposing (..)
+module View.Graph.Table.AllAssetsTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View

@@ -1,4 +1,4 @@
-module Route.Pathfinder exposing (..)
+module Route.Pathfinder exposing (Config, Route(..), Thing(..), addressRoute, parser, toUrl, txRoute)
 
 import List.Extra
 import Url.Builder exposing (QueryParameter, absolute)

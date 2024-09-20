@@ -1,4 +1,4 @@
-module Model.Pathfinder.TxDetails exposing (..)
+module Model.Pathfinder.TxDetails exposing (Model)
 
 import Api.Data
 import Model.Graph.Table exposing (Table)

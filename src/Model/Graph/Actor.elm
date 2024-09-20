@@ -1,4 +1,4 @@
-module Model.Graph.Actor exposing (..)
+module Model.Graph.Actor exposing (Actor, getImageUri, getUris, getUrisWithoutMain)
 
 import Api.Data
 import List.Extra

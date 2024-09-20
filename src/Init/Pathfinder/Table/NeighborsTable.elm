@@ -1,4 +1,4 @@
-module Init.Pathfinder.Table.NeighborsTable exposing (..)
+module Init.Pathfinder.Table.NeighborsTable exposing (init)
 
 import Api.Data
 import Init.Graph.Table

@@ -1,4 +1,4 @@
-module Model.Graph exposing (..)
+module Model.Graph exposing (ActiveTool, Dragging(..), Hovered(..), Model, NodeType(..), SelectIfLoaded(..), Selected(..))
 
 import Api.Data
 import Browser.Dom as Dom

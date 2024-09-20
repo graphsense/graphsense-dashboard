@@ -1,4 +1,4 @@
-module Util.Flags exposing (..)
+module Util.Flags exposing (getFlagEmoji)
 
 {- See https://dev.to/jorik/country-code-to-flag-emoji-a21 -}
 

@@ -1,4 +1,4 @@
-module Init.Pathfinder.Network exposing (..)
+module Init.Pathfinder.Network exposing (init)
 
 import Dict
 import Model.Pathfinder.Network exposing (Network)

@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (..)
+module Model.Pathfinder.Network exposing (Network, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress)
 
 import Animation
 import Dict exposing (Dict)

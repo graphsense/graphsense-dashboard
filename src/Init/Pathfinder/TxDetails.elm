@@ -1,4 +1,4 @@
-module Init.Pathfinder.TxDetails exposing (..)
+module Init.Pathfinder.TxDetails exposing (init)
 
 import Init.Graph.Table
 import Model.Pathfinder.Table.IoTable as IoTable

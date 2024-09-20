@@ -1,4 +1,4 @@
-module Model.Direction exposing (..)
+module Model.Direction exposing (Direction(..), flip, signOffsetByDirection, toString)
 
 
 type Direction

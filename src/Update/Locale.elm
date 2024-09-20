@@ -1,4 +1,4 @@
-module Update.Locale exposing (..)
+module Update.Locale exposing (changeCurrency, changeTimeZone, changeValueDetail, setSupportedTokens, switch, update)
 
 import Api.Data
 import DateFormat.Language

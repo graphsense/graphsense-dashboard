@@ -1,4 +1,4 @@
-module View.Graph.Table.LabelAddressTagsTable exposing (..)
+module View.Graph.Table.LabelAddressTagsTable exposing (config)
 
 import Api.Data
 import Config.View as View

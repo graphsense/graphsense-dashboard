@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table.IoTable exposing (..)
+module Model.Pathfinder.Table.IoTable exposing (filter, titleValue)
 
 import Api.Data
 import Model.Graph.Table as Table

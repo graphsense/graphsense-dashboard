@@ -1,4 +1,4 @@
-module Init.Graph.Search exposing (..)
+module Init.Graph.Search exposing (init, initCriterion)
 
 import Api.Data
 import Hovercard

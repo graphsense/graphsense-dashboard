@@ -1,4 +1,4 @@
-module Data.Pathfinder.Id exposing (..)
+module Data.Pathfinder.Id exposing (address1, address2, address3, address4, address5, address6, address7, tx1, tx2, tx3)
 
 import Model.Pathfinder.Id exposing (Id)
 

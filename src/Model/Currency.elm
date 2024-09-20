@@ -1,4 +1,4 @@
-module Model.Currency exposing (..)
+module Model.Currency exposing (AssetIdentifier, Currency(..), asset, assetFromBase, tokensToValue)
 
 import Api.Data
 

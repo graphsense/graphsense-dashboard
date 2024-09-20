@@ -1,4 +1,4 @@
-module Model.Search exposing (..)
+module Model.Search exposing (Model, ResultLine(..), SearchType(..), firstResult, getLatestBlocks, getMulti, isLikelyPathSearchInput, minSearchInputLength, query, selectedValue, setIsPickingCurrency, setQuery)
 
 import Api.Data
 import Autocomplete exposing (Autocomplete)

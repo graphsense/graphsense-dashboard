@@ -1,4 +1,4 @@
-module Init.Pathfinder exposing (..)
+module Init.Pathfinder exposing (init)
 
 import Api.Data
 import Config.UserSettings exposing (UserSettings)

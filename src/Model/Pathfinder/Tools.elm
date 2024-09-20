@@ -1,4 +1,4 @@
-module Model.Pathfinder.Tools exposing (..)
+module Model.Pathfinder.Tools exposing (PointerTool(..))
 
 
 type PointerTool

@@ -1,4 +1,4 @@
-module Model.Graph.Table.TxsUtxoTable exposing (..)
+module Model.Graph.Table.TxsUtxoTable exposing (filter, titleNoInputs, titleNoOutputs, titleTotalInput, titleTotalOutput, titleTx)
 
 import Api.Data
 import Config.Graph as Graph

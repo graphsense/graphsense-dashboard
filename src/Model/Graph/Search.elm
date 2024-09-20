@@ -1,4 +1,4 @@
-module Model.Graph.Search exposing (..)
+module Model.Graph.Search exposing (Criterion(..), Direction(..), Model)
 
 import Api.Data
 import Browser.Dom as Dom

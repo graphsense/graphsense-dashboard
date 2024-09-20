@@ -1,4 +1,4 @@
-module Util.ExternalLinks exposing (..)
+module Util.ExternalLinks exposing (addProtocolPrefx, getBlockExplorerLinks, getBlockExplorerTransactionLinks, getFontAwesomeIconForUris)
 
 import Dict
 import FontAwesome

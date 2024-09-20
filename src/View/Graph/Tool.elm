@@ -1,4 +1,4 @@
-module View.Graph.Tool exposing (..)
+module View.Graph.Tool exposing (tool, toolbox)
 
 import Config.View exposing (Config)
 import Css exposing (color)

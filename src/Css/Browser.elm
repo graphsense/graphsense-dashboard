@@ -1,4 +1,4 @@
-module Css.Browser exposing (..)
+module Css.Browser exposing (currencyCell, frame, loadingSpinner, propertyBoxActivityPeriod, propertyBoxEntityId, propertyBoxImage, propertyBoxIncomingTxs, propertyBoxKey, propertyBoxNote, propertyBoxOutgoingTxs, propertyBoxRoot, propertyBoxRow, propertyBoxRule, propertyBoxTable, propertyBoxTableLink, propertyBoxUsageRelative, propertyBoxUsageTimestamp, propertyBoxValue, propertyBoxValueInner, root, tableSeparator, valueCell)
 
 import Config.View exposing (Config)
 import Css exposing (..)

@@ -1,4 +1,4 @@
-module Init.Pathfinder.AddressDetails exposing (..)
+module Init.Pathfinder.AddressDetails exposing (init)
 
 import Api.Data
 import Effect.Pathfinder exposing (Effect)

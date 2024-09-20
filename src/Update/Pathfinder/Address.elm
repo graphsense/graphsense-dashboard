@@ -1,4 +1,4 @@
-module Update.Pathfinder.Address exposing (..)
+module Update.Pathfinder.Address exposing (removeTx, txsInsertId)
 
 import Model.Pathfinder.Address exposing (..)
 import Model.Pathfinder.Id exposing (Id)

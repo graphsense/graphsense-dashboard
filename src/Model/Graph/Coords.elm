@@ -1,4 +1,4 @@
-module Model.Graph.Coords exposing (..)
+module Model.Graph.Coords exposing (BBox, Coords, avg, betrag, relativeToGraph, relativeToGraphZero)
 
 import List.Nonempty as NList
 

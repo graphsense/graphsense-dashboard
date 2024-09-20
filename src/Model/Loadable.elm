@@ -1,4 +1,4 @@
-module Model.Loadable exposing (..)
+module Model.Loadable exposing (Loadable(..), id, map, withDefault)
 
 
 type Loadable id thing

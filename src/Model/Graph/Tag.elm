@@ -1,4 +1,4 @@
-module Model.Graph.Tag exposing (..)
+module Model.Graph.Tag exposing (Input, Model, UserTag, userTagToApiTag)
 
 import Api.Data
 import Browser.Dom as Dom

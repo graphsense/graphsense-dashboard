@@ -1,4 +1,4 @@
-module Model.Graph.ContextMenu exposing (..)
+module Model.Graph.ContextMenu exposing (Model, Type(..))
 
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)

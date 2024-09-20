@@ -1,4 +1,4 @@
-module View.Graph.Table.TxsAccountTable exposing (..)
+module View.Graph.Table.TxsAccountTable exposing (blockConfig, config, prepareCSV)
 
 import Api.Data
 import Config.View as View

@@ -1,4 +1,4 @@
-module Data.Pathfinder.Tx exposing (..)
+module Data.Pathfinder.Tx exposing (tx1, tx2, tx3)
 
 import Animation
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)

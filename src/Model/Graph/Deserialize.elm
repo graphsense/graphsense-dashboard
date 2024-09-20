@@ -1,4 +1,4 @@
-module Model.Graph.Deserialize exposing (..)
+module Model.Graph.Deserialize exposing (Deserialized, DeserializedAddress, DeserializedEntity, DeserializedEntityTag(..), DeserializedEntityUserTag, Deserializing)
 
 import Api.Data
 import Color

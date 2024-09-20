@@ -1,4 +1,4 @@
-module Config.Pathfinder exposing (..)
+module Config.Pathfinder exposing (Config, addressRadius, nodeXOffset, nodeYOffset)
 
 import Hovercard
 

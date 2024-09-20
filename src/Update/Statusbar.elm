@@ -1,4 +1,4 @@
-module Update.Statusbar exposing (..)
+module Update.Statusbar exposing (add, messagesFromEffects, toggle, update, updateLastBlocks)
 
 import Api.Data
 import Api.Request.Entities
