@@ -119,8 +119,8 @@ view _ vc _ colors address getCluster =
                     |> onMouseLeave
                 ]
             |> s_clusterColor
-                (case (clusterColorLight, vc.highlightClusterFriends) of
-                    (Just c, True) ->
+                (case ( clusterColorLight, vc.highlightClusterFriends ) of
+                    ( Just c, True ) ->
                         [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
 
                     _ ->

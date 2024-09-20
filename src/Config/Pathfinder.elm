@@ -15,7 +15,7 @@ nodeXOffset =
 
 nodeYOffset : Float
 nodeYOffset =
-    2
+    2.5
 
 
 type alias Config =

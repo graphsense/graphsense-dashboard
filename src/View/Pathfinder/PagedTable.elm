@@ -57,11 +57,6 @@ customizations vc =
         |> s_rowAttrs (\_ -> [ Css.Table.row vc |> css ])
 
 
-pageIndicatorView : PagedTable data -> Html msg
-pageIndicatorView pt =
-    div [ [ Css.verticalAlign Css.center ] |> toAttr ] [ text (pt.currentPage |> String.fromInt) ]
-
-
 rawTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> String -> List data -> Html msg
 rawTableView _ attributes config sortColumn data =
     div []
@@ -138,9 +133,20 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
                         |> s_iconsChevronRightThin nextActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartStartInstances
-                        |> s_iconsChevronRightEnd (Just Util.View.none)
+                     -- |> s_iconsChevronRightEnd (Just Util.View.none)
                     )
                     { listPartStart = listPart }
+
+              else if tblPaged.currentPage == 1 && not nextPageAvailable then
+                SidePanelComponents.paginationListPartOnePageWithInstances
+                    (SidePanelComponents.paginationListPartOnePageAttributes
+                        |> s_listPartOnePage paggingBlockAttributes
+                        |> s_iconsChevronRightThin nextActiveAttributes
+                    )
+                    (SidePanelComponents.paginationListPartOnePageInstances
+                     -- |> s_iconsChevronRightEnd (Just Util.View.none)
+                    )
+                    { listPartOnePage = listPart }
 
               else if nextPageAvailable then
                 SidePanelComponents.paginationListPartMiddleWithInstances
@@ -151,7 +157,7 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
                         |> s_iconsChevronLeftEnd firstActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartMiddleInstances
-                        |> s_iconsChevronRightEnd (Just Util.View.none)
+                     -- |> s_iconsChevronRightEnd (Just Util.View.none)
                     )
                     { listPartMiddle = listPart }
 
@@ -164,7 +170,7 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
                         |> s_iconsChevronLeftEnd firstActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartEndInstances
-                        |> s_iconsChevronRightEnd (Just Util.View.none)
+                     -- |> s_iconsChevronRightEnd (Just Util.View.none)
                     )
                     { listPartEnd = listPart }
             ]
