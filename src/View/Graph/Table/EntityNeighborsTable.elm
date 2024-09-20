@@ -172,6 +172,7 @@ zero =
     }
 
 
+n : x -> ( x, List y )
 n s =
     ( s, [] )
 

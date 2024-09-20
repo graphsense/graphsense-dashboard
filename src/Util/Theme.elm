@@ -7,6 +7,7 @@ import Theme.SwitchableColor as Theme
 import Util.View as Util
 
 
+duration : Int
 duration =
     500
 
@@ -54,7 +55,7 @@ borderColor_backgroundColorWithLightmode lm c bg =
 withLightmode : List ( ( Float -> Css.Transitions.Transition, Css.Color -> Css.Style ), Theme.SwitchableColor ) -> Bool -> Css.Style
 withLightmode attributes lm =
     (attributes
-        |> List.map (\( ( attr, _ ), _ ) -> attr duration)
+        |> List.map (\( ( attr, _ ), _ ) -> attr (duration |> toFloat))
         |> Css.Transitions.transition
     )
         :: (attributes

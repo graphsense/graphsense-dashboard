@@ -211,11 +211,7 @@ updateByMsg plugins uc msg model =
             n { model | clusters = Dict.insert id data model.clusters }
 
         BrowserGotTxForAddress addressId direction data ->
-            let
-                ( m, eff ) =
-                    addTx plugins uc addressId direction data model
-            in
-            ( m, eff )
+            addTx plugins uc addressId direction data model
 
         SearchMsg m ->
             case m of
@@ -1105,7 +1101,7 @@ getNextTxEffects model addressId direction =
         |> Maybe.withDefault
             (BrowserGotRecentTx
                 >> WorkflowNextTxByTime context
-                |> Api.GetAddressTxsEffect
+                |> Api.GetAddressTxsEffectDetailed
                     { currency = Id.network addressId
                     , address = Id.id addressId
                     , direction = Just direction
@@ -1137,13 +1133,10 @@ updateByRoute_ plugins uc route model =
             let
                 id =
                     Id.init network a
-
-                ( x, b ) =
-                    { model | network = Network.clearSelection model.network }
-                        |> loadAddress plugins id
-                        |> and (selectAddress uc id)
             in
-            ( x, b )
+            { model | network = Network.clearSelection model.network }
+                |> loadAddress plugins id
+                |> and (selectAddress uc id)
 
         Route.Network network (Route.Tx a) ->
             let
@@ -1198,7 +1191,7 @@ loadTx _ id model =
             |> Api.GetTxEffect
                 { currency = Id.network id
                 , txHash = Id.id id
-                , includeIo = True
+                , includeIo = Just True
                 , tokenTxId = Nothing
                 }
             |> ApiEffect

@@ -90,7 +90,7 @@ initWithoutFilter addressId locale data =
       , txMaxBlock = Nothing
       }
     , (GotTxsForAddressDetails addressId ( Nothing, Nothing ) >> AddressDetailsMsg)
-        |> Api.GetAddressTxsEffect
+        |> Api.GetAddressTxsEffectDetailed
             { currency = Id.network addressId
             , address = Id.id addressId
             , direction = Nothing

@@ -38,15 +38,15 @@ config =
     [
     --   Docs.ReviewAtDocs.rule
     -- , NoConfusingPrefixOperator.rule
-    -- , NoDebug.Log.rule
+     NoDebug.Log.rule |> Rule.ignoreErrorsForFiles [ "src/Util/Debug.elm" ]
     -- , NoDebug.TodoOrToString.rule
     --     |> Rule.ignoreErrorsForDirectories [ "tests/" ]
     -- , NoExposingEverything.rule
     -- , NoImportingEverything.rule []
-    -- , NoMissingTypeAnnotation.rule
+    , NoMissingTypeAnnotation.rule
     -- , NoMissingTypeAnnotationInLetIn.rule
     -- , NoMissingTypeExpose.rule
-    -- , NoSimpleLetBody.rule
+    , NoSimpleLetBody.rule
     -- , NoPrematureLetComputation.rule
     -- , NoUnused.CustomTypeConstructors.rule []
     -- , NoUnused.CustomTypeConstructorArgs.rule
@@ -59,7 +59,7 @@ config =
     -- NoUnused.CustomTypeConstructors.rule []
     -- NoUnused.CustomTypeConstructorArgs.rule
     -- , NoUnused.Dependencies.rule
-    NoUnused.Exports.rule
+    , NoUnused.Exports.rule
     -- , NoUnused.Parameters.rule
     -- , NoUnused.Patterns.rule
      , NoUnused.Variables.rule

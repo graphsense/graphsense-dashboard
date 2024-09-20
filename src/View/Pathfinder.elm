@@ -16,7 +16,7 @@ import FontAwesome
 import Hex
 import Hovercard
 import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes as HA exposing ( src)
+import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
@@ -1027,6 +1027,7 @@ optionalTextButton vc bt btn =
             :: content
         )
 
+
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg
 graphSvg plugins _ vc gc model bbox =
     let
@@ -1126,6 +1127,7 @@ graphSvg plugins _ vc gc model bbox =
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system
         -- , showBoundingBox model
         ]
+
 
 
 -- showBoundingBox : Model -> Svg Msg

@@ -137,6 +137,7 @@ config vc coinCode =
         }
 
 
+n : x -> ( x, List y )
 n s =
     ( s, [] )
 

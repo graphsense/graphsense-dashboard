@@ -6,6 +6,7 @@ import Model.Pathfinder.Id as Id
 type Id
     = Id Id.Id
 
+
 network : Id -> String
 network (Id i) =
     Id.network i

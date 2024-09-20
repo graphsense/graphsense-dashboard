@@ -11,34 +11,42 @@ toAttr =
     HA.css
 
 
+xsGap : Px
 xsGap =
     px 1
 
 
+sGap : Px
 sGap =
     px 3
 
 
+smGap : Px
 smGap =
     px 5
 
 
+mGap : Px
 mGap =
     px 5
 
 
+mlGap : Px
 mlGap =
     px 10
 
 
+lGap : Px
 lGap =
     px 20
 
 
+all : Pct
 all =
     pct 100
 
 
+no : Px
 no =
     px 0
 
@@ -50,7 +58,6 @@ no =
 type ButtonType
     = Primary
     | Secondary
-
 
 
 primaryFrostedColor : Color
@@ -71,7 +78,6 @@ lightGreyColor =
 blackColor : Color
 blackColor =
     rgb 33 33 33
-
 
 
 whiteColor : Color
@@ -119,7 +125,6 @@ successColor _ =
 warningColor : View.Config -> Color
 warningColor _ =
     orangeColor
-
 
 
 highlightPrimaryFrostedColor : View.Config -> Color
@@ -174,6 +179,7 @@ panelHeadingStyle3 _ =
     , mlGap |> marginBottom
     ]
 
+
 linkButtonStyle : View.Config -> Bool -> List Style
 linkButtonStyle vc enabled =
     let
@@ -209,7 +215,6 @@ tagLinkButtonStyle vc =
     [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, blackColor |> color ]
 
 
-
 topLeftPanelStyle : View.Config -> List Style
 topLeftPanelStyle _ =
     [ position absolute
@@ -239,6 +244,7 @@ topRightPanelStyle _ =
     , mlGap |> right
     , top (px 70)
     ]
+
 
 searchBoxMinWidth : Float
 searchBoxMinWidth =
@@ -312,6 +318,7 @@ detailsActionButtonStyle vc bt _ =
                    , highlightPrimaryFrostedColor vc |> border3 xsGap solid
                    ]
 
+
 centerContent : List Style
 centerContent =
     [ displayFlex, flexDirection row, alignItems center, justifyContent center ]
@@ -337,7 +344,9 @@ kVTableValueTdStyle vc =
     textAlign right :: kVTableTdStyle vc ++ [ mGap |> paddingTop, mGap |> paddingBottom ]
 
 
+
 -- non vc dependent styles
+
 
 inIconStyle : List Style
 inIconStyle =
@@ -372,7 +381,6 @@ ioOutIndicatorStyle =
 iconWithTextStyle : List Style
 iconWithTextStyle =
     [ mGap |> paddingRight ]
-
 
 
 smPaddingBottom : List Style

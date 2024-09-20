@@ -12,5 +12,6 @@ filter =
     }
 
 
+titleValue : String
 titleValue =
     "Value"

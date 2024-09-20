@@ -64,6 +64,7 @@ config vc coinCode entityId entityHasAddress =
         }
 
 
+n : x -> ( x, List y )
 n s =
     ( s, [] )
 

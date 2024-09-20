@@ -36,7 +36,7 @@ update context msg model =
                             |> Api.GetTxEffect
                                 { currency = Id.network context.addressId
                                 , txHash = ref.txHash
-                                , includeIo = True
+                                , includeIo = Just True
                                 , tokenTxId = Nothing
                                 }
                             |> ApiEffect
