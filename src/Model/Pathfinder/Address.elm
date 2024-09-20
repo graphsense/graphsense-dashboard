@@ -2,7 +2,6 @@ module Model.Pathfinder.Address exposing (..)
 
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
-import Hex
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)

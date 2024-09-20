@@ -6,7 +6,6 @@ import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
-import Css.Pathfinder as Css
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
@@ -17,12 +16,12 @@ import Model.Pathfinder.Address exposing (..)
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
-import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled.Events exposing (..)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Graph exposing (translate)
@@ -225,8 +224,8 @@ toNodeIconHtml highlight address cluster clusterColor =
 toNodeIcon : Bool -> Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
 toNodeIcon highlight address cluster clusterColor =
     let
-        clstrSize =
-            cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
+        -- clstrSize =
+        --     cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
 
         getHighlight c =
             if highlight then

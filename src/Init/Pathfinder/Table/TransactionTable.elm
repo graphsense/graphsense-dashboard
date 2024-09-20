@@ -10,7 +10,7 @@ import Init.DateRangePicker as DateRangePicker
 import Init.Graph.Table
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
-import Model.Pathfinder.Address as Address exposing (Address)
+import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable

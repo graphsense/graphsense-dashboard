@@ -6,12 +6,6 @@ import Model.Pathfinder.Id as Id
 type Id
     = Id Id.Id
 
-
-unwrap : Id -> Id.Id
-unwrap (Id i) =
-    i
-
-
 network : Id -> String
 network (Id i) =
     Id.network i

@@ -59,8 +59,8 @@ config =
     -- NoUnused.CustomTypeConstructors.rule []
     -- NoUnused.CustomTypeConstructorArgs.rule
     -- , NoUnused.Dependencies.rule
-    -- NoUnused.Exports.rule
+    NoUnused.Exports.rule
     -- , NoUnused.Parameters.rule
     -- , NoUnused.Patterns.rule
-    NoUnused.Variables.rule
-    ] |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/" ])
+     , NoUnused.Variables.rule
+    ] |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins"])

@@ -17,7 +17,6 @@ import Model.Pathfinder.Tooltip exposing (Tooltip)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
-import Set exposing (..)
 import Theme.Svg.GraphComponents as GraphComponents
 import Time exposing (Posix)
 

@@ -4,7 +4,7 @@ import Color exposing (Color)
 import Dict
 import Iknaio.ColorScheme exposing (colorSchemePathfinder)
 import List.Extra exposing (getAt)
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id exposing (Id)
 
 
 type ColorScope

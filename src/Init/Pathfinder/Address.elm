@@ -5,7 +5,6 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address, Txs(..))
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..))
-import Set
 
 
 init : Id -> Coords -> Address

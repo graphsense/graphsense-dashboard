@@ -4,8 +4,6 @@ import Config.View as View
 import Css exposing (..)
 import Html.Styled
 import Html.Styled.Attributes as HA
-import Theme.Colors as Colors
-import Util.View
 
 
 toAttr : List Style -> Html.Styled.Attribute msg
@@ -41,10 +39,6 @@ all =
     pct 100
 
 
-half =
-    pct 50
-
-
 no =
     px 0
 
@@ -57,10 +51,6 @@ type ButtonType
     = Primary
     | Secondary
 
-
-primaryColorSelection : Color
-primaryColorSelection =
-    rgb 178 226 217
 
 
 primaryFrostedColor : Color
@@ -83,15 +73,6 @@ blackColor =
     rgb 33 33 33
 
 
-lightBlackColor : Color
-lightBlackColor =
-    rgb 33 33 33
-
-
-greyColor : Color
-greyColor =
-    rgb 79 79 79
-
 
 whiteColor : Color
 whiteColor =
@@ -101,11 +82,6 @@ whiteColor =
 darkBlue : Color
 darkBlue =
     rgb 3 31 53
-
-
-lighterDarkBlue : Color
-lighterDarkBlue =
-    rgb 5 50 84
 
 
 greenColor : Color
@@ -126,11 +102,6 @@ orangeColor =
     hex "#FF9800"
 
 
-veryLightGrayColor : Color
-veryLightGrayColor =
-    hex "#EEEEEE"
-
-
 
 -- Styles
 
@@ -149,11 +120,6 @@ warningColor : View.Config -> Color
 warningColor _ =
     orangeColor
 
-
-highlightPrimaryColor : View.Config -> Color
-highlightPrimaryColor _ =
-    Colors.highlight
-        |> Util.View.toCssColor
 
 
 highlightPrimaryFrostedColor : View.Config -> Color
@@ -189,14 +155,6 @@ tooltipMargin =
     [ margin4 sGap mGap sGap mGap ]
 
 
-boxStyle : View.Config -> Maybe Float -> List Style
-boxStyle vc upadding =
-    [ defaultBackgroundColor vc |> backgroundColor
-    , boxBorderColor vc |> boxShadow5 xsGap xsGap mGap xsGap
-    , px (upadding |> Maybe.withDefault 10.0) |> padding
-    ]
-
-
 searchInputStyle : View.Config -> String -> List Style
 searchInputStyle vc _ =
     [ width (ex 40)
@@ -209,76 +167,12 @@ searchInputStyle vc _ =
     ]
 
 
-panelHeadingStyle : View.Config -> List Style
-panelHeadingStyle _ =
-    [ fontWeight bold
-    , mlGap |> marginBottom
-    ]
-
-
-panelHeadingStyle2 : View.Config -> List Style
-panelHeadingStyle2 _ =
-    [ fontWeight bold
-    , mlGap |> marginBottom
-    ]
-
-
 panelHeadingStyle3 : View.Config -> List Style
 panelHeadingStyle3 _ =
     [ fontWeight bold
     , Css.marginTop (Css.px 15)
     , mlGap |> marginBottom
     ]
-
-
-collapsibleSectionHeadingStyle : View.Config -> List Style
-collapsibleSectionHeadingStyle vc =
-    [ fontWeight bold
-
-    -- , mlGap |> marginBottom
-    , mlGap |> marginTop
-    , mlGap |> padding
-
-    -- , veryLightGrayColor |> borderBottom3 (px 0.3) solid
-    , veryLightGrayColor |> borderTop3 (px 0.3) solid
-    , px 30 |> height
-    , cursor pointer
-    , displayFlex
-    , alignItems center
-    ]
-
-
-collapsibleSectionHeadingDisplaySettingsStyle : View.Config -> List Style
-collapsibleSectionHeadingDisplaySettingsStyle vc =
-    [ fontWeight bold
-    , sGap |> marginBottom
-    , sGap |> marginTop
-    , cursor pointer
-    ]
-
-
-toolItemSmallStyle : View.Config -> Bool -> List Style
-toolItemSmallStyle vc active =
-    [ px 30 |> minWidth
-    , textAlign center
-    , margin (px 2)
-    , highlightPrimaryFrostedColor vc |> border3 xsGap solid
-    , px 3 |> borderRadius
-    ]
-        ++ (if active then
-                [ highlightPrimaryFrostedColor vc |> backgroundColor ]
-
-            else
-                []
-           )
-
-
-toolItemStyle : View.Config -> List Style
-toolItemStyle _ =
-    [ px 50 |> minWidth
-    , textAlign center
-    ]
-
 
 linkButtonStyle : View.Config -> Bool -> List Style
 linkButtonStyle vc enabled =
@@ -315,29 +209,6 @@ tagLinkButtonStyle vc =
     [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, blackColor |> color ]
 
 
-toggleToolButtonStyle : View.Config -> Bool -> Bool -> List Style
-toggleToolButtonStyle vc selected enabled =
-    (textAlign center :: linkButtonStyle vc enabled)
-        ++ (if selected then
-                [ highlightPrimaryFrostedColor vc |> backgroundColor ]
-
-            else
-                []
-           )
-        ++ [ paddingTop (px 5) ]
-
-
-toolButtonStyle : View.Config -> Bool -> List Style
-toolButtonStyle vc enabled =
-    textAlign center :: linkButtonStyle vc enabled
-
-
-toolIconStyle : View.Config -> List Style
-toolIconStyle _ =
-    -- [ mText |> fontSize
-    [ mGap |> marginBottom
-    ]
-
 
 topLeftPanelStyle : View.Config -> List Style
 topLeftPanelStyle _ =
@@ -362,38 +233,12 @@ topPanelStyle =
     ]
 
 
-graphSelectionToolsStyle : View.Config -> List Style
-graphSelectionToolsStyle vc =
-    [ position absolute
-    , half |> left
-    , px 50 |> bottom
-    , displayFlex
-    , transform (translate (pct -50))
-    ]
-        ++ boxStyle vc (Just 5)
-
-
-graphActionsStyle : View.Config -> List Style
-graphActionsStyle vc =
-    [ displayFlex, sGap |> marginBottom ]
-        ++ boxStyle vc Nothing
-
-
 topRightPanelStyle : View.Config -> List Style
 topRightPanelStyle _ =
     [ position absolute
     , mlGap |> right
     , top (px 70)
     ]
-
-
-searchBoxStyle : View.Config -> Maybe Float -> List Style
-searchBoxStyle vc padding =
-    [ px searchBoxMinWidth |> minWidth
-    , sGap |> marginBottom
-    ]
-        ++ boxStyle vc padding
-
 
 searchBoxMinWidth : Float
 searchBoxMinWidth =
@@ -441,12 +286,6 @@ dateTimeRangeHighlightedDateStyle vc =
     ]
 
 
-dateTimeRangeFilterButtonStyle : View.Config -> List Style
-dateTimeRangeFilterButtonStyle vc =
-    [ alignItems flexEnd
-    ]
-
-
 detailsActionButtonStyle : View.Config -> ButtonType -> Bool -> List Style
 detailsActionButtonStyle vc bt _ =
     let
@@ -473,35 +312,6 @@ detailsActionButtonStyle vc bt _ =
                    , highlightPrimaryFrostedColor vc |> border3 xsGap solid
                    ]
 
-
-searchBoxContainerStyle : View.Config -> List Style
-searchBoxContainerStyle _ =
-    [ position relative ]
-
-
-searchBoxIconStyle : View.Config -> List Style
-searchBoxIconStyle _ =
-    [ position absolute, px 4 |> top, px 7 |> left ]
-
-
-addressDetailsViewActorImageStyle : View.Config -> List Style
-addressDetailsViewActorImageStyle vc =
-    [ display block
-    , borderRadius (pct 50)
-    , height (px 40)
-    , width (px 40)
-    , border3 xsGap
-        solid
-        (if vc.lightmode then
-            blackColor
-
-         else
-            whiteColor
-        )
-    , mGap |> marginRight
-    ]
-
-
 centerContent : List Style
 centerContent =
     [ displayFlex, flexDirection row, alignItems center, justifyContent center ]
@@ -510,11 +320,6 @@ centerContent =
 emptyTableMsg : List Style
 emptyTableMsg =
     [ margin (px 20), textAlign center ]
-
-
-detailsViewContainerStyle : View.Config -> List Style
-detailsViewContainerStyle _ =
-    [ displayFlex, justifyContent left, all |> width ]
 
 
 kVTableTdStyle : View.Config -> List Style
@@ -532,19 +337,7 @@ kVTableValueTdStyle vc =
     textAlign right :: kVTableTdStyle vc ++ [ mGap |> paddingTop, mGap |> paddingBottom ]
 
 
-copyableIdentifierStyle : View.Config -> List Style
-copyableIdentifierStyle vc =
-    [ highlightPrimaryColor vc |> color ]
-
-
-
 -- non vc dependent styles
-
-
-ruleStyle : List Style
-ruleStyle =
-    [ mGap |> marginBottom, mGap |> marginTop ]
-
 
 inIconStyle : List Style
 inIconStyle =
@@ -571,44 +364,15 @@ dateStyle =
     [ fontWeight (int 600) ]
 
 
-multiLineDatetimeDateStyle : List Style
-multiLineDatetimeDateStyle =
-    paddingBottom (px 4) :: dateStyle
-
-
-multiLineDatetimeTimeStyle : List Style
-multiLineDatetimeTimeStyle =
-    [ color greyColor ]
-
-
 ioOutIndicatorStyle : List Style
 ioOutIndicatorStyle =
     [ ch 0.5 |> paddingLeft ]
-
-
-collapsibleSectionIconStyle : List Style
-collapsibleSectionIconStyle =
-    [ ch 1 |> paddingRight, ch 2 |> paddingLeft ]
-
-
-collapsibleSectionDisplaySettingsIconStyle : List Style
-collapsibleSectionDisplaySettingsIconStyle =
-    [ ch 1 |> paddingRight ]
 
 
 iconWithTextStyle : List Style
 iconWithTextStyle =
     [ mGap |> paddingRight ]
 
-
-detailsViewCloseButtonStyle : List Style
-detailsViewCloseButtonStyle =
-    [ float right, margin4 mlGap mlGap no no ]
-
-
-detailsContainerStyle : List Style
-detailsContainerStyle =
-    [ mlGap |> marginRight, mlGap |> marginLeft ]
 
 
 smPaddingBottom : List Style
