@@ -171,7 +171,7 @@ view _ vc _ colors address getCluster =
                         text ""
 
                     ( False, True ) ->
-                        Icons.iconExport {}
+                        Icons.iconsNodeMarkerPurposeStartingPoint {}
             }
         }
 
@@ -226,7 +226,6 @@ toNodeIcon highlight address cluster clusterColor =
     let
         -- clstrSize =
         --     cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
-
         getHighlight c =
             if highlight then
                 [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]

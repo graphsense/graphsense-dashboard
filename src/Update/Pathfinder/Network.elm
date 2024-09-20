@@ -119,6 +119,7 @@ addAddressWithPosition position id model =
                                     )
         in
         Address.init id coords
+            |> s_isStartingPoint (isEmpty model)
             |> insertAddress (freeSpaceAroundCoords coords model)
 
 
