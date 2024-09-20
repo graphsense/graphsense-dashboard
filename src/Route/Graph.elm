@@ -28,11 +28,9 @@ module Route.Graph exposing
     )
 
 import List.Extra
-import Model.Graph.Table exposing (AddressTable(..))
 import Model.Search as Search exposing (ResultLine)
 import Plugin.Model
 import Plugin.Route as Plugin
-import Url
 import Url.Builder as B exposing (..)
 import Util.Url.Parser as P exposing (..)
 import Util.Url.Parser.Query as Q
@@ -550,11 +548,6 @@ parseCurrency c =
     P.custom "CURRENCY" <|
         \segment ->
             List.Extra.find ((==) segment) c.currencies
-
-
-encodedString : Parser (String -> a) a
-encodedString =
-    P.custom "ENCODED_STRING" Url.percentDecode
 
 
 parseAddressPath : Parser (( String, List String ) -> a) a

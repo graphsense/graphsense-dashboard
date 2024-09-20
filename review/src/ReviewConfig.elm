@@ -59,11 +59,11 @@ config =
     -- NoUnused.CustomTypeConstructors.rule []
     -- NoUnused.CustomTypeConstructorArgs.rule
     -- , NoUnused.Dependencies.rule
-    , NoUnused.Exports.rule
+    -- , NoUnused.Exports.rule |> Rule.ignoreErrorsForFiles ["src/View/Locale.elm"]
     -- , NoUnused.Parameters.rule
     -- , NoUnused.Patterns.rule
-     , NoUnused.Variables.rule |> Rule.ignoreErrorsForFiles ["src/View/Locale.elm"]
+     , NoUnused.Variables.rule 
     ]
-    |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins", "codegen/", "theme/", "plugins/"])
+    |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins", "codegen/", "theme/", "plugins/", "src/PluginInterface"])
     |> List.map (Rule.ignoreErrorsForFiles [ "src/PluginInterface.elm"])
 
