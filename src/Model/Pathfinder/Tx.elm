@@ -10,7 +10,7 @@ import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (..)
 import Model.Pathfinder.Id exposing (Id)
-import Tuple exposing (first, pair)
+import Tuple exposing (pair)
 import Util.Pathfinder exposing (getAddress)
 
 
@@ -98,12 +98,10 @@ listAddressesForTx addresses tx =
             [ ( Incoming, from ), ( Outgoing, to ) ]
 
         Utxo { inputs, outputs } ->
-            (Dict.toList inputs
-                |> List.map first
+            (Dict.keys inputs
                 |> List.map (pair Incoming)
             )
-                ++ (Dict.toList outputs
-                        |> List.map first
+                ++ (Dict.keys outputs
                         |> List.map (pair Outgoing)
                    )
     )

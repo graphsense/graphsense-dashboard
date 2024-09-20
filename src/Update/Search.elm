@@ -55,8 +55,7 @@ blocksToResult input currency latestBlock =
 searchResultToResultLines : String -> List ( String, Int ) -> Api.Data.SearchResult -> List ResultLine
 searchResultToResultLines query latestBlocks searchResult =
     latestBlocks
-        |> List.map (currencyToResult query searchResult)
-        |> List.concat
+        |> List.concatMap (currencyToResult query searchResult)
 
 
 labelResultLines : Api.Data.SearchResult -> List ResultLine
@@ -126,7 +125,7 @@ update msg model =
                                     ++ labelResultLines result
 
                             SearchAddressAndTx conf ->
-                                List.map (currencyToResultWithoutBlock query result) conf.currencies |> List.concat
+                                List.concatMap (currencyToResultWithoutBlock query result) conf.currencies
 
                             SearchTagsOnly ->
                                 labelResultLines result
@@ -206,8 +205,7 @@ update msg model =
                     case model.searchType of
                         SearchAll { latestBlocks } ->
                             latestBlocks
-                                |> List.map (\( curr, lb ) -> blocksToResult query curr lb)
-                                |> List.concat
+                                |> List.concatMap (\( curr, lb ) -> blocksToResult query curr lb)
 
                         SearchAddressAndTx _ ->
                             []

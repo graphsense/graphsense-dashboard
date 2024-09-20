@@ -54,25 +54,23 @@ blockConfig vc coinCode =
                             ]
                         |> List.singleton
                 )
-            ]
-                ++ [ (if vc.locale.currency /= Model.Currency.Coin then
-                        T.valueColumn
+            , (if vc.locale.currency /= Model.Currency.Coin then
+                T.valueColumn
 
-                      else
-                        T.valueColumnWithoutCode
-                     )
-                        styles
-                        vc
-                        (\x -> asset coinCode x.currency)
-                        "Value"
-                        .value
-                   ]
-                ++ [ T.stringColumn styles vc "Currency" (.currency >> String.toUpper)
-                   , toMsg .fromAddress
-                        |> T.addressColumn styles vc titleSendingAddress .fromAddress
-                   , toMsg .toAddress
-                        |> T.addressColumn styles vc titleReceivingAddress .toAddress
-                   ]
+               else
+                T.valueColumnWithoutCode
+              )
+                styles
+                vc
+                (\x -> asset coinCode x.currency)
+                "Value"
+                .value
+            , T.stringColumn styles vc "Currency" (.currency >> String.toUpper)
+            , toMsg .fromAddress
+                |> T.addressColumn styles vc titleSendingAddress .fromAddress
+            , toMsg .toAddress
+                |> T.addressColumn styles vc titleReceivingAddress .toAddress
+            ]
         , customizations = customizations styles vc
         }
 
@@ -111,28 +109,26 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            ]
-                ++ [ (if vc.locale.currency /= Model.Currency.Coin then
-                        T.valueColumn
+            , (if vc.locale.currency /= Model.Currency.Coin then
+                T.valueColumn
 
-                      else
-                        T.valueColumnWithoutCode
-                     )
-                        styles
-                        vc
-                        (\x -> asset coinCode x.currency)
-                        "Value"
-                        .value
-                   ]
-                ++ [ T.stringColumn styles vc "Currency" (.currency >> String.toUpper)
-                   , T.timestampColumn styles vc titleTimestamp .timestamp
-                   , toMsg .fromAddress
-                        |> T.addressColumn styles vc titleSendingAddress .fromAddress
-                   , toMsg .toAddress
-                        |> T.addressColumn styles vc titleReceivingAddress .toAddress
-                   , T.intColumnWithoutValueDetailFormatting styles vc titleHeight .height
-                   , T.maybeIntColumn styles vc "Token Tx Id" .tokenTxId
-                   ]
+               else
+                T.valueColumnWithoutCode
+              )
+                styles
+                vc
+                (\x -> asset coinCode x.currency)
+                "Value"
+                .value
+            , T.stringColumn styles vc "Currency" (.currency >> String.toUpper)
+            , T.timestampColumn styles vc titleTimestamp .timestamp
+            , toMsg .fromAddress
+                |> T.addressColumn styles vc titleSendingAddress .fromAddress
+            , toMsg .toAddress
+                |> T.addressColumn styles vc titleReceivingAddress .toAddress
+            , T.intColumnWithoutValueDetailFormatting styles vc titleHeight .height
+            , T.maybeIntColumn styles vc "Token Tx Id" .tokenTxId
+            ]
         , customizations = customizations styles vc
         }
 

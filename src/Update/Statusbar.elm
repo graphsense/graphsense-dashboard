@@ -26,7 +26,7 @@ messagesFromEffects model effects =
                         (\( key, message ) ->
                             let
                                 keyJoined =
-                                    key ++ String.join "" message
+                                    key ++ String.concat message
                             in
                             ( { statusbar
                                 | messages = Dict.insert keyJoined ( key, message ) statusbar.messages
@@ -172,19 +172,6 @@ update key error model =
                 { model
                     | messages = Dict.remove key model.messages
                     , log = addLog ( first msg, second msg, error ) model.log
-                    , visible =
-                        if first msg == loadingAddressKey then
-                            model.visible
-
-                        else if first msg == loadingAddressEntityKey then
-                            model.visible
-
-                        else
-                            model.visible
-
-                    -- error
-                    --     |> Maybe.map (\_ -> True)
-                    --     |> Maybe.withDefault model.visible
                 }
             )
         |> Maybe.withDefault model

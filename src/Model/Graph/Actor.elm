@@ -22,8 +22,8 @@ getImageUri actor =
 
 getUris : Actor -> List String
 getUris actor =
-    [ actor.uri ]
-        ++ getUrisWithoutMain actor
+    actor.uri
+        :: getUrisWithoutMain actor
 
 
 getUrisWithoutMain : Actor -> List String

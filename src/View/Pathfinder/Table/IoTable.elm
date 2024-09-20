@@ -29,7 +29,7 @@ config styles vc ioDirection network isCheckedFn lblFn =
             [ "Value" ]
     in
     Table.customConfig
-        { toId = .address >> String.join ""
+        { toId = .address >> String.concat
         , toMsg = TableMsg ioDirection >> TxDetailsMsg
         , columns =
             [ PT.checkboxColumn vc

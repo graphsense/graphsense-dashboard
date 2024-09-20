@@ -21,7 +21,7 @@ import Api.Data
 import Basics.Extra exposing (uncurry)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict
-import Effect.Pathfinder exposing (Effect(..))
+import Effect.Pathfinder
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Tx as Tx
@@ -152,8 +152,7 @@ findAddressCoordsNextToTx model direction tx =
                 ( Outgoing, Tx.Utxo t ) ->
                     Just
                         ( t.outputs
-                            |> Dict.toList
-                            |> List.map first
+                            |> Dict.keys
                         , tx.x
                         , A.getTo tx.y
                         )
@@ -161,8 +160,7 @@ findAddressCoordsNextToTx model direction tx =
                 ( Incoming, Tx.Utxo t ) ->
                     Just
                         ( t.inputs
-                            |> Dict.toList
-                            |> List.map first
+                            |> Dict.keys
                         , tx.x
                         , A.getTo tx.y
                         )
@@ -554,9 +552,7 @@ listInOutputsOfApiTxUtxo network tx =
     let
         toSet =
             Maybe.withDefault []
-                >> List.map .address
-                >> List.concat
-                -- TODO what to do with multisig? Fine to concat?
+                >> List.concatMap .address
                 >> Set.fromList
 
         normalizeAddresses direction =
@@ -684,8 +680,7 @@ findUtxoTxCoordsNextToAddress model direction address =
                                             Incoming ->
                                                 tx.inputs
                                         )
-                                            |> Dict.toList
-                                            |> List.map first
+                                            |> Dict.keys
                                             |> toAddresses model
                                     )
                     )

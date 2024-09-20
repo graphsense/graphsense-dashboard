@@ -30,7 +30,7 @@ currencyHeading vc =
 
 statsTableWrapper : Config -> List Style
 statsTableWrapper vc =
-    [ position relative ] ++ vc.theme.stats.tableWrapper
+    position relative :: vc.theme.stats.tableWrapper
 
 
 statsTableInnerWrapper : Config -> List Style
@@ -43,30 +43,26 @@ statsTableInnerWrapper vc =
 
 statsTable : Config -> List Style
 statsTable vc =
-    [ display table
-    ]
-        ++ vc.theme.stats.table
+    display table
+        :: vc.theme.stats.table
 
 
 statsTableRow : Config -> List Style
 statsTableRow vc =
-    [ display tableRow
-    ]
-        ++ vc.theme.stats.tableRow
+    display tableRow
+        :: vc.theme.stats.tableRow
 
 
 statsTableCellValue : Config -> List Style
 statsTableCellValue vc =
-    [ display tableCell
-    ]
-        ++ vc.theme.stats.tableCellValue
+    display tableCell
+        :: vc.theme.stats.tableCellValue
 
 
 statsTableCellKey : Config -> List Style
 statsTableCellKey vc =
-    [ display tableCell
-    ]
-        ++ vc.theme.stats.tableCellKey
+    display tableCell
+        :: vc.theme.stats.tableCellKey
 
 
 statsBadge : Config -> List Style
@@ -99,9 +95,8 @@ currencyBackground vc =
 
 currencyBackgroundPath : Config -> List Style
 currencyBackgroundPath vc =
-    [ fill currentColor
-    ]
-        ++ vc.theme.stats.currencyBackgroundPath
+    fill currentColor
+        :: vc.theme.stats.currencyBackgroundPath
 
 
 loadingSpinner : Config -> List Style

@@ -213,7 +213,7 @@ prepareCSV locale isOutgoing network row =
 prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
 prepareCsvTokens locale coinCode row =
     Locale.tokenCurrencies coinCode locale
-        |> List.map
+        |> List.concatMap
             (\token ->
                 Util.Csv.values ("entity_balance_" ++ token)
                     (row.entity.totalTokensReceived
@@ -231,4 +231,3 @@ prepareCsvTokens locale coinCode row =
                             |> Maybe.withDefault zero
                         )
             )
-        |> List.concat

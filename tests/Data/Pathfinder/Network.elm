@@ -45,7 +45,7 @@ oneAddressWithOutgoingTx =
                 (Maybe.map
                     (\address ->
                         { address
-                            | outgoingTxs = Address.Txs (Set.fromList [ Id.tx1 ])
+                            | outgoingTxs = Address.Txs (Set.singleton Id.tx1)
                         }
                     )
                 )
@@ -69,7 +69,7 @@ oneAddressWithIncomingTx =
                 (Maybe.map
                     (\address ->
                         { address
-                            | incomingTxs = Address.Txs (Set.fromList [ Id.tx2 ])
+                            | incomingTxs = Address.Txs (Set.singleton Id.tx2)
                         }
                     )
                 )
@@ -89,8 +89,8 @@ oneAddressWithTwoTxs =
                 (Maybe.map
                     (\address ->
                         { address
-                            | outgoingTxs = Address.Txs (Set.fromList [ Id.tx1 ])
-                            , incomingTxs = Address.Txs (Set.fromList [ Id.tx2 ])
+                            | outgoingTxs = Address.Txs (Set.singleton Id.tx1)
+                            , incomingTxs = Address.Txs (Set.singleton Id.tx2)
                         }
                     )
                 )

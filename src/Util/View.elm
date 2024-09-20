@@ -283,7 +283,7 @@ colorToHex cl =
     List.map (round >> Hex.toString) [ red * 255, green * 255, blue * 255 ]
         |> List.map (String.padLeft 2 '0')
         |> (::) "#"
-        |> String.join ""
+        |> String.concat
 
 
 frame : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg

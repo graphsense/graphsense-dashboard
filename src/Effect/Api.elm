@@ -559,12 +559,11 @@ perform apiKey wrapMsg effect =
         GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, includeActors, nextpage } toMsg ->
             let
                 direction =
-                    case isOutgoing of
-                        True ->
-                            Api.Request.Addresses.DirectionOut
+                    if isOutgoing then
+                        Api.Request.Addresses.DirectionOut
 
-                        False ->
-                            Api.Request.Addresses.DirectionIn
+                    else
+                        Api.Request.Addresses.DirectionIn
             in
             Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) (Just includeActors) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg

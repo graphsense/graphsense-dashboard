@@ -78,8 +78,7 @@ fromTxUtxoData network tx coords =
             Dict.map sumIoEntries groupedIos
 
         fn dir =
-            Dict.toList summedIo
-                |> List.map Tuple.second
+            Dict.values summedIo
                 |> List.filter (\x -> x.isOutput == (dir == Outgoing))
                 |> List.map
                     (\ioEntry ->

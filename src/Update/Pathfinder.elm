@@ -518,18 +518,16 @@ updateByMsg plugins uc msg model =
                             | tooltip =
                                 model.network.txs
                                     |> Dict.get id
-                                    |> Maybe.andThen
+                                    |> Maybe.map
                                         (\tx ->
                                             case tx.type_ of
                                                 Tx.Utxo t ->
                                                     Tooltip.UtxoTx t
                                                         |> Tooltip.init hc
-                                                        |> Just
 
                                                 Tx.Account t ->
                                                     Tooltip.AccountTx t
                                                         |> Tooltip.init hc
-                                                        |> Just
                                         )
                             , network = Network.updateTx id (s_hovered True) model.network
                             , hovered = HoveredTx id
@@ -565,9 +563,9 @@ updateByMsg plugins uc msg model =
                             | tooltip =
                                 model.network.addresses
                                     |> Dict.get id
-                                    |> Maybe.andThen
+                                    |> Maybe.map
                                         (\addr ->
-                                            Tooltip.Address addr |> Tooltip.init hc |> Just
+                                            Tooltip.Address addr |> Tooltip.init hc
                                         )
 
                             -- , network = Network.updateTx id (s_hovered True) model.network
@@ -1453,12 +1451,13 @@ getAddressForDirection tx direction exceptAddress =
         Tx.Account { raw } ->
             (case direction of
                 Incoming ->
-                    Just raw.fromAddress
+                    raw.fromAddress
 
                 Outgoing ->
-                    Just raw.toAddress
+                    raw.toAddress
             )
-                |> Maybe.map (Id.init raw.network)
+                |> Id.init raw.network
+                |> Just
 
 
 addTx : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
@@ -1733,14 +1732,14 @@ autoLoadAddresses plugins tx model =
             and (loadAddress plugins addressId)
 
         src =
-            if List.any ((==) Incoming) addresses then
+            if List.member Incoming addresses then
                 Nothing
 
             else
                 getAddressForDirection tx Incoming Nothing
 
         dst =
-            if List.any ((==) Outgoing) addresses then
+            if List.member Outgoing addresses then
                 Nothing
 
             else

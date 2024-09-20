@@ -107,7 +107,7 @@ bulkJson currency_path operation_path body_body decoder =
     Api.request
         "POST"
         "/{currency}/bulk.json/{operation}"
-        [ ( "currency", identity currency_path )
+        [ ( "currency", currency_path )
         , ( "operation", stringFromOperation operation_path )
         ]
         [ ( "num_pages", Just "1" ) ]

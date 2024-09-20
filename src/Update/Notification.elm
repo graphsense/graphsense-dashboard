@@ -13,7 +13,7 @@ notificationsFromEffects : Model.Model key -> List Model.Effect -> ( Model.Model
 notificationsFromEffects model effects =
     let
         notifications =
-            effects |> List.filterMap (notificationFromEffect model) |> List.concatMap identity
+            effects |> List.filterMap (notificationFromEffect model) |> List.concat
     in
     ( model |> s_notifications (model.notifications |> flip Notify.addMany notifications), effects )
 
@@ -41,7 +41,7 @@ pathFinderErrorToNotifications err =
             Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
 
         Errors x ->
-            x |> List.map pathFinderErrorToNotifications |> List.concatMap identity
+            x |> List.concatMap pathFinderErrorToNotifications
 
 
 addHttpError : Notify.Model -> Maybe String -> Http.Error -> Notify.Model

@@ -4,7 +4,6 @@ import Color exposing (rgb255)
 import Css exposing (..)
 import Css.Transitions
 import Iknaio.ColorScheme exposing (..)
-import Model.Graph exposing (NodeType(..))
 import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
 import Theme.Autocomplete as Autocomplete
@@ -145,7 +144,9 @@ theme =
             ]
         |> s_inputRaw (\lightmode -> inputStyleRaw lightmode)
         |> s_headerLogo
-            [ width <| px 45, paddingTop <| px 10, paddingLeft <| px 3
+            [ width <| px 45
+            , paddingTop <| px 10
+            , paddingLeft <| px 3
             ]
         |> s_headerLogoWrap
             []
@@ -173,8 +174,7 @@ theme =
                 , Css.textDecoration Css.none
                 ]
                     ++ (if active then
-                            [ 
-                                switchColor lightmode iconHovered |> toCssColor |> color
+                            [ switchColor lightmode iconHovered |> toCssColor |> color
                             ]
 
                         else
@@ -187,7 +187,7 @@ theme =
         |> s_sidebarIconsBottom
             (\lightmode active ->
                 [ marginTop auto
-                , (px 0)|> padding
+                , px 0 |> padding
                 ]
             )
         |> s_sidebarLink
@@ -950,12 +950,7 @@ theme =
                            else
                             highlight
                                 |> Maybe.withDefault
-                                    (if nodeType == AddressType then
-                                        switchColor lightmode colors.grey
-
-                                     else
-                                        switchColor lightmode colors.grey
-                                    )
+                                    (switchColor lightmode colors.grey)
                           )
                             |> Color.toCssString
                             |> property "stroke"

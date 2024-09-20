@@ -2744,13 +2744,12 @@ addEntityEgonet : String -> Int -> Bool -> List Api.Data.NeighborEntity -> Model
 addEntityEgonet currency entity isOutgoing neighbors model =
     let
         entities =
-            List.map
+            List.concatMap
                 (\neighbor ->
                     Layer.getEntities neighbor.entity.currency neighbor.entity.entity model.layers
                         |> List.map (pair neighbor)
                 )
                 neighbors
-                |> List.concat
 
         anchors =
             Layer.getEntities currency entity model.layers
@@ -2773,7 +2772,7 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
         |> syncLinks repositioned
         |> insertEntityShadowLinks (List.map (second >> .id) new |> Set.fromList)
     , neighbors
-        |> List.map
+        |> List.concatMap
             (\{ entity } ->
                 getEntityEgonet
                     { currency = entity.currency
@@ -2783,7 +2782,6 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
                     newModel.layers
                     |> List.map ApiEffect
             )
-        |> List.concat
         |> (::)
             (new
                 |> List.map (second >> .id)
@@ -2836,12 +2834,11 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
         |> (++)
             (added.newAddresses
                 |> List.map .id
-                |> List.map
+                |> List.concatMap
                     (\a ->
                         getAddressEgonet a BrowserGotAddressEgonet added.model.layers
                             |> List.map ApiEffect
                     )
-                |> List.concat
             )
         |> (::)
             (added.newAddresses
@@ -3269,8 +3266,7 @@ refreshBrowserEntityIf predicate model =
 addUserTag : Set Id.AddressId -> Dict ( String, String, String ) Tag.UserTag -> IntDict Layer -> IntDict Layer
 addUserTag ids userTags layers =
     ids
-        |> Set.toList
-        |> List.foldl
+        |> Set.foldl
             (\id layers_ ->
                 Dict.get ( Id.currency id, Id.addressId id, "address" ) userTags
                     |> Maybe.Extra.orElseLazy
@@ -3293,10 +3289,9 @@ makeLegend uc model =
                 |> List.filterMap identity
     in
     (Layer.addresses model.layers
-        |> List.map getCategories
-        |> List.concat
+        |> List.concatMap getCategories
     )
-        ++ (Layer.entities model.layers |> List.map getCategories |> List.concat)
+        ++ (Layer.entities model.layers |> List.concatMap getCategories)
         |> Set.fromList
         |> Set.toList
         |> List.filterMap
@@ -3463,15 +3458,11 @@ forcePushHistory model =
 
 cleanHistory : ( Model, List Effect ) -> ( Model, List Effect )
 cleanHistory ( model, eff ) =
-    ( if True then
-        { model
-            | history =
-                makeHistoryEntry model
-                    |> History.prune model.history
-        }
-
-      else
-        model
+    ( { model
+        | history =
+            makeHistoryEntry model
+                |> History.prune model.history
+      }
     , eff
     )
 
@@ -3571,12 +3562,11 @@ addAddressesAtEntity plugins uc entityId addresses model =
             ((++)
                 (added.new
                     |> Set.toList
-                    |> List.map
+                    |> List.concatMap
                         (\a ->
                             getAddressEgonet a BrowserGotAddressEgonet added.layers
                                 |> List.map ApiEffect
                         )
-                    |> List.concat
                 )
             )
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
@@ -3766,14 +3756,14 @@ loadEntity plugins { currency, entity, table, layer } model =
                     | browser = browser2
                     , adding = Adding.loadEntity { currency = currency, entity = entity } model.adding
                   }
-                , [ BrowserGotEntity
-                        |> GetEntityEffect
-                            { entity = entity
-                            , currency = currency
-                            }
-                        |> ApiEffect
-                  ]
-                    ++ (getEntityEgonet
+                , (BrowserGotEntity
+                    |> GetEntityEffect
+                        { entity = entity
+                        , currency = currency
+                        }
+                    |> ApiEffect
+                  )
+                    :: (getEntityEgonet
                             { currency = currency
                             , entity = entity
                             }

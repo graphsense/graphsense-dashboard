@@ -79,9 +79,8 @@ main_ vc =
 
 navbar : Config -> List Style
 navbar vc =
-    [ Util.Css.zIndexMain
-    ]
-        ++ vc.theme.navbar vc.lightmode
+    Util.Css.zIndexMain
+        :: vc.theme.navbar vc.lightmode
 
 
 contents : Config -> List Style

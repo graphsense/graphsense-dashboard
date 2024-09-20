@@ -419,19 +419,18 @@ tableLink vc link =
 propertyBoxButton : Bool -> FontAwesome.IconLayer msg -> Html msg
 propertyBoxButton active iconlayer =
     FontAwesome.layers
-        (iconlayer
-            :: [ FontAwesome.IconLayer FontAwesome.caretRight
-                    FontAwesome.Solid
-                    [ FontAwesome.Pull FontAwesome.Right ]
-                    [ Html.Attributes.style "opacity" <|
-                        if active then
-                            "1"
+        [ iconlayer
+        , FontAwesome.IconLayer FontAwesome.caretRight
+            FontAwesome.Solid
+            [ FontAwesome.Pull FontAwesome.Right ]
+            [ Html.Attributes.style "opacity" <|
+                if active then
+                    "1"
 
-                        else
-                            "0"
-                    ]
-               ]
-        )
+                else
+                    "0"
+            ]
+        ]
         []
         |> Html.fromUnstyled
 

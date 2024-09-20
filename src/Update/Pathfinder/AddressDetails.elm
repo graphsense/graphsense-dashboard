@@ -69,7 +69,7 @@ update uc pathfinderModel msg id model =
                             ( model.neighborsOutgoing, s_neighborsOutgoing )
 
                 ( eff, loading ) =
-                    if not (tbl.table.nextpage == Nothing) then
+                    if tbl.table.nextpage /= Nothing then
                         ( (GotNeighborsForAddressDetails id dir >> AddressDetailsMsg)
                             |> Api.GetAddressNeighborsEffect
                                 { currency = Id.network id
@@ -128,7 +128,7 @@ update uc pathfinderModel msg id model =
         UserClickedNextPageTransactionTable ->
             let
                 ( eff, loading ) =
-                    if not (model.txs.table.table.nextpage == Nothing) && not (PT.isNextPageLoaded model.txs.table) then
+                    if (model.txs.table.table.nextpage /= Nothing) && not (PT.isNextPageLoaded model.txs.table) then
                         ( (GotNextPageTxsForAddressDetails id >> AddressDetailsMsg)
                             |> Api.GetAddressTxsEffectDetailed
                                 { currency = Id.network id

@@ -266,11 +266,10 @@ update plugins uc msg model =
                     }
             in
             ( newModel
-            , (Locale.getTranslationEffect loc
-                |> LocaleEffect
-                |> List.singleton
-              )
-                ++ [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ]
+            , [ Locale.getTranslationEffect loc
+                    |> LocaleEffect
+              , SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel)
+              ]
             )
 
         UserClickedLightmode ->
@@ -706,7 +705,7 @@ update plugins uc msg model =
 
         PathfinderMsg (Pathfinder.UserClickedSaveGraph time) ->
             ( model
-            , ((case time of
+            , [ (case time of
                     Nothing ->
                         Time.now
                             |> Task.perform (Just >> Pathfinder.UserClickedSaveGraph)
@@ -718,12 +717,11 @@ update plugins uc msg model =
                                     |> (\tt -> tt ++ ".gs")
                                 )
                             |> Ports.serialize
-               )
-                |> Pathfinder.CmdEffect
-                |> PathfinderEffect
-                |> List.singleton
-              )
-                ++ [ SetCleanEffect ]
+                )
+                    |> Pathfinder.CmdEffect
+                    |> PathfinderEffect
+              , SetCleanEffect
+              ]
             )
 
         PathfinderMsg m ->
@@ -871,7 +869,7 @@ update plugins uc msg model =
 
                 Graph.UserClickedExportGS time ->
                     ( model
-                    , ((case time of
+                    , [ (case time of
                             Nothing ->
                                 Time.now
                                     |> Task.perform (Just >> Graph.UserClickedExportGS)
@@ -883,12 +881,11 @@ update plugins uc msg model =
                                             |> (\tt -> tt ++ ".gs")
                                         )
                                     |> Ports.serialize
-                       )
-                        |> Graph.CmdEffect
-                        |> GraphEffect
-                        |> List.singleton
-                      )
-                        ++ [ SetCleanEffect ]
+                        )
+                            |> Graph.CmdEffect
+                            |> GraphEffect
+                      , SetCleanEffect
+                      ]
                     )
 
                 Graph.UserClickedExportGraphics time ->
@@ -1102,9 +1099,8 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
 
                     PluginInterface.GetEntities entities toMsg ->
                         entities
-                            |> List.map
+                            |> List.concatMap
                                 (\entity -> Layer.getEntities entity.currency entity.entity model.graph.layers)
-                            |> List.concat
                             |> List.map .entity
                             |> (\ents ->
                                     let

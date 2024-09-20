@@ -290,7 +290,7 @@ resultLineToHtml vc query asLink selectedValue choiceEvents resultLine =
                     ( FontAwesome.user, lbl )
     in
     span
-        ([ Css.resultLine vc
+        ((Css.resultLine vc
             ++ (if selectedValue == Just resultLine then
                     Css.resultLineHighlighted vc
 
@@ -298,8 +298,8 @@ resultLineToHtml vc query asLink selectedValue choiceEvents resultLine =
                     []
                )
             |> css
-         ]
-            ++ choiceEvents
+         )
+            :: choiceEvents
         )
         [ FontAwesome.icon icon
             |> Html.Styled.fromUnstyled

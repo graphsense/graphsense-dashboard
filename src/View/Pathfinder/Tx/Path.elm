@@ -196,13 +196,8 @@ coloredPath vc c =
                p0.x + (val.x / pa.width) * dx
         -}
         ly =
-            if c.isOutgoing then
-                val.y
-                    + (Bezier.atX lx spline |> .point |> .y)
-
-            else
-                val.y
-                    + (Bezier.atX lx spline |> .point |> .y)
+            val.y
+                + (Bezier.atX lx spline |> .point |> .y)
 
         p =
             [ M ( p0.x, p0.y )

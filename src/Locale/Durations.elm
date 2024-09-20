@@ -61,6 +61,5 @@ durationToString { unitToString, precision, separator } dur =
                         (\( unit, c ) ->
                             unitToString c unit
                         )
-                    |> List.intersperse separator
-                    |> String.concat
+                    |> String.join separator
            )

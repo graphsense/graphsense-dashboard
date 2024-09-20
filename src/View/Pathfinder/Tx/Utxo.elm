@@ -113,7 +113,7 @@ edge _ vc _ hovered tx pos =
                                     --        else
                                     --            x
                                     --   )
-                                    >> pair
+                                    |> pair
                                 )
                     )
 

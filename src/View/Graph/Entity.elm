@@ -186,7 +186,7 @@ getLabel vc gc ent =
 
 addFlagsOffset : (Float -> List (Svg Msg)) -> List (Svg Msg) -> List (Svg Msg)
 addFlagsOffset f acc =
-    acc ++ f -((List.length acc |> toFloat) * 20.0 - 0.0)
+    acc ++ f -((List.length acc |> toFloat) * 20.0)
 
 
 flags : Plugins -> Config -> Graph.Config -> Entity -> Svg Msg
@@ -204,19 +204,16 @@ flags plugins vc gc ent =
         ]
         (List.foldl addFlagsOffset
             []
-            ((tagsFlag vc ent
-                :: actorsFlag vc ent
-                :: []
-             )
-                ++ [ \pluginOffsetStart ->
-                        Plugin.entityFlags plugins ent.plugins vc
-                            |> (\( pluginOffset, pluginFlags ) ->
-                                    g [ translate (pluginOffsetStart - pluginOffset) 0 |> transform ]
-                                        pluginFlags
-                               )
-                            |> List.singleton
-                   ]
-            )
+            [ tagsFlag vc ent
+            , actorsFlag vc ent
+            , \pluginOffsetStart ->
+                Plugin.entityFlags plugins ent.plugins vc
+                    |> (\( pluginOffset, pluginFlags ) ->
+                            g [ translate (pluginOffsetStart - pluginOffset) 0 |> transform ]
+                                pluginFlags
+                       )
+                    |> List.singleton
+            ]
         )
 
 

@@ -20,12 +20,7 @@ selectCriterion : Config -> String -> Model -> ( Model, List Effect )
 selectCriterion config criterion model =
     { model
         | criterion =
-            case criterion of
-                "category" ->
-                    initCriterion config.categories
-
-                _ ->
-                    initCriterion config.categories
+            initCriterion config.categories
     }
         |> n
 

@@ -35,21 +35,20 @@ navbarLeft plugins states vc model =
     div
         [ Css.navbarLeft vc |> css
         ]
-        (List.map (Tool.tool vc)
-            [ { icon = FontAwesome.icon FontAwesome.userTag
-              , title = "My tags"
-              , msg = \_ -> UserClickedUserTags
-              , color = Nothing
-              , status =
-                    case model.browser.type_ of
-                        Browser.UserTags _ ->
-                            Tool.Active
+        (Tool.tool vc
+            { icon = FontAwesome.icon FontAwesome.userTag
+            , title = "My tags"
+            , msg = \_ -> UserClickedUserTags
+            , color = Nothing
+            , status =
+                case model.browser.type_ of
+                    Browser.UserTags _ ->
+                        Tool.Active
 
-                        _ ->
-                            Tool.Inactive
-              }
-            ]
-            ++ Plugin.graphNavbarLeft plugins states vc
+                    _ ->
+                        Tool.Inactive
+            }
+            :: Plugin.graphNavbarLeft plugins states vc
         )
 
 

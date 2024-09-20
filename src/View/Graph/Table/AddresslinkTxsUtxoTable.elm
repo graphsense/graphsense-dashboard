@@ -59,9 +59,8 @@ config vc coinCode =
 
 prepareCSV : Model.Locale.Model -> String -> Api.Data.LinkUtxo -> List ( ( String, List String ), String )
 prepareCSV locModel currency row =
-    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
-    ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "input_value" row.inputValue locModel currency
+    ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
+        :: Util.Csv.valuesWithBaseCurrencyFloat "input_value" row.inputValue locModel currency
         ++ Util.Csv.valuesWithBaseCurrencyFloat "output_value" row.outputValue locModel currency
         ++ [ ( ( "height", [] ), Util.Csv.int row.height )
            , ( ( "timestamp", [] ), Util.Csv.timestamp locModel row.timestamp )

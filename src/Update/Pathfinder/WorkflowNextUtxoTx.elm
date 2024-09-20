@@ -54,8 +54,7 @@ update context msg model =
                             tx.outputs
                     )
                         |> Maybe.withDefault []
-                        |> List.map .address
-                        |> List.concat
+                        |> List.concatMap .address
                         |> List.map (Id.init tx.currency)
                         |> Set.fromList
             in
@@ -100,7 +99,7 @@ loadReferencedTx context tx =
             getIo tx
                 |> Maybe.andThen
                     (List.Extra.findIndex
-                        (.address >> List.any ((==) (Id.id context.addressId)))
+                        (.address >> List.member (Id.id context.addressId))
                     )
     in
     BrowserGotReferencedTxs

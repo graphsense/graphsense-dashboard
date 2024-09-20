@@ -106,9 +106,8 @@ graphSvg plugins _ vc gc model bbox =
                     []
                )
         )
-        ([ Svg.lazy2 arrowMarkers vc gc
-         ]
-            ++ (if gc.showEntityShadowLinks then
+        (Svg.lazy2 arrowMarkers vc gc
+            :: (if gc.showEntityShadowLinks then
                     [ Svg.lazy2 entityShadowLinks vc model.layers ]
 
                 else

@@ -21,7 +21,7 @@ rule col attributes =
             ]
     in
     div <|
-        [ css <|
+        (css <|
             [ overflow hidden
             , textAlign center
             , before <|
@@ -35,5 +35,5 @@ rule col attributes =
                        , marginRight <| pct -50
                        ]
             ]
-        ]
-            ++ attributes
+        )
+            :: attributes
