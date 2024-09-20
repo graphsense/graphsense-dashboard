@@ -7,7 +7,6 @@ import Css.Graph as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Init.Graph.History as History
 import Init.Graph.History.Entry as Entry
 import Model.Graph exposing (ActiveTool, Model)
 import Model.Graph.Browser as Browser

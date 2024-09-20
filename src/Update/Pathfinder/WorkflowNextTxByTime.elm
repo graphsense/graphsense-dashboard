@@ -1,7 +1,6 @@
 module Update.Pathfinder.WorkflowNextTxByTime exposing (update)
 
 import Api.Data
-import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Model.Pathfinder exposing (Model)

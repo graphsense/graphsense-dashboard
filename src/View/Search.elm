@@ -7,7 +7,6 @@ import Css exposing (Style)
 import Css.Button
 import Css.Search as Css
 import FontAwesome
-import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)

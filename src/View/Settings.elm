@@ -12,7 +12,7 @@ import Model.Currency as Currency exposing (..)
 import Model.Locale exposing (ValueDetail(..))
 import Msg.Graph exposing (Msg(..))
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View exposing (Plugins)
 import Time
 import Util.View
 import View.Locale as Locale

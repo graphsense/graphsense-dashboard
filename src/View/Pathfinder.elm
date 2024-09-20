@@ -2,7 +2,6 @@ module View.Pathfinder exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Browser.Events exposing (Visibility(..))
 import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
@@ -17,14 +16,12 @@ import FontAwesome
 import Hex
 import Hovercard
 import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes as HA exposing (id, src)
+import Html.Styled.Attributes as HA exposing ( src)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
-import Html.Styled.Lazy exposing (..)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency as Asset exposing (Currency(..), asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
-import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Table
@@ -43,12 +40,11 @@ import Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData
 import Route
 import Route.Graph exposing (AddressTable(..))
-import Route.Pathfinder exposing (Route(..))
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -82,11 +78,6 @@ import View.Search
 
 type alias BtnConfig =
     { icon : Bool -> Html Msg, text : String, msg : Msg, enable : Bool }
-
-
-inlineExportIcon : Html Msg
-inlineExportIcon =
-    HIcons.iconExportWithAttributes (HIcons.iconExportAttributes |> s_vector [ css (Css.lightGreyColor |> Css.fill |> Css.important |> List.singleton) ]) {}
 
 
 inlineCloseSmallIcon : Html Msg
@@ -1036,25 +1027,6 @@ optionalTextButton vc bt btn =
             :: content
         )
 
-
-detailsActionButton : View.Config -> ButtonType -> BtnConfig -> Html Msg
-detailsActionButton vc btnT btn =
-    disableableButton (detailsActionButtonStyle vc btnT) btn [] [ Html.text (Locale.string vc.locale btn.text) ]
-
-
-detailsActionsView : View.Config -> List BtnConfig -> Html Msg
-detailsActionsView vc actionButtons =
-    let
-        btnType i =
-            if i == 0 then
-                Primary
-
-            else
-                Secondary
-    in
-    div [ smPaddingBottom |> toAttr ] (actionButtons |> List.indexedMap (\i itm -> detailsActionButton vc (btnType i) itm))
-
-
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg
 graphSvg plugins _ vc gc model bbox =
     let
@@ -1156,13 +1128,13 @@ graphSvg plugins _ vc gc model bbox =
         ]
 
 
-showBoundingBox : Model -> Svg Msg
-showBoundingBox model =
-    let
-        bb =
-            Network.getBoundingBox model.network
-    in
-    rect [ fill "red", width (bb.width * unit + (2 * unit) |> String.fromFloat), height (bb.height * unit + (2 * unit) |> String.fromFloat), x (bb.x * unit - unit |> String.fromFloat), y ((bb.y * unit - unit) |> String.fromFloat) ] []
+-- showBoundingBox : Model -> Svg Msg
+-- showBoundingBox model =
+--     let
+--         bb =
+--             Network.getBoundingBox model.network
+--     in
+--     rect [ fill "red", width (bb.width * unit + (2 * unit) |> String.fromFloat), height (bb.height * unit + (2 * unit) |> String.fromFloat), x (bb.x * unit - unit |> String.fromFloat), y ((bb.y * unit - unit) |> String.fromFloat) ] []
 
 
 drawDragSelector : View.Config -> Model -> Svg Msg

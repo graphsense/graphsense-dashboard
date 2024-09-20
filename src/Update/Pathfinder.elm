@@ -26,47 +26,39 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
-import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Txs(..), getTxs, txsSetter)
-import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.History.Entry as Entry
-import Model.Pathfinder.Id as Id exposing (Id, network)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Search as Search
-import Msg.Pathfinder as Msg
+import Msg.Pathfinder
     exposing
         ( DisplaySettingsMsg(..)
         , Msg(..)
-        , TxDetailsMsg(..)
         , WorkflowNextTxByTimeMsg(..)
-        , WorkflowNextUtxoTxMsg(..)
         )
-import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update exposing (Plugins)
 import Ports
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
-import Route.Pathfinder as Route exposing (Route(..))
+import Route.Pathfinder as Route
 import Set exposing (..)
-import Svg.Attributes exposing (x)
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
-import Update.Graph.Table exposing (UpdateSearchTerm(..))
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.Network as Network exposing (FindPosition(..), ingestAddresses, ingestTxs)
 import Update.Pathfinder.Node as Node
-import Update.Pathfinder.Tx as Tx
 import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx

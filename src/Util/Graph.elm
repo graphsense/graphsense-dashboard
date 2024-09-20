@@ -5,7 +5,6 @@ import Config.Graph as Graph
 import Dict exposing (Dict)
 import Json.Decode
 import List.Extra
-import Model.Currency exposing (AssetIdentifier)
 import Model.Graph.Coords exposing (Coords)
 import Svg.Styled as Svg
 import Svg.Styled.Events as Svg

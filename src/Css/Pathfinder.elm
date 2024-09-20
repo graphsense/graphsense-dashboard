@@ -1,6 +1,5 @@
 module Css.Pathfinder exposing (..)
 
-import Color exposing (red)
 import Config.View as View
 import Css exposing (..)
 import Html.Styled

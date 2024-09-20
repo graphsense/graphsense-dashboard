@@ -1,7 +1,6 @@
 module View.Dialog exposing (..)
 
 import Config.View exposing (Config)
-import Css
 import Css.Dialog as Css
 import Css.View
 import FontAwesome

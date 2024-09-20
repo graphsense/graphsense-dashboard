@@ -11,7 +11,7 @@ import Hovercard
 import Html
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (classList, css, src, title, value)
+import Html.Styled.Attributes exposing (classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import RecordSetter exposing (s_iconsCopySmall)

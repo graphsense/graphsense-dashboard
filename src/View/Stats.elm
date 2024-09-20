@@ -12,7 +12,6 @@ import RecordSetter exposing (..)
 import RemoteData exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as Svg exposing (d, viewBox)
-import Time
 import Util.RemoteData exposing (webdata)
 import Util.View
 import View.CurrencyMeta exposing (currencies)

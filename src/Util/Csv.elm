@@ -1,7 +1,7 @@
 module Util.Csv exposing (..)
 
 import Api.Data
-import Model.Currency exposing (AssetIdentifier, Currency(..), assetFromBase)
+import Model.Currency exposing (Currency(..), assetFromBase)
 import Model.Locale exposing (..)
 import View.Locale exposing (currencyWithoutCode)
 

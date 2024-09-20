@@ -52,6 +52,12 @@ format:
 	npx elm-format --yes src
 	npx elm-format --yes tests
 
+lint:
+	npx elm-review src
+
+lint-fix:
+	npx elm-review src --fix-all
+
 ./theme/figma.json:
 	mkdir -p theme
 	curl 'https://api.figma.com/v1/files/$(FIGMA_FILE_ID)?geometry=paths' -H 'X-Figma-Token: $(FIGMA_API_TOKEN)' | jq > theme/figma.json
@@ -67,4 +73,4 @@ gen:
 	make setem
 	
 
-.PHONY: openapi serve test format build build-docker serve-docker gen theme
+.PHONY: openapi serve test format lint lint-fix build build-docker serve-docker gen theme

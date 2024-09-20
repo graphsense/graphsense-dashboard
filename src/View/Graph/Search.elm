@@ -4,7 +4,7 @@ import Config.View as View
 import Css.Button
 import Css.Graph as Css
 import Css.View
-import Html.Styled as Html exposing (..)
+import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Graph.Search exposing (..)

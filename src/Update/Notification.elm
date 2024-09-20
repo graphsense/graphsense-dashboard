@@ -7,7 +7,6 @@ import Model
 import Model.Notification as Notify
 import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import RecordSetter exposing (..)
-import Tuple exposing (..)
 
 
 notificationsFromEffects : Model.Model key -> List Model.Effect -> ( Model.Model key, List Model.Effect )

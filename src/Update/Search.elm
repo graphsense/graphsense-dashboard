@@ -7,9 +7,7 @@ import Effect.Search exposing (Effect(..))
 import Init.Search exposing (init)
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
-import Route.Graph as Graph
 import Tuple exposing (pair)
-import Util.Data as Data
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
