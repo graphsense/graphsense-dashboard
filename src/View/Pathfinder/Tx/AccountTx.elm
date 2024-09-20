@@ -7,18 +7,16 @@ import Css
 import Dict exposing (Dict)
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
-import Model.Currency exposing (AssetIdentifier, asset)
-import Model.Direction exposing (Direction(..))
+import Model.Currency exposing (asset)
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View as Plugin exposing (Plugins)
-import Svg.PathD exposing (..)
-import Svg.Styled as Svg exposing (..)
+import Plugin.View exposing (Plugins)
+import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
-import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeEthAttributes)

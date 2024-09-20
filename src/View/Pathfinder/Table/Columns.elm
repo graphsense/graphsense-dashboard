@@ -7,7 +7,7 @@ import Css.Pathfinder as PCSS exposing (inoutStyle)
 import Css.Statusbar
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
+import Html.Styled.Events
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..))
 import RecordSetter exposing (..)

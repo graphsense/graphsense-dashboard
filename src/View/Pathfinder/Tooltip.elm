@@ -1,16 +1,14 @@
 module View.Pathfinder.Tooltip exposing (view)
 
 import Api.Data exposing (TagSummary)
-import Config.Graph exposing (AddressLabelType(..))
 import Config.View as View
 import Css
 import Css.Pathfinder as Css
-import Css.View as Css
 import Dict exposing (Dict)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (css)
 import Model.Currency exposing (assetFromBase)
-import Model.Pathfinder exposing (HavingTags(..))
+import Model.Pathfinder exposing (HavingTags)
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))

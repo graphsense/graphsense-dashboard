@@ -2,11 +2,10 @@ module View.Pathfinder.Toolbar exposing (..)
 
 import Config.View as View
 import Css
-import Html.Styled as Html exposing (..)
+import Html.Styled exposing (..)
 import Html.Styled.Attributes as HA exposing (css, id)
-import Html.Styled.Lazy exposing (..)
 import Model.Pathfinder.Tools exposing (PointerTool(..))
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
 import RecordSetter exposing (..)
 import Theme.Colors
 import Theme.Html.Icons as Icons

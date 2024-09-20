@@ -21,7 +21,6 @@ import Api.Data
 import Basics.Extra exposing (uncurry)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict
-import Effect.Pathfinder
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Tx as Tx
@@ -29,21 +28,14 @@ import List.Nonempty as NList
 import Maybe.Extra
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
-import Model.Graph.Id as Id
 import Model.Pathfinder.Address exposing (Address, txsToSet)
 import Model.Pathfinder.Deserialize exposing (DeserializedThing)
-import Model.Pathfinder.Error exposing (..)
-import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Id.Address as Address
-import Model.Pathfinder.Id.Tx as Tx
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx, listAddressesForTx)
-import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (..)
-import RemoteData exposing (RemoteData(..))
 import Set
-import Svg.Attributes exposing (y)
-import Tuple exposing (first, pair, second)
+import Tuple exposing (pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
 import Update.Pathfinder.Tx as Tx

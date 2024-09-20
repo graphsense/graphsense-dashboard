@@ -2,14 +2,12 @@ module View.Pathfinder.Table.IoTable exposing (..)
 
 import Api.Data
 import Config.View as View
-import Css
 import Css.Table exposing (Styles)
-import Html.Styled.Attributes as HA exposing (id, src)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
-import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder exposing (IoDirection, Msg(..), TxDetailsMsg(..))
 import Set
 import Table
 import View.Graph.Table exposing (customizations)

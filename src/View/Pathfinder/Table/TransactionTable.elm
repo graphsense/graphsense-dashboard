@@ -1,19 +1,14 @@
-module View.Pathfinder.Table.TransactionTable exposing (config, prepareCSV)
+module View.Pathfinder.Table.TransactionTable exposing (config)
 
 import Api.Data
-import Api.Request.Addresses exposing (Direction)
 import Config.View as View
 import Css.Table exposing (Styles)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
-import Model.Locale
-import Model.Pathfinder.Id as Id exposing (Id, network)
-import Model.Pathfinder.Tx as Tx
+import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Set
 import Table
-import View.Graph.Address exposing (address)
-import View.Graph.Search exposing (direction)
 import View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations)
 import View.Pathfinder.Table.Columns as PT
 
@@ -83,6 +78,7 @@ config _ vc addressId isCheckedFn =
         }
 
 
-prepareCSV : Model.Locale.Model -> String -> Api.Data.AddressTx -> List ( ( String, List String ), String )
-prepareCSV _ _ _ =
-    []
+
+-- prepareCSV : Model.Locale.Model -> String -> Api.Data.AddressTx -> List ( ( String, List String ), String )
+-- prepareCSV _ _ _ =
+--     []

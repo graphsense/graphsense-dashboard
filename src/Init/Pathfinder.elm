@@ -12,7 +12,6 @@ import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
-import Set exposing (..)
 import Task
 import Time
 

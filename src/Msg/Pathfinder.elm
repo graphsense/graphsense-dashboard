@@ -7,8 +7,6 @@ import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Tools exposing (PointerTool)
-import Msg.Graph exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin

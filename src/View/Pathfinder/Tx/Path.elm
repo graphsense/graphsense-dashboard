@@ -1,20 +1,14 @@
-module View.Pathfinder.Tx.Path exposing (accountPath, inPath, inPathHovered, outPath, outPathHovered)
+module View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
 
 import Bezier
 import Color
-import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
-import Css.Pathfinder as Css
-import Model.Direction exposing (Direction(..))
-import Model.Pathfinder.Tx exposing (..)
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder exposing (Msg)
 import String.Format as Format
 import Svg.PathD exposing (..)
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
-import Svg.Styled.Events as Svg exposing (..)
-import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Util.Graph exposing (translate)
@@ -80,19 +74,20 @@ outPathHovered vc label x1 y1 x2 y2 opacity =
         }
 
 
-accountPath : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-accountPath vc label x1 y1 x2 y2 opacity =
-    coloredPath vc
-        { label = label
-        , highlight = False
-        , isOutgoing = True
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
-        , opacity = opacity
-        , isUtxo = False
-        }
+
+-- accountPath : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+-- accountPath vc label x1 y1 x2 y2 opacity =
+--     coloredPath vc
+--         { label = label
+--         , highlight = False
+--         , isOutgoing = True
+--         , x1 = x1
+--         , y1 = y1
+--         , x2 = x2
+--         , y2 = y2
+--         , opacity = opacity
+--         , isUtxo = False
+--         }
 
 
 type alias ColoredPathConfig =
@@ -330,90 +325,86 @@ coloredPath vc c =
             ]
 
 
-bendedPath : View.Config -> Pathfinder.Config -> String -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
-bendedPath vc _ label withArrow x1 y1 x2 y2 =
-    let
-        ( dx, dy ) =
-            ( x2 - x1
-            , y2 - y1
-            )
 
-        ( nodes, lx, ly ) =
-            if dx > 0 then
-                let
-                    ( mx, my ) =
-                        ( x1 + dx / 2
-                        , y1 + dy / 2
-                        )
-                in
-                ( [ ( x2, y2 )
-                        |> C
-                            ( mx, y1 )
-                            ( mx, y2 )
-                  ]
-                , mx
-                , my
-                )
-
-            else
-                let
-                    ( mx, my ) =
-                        ( x1 + dx / 2
-                        , y1 + Basics.max (dy / 2) (GraphComponents.addressNodeNodeFrame_details.width / 2)
-                        )
-
-                    ( c1x, c1y ) =
-                        ( x1 + (mx - x1 |> abs) / 2
-                        , my
-                        )
-
-                    ( c2x, c2y ) =
-                        ( mx
-                            - (mx - x1)
-                            / 2
-                        , my
-                        )
-                in
-                ( [ ( mx, my )
-                        |> C
-                            ( c1x, c1y )
-                            ( c2x, c2y )
-                  , ( x2, y2 )
-                        |> S
-                            ( x2 - (x2 - mx |> abs) / 2
-                            , y2 - (y2 - my) / 2
-                            )
-                  ]
-                , mx
-                , my
-                )
-    in
-    [ Svg.path
-        [ nodes
-            |> (::) (M ( x1, y1 ))
-            |> pathD
-            |> d
-        ]
-        []
-    , if withArrow then
-        Svg.path
-            [ d <|
-                pathD
-                    [ M ( x2 - arrowLength, y2 - arrowLength )
-                    , l ( arrowLength, arrowLength )
-                    , l ( -arrowLength, arrowLength )
-                    ]
-            ]
-            []
-
-      else
-        text ""
-    , text_
-        [ lx |> String.fromFloat |> x
-        , ly |> String.fromFloat |> y
-        , textAnchor "middle"
-        ]
-        [ text label
-        ]
-    ]
-        |> g []
+-- bendedPath : View.Config -> Pathfinder.Config -> String -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
+-- bendedPath vc _ label withArrow x1 y1 x2 y2 =
+--     let
+--         ( dx, dy ) =
+--             ( x2 - x1
+--             , y2 - y1
+--             )
+--         ( nodes, lx, ly ) =
+--             if dx > 0 then
+--                 let
+--                     ( mx, my ) =
+--                         ( x1 + dx / 2
+--                         , y1 + dy / 2
+--                         )
+--                 in
+--                 ( [ ( x2, y2 )
+--                         |> C
+--                             ( mx, y1 )
+--                             ( mx, y2 )
+--                   ]
+--                 , mx
+--                 , my
+--                 )
+--             else
+--                 let
+--                     ( mx, my ) =
+--                         ( x1 + dx / 2
+--                         , y1 + Basics.max (dy / 2) (GraphComponents.addressNodeNodeFrame_details.width / 2)
+--                         )
+--                     ( c1x, c1y ) =
+--                         ( x1 + (mx - x1 |> abs) / 2
+--                         , my
+--                         )
+--                     ( c2x, c2y ) =
+--                         ( mx
+--                             - (mx - x1)
+--                             / 2
+--                         , my
+--                         )
+--                 in
+--                 ( [ ( mx, my )
+--                         |> C
+--                             ( c1x, c1y )
+--                             ( c2x, c2y )
+--                   , ( x2, y2 )
+--                         |> S
+--                             ( x2 - (x2 - mx |> abs) / 2
+--                             , y2 - (y2 - my) / 2
+--                             )
+--                   ]
+--                 , mx
+--                 , my
+--                 )
+--     in
+--     [ Svg.path
+--         [ nodes
+--             |> (::) (M ( x1, y1 ))
+--             |> pathD
+--             |> d
+--         ]
+--         []
+--     , if withArrow then
+--         Svg.path
+--             [ d <|
+--                 pathD
+--                     [ M ( x2 - arrowLength, y2 - arrowLength )
+--                     , l ( arrowLength, arrowLength )
+--                     , l ( -arrowLength, arrowLength )
+--                     ]
+--             ]
+--             []
+--       else
+--         text ""
+--     , text_
+--         [ lx |> String.fromFloat |> x
+--         , ly |> String.fromFloat |> y
+--         , textAnchor "middle"
+--         ]
+--         [ text label
+--         ]
+--     ]
+--         |> g []

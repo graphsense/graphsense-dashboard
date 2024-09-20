@@ -1,4 +1,4 @@
-module Model.Pathfinder.PagedTable exposing (PagedTable, decPage, getPage, goToFirstPage, hasNextPage, incPage, isNextPageLoaded, nrPages, setLoading)
+module Model.Pathfinder.PagedTable exposing (PagedTable, decPage, getPage, goToFirstPage, hasNextPage, incPage, isNextPageLoaded, setLoading)
 
 import Model.Graph.Table exposing (Table)
 import RecordSetter exposing (s_loading)
@@ -10,11 +10,6 @@ type alias PagedTable d =
     , currentPage : Int
     , itemsPerPage : Int
     }
-
-
-nrPages : PagedTable d -> Maybe Int
-nrPages pt =
-    pt.nrItems |> Maybe.map (\x -> toFloat x / toFloat pt.itemsPerPage) |> Maybe.map ceiling
 
 
 incPage : PagedTable d -> PagedTable d

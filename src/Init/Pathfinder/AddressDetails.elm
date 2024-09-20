@@ -1,16 +1,13 @@
 module Init.Pathfinder.AddressDetails exposing (..)
 
 import Api.Data
-import DurationDatePicker exposing (TimePickerVisibility(..))
 import Effect.Pathfinder exposing (Effect)
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Locale as Locale
-import Model.Pathfinder exposing (Details(..), Selection(..))
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
-import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 
 
 init : Network -> Locale.Model -> Id -> Api.Data.Address -> ( AddressDetails.Model, List Effect )

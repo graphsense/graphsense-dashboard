@@ -9,7 +9,7 @@ import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Direction exposing (Direction(..))
-import Model.Pathfinder as Pathfinder exposing (Details(..))
+import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -20,7 +20,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
 import Update.DateRangePicker as DateRangePicker
-import Update.Graph.Table exposing (UpdateSearchTerm(..))
+import Update.Graph.Table
 import Update.Pathfinder.PagedTable as PT
 
 

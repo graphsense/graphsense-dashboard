@@ -1,4 +1,4 @@
-module Model.Pathfinder.Colors exposing (ColorScope(..), ScopedColorAssignment, assignNextColor, getAssignedColor, hasAssingedColor, init)
+module Model.Pathfinder.Colors exposing (ColorScope(..), ScopedColorAssignment, assignNextColor, getAssignedColor, init)
 
 import Color exposing (Color)
 import Dict
@@ -36,11 +36,6 @@ type alias ScopedColorAssignment =
 getAssignedColor : ColorScope -> Id -> ScopedColorAssignment -> Maybe ReuseableColor
 getAssignedColor cs id m =
     Dict.get (scopeToId cs) m |> Maybe.andThen (.assignments >> Dict.get id)
-
-
-hasAssingedColor : ColorScope -> Id -> ScopedColorAssignment -> Bool
-hasAssingedColor cs id m =
-    getAssignedColor cs id m |> (/=) Nothing
 
 
 assignNextColor : ColorScope -> Id -> ScopedColorAssignment -> ScopedColorAssignment

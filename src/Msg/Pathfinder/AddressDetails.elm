@@ -1,7 +1,6 @@
 module Msg.Pathfinder.AddressDetails exposing (Msg(..))
 
 import Api.Data
-import Api.Request.Addresses
 import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)

@@ -5,16 +5,14 @@ import Basics.Extra exposing (flip)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict exposing (Dict)
-import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Tx exposing (Tx, TxType(..))
-import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View as Plugin exposing (Plugins)
+import Model.Pathfinder.Tx exposing (Tx)
+import Msg.Pathfinder exposing (Msg)
+import Plugin.View exposing (Plugins)
 import Svg.Styled exposing (..)
-import Svg.Styled.Attributes as Svg exposing (..)
-import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import View.Pathfinder.Address as Address

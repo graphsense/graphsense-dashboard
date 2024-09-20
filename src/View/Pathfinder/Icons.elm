@@ -1,11 +1,8 @@
 module View.Pathfinder.Icons exposing (inIcon, outIcon)
 
-import Css
-import Css.Pathfinder as Css exposing (..)
-import FontAwesome
-import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes as HA exposing (disabled, id, src)
-import Html.Styled.Lazy exposing (..)
+import Css.Pathfinder exposing (..)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes as HA
 import RecordSetter exposing (..)
 import Theme.Html.Icons as Icons
 

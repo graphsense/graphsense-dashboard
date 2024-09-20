@@ -93,11 +93,6 @@ getTotalReceived a =
     RemoteData.unwrap Nothing (.totalReceived >> Just) a.data
 
 
-getCurrency : Address -> Maybe String
-getCurrency a =
-    RemoteData.unwrap Nothing (.currency >> Just) a.data
-
-
 getActivityRange : Api.Data.Address -> ( Posix, Posix )
 getActivityRange x =
     ( timestampToPosix x.firstTx.timestamp

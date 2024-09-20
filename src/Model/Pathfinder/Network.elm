@@ -54,11 +54,6 @@ getBoundingBox net =
     { x = mix, y = miy, width = abs (mxx - mix), height = abs (mxy - miy) }
 
 
-hasTx : Id -> Network -> Bool
-hasTx id network =
-    Dict.member id network.txs
-
-
 hasAddress : Id -> Network -> Bool
 hasAddress id network =
     Dict.member id network.addresses

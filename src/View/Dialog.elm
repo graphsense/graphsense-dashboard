@@ -70,7 +70,7 @@ confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
     in
     dialogConfirmationMessageWithAttributes
         (dialogConfirmationMessageAttributes |> s_iconsCloseBlack buttonAttrNo)
-        { cancelButton = { variant = nbtn }, confirmButton = { variant = ybtn }, dialogConfirmationMessage = { bodyText = message, headerText = title } }
+        { cancelButton = { variant = nbtn }, confirmButton = { variant = ybtn }, dialogConfirmationMessage = { bodyText = Locale.string vc.locale message, headerText = Locale.string vc.locale title } }
 
 
 options_ : Config -> OptionsConfig Msg -> Html Msg
@@ -268,4 +268,4 @@ info vc inf =
     in
     errorMessageComponentProperty1AlertWithAttributes
         (errorMessageComponentProperty1AlertAttributes |> s_iconsCloseSmall buttonAttrOk)
-        { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = inf.info }, property1Alert = { bodyText = "", headlineText = "" } }
+        { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, property1Alert = { bodyText = "", headlineText = "" } }

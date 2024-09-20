@@ -3,15 +3,12 @@ module View.Pathfinder.Tx exposing (edge, view)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict
-import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (..)
-import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View as Plugin exposing (Plugins)
-import Svg.Styled as Svg exposing (..)
-import Svg.Styled.Attributes exposing (..)
-import Svg.Styled.Events as Svg exposing (..)
+import Msg.Pathfinder exposing (Msg)
+import Plugin.View exposing (Plugins)
+import Svg.Styled exposing (..)
 import Svg.Styled.Lazy as Svg
 import View.Pathfinder.Tx.AccountTx as AccountTx
 import View.Pathfinder.Tx.Utxo as Utxo

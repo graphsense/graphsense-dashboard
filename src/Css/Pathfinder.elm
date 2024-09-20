@@ -319,11 +319,6 @@ detailsActionButtonStyle vc bt _ =
                    ]
 
 
-centerContent : List Style
-centerContent =
-    [ displayFlex, flexDirection row, alignItems center, justifyContent center ]
-
-
 emptyTableMsg : List Style
 emptyTableMsg =
     [ margin (px 20), textAlign center ]

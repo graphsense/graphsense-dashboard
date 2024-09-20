@@ -1,22 +1,20 @@
-module View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations, pagedTableView, rawTableView)
+module View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations, pagedTableView)
 
 import Config.View as View
 import Css
-import Css.Pathfinder exposing (centerContent, emptyTableMsg, fullWidth, linkButtonStyle, toAttr)
+import Css.Pathfinder exposing (emptyTableMsg, fullWidth)
 import Css.Table exposing (Styles, loadingSpinner, styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Events exposing (..)
-import Model exposing (Msg(..))
 import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
 import RecordSetter exposing (..)
 import Set
 import Table
-import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
 import Util.View
-import View.Graph.Table exposing (simpleThead, tableHint)
+import View.Graph.Table exposing (simpleThead)
 import View.Locale as Locale
 
 
@@ -57,12 +55,13 @@ customizations vc =
         |> s_rowAttrs (\_ -> [ Css.Table.row vc |> css ])
 
 
-rawTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> String -> List data -> Html msg
-rawTableView _ attributes config sortColumn data =
-    div []
-        [ div attributes
-            [ Table.view config (Table.initialSort sortColumn) data ]
-        ]
+
+-- rawTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> String -> List data -> Html msg
+-- rawTableView _ attributes config sortColumn data =
+--     div []
+--         [ div attributes
+--             [ Table.view config (Table.initialSort sortColumn) data ]
+--         ]
 
 
 pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> PagingMsg data msg -> PagingMsg data msg -> PagingMsg data msg -> Html msg
