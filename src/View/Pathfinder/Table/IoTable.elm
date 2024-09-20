@@ -10,7 +10,6 @@ import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
-import RecordSetter exposing (..)
 import Set
 import Table
 import View.Graph.Table exposing (customizations)

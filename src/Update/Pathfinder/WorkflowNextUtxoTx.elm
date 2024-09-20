@@ -1,6 +1,6 @@
 module Update.Pathfinder.WorkflowNextUtxoTx exposing (loadReferencedTx, update)
 
-import Api.Data exposing (Tx(..))
+import Api.Data
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))

@@ -7,9 +7,8 @@ import Data.Pathfinder.Network as Data
 import Dict
 import Expect exposing (Expectation)
 import Model.Pathfinder.Network exposing (Network)
-import RecordSetter exposing (..)
 import Test exposing (..)
-import Tuple exposing (..)
+import Tuple
 import Update.Pathfinder.Network as Network
 
 

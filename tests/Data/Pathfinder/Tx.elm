@@ -4,8 +4,7 @@ import Animation
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Data.Api as Api
 import Data.Pathfinder.Id as Id
-import Dict as Dict
-import Model.Pathfinder.Id as Id
+import Dict
 import Model.Pathfinder.Tx as Tx exposing (Io)
 
 

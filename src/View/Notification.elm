@@ -20,7 +20,6 @@ import Theme.Html.ErrorMessagesAlerts
         , errorMessageComponentProperty1ErrorWithInstances
         )
 import Theme.Html.Icons as Icons
-import Tuple exposing (..)
 import Util.View exposing (none, onClickWithStop)
 import View.Locale as Locale
 

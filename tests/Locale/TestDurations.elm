@@ -5,6 +5,7 @@ import Locale.Durations as Durations
 import Test exposing (..)
 
 
+data : List ( Float, Int, String )
 data =
     [ ( 0, 3, "" )
     , ( 12, 3, "12 Seconds" )
@@ -28,6 +29,7 @@ data =
     ]
 
 
+config : { unitToString : Int -> x -> String, separator : String, precision : Int }
 config =
     { unitToString = \i u -> String.fromInt i ++ " " ++ Debug.toString u
     , separator = " "

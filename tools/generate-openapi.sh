@@ -52,3 +52,4 @@ python ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/A
 
 sed -i 's/tx_hash/txHash/' "${dir}/../openapi/src/Api/Request/Txs.elm"
 printf "\n\nvaluesDecodervaluesDecoder = valuesDecoder" >> "${dir}/../openapi/src/Api/Data.elm"
+rm ${dir}/../openapi/src/Api/Request/Bulk.elm

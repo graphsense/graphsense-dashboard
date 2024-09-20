@@ -63,4 +63,7 @@ config =
     -- , NoUnused.Parameters.rule
     -- , NoUnused.Patterns.rule
      , NoUnused.Variables.rule
-    ] |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins"])
+    ]
+    |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins", "codegen/", "theme/", "plugins/"])
+    |> List.map (Rule.ignoreErrorsForFiles [ "src/PluginInterface.elm"])
+

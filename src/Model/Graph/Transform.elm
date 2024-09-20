@@ -2,9 +2,7 @@ module Model.Graph.Transform exposing (..)
 
 import Bounce exposing (Bounce)
 import Model.Graph.Coords exposing (BBox)
-import Model.Graph.Id as Id
 import Number.Bounded as Bounded exposing (Bounded)
-import RecordSetter exposing (..)
 import Set exposing (Set)
 
 

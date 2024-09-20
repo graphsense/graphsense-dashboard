@@ -4,12 +4,11 @@ import Data.Pathfinder.Address as Address
 import Data.Pathfinder.Id as Id
 import Data.Pathfinder.Tx as Tx
 import Dict
-import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Network as Init
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Network exposing (Network)
-import RecordSetter exposing (s_address, s_incomingTxs, s_outgoingTxs, s_visible)
+import RecordSetter exposing (s_address, s_incomingTxs)
 import Set
 import Update.Pathfinder.Tx as Tx
 

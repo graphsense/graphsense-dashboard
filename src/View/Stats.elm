@@ -8,7 +8,6 @@ import Dict exposing (Dict)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Http
-import RecordSetter exposing (..)
 import RemoteData exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as Svg exposing (d, viewBox)

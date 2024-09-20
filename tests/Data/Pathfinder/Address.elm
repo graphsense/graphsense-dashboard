@@ -3,7 +3,7 @@ module Data.Pathfinder.Address exposing (..)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Data.Pathfinder.Id as Id
 import Init.Pathfinder.Address as Address
-import Model.Pathfinder.Address as Address exposing (Address)
+import Model.Pathfinder.Address exposing (Address)
 
 
 address1 : Address

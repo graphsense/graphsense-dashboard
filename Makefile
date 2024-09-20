@@ -53,10 +53,10 @@ format:
 	npx elm-format --yes tests
 
 lint:
-	npx elm-review src
+	npx elm-review
 
 lint-fix:
-	npx elm-review src --fix-all
+	npx elm-review --fix-all
 
 ./theme/figma.json:
 	mkdir -p theme
