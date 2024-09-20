@@ -2,7 +2,6 @@ module Update.Graph exposing (At(..), More(..), SearchResult, addAddress, addAdd
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Bounce
 import Browser.Dom as Dom
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update

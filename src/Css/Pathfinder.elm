@@ -1,14 +1,7 @@
-module Css.Pathfinder exposing (ButtonType(..), alertColor, dateStyle, dateTimeRangeBoxStyle, dateTimeRangeHighlightedDateStyle, detailsActionButtonStyle, emptyTableMsg, fullWidth, graphActionButtonStyle, graphActionsViewStyle, iconWithTextStyle, inIconStyle, inoutStyle, ioOutIndicatorStyle, kVTableKeyTdStyle, kVTableTdStyle, kVTableValueTdStyle, lGap, lightGreyColor, linkButtonStyle, mGap, mlGap, no, outIconStyle, panelHeadingStyle3, sGap, searchBoxMinWidth, searchInputStyle, smPaddingBottom, smPaddingRight, successColor, tagLinkButtonStyle, toAttr, tooltipMargin, topLeftPanelStyle, topPanelStyle, topRightPanelStyle, warningColor)
+module Css.Pathfinder exposing (ButtonType(..), alertColor, dateStyle, dateTimeRangeBoxStyle, dateTimeRangeHighlightedDateStyle, detailsActionButtonStyle, emptyTableMsg, fullWidth, graphActionButtonStyle, graphActionsViewStyle, iconWithTextStyle, inIconStyle, inoutStyle, ioOutIndicatorStyle, kVTableKeyTdStyle, kVTableTdStyle, kVTableValueTdStyle, lGap, lightGreyColor, linkButtonStyle, mGap, mlGap, no, outIconStyle, panelHeadingStyle3, sGap, searchBoxMinWidth, searchInputStyle, smPaddingBottom, smPaddingRight, successColor, tagLinkButtonStyle, tooltipMargin, topLeftPanelStyle, topPanelStyle, topRightPanelStyle, warningColor)
 
 import Config.View as View
 import Css exposing (..)
-import Html.Styled
-import Html.Styled.Attributes as HA
-
-
-toAttr : List Style -> Html.Styled.Attribute msg
-toAttr =
-    HA.css
 
 
 xsGap : Px

@@ -49,8 +49,7 @@ serve-docker: build-docker
 	docker run -it --network='host' -e REST_URL=http://localhost:9000 localhost/graphsense-dashboard:latest
 
 format:
-	npx elm-format --yes src
-	npx elm-format --yes tests
+	npx elm-format --yes src tests
 
 lint:
 	npx elm-review

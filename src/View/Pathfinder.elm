@@ -7,7 +7,7 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Css.Graph
-import Css.Pathfinder as Css exposing (..)
+import Css.Pathfinder as Css exposing (fullWidth)
 import Css.Table
 import Css.View
 import Dict
@@ -15,7 +15,7 @@ import DurationDatePicker as DatePicker
 import FontAwesome
 import Hex
 import Hovercard
-import Html.Styled as Html exposing (..)
+import Html.Styled as Html exposing (Html, div, span, img, td, tr, button, h2, table)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Init.Pathfinder.Id as Id
@@ -26,7 +26,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Table
 import Model.Graph.Transform exposing (Transition(..))
-import Model.Pathfinder exposing (..)
+import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -41,13 +41,13 @@ import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
-import RecordSetter exposing (..)
+import RecordSetter as Rs
 import RemoteData
 import Route
 import Route.Graph exposing (AddressTable(..))
-import Svg.Styled exposing (..)
-import Svg.Styled.Attributes as SA exposing (..)
-import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled exposing (Svg, stop, linearGradient, defs, svg)
+import Svg.Styled.Attributes exposing (css, preserveAspectRatio, viewBox, width, height, transform,stopColor, offset, id)
+import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.Icons as HIcons
@@ -57,6 +57,7 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
 import Util.Css as Css
+import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
@@ -102,19 +103,20 @@ inlineClusterIcon highlight clr =
     in
     HIcons.iconsUntaggedWithAttributes
         (HIcons.iconsUntaggedAttributes
-            |> s_ellipse25 (getHighlight clr)
+            |> Rs.s_ellipse25 (getHighlight clr)
         )
         {}
 
+
+
+
+
+-- Helpers
 
 graphActionButtons : String -> List BtnConfig
 graphActionButtons name =
     [-- BtnConfig (\_ -> inlineExportIcon) "Export" (UserClickedExportGraphAsPNG name) True
     ]
-
-
-
--- Helpers
 
 
 type ValueType
@@ -138,7 +140,7 @@ type KVTableRow
 
 renderKVTable : View.Config -> List KVTableRow -> Html Msg
 renderKVTable vc rows =
-    table [ fullWidth |> toAttr ] (rows |> List.map (renderKVRow vc))
+    table [ fullWidth |> css ] (rows |> List.map (renderKVRow vc))
 
 
 renderKVRow : View.Config -> KVTableRow -> Html Msg
@@ -146,21 +148,21 @@ renderKVRow vc row =
     case row of
         Row key value ->
             tr []
-                [ td [ kVTableKeyTdStyle vc |> toAttr ] [ Html.text (Locale.string vc.locale key) ]
-                , td [ kVTableValueTdStyle vc |> toAttr ] (renderValueTypeValue vc value |> List.singleton)
-                , td [ kVTableTdStyle vc |> toAttr ] (renderValueTypeExtension vc value |> List.singleton)
+                [ td [ Css.kVTableKeyTdStyle vc |> css ] [ Html.text (Locale.string vc.locale key) ]
+                , td [ Css.kVTableValueTdStyle vc |> css ] (renderValueTypeValue vc value |> List.singleton)
+                , td [ Css.kVTableTdStyle vc |> css ] (renderValueTypeExtension vc value |> List.singleton)
                 ]
 
         Gap ->
             tr []
-                [ td [ kVTableKeyTdStyle vc |> toAttr ] []
+                [ td [ Css.kVTableKeyTdStyle vc |> css ] []
                 , td [] []
                 , td [] []
                 ]
 
         LinkRow n l ->
             tr []
-                [ td [ kVTableKeyTdStyle vc |> toAttr ] []
+                [ td [ Css.kVTableKeyTdStyle vc |> css ] []
                 , td [] []
                 , td [] [ Html.a [ HA.href l, Css.View.link vc |> css ] [ Locale.text vc.locale n ] ]
                 ]
@@ -237,12 +239,12 @@ disableableButton style btn attrs content =
     let
         addattr =
             if btn.enable then
-                [ btn.msg |> onClick ]
+                [ btn.msg |> Svg.onClick ]
 
             else
                 [ HA.disabled True ]
     in
-    button (((style btn.enable |> toAttr) :: addattr) ++ attrs) content
+    button (((style btn.enable |> css) :: addattr) ++ attrs) content
 
 
 inOutIndicator : View.Config -> String -> Int -> Int -> Int -> Html Msg
@@ -263,21 +265,21 @@ inOutIndicatorOld vc mnr inNr outNr =
         prefix =
             String.trim (String.join " " [ mnr |> Maybe.map (Locale.int vc.locale >> (++) " - ") |> Maybe.withDefault "", "(" ])
     in
-    span [ ioOutIndicatorStyle |> toAttr ] [ Html.text prefix, inIcon, Html.text (Locale.int vc.locale inNr), outIcon, Html.text (Locale.int vc.locale outNr), Html.text ")" ]
+    span [ Css.ioOutIndicatorStyle |> css ] [ Html.text prefix, inIcon, Html.text (Locale.int vc.locale inNr), outIcon, Html.text (Locale.int vc.locale outNr), Html.text ")" ]
 
 
 
 -- View
 
 
-view : Plugins -> ModelState -> View.Config -> Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
+view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
 view plugins states vc model =
     { navbar = []
     , contents = graph plugins states vc model.config model
     }
 
 
-graph : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> List (Html Msg)
+graph : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> List (Html Msg)
 graph plugins states vc gc model =
     [ vc.size
         |> Maybe.map (graphSvg plugins states vc gc model)
@@ -298,12 +300,12 @@ graph plugins states vc gc model =
            )
 
 
-topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 topCenterPanel plugins ms vc gc model =
     div
-        [ css topPanelStyle
+        [ css Css.topPanelStyle
         ]
-        [ h2 [ vc.theme.heading2 |> toAttr ] [ Html.text "Pathfinder" ]
+        [ h2 [ vc.theme.heading2 |> css ] [ Html.text "Pathfinder" ]
         , div
             [ css
                 [ Css.displayFlex
@@ -315,7 +317,7 @@ topCenterPanel plugins ms vc gc model =
             , Toolbar.view vc
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
-                , deleteDisabled = model.selection == NoSelection
+                , deleteDisabled = model.selection == Pathfinder.NoSelection
                 , pointerTool = model.pointerTool
                 , exportName = model.name
                 }
@@ -329,11 +331,11 @@ topCenterPanel plugins ms vc gc model =
 
 topLeftPanel : View.Config -> Html Msg
 topLeftPanel vc =
-    div [ topLeftPanelStyle vc |> toAttr ]
+    div [ Css.topLeftPanelStyle vc |> css ]
         []
 
 
-settingsView : View.Config -> Model -> Hovercard.Model -> Html Msg
+settingsView : View.Config -> Pathfinder.Model -> Hovercard.Model -> Html Msg
 settingsView vc _ hc =
     let
         utc_text =
@@ -344,35 +346,34 @@ settingsView vc _ hc =
                 "UTC"
     in
     div [ css [ Css.padding Css.mlGap ] ]
-        [ div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction") ]
-        , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
-        , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date") ]
-        , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
-        , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
-        , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Cluster") ]
-        , Util.View.onOffSwitch vc [ HA.checked vc.highlightClusterFriends, onClick (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Highlight clusters")
+        [ div [ Css.panelHeadingStyle3 vc |> css ] [ Html.text (Locale.string vc.locale "Transaction") ]
+        , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, Svg.onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
+        , div [ Css.panelHeadingStyle3 vc |> css ] [ Html.text (Locale.string vc.locale "Date") ]
+        , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, Svg.onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
+        , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, Svg.onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
+        , div [ Css.panelHeadingStyle3 vc |> css ] [ Html.text (Locale.string vc.locale "Cluster") ]
+        , Util.View.onOffSwitch vc [ HA.checked vc.highlightClusterFriends, Svg.onClick (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Highlight clusters")
         ]
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc hc (Css.zIndexMainValue + 1)
 
 
-topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 topRightPanel _ _ vc gc model =
-    div [ topRightPanelStyle vc |> toAttr ]
+    div [ Css.topRightPanelStyle vc |> css ]
         [ detailsView vc gc model
         ]
 
-
-graphActionsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
+graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 graphActionsView vc _ m =
-    div [ graphActionsViewStyle vc |> toAttr ]
+    div [ Css.graphActionsViewStyle vc |> css ]
         (graphActionButtons m.name |> List.map (graphActionButton vc))
 
 
 graphActionButton : View.Config -> BtnConfig -> Html Msg
 graphActionButton vc btn =
-    disableableButton (graphActionButtonStyle vc) btn [] (iconWithText vc (btn.icon True) (Locale.string vc.locale btn.text))
+    disableableButton (Css.graphActionButtonStyle vc) btn [] (iconWithText vc (btn.icon True) (Locale.string vc.locale btn.text))
 
 
 iconWithText : View.Config -> Html Msg -> String -> List (Html Msg)
@@ -380,26 +381,26 @@ iconWithText _ faIcon text =
     let
         s =
             if String.length text > 0 then
-                iconWithTextStyle
+                Css.iconWithTextStyle
 
             else
                 []
     in
-    [ span [ s |> toAttr ] [ faIcon ], Html.text text ]
+    [ span [ s |> css ] [ faIcon ], Html.text text ]
 
 
-searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 searchBoxView plugins _ vc _ model =
     SettingsComponents.toolbarSearchFieldWithInstances
         (SettingsComponents.toolbarSearchFieldAttributes
-            |> s_toolbarSearchField
+            |> Rs.s_toolbarSearchField
                 [ css [ Css.alignItems Css.stretch |> Css.important ] ]
         )
         (SettingsComponents.toolbarSearchFieldInstances
-            |> s_searchInputField
+            |> Rs.s_searchInputField
                 (View.Search.searchWithMoreCss plugins
                     vc
-                    { css = searchInputStyle vc
+                    { css = Css.searchInputStyle vc
                     , formCss =
                         Just
                             [ Css.flexGrow <| Css.num 1
@@ -422,30 +423,30 @@ searchBoxView plugins _ vc _ model =
         {}
 
 
-detailsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
+detailsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 detailsView vc gc model =
     case model.details of
         Just details ->
             case details of
-                AddressDetails id state ->
+                 Pathfinder.AddressDetails id state ->
                     RemoteData.unwrap
                         (Util.View.loadingSpinner vc Css.View.loadingSpinner)
                         (addressDetailsContentView vc gc model id)
                         state
 
-                TxDetails id state ->
+                 Pathfinder.TxDetails id state ->
                     txDetailsContentView vc gc model id state
 
         Nothing ->
             none
 
 
-txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Html Msg
+txDetailsContentView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
 txDetailsContentView vc _ model id viewState =
     let
         getLbl id_ =
             Dict.get id_ model.tagSummaries
-                |> Maybe.withDefault NoTags
+                |> Maybe.withDefault  Pathfinder.NoTags
     in
     case viewState.tx.type_ of
         Tx.Utxo tx ->
@@ -455,7 +456,7 @@ txDetailsContentView vc _ model id viewState =
             in
             SidePanelComponents.sidePanelTransactionWithAttributes
                 (SidePanelComponents.sidePanelTransactionAttributes
-                    |> s_sidePanelTransaction
+                    |> Rs.s_sidePanelTransaction
                         [ sidePanelCss
                             |> css
                         ]
@@ -482,15 +483,15 @@ txDetailsContentView vc _ model id viewState =
                                 }
 
                             headerEvent =
-                                [ onClick (TxDetailsMsg (UserClickedToggleIoTable Inputs))
+                                [ Svg.onClick (TxDetailsMsg (UserClickedToggleIoTable Inputs))
                                 , css [ Css.cursor Css.pointer ]
                                 ]
                         in
                         if viewState.inputsTableOpen then
                             SidePanelComponents.sidePanelInputListOpenWithAttributes
                                 (SidePanelComponents.sidePanelInputListOpenAttributes
-                                    |> s_sidePanelInputListOpen style
-                                    |> s_sidePanelInputListHeaderOpen headerEvent
+                                    |> Rs.s_sidePanelInputListOpen style
+                                    |> Rs.s_sidePanelInputListHeaderOpen headerEvent
                                 )
                                 { sidePanelInputListOpen =
                                     { listInstance = ioTableView vc Inputs model.network tx.raw.currency viewState.inputsTable getLbl
@@ -502,7 +503,7 @@ txDetailsContentView vc _ model id viewState =
                         else
                             SidePanelComponents.sidePanelInputListHeaderClosedWithAttributes
                                 (SidePanelComponents.sidePanelInputListHeaderClosedAttributes
-                                    |> s_sidePanelInputListHeaderClosed (headerEvent ++ style)
+                                    |> Rs.s_sidePanelInputListHeaderClosed (headerEvent ++ style)
                                 )
                                 headerTitle
                     , outputListInstance =
@@ -513,20 +514,20 @@ txDetailsContentView vc _ model id viewState =
                                 }
 
                             headerEvent =
-                                [ onClick (TxDetailsMsg (UserClickedToggleIoTable Outputs))
+                                [ Svg.onClick (TxDetailsMsg (UserClickedToggleIoTable Outputs))
                                 , css [ Css.cursor Css.pointer ]
                                 ]
                         in
                         if viewState.outputsTableOpen then
                             SidePanelComponents.sidePanelOutputListOpenWithAttributes
-                                (SidePanelComponents.sidePanelOutputListOpenAttributes |> s_sidePanelOutputListOpen style |> s_sidePanelOutputListHeaderOpen headerEvent)
+                                (SidePanelComponents.sidePanelOutputListOpenAttributes |> Rs.s_sidePanelOutputListOpen style |> Rs.s_sidePanelOutputListHeaderOpen headerEvent)
                                 { sidePanelOutputListOpen = { listInstance = ioTableView vc Outputs model.network tx.raw.currency viewState.outputsTable getLbl }
                                 , sidePanelListHeaderTitleOutputs = headerTitle
                                 }
 
                         else
                             SidePanelComponents.sidePanelOutputListHeaderClosedWithAttributes
-                                (SidePanelComponents.sidePanelOutputListHeaderClosedAttributes |> s_sidePanelOutputListHeaderClosed (headerEvent ++ style))
+                                (SidePanelComponents.sidePanelOutputListHeaderClosedAttributes |> Rs.s_sidePanelOutputListHeaderClosed (headerEvent ++ style))
                                 { sidePanelListHeaderTitleOutputs = headerTitle }
                     }
                 , sidePanelTxHeader =
@@ -538,7 +539,7 @@ txDetailsContentView vc _ model id viewState =
         Tx.Account tx ->
             SidePanelComponents.sidePanelEthTransactionWithAttributes
                 (SidePanelComponents.sidePanelEthTransactionAttributes
-                    |> s_sidePanelEthTransaction
+                    |> Rs.s_sidePanelEthTransaction
                         [ sidePanelCss
                             |> css
                         ]
@@ -593,7 +594,7 @@ txDetailsContentView vc _ model id viewState =
                 }
 
 
-ioTableView : View.Config -> IoDirection -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> HavingTags) -> Html Msg
+ioTableView : View.Config -> IoDirection -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> Pathfinder.HavingTags) -> Html Msg
 ioTableView vc dir network currency table getLbl =
     let
         isCheckedFn =
@@ -601,7 +602,7 @@ ioTableView vc dir network currency table getLbl =
 
         styles =
             Css.Table.styles
-                |> s_root (\vc_ -> Css.Table.styles.root vc_ ++ [ Css.display Css.block, Css.width (Css.pct 100), Css.paddingTop Css.lGap ])
+                |> Rs.s_root (\vc_ -> Css.Table.styles.root vc_ ++ [ Css.display Css.block, Css.width (Css.pct 100), Css.paddingTop Css.lGap ])
     in
     View.Graph.Table.table
         styles
@@ -637,7 +638,7 @@ sidePanelCss =
     ]
 
 
-addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Html Msg
+addressDetailsContentView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
 addressDetailsContentView vc gc model id viewState =
     let
         address =
@@ -646,7 +647,7 @@ addressDetailsContentView vc gc model id viewState =
 
         ts =
             case Dict.get id model.tagSummaries of
-                Just (HasTagSummary t) ->
+                Just (Pathfinder.HasTagSummary t) ->
                     Just t
 
                 _ ->
@@ -737,10 +738,10 @@ addressDetailsContentView vc gc model id viewState =
         tagsControl =
             if lenTagLabels > nMaxTags then
                 if gc.displayAllTagsInDetails then
-                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text (Locale.string vc.locale "less...") ]
+                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text (Locale.string vc.locale "less...") ]
 
                 else
-                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
+                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
 
             else
                 none
@@ -762,53 +763,8 @@ addressDetailsContentView vc gc model id viewState =
         --         []
         assetId =
             assetFromBase viewState.data.currency
-    in
-    SidePanelComponents.sidePanelAddressWithInstances
-        (SidePanelComponents.sidePanelAddressAttributes
-            |> s_sidePanelAddress
-                [ sidePanelCss
-                    |> css
-                ]
-        )
-        (SidePanelComponents.sidePanelAddressInstances
-            |> s_labelOfTags
-                (Just
-                    (div
-                        [ css
-                            [ Css.displayFlex
-                            , Css.flexDirection Css.row
-                            , Css.flexWrap Css.wrap
-                            , Css.property "gap" "1ex"
-                            , Css.alignItems Css.center
-                            , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
-                            ]
-                        ]
-                        ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
-                    )
-                )
-            |> s_labelOfActor
-                (actor_id
-                    |> Maybe.map
-                        (\aid ->
-                            let
-                                link =
-                                    Route.Graph.actorRoute aid Nothing
-                                        |> Route.Graph
-                                        |> Route.toUrl
 
-                                text =
-                                    actorText |> Maybe.withDefault ""
-                            in
-                            Html.a
-                                [ HA.href link
-                                , css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
-                                ]
-                                [ Html.text text
-                                ]
-                        )
-                )
-        )
-        { sidePanelAddress =
+        sidePanelData =
             { actorIconInstance =
                 actorImg
                     |> Maybe.map
@@ -851,15 +807,15 @@ addressDetailsContentView vc gc model id viewState =
                         [ css [ Css.width (Css.pct 100) ] ]
 
                     headerEvent =
-                        [ onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
+                        [ Svg.onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
                         , css [ Css.cursor Css.pointer ]
                         ]
                 in
                 if viewState.transactionsTableOpen then
                     SidePanelComponents.sidePanelTxListOpenWithAttributes
                         (SidePanelComponents.sidePanelTxListOpenAttributes
-                            |> s_sidePanelTxListOpen style
-                            |> s_sidePanelTxListHeaderOpen headerEvent
+                            |> Rs.s_sidePanelTxListOpen style
+                            |> Rs.s_sidePanelTxListHeaderOpen headerEvent
                         )
                         { sidePanelTxListHeaderOpen = titleInstance
                         , sidePanelTxListOpen =
@@ -871,27 +827,15 @@ addressDetailsContentView vc gc model id viewState =
                 else
                     SidePanelComponents.sidePanelTxListClosedWithAttributes
                         (SidePanelComponents.sidePanelTxListClosedAttributes
-                            |> s_sidePanelTxListClosed (style ++ headerEvent)
+                            |> Rs.s_sidePanelTxListClosed (style ++ headerEvent)
                         )
                         { sidePanelTxListClosed = titleInstance
                         }
             , actorVisible = showExchangeTag
             , tagsVisible = showOtherTag
             }
-        , leftTab = { variant = none }
-        , rightTab = { variant = none }
-        , identifierWithCopyIcon =
-            { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
-            , copyIconInstance = Id.id id |> copyIconPathfinder vc
-            }
-        , sidePanelAddressDetails =
-            { clusterInfoVisible = Dict.member clstrId model.clusters
-            , clusterInfoInstance =
-                Dict.get clstrId model.clusters
-                    |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
-                    |> Maybe.withDefault none
-            }
-        , sidePanelAddressHeader =
+
+        sidePanelAddressHeader =
             { iconInstance =
                 Address.toNodeIconHtml False address (Dict.get clstrId model.clusters) (Colors.getAssignedColor Colors.Clusters clstrId model.colors |> Maybe.map .color)
             , headerText =
@@ -904,17 +848,112 @@ addressDetailsContentView vc gc model id viewState =
                             Locale.string vc.locale "address"
                        )
             }
-        , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
-        , valueOfBalance = valuesToCell vc assetId viewState.data.balance
-        , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
-        , valueOfTotalReceived = valuesToCell vc assetId viewState.data.totalReceived
-        , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
-        , valueOfTotalSent = valuesToCell vc assetId viewState.data.totalSpent
-        , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
-        , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
-        }
+
+        sidePanelAddressDetails =
+            { clusterInfoVisible = Dict.member clstrId model.clusters
+            , clusterInfoInstance =
+                Dict.get clstrId model.clusters
+                    |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
+                    |> Maybe.withDefault none
+            }
+
+        sidePanelAddressCopyIcon =
+            { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
+            , copyIconInstance = Id.id id |> copyIconPathfinder vc
+            }
+    in
+    if Data.isAccountLike (Id.network id) then
+        SidePanelComponents.sidePanelEthAddressWithInstances
+            (SidePanelComponents.sidePanelEthAddressAttributes
+                |> Rs.s_sidePanelEthAddress
+                    [ sidePanelCss
+                        |> css
+                    ]
+            )
+            SidePanelComponents.sidePanelEthAddressInstances
+            { identifierWithCopyIcon = sidePanelAddressCopyIcon
+            , leftTab = { variant = none }
+            , rightTab = { variant = none }
+            , sidePanelAddressHeader = sidePanelAddressHeader
+            , sidePanelEthAddress = sidePanelData
+            , sidePanelEthAddressDetails = sidePanelAddressDetails
+            , sidePanelRowWithDropdown = { valueCellInstance = none }
+            , titleOfEthBalance = { infoLabel = Locale.string vc.locale "Balance" ++ " " ++ String.toUpper viewState.data.currency }
+            , titleOfSidePanelRowWithDropdown = { infoLabel = Locale.string vc.locale "Token holdings" }
+            , valueOfEthBalance = valuesToCell vc assetId viewState.data.balance
+            , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
+            , valueOfTotalReceived = valuesToCell vc assetId viewState.data.totalReceived
+            , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
+            , valueOfTotalSent = valuesToCell vc assetId viewState.data.totalSpent
+            , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
+            , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
+            , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
+            , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+            }
+
+    else
+        SidePanelComponents.sidePanelAddressWithInstances
+            (SidePanelComponents.sidePanelAddressAttributes
+                |> Rs.s_sidePanelAddress
+                    [ sidePanelCss
+                        |> css
+                    ]
+            )
+            (SidePanelComponents.sidePanelAddressInstances
+                |> Rs.s_labelOfTags
+                    (Just
+                        (div
+                            [ css
+                                [ Css.displayFlex
+                                , Css.flexDirection Css.row
+                                , Css.flexWrap Css.wrap
+                                , Css.property "gap" "1ex"
+                                , Css.alignItems Css.center
+                                , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
+                                ]
+                            ]
+                            ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
+                        )
+                    )
+                |> Rs.s_labelOfActor
+                    (actor_id
+                        |> Maybe.map
+                            (\aid ->
+                                let
+                                    link =
+                                        Route.Graph.actorRoute aid Nothing
+                                            |> Route.Graph
+                                            |> Route.toUrl
+
+                                    text =
+                                        actorText |> Maybe.withDefault ""
+                                in
+                                Html.a
+                                    [ HA.href link
+                                    , css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
+                                    ]
+                                    [ Html.text text
+                                    ]
+                            )
+                    )
+            )
+            { sidePanelAddress = sidePanelData
+            , leftTab = { variant = none }
+            , rightTab = { variant = none }
+            , identifierWithCopyIcon = sidePanelAddressCopyIcon
+            , sidePanelAddressDetails = sidePanelAddressDetails
+            , sidePanelAddressHeader = sidePanelAddressHeader
+            , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
+            , valueOfBalance = valuesToCell vc assetId viewState.data.balance
+            , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
+            , valueOfTotalReceived = valuesToCell vc assetId viewState.data.totalReceived
+            , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
+            , valueOfTotalSent = valuesToCell vc assetId viewState.data.totalSpent
+            , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
+            , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
+            , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
+            , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+            }
 
 
 apiEntityToRows : Id -> Api.Data.Entity -> List KVTableRow
@@ -962,7 +1001,7 @@ clusterInfoView vc open colors _ clstr =
                     |> Maybe.withDefault none
         in
         div [ css [ Css.color Css.lightGreyColor, Css.width (Css.pct 100) ] ]
-            [ div [ css [ Css.paddingLeft (Css.px 8), Css.paddingBottom Css.mGap, Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center, Css.cursor Css.pointer ], onClick UserClickedToggleClusterDetailsOpen ]
+            [ div [ css [ Css.paddingLeft (Css.px 8), Css.paddingBottom Css.mGap, Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center, Css.cursor Css.pointer ], Svg.onClick UserClickedToggleClusterDetailsOpen ]
                 [ div
                     [ css
                         [ Css.displayFlex
@@ -997,20 +1036,20 @@ clusterInfoView vc open colors _ clstr =
 
 detailsFactTableView : View.Config -> List KVTableRow -> Html Msg
 detailsFactTableView vc rows =
-    div [ smPaddingBottom |> toAttr ] [ renderKVTable vc rows ]
+    div [ Css.smPaddingBottom |> css ] [ renderKVTable vc rows ]
 
 
 primaryButton : View.Config -> BtnConfig -> Html Msg
 primaryButton vc btn =
-    optionalTextButton vc Primary btn
+    optionalTextButton vc Css.Primary btn
 
 
 secondaryButton : View.Config -> BtnConfig -> Html Msg
 secondaryButton vc btn =
-    optionalTextButton vc Secondary btn
+    optionalTextButton vc Css.Secondary btn
 
 
-optionalTextButton : View.Config -> ButtonType -> BtnConfig -> Html Msg
+optionalTextButton : View.Config -> Css.ButtonType -> BtnConfig -> Html Msg
 optionalTextButton vc bt btn =
     let
         ( iconattr, content ) =
@@ -1018,9 +1057,9 @@ optionalTextButton vc bt btn =
                 ( [], [] )
 
             else
-                ( [ (smPaddingRight ++ [ Css.verticalAlign Css.middle ]) |> toAttr ], [ Html.text (Locale.string vc.locale btn.text) ] )
+                ( [ (Css.smPaddingRight ++ [ Css.verticalAlign Css.middle ]) |> css ], [ Html.text (Locale.string vc.locale btn.text) ] )
     in
-    disableableButton (detailsActionButtonStyle vc bt)
+    disableableButton (Css.detailsActionButtonStyle vc bt)
         btn
         []
         (span iconattr [ btn.icon btn.enable ]
@@ -1028,7 +1067,7 @@ optionalTextButton vc bt btn =
         )
 
 
-graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg
+graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> BBox -> Svg Msg
 graphSvg plugins _ vc gc model bbox =
     let
         dim =
@@ -1050,25 +1089,25 @@ graphSvg plugins _ vc gc model bbox =
 
         gradient name from to =
             linearGradient
-                [ SA.id name
+                [ id name
                 ]
                 [ stop
                     [ from
                         |> Color.toCssString
-                        |> SA.stopColor
+                        |> stopColor
                     ]
                     []
                 , stop
-                    [ SA.offset "70%"
+                    [ offset "70%"
                     , to
                         |> Color.toCssString
-                        |> SA.stopColor
+                        |> stopColor
                     ]
                     []
                 ]
 
         originShiftX =
-            searchBoxMinWidth / 2
+            Css.searchBoxMinWidth / 2
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
@@ -1076,10 +1115,10 @@ graphSvg plugins _ vc gc model bbox =
             |> Transform.update { x = 0, y = 0 } { x = -originShiftX, y = 0 }
             |> Transform.viewBox dim
             |> viewBox
-         , (Css.Graph.svgRoot vc ++ pointerStyle) |> SA.css
+         , (Css.Graph.svgRoot vc ++ pointerStyle) |> css
          , UserClickedGraph model.dragging
-            |> onClick
-         , SA.id "graph"
+            |> Svg.onClick
+         , id "graph"
          , Svg.custom "wheel"
             (Json.Decode.map3
                 (\y mx my ->
@@ -1139,13 +1178,13 @@ graphSvg plugins _ vc gc model bbox =
 --     rect [ fill "red", width (bb.width * unit + (2 * unit) |> String.fromFloat), height (bb.height * unit + (2 * unit) |> String.fromFloat), x (bb.x * unit - unit |> String.fromFloat), y ((bb.y * unit - unit) |> String.fromFloat) ] []
 
 
-drawDragSelector : View.Config -> Model -> Svg Msg
+drawDragSelector : View.Config -> Pathfinder.Model -> Svg Msg
 drawDragSelector _ m =
     case ( m.dragging, m.pointerTool ) of
         ( Dragging tm start now, Select ) ->
             let
                 originShiftX =
-                    searchBoxMinWidth / 2
+                    Css.searchBoxMinWidth / 2
 
                 crd =
                     case tm.state of
@@ -1172,10 +1211,10 @@ drawDragSelector _ m =
             in
             GraphComponents.selectionBoxWithAttributes
                 (GraphComponents.selectionBoxAttributes
-                    |> s_selectionBox
+                    |> Rs.s_selectionBox
                         [ Util.Graph.translate xn yn |> transform
                         ]
-                    |> s_rectangle
+                    |> Rs.s_rectangle
                         [ String.fromFloat widthn |> width
                         , String.fromFloat heightn |> height
                         ]
@@ -1204,16 +1243,16 @@ dateRangePickerSelectionView vc model =
             dateFromTimestamp vc (Locale.posixToTimestampSeconds endP)
 
         attr =
-            [ css [ Css.cursor Css.pointer ], onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) ]
+            [ css [ Css.cursor Css.pointer ], Svg.onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) ]
     in
-    div [ dateTimeRangeBoxStyle vc |> toAttr ]
+    div [ Css.dateTimeRangeBoxStyle vc |> css ]
         [ span attr [ HIcons.iconsCalendar {} ]
 
         -- , span [] [ Html.text selectedDuration ]
-        , span ((dateTimeRangeHighlightedDateStyle vc |> toAttr) :: attr) [ startML ]
+        , span ((Css.dateTimeRangeHighlightedDateStyle vc |> css) :: attr) [ startML ]
         , span attr [ Html.text (Locale.string vc.locale "to") ]
-        , span ((dateTimeRangeHighlightedDateStyle vc |> toAttr) :: attr) [ endML ]
-        , button [ linkButtonStyle vc True |> toAttr, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> onClick ] [ HIcons.iconsCloseSmall {} ]
+        , span ((Css.dateTimeRangeHighlightedDateStyle vc |> css) :: attr) [ endML ]
+        , button [ Css.linkButtonStyle vc True |> css, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> Svg.onClick ] [ HIcons.iconsCloseSmall {} ]
         ]
 
 
