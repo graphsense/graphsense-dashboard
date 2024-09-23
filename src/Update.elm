@@ -25,6 +25,7 @@ import List.Extra
 import Log
 import Maybe.Extra
 import Model exposing (..)
+import Model.Currency
 import Model.Dialog as Dialog
 import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
@@ -480,6 +481,43 @@ update plugins uc msg model =
             , List.map LocaleEffect localeEffects ++ eff
             )
 
+        SettingsMsg (UserChangedPreferredCurrency currency) ->
+            let
+                locale =
+                    Locale.changeCurrency currency model.config.locale
+
+                newModel =
+                    { model
+                        | config =
+                            model.config
+                                |> s_locale locale
+                                |> s_preferredFiatCurrency currency
+                    }
+            in
+            ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+
+        SettingsMsg UserToggledValueDisplay ->
+            let
+                showInFiat =
+                    not model.config.showValuesInFiat
+
+                locale =
+                    if showInFiat then
+                        Locale.changeCurrency model.config.preferredFiatCurrency model.config.locale
+
+                    else
+                        Locale.changeCurrency "coin" model.config.locale
+
+                newModel =
+                    { model
+                        | config =
+                            model.config
+                                |> s_locale locale
+                                |> s_showValuesInFiat showInFiat
+                    }
+            in
+            ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
@@ -786,6 +824,7 @@ update plugins uc msg model =
                                 | config =
                                     model.config
                                         |> s_locale locale
+                                        |> s_showValuesInFiat (locale.currency /= Model.Currency.Coin)
                             }
                     in
                     ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )

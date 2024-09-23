@@ -1,11 +1,12 @@
 module Config.UserSettings exposing (UserSettings, decoder, default, encoder)
 
-import Config.Graph exposing (AddressLabelType(..), TxLabelType(..), addressLabelToString, stringToAddressLabel)
+-- import Model.Currency exposing (Currency(..))
+
+import Config.Graph exposing (AddressLabelType, TxLabelType(..), addressLabelToString, stringToAddressLabel)
 import Json.Decode as Decode exposing (Decoder, bool, nullable, string)
 import Json.Decode.Extra
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
-import Model.Currency exposing (Currency(..))
 import Model.Locale exposing (ValueDetail(..))
 
 
@@ -13,7 +14,10 @@ type alias UserSettings =
     { selectedLanguage : String
     , lightMode : Maybe Bool
     , valueDetail : Maybe Model.Locale.ValueDetail
-    , valueDenomination : Maybe Currency
+
+    -- , valueDenomination : Maybe Currency
+    , preferredFiatCurrency : Maybe String
+    , showValuesInFiat : Maybe Bool
     , addressLabel : Maybe AddressLabelType
     , edgeLabel : Maybe TxLabelType
     , showAddressShadowLinks : Maybe Bool
@@ -50,24 +54,21 @@ valueDetailToString d =
             "magnitude"
 
 
-currencyToString : Currency -> String
-currencyToString c =
-    case c of
-        Coin ->
-            "coin"
 
-        Fiat x ->
-            x
-
-
-stringToCurrency : String -> Currency
-stringToCurrency s =
-    case s of
-        "coin" ->
-            Coin
-
-        x ->
-            Fiat x
+-- currencyToString : Currency -> String
+-- currencyToString c =
+--     case c of
+--         Coin ->
+--             "coin"
+--         Fiat x ->
+--             x
+-- stringToCurrency : String -> Currency
+-- stringToCurrency s =
+--     case s of
+--         "coin" ->
+--             Coin
+--         x ->
+--             Fiat x
 
 
 edgeLabelToString : TxLabelType -> String
@@ -109,7 +110,9 @@ decoder =
         |> required "selectedLanguage" string
         |> optional "lightMode" (nullable bool |> fromString) Nothing
         |> optional "valueDetail" (Decode.string |> Decode.map stringToValueDetail |> nullable) Nothing
-        |> optional "valueDenomination" (Decode.string |> Decode.map stringToCurrency |> nullable) Nothing
+        -- |> optional "valueDenomination" (Decode.string |> Decode.map stringToCurrency |> nullable) Nothing
+        |> optional "preferredFiatCurrency" (Decode.string |> nullable) Nothing
+        |> optional "showValuesInFiat" (nullable bool |> fromString) Nothing
         |> optional "addressLabel" (Decode.string |> Decode.map stringToAddressLabel) Nothing
         |> optional "edgeLabel" (Decode.string |> Decode.map stringToEdgeLabel |> nullable) Nothing
         |> optional "showAddressShadowLinks" (nullable bool |> fromString) Nothing
@@ -128,7 +131,10 @@ encoder settings =
         [ ( "selectedLanguage", Json.Encode.string settings.selectedLanguage )
         , ( "lightMode", settings.lightMode |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "valueDetail", settings.valueDetail |> Maybe.map valueDetailToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
-        , ( "valueDenomination", settings.valueDenomination |> Maybe.map currencyToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
+
+        -- , ( "valueDenomination", settings.valueDenomination |> Maybe.map currencyToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
+        , ( "preferredFiatCurrency", settings.preferredFiatCurrency |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
+        , ( "showValuesInFiat", settings.showValuesInFiat |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "addressLabel", settings.addressLabel |> Maybe.map addressLabelToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "edgeLabel", settings.edgeLabel |> Maybe.map edgeLabelToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "showAddressShadowLinks", settings.showAddressShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
@@ -147,7 +153,10 @@ default =
     { selectedLanguage = "en"
     , lightMode = Nothing
     , valueDetail = Nothing
-    , valueDenomination = Nothing
+
+    -- , valueDenomination = Nothing
+    , preferredFiatCurrency = Nothing
+    , showValuesInFiat = Nothing
     , addressLabel = Nothing
     , edgeLabel = Nothing
     , showAddressShadowLinks = Nothing

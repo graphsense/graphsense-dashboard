@@ -176,8 +176,6 @@ type alias Config =
     , highlighter : Bool
     , showEntityShadowLinks : Bool
     , showAddressShadowLinks : Bool
-
-    -- , showDatesInUserLocale : Bool
     , showZeroTransactions : Bool
     }
 

@@ -15,4 +15,6 @@ type alias Config =
     , highlightClusterFriends : Bool
     , showTimestampOnTxEdge : Bool
     , snapToGrid : Bool
+    , preferredFiatCurrency : String
+    , showValuesInFiat : Bool
     }

@@ -8,7 +8,6 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick, onInput)
 import Model exposing (..)
-import Model.Currency as Currency exposing (..)
 import Model.Locale exposing (ValueDetail(..))
 import Msg.Graph exposing (Msg(..))
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
@@ -72,11 +71,10 @@ type Settings
     = Section String (List SettingsItem)
 
 
-currencyOptions : Currency -> List SelectOption
+currencyOptions : String -> List SelectOption
 currencyOptions cs =
-    [ { val = "coin", selected = cs == Currency.Coin, lbl = "Coin" }
-    , { val = "eur", selected = cs == Currency.Fiat "eur", lbl = "EUR" }
-    , { val = "usd", selected = cs == Currency.Fiat "usd", lbl = "USD" }
+    [ { val = "eur", selected = cs == "eur", lbl = "EUR" }
+    , { val = "usd", selected = cs == "usd", lbl = "USD" }
     ]
 
 
@@ -112,8 +110,11 @@ view p vc m =
                 [ SubSection "General"
                 , Custom "Language" (localeSwitch vc)
                 , ToggleSwitch "Show date in user locale" vc.showDatesInUserLocale (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg |> PathfinderMsg)
+                , Select "Preferred fiat currency" (UserChangedPreferredCurrency >> SettingsMsg) (currencyOptions vc.preferredFiatCurrency)
                 , SubSection "Values"
-                , Select "Change currency" (UserChangesCurrency >> GraphMsg) (currencyOptions vc.locale.currency)
+                , ToggleSwitch "Show in fiat" vc.showValuesInFiat (UserToggledValueDisplay |> SettingsMsg)
+
+                -- , Select "Change currency" (UserChangesCurrency >> GraphMsg) (currencyOptions vc.locale.currency)
                 , Select "Value format" (UserChangesValueDetail >> GraphMsg) (valueFormatOptions vc.locale.valueDetail)
                 ]
             , Section "Overview Network"

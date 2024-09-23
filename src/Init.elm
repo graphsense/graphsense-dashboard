@@ -48,6 +48,8 @@ init plugins uc flags url key =
             , highlightClusterFriends = settings.highlightClusterFriends |> Maybe.withDefault True
             , showTimestampOnTxEdge = settings.showTimestampOnTxEdge |> Maybe.withDefault True
             , snapToGrid = settings.snapToGrid |> Maybe.withDefault False
+            , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
+            , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
             }
       , page = Stats
       , search = Search.init (Search.initSearchAll Nothing)

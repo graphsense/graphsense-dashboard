@@ -1,4 +1,4 @@
-module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), Page(..), RequestLimit(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), Page(..), RequestLimit(..), SettingsMsg(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -105,6 +105,12 @@ type Msg
     | UserClickedExampleSearch String
     | UserHovercardMsg Hovercard.Msg
     | UserClosesNotification
+    | SettingsMsg SettingsMsg
+
+
+type SettingsMsg
+    = UserChangedPreferredCurrency String
+    | UserToggledValueDisplay
 
 
 type RequestLimit
@@ -162,7 +168,10 @@ userSettingsFromMainModel model =
     { selectedLanguage = model.config.locale.locale
     , lightMode = Just model.config.lightmode
     , valueDetail = Just model.config.locale.valueDetail
-    , valueDenomination = Just model.config.locale.currency
+
+    -- , valueDenomination = Just model.config.locale.currency
+    , preferredFiatCurrency = Just model.config.preferredFiatCurrency
+    , showValuesInFiat = Just model.config.showValuesInFiat
     , addressLabel = Just model.graph.config.addressLabelType
     , edgeLabel = Just model.graph.config.txLabelType
     , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks

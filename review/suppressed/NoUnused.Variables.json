@@ -27,7 +27,6 @@
     { "count": 2, "filePath": "src/View/Graph/Table/UserAddressTagsTable.elm" },
     { "count": 2, "filePath": "src/View/Header.elm" },
     { "count": 2, "filePath": "src/View/Notification.elm" },
-    { "count": 1, "filePath": "src/Config/UserSettings.elm" },
     { "count": 1, "filePath": "src/Css/Graph.elm" },
     { "count": 1, "filePath": "src/Css/Stats.elm" },
     { "count": 1, "filePath": "src/Effect/Api.elm" },
