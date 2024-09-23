@@ -10,6 +10,7 @@ import Time exposing (Posix)
 
 type Msg
     = UserClickedToggleNeighborsTable
+    | UserClickedToggleTokenBalancesSelect
     | UserClickedToggleTransactionTable
     | UserClickedNextPageTransactionTable
     | UserClickedPreviousPageTransactionTable

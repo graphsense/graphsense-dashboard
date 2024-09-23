@@ -18,6 +18,7 @@ init network locale addressId data =
     in
     ( { neighborsTableOpen = False
       , transactionsTableOpen = False
+      , tokenBalancesOpen = False
       , txs = txs
       , neighborsOutgoing = NeighborsTable.init data.outDegree
       , neighborsIncoming = NeighborsTable.init data.inDegree

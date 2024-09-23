@@ -9,6 +9,7 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 type alias Model =
     { neighborsTableOpen : Bool
     , transactionsTableOpen : Bool
+    , tokenBalancesOpen : Bool
     , txs : TransactionTable.Model
     , neighborsIncoming : PagedTable Api.Data.NeighborAddress
     , neighborsOutgoing : PagedTable Api.Data.NeighborAddress

@@ -15,7 +15,7 @@ import DurationDatePicker as DatePicker
 import FontAwesome
 import Hex
 import Hovercard
-import Html.Styled as Html exposing (Html, div, span, img, td, tr, button, h2, table)
+import Html.Styled as Html exposing (Html, button, div, h2, img, span, table, td, tr)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Init.Pathfinder.Id as Id
@@ -26,6 +26,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Table
 import Model.Graph.Transform exposing (Transition(..))
+import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
@@ -45,8 +46,8 @@ import RecordSetter as Rs
 import RemoteData
 import Route
 import Route.Graph exposing (AddressTable(..))
-import Svg.Styled exposing (Svg, stop, linearGradient, defs, svg)
-import Svg.Styled.Attributes exposing (css, preserveAspectRatio, viewBox, width, height, transform,stopColor, offset, id)
+import Svg.Styled exposing (Svg, defs, linearGradient, stop, svg)
+import Svg.Styled.Attributes exposing (css, height, id, offset, preserveAspectRatio, stopColor, transform, viewBox, width)
 import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
@@ -109,9 +110,8 @@ inlineClusterIcon highlight clr =
 
 
 
-
-
 -- Helpers
+
 
 graphActionButtons : String -> List BtnConfig
 graphActionButtons name =
@@ -365,6 +365,7 @@ topRightPanel _ _ vc gc model =
         [ detailsView vc gc model
         ]
 
+
 graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 graphActionsView vc _ m =
     div [ Css.graphActionsViewStyle vc |> css ]
@@ -428,13 +429,13 @@ detailsView vc gc model =
     case model.details of
         Just details ->
             case details of
-                 Pathfinder.AddressDetails id state ->
+                Pathfinder.AddressDetails id state ->
                     RemoteData.unwrap
                         (Util.View.loadingSpinner vc Css.View.loadingSpinner)
                         (addressDetailsContentView vc gc model id)
                         state
 
-                 Pathfinder.TxDetails id state ->
+                Pathfinder.TxDetails id state ->
                     txDetailsContentView vc gc model id state
 
         Nothing ->
@@ -446,7 +447,7 @@ txDetailsContentView vc _ model id viewState =
     let
         getLbl id_ =
             Dict.get id_ model.tagSummaries
-                |> Maybe.withDefault  Pathfinder.NoTags
+                |> Maybe.withDefault Pathfinder.NoTags
     in
     case viewState.tx.type_ of
         Tx.Utxo tx ->
@@ -861,6 +862,146 @@ addressDetailsContentView vc gc model id viewState =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
             }
+
+        labelOfTags =
+            Just
+                (div
+                    [ css
+                        [ Css.displayFlex
+                        , Css.flexDirection Css.row
+                        , Css.flexWrap Css.wrap
+                        , Css.property "gap" "1ex"
+                        , Css.alignItems Css.center
+                        , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
+                        ]
+                    ]
+                    ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
+                )
+
+        labelOfActor =
+            actor_id
+                |> Maybe.map
+                    (\aid ->
+                        let
+                            link =
+                                Route.Graph.actorRoute aid Nothing
+                                    |> Route.Graph
+                                    |> Route.toUrl
+
+                            text =
+                                actorText |> Maybe.withDefault ""
+                        in
+                        Html.a
+                            [ HA.href link
+                            , css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
+                            ]
+                            [ Html.text text
+                            ]
+                    )
+
+        fiatCurr =
+            "eur"
+
+        toTokenRow i ( symbol, values ) =
+            let
+                ass =
+                    asset viewState.data.currency symbol
+
+                value =
+                    Locale.coin vc.locale ass values.value
+
+                fvalue =
+                    Locale.getFiatValue fiatCurr values
+            in
+            SidePanelComponents.tokenRow
+                { tokenRow =
+                    { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
+                    , highlightVisible = modBy 2 (i + 1) == 0
+                    , tokenCode = String.toUpper symbol
+                    , tokenName = String.toUpper symbol
+                    , tokenValue = value
+                    }
+                }
+
+        tokenRows =
+            div
+                [ SidePanelComponents.tokensDropDownOpenTokensListTokensList_details.styles
+                    ++ [ Css.position Css.absolute
+                       , Css.zIndex (Css.int (Css.zIndexMainValue + 1))
+                       , Css.left (Css.px -(SidePanelComponents.tokensDropDownOpen_details.width - SidePanelComponents.tokensDropDownOpenTokensHeaderOpen_details.width))
+                       , Css.top (Css.px SidePanelComponents.tokensDropDownClosed_details.height)
+                       ]
+                    |> css
+                ]
+                (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.indexedMap toTokenRow)
+
+        dummyRows =
+            { tokenRow1 =
+                { fiatValue = ""
+                , highlightVisible = False
+                , tokenCode = ""
+                , tokenName = ""
+                , tokenValue = ""
+                }
+            , tokenRow2 =
+                { fiatValue = ""
+                , highlightVisible = False
+                , tokenCode = ""
+                , tokenName = ""
+                , tokenValue = ""
+                }
+            , tokenRow3 =
+                { fiatValue = ""
+                , highlightVisible = False
+                , tokenCode = ""
+                , tokenName = ""
+                , tokenValue = ""
+                }
+            }
+
+        ntokensString =
+            div ((SidePanelComponents.tokensDropDownOpenN2Tokens_details.styles |> css) :: SidePanelComponents.tokensDropDownClosedAttributes.n2Tokens)
+                [ Html.text ("(" ++ (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size |> String.fromInt) ++ " tokens)") ]
+
+        fiatSum =
+            viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr) |> List.sum
+
+        n302032String =
+            div [ SidePanelComponents.tokensDropDownOpenN302032_details.styles |> css ]
+                [ Html.text (Locale.fiat vc.locale fiatCurr fiatSum) ]
+
+        attrClickSelect =
+            [ Svg.onClick (AddressDetails.UserClickedToggleTokenBalancesSelect |> AddressDetailsMsg), [ Css.cursor Css.pointer ] |> css ]
+
+        tokensDropDownOpen =
+            SidePanelComponents.tokensDropDownOpenWithInstances
+                (SidePanelComponents.tokensDropDownOpenAttributes
+                    |> Rs.s_tokensHeaderOpen attrClickSelect
+                )
+                (SidePanelComponents.tokensDropDownOpenInstances
+                    |> Rs.s_tokensList (Just tokenRows)
+                    |> Rs.s_n302032 (Just n302032String)
+                    |> Rs.s_n2Tokens (Just ntokensString)
+                )
+                dummyRows
+
+        tokensDropDownClosed =
+            SidePanelComponents.tokensDropDownClosedWithInstances
+                (SidePanelComponents.tokensDropDownClosedAttributes
+                    |> Rs.s_tokensDropDownClosed attrClickSelect
+                )
+                (SidePanelComponents.tokensDropDownClosedInstances
+                    |> Rs.s_n302032 (Just n302032String)
+                    |> Rs.s_n2Tokens (Just ntokensString)
+                )
+                {}
+
+        tokensDropdown =
+            if viewState.tokenBalancesOpen then
+                tokensDropDownOpen
+
+            else
+                tokensDropDownClosed
     in
     if Data.isAccountLike (Id.network id) then
         SidePanelComponents.sidePanelEthAddressWithInstances
@@ -870,7 +1011,13 @@ addressDetailsContentView vc gc model id viewState =
                         |> css
                     ]
             )
-            SidePanelComponents.sidePanelEthAddressInstances
+            (SidePanelComponents.sidePanelEthAddressInstances
+                |> Rs.s_labelOfTags
+                    labelOfTags
+                |> Rs.s_labelOfActor
+                    labelOfActor
+                |> Rs.s_tokensDropDownClosed (Just tokensDropdown)
+            )
             { identifierWithCopyIcon = sidePanelAddressCopyIcon
             , leftTab = { variant = none }
             , rightTab = { variant = none }
@@ -901,41 +1048,9 @@ addressDetailsContentView vc gc model id viewState =
             )
             (SidePanelComponents.sidePanelAddressInstances
                 |> Rs.s_labelOfTags
-                    (Just
-                        (div
-                            [ css
-                                [ Css.displayFlex
-                                , Css.flexDirection Css.row
-                                , Css.flexWrap Css.wrap
-                                , Css.property "gap" "1ex"
-                                , Css.alignItems Css.center
-                                , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
-                                ]
-                            ]
-                            ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
-                        )
-                    )
+                    labelOfTags
                 |> Rs.s_labelOfActor
-                    (actor_id
-                        |> Maybe.map
-                            (\aid ->
-                                let
-                                    link =
-                                        Route.Graph.actorRoute aid Nothing
-                                            |> Route.Graph
-                                            |> Route.toUrl
-
-                                    text =
-                                        actorText |> Maybe.withDefault ""
-                                in
-                                Html.a
-                                    [ HA.href link
-                                    , css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
-                                    ]
-                                    [ Html.text text
-                                    ]
-                            )
-                    )
+                    labelOfActor
             )
             { sidePanelAddress = sidePanelData
             , leftTab = { variant = none }

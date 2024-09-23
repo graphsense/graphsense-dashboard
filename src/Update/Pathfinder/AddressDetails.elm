@@ -27,6 +27,9 @@ import Update.Pathfinder.PagedTable as PT
 update : Update.Config -> Pathfinder.Model -> Msg -> Id -> Model -> ( Model, List Effect )
 update uc pathfinderModel msg id model =
     case msg of
+        UserClickedToggleTokenBalancesSelect ->
+            ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
+
         UserClickedToggleNeighborsTable ->
             let
                 tables =

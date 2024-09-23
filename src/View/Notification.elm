@@ -20,13 +20,14 @@ import Theme.Html.ErrorMessagesAlerts
         , errorMessageComponentProperty1ErrorWithInstances
         )
 import Theme.Html.Icons as Icons
+import Util.Css as Css
 import Util.View exposing (none, onClickWithStop)
 import View.Locale as Locale
 
 
 overlay : List (Html msg) -> Html msg
 overlay =
-    div [ css [ Css.position Css.relative, Css.left (Css.px 90), Css.bottom (Css.px (errorMessageComponentProperty1Alert_details.height - 20)), Css.zIndex (Css.int 100) ] ]
+    div [ css [ Css.position Css.relative, Css.left (Css.px 90), Css.bottom (Css.px (errorMessageComponentProperty1Alert_details.height - 20)), Css.zIndex (Css.int (Css.zIndexMainValue + 10)) ] ]
 
 
 view : View.Config -> Model -> Html Msg
