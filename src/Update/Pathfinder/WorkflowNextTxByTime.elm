@@ -19,7 +19,7 @@ update ctx msg model =
             ( model
             , BrowserGotRecentTx
                 >> WorkflowNextTxByTime ctx
-                |> Api.GetAddressTxsEffectDetailed
+                |> Api.GetAddressTxsEffect
                     { currency = Id.network ctx.addressId
                     , address = Id.id ctx.addressId
                     , direction = Just ctx.direction
@@ -63,7 +63,7 @@ update ctx msg model =
                             |> Api.GetTxEffect
                                 { currency = Id.network ctx.addressId
                                 , txHash = txId
-                                , includeIo = Just True
+                                , includeIo = True
                                 , tokenTxId = Nothing
                                 }
                             |> ApiEffect

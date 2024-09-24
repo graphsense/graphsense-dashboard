@@ -1099,7 +1099,7 @@ getNextTxEffects model addressId direction =
         |> Maybe.withDefault
             (BrowserGotRecentTx
                 >> WorkflowNextTxByTime context
-                |> Api.GetAddressTxsEffectDetailed
+                |> Api.GetAddressTxsEffect
                     { currency = Id.network addressId
                     , address = Id.id addressId
                     , direction = Just direction
@@ -1189,7 +1189,7 @@ loadTx _ id model =
             |> Api.GetTxEffect
                 { currency = Id.network id
                 , txHash = Id.id id
-                , includeIo = Just True
+                , includeIo = True
                 , tokenTxId = Nothing
                 }
             |> ApiEffect

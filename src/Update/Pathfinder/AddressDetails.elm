@@ -133,7 +133,7 @@ update uc pathfinderModel msg id model =
                 ( eff, loading ) =
                     if (model.txs.table.table.nextpage /= Nothing) && not (PT.isNextPageLoaded model.txs.table) then
                         ( (GotNextPageTxsForAddressDetails id >> AddressDetailsMsg)
-                            |> Api.GetAddressTxsEffectDetailed
+                            |> Api.GetAddressTxsEffect
                                 { currency = Id.network id
                                 , address = Id.id id
                                 , direction = Nothing
@@ -329,7 +329,7 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
             case ( txmin, txmax ) of
                 ( Just min, Just max ) ->
                     (GotTxsForAddressDetails id ( Just min, Just max ) >> AddressDetailsMsg)
-                        |> Api.GetAddressTxsEffectDetailed
+                        |> Api.GetAddressTxsEffect
                             { currency = Id.network id
                             , address = Id.id id
                             , direction = Nothing
@@ -344,7 +344,7 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
 
                 ( Nothing, Nothing ) ->
                     (GotTxsForAddressDetails id ( Nothing, Nothing ) >> AddressDetailsMsg)
-                        |> Api.GetAddressTxsEffectDetailed
+                        |> Api.GetAddressTxsEffect
                             { currency = Id.network id
                             , address = Id.id id
                             , direction = Nothing

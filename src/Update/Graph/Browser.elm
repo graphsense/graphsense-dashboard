@@ -133,7 +133,7 @@ loadingTxAccount id accountCurrency model =
                     { txHash = id.txHash
                     , currency = id.currency
                     , tokenTxId = id.tokenTxId
-                    , includeIo = Just False
+                    , includeIo = False
                     }
                     (BrowserGotTx accountCurrency)
                     |> ApiEffect
@@ -169,7 +169,7 @@ loadingTxUtxo id model =
                     { txHash = id.txHash
                     , currency = id.currency
                     , tokenTxId = Nothing
-                    , includeIo = Just False
+                    , includeIo = False
                     }
                     (BrowserGotTx id.currency)
                     |> ApiEffect
@@ -2339,7 +2339,7 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
 
 getAddressTxsEffect : A.Address -> Maybe String -> Effect
 getAddressTxsEffect { currency, address } nextpage =
-    GetAddressTxsEffectDetailed
+    GetAddressTxsEffect
         { currency = currency
         , address = address
         , direction = Nothing

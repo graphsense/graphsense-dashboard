@@ -377,14 +377,6 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
-        Api.GetAddressTxsEffectDetailed e _ ->
-            ( "{1}: loading transactions of address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
         Api.GetAddressTxsEffect e _ ->
             ( "{1}: loading transactions of address {0}"
             , [ e.address

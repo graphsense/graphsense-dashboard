@@ -91,14 +91,6 @@ type Effect msg
         }
         (Api.Data.NeighborAddresses -> msg)
     | GetAddressTxsEffect
-        { address : String
-        , currency : String
-        , isOutgoing : Maybe Bool
-        , nextpage : Maybe String
-        , pagesize : Int
-        }
-        (Api.Data.AddressTxs -> msg)
-    | GetAddressTxsEffectDetailed
         { currency : String
         , address : String
         , direction : Maybe Direction
@@ -171,7 +163,7 @@ type Effect msg
         { currency : String
         , txHash : String
         , tokenTxId : Maybe Int
-        , includeIo : Maybe Bool
+        , includeIo : Bool
         }
         (Api.Data.Tx -> msg)
     | GetTxUtxoAddressesEffect
@@ -403,11 +395,6 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetAddressNeighborsEffect eff
 
-        GetAddressTxsEffectDetailed eff m ->
-            m
-                >> mapMsg
-                |> GetAddressTxsEffectDetailed eff
-
         GetAddressTxsEffect eff m ->
             m
                 >> mapMsg
@@ -596,24 +583,7 @@ perform apiKey wrapMsg effect =
             Api.Request.Addresses.getAddressEntity currency address
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressTxsEffect { address, currency, isOutgoing, nextpage, pagesize } toMsg ->
-            let
-                dir =
-                    case isOutgoing of
-                        Nothing ->
-                            Nothing
-
-                        Just True ->
-                            Just Api.Request.Addresses.DirectionOut
-
-                        Just False ->
-                            Just Api.Request.Addresses.DirectionIn
-            in
-            -- currency_path address_path neighbor_query minHeight_query maxHeight_query order_query page_query pagesize_query
-            Api.Request.Addresses.listAddressTxs currency address dir Nothing Nothing Nothing Nothing nextpage (Just pagesize)
-                |> send apiKey wrapMsg effect toMsg
-
-        GetAddressTxsEffectDetailed { currency, address, direction, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
+        GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
             let
                 dir =
                     case direction of
@@ -671,7 +641,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxEffect { currency, txHash, tokenTxId, includeIo } toMsg ->
-            Api.Request.Txs.getTx currency txHash includeIo tokenTxId
+            Api.Request.Txs.getTx currency txHash (Just includeIo) tokenTxId
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
