@@ -945,8 +945,11 @@ addressDetailsContentView vc gc model id viewState =
                 ]
                 (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.indexedMap toTokenRow)
 
+        ntokens =
+            viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size
+
         ntokensString =
-            "(" ++ (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size |> String.fromInt) ++ " tokens)"
+            "(" ++ (ntokens |> String.fromInt) ++ " tokens)"
 
         fiatSum =
             viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr) |> List.sum
@@ -955,7 +958,11 @@ addressDetailsContentView vc gc model id viewState =
             Locale.fiat vc.locale fiatCurr fiatSum
 
         attrClickSelect =
-            [ Svg.onClick (AddressDetails.UserClickedToggleTokenBalancesSelect |> AddressDetailsMsg), [ Css.cursor Css.pointer ] |> css ]
+            if ntokens > 0 then
+                [ Svg.onClick (AddressDetails.UserClickedToggleTokenBalancesSelect |> AddressDetailsMsg), [ Css.cursor Css.pointer ] |> css ]
+
+            else
+                [ [ Css.cursor Css.notAllowed ] |> css ]
 
         tokensDropDownOpen =
             SidePanelComponents.tokensDropDownOpenWithInstances
