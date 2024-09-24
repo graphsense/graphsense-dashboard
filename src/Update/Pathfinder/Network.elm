@@ -842,7 +842,7 @@ ingestTxs network things txs =
                             |> Maybe.map (toUtxo nw t)
 
                     Api.Data.TxTxAccount t ->
-                        Dict.get (Id.init t.currency t.txHash) thingsDict
+                        Dict.get (Id.init t.currency t.identifier) thingsDict
                             |> Maybe.map (toAccount t)
                 )
                     |> Maybe.map (insertTx nw >> second)
