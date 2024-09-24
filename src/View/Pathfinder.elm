@@ -899,8 +899,7 @@ addressDetailsContentView vc gc model id viewState =
                             ]
                     )
 
-        fiatCurr =
-            "eur"
+        fiatCurr = vc.preferredFiatCurrency
 
         toTokenRow i ( symbol, values ) =
             let
@@ -913,15 +912,25 @@ addressDetailsContentView vc gc model id viewState =
                 fvalue =
                     Locale.getFiatValue fiatCurr values
             in
-            SidePanelComponents.tokenRow
-                { tokenRow =
-                    { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
-                    , highlightVisible = modBy 2 (i + 1) == 0
-                    , tokenCode = String.toUpper symbol
-                    , tokenName = String.toUpper symbol
-                    , tokenValue = value
+            if (modBy 2 (i + 1) == 0) then
+                SidePanelComponents.tokenRowStateNeutral
+                    { stateNeutral =
+                        { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
+                        , tokenCode = String.toUpper symbol
+                        , tokenName = String.toUpper symbol
+                        , tokenValue = value
+                        }
                     }
-                }
+            else
+                SidePanelComponents.tokenRowStateHighlight
+                    { stateHighlight =
+                        { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
+                        , tokenCode = String.toUpper symbol
+                        , tokenName = String.toUpper symbol
+                        , tokenValue = value
+                        }
+                    }
+
 
         tokenRows =
             div
@@ -937,38 +946,35 @@ addressDetailsContentView vc gc model id viewState =
 
         dummyRows =
             { tokenRow1 =
-                { fiatValue = ""
-                , highlightVisible = False
-                , tokenCode = ""
-                , tokenName = ""
-                , tokenValue = ""
+                { variant = none
                 }
             , tokenRow2 =
-                { fiatValue = ""
-                , highlightVisible = False
-                , tokenCode = ""
-                , tokenName = ""
-                , tokenValue = ""
+                { variant = none
                 }
             , tokenRow3 =
-                { fiatValue = ""
-                , highlightVisible = False
-                , tokenCode = ""
-                , tokenName = ""
-                , tokenValue = ""
+                { variant = none
                 }
             }
 
-        ntokensString =
+        ntokensString =("(" ++ (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size |> String.fromInt) ++ " tokens)")
+
+        ntokensHtml =
             div ((SidePanelComponents.tokensDropDownOpenN2Tokens_details.styles |> css) :: SidePanelComponents.tokensDropDownClosedAttributes.n2Tokens)
-                [ Html.text ("(" ++ (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size |> String.fromInt) ++ " tokens)") ]
+                [ Html.text ntokensString ]
+
+
+        
 
         fiatSum =
             viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr) |> List.sum
 
-        n302032String =
+        n302032String =(Locale.fiat vc.locale fiatCurr fiatSum) 
+        
+        n302032Html =
             div [ SidePanelComponents.tokensDropDownOpenN302032_details.styles |> css ]
-                [ Html.text (Locale.fiat vc.locale fiatCurr fiatSum) ]
+                [ Html.text n302032String ]
+
+        
 
         attrClickSelect =
             [ Svg.onClick (AddressDetails.UserClickedToggleTokenBalancesSelect |> AddressDetailsMsg), [ Css.cursor Css.pointer ] |> css ]
@@ -980,8 +986,8 @@ addressDetailsContentView vc gc model id viewState =
                 )
                 (SidePanelComponents.tokensDropDownOpenInstances
                     |> Rs.s_tokensList (Just tokenRows)
-                    |> Rs.s_n302032 (Just n302032String)
-                    |> Rs.s_n2Tokens (Just ntokensString)
+                    |> Rs.s_n302032 (Just n302032Html)
+                    |> Rs.s_n2Tokens (Just ntokensHtml)
                 )
                 dummyRows
 
@@ -991,10 +997,9 @@ addressDetailsContentView vc gc model id viewState =
                     |> Rs.s_tokensDropDownClosed attrClickSelect
                 )
                 (SidePanelComponents.tokensDropDownClosedInstances
-                    |> Rs.s_n302032 (Just n302032String)
-                    |> Rs.s_n2Tokens (Just ntokensString)
                 )
-                {}
+                { tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = n302032String }}
+
 
         tokensDropdown =
             if viewState.tokenBalancesOpen then
@@ -1025,6 +1030,7 @@ addressDetailsContentView vc gc model id viewState =
             , sidePanelEthAddress = sidePanelData
             , sidePanelEthAddressDetails = sidePanelAddressDetails
             , sidePanelRowWithDropdown = { valueCellInstance = none }
+            , tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = n302032String }
             , titleOfEthBalance = { infoLabel = Locale.string vc.locale "Balance" ++ " " ++ String.toUpper viewState.data.currency }
             , titleOfSidePanelRowWithDropdown = { infoLabel = Locale.string vc.locale "Token holdings" }
             , valueOfEthBalance = valuesToCell vc assetId viewState.data.balance

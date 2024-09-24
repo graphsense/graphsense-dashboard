@@ -11,7 +11,7 @@ import Json.Decode
 import Model exposing (Msg(..))
 import Model.Dialog exposing (..)
 import RecordSetter exposing (..)
-import Theme.Html.Buttons exposing (..)
+import Theme.Html.Buttons as Buttons
 import Theme.Html.ErrorMessagesAlerts
     exposing
         ( dialogConfirmationMessageAttributes
@@ -27,6 +27,7 @@ import Theme.Html.ErrorMessagesAlerts
 import Theme.Html.Icons as Icons
 import Util.View exposing (addDot, none, onClickWithStop)
 import View.Locale as Locale
+import Theme.Html.Buttons as Buttons
 
 
 view : Config -> Model Msg -> Html Msg
@@ -58,15 +59,14 @@ confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
         buttonAttrNo =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm onNo) ]
 
-        ybtn =
-            buttonStyleColoredStateRegularWithAttributes
-                (buttonStyleColoredStateRegularAttributes |> s_button buttonAttrYes)
-                { styleColoredStateRegular = { buttonText = Locale.string vc.locale (confirmText |> Maybe.withDefault "Yes"), iconInstance = none, iconVisible = True } }
+        ybtn = Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
+                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> s_button buttonAttrYes)
+                { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale (confirmText |> Maybe.withDefault "Yes"), iconInstance = none, iconVisible = True } }
 
         nbtn =
-            buttonStyleOutlineStateRegularWithAttributes
-                (buttonStyleOutlineStateRegularAttributes |> s_button buttonAttrNo)
-                { styleOutlineStateRegular = { buttonText = Locale.string vc.locale (cancelText |> Maybe.withDefault "No"), iconInstance = none, iconVisible = True } }
+            Buttons.buttonTypeTextStateRegularStyleOutlinedWithAttributes
+                (Buttons.buttonTypeTextStateRegularStyleOutlinedAttributes |> s_button buttonAttrNo)
+                { typeTextStateRegularStyleOutlined = { buttonText = Locale.string vc.locale (cancelText |> Maybe.withDefault "No"), iconInstance = none, iconVisible = True } }
     in
     dialogConfirmationMessageWithAttributes
         (dialogConfirmationMessageAttributes |> s_iconsCloseBlack buttonAttrNo)
@@ -80,9 +80,9 @@ options_ vc { message, options } =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedOption NoOp) ]
 
         btn ( title, msg ) =
-            buttonStyleColoredStateRegularWithAttributes
-                (buttonStyleColoredStateRegularAttributes |> s_button [ css (Css.btnBase vc), onClickWithStop (UserClickedOption msg) ])
-                { styleColoredStateRegular = { buttonText = Locale.string vc.locale title, iconInstance = none, iconVisible = True } }
+            Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
+                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> s_button [ css (Css.btnBase vc), onClickWithStop (UserClickedOption msg) ])
+                { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale title, iconInstance = none, iconVisible = True } }
 
         btns =
             options |> List.map btn |> div [ Css.optionsButtonsContainer |> css ]
