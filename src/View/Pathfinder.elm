@@ -899,7 +899,8 @@ addressDetailsContentView vc gc model id viewState =
                             ]
                     )
 
-        fiatCurr = vc.preferredFiatCurrency
+        fiatCurr =
+            vc.preferredFiatCurrency
 
         toTokenRow i ( symbol, values ) =
             let
@@ -912,7 +913,7 @@ addressDetailsContentView vc gc model id viewState =
                 fvalue =
                     Locale.getFiatValue fiatCurr values
             in
-            if (modBy 2 (i + 1) == 0) then
+            if modBy 2 (i + 1) == 0 then
                 SidePanelComponents.tokenRowStateNeutral
                     { stateNeutral =
                         { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
@@ -921,6 +922,7 @@ addressDetailsContentView vc gc model id viewState =
                         , tokenValue = value
                         }
                     }
+
             else
                 SidePanelComponents.tokenRowStateHighlight
                     { stateHighlight =
@@ -931,50 +933,26 @@ addressDetailsContentView vc gc model id viewState =
                         }
                     }
 
-
         tokenRows =
             div
                 [ SidePanelComponents.tokensDropDownOpenTokensListTokensList_details.styles
                     ++ [ Css.position Css.absolute
                        , Css.zIndex (Css.int (Css.zIndexMainValue + 1))
-                       , Css.left (Css.px -(SidePanelComponents.tokensDropDownOpen_details.width - SidePanelComponents.tokensDropDownOpenTokensHeaderOpen_details.width))
                        , Css.top (Css.px SidePanelComponents.tokensDropDownClosed_details.height)
+                       , Css.width (Css.px SidePanelComponents.tokensDropDownOpen_details.width)
                        ]
                     |> css
                 ]
                 (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.indexedMap toTokenRow)
 
-        dummyRows =
-            { tokenRow1 =
-                { variant = none
-                }
-            , tokenRow2 =
-                { variant = none
-                }
-            , tokenRow3 =
-                { variant = none
-                }
-            }
-
-        ntokensString =("(" ++ (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size |> String.fromInt) ++ " tokens)")
-
-        ntokensHtml =
-            div ((SidePanelComponents.tokensDropDownOpenN2Tokens_details.styles |> css) :: SidePanelComponents.tokensDropDownClosedAttributes.n2Tokens)
-                [ Html.text ntokensString ]
-
-
-        
+        ntokensString =
+            "(" ++ (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size |> String.fromInt) ++ " tokens)"
 
         fiatSum =
             viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr) |> List.sum
 
-        n302032String =(Locale.fiat vc.locale fiatCurr fiatSum) 
-        
-        n302032Html =
-            div [ SidePanelComponents.tokensDropDownOpenN302032_details.styles |> css ]
-                [ Html.text n302032String ]
-
-        
+        valueSumString =
+            Locale.fiat vc.locale fiatCurr fiatSum
 
         attrClickSelect =
             [ Svg.onClick (AddressDetails.UserClickedToggleTokenBalancesSelect |> AddressDetailsMsg), [ Css.cursor Css.pointer ] |> css ]
@@ -982,24 +960,33 @@ addressDetailsContentView vc gc model id viewState =
         tokensDropDownOpen =
             SidePanelComponents.tokensDropDownOpenWithInstances
                 (SidePanelComponents.tokensDropDownOpenAttributes
-                    |> Rs.s_tokensHeaderOpen attrClickSelect
+                    |> Rs.s_tokensDropDownHeaderOpen attrClickSelect
                 )
                 (SidePanelComponents.tokensDropDownOpenInstances
                     |> Rs.s_tokensList (Just tokenRows)
-                    |> Rs.s_n302032 (Just n302032Html)
-                    |> Rs.s_n2Tokens (Just ntokensHtml)
+                 -- |> Rs.s_n302032 (Just n302032Html)
+                 -- |> Rs.s_n2Tokens (Just ntokensHtml)
                 )
-                dummyRows
+                { tokenRow1 =
+                    { variant = none
+                    }
+                , tokenRow2 =
+                    { variant = none
+                    }
+                , tokenRow3 =
+                    { variant = none
+                    }
+                , tokensDropDownHeaderOpen =
+                    { numberOfToken = ntokensString, totalTokenValue = valueSumString }
+                }
 
         tokensDropDownClosed =
             SidePanelComponents.tokensDropDownClosedWithInstances
                 (SidePanelComponents.tokensDropDownClosedAttributes
                     |> Rs.s_tokensDropDownClosed attrClickSelect
                 )
-                (SidePanelComponents.tokensDropDownClosedInstances
-                )
-                { tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = n302032String }}
-
+                SidePanelComponents.tokensDropDownClosedInstances
+                { tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = valueSumString } }
 
         tokensDropdown =
             if viewState.tokenBalancesOpen then
@@ -1030,7 +1017,7 @@ addressDetailsContentView vc gc model id viewState =
             , sidePanelEthAddress = sidePanelData
             , sidePanelEthAddressDetails = sidePanelAddressDetails
             , sidePanelRowWithDropdown = { valueCellInstance = none }
-            , tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = n302032String }
+            , tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = valueSumString }
             , titleOfEthBalance = { infoLabel = Locale.string vc.locale "Balance" ++ " " ++ String.toUpper viewState.data.currency }
             , titleOfSidePanelRowWithDropdown = { infoLabel = Locale.string vc.locale "Token holdings" }
             , valueOfEthBalance = valuesToCell vc assetId viewState.data.balance

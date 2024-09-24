@@ -1249,12 +1249,10 @@ rowsEntity vc gc now table ent =
         --         (case ent of
         --             Loaded e ->
         --                 e.entity.currency == "trx"
-
         --             _ ->
         --                 False
         --         )
         --     ]
-
         -- len =
         --     multiValueMaxLen vc .entity ent
     in

@@ -4,12 +4,12 @@ import Config.View exposing (Config)
 import Css.Dialog as Css
 import Css.View
 import FontAwesome
-import Html.Styled exposing (Html, div, h4, text, button, span, li, ul)
+import Html.Styled exposing (Html, button, div, h4, li, span, text, ul)
 import Html.Styled.Attributes exposing (css)
-import Html.Styled.Events exposing (onClick,stopPropagationOn)
+import Html.Styled.Events exposing (onClick, stopPropagationOn)
 import Json.Decode
 import Model exposing (Msg(..))
-import Model.Dialog exposing (Model(..), ConfirmConfig, ErrorConfig, OptionsConfig, InfoConfig, ErrorType(..))
+import Model.Dialog exposing (ConfirmConfig, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig)
 import RecordSetter as Rs
 import Theme.Html.Buttons as Buttons
 import Theme.Html.ErrorMessagesAlerts
@@ -27,7 +27,6 @@ import Theme.Html.ErrorMessagesAlerts
 import Theme.Html.Icons as Icons
 import Util.View exposing (addDot, none, onClickWithStop)
 import View.Locale as Locale
-import Theme.Html.Buttons as Buttons
 
 
 view : Config -> Model Msg -> Html Msg
@@ -59,7 +58,8 @@ confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
         buttonAttrNo =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm onNo) ]
 
-        ybtn = Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
+        ybtn =
+            Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
                 (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> Rs.s_button buttonAttrYes)
                 { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale (confirmText |> Maybe.withDefault "Yes"), iconInstance = none, iconVisible = True } }
 
