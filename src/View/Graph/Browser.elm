@@ -938,7 +938,10 @@ rowsAddress vc now table address =
            ]
         ++ dataPart2
         ++ statusNote
-        ++ betaIndicator
+
+
+
+-- ++ betaIndicator
 
 
 unwrapTableRouteMatch : (table -> route -> Bool) -> Maybe table -> route -> Bool
@@ -1241,19 +1244,19 @@ rowsEntity vc gc now table ent =
                         }
                     )
 
-        betaIndicator =
-            [ OptionalRow (Footnote "BETA")
-                (case ent of
-                    Loaded e ->
-                        e.entity.currency == "trx"
+        -- betaIndicator =
+        --     [ OptionalRow (Footnote "BETA")
+        --         (case ent of
+        --             Loaded e ->
+        --                 e.entity.currency == "trx"
 
-                    _ ->
-                        False
-                )
-            ]
+        --             _ ->
+        --                 False
+        --         )
+        --     ]
 
-        len =
-            multiValueMaxLen vc .entity ent
+        -- len =
+        --     multiValueMaxLen vc .entity ent
     in
     [ RowWithMoreActionsButton
         ( "Entity"
@@ -1424,7 +1427,10 @@ rowsEntity vc gc now table ent =
             |> Loadable.withDefault Nothing
         )
     ]
-        ++ betaIndicator
+
+
+
+-- ++ betaIndicator
 
 
 rowsActor : View.Config -> Graph.Config -> Time.Posix -> Maybe ActorTable -> Loadable String Actor -> List (Row (Value Msg) Coords Msg)
