@@ -4,13 +4,13 @@ import Config.View exposing (Config)
 import Css.Dialog as Css
 import Css.View
 import FontAwesome
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
+import Html.Styled exposing (Html, div, h4, text, button, span, li, ul)
+import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onClick,stopPropagationOn)
 import Json.Decode
 import Model exposing (Msg(..))
-import Model.Dialog exposing (..)
-import RecordSetter exposing (..)
+import Model.Dialog exposing (Model(..), ConfirmConfig, ErrorConfig, OptionsConfig, InfoConfig, ErrorType(..))
+import RecordSetter as Rs
 import Theme.Html.Buttons as Buttons
 import Theme.Html.ErrorMessagesAlerts
     exposing
@@ -60,16 +60,16 @@ confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm onNo) ]
 
         ybtn = Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
-                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> s_button buttonAttrYes)
+                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> Rs.s_button buttonAttrYes)
                 { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale (confirmText |> Maybe.withDefault "Yes"), iconInstance = none, iconVisible = True } }
 
         nbtn =
             Buttons.buttonTypeTextStateRegularStyleOutlinedWithAttributes
-                (Buttons.buttonTypeTextStateRegularStyleOutlinedAttributes |> s_button buttonAttrNo)
+                (Buttons.buttonTypeTextStateRegularStyleOutlinedAttributes |> Rs.s_button buttonAttrNo)
                 { typeTextStateRegularStyleOutlined = { buttonText = Locale.string vc.locale (cancelText |> Maybe.withDefault "No"), iconInstance = none, iconVisible = True } }
     in
     dialogConfirmationMessageWithAttributes
-        (dialogConfirmationMessageAttributes |> s_iconsCloseBlack buttonAttrNo)
+        (dialogConfirmationMessageAttributes |> Rs.s_iconsCloseBlack buttonAttrNo)
         { cancelButton = { variant = nbtn }, confirmButton = { variant = ybtn }, dialogConfirmationMessage = { bodyText = Locale.string vc.locale message, headerText = Locale.string vc.locale title } }
 
 
@@ -81,15 +81,15 @@ options_ vc { message, options } =
 
         btn ( title, msg ) =
             Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
-                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> s_button [ css (Css.btnBase vc), onClickWithStop (UserClickedOption msg) ])
+                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> Rs.s_button [ css (Css.btnBase vc), onClickWithStop (UserClickedOption msg) ])
                 { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale title, iconInstance = none, iconVisible = True } }
 
         btns =
             options |> List.map btn |> div [ Css.optionsButtonsContainer |> css ]
     in
     dialogConfirmationMessageWithInstances
-        (dialogConfirmationMessageAttributes |> s_iconsCloseBlack buttonAttrNo)
-        (dialogConfirmationMessageInstances |> s_buttonsLayout (Just btns))
+        (dialogConfirmationMessageAttributes |> Rs.s_iconsCloseBlack buttonAttrNo)
+        (dialogConfirmationMessageInstances |> Rs.s_buttonsLayout (Just btns))
         { cancelButton = { variant = none }, confirmButton = { variant = none }, dialogConfirmationMessage = { bodyText = message, headerText = Locale.string vc.locale "Please select..." } }
 
 
@@ -252,8 +252,8 @@ error vc err =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm err.onOk) ]
     in
     errorMessageComponentProperty1ErrorWithInstances
-        (errorMessageComponentProperty1ErrorAttributes |> s_iconsCloseSmall buttonAttrOk)
-        (errorMessageComponentProperty1ErrorInstances |> s_messageText (Just (div [] details)))
+        (errorMessageComponentProperty1ErrorAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
+        (errorMessageComponentProperty1ErrorInstances |> Rs.s_messageText (Just (div [] details)))
         { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = "" }, property1Error = { bodyText = "", headlineText = "" } }
 
 
@@ -267,5 +267,5 @@ info vc inf =
             Icons.iconsAlert {}
     in
     errorMessageComponentProperty1AlertWithAttributes
-        (errorMessageComponentProperty1AlertAttributes |> s_iconsCloseSmall buttonAttrOk)
+        (errorMessageComponentProperty1AlertAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
         { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, property1Alert = { bodyText = "", headlineText = "" } }

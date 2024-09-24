@@ -5,7 +5,6 @@
   "suppressions": [
     { "count": 9, "filePath": "src/View/Graph/Browser.elm" },
     { "count": 8, "filePath": "src/View/Graph.elm" },
-    { "count": 6, "filePath": "src/View/Dialog.elm" },
     { "count": 6, "filePath": "src/View/Notification.elm" },
     { "count": 5, "filePath": "src/Model/Graph/Layer.elm" },
     { "count": 5, "filePath": "src/View/Graph/Highlighter.elm" },
