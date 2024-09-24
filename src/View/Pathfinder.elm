@@ -964,8 +964,6 @@ addressDetailsContentView vc gc model id viewState =
                 )
                 (SidePanelComponents.tokensDropDownOpenInstances
                     |> Rs.s_tokensList (Just tokenRows)
-                 -- |> Rs.s_n302032 (Just n302032Html)
-                 -- |> Rs.s_n2Tokens (Just ntokensHtml)
                 )
                 { tokenRow1 =
                     { variant = none
