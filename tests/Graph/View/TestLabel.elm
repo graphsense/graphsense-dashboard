@@ -1,7 +1,7 @@
 module Graph.View.TestLabel exposing (suite)
 
 import Expect
-import Test exposing (..)
+import Test
 import View.Graph.Label as Label
 
 
@@ -19,13 +19,13 @@ data =
     ]
 
 
-suite : Test
+suite : Test.Test
 suite =
-    describe "The Graph.View.Label module"
+    Test.describe "The Graph.View.Label module"
         (data
             |> List.map
                 (\( input, output ) ->
-                    test ("input: \"" ++ input ++ "\"") <|
+                    Test.test ("input: \"" ++ input ++ "\"") <|
                         \_ ->
                             Expect.equal output (Label.split 8 input)
                 )

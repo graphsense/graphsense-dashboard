@@ -1,13 +1,12 @@
 module View.Graph.Transform exposing (viewBox)
 
-import Config.Graph exposing (addressHeight, entityMinHeight, entityWidth, expandHandleWidth)
-import Model.Graph.Transform exposing (..)
+import Model.Graph.Transform as GTransform
 import Number.Bounded as Bounded
 
 
-viewBox : { width : Float, height : Float } -> Model comparable -> String
+viewBox : { width : Float, height : Float } -> GTransform.Model comparable -> String
 viewBox { width, height } mo =
-    getCurrent mo
+    GTransform.getCurrent mo
         |> (\model ->
                 let
                     z =

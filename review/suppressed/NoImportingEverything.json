@@ -141,15 +141,6 @@
     { "count": 1, "filePath": "src/Update/Pathfinder/Address.elm" },
     { "count": 1, "filePath": "src/Update/Pathfinder/TxDetails.elm" },
     { "count": 1, "filePath": "src/Update/Pathfinder/WorkflowNextTxByTime.elm" },
-    { "count": 1, "filePath": "src/Update/Search.elm" },
-    { "count": 1, "filePath": "src/Util/Csv.elm" },
-    { "count": 1, "filePath": "src/Util/Pathfinder.elm" },
-    { "count": 1, "filePath": "src/Util/RemoteData.elm" },
-    { "count": 1, "filePath": "src/Util/View/Rule.elm" },
-    { "count": 1, "filePath": "src/View/Graph/Transform.elm" },
-    { "count": 1, "filePath": "src/View/Pathfinder/Utils.elm" },
-    { "count": 1, "filePath": "tests/Graph/View/TestLabel.elm" },
-    { "count": 1, "filePath": "tests/Locale/TestDurations.elm" },
-    { "count": 1, "filePath": "tests/Test/Update/Pathfinder/Network.elm" }
+    { "count": 1, "filePath": "src/Update/Search.elm" }
   ]
 }

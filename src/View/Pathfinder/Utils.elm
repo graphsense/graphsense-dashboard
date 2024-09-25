@@ -2,7 +2,7 @@ module View.Pathfinder.Utils exposing (dateFromTimestamp, multiLineDateTimeFromT
 
 import Config.View as View
 import Css.Pathfinder exposing (dateStyle)
-import Html.Styled exposing (..)
+import Html.Styled exposing (Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Theme.Html.GraphComponents
 import View.Locale as Locale

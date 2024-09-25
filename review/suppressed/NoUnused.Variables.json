@@ -7,7 +7,6 @@
     { "count": 4, "filePath": "src/Update/Graph/Coords.elm" },
     { "count": 4, "filePath": "src/View/Graph/Browser.elm" },
     { "count": 4, "filePath": "src/View/Graph/Link.elm" },
-    { "count": 4, "filePath": "src/View/Graph/Transform.elm" },
     { "count": 3, "filePath": "src/Update/Graph.elm" },
     { "count": 3, "filePath": "src/View/Graph/Table/AddressTagsTable.elm" },
     { "count": 3, "filePath": "src/View/Graph/Table/EntityAddressesTable.elm" },

@@ -20,6 +20,8 @@ import NoImportingEverything
 import NoMissingTypeAnnotation
 import NoMissingTypeAnnotationInLetIn
 import NoMissingTypeExpose
+import NoUnnecessaryTrailingUnderscore
+import NoRedundantlyQualifiedType
 import NoPrematureLetComputation
 import NoSimpleLetBody
 import NoUnused.CustomTypeConstructorArgs
@@ -47,6 +49,8 @@ config =
     -- , NoMissingTypeAnnotationInLetIn.rule
     , NoMissingTypeExpose.rule
     , NoSimpleLetBody.rule
+    -- , NoUnnecessaryTrailingUnderscore.rule
+    -- , NoRedundantlyQualifiedType.rule
     -- , NoPrematureLetComputation.rule
     -- , NoUnused.CustomTypeConstructors.rule []
     -- , NoUnused.CustomTypeConstructorArgs.rule
