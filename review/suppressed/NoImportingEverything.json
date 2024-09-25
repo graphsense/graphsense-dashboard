@@ -5,7 +5,6 @@
   "suppressions": [
     { "count": 9, "filePath": "src/View/Graph/Browser.elm" },
     { "count": 8, "filePath": "src/View/Graph.elm" },
-    { "count": 6, "filePath": "src/View/Notification.elm" },
     { "count": 5, "filePath": "src/Model/Graph/Layer.elm" },
     { "count": 5, "filePath": "src/View/Graph/Highlighter.elm" },
     { "count": 5, "filePath": "src/View/Graph/Link.elm" },
@@ -25,6 +24,7 @@
     { "count": 4, "filePath": "src/View/Graph/Tag.elm" },
     { "count": 4, "filePath": "src/View/Graph/Tool.elm" },
     { "count": 4, "filePath": "src/View/Locale.elm" },
+    { "count": 4, "filePath": "src/View/Notification.elm" },
     { "count": 4, "filePath": "src/View/Pathfinder/PagedTable.elm" },
     { "count": 4, "filePath": "src/View/Pathfinder/Tx/AccountTx.elm" },
     { "count": 4, "filePath": "src/View/Pathfinder/Tx/Utxo.elm" },
@@ -129,7 +129,6 @@
     { "count": 1, "filePath": "src/Model/Graph/Id.elm" },
     { "count": 1, "filePath": "src/Model/Locale.elm" },
     { "count": 1, "filePath": "src/Model/Pathfinder/Tx.elm" },
-    { "count": 1, "filePath": "src/Msg/Search.elm" },
     { "count": 1, "filePath": "src/Route/Pathfinder.elm" },
     { "count": 1, "filePath": "src/Sub/Graph/Transform.elm" },
     { "count": 1, "filePath": "src/Switch.elm" },

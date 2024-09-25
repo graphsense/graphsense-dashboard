@@ -9,7 +9,6 @@ import Effect exposing (perform)
 import Init exposing (init)
 import Init.Locale as Locale
 import Model exposing (Flags, Model, Msg(..))
-import Model.Notification exposing (Notification)
 import Plugin
 import Sub exposing (subscriptions)
 import Tuple exposing (..)

@@ -1,4 +1,4 @@
-module View.CurrencyMeta exposing (currencies)
+module View.CurrencyMeta exposing (CurrencyMeta, currencies)
 
 import Dict exposing (Dict)
 

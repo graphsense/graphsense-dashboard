@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, debitCreditColumn, stringColumn, timestampDateMultiRowColumn, txColumn, valueColumn, valueColumnWithOptions)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, ValueColumnOptions, addressColumn, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, txColumn, valueColumn, valueColumnWithOptions)
 
 import Api.Data
 import Config.View as View
@@ -181,6 +181,16 @@ debitCreditColumn : (data -> Bool) -> View.Config -> (data -> AssetIdentifier) -
 debitCreditColumn isOutgoingFn =
     valueColumnWithOptions
         { sortable = False
+        , hideCode = False
+        , colorFlowDirection = True
+        , isOutgoingFn = isOutgoingFn
+        }
+
+
+sortableDebitCreditColumn : (data -> Bool) -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+sortableDebitCreditColumn isOutgoingFn =
+    valueColumnWithOptions
+        { sortable = True
         , hideCode = False
         , colorFlowDirection = True
         , isOutgoingFn = isOutgoingFn

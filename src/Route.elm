@@ -1,5 +1,6 @@
 module Route exposing
-    ( Route(..)
+    ( Config
+    , Route(..)
     , graphRoute
     , homeRoute
     , parse

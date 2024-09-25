@@ -5,11 +5,9 @@ import Css
 import Css.Dialog as Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
 import Model exposing (Msg(..))
 import Model.Notification exposing (..)
 import RecordSetter exposing (..)
-import Theme.Html.Buttons exposing (..)
 import Theme.Html.ErrorMessagesAlerts
     exposing
         ( errorMessageComponentProperty1AlertAttributes

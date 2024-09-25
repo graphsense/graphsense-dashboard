@@ -18,7 +18,7 @@ import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
 import Model.Direction exposing (Direction(..))
-import Model.Graph.Id as Id exposing (AddressId, currency)
+import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 
 

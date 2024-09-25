@@ -1,5 +1,6 @@
 module Update.Graph.Entity exposing
-    ( BoundingBox
+    ( Acc
+    , BoundingBox
     , addAddress
     , insertEntityShadowLink
     , move

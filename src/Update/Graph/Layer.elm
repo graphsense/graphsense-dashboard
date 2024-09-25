@@ -1,5 +1,6 @@
 module Update.Graph.Layer exposing
     ( Acc
+    , Position
     , addAddress
     , addAddressAtEntity
     , addEntitiesAt

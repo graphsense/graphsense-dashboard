@@ -32,7 +32,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Notification as Notification
-import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
+import Model.Pathfinder.Error exposing (Error(..))
 import Model.Search as Search
 import Model.Statusbar as Statusbar
 import Msg.Graph as Graph

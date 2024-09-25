@@ -2,7 +2,6 @@ module Msg.Search exposing (Msg(..))
 
 import Api.Data
 import Autocomplete
-import Model.Search exposing (..)
 import Plugin.Msg
 
 

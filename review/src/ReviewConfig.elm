@@ -45,7 +45,7 @@ config =
     , NoImportingEverything.rule []
     , NoMissingTypeAnnotation.rule
     -- , NoMissingTypeAnnotationInLetIn.rule
-    -- , NoMissingTypeExpose.rule
+    , NoMissingTypeExpose.rule
     , NoSimpleLetBody.rule
     -- , NoPrematureLetComputation.rule
     -- , NoUnused.CustomTypeConstructors.rule []
@@ -54,7 +54,6 @@ config =
     -- , NoUnused.Exports.rule
     -- , NoUnused.Parameters.rule
     -- , NoUnused.Patterns.rule
-    -- , NoUnused.Variables.rule
     , Simplify.rule Simplify.defaults
     -- NoUnused.CustomTypeConstructors.rule []
     -- NoUnused.CustomTypeConstructorArgs.rule

@@ -1,4 +1,4 @@
-module Update.Pathfinder.Node exposing (move, release)
+module Update.Pathfinder.Node exposing (Node, move, release)
 
 import Animation exposing (Animation)
 import Model.Graph.Coords exposing (Coords)

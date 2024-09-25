@@ -1,4 +1,4 @@
-module Model.Pathfinder.Colors exposing (ColorScope(..), ScopedColorAssignment, assignNextColor, getAssignedColor, init)
+module Model.Pathfinder.Colors exposing (ColorAssingment, ColorScope(..), ReuseableColor, ScopedColorAssignment, assignNextColor, getAssignedColor, init)
 
 import Color exposing (Color)
 import Dict

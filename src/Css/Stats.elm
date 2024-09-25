@@ -1,6 +1,5 @@
 module Css.Stats exposing (currency, currencyBackground, currencyBackgroundPath, currencyHeading, loadingSpinner, root, stats, statsBadge, statsTable, statsTableCellKey, statsTableCellValue, statsTableInnerWrapper, statsTableRow, statsTableWrapper)
 
-import Color exposing (black)
 import Config.View exposing (Config)
 import Css exposing (..)
 

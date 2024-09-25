@@ -1,4 +1,4 @@
-module View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
+module View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition, Pos)
 
 import Animation exposing (Animation, Clock)
 

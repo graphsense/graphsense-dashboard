@@ -1,4 +1,4 @@
-module View.Search exposing (search, searchWithMoreCss)
+module View.Search exposing (search, searchWithMoreCss, SearchConfig, SearchConfigWithMoreCss)
 
 import Autocomplete
 import Autocomplete.Styled as Autocomplete

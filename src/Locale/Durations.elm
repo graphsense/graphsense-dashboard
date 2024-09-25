@@ -1,4 +1,4 @@
-module Locale.Durations exposing (Unit(..), durationToString)
+module Locale.Durations exposing (Config, Unit(..), durationToString)
 
 import List.Extra
 import Tuple exposing (second)
