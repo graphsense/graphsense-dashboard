@@ -8,8 +8,8 @@ import Css.View as Css
 import FontAwesome
 import Hex
 import Hovercard
-import Html
 import Html.Attributes
+import Html as BHtml
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
@@ -105,7 +105,7 @@ setAlpha alpha =
         >> Color.fromRgba
 
 
-hovercard : View.Config -> Hovercard.Model -> Int -> List (Html.Html msg) -> Html.Styled.Html msg
+hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
 hovercard vc element zIndex =
     Hovercard.view
         { tickLength = 16

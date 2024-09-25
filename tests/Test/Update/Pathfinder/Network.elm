@@ -7,7 +7,7 @@ import Data.Pathfinder.Network as Data
 import Dict
 import Expect exposing (Expectation)
 import Model.Pathfinder.Network exposing (Network)
-import Test
+import Test exposing (Test)
 import Tuple
 import Update.Pathfinder.Network as Network
 
@@ -30,7 +30,7 @@ equalIds expected result =
         expected
 
 
-suite : Test.Test
+suite : Test
 suite =
     Test.describe "Update.Pathfinder.Network"
         [ Test.test "addAddress 1" <|

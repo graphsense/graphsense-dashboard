@@ -1,7 +1,7 @@
 module Model.Pathfinder.Colors exposing (ColorAssingment, ColorScope(..), ReuseableColor, ScopedColorAssignment, assignNextColor, getAssignedColor, init)
 
 import Color exposing (Color)
-import Dict
+import Dict exposing (Dict)
 import Iknaio.ColorScheme exposing (colorSchemePathfinder)
 import List.Extra exposing (getAt)
 import Model.Pathfinder.Id exposing (Id)
@@ -24,13 +24,13 @@ type alias ReuseableColor =
 
 type alias ColorAssingment =
     { currentIndex : Int
-    , assignments : Dict.Dict Id ReuseableColor
+    , assignments : Dict Id ReuseableColor
     , colorSet : List Color
     }
 
 
 type alias ScopedColorAssignment =
-    Dict.Dict String ColorAssingment
+    Dict String ColorAssingment
 
 
 getAssignedColor : ColorScope -> Id -> ScopedColorAssignment -> Maybe ReuseableColor

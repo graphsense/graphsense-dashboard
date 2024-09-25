@@ -3,13 +3,13 @@ module Update.Notification exposing (addHttpError, notificationsFromEffects)
 import Basics.Extra exposing (flip)
 import Effect.Pathfinder as Pathfinder
 import Http
-import Model
+import Model exposing (Model)
 import Model.Notification as Notify
 import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import RecordSetter exposing (..)
 
 
-notificationsFromEffects : Model.Model key -> List Model.Effect -> ( Model.Model key, List Model.Effect )
+notificationsFromEffects : Model key -> List Model.Effect -> ( Model key, List Model.Effect )
 notificationsFromEffects model effects =
     let
         notifications =
@@ -18,7 +18,7 @@ notificationsFromEffects model effects =
     ( model |> s_notifications (model.notifications |> flip Notify.addMany notifications), effects )
 
 
-notificationFromEffect : Model.Model key -> Model.Effect -> Maybe (List Notify.Notification)
+notificationFromEffect : Model key -> Model.Effect -> Maybe (List Notify.Notification)
 notificationFromEffect _ effect =
     case effect of
         Model.PathfinderEffect (Pathfinder.ErrorEffect x) ->

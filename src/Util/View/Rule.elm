@@ -1,13 +1,13 @@
 module Util.View.Rule exposing (rule)
 
-import Color
+import Color exposing (Color)
 import Css
 import Html.Styled exposing (Attribute, Html, div)
 import Html.Styled.Attributes exposing (css)
 import Util.View exposing (toCssColor)
 
 
-rule : Color.Color -> List (Attribute msg) -> List (Html msg) -> Html msg
+rule : Color -> List (Attribute msg) -> List (Html msg) -> Html msg
 rule col attributes =
     let
         ba =

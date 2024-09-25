@@ -1,6 +1,6 @@
 module Theme.Theme exposing (Theme, default)
 
-import Color
+import Color exposing (Color)
 import Css exposing (Style)
 import Theme.Autocomplete as Autocomplete exposing (Autocomplete)
 import Theme.Browser as Browser exposing (Browser)
@@ -67,7 +67,7 @@ type alias Theme =
     , custom : String
     , switchLabel : List Style
     , switchRoot : List Style
-    , switchOnColor : Bool -> Color.Color
+    , switchOnColor : Bool -> Color
     , disabled : Bool -> List Style
     , copyIcon : Bool -> List Style
     , longIdentifier : List Style

@@ -3,7 +3,7 @@ module Decode.Pathfinder1 exposing (decoder)
 import Init.Pathfinder.Id as Id
 import Json.Decode exposing (..)
 import Model.Pathfinder.Deserialize exposing (..)
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id exposing (Id)
 
 
 decoder : Decoder Deserialized
@@ -22,7 +22,7 @@ thingDecoder =
         (index 3 bool)
 
 
-idDecoder : Decoder Id.Id
+idDecoder : Decoder Id
 idDecoder =
     map2 Id.init
         (index 0 string)

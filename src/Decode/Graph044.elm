@@ -1,6 +1,6 @@
 module Decode.Graph044 exposing (decoder)
 
-import Color
+import Color exposing (Color)
 import Color.Convert
 import Dict exposing (Dict)
 import Init.Graph.Id as Id
@@ -24,7 +24,7 @@ type alias Address =
     { id : Id.AddressId
     , x : Float
     , y : Float
-    , color : Maybe Color.Color
+    , color : Maybe Color
     }
 
 
@@ -32,7 +32,7 @@ type alias Entity =
     { id : Id.EntityId
     , x : Float
     , y : Float
-    , color : Maybe Color.Color
+    , color : Maybe Color
     , noAddresses : Int
     }
 
@@ -45,7 +45,7 @@ type alias CurrencyEntity =
     ( String, Int )
 
 
-merge : Dict CurrencyAddress Tag.UserTag -> Dict CurrencyEntity DeserializedEntityUserTag -> List Address -> List Entity -> List ( String, Color.Color ) -> Deserialized
+merge : Dict CurrencyAddress Tag.UserTag -> Dict CurrencyEntity DeserializedEntityUserTag -> List Address -> List Entity -> List ( String, Color ) -> Deserialized
 merge tags entityTags addresses entities highlights =
     { addresses =
         addresses
@@ -271,7 +271,7 @@ decodeEntityId =
         (index 2 string)
 
 
-decodeColor : Decoder Color.Color
+decodeColor : Decoder Color
 decodeColor =
     andThen
         (Color.Convert.hexToColor

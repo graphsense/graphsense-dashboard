@@ -1,6 +1,6 @@
 module Util.Theme exposing (backgroundColorWithLightmode, borderColorWithLightmode, borderColor_backgroundColorWithLightmode, colorWithLightmode, color_backgroundColorWithLightmode, duration, setAlpha, switchColor)
 
-import Color
+import Color exposing (Color)
 import Css
 import Css.Transitions
 import Theme.SwitchableColor as Theme
@@ -65,7 +65,7 @@ withLightmode attributes lm =
         |> Css.batch
 
 
-switchColor : Bool -> Theme.SwitchableColor -> Color.Color
+switchColor : Bool -> Theme.SwitchableColor -> Color
 switchColor lm c =
     if lm then
         c.light

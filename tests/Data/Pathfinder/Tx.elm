@@ -5,10 +5,10 @@ import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Data.Api as Api
 import Data.Pathfinder.Id as Id
 import Dict
-import Model.Pathfinder.Tx as Tx exposing (Io)
+import Model.Pathfinder.Tx as Tx exposing (Io, Tx)
 
 
-tx1 : Tx.Tx
+tx1 : Tx
 tx1 =
     { id = Id.tx1
     , x = nodeXOffset
@@ -32,7 +32,7 @@ tx1 =
     }
 
 
-tx2 : Tx.Tx
+tx2 : Tx
 tx2 =
     { id = Id.tx2
     , x = -nodeXOffset
@@ -53,7 +53,7 @@ tx2 =
     }
 
 
-tx3 : Tx.Tx
+tx3 : Tx
 tx3 =
     { id = Id.tx3
     , x = nodeXOffset

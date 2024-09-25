@@ -11,7 +11,7 @@ import Init.Graph.Table
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
 import Model.Pathfinder.Address as Address
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
@@ -25,7 +25,7 @@ itemsPerPage =
     5
 
 
-init : Network -> Locale.Model -> Id.Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
+init : Network -> Locale.Model -> Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
 init network locale addressId data =
     let
         nrItems =
@@ -66,7 +66,7 @@ init network locale addressId data =
             (initWithoutFilter addressId locale data)
 
 
-initWithoutFilter : Id.Id -> Locale.Model -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
+initWithoutFilter : Id -> Locale.Model -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
 initWithoutFilter addressId locale data =
     let
         nrItems =
@@ -105,14 +105,14 @@ initWithoutFilter addressId locale data =
     )
 
 
-loadTxs : Id.Id -> Posix -> Posix -> List Effect
+loadTxs : Id -> Posix -> Posix -> List Effect
 loadTxs id mn mx =
     [ loadToDateBlock id mx
     , loadFromDateBlock id mn
     ]
 
 
-loadFromDateBlock : Id.Id -> Posix -> Effect
+loadFromDateBlock : Id -> Posix -> Effect
 loadFromDateBlock id mx =
     BrowserGotFromDateBlock mx
         >> AddressDetailsMsg
@@ -123,7 +123,7 @@ loadFromDateBlock id mx =
         |> ApiEffect
 
 
-loadToDateBlock : Id.Id -> Posix -> Effect
+loadToDateBlock : Id -> Posix -> Effect
 loadToDateBlock id mn =
     BrowserGotToDateBlock mn
         >> AddressDetailsMsg

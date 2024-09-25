@@ -1,7 +1,7 @@
 module Graph.View.TestLabel exposing (suite)
 
 import Expect
-import Test
+import Test exposing (Test)
 import View.Graph.Label as Label
 
 
@@ -19,7 +19,7 @@ data =
     ]
 
 
-suite : Test.Test
+suite : Test
 suite =
     Test.describe "The Graph.View.Label module"
         (data

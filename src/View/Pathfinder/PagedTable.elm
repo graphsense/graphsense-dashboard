@@ -9,7 +9,7 @@ import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
 import RecordSetter exposing (..)
-import Set
+import Set exposing (Set)
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
@@ -31,7 +31,7 @@ tableHint styles vc msg =
         ]
 
 
-alignColumnsRight : View.Config -> Set.Set String -> Table.Customizations data msg -> Table.Customizations data msg
+alignColumnsRight : View.Config -> Set String -> Table.Customizations data msg -> Table.Customizations data msg
 alignColumnsRight vc columns tc =
     let
         addAttr ( name, x, attr ) =

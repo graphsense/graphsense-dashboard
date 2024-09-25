@@ -6,7 +6,7 @@ import Basics.Extra exposing (flip)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
-import Dict
+import Dict exposing (Dict)
 import Effect exposing (and, n)
 import Effect.Api as Api exposing (Effect(..))
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
@@ -49,7 +49,7 @@ import Plugin.Update exposing (Plugins)
 import Ports
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
-import Route.Pathfinder as Route
+import Route.Pathfinder as Route exposing (Route)
 import Set exposing (..)
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
@@ -76,7 +76,7 @@ update plugins uc msg model =
         |> updateByMsg plugins uc msg
 
 
-resultLineToRoute : Search.ResultLine -> Route.Route
+resultLineToRoute : Search.ResultLine -> Route
 resultLineToRoute search =
     case search of
         Search.Address net address ->
@@ -1114,13 +1114,13 @@ getNextTxEffects model addressId direction =
         |> List.singleton
 
 
-updateByRoute : Plugins -> Update.Config -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
 updateByRoute plugins uc route model =
     forcePushHistory (model |> s_isDirty True)
         |> updateByRoute_ plugins uc route
 
 
-updateByRoute_ : Plugins -> Update.Config -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
 updateByRoute_ plugins uc route model =
     case route |> Log.log "route" of
         Route.Root ->
@@ -1350,7 +1350,7 @@ fetchActor id =
     BrowserGotActor id |> Api.GetActorEffect { actorId = id } |> ApiEffect
 
 
-bulkfetchTagsForTx : Tx.Tx -> Model -> ( Model, List Effect )
+bulkfetchTagsForTx : Tx -> Model -> ( Model, List Effect )
 bulkfetchTagsForTx tx model =
     case tx.type_ of
         Tx.Utxo { raw } ->
@@ -1393,7 +1393,7 @@ bulkfetchTagsForTx tx model =
             n model
 
 
-fetchTagSummaryForId : Dict.Dict Id HavingTags -> Id -> Effect
+fetchTagSummaryForId : Dict Id HavingTags -> Id -> Effect
 fetchTagSummaryForId existing id =
     case Dict.get id existing of
         Just (HasTagSummary _) ->
@@ -1405,7 +1405,7 @@ fetchTagSummaryForId existing id =
                 |> ApiEffect
 
 
-fetchActorsForAddress : Api.Data.Address -> Dict.Dict String Api.Data.Actor -> List Effect
+fetchActorsForAddress : Api.Data.Address -> Dict String Api.Data.Actor -> List Effect
 fetchActorsForAddress d existing =
     d.actors
         |> Maybe.map (List.filter (\l -> not (Dict.member l.id existing)))
@@ -1413,7 +1413,7 @@ fetchActorsForAddress d existing =
         |> Maybe.withDefault []
 
 
-fetchActors : List String -> Dict.Dict String Api.Data.Actor -> List Effect
+fetchActors : List String -> Dict String Api.Data.Actor -> List Effect
 fetchActors d existing =
     d
         |> List.filter (\l -> not (Dict.member l existing))
@@ -1592,7 +1592,7 @@ removeTx id model =
     )
 
 
-isIsolatedTx : Model -> Tx.Tx -> Bool
+isIsolatedTx : Model -> Tx -> Bool
 isIsolatedTx model tx =
     case tx.type_ of
         Tx.Utxo x ->

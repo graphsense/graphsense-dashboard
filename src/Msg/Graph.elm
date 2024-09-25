@@ -2,8 +2,8 @@ module Msg.Graph exposing (Msg(..))
 
 import Api.Data
 import Browser.Dom
-import Color
-import File
+import Color exposing (Color)
+import File exposing (File)
 import Hovercard
 import Json.Encode
 import Model.Actor as Act
@@ -139,7 +139,7 @@ type Msg
     | UserClickedExportGraphics (Maybe Time.Posix)
     | UserClickedExportTagPack (Maybe Time.Posix)
     | UserClickedImportTagPack
-    | BrowserGotTagPackFile File.File
+    | BrowserGotTagPackFile File
     | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.UserTag))
     | UserClickedExportGS (Maybe Time.Posix)
     | UserClickedImportGS
@@ -155,7 +155,7 @@ type Msg
     | BrowserGotBulkAddressNeighbors String Bool (List ( String, Api.Data.NeighborAddress ))
     | UserClickedNew
     | UserClickedNewYes
-    | UserClickedHighlightColor Color.Color
+    | UserClickedHighlightColor Color
     | UserClickedHighlightTrash Int
     | UserInputsHighlightTitle Int String
     | UserClicksHighlight Int

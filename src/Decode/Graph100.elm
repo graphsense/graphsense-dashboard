@@ -1,6 +1,6 @@
 module Decode.Graph100 exposing (decoder)
 
-import Color
+import Color exposing (Color)
 import Init.Graph.Id as Id
 import Json.Decode exposing (..)
 import Model.Address as A
@@ -110,7 +110,7 @@ decodeUserTag isClusterDefiner { currency, address } =
         (index 3 (maybe string))
 
 
-decodeColor : Decoder Color.Color
+decodeColor : Decoder Color
 decodeColor =
     map4 (\r g b a -> Color.fromRgba { red = r, green = g, blue = b, alpha = a })
         (index 0 float)
@@ -119,7 +119,7 @@ decodeColor =
         (index 3 float)
 
 
-decodeHighlights : Decoder (List ( String, Color.Color ))
+decodeHighlights : Decoder (List ( String, Color ))
 decodeHighlights =
     map2 pair
         (index 0 string)

@@ -9,8 +9,8 @@ import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (css)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags)
-import Model.Pathfinder.Address as Address
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Address as Addr
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import RecordSetter exposing (..)
 import Theme.Html.GraphComponents as GraphComponents
@@ -20,7 +20,7 @@ import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : View.Config -> Dict Id.Id HavingTags -> Tooltip -> Html msg
+view : View.Config -> Dict Id HavingTags -> Tooltip -> Html msg
 view vc ts tt =
     (case tt.type_ of
         UtxoTx t ->
@@ -128,7 +128,7 @@ tagLabel vc lbl tag =
             none
 
 
-address : View.Config -> Maybe HavingTags -> Address.Address -> Html msg
+address : View.Config -> Maybe HavingTags -> Addr.Address -> Html msg
 address vc _ adr =
     let
         net =
@@ -139,7 +139,7 @@ address vc _ adr =
         [ row
             { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
             , tooltipRowValue =
-                Address.getBalance adr
+                Addr.getBalance adr
                     |> Maybe.map
                         (pair (assetFromBase net)
                             >> List.singleton
@@ -151,7 +151,7 @@ address vc _ adr =
         , row
             { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
             , tooltipRowValue =
-                Address.getTotalReceived adr
+                Addr.getTotalReceived adr
                     |> Maybe.map
                         (pair (assetFromBase net)
                             >> List.singleton

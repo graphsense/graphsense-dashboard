@@ -5,7 +5,7 @@ import Dict
 import Json.Encode exposing (..)
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address exposing (Address)
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx)
 
 
@@ -23,7 +23,7 @@ encode model =
         |> list identity
 
 
-encodeId : Id.Id -> Value
+encodeId : Id -> Value
 encodeId id =
     [ Id.network id
     , Id.id id

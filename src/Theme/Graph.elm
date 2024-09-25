@@ -23,12 +23,12 @@ type alias Graph =
     , entityAddressesCount : Bool -> List Style
     , entityRect : List Style
     , entityRoot : List Style
-    , link : Bool -> NodeType -> Bool -> Bool -> Maybe Color.Color -> List Style
+    , link : Bool -> NodeType -> Bool -> Bool -> Maybe Color -> List Style
     , linkThickness : Float
     , linkColorFaded : Bool -> Color
     , linkColorStrong : Bool -> Color
     , linkColorSelected : Bool -> Color
-    , linkLabel : Bool -> Bool -> Bool -> Maybe Color.Color -> List Style
+    , linkLabel : Bool -> Bool -> Bool -> Maybe Color -> List Style
     , linkLabelBox : Bool -> Bool -> Bool -> List Style
     , shadowLink : Bool -> List Style
     , expandHandle : NodeType -> List Style

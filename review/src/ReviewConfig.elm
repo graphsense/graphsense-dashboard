@@ -39,10 +39,9 @@ config : List Rule
 config =
     [
     --   Docs.ReviewAtDocs.rule
-    -- , NoConfusingPrefixOperator.rule
-     NoDebug.Log.rule |> Rule.ignoreErrorsForFiles [ "src/Util/Debug.elm" ]
-    -- , NoDebug.TodoOrToString.rule
-    --     |> Rule.ignoreErrorsForDirectories [ "tests/" ]
+    -- NoConfusingPrefixOperator.rule
+    NoDebug.Log.rule |> Rule.ignoreErrorsForFiles [ "src/Util/Debug.elm" ]
+    , NoDebug.TodoOrToString.rule |> Rule.ignoreErrorsForDirectories [ "tests/" ]
     , NoExposingEverything.rule
     , NoImportingEverything.rule []
     , NoMissingTypeAnnotation.rule
@@ -50,7 +49,7 @@ config =
     , NoMissingTypeExpose.rule
     , NoSimpleLetBody.rule
     -- , NoUnnecessaryTrailingUnderscore.rule
-    -- , NoRedundantlyQualifiedType.rule
+    , NoRedundantlyQualifiedType.rule
     -- , NoPrematureLetComputation.rule
     -- , NoUnused.CustomTypeConstructors.rule []
     -- , NoUnused.CustomTypeConstructorArgs.rule
