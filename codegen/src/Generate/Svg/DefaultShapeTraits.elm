@@ -17,13 +17,17 @@ import Types exposing (Config, Details)
 
 toExpressions : Config -> String -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
 toExpressions config componentName node =
-    Gen.Svg.Styled.g
-        (toAttributes node)
-        [ toStrokePaths config node
-        , toFillPaths config node
-        ]
-        |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
-        |> List.singleton
+    if Common.isHidden node then
+        []
+
+    else
+        Gen.Svg.Styled.g
+            (toAttributes node)
+            [ toStrokePaths config node
+            , toFillPaths config node
+            ]
+            |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+            |> List.singleton
 
 
 renderPath : { a | path : String } -> Elm.Expression

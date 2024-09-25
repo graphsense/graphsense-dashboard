@@ -17,25 +17,29 @@ import Types exposing (Config, Details)
 
 toExpressions : Config -> String -> TextNode -> List Elm.Expression
 toExpressions config componentName node =
-    Elm.get (Common.getName node) config.instances
-        |> Gen.Maybe.withDefault
-            (Gen.Html.Styled.call_.div
-                (Common.getName node
-                    |> getElementAttributes config
-                    |> Elm.Op.append
-                        ([ toStyles node |> Attributes.css ]
-                            |> Elm.list
-                        )
+    if Common.isHidden node then
+        []
+
+    else
+        Elm.get (Common.getName node) config.instances
+            |> Gen.Maybe.withDefault
+                (Gen.Html.Styled.call_.div
+                    (Common.getName node
+                        |> getElementAttributes config
+                        |> Elm.Op.append
+                            ([ toStyles node |> Attributes.css ]
+                                |> Elm.list
+                            )
+                    )
+                    (getTextProperty componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+                        |> Maybe.map Gen.Html.Styled.call_.text
+                        |> Maybe.withDefault (Gen.Html.Styled.text node.characters)
+                        |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+                        |> List.singleton
+                        |> Elm.list
+                    )
                 )
-                (getTextProperty componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
-                    |> Maybe.map Gen.Html.Styled.call_.text
-                    |> Maybe.withDefault (Gen.Html.Styled.text node.characters)
-                    |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
-                    |> List.singleton
-                    |> Elm.list
-                )
-            )
-        |> List.singleton
+            |> List.singleton
 
 
 toStyles : TextNode -> List Elm.Expression

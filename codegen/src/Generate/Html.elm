@@ -15,6 +15,7 @@ import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
 import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty)
+import Generate.Common.DefaultShapeTraits
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
@@ -39,14 +40,22 @@ subcanvasNodeToExpressions config name node =
             TextNode.toExpressions config name n
 
         SubcanvasNodeGroupNode n ->
-            withFrameTraitsNodeToExpression config name name n
-                |> List.singleton
+            if Generate.Common.FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToExpression config name name n
+                    |> List.singleton
 
         SubcanvasNodeFrameNode n ->
-            Elm.get (Generate.Common.FrameTraits.getName n) config.instances
-                |> Gen.Maybe.withDefault
-                    (withFrameTraitsNodeToExpression config name name n)
-                |> List.singleton
+            if Generate.Common.FrameTraits.isHidden n then
+                []
+
+            else
+                Elm.get (Generate.Common.FrameTraits.getName n) config.instances
+                    |> Gen.Maybe.withDefault
+                        (withFrameTraitsNodeToExpression config name name n)
+                    |> List.singleton
 
         SubcanvasNodeInstanceNode n ->
             instanceNodeToExpressions config name n
@@ -362,27 +371,31 @@ instanceNodeToExpressions config parentName node =
             else
                 parentName
     in
-    (node.frameTraits.isLayerTrait.componentPropertyReferences
-        |> Maybe.andThen (Dict.get "mainComponent")
-        |> Maybe.andThen
-            (\ref ->
-                Dict.get parentName config.propertyExpressions
-                    |> Maybe.andThen (Dict.get ref)
-            )
-        |> Maybe.Extra.orElseLazy
-            (\_ ->
-                Dict.get (Generate.Common.FrameTraits.getName node |> sanitize) config.propertyExpressions
-                    |> Maybe.andThen (Dict.get "variant")
-            )
-        |> Maybe.Extra.withDefaultLazy
-            (\_ ->
-                Elm.get name config.instances
-                    |> Gen.Maybe.withDefault
-                        (withFrameTraitsNodeToExpression config name subNameId node)
-            )
-    )
-        |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
-        |> List.singleton
+    if Generate.Common.FrameTraits.isHidden node then
+        []
+
+    else
+        (node.frameTraits.isLayerTrait.componentPropertyReferences
+            |> Maybe.andThen (Dict.get "mainComponent")
+            |> Maybe.andThen
+                (\ref ->
+                    Dict.get parentName config.propertyExpressions
+                        |> Maybe.andThen (Dict.get ref)
+                )
+            |> Maybe.Extra.orElseLazy
+                (\_ ->
+                    Dict.get (Generate.Common.FrameTraits.getName node |> sanitize) config.propertyExpressions
+                        |> Maybe.andThen (Dict.get "variant")
+                )
+            |> Maybe.Extra.withDefaultLazy
+                (\_ ->
+                    Elm.get name config.instances
+                        |> Gen.Maybe.withDefault
+                            (withFrameTraitsNodeToExpression config name subNameId node)
+                )
+        )
+            |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+            |> List.singleton
 
 
 instanceNodeToStyles : InstanceNode -> List Elm.Expression
@@ -394,31 +407,58 @@ subcanvasNodeToDetails : SubcanvasNode -> List Details
 subcanvasNodeToDetails node =
     case node of
         SubcanvasNodeComponentNode n ->
-            withFrameTraitsNodeToDetails n
-                |> uncurry (::)
+            if Generate.Common.FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
 
         SubcanvasNodeComponentSetNode n ->
-            withFrameTraitsNodeToDetails n
-                |> uncurry (::)
+            if Generate.Common.FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
 
         SubcanvasNodeTextNode n ->
-            TextNode.toDetails n
-                |> List.singleton
+            if Generate.Common.DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                TextNode.toDetails n
+                    |> List.singleton
 
         SubcanvasNodeEllipseNode n ->
-            DefaultShapeTraits.toDetails n
-                |> List.singleton
+            if Generate.Common.DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n
+                    |> List.singleton
 
         SubcanvasNodeGroupNode n ->
-            withFrameTraitsNodeToDetails n
-                |> uncurry (::)
+            if Generate.Common.FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
 
         SubcanvasNodeFrameNode n ->
-            withFrameTraitsNodeToDetails n
-                |> uncurry (::)
+            if Generate.Common.FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
 
         SubcanvasNodeInstanceNode n ->
-            if hasVariantProperty n || hasMainComponentProperty n then
+            if Generate.Common.FrameTraits.isHidden n then
+                []
+
+            else if hasVariantProperty n || hasMainComponentProperty n then
                 []
 
             else
@@ -427,16 +467,28 @@ subcanvasNodeToDetails node =
                     |> List.map (s_instanceName (Generate.Common.FrameTraits.getName n))
 
         SubcanvasNodeRectangleNode n ->
-            RectangleNode.toDetails n
-                |> List.singleton
+            if Generate.Common.DefaultShapeTraits.isHidden n.rectangularShapeTraits then
+                []
+
+            else
+                RectangleNode.toDetails n
+                    |> List.singleton
 
         SubcanvasNodeVectorNode n ->
-            VectorNode.toDetails n
-                |> List.singleton
+            if Generate.Common.DefaultShapeTraits.isHidden n.cornerRadiusShapeTraits then
+                []
+
+            else
+                VectorNode.toDetails n
+                    |> List.singleton
 
         SubcanvasNodeLineNode n ->
-            LineNode.toDetails n
-                |> List.singleton
+            if Generate.Common.DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                LineNode.toDetails n
+                    |> List.singleton
 
         _ ->
             []

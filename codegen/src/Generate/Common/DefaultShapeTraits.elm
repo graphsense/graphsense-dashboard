@@ -64,3 +64,9 @@ toDetails styles node =
     , strokeWidth = getStrokeWidth node
     , styles = styles
     }
+
+
+isHidden : { a | defaultShapeTraits : DefaultShapeTraits } -> Bool
+isHidden { defaultShapeTraits } =
+    Maybe.map not defaultShapeTraits.isLayerTrait.visible
+        |> Maybe.withDefault False

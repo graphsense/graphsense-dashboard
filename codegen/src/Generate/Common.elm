@@ -29,9 +29,15 @@ subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
     in
     case node of
         SubcanvasNodeComponentNode n ->
+            if FrameTraits.isHidden n then
+                []
+            else
             toDeclarations "" Dict.empty n
 
         SubcanvasNodeComponentSetNode n ->
+            if FrameTraits.isHidden n then
+                []
+            else
             let
                 parentName =
                     FrameTraits.getName n
@@ -109,7 +115,8 @@ adjustNames node =
 
         log tit =
             if FrameTraits.getName node == "Icons/Report" then
-                identity -- Debug.log tit
+                identity
+                -- Debug.log tit
 
             else
                 identity
@@ -122,7 +129,8 @@ disambiguateCollectedNames dict =
     let
         log id tit =
             if id == "2914:463" then
-                identity -- Debug.log tit
+                identity
+                -- Debug.log tit
 
             else
                 identity
@@ -415,7 +423,10 @@ subcanvasNodeToProperties : SubcanvasNode -> List ( String, Dict String Componen
 subcanvasNodeToProperties node =
     case node of
         SubcanvasNodeInstanceNode n ->
-            if hasMainComponentProperty n then
+            if FrameTraits.isHidden n then
+                []
+
+            else if hasMainComponentProperty n then
                 []
 
             else if hasVariantProperty n then
@@ -437,10 +448,18 @@ subcanvasNodeToProperties node =
                     |> (++) (withFrameTraitsToProperties n)
 
         SubcanvasNodeFrameNode n ->
-            withFrameTraitsToProperties n
+            if FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsToProperties n
 
         SubcanvasNodeGroupNode n ->
-            withFrameTraitsToProperties n
+            if FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsToProperties n
 
         _ ->
             []
