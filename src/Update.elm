@@ -131,6 +131,42 @@ update plugins uc msg model =
                 |> n
 
         BrowserGotResponseWithHeaders statusbarToken result ->
+            let
+                newDialog =
+                    statusbarToken
+                        |> Maybe.andThen
+                            (\token ->
+                                case result of
+                                    Err ( Http.BadStatus 404, _ ) ->
+                                        Statusbar.getMessage token model.statusbar
+                                            |> Maybe.andThen
+                                                (\( key, v ) ->
+                                                    if key == Statusbar.loadingAddressKey || key == Statusbar.loadingAddressEntityKey then
+                                                        Just ( key, v )
+
+                                                    else
+                                                        Nothing
+                                                )
+                                            |> Maybe.andThen (second >> List.Extra.getAt 0)
+                                            |> Maybe.map
+                                                (\address ->
+                                                    UserClosesDialog
+                                                        |> Dialog.addressNotFoundError address model.dialog
+                                                )
+
+                                    _ ->
+                                        model.dialog
+                            )
+                        |> Maybe.Extra.orElse model.dialog
+
+                isErrorDialogShown =
+                    case newDialog of
+                        Just (Dialog.Error _) ->
+                            True
+
+                        _ ->
+                            False
+            in
             { model
                 | statusbar =
                     case statusbarToken of
@@ -157,35 +193,10 @@ update plugins uc msg model =
 
                                 _ ->
                                     model.statusbar
-                , dialog =
-                    statusbarToken
-                        |> Maybe.andThen
-                            (\token ->
-                                case result of
-                                    Err ( Http.BadStatus 404, _ ) ->
-                                        Statusbar.getMessage token model.statusbar
-                                            |> Maybe.andThen
-                                                (\( key, v ) ->
-                                                    if key == Statusbar.loadingAddressKey || key == Statusbar.loadingAddressEntityKey then
-                                                        Just ( key, v )
-
-                                                    else
-                                                        Nothing
-                                                )
-                                            |> Maybe.andThen (second >> List.Extra.getAt 0)
-                                            |> Maybe.map
-                                                (\address ->
-                                                    UserClosesDialog
-                                                        |> Dialog.addressNotFoundError address model.dialog
-                                                )
-
-                                    _ ->
-                                        model.dialog
-                            )
-                        |> Maybe.Extra.orElse model.dialog
+                , dialog = newDialog
                 , notifications =
-                    case result of
-                        Err ( httpErr, _ ) ->
+                    case ( isErrorDialogShown, result ) of
+                        ( False, Err ( httpErr, _ ) ) ->
                             Notification.addHttpError model.notifications Nothing httpErr
 
                         _ ->

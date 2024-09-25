@@ -12,7 +12,6 @@ import Theme.Html.ErrorMessagesAlerts
     exposing
         ( errorMessageComponentProperty1AlertAttributes
         , errorMessageComponentProperty1AlertWithAttributes
-        , errorMessageComponentProperty1Alert_details
         , errorMessageComponentProperty1ErrorAttributes
         , errorMessageComponentProperty1ErrorInstances
         , errorMessageComponentProperty1ErrorWithInstances
@@ -25,7 +24,7 @@ import View.Locale as Locale
 
 overlay : List (Html msg) -> Html msg
 overlay =
-    div [ css [ Css.position Css.relative, Css.left (Css.px 90), Css.bottom (Css.px (errorMessageComponentProperty1Alert_details.height - 20)), Css.zIndex (Css.int (Css.zIndexMainValue + 10)) ] ]
+    div [ css [ Css.position Css.absolute, Css.left (Css.px 90), Css.bottom (Css.px 30), Css.zIndex (Css.int (Css.zIndexMainValue + 10)) ] ]
 
 
 view : View.Config -> Model -> Html Msg

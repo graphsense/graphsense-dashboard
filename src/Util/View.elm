@@ -8,8 +8,8 @@ import Css.View as Css
 import FontAwesome
 import Hex
 import Hovercard
-import Html.Attributes
 import Html as BHtml
+import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
