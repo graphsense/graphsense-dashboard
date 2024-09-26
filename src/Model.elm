@@ -29,6 +29,8 @@ import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
 import Time
 import Url exposing (Url)
+import Util.ThemedSelectBox as SelectBox
+import Util.ThemedSelectBoxes as SelectBoxes
 
 
 type alias Flags =
@@ -58,6 +60,7 @@ type alias Model navigationKey =
     , supportedTokens : Dict String Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , notifications : Model.Notification.Model
+    , selectBoxes : SelectBoxes.Model
     , dirty : Bool
     }
 
@@ -106,6 +109,7 @@ type Msg
     | UserHovercardMsg Hovercard.Msg
     | UserClosesNotification
     | SettingsMsg SettingsMsg
+    | SelectBoxMsg SelectBoxes.SelectBoxesAvailable SelectBox.Msg
 
 
 type SettingsMsg

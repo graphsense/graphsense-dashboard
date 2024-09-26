@@ -893,7 +893,7 @@ addressDetailsContentView vc gc model id viewState =
                         in
                         Html.a
                             [ HA.href link
-                            , css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
+                            , css SidePanelComponents.sidePanelAddressLabelOfActor_details.styles
                             ]
                             [ Html.text text
                             ]

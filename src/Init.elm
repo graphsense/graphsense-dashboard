@@ -13,10 +13,13 @@ import Init.Search as Search
 import Init.Statusbar as Statusbar
 import Json.Decode
 import Model exposing (..)
+import Model.Locale as Locale
 import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 import Update exposing (updateByPluginOutMsg)
 import Url exposing (Url)
+import Util.ThemedSelectBox as TSelectBox
+import Util.ThemedSelectBoxes as TSelectBoxes
 
 
 init : Plugins -> Update.Config -> Flags -> Url -> key -> ( Model key, List Effect )
@@ -35,6 +38,11 @@ init plugins uc flags url key =
 
         ( pathfinderState, pathfinderCmd ) =
             Pathfinder.init settings Nothing
+
+        selectBoxes =
+            TSelectBoxes.init
+                [ ( TSelectBoxes.SupportedLanguages, TSelectBox.fromList Locale.locales )
+                ]
     in
     ( { url = url
       , key = key
@@ -70,6 +78,7 @@ init plugins uc flags url key =
       , plugins = pluginStates
       , dirty = False
       , notifications = Notification.init
+      , selectBoxes = selectBoxes
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy

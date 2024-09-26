@@ -62,6 +62,8 @@ import Update.Pathfinder as Pathfinder
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
+import Util.ThemedSelectBoxes as TSelectBoxes
+import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale
 import Yaml.Decode
 
@@ -1071,6 +1073,14 @@ update plugins uc msg model =
 
         UserClosesNotification ->
             n { model | notifications = Notification.pop model.notifications }
+
+        SelectBoxMsg sb subMsg ->
+                                let 
+                                    newModel = { model | selectBoxes = model.selectBoxes |> TSelectBoxes.update sb subMsg }
+                                in
+                                    case (sb, subMsg) of
+                                        (TSelectBoxes.SupportedLanguages, TSelectBox.Select x) ->  update plugins uc (UserSwitchesLocale x) newModel
+
 
 
 updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
