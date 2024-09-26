@@ -1,29 +1,27 @@
 module View.Settings exposing (view)
 
 -- import Config.Graph as Graph
-import Config.View exposing (Config)
 -- import Css
 -- import Css.View
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
 -- import Html.Styled.Events exposing (onClick, onInput)
+-- import Time
+
+import Config.View exposing (Config)
+import Html.Styled exposing (..)
 import Model exposing (..)
-import Model.Locale exposing (ValueDetail(..))
-import Msg.Graph exposing (Msg(..))
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
--- import Time
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
 import Util.View
 import View.Controls as Vc
 import View.Locale as Locale
+
+
+
 -- import View.User exposing (localeSwitch)
-
-
 -- heading3 : List Css.Style
 -- heading3 =
 --     [ Css.fontWeight Css.bold
@@ -32,8 +30,6 @@ import View.Locale as Locale
 --     , Css.fontSize (Css.px 18)
 --     , Css.px 10 |> Css.marginLeft
 --     ]
-
-
 -- heading4 : List Css.Style
 -- heading4 =
 --     [ Css.fontWeight Css.bold
@@ -41,49 +37,33 @@ import View.Locale as Locale
 --     , Css.px 10 |> Css.paddingBottom
 --     , Css.px 10 |> Css.paddingTop
 --     ]
-
-
 -- tableKey : List Css.Style
 -- tableKey =
 --     [ Css.minWidth (Css.px 500), Css.px 5 |> Css.paddingTop, Css.px 5 |> Css.paddingBottom, Css.px 10 |> Css.paddingLeft, Css.verticalAlign Css.middle ]
-
-
 -- tableData : List Css.Style
 -- tableData =
 --     [ Css.verticalAlign Css.middle, Css.textAlign Css.right ]
-
-
 -- tableStyle : List Css.Style
 -- tableStyle =
 --     [ Css.px 20 |> Css.marginLeft ]
-
-
 -- type alias SelectOption =
 --     { val : String
 --     , selected : Bool
 --     , lbl : String
 --     }
-
-
 -- type SettingsItem
 --     = ToggleSwitch String Bool Model.Msg
 --     | Display String String
 --     | SubSection String
 --     | Custom String (Html Model.Msg)
 --     | Select String (String -> Model.Msg) (List SelectOption)
-
-
 -- type Settings
 --     = Section String (List SettingsItem)
-
-
 -- currencyOptions : String -> List SelectOption
 -- currencyOptions cs =
 --     [ { val = "eur", selected = cs == "eur", lbl = "EUR" }
 --     , { val = "usd", selected = cs == "usd", lbl = "USD" }
 --     ]
-
-
 -- addressLabelOptions : Graph.AddressLabelType -> List SelectOption
 -- addressLabelOptions gc =
 --     [ { val = "id", selected = gc == Graph.ID, lbl = "Id" }
@@ -91,15 +71,11 @@ import View.Locale as Locale
 --     , { val = "total received", selected = gc == Graph.TotalReceived, lbl = "Total received" }
 --     , { val = "tag", selected = gc == Graph.Tag, lbl = "Label" }
 --     ]
-
-
 -- valueFormatOptions : ValueDetail -> List SelectOption
 -- valueFormatOptions vd =
 --     [ { val = "exact", selected = vd == Exact, lbl = "Exact" }
 --     , { val = "magnitude", selected = vd == Magnitude, lbl = "Magnitude" }
 --     ]
-
-
 -- transactionLableOptions : Graph.TxLabelType -> List SelectOption
 -- transactionLableOptions lt =
 --     [ { val = "notxs", selected = lt == Graph.NoTxs, lbl = "No. transactions" }
@@ -108,7 +84,7 @@ import View.Locale as Locale
 
 
 view : Plugins -> Config -> Model x -> Html Model.Msg
-view p vc m =
+view _ vc m =
     let
         -- settings =
         --     [ Section "Profile" (authContent vc m.user)
@@ -119,7 +95,6 @@ view p vc m =
         --         , Select "Preferred fiat currency" (UserChangedPreferredCurrency >> SettingsMsg) (currencyOptions vc.preferredFiatCurrency)
         --         , SubSection "Values"
         --         , ToggleSwitch "Show in fiat" vc.showValuesInFiat (UserToggledValueDisplay |> SettingsMsg)
-
         --         -- , Select "Change currency" (UserChangesCurrency >> GraphMsg) (currencyOptions vc.locale.currency)
         --         , Select "Value format" (UserChangesValueDetail >> GraphMsg) (valueFormatOptions vc.locale.valueDetail)
         --         ]
@@ -144,25 +119,61 @@ view p vc m =
         --         , ToggleSwitch "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg |> PathfinderMsg)
         --         ]
         --     ]
-
         tbs =
             Vc.tabs
-                [ { title = Locale.string vc.locale "General", selected = True, msg = Model.NoOp }
-                , { title = Locale.string vc.locale "Pathfinder", selected = False, msg = Model.NoOp }
-                , { title = Locale.string vc.locale "Overview Network", selected = False, msg = Model.NoOp }
-                ]
+                ([ ( "General", GeneralTab )
+                 , ( "Pathfinder", PathfinderTab )
+                 , ( "Overview Network", GraphTab )
+                 ]
+                    |> List.map
+                        (\( t, msg ) ->
+                            { title = Locale.string vc.locale t
+                            , selected = m.selectedSettingsTab == msg
+                            , msg = Model.UserChangedSettingsTab msg |> Model.SettingsMsg
+                            }
+                        )
+                )
+    in
+    div
+        []
+        [ Sp.settingsPageWithInstances
+            Sp.settingsPageAttributes
+            (Sp.settingsPageInstances
+                |> Rs.s_settingsTabs (Just tbs)
+            )
+            { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBack {} }
+            , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
+            , settingsPage =
+                { instance =
+                    case m.selectedSettingsTab of
+                        GeneralTab ->
+                            generalSettings vc m
 
-        generalSettingsPageDummyData =
-            { dropDownExtraTextClosed = { primaryText = "a", secondaryText = "b" }
-            , languageDropDown = { text = "" }
-            , settingsItemLabelOfSettingsCurrencyItem = { text = Locale.string vc.locale "Preferred fiat currency" }
-            , settingsItemLabelOfSettingsLanguageItem = { text = Locale.string vc.locale "Language" }
-            , settingsItemLabelOfSettingsModeItem = { text = Locale.string vc.locale "Mode" }
-            , settingsItemLabelOfSettingsTimeZoneItem = { text = Locale.string vc.locale "Timezone" }
-            , toggleCellNeutralOfToggleSwitchText = { toggleText = "" }
-            , toggleCellSelectedOfToggleSwitchText = { toggleText = "" }
+                        GraphTab ->
+                            graphSettings vc m
+
+                        PathfinderTab ->
+                            pathfinderSettings vc m
+                }
+            , singleTab1 = { variant = Util.View.none }
+            , singleTab2 = { variant = Util.View.none }
             }
+        ]
 
+
+pathfinderSettings : Config -> Model x -> Html Model.Msg
+pathfinderSettings vc m =
+    Util.View.none
+
+
+graphSettings : Config -> Model x -> Html Model.Msg
+graphSettings vc m =
+    Util.View.none
+
+
+generalSettings : Config -> Model x -> Html Model.Msg
+generalSettings vc m =
+    let
         usdSelected =
             vc.preferredFiatCurrency == "usd"
 
@@ -190,7 +201,6 @@ view p vc m =
                 , msg = Model.UserClickedLightmode
                 }
 
-        -- sb = TSelectBox.init (locales |> List.map (\ (a, b) -> {value = a, label = (Locale.string vc.locale b)}))
         sbId =
             TSelectBoxes.SupportedLanguages
 
@@ -202,30 +212,27 @@ view p vc m =
         languageSb =
             TSelectBox.view sb vc.locale.locale |> Html.Styled.map (Model.SelectBoxMsg sbId)
 
-        pageBody =
-            Sp.settingsPageGeneralWithInstances
-                Sp.settingsPageGeneralAttributes
-                (Sp.settingsPageGeneralInstances
-                    |> Rs.s_toggleSwitchText (Just currencyToggle)
-                    |> Rs.s_toggleSwitchIcons (Just modeToggle)
-                    |> Rs.s_languageDropDown (Just languageSb)
-                )
-                generalSettingsPageDummyData
-    in
-    div
-        []
-        [ Sp.settingsPageWithInstances
-            Sp.settingsPageAttributes
-            (Sp.settingsPageInstances
-                |> Rs.s_settingsTabs (Just tbs)
-            )
-            { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBack {} }
-            , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
-            , settingsPage = { instance = pageBody }
-            , singleTab1 = { variant = Util.View.none }
-            , singleTab2 = { variant = Util.View.none }
+        generalSettingsPageDummyData =
+            { dropDownExtraTextClosed = { primaryText = "a", secondaryText = "b" }
+            , languageDropDown = { text = "" }
+            , leftCell = { variant = Util.View.none }
+            , modeToggle = { variant = modeToggle }
+            , rightCell = { variant = Util.View.none }
+            , settingsItemLabelOfSettingsCurrencyItem = { text = Locale.string vc.locale "Preferred fiat currency" }
+            , settingsItemLabelOfSettingsLanguageItem = { text = Locale.string vc.locale "Language" }
+            , settingsItemLabelOfSettingsModeItem = { text = Locale.string vc.locale "Mode" }
+            , settingsItemLabelOfSettingsTimeZoneItem = { text = Locale.string vc.locale "Timezone" }
             }
-        ]
+    in
+    Sp.settingsPageGeneralWithInstances
+        Sp.settingsPageGeneralAttributes
+        (Sp.settingsPageGeneralInstances
+            |> Rs.s_toggleSwitchText (Just currencyToggle)
+            |> Rs.s_languageDropDown (Just languageSb)
+            |> Rs.s_settingsTimeZoneItem (Just Util.View.none)
+        )
+        generalSettingsPageDummyData
+
 
 
 -- viewSettings : Config -> Settings -> Html Model.Msg
@@ -236,24 +243,18 @@ view p vc m =
 --                 [ h4 [ heading3 |> css ] [ text (Locale.string vc.locale label) ]
 --                 , table [ tableStyle |> css ] (items |> List.map (viewItem vc))
 --                 ]
-
-
 -- viewItem : Config -> SettingsItem -> Html Model.Msg
 -- viewItem vc item =
 --     tr []
 --         (case item of
 --             ToggleSwitch lbl stat msg ->
 --                 [ td [ tableKey |> css ] [ text (Locale.string vc.locale lbl) ], td [ tableData |> css ] [ Util.View.onOffSwitch vc [ checked stat, onClick msg ] "" ] ]
-
 --             Display lbl x ->
 --                 [ td [ tableKey |> css ] [ text (Locale.string vc.locale lbl) ], td [ tableData |> css ] [ text x ] ]
-
 --             SubSection x ->
 --                 [ td [ heading4 |> css ] [ text (Locale.string vc.locale x) ], td [ tableData |> css ] [] ]
-
 --             Custom lbl ctnt ->
 --                 [ td [ tableKey |> css ] [ text (Locale.string vc.locale lbl) ], td [ tableData |> css ] [ ctnt ] ]
-
 --             Select lbl msg options ->
 --                 [ td [ tableKey |> css ] [ text (Locale.string vc.locale lbl) ]
 --                 , td [ tableData |> css ]
@@ -265,8 +266,6 @@ view p vc m =
 --                     ]
 --                 ]
 --         )
-
-
 -- authContent : Config -> UserModel -> List SettingsItem
 -- authContent vc user =
 --     case user.auth of
@@ -274,25 +273,19 @@ view p vc m =
 --             [ Display "Request limit" (auth.requestLimit |> requestLimit vc)
 --             , Display "Expiration" (auth.expiration |> Maybe.map (expiration vc) |> Maybe.withDefault "none")
 --             ]
-
 --         Unknown ->
 --             [ Locale.string vc.locale "Unknown" |> Display "Request Limit" ]
-
 --         Unauthorized _ _ ->
 --             [ Locale.string vc.locale "Please log-in" |> Display "Request Limit" ]
-
-
 -- requestLimit : Config -> RequestLimit -> String
 -- requestLimit vc rl =
 --     case rl of
 --         Unlimited ->
 --             Locale.string vc.locale "unlimited"
-
 --         Limited { remaining, limit, reset } ->
 --             Locale.interpolated vc.locale "{0}/{1}" [ String.fromInt remaining, String.fromInt limit ]
 --                 ++ (if reset == 0 || remaining > Model.showResetCounterAtRemaining then
 --                         Locale.string vc.locale "None"
-
 --                     else
 --                         " "
 --                             ++ (reset
@@ -301,8 +294,6 @@ view p vc m =
 --                                     |> Locale.interpolated vc.locale "reset in {0}s"
 --                                )
 --                    )
-
-
 -- expiration : Config -> Time.Posix -> String
 -- expiration vc time =
 --     Time.posixToMillis time

@@ -79,6 +79,7 @@ init plugins uc flags url key =
       , dirty = False
       , notifications = Notification.init
       , selectBoxes = selectBoxes
+      , selectedSettingsTab = GeneralTab
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy

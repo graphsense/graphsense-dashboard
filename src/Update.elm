@@ -62,8 +62,8 @@ import Update.Pathfinder as Pathfinder
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
-import Util.ThemedSelectBoxes as TSelectBoxes
 import Util.ThemedSelectBox as TSelectBox
+import Util.ThemedSelectBoxes as TSelectBoxes
 import View.Locale as Locale
 import Yaml.Decode
 
@@ -530,6 +530,9 @@ update plugins uc msg model =
                     }
             in
             ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+
+        SettingsMsg (UserChangedSettingsTab tab) ->
+            n { model | selectedSettingsTab = tab }
 
         SearchMsg m ->
             case m of
@@ -1075,12 +1078,14 @@ update plugins uc msg model =
             n { model | notifications = Notification.pop model.notifications }
 
         SelectBoxMsg sb subMsg ->
-                                let 
-                                    newModel = { model | selectBoxes = model.selectBoxes |> TSelectBoxes.update sb subMsg }
-                                in
-                                    case (sb, subMsg) of
-                                        (TSelectBoxes.SupportedLanguages, TSelectBox.Select x) ->  update plugins uc (UserSwitchesLocale x) newModel
+            let
+                newModel =
+                    { model | selectBoxes = model.selectBoxes |> TSelectBoxes.update sb subMsg }
 
+                ( TSelectBoxes.SupportedLanguages, TSelectBox.Select x ) =
+                    ( sb, subMsg )
+            in
+            update plugins uc (UserSwitchesLocale x) newModel
 
 
 updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )

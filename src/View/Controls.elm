@@ -13,71 +13,114 @@ toggleWithText { selectedA, titleA, titleB, msg } =
     let
         ( a, b ) =
             if selectedA then
-                ( Sc.toggleCellSelected { toggleCellSelected = { toggleText = titleA } }
-                , Sc.toggleCellNeutral { toggleCellNeutral = { toggleText = titleB } }
+                ( Sc.toggleCellWithTextStateSelected { stateSelected = { toggleText = titleA } }
+                , Sc.toggleCellWithTextStateDeselected { stateDeselected = { toggleText = titleB } }
                 )
 
             else
-                ( Sc.toggleCellNeutral { toggleCellNeutral = { toggleText = titleA } }
-                , Sc.toggleCellSelected { toggleCellSelected = { toggleText = titleB } }
+                ( Sc.toggleCellWithTextStateDeselected { stateDeselected = { toggleText = titleA } }
+                , Sc.toggleCellWithTextStateSelected { stateSelected = { toggleText = titleB } }
                 )
     in
     Sc.toggleSwitchTextWithInstances
         (Sc.toggleSwitchTextAttributes
             |> Rs.s_toggleSwitchText [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
         )
-        (Sc.toggleSwitchTextInstances
-            |> Rs.s_toggleCellSelected (Just a)
-            |> Rs.s_toggleCellNeutral (Just b)
-        )
-        { toggleCellNeutral = { toggleText = "" }
-        , toggleCellSelected = { toggleText = "" }
+        Sc.toggleSwitchTextInstances
+        { rightCell = { variant = b }
+        , leftCell = { variant = a }
         }
 
 
 toggleWithIcons : { selectedA : Bool, iconA : Html msg, iconB : Html msg, msg : msg } -> Html msg
 toggleWithIcons { selectedA, iconA, iconB, msg } =
+    -- let
+    -- ( a, b ) =
+    --     if selectedA then
+    --         ( Sc.toggleCellSelectedWithInstances
+    --             Sc.toggleCellSelectedAttributes
+    --             (Sc.toggleCellSelectedInstances
+    --                 |> Rs.s_placeholder (Just iconA)
+    --             )
+    --             { toggleCellSelected = { toggleText = "" } }
+    --         , Sc.toggleCellNeutralWithInstances
+    --             Sc.toggleCellNeutralAttributes
+    --             (Sc.toggleCellNeutralInstances
+    --                 |> Rs.s_placeholder (Just iconB)
+    --             )
+    --             { toggleCellNeutral = { toggleText = "" } }
+    --         )
+    --     else
+    --         ( Sc.toggleCellNeutralWithInstances
+    --             Sc.toggleCellNeutralAttributes
+    --             (Sc.toggleCellNeutralInstances
+    --                 |> Rs.s_placeholder (Just iconA)
+    --             )
+    --             { toggleCellNeutral = { toggleText = "" } }
+    --         , Sc.toggleCellSelectedWithInstances
+    --             Sc.toggleCellSelectedAttributes
+    --             (Sc.toggleCellSelectedInstances
+    --                 |> Rs.s_placeholder (Just iconB)
+    --             )
+    --             { toggleCellSelected = { toggleText = "" } }
+    --         )
+    -- in
     let
         ( a, b ) =
             if selectedA then
-                ( Sc.toggleCellSelectedWithInstances
-                    Sc.toggleCellSelectedAttributes
-                    (Sc.toggleCellSelectedInstances
+                ( Sc.toggleCellWithTextStateSelectedWithInstances
+                    Sc.toggleCellWithTextStateSelectedAttributes
+                    (Sc.toggleCellWithTextStateSelectedInstances
                         |> Rs.s_placeholder (Just iconA)
                     )
-                    { toggleCellSelected = { toggleText = "" } }
-                , Sc.toggleCellNeutralWithInstances
-                    Sc.toggleCellNeutralAttributes
-                    (Sc.toggleCellNeutralInstances
+                    { stateSelected = { toggleText = "" } }
+                , Sc.toggleCellWithTextStateDeselectedWithInstances
+                    Sc.toggleCellWithTextStateDeselectedAttributes
+                    (Sc.toggleCellWithTextStateDeselectedInstances
                         |> Rs.s_placeholder (Just iconB)
                     )
-                    { toggleCellNeutral = { toggleText = "" } }
+                    { stateDeselected = { toggleText = "" } }
                 )
 
             else
-                ( Sc.toggleCellNeutralWithInstances
-                    Sc.toggleCellNeutralAttributes
-                    (Sc.toggleCellNeutralInstances
+                ( Sc.toggleCellWithTextStateDeselectedWithInstances
+                    Sc.toggleCellWithTextStateDeselectedAttributes
+                    (Sc.toggleCellWithTextStateDeselectedInstances
                         |> Rs.s_placeholder (Just iconA)
                     )
-                    { toggleCellNeutral = { toggleText = "" } }
-                , Sc.toggleCellSelectedWithInstances
-                    Sc.toggleCellSelectedAttributes
-                    (Sc.toggleCellSelectedInstances
+                    { stateDeselected = { toggleText = "" } }
+                , Sc.toggleCellWithTextStateSelectedWithInstances
+                    Sc.toggleCellWithTextStateSelectedAttributes
+                    (Sc.toggleCellWithTextStateSelectedInstances
                         |> Rs.s_placeholder (Just iconB)
                     )
-                    { toggleCellSelected = { toggleText = "" } }
+                    { stateSelected = { toggleText = "" } }
                 )
+
+        shapeAttrs =
+            [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
     in
-    Sc.toggleSwitchIconsWithInstances
-        (Sc.toggleSwitchIconsAttributes
-            |> Rs.s_toggleSwitchIcons [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
-        )
-        (Sc.toggleSwitchIconsInstances
-            |> Rs.s_toggleCellSelected (Just a)
-            |> Rs.s_toggleCellNeutral (Just b)
-        )
-        {}
+    if selectedA then
+        Sc.modeToggleModeLightWithInstances
+            (Sc.modeToggleModeLightAttributes
+                |> Rs.s_modeLight shapeAttrs
+            )
+            (Sc.modeToggleModeLightInstances
+                |> Rs.s_toggleCellSelected (Just a)
+                |> Rs.s_toggleCellNeutral (Just b)
+            )
+            {}
+
+    else
+        Sc.modeToggleModeDarkWithInstances
+            (Sc.modeToggleModeDarkAttributes
+                |> Rs.s_modeDark shapeAttrs
+            )
+            (Sc.modeToggleModeDarkInstances
+                |> Rs.s_toggleCellSelected (Just a)
+                |> Rs.s_toggleCellNeutral (Just b)
+            )
+            {}
 
 
 tabs : List { title : String, selected : Bool, msg : msg } -> Html msg
