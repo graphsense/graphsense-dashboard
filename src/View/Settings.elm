@@ -8,7 +8,8 @@ module View.Settings exposing (view)
 
 import Config.View exposing (Config)
 import Html.Styled exposing (..)
-import Model exposing (..)
+import Model exposing (Model, Msg(..), SettingsTabs(..), SettingsMsg(..))
+import Msg.Pathfinder exposing (Msg(..), DisplaySettingsMsg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Html.Icons as Icons
@@ -163,7 +164,25 @@ view _ vc m =
 
 pathfinderSettings : Config -> Model x -> Html Model.Msg
 pathfinderSettings vc m =
-    Util.View.none
+    Sp.settingsPagePathfinderWithInstances 
+        (Sp.settingsPagePathfinderAttributes)
+        (Sp.settingsPagePathfinderInstances)
+        { settingsAmountInFiat = { text = (Locale.string vc.locale "Amount in Fiat") }
+        , settingsExactValuesLabel = { text = (Locale.string vc.locale "Show exact values") }
+        , settingsHighlightClustersLabel = { text = (Locale.string vc.locale "Highlight on graph") }
+        , settingsSectionHeaderOfSettingsPathfinderClusters = { text = (Locale.string vc.locale "Clusters") }
+        , settingsSectionHeaderOfSettingsPathfinderTransactions = { text = (Locale.string vc.locale "Transactions") }
+        , settingsTimeZone = { text = (Locale.string vc.locale "Show timestamp") }
+        , settingsTimestamp = { text = (Locale.string vc.locale "Show timezone") }
+        , switchOfSettingsPathfinderClusters = { variant = Vc.toggle { selected = vc.highlightClusterFriends
+                                                                        , disabled = False
+                                                                        , msg = (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg |> PathfinderMsg)} }
+        , switchOfSettingsTime = { variant = Vc.toggle {selected = True, disabled = False, msg = Model.NoOp}}
+        , switchOfSettingsValue = { variant = Vc.toggle {selected = True, disabled = False, msg = Model.NoOp} }
+        }
+
+         
+
 
 
 graphSettings : Config -> Model x -> Html Model.Msg

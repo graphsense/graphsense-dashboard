@@ -1,4 +1,4 @@
-module View.Controls exposing (tabs, toggleWithIcons, toggleWithText)
+module View.Controls exposing (tabs, toggleWithIcons, toggleWithText, toggle)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -7,6 +7,16 @@ import RecordSetter as Rs
 import Theme.Html.SelectionControls as Sc
 import Util.View
 
+
+toggle : { selected : Bool, disabled : Bool,  msg : msg} -> Html msg
+toggle {selected, disabled, msg} = case (selected, disabled) of
+                                        (True, True) -> Sc.switchOnDisabledSizeBig {}
+                                        (True, False) -> Sc.switchOnOnSizeBigWithAttributes 
+                                                            (Sc.switchOnOnSizeBigAttributes
+                                                                |> Rs.s_onOnSizeBig [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]) {}
+                                        (False, False) -> Sc.switchOnOffSizeBigWithAttributes (Sc.switchOnOffSizeBigAttributes
+                                                                |> Rs.s_onOffSizeBig [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]) {}
+                                        (False, True) -> Sc.switchOnDisabledSizeBig {}
 
 toggleWithText : { selectedA : Bool, titleA : String, titleB : String, msg : msg } -> Html msg
 toggleWithText { selectedA, titleA, titleB, msg } =
@@ -34,37 +44,6 @@ toggleWithText { selectedA, titleA, titleB, msg } =
 
 toggleWithIcons : { selectedA : Bool, iconA : Html msg, iconB : Html msg, msg : msg } -> Html msg
 toggleWithIcons { selectedA, iconA, iconB, msg } =
-    -- let
-    -- ( a, b ) =
-    --     if selectedA then
-    --         ( Sc.toggleCellSelectedWithInstances
-    --             Sc.toggleCellSelectedAttributes
-    --             (Sc.toggleCellSelectedInstances
-    --                 |> Rs.s_placeholder (Just iconA)
-    --             )
-    --             { toggleCellSelected = { toggleText = "" } }
-    --         , Sc.toggleCellNeutralWithInstances
-    --             Sc.toggleCellNeutralAttributes
-    --             (Sc.toggleCellNeutralInstances
-    --                 |> Rs.s_placeholder (Just iconB)
-    --             )
-    --             { toggleCellNeutral = { toggleText = "" } }
-    --         )
-    --     else
-    --         ( Sc.toggleCellNeutralWithInstances
-    --             Sc.toggleCellNeutralAttributes
-    --             (Sc.toggleCellNeutralInstances
-    --                 |> Rs.s_placeholder (Just iconA)
-    --             )
-    --             { toggleCellNeutral = { toggleText = "" } }
-    --         , Sc.toggleCellSelectedWithInstances
-    --             Sc.toggleCellSelectedAttributes
-    --             (Sc.toggleCellSelectedInstances
-    --                 |> Rs.s_placeholder (Just iconB)
-    --             )
-    --             { toggleCellSelected = { toggleText = "" } }
-    --         )
-    -- in
     let
         ( a, b ) =
             if selectedA then
