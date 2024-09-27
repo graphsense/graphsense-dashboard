@@ -5,6 +5,7 @@ import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import RecordSetter as Rs
 import Theme.Html.SelectionControls as Sc
+import Theme.Html.SettingsPage as Sp
 import Util.View
 
 
@@ -120,24 +121,6 @@ tabs tbs =
     in
     div
         [ Html.Styled.Attributes.css
-            [ Css.borderRadius (Css.px 0)
-            , Css.opacity (Css.num 1)
-            , Css.height (Css.px 30)
-            , Css.width (Css.pct 100)
-            , Css.position Css.relative
-            , Css.displayFlex
-            , Css.boxSizing Css.borderBox
-            , Css.property "gap" "0px"
-            , Css.alignItems Css.center
-            , Css.justifyContent Css.center
-            , Css.displayFlex
-            , Css.flexDirection Css.row
-            , Css.paddingBottom (Css.px 0)
-            , Css.paddingTop (Css.px 0)
-            , Css.paddingRight (Css.px 0)
-            , Css.paddingLeft (Css.px 0)
-            , Css.backgroundColor (Css.rgba 0 0 0 0)
-            , Css.borderWidth (Css.px 1)
-            ]
+            Sp.settingsPageSettingsTabsSettingsTabs_details.styles
         ]
         (tbs |> List.map viewTab)
