@@ -3,31 +3,23 @@ module Generate.Svg.CornerTrait exposing (..)
 import Api.Raw exposing (CornerTrait)
 import Elm
 import Gen.Css as Css
+import Gen.Svg.Styled.Attributes as Svg
 import Generate.Util exposing (..)
 
 
-toStyles : CornerTrait -> List Elm.Expression
-toStyles node =
+toAttributes : CornerTrait -> List Elm.Expression
+toAttributes node =
     []
         |> m cornerRadius node.cornerRadius
-        |> (++) (rectangleCornerRadii node.rectangleCornerRadii)
 
 
 cornerRadius : Float -> Elm.Expression
 cornerRadius =
-    Css.px >> lengthType >> Css.borderRadius
+    String.fromFloat >> Svg.rx
 
 
-rectangleCornerRadii : Maybe (List Float) -> List Elm.Expression
+rectangleCornerRadii : List Float -> List Elm.Expression
 rectangleCornerRadii radii =
-    case radii of
-        Just (a :: b :: c :: d :: []) ->
-            Css.borderRadius4
-                (Css.px a |> lengthType)
-                (Css.px b |> lengthType)
-                (Css.px c |> lengthType)
-                (Css.px d |> lengthType)
-                |> List.singleton
-
-        _ ->
-            []
+    -- in case we need that we have to use the path geometry of rectangle
+    -- there is no way of setting individual corner radius on a rect
+    []

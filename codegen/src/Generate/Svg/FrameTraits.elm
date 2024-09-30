@@ -2,16 +2,14 @@ module Generate.Svg.FrameTraits exposing (..)
 
 import Api.Raw exposing (FrameTraits)
 import Elm
-import Generate.Svg.CornerTrait as CornerTrait
-import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Common.FrameTraits as Common
+import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Types exposing (Details)
 
 
 toStyles : FrameTraits -> List Elm.Expression
 toStyles node =
-    CornerTrait.toStyles node.cornerTrait
-        ++ HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
+    HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
 
 
 toDetails : { a | frameTraits : FrameTraits } -> Details

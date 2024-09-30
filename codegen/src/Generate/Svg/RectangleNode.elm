@@ -12,6 +12,8 @@ import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Util exposing (getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
 import Types exposing (Config, Details, OriginAdjust)
+import Generate.Util exposing (mm2)
+import Generate.Svg.CornerTrait as CornerTrait
 
 
 toExpressions : Config -> String -> RectangleNode -> List Elm.Expression
@@ -46,6 +48,7 @@ toAttributes : RectangleNode -> List Elm.Expression
 toAttributes node =
     toSize node.rectangularShapeTraits.defaultShapeTraits
         ++ toCoords node.rectangularShapeTraits.defaultShapeTraits.absoluteBoundingBox
+        ++ CornerTrait.toAttributes node.rectangularShapeTraits.cornerTrait
 
 
 toCoords : Rectangle -> List Elm.Expression
