@@ -1,7 +1,6 @@
 module View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
 
 import Bezier
-import Color
 import Config.View as View
 import Css
 import Msg.Pathfinder exposing (Msg)

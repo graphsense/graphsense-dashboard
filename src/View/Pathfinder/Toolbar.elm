@@ -1,6 +1,5 @@
 module View.Pathfinder.Toolbar exposing (Config, view)
 
-import Color exposing (toCssString)
 import Config.View as View
 import Css
 import Html.Styled exposing (..)
