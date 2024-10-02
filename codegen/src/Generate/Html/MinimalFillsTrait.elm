@@ -5,9 +5,10 @@ import Elm
 import Gen.Css as Css
 import Generate.Util exposing (..)
 import Generate.Util.Paint as Paint
+import Types exposing (ColorMap)
 
 
-toStyles : MinimalFillsTrait -> List Elm.Expression
-toStyles node =
+toStyles : ColorMap -> MinimalFillsTrait -> List Elm.Expression
+toStyles colorMap node =
     []
-        |> a (Paint.toStyles >> Maybe.map Css.color) (Just node.fills)
+        |> a (Paint.toStylesString colorMap >> Maybe.map (Css.property "color")) (Just node.fills)

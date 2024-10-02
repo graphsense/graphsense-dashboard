@@ -5,11 +5,10 @@ import Elm exposing (Expression)
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (cx, cy, rx, ry)
-import Generate.Common.DefaultShapeTraits as Common
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Util exposing (getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
-import Types exposing (Config)
+import Types exposing (ColorMap, Config)
 
 
 toExpressions : Config -> String -> EllipseNode -> List Elm.Expression
@@ -21,7 +20,7 @@ toExpressions config componentName node =
     Gen.Svg.Styled.call_.ellipse
         (getElementAttributes config name
             |> Elm.Op.append
-                ((toStyles node
+                ((toStyles config.colorMap node
                     |> Gen.Svg.Styled.Attributes.css
                  )
                     :: toAttributes node
@@ -38,9 +37,9 @@ getName node =
     node.defaultShapeTraits.isLayerTrait.name
 
 
-toStyles : EllipseNode -> List Elm.Expression
-toStyles node =
-    DefaultShapeTraits.toStyles node.defaultShapeTraits
+toStyles : ColorMap -> EllipseNode -> List Elm.Expression
+toStyles colorMap node =
+    DefaultShapeTraits.toStyles colorMap node.defaultShapeTraits
 
 
 toAttributes : EllipseNode -> List Elm.Expression

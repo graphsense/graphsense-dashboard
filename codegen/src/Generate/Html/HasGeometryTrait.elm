@@ -6,22 +6,23 @@ import Gen.Css as Css
 import Generate.Html.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Util exposing (..)
 import Generate.Util.Paint as Paint
+import Types exposing (ColorMap)
 
 
-toStyles : HasGeometryTrait -> List Elm.Expression
-toStyles node =
-    toBorder node.strokes
+toStyles : ColorMap -> HasGeometryTrait -> List Elm.Expression
+toStyles colorMap node =
+    toBorder colorMap node.strokes
         |> m (Css.px >> Css.borderWidth) node.strokeWeight
 
 
-toBorder : Maybe (List Paint) -> List Elm.Expression
-toBorder paints =
+toBorder : ColorMap -> Maybe (List Paint) -> List Elm.Expression
+toBorder colorMap paints =
     paints
-        |> Maybe.andThen Paint.toStylesString
+        |> Maybe.andThen (Paint.toStylesString colorMap)
         |> Maybe.map
             (\color ->
                 [ Css.borderStyle Css.solid
-                , Css.call_.property (Elm.string "border-color") color
+                , Css.property "border-color" color
                 ]
             )
         |> Maybe.withDefault []

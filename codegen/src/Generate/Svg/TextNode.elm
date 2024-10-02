@@ -11,7 +11,7 @@ import Generate.Common.TextNode exposing (getName)
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.TypeStyle as TypeStyle
 import Generate.Util exposing (getElementAttributes, getTextProperty, m, mm, withVisibility)
-import Types exposing (Config, Details)
+import Types exposing (ColorMap, Config, Details)
 
 
 toExpressions : Config -> String -> TextNode -> List Elm.Expression
@@ -20,7 +20,7 @@ toExpressions config componentName node =
         (getName node
             |> getElementAttributes config
             |> Elm.Op.append
-                ((toStyles node |> Attributes.css)
+                ((toStyles config.colorMap node |> Attributes.css)
                     :: toAttributes node
                     |> Elm.list
                 )
@@ -35,15 +35,15 @@ toExpressions config componentName node =
         |> List.singleton
 
 
-toStyles : TextNode -> List Elm.Expression
-toStyles node =
-    TypeStyle.toStyles node.style
-        ++ DefaultShapeTraits.toStyles node.defaultShapeTraits
+toStyles : ColorMap -> TextNode -> List Elm.Expression
+toStyles colorMap node =
+    TypeStyle.toStyles colorMap node.style
+        ++ DefaultShapeTraits.toStyles colorMap node.defaultShapeTraits
 
 
-toDetails : TextNode -> Details
-toDetails node =
-    Common.toDetails (toStyles node) node
+toDetails : ColorMap -> TextNode -> Details
+toDetails colorMap node =
+    Common.toDetails (toStyles colorMap node) node
 
 
 toAlignmentBaseline : TypeStyleTextAlignVertical -> Elm.Expression

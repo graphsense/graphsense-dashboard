@@ -1,5 +1,6 @@
 module View.Pathfinder.Toolbar exposing (Config, view)
 
+import Color exposing (toCssString)
 import Config.View as View
 import Css
 import Html.Styled exposing (..)
@@ -10,7 +11,7 @@ import RecordSetter exposing (..)
 import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as SettingsComponents
-import Util.View exposing (onClickWithStop, toCssColor)
+import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
 
 
@@ -34,13 +35,12 @@ view vc config =
 
         highlightBackground pointer =
             [ Css.important <|
-                Css.backgroundColor <|
+                Css.property "background-color" <|
                     if config.pointerTool == pointer then
                         Theme.Colors.brandLight
-                            |> toCssColor
 
                     else
-                        Css.rgba 0 0 0 0
+                        "transparent"
             ]
 
         title str =

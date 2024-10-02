@@ -1,17 +1,17 @@
 module Generate.Html.HasFramePropertiesTrait exposing (..)
 
 import Api.Raw exposing (..)
-import Basics.Extra exposing (flip)
 import Elm
 import Gen.Css as Css
 import Generate.Util exposing (..)
 import Generate.Util.RGBA as RGBA
+import Types exposing (ColorMap)
 
 
-toStyles : HasFramePropertiesTrait -> List Elm.Expression
-toStyles node =
+toStyles : ColorMap -> HasFramePropertiesTrait -> List Elm.Expression
+toStyles colorMap node =
     []
-        |> m (RGBA.toStyles >> Css.backgroundColor) node.backgroundColor
+        |> m (RGBA.toStylesString colorMap >> Css.property "background-color") node.backgroundColor
         |> m (Css.px >> Css.paddingLeft) node.paddingLeft
         |> m (Css.px >> Css.paddingRight) node.paddingRight
         |> m (Css.px >> Css.paddingTop) node.paddingTop

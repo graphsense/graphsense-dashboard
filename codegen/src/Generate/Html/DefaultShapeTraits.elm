@@ -2,29 +2,25 @@ module Generate.Html.DefaultShapeTraits exposing (..)
 
 import Api.Raw exposing (..)
 import Elm
-import Gen.Css as Css
-import Gen.Svg.Styled
-import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Html.HasEffectsTrait as HasEffectsTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.DefaultShapeTraits
 import Generate.Util exposing (..)
-import String.Format as Format
-import Types exposing (Config, Details)
+import Types exposing (ColorMap, Config, Details)
 
 
-toStyles : DefaultShapeTraits -> List Elm.Expression
-toStyles node =
+toStyles : ColorMap -> DefaultShapeTraits -> List Elm.Expression
+toStyles colorMap node =
     HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
-        ++ HasGeometryTrait.toStyles node.hasGeometryTrait
-        ++ HasEffectsTrait.toStyles node.hasEffectsTrait
+        ++ HasGeometryTrait.toStyles colorMap node.hasGeometryTrait
+        ++ HasEffectsTrait.toStyles colorMap node.hasEffectsTrait
 
 
-toDetails : { a | defaultShapeTraits : DefaultShapeTraits } -> Details
-toDetails node =
-    Common.toDetails (toStyles node.defaultShapeTraits) node
+toDetails : ColorMap -> { a | defaultShapeTraits : DefaultShapeTraits } -> Details
+toDetails colorMap node =
+    Common.toDetails (toStyles colorMap node.defaultShapeTraits) node
 
 
 toExpressions : Config -> String -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression

@@ -2,11 +2,10 @@ module Generate.Html.VectorNode exposing (..)
 
 import Api.Raw exposing (..)
 import Elm
-import Gen.Css as Css
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.DefaultShapeTraits
 import RecordSetter exposing (s_styles)
-import Types exposing (Config, Details)
+import Types exposing (ColorMap, Config, Details)
 
 
 toExpressions : Config -> String -> VectorNode -> List Elm.Expression
@@ -33,7 +32,7 @@ toStyles node =
 -}
 
 
-toDetails : VectorNode -> Details
-toDetails node =
-    Generate.Svg.DefaultShapeTraits.toDetails node.cornerRadiusShapeTraits
+toDetails : ColorMap -> VectorNode -> Details
+toDetails colorMap node =
+    Generate.Svg.DefaultShapeTraits.toDetails colorMap node.cornerRadiusShapeTraits
         |> s_styles (toStyles node)

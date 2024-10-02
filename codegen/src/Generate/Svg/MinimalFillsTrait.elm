@@ -5,12 +5,13 @@ import Elm
 import Gen.Css as Css
 import Generate.Util exposing (..)
 import Generate.Util.Paint as Paint
+import Types exposing (ColorMap)
 
 
-toStyles : MinimalFillsTrait -> List Elm.Expression
-toStyles node =
+toStyles : ColorMap -> MinimalFillsTrait -> List Elm.Expression
+toStyles colorMap node =
     []
-        |> m (Paint.toStyles >> Maybe.withDefault Css.transparent >> Css.fill) (Just node.fills)
+        |> m (Paint.toStylesString colorMap >> Maybe.withDefault "transparent" >> Css.property "fill") (Just node.fills)
         |> a
             (Paint.getBasePaint
                 >> Maybe.andThen .opacity

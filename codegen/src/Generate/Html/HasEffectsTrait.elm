@@ -6,16 +6,17 @@ import Gen.Css as Css
 import Generate.Util exposing (..)
 import Generate.Util.RGBA as RGBA
 import String.Format as Format
+import Types exposing (ColorMap)
 
 
-toStyles : HasEffectsTrait -> List Elm.Expression
-toStyles node =
+toStyles : ColorMap -> HasEffectsTrait -> List Elm.Expression
+toStyles colorMap node =
     node.effects
-        |> List.filterMap effectToStyle
+        |> List.filterMap (effectToStyle colorMap)
 
 
-effectToStyle : Effect -> Maybe Elm.Expression
-effectToStyle effect =
+effectToStyle : ColorMap -> Effect -> Maybe Elm.Expression
+effectToStyle colorMap effect =
     case effect of
         EffectBlurEffect blurEffect ->
             if blurEffect.visible then
@@ -28,30 +29,36 @@ effectToStyle effect =
                 Nothing
 
         EffectDropShadowEffect { baseShadowEffect } ->
-            baseShadowToStyle False baseShadowEffect
+            baseShadowToStyle colorMap False baseShadowEffect
 
         EffectInnerShadowEffect { baseShadowEffect } ->
-            baseShadowToStyle True baseShadowEffect
+            baseShadowToStyle colorMap True baseShadowEffect
 
 
-baseShadowToStyle : Bool -> BaseShadowEffect -> Maybe Elm.Expression
-baseShadowToStyle inset { color, offset, radius, spread, visible } =
+baseShadowToStyle : ColorMap -> Bool -> BaseShadowEffect -> Maybe Elm.Expression
+baseShadowToStyle colorMap inset { color, offset, radius, spread, visible } =
     if not visible then
         Nothing
 
     else
         let
-            boxShadow =
+            boxShadowInset =
                 if inset then
-                    Css.boxShadow6 Css.inset
+                    "inset"
 
                 else
-                    Css.boxShadow5
+                    ""
+
+            px n =
+                String.fromFloat n ++ "px"
         in
-        RGBA.toStyles color
-            |> boxShadow
-                (Css.px offset.x)
-                (Css.px offset.y)
-                (Css.px radius)
-                (spread |> Maybe.withDefault 0 |> Css.px)
+        String.join " "
+            [ boxShadowInset
+            , px offset.x
+            , px offset.y
+            , px radius
+            , spread |> Maybe.withDefault 0 |> px
+            , RGBA.toStylesString colorMap color
+            ]
+            |> Css.property "box-shadow"
             |> Just

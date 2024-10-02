@@ -1206,14 +1206,12 @@ graphSvg plugins _ vc gc model bbox =
                 ]
                 [ stop
                     [ from
-                        |> Color.toCssString
                         |> stopColor
                     ]
                     []
                 , stop
                     [ offset "70%"
                     , to
-                        |> Color.toCssString
                         |> stopColor
                     ]
                     []

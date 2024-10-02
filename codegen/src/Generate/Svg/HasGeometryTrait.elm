@@ -6,21 +6,22 @@ import Gen.Css as Css
 import Generate.Svg.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Util exposing (..)
 import Generate.Util.Paint as Paint
+import Types exposing (ColorMap)
 
 
-toStyles : HasGeometryTrait -> List Elm.Expression
-toStyles node =
-    MinimalFillsTrait.toStyles node.minimalFillsTrait
-        |> (++) (toStroke node.strokes)
+toStyles : ColorMap -> HasGeometryTrait -> List Elm.Expression
+toStyles colorMap node =
+    MinimalFillsTrait.toStyles colorMap node.minimalFillsTrait
+        |> (++) (toStroke colorMap node.strokes)
         |> m (String.fromFloat >> Css.property "stroke-width") node.strokeWeight
 
 
-toStroke : Maybe (List Paint) -> List Elm.Expression
-toStroke paints =
+toStroke : ColorMap -> Maybe (List Paint) -> List Elm.Expression
+toStroke colorMap paints =
     []
         |> a
-            (Paint.toStylesString
-                >> Maybe.map (Css.call_.property (Elm.string "stroke"))
+            (Paint.toStylesString colorMap
+                >> Maybe.map (Css.property "stroke")
             )
             {- already covered by color alpha
                paints

@@ -12,7 +12,7 @@ import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Html.TypeStyle as TypeStyle
 import Generate.Util exposing (getElementAttributes, getTextProperty, withVisibility)
-import Types exposing (Config, Details)
+import Types exposing (ColorMap, Config, Details)
 
 
 toExpressions : Config -> String -> TextNode -> List Elm.Expression
@@ -27,7 +27,7 @@ toExpressions config componentName node =
                     (Common.getName node
                         |> getElementAttributes config
                         |> Elm.Op.append
-                            ([ toStyles node |> Attributes.css ]
+                            ([ toStyles config.colorMap node |> Attributes.css ]
                                 |> Elm.list
                             )
                     )
@@ -42,14 +42,14 @@ toExpressions config componentName node =
             |> List.singleton
 
 
-toStyles : TextNode -> List Elm.Expression
-toStyles node =
+toStyles : ColorMap -> TextNode -> List Elm.Expression
+toStyles colorMap node =
     Css.whiteSpace Css.noWrap
-        :: TypeStyle.toStyles node.style
-        ++ MinimalFillsTrait.toStyles node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait
-        ++ DefaultShapeTraits.toStyles node.defaultShapeTraits
+        :: TypeStyle.toStyles colorMap node.style
+        ++ MinimalFillsTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait
+        ++ DefaultShapeTraits.toStyles colorMap node.defaultShapeTraits
 
 
-toDetails : TextNode -> Details
-toDetails node =
-    Common.toDetails (toStyles node) node
+toDetails : ColorMap -> TextNode -> Details
+toDetails colorMap node =
+    Common.toDetails (toStyles colorMap node) node

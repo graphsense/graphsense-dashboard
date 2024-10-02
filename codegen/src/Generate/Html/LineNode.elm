@@ -5,7 +5,7 @@ import Elm
 import Gen.Css as Css
 import Generate.Svg.DefaultShapeTraits
 import RecordSetter exposing (s_styles)
-import Types exposing (Details)
+import Types exposing (ColorMap, Details)
 
 
 toStyles : LineNode -> List Elm.Expression
@@ -26,7 +26,7 @@ toStyles node =
 -}
 
 
-toDetails : LineNode -> Details
-toDetails node =
-    Generate.Svg.DefaultShapeTraits.toDetails node
+toDetails : ColorMap -> LineNode -> Details
+toDetails colorMap node =
+    Generate.Svg.DefaultShapeTraits.toDetails colorMap node
         |> s_styles (toStyles node)

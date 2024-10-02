@@ -31,65 +31,67 @@ subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
         SubcanvasNodeComponentNode n ->
             if FrameTraits.isHidden n then
                 []
+
             else
-            toDeclarations "" Dict.empty n
+                toDeclarations "" Dict.empty n
 
         SubcanvasNodeComponentSetNode n ->
             if FrameTraits.isHidden n then
                 []
+
             else
-            let
-                parentName =
-                    FrameTraits.getName n
-            in
-            -- for component sets we need to
-            -- get its properties before
-            -- going deeper down to components of the set
-            n.frameTraits.children
-                |> List.map
-                    (\child ->
-                        case child of
-                            SubcanvasNodeComponentNode nn ->
-                                let
-                                    name =
-                                        FrameTraits.getName nn
-                                            |> sanitize
+                let
+                    parentName =
+                        FrameTraits.getName n
+                in
+                -- for component sets we need to
+                -- get its properties before
+                -- going deeper down to components of the set
+                n.frameTraits.children
+                    |> List.map
+                        (\child ->
+                            case child of
+                                SubcanvasNodeComponentNode nn ->
+                                    let
+                                        name =
+                                            FrameTraits.getName nn
+                                                |> sanitize
 
-                                    nothingIfEmpty d =
-                                        if Dict.isEmpty d then
-                                            Nothing
+                                        nothingIfEmpty d =
+                                            if Dict.isEmpty d then
+                                                Nothing
 
-                                        else
-                                            Just d
+                                            else
+                                                Just d
 
-                                    properties =
-                                        componentNodeToProperties name n
-                                            |> Dict.toList
-                                            |> List.filterMap
-                                                (\( k, types ) ->
-                                                    if k == name then
-                                                        Dict.filter
-                                                            (\_ type_ ->
-                                                                type_ /= ComponentPropertyTypeVARIANT
-                                                            )
-                                                            types
-                                                            |> nothingIfEmpty
-                                                            |> Maybe.map (pair k)
+                                        properties =
+                                            componentNodeToProperties name n
+                                                |> Dict.toList
+                                                |> List.filterMap
+                                                    (\( k, types ) ->
+                                                        if k == name then
+                                                            Dict.filter
+                                                                (\_ type_ ->
+                                                                    type_ /= ComponentPropertyTypeVARIANT
+                                                                )
+                                                                types
+                                                                |> nothingIfEmpty
+                                                                |> Maybe.map (pair k)
 
-                                                    else
-                                                        Just ( k, types )
-                                                )
-                                            |> Dict.fromList
-                                in
-                                toDeclarations
-                                    parentName
-                                    properties
-                                    nn
+                                                        else
+                                                            Just ( k, types )
+                                                    )
+                                                |> Dict.fromList
+                                    in
+                                    toDeclarations
+                                        parentName
+                                        properties
+                                        nn
 
-                            _ ->
-                                []
-                    )
-                |> List.concat
+                                _ ->
+                                    []
+                        )
+                    |> List.concat
 
         _ ->
             []

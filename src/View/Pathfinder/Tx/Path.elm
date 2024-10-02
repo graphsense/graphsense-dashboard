@@ -282,11 +282,9 @@ coloredPath vc c =
                 ++ ")"
                 |> transform
             , (Colors.pathOut
-                |> Color.toCssString
                 |> Css.property "stroke"
               )
                 :: (Colors.pathOut
-                        |> Color.toCssString
                         |> Css.property "fill"
                         |> Css.important
                    )

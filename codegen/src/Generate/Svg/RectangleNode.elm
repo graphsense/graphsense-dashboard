@@ -8,12 +8,11 @@ import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (height, width, x, y)
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.RectangleNode exposing (getName)
+import Generate.Svg.CornerTrait as CornerTrait
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Util exposing (getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
-import Types exposing (Config, Details, OriginAdjust)
-import Generate.Util exposing (mm2)
-import Generate.Svg.CornerTrait as CornerTrait
+import Types exposing (ColorMap, Config, Details, OriginAdjust)
 
 
 toExpressions : Config -> String -> RectangleNode -> List Elm.Expression
@@ -22,7 +21,7 @@ toExpressions config componentName node =
         (getName node
             |> getElementAttributes config
             |> Elm.Op.append
-                ((toStyles node
+                ((toStyles config.colorMap node
                     |> Gen.Svg.Styled.Attributes.css
                  )
                     :: toAttributes node
@@ -34,14 +33,14 @@ toExpressions config componentName node =
         |> List.singleton
 
 
-toStyles : RectangleNode -> List Elm.Expression
-toStyles node =
-    DefaultShapeTraits.toStyles node.rectangularShapeTraits.defaultShapeTraits
+toStyles : ColorMap -> RectangleNode -> List Elm.Expression
+toStyles colorMap node =
+    DefaultShapeTraits.toStyles colorMap node.rectangularShapeTraits.defaultShapeTraits
 
 
-toDetails : RectangleNode -> Details
-toDetails node =
-    Common.toDetails (toStyles node) node.rectangularShapeTraits
+toDetails : ColorMap -> RectangleNode -> Details
+toDetails colorMap node =
+    Common.toDetails (toStyles colorMap node) node.rectangularShapeTraits
 
 
 toAttributes : RectangleNode -> List Elm.Expression

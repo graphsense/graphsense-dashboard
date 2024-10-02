@@ -67,6 +67,7 @@ toDetails getStyles node =
     , styles = getStyles node.frameTraits
     }
 
+
 isHidden : { a | frameTraits : FrameTraits } -> Bool
 isHidden { frameTraits } =
     Maybe.map not frameTraits.isLayerTrait.visible

@@ -13,6 +13,7 @@ import Generate.Html
 import Generate.Svg
 import Json.Decode
 import String.Case exposing (toCamelCaseUpper)
+import Types exposing (ColorMap)
 
 
 onlyFrames : List String
@@ -35,58 +36,84 @@ generate { children } =
         |> List.concat
 
 
+themeFolder : String
+themeFolder =
+    "Theme"
+
+
 canvasNodeToFiles : CanvasNode -> List Generate.File
 canvasNodeToFiles node =
-    node.children
-        |> List.map frameToFiles
-        |> List.concat
-
-
-frameToFiles : SubcanvasNode -> List Generate.File
-frameToFiles node =
     let
-        themeFolder =
-            "Theme"
+        frames =
+            node.children
+                |> List.filterMap isFrame
+
+        colorMap =
+            frames
+                |> findColorMap
     in
-    case node of
+    (Colors.colorMapToStylesheet colorMap
+        :: Colors.colorMapToDeclarations colorMap
+        |> Elm.file [ themeFolder, "Colors" ]
+    )
+        :: (List.map (frameToFiles (Dict.fromList colorMap)) frames
+                |> List.concat
+           )
+
+
+findColorMap : List FrameNode -> List ( String, String )
+findColorMap =
+    List.filter (.frameTraits >> .isLayerTrait >> .name >> (==) colorsFrame)
+        >> List.head
+        >> Maybe.map Colors.frameNodeToColorMap
+        >> Maybe.withDefault []
+
+
+colorsFrame : String
+colorsFrame =
+    "Colors"
+
+
+isFrame : SubcanvasNode -> Maybe FrameNode
+isFrame arg1 =
+    case arg1 of
         SubcanvasNodeFrameNode n ->
-            if n.frameTraits.isLayerTrait.name == "Colors" then
-                Colors.frameNodeToDeclarations n
-                    |> Elm.file [ themeFolder, "Colors" ]
-                    |> List.singleton
-
-            else
-                let
-                    name sub =
-                        n.frameTraits.isLayerTrait.name
-                            |> toCamelCaseUpper
-                            |> List.singleton
-                            |> (::) sub
-                            |> (::) themeFolder
-
-                    nameLowered =
-                        String.toLower n.frameTraits.isLayerTrait.name
-
-                    matchOnlyFrames =
-                        List.isEmpty onlyFrames
-                            || List.any (flip String.startsWith nameLowered) onlyFrames
-                in
-                if n.frameTraits.readyForDev && matchOnlyFrames then
-                    [ frameNodeToDeclarations
-                        (Common.subcanvasNodeComponentsToDeclarations Generate.Svg.componentNodeToDeclarations)
-                        n
-                        |> Elm.file (name "Svg")
-                    , frameNodeToDeclarations
-                        (Common.subcanvasNodeComponentsToDeclarations Generate.Html.componentNodeToDeclarations)
-                        n
-                        |> Elm.file (name "Html")
-                    ]
-
-                else
-                    []
+            Just n
 
         _ ->
-            []
+            Nothing
+
+
+frameToFiles : ColorMap -> FrameNode -> List Generate.File
+frameToFiles colorMap n =
+    let
+        name sub =
+            n.frameTraits.isLayerTrait.name
+                |> toCamelCaseUpper
+                |> List.singleton
+                |> (::) sub
+                |> (::) themeFolder
+
+        nameLowered =
+            String.toLower n.frameTraits.isLayerTrait.name
+
+        matchOnlyFrames =
+            List.isEmpty onlyFrames
+                || List.any (flip String.startsWith nameLowered) onlyFrames
+    in
+    if n.frameTraits.readyForDev && matchOnlyFrames && nameLowered /= String.toLower colorsFrame then
+        [ frameNodeToDeclarations
+            (Common.subcanvasNodeComponentsToDeclarations (Generate.Svg.componentNodeToDeclarations colorMap))
+            n
+            |> Elm.file (name "Svg")
+        , frameNodeToDeclarations
+            (Common.subcanvasNodeComponentsToDeclarations (Generate.Html.componentNodeToDeclarations colorMap))
+            n
+            |> Elm.file (name "Html")
+        ]
+
+    else
+        []
 
 
 frameNodeToDeclarations : (SubcanvasNode -> List Elm.Declaration) -> FrameNode -> List Elm.Declaration

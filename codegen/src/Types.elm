@@ -10,6 +10,7 @@ type alias Config =
     , positionRelatively : Maybe OriginAdjust
     , attributes : Expression
     , instances : Expression
+    , colorMap : ColorMap
     }
 
 
@@ -30,5 +31,9 @@ type alias OriginAdjust =
     }
 
 
-type alias ComponentPropertyExpressions
-    = (Dict String Expression)
+type alias ComponentPropertyExpressions =
+    Dict String Expression
+
+
+type alias ColorMap =
+    Dict String String

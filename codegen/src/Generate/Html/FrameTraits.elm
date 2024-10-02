@@ -9,19 +9,19 @@ import Generate.Html.HasEffectsTrait as HasEffectsTrait
 import Generate.Html.HasFramePropertiesTrait as HasFramePropertiesTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
 import Generate.Html.HasLayoutTrait as HasLayoutTrait
-import Types exposing (Details)
+import Types exposing (ColorMap, Details)
 
 
-toStyles : FrameTraits -> List Elm.Expression
-toStyles node =
+toStyles : ColorMap -> FrameTraits -> List Elm.Expression
+toStyles colorMap node =
     CornerTrait.toStyles node.cornerTrait
         ++ HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
         ++ HasLayoutTrait.toStyles node.hasLayoutTrait
-        ++ HasFramePropertiesTrait.toStyles node.hasFramePropertiesTrait
-        ++ HasGeometryTrait.toStyles node.hasGeometryTrait
-        ++ HasEffectsTrait.toStyles node.hasEffectsTrait
+        ++ HasFramePropertiesTrait.toStyles colorMap node.hasFramePropertiesTrait
+        ++ HasGeometryTrait.toStyles colorMap node.hasGeometryTrait
+        ++ HasEffectsTrait.toStyles colorMap node.hasEffectsTrait
 
 
-toDetails : { a | frameTraits : FrameTraits } -> Details
-toDetails node =
-    Common.toDetails toStyles node
+toDetails : ColorMap -> { a | frameTraits : FrameTraits } -> Details
+toDetails colorMap node =
+    Common.toDetails (toStyles colorMap) node
