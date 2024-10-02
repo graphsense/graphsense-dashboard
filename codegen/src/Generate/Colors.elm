@@ -10,8 +10,7 @@ import Generate.Util exposing (sanitize)
 import Generate.Util.Paint as Paint
 import Generate.Util.RGBA as RGBA
 import String.Format as Format
-import Tuple exposing (pair)
-import Tuple exposing (second)
+import Tuple exposing (pair, second)
 
 
 frameNodeToColorMap : FrameNode -> List ( String, String )
@@ -64,6 +63,8 @@ colorMapToDeclarations =
 
 colorToDeclaration : String -> Elm.Declaration
 colorToDeclaration name =
-    "var(--" ++ name ++ ")"
-    |> Elm.string 
+    "var(--"
+        ++ name
+        ++ ")"
+        |> Elm.string
         |> Elm.declaration (String.dropLeft (String.length prefix) name)

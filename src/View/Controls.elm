@@ -1,4 +1,4 @@
-module View.Controls exposing (tabs, toggleWithIcons, toggleWithText, toggle)
+module View.Controls exposing (tabs, toggle, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -9,15 +9,29 @@ import Theme.Html.SettingsPage as Sp
 import Util.View
 
 
-toggle : { selected : Bool, disabled : Bool,  msg : msg} -> Html msg
-toggle {selected, disabled, msg} = case (selected, disabled) of
-                                        (True, True) -> Sc.switchOnDisabledSizeBig {}
-                                        (True, False) -> Sc.switchOnOnSizeBigWithAttributes 
-                                                            (Sc.switchOnOnSizeBigAttributes
-                                                                |> Rs.s_onOnSizeBig [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]) {}
-                                        (False, False) -> Sc.switchOnOffSizeBigWithAttributes (Sc.switchOnOffSizeBigAttributes
-                                                                |> Rs.s_onOffSizeBig [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]) {}
-                                        (False, True) -> Sc.switchOnDisabledSizeBig {}
+toggle : { selected : Bool, disabled : Bool, msg : msg } -> Html msg
+toggle { selected, disabled, msg } =
+    case ( selected, disabled ) of
+        ( True, True ) ->
+            Sc.switchStateDisabledSizeBig {}
+
+        ( True, False ) ->
+            Sc.switchStateOnSizeBigWithAttributes
+                (Sc.switchStateOnSizeBigAttributes
+                    |> Rs.s_stateOnSizeBig [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
+                )
+                {}
+
+        ( False, False ) ->
+            Sc.switchStateOffSizeBigWithAttributes
+                (Sc.switchStateOffSizeBigAttributes
+                    |> Rs.s_stateOffSizeBig [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
+                )
+                {}
+
+        ( False, True ) ->
+            Sc.switchStateDisabledSizeBig {}
+
 
 toggleWithText : { selectedA : Bool, titleA : String, titleB : String, msg : msg } -> Html msg
 toggleWithText { selectedA, titleA, titleB, msg } =
