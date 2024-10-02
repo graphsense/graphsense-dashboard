@@ -52,7 +52,7 @@ import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.Icons as HIcons
-import Theme.Html.SettingsComponents as SettingsComponents
+import Theme.Html.SettingsComponents as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
@@ -63,6 +63,7 @@ import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.View exposing (copyIconPathfinder, hovercard, none, truncateLongIdentifierWithLengths)
+import View.Controls as Vc
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -338,22 +339,41 @@ topLeftPanel vc =
 settingsView : View.Config -> Pathfinder.Model -> Hovercard.Model -> Html Msg
 settingsView vc _ hc =
     let
-        utc_text =
-            if vc.showDatesInUserLocale then
-                "User"
+        switchWithText primary text enabled msg =
+            let
+                toggle =
+                    Vc.toggleSmall
+                        { selected = enabled
+                        , disabled = False
+                        , msg = msg
+                        }
+            in
+            if primary then
+                Sc.textSwitchStylePrimary
+                    { stylePrimary = { label = Locale.string vc.locale text }
+                    , switch = { variant = toggle }
+                    }
 
             else
-                "UTC"
+                Sc.textSwitchStyleSecondary
+                    { styleSecondary = { label = Locale.string vc.locale text }
+                    , switch = { variant = toggle }
+                    }
     in
-    div [ css [ Css.padding Css.mlGap ] ]
-        [ div [ Css.panelHeadingStyle3 vc |> css ] [ Html.text (Locale.string vc.locale "Transaction") ]
-        , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, Svg.onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
-        , div [ Css.panelHeadingStyle3 vc |> css ] [ Html.text (Locale.string vc.locale "Date") ]
-        , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, Svg.onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
-        , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, Svg.onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
-        , div [ Css.panelHeadingStyle3 vc |> css ] [ Html.text (Locale.string vc.locale "Cluster") ]
-        , Util.View.onOffSwitch vc [ HA.checked vc.highlightClusterFriends, Svg.onClick (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Highlight clusters")
-        ]
+    Sc.displayPropertiesWithInstances
+        Sc.displayPropertiesAttributes
+        Sc.displayPropertiesInstances
+        { exactValueSwitch = { variant = switchWithText True "Show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
+        , fiatSwitch = { variant = switchWithText False "Amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
+        , gridSwitch = { variant = switchWithText True "Snap to Grid" vc.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
+        , highlightSwitch = { variant = switchWithText True "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
+        , settingsLabelOfClustersSettings = { settingsLabel = Locale.string vc.locale "Clusters" }
+        , settingsLabelOfGeneralSettings = { settingsLabel = Locale.string vc.locale "General" }
+        , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "Transaction" }
+        , timestampSwitch = { variant = switchWithText True "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) }
+        , timezoneSwitch = { variant = switchWithText False "with zone code" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) }
+        , utcSwitch = { variant = switchWithText False "in UTC" (not vc.showDatesInUserLocale) (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) }
+        }
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc hc (Css.zIndexMainValue + 1)
@@ -392,12 +412,12 @@ iconWithText _ faIcon text =
 
 searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 searchBoxView plugins _ vc _ model =
-    SettingsComponents.toolbarSearchFieldWithInstances
-        (SettingsComponents.toolbarSearchFieldAttributes
+    Sc.toolbarSearchFieldWithInstances
+        (Sc.toolbarSearchFieldAttributes
             |> Rs.s_toolbarSearchField
                 [ css [ Css.alignItems Css.stretch |> Css.important ] ]
         )
-        (SettingsComponents.toolbarSearchFieldInstances
+        (Sc.toolbarSearchFieldInstances
             |> Rs.s_searchInputField
                 (View.Search.searchWithMoreCss plugins
                     vc

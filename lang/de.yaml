@@ -401,3 +401,6 @@ contract creation: Contract erstellt
 Token holdings: Token Saldo
 Show in fiat: In Fiat anzeigen
 Preferred fiat currency: Bevorzugte Fiatwährung
+Show exact values: Genaue Werte anzeigen
+Amount in Fiat: In Fiatwährung
+with zone code: mit Zeitzone

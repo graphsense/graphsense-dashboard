@@ -899,15 +899,23 @@ updateByMsg plugins uc msg model =
                     n model
 
                 UserClickedToggleDatesInUserLocale ->
-                    -- handled Uptream
+                    -- handled Upstream
                     n model
 
                 UserClickedToggleShowTimeZoneOffset ->
-                    -- handled Uptream
+                    -- handled Upstream
+                    n model
+
+                UserClickedToggleValueDisplay ->
+                    -- handled Upstream
+                    n model
+
+                UserClickedToggleValueDetail ->
+                    -- handled Upstream
                     n model
 
                 UserClickedToggleHighlightClusterFriends ->
-                    -- handled Uptream
+                    -- handled Upstream
                     n model
 
                 UserClickedToggleDisplaySettings ->

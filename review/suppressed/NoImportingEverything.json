@@ -87,7 +87,6 @@
     { "count": 2, "filePath": "src/View/Pathfinder/Toolbar.elm" },
     { "count": 2, "filePath": "src/View/Pathfinder/Tooltip.elm" },
     { "count": 2, "filePath": "src/View/Pathfinder/Tx.elm" },
-    { "count": 2, "filePath": "src/View/Settings.elm" },
     { "count": 2, "filePath": "src/View/Stats.elm" },
     { "count": 2, "filePath": "src/View/User.elm" },
     { "count": 1, "filePath": "src/Css/Autocomplete.elm" },
@@ -141,6 +140,7 @@
     { "count": 1, "filePath": "src/Update/Pathfinder/Address.elm" },
     { "count": 1, "filePath": "src/Update/Pathfinder/TxDetails.elm" },
     { "count": 1, "filePath": "src/Update/Pathfinder/WorkflowNextTxByTime.elm" },
-    { "count": 1, "filePath": "src/Update/Search.elm" }
+    { "count": 1, "filePath": "src/Update/Search.elm" },
+    { "count": 1, "filePath": "src/View/Settings.elm" }
   ]
 }

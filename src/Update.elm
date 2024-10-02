@@ -666,6 +666,21 @@ update plugins uc msg model =
             else
                 n model
 
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleValueDisplay) ->
+            update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
+
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleValueDetail) ->
+            let
+                option =
+                    case model.config.locale.valueDetail of
+                        Locale.Exact ->
+                            "magnitude"
+
+                        _ ->
+                            "exact"
+            in
+            update plugins uc (Graph.UserChangesValueDetail option |> GraphMsg) model
+
         PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleDatesInUserLocale) ->
             let
                 ( pf, pfeff ) =

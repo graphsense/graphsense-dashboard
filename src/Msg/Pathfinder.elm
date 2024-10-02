@@ -86,6 +86,8 @@ type DisplaySettingsMsg
     | UserClickedToggleHighlightClusterFriends
     | UserClickedToggleSnapToGrid
     | DisplaySettingsHovercardMsg Hovercard.Msg
+    | UserClickedToggleValueDisplay
+    | UserClickedToggleValueDetail
 
 
 type TxDetailsMsg

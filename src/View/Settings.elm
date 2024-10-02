@@ -8,8 +8,8 @@ module View.Settings exposing (view)
 
 import Config.View exposing (Config)
 import Html.Styled exposing (..)
-import Model exposing (Model, Msg(..), SettingsTabs(..), SettingsMsg(..))
-import Msg.Pathfinder exposing (Msg(..), DisplaySettingsMsg(..))
+import Model exposing (Model, Msg(..), SettingsMsg(..), SettingsTabs(..))
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Html.Icons as Icons
@@ -86,61 +86,61 @@ import View.Locale as Locale
 
 view : Plugins -> Config -> Model x -> Html Model.Msg
 view _ vc m =
-    let
-        -- settings =
-        --     [ Section "Profile" (authContent vc m.user)
-        --     , Section "General"
-        --         [ SubSection "General"
-        --         , Custom "Language" (localeSwitch vc)
-        --         , ToggleSwitch "Show date in user locale" vc.showDatesInUserLocale (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg |> PathfinderMsg)
-        --         , Select "Preferred fiat currency" (UserChangedPreferredCurrency >> SettingsMsg) (currencyOptions vc.preferredFiatCurrency)
-        --         , SubSection "Values"
-        --         , ToggleSwitch "Show in fiat" vc.showValuesInFiat (UserToggledValueDisplay |> SettingsMsg)
-        --         -- , Select "Change currency" (UserChangesCurrency >> GraphMsg) (currencyOptions vc.locale.currency)
-        --         , Select "Value format" (UserChangesValueDetail >> GraphMsg) (valueFormatOptions vc.locale.valueDetail)
-        --         ]
-        --     , Section "Overview Network"
-        --         [ SubSection "Transaction"
-        --         , ToggleSwitch "Show zero value transactions" m.graph.config.showZeroTransactions (UserClickedToggleShowZeroTransactions |> GraphMsg)
-        --         , Select "Transaction label" (UserChangesTxLabelType >> GraphMsg) (transactionLableOptions m.graph.config.txLabelType)
-        --         , SubSection "Address"
-        --         , Select "Address Label" (UserChangesAddressLabelType >> GraphMsg) (addressLabelOptions m.graph.config.addressLabelType)
-        --         , SubSection "Show Shadow Links ..."
-        --         , ToggleSwitch "for addresses" m.graph.config.showAddressShadowLinks (UserClickedShowAddressShadowLinks |> GraphMsg)
-        --         , ToggleSwitch "for entities" m.graph.config.showEntityShadowLinks (UserClickedShowEntityShadowLinks |> GraphMsg)
-        --         ]
-        --     , Section "Pathfinder"
-        --         [ SubSection "General"
-        --         , ToggleSwitch "Snap to Grid" vc.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg |> PathfinderMsg)
-        --         , SubSection "Date"
-        --         , ToggleSwitch "Show timezone" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg |> PathfinderMsg)
-        --         , SubSection "Transaction"
-        --         , ToggleSwitch "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg |> PathfinderMsg)
-        --         , SubSection "Cluster"
-        --         , ToggleSwitch "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg |> PathfinderMsg)
-        --         ]
-        --     ]
-        tbs =
-            Vc.tabs
-                ([ ( "General", GeneralTab )
-                 , ( "Pathfinder", PathfinderTab )
-                 , ( "Overview Network", GraphTab )
-                 ]
-                    |> List.map
-                        (\( t, msg ) ->
-                            { title = Locale.string vc.locale t
-                            , selected = m.selectedSettingsTab == msg
-                            , msg = Model.UserChangedSettingsTab msg |> Model.SettingsMsg
-                            }
-                        )
-                )
-    in
+    -- let
+    -- settings =
+    --     [ Section "Profile" (authContent vc m.user)
+    --     , Section "General"
+    --         [ SubSection "General"
+    --         , Custom "Language" (localeSwitch vc)
+    --         , ToggleSwitch "Show date in user locale" vc.showDatesInUserLocale (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg |> PathfinderMsg)
+    --         , Select "Preferred fiat currency" (UserChangedPreferredCurrency >> SettingsMsg) (currencyOptions vc.preferredFiatCurrency)
+    --         , SubSection "Values"
+    --         , ToggleSwitch "Show in fiat" vc.showValuesInFiat (UserToggledValueDisplay |> SettingsMsg)
+    --         -- , Select "Change currency" (UserChangesCurrency >> GraphMsg) (currencyOptions vc.locale.currency)
+    --         , Select "Value format" (UserChangesValueDetail >> GraphMsg) (valueFormatOptions vc.locale.valueDetail)
+    --         ]
+    --     , Section "Overview Network"
+    --         [ SubSection "Transaction"
+    --         , ToggleSwitch "Show zero value transactions" m.graph.config.showZeroTransactions (UserClickedToggleShowZeroTransactions |> GraphMsg)
+    --         , Select "Transaction label" (UserChangesTxLabelType >> GraphMsg) (transactionLableOptions m.graph.config.txLabelType)
+    --         , SubSection "Address"
+    --         , Select "Address Label" (UserChangesAddressLabelType >> GraphMsg) (addressLabelOptions m.graph.config.addressLabelType)
+    --         , SubSection "Show Shadow Links ..."
+    --         , ToggleSwitch "for addresses" m.graph.config.showAddressShadowLinks (UserClickedShowAddressShadowLinks |> GraphMsg)
+    --         , ToggleSwitch "for entities" m.graph.config.showEntityShadowLinks (UserClickedShowEntityShadowLinks |> GraphMsg)
+    --         ]
+    --     , Section "Pathfinder"
+    --         [ SubSection "General"
+    --         , ToggleSwitch "Snap to Grid" vc.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg |> PathfinderMsg)
+    --         , SubSection "Date"
+    --         , ToggleSwitch "Show timezone" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg |> PathfinderMsg)
+    --         , SubSection "Transaction"
+    --         , ToggleSwitch "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg |> PathfinderMsg)
+    --         , SubSection "Cluster"
+    --         , ToggleSwitch "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg |> PathfinderMsg)
+    --         ]
+    --     ]
+    -- tbs =
+    --     Vc.tabs
+    --         ([ ( "General", GeneralTab )
+    --          , ( "Pathfinder", PathfinderTab )
+    --          , ( "Overview Network", GraphTab )
+    --          ]
+    --             |> List.map
+    --                 (\( t, msg ) ->
+    --                     { title = Locale.string vc.locale t
+    --                     , selected = m.selectedSettingsTab == msg
+    --                     , msg = Model.UserChangedSettingsTab msg |> Model.SettingsMsg
+    --                     }
+    --                 )
+    --         )
+    -- in
     div
         []
         [ Sp.settingsPageWithInstances
             Sp.settingsPageAttributes
             (Sp.settingsPageInstances
-                |> Rs.s_settingsTabs (Just tbs)
+                |> Rs.s_settingsTabs (Just Util.View.none)
             )
             { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBack {} }
             , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
@@ -164,25 +164,27 @@ view _ vc m =
 
 pathfinderSettings : Config -> Model x -> Html Model.Msg
 pathfinderSettings vc m =
-    Sp.settingsPagePathfinderWithInstances 
-        (Sp.settingsPagePathfinderAttributes)
-        (Sp.settingsPagePathfinderInstances)
-        { settingsAmountInFiat = { text = (Locale.string vc.locale "Amount in Fiat") }
-        , settingsExactValuesLabel = { text = (Locale.string vc.locale "Show exact values") }
-        , settingsHighlightClustersLabel = { text = (Locale.string vc.locale "Highlight on graph") }
-        , settingsSectionHeaderOfSettingsPathfinderClusters = { text = (Locale.string vc.locale "Clusters") }
-        , settingsSectionHeaderOfSettingsPathfinderTransactions = { text = (Locale.string vc.locale "Transactions") }
-        , settingsTimeZone = { text = (Locale.string vc.locale "Show timestamp") }
-        , settingsTimestamp = { text = (Locale.string vc.locale "Show timezone") }
-        , switchOfSettingsPathfinderClusters = { variant = Vc.toggle { selected = vc.highlightClusterFriends
-                                                                        , disabled = False
-                                                                        , msg = (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg |> PathfinderMsg)} }
-        , switchOfSettingsTime = { variant = Vc.toggle {selected = True, disabled = False, msg = Model.NoOp}}
-        , switchOfSettingsValue = { variant = Vc.toggle {selected = True, disabled = False, msg = Model.NoOp} }
+    Sp.settingsPagePathfinderWithInstances
+        Sp.settingsPagePathfinderAttributes
+        Sp.settingsPagePathfinderInstances
+        { settingsAmountInFiat = { text = Locale.string vc.locale "Amount in Fiat" }
+        , settingsExactValuesLabel = { text = Locale.string vc.locale "Show exact values" }
+        , settingsHighlightClustersLabel = { text = Locale.string vc.locale "Highlight on graph" }
+        , settingsSectionHeaderOfSettingsPathfinderClusters = { text = Locale.string vc.locale "Clusters" }
+        , settingsSectionHeaderOfSettingsPathfinderTransactions = { text = Locale.string vc.locale "Transactions" }
+        , settingsTimeZone = { text = Locale.string vc.locale "Show timestamp" }
+        , settingsTimestamp = { text = Locale.string vc.locale "Show timezone" }
+        , switchOfSettingsPathfinderClusters =
+            { variant =
+                Vc.toggle
+                    { selected = vc.highlightClusterFriends
+                    , disabled = False
+                    , msg = UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg |> PathfinderMsg
+                    }
+            }
+        , switchOfSettingsTime = { variant = Vc.toggle { selected = True, disabled = False, msg = Model.NoOp } }
+        , switchOfSettingsValue = { variant = Vc.toggle { selected = True, disabled = False, msg = Model.NoOp } }
         }
-
-         
-
 
 
 graphSettings : Config -> Model x -> Html Model.Msg
@@ -213,10 +215,8 @@ generalSettings vc m =
                 }
 
         modeToggle =
-            Vc.toggleWithIcons
+            Vc.lightModeToggle
                 { selectedA = vc.lightmode
-                , iconA = Icons.iconsLightMode {}
-                , iconB = Icons.iconsDarkMode {}
                 , msg = Model.UserClickedLightmode
                 }
 

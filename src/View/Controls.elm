@@ -1,4 +1,4 @@
-module View.Controls exposing (tabs, toggle, toggleWithIcons, toggleWithText)
+module View.Controls exposing (lightModeToggle, tabs, toggle, toggleSmall, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -33,6 +33,30 @@ toggle { selected, disabled, msg } =
             Sc.switchStateDisabledSizeBig {}
 
 
+toggleSmall : { selected : Bool, disabled : Bool, msg : msg } -> Html msg
+toggleSmall { selected, disabled, msg } =
+    case ( selected, disabled ) of
+        ( True, True ) ->
+            Sc.switchStateDisabledSizeSmall {}
+
+        ( True, False ) ->
+            Sc.switchStateOnSizeSmallWithAttributes
+                (Sc.switchStateOnSizeSmallAttributes
+                    |> Rs.s_stateOnSizeSmall [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
+                )
+                {}
+
+        ( False, False ) ->
+            Sc.switchStateOffSizeSmallWithAttributes
+                (Sc.switchStateOffSizeSmallAttributes
+                    |> Rs.s_stateOffSizeSmall [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
+                )
+                {}
+
+        ( False, True ) ->
+            Sc.switchStateDisabledSizeSmall {}
+
+
 toggleWithText : { selectedA : Bool, titleA : String, titleB : String, msg : msg } -> Html msg
 toggleWithText { selectedA, titleA, titleB, msg } =
     let
@@ -57,38 +81,64 @@ toggleWithText { selectedA, titleA, titleB, msg } =
         }
 
 
+lightModeToggle : { selectedA : Bool, msg : msg } -> Html msg
+lightModeToggle { selectedA, msg } =
+    toggleWithIconsInternal { selectedA = selectedA, iconA = Nothing, iconB = Nothing, msg = msg }
+
+
 toggleWithIcons : { selectedA : Bool, iconA : Html msg, iconB : Html msg, msg : msg } -> Html msg
 toggleWithIcons { selectedA, iconA, iconB, msg } =
+    toggleWithIconsInternal { selectedA = selectedA, iconA = Just iconA, iconB = Just iconB, msg = msg }
+
+
+toggleWithIconsInternal : { selectedA : Bool, iconA : Maybe (Html msg), iconB : Maybe (Html msg), msg : msg } -> Html msg
+toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
     let
         ( a, b ) =
             if selectedA then
-                ( Sc.toggleCellWithTextStateSelectedWithInstances
-                    Sc.toggleCellWithTextStateSelectedAttributes
-                    (Sc.toggleCellWithTextStateSelectedInstances
-                        |> Rs.s_placeholder (Just iconA)
-                    )
-                    { stateSelected = { toggleText = "" } }
-                , Sc.toggleCellWithTextStateDeselectedWithInstances
-                    Sc.toggleCellWithTextStateDeselectedAttributes
-                    (Sc.toggleCellWithTextStateDeselectedInstances
-                        |> Rs.s_placeholder (Just iconB)
-                    )
-                    { stateDeselected = { toggleText = "" } }
+                ( iconA
+                    |> Maybe.map
+                        (\i ->
+                            Sc.toggleCellWithTextStateSelectedWithInstances
+                                Sc.toggleCellWithTextStateSelectedAttributes
+                                (Sc.toggleCellWithTextStateSelectedInstances
+                                    |> Rs.s_placeholder (Just i)
+                                )
+                                { stateSelected = { toggleText = "" } }
+                        )
+                , iconB
+                    |> Maybe.map
+                        (\i ->
+                            Sc.toggleCellWithTextStateDeselectedWithInstances
+                                Sc.toggleCellWithTextStateDeselectedAttributes
+                                (Sc.toggleCellWithTextStateDeselectedInstances
+                                    |> Rs.s_placeholder (Just i)
+                                )
+                                { stateDeselected = { toggleText = "" } }
+                        )
                 )
 
             else
-                ( Sc.toggleCellWithTextStateDeselectedWithInstances
-                    Sc.toggleCellWithTextStateDeselectedAttributes
-                    (Sc.toggleCellWithTextStateDeselectedInstances
-                        |> Rs.s_placeholder (Just iconA)
-                    )
-                    { stateDeselected = { toggleText = "" } }
-                , Sc.toggleCellWithTextStateSelectedWithInstances
-                    Sc.toggleCellWithTextStateSelectedAttributes
-                    (Sc.toggleCellWithTextStateSelectedInstances
-                        |> Rs.s_placeholder (Just iconB)
-                    )
-                    { stateSelected = { toggleText = "" } }
+                ( iconA
+                    |> Maybe.map
+                        (\i ->
+                            Sc.toggleCellWithTextStateDeselectedWithInstances
+                                Sc.toggleCellWithTextStateDeselectedAttributes
+                                (Sc.toggleCellWithTextStateDeselectedInstances
+                                    |> Rs.s_placeholder (Just i)
+                                )
+                                { stateDeselected = { toggleText = "" } }
+                        )
+                , iconB
+                    |> Maybe.map
+                        (\i ->
+                            Sc.toggleCellWithTextStateSelectedWithInstances
+                                Sc.toggleCellWithTextStateSelectedAttributes
+                                (Sc.toggleCellWithTextStateSelectedInstances
+                                    |> Rs.s_placeholder (Just i)
+                                )
+                                { stateSelected = { toggleText = "" } }
+                        )
                 )
 
         shapeAttrs =
@@ -100,8 +150,8 @@ toggleWithIcons { selectedA, iconA, iconB, msg } =
                 |> Rs.s_modeLight shapeAttrs
             )
             (Sc.modeToggleModeLightInstances
-                |> Rs.s_toggleCellSelected (Just a)
-                |> Rs.s_toggleCellNeutral (Just b)
+                |> Rs.s_iconsDarkMode b
+                |> Rs.s_iconsLightMode a
             )
             {}
 
@@ -111,8 +161,8 @@ toggleWithIcons { selectedA, iconA, iconB, msg } =
                 |> Rs.s_modeDark shapeAttrs
             )
             (Sc.modeToggleModeDarkInstances
-                |> Rs.s_toggleCellSelected (Just a)
-                |> Rs.s_toggleCellNeutral (Just b)
+                |> Rs.s_iconsLightMode a
+                |> Rs.s_iconsDarkMode b
             )
             {}
 
