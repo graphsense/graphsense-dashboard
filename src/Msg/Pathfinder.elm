@@ -66,6 +66,7 @@ type Msg
     | UserMovesMouseOutAddress Id
     | UserMovesMouseOverTagLabel String
     | UserMovesMouseOutTagLabel String
+    | UserInputsAnnotation Id String
     | HovercardMsg Hovercard.Msg
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsPNG String

@@ -19,6 +19,7 @@ import Model.Search as Search
 import RemoteData exposing (WebData)
 import Theme.Svg.GraphComponents as GraphComponents
 import Time exposing (Posix)
+import Util.Annotations exposing (AnnotationModel)
 
 
 unit : Float
@@ -32,6 +33,7 @@ type alias Model =
     , tagSummaries : Dict Id HavingTags
     , clusters : Dict Id Entity
     , colors : ScopedColorAssignment
+    , annotations : AnnotationModel
     , dragging : Dragging Id
     , selection : Selection
     , hovered : Hovered

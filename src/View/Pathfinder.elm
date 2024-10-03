@@ -15,9 +15,9 @@ import DurationDatePicker as DatePicker
 import FontAwesome
 import Hex
 import Hovercard
-import Html.Styled as Html exposing (Html, button, div, h2, img, span, table, td, tr)
+import Html.Styled as Html exposing (Html, button, div, form, h2, img, input, span, table, td, tr)
 import Html.Styled.Attributes as HA exposing (src)
-import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
+import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency as Asset exposing (Currency(..), asset, assetFromBase)
@@ -57,6 +57,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
+import Util.Annotations as Annotations
 import Util.Css as Css
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
@@ -344,18 +345,50 @@ topLeftPanel vc =
 
 
 toolbarHovercardView : View.Config -> Pathfinder.Model -> ToolbarHovercardModel -> Html Msg
-toolbarHovercardView vc m ( id, hc ) =
-    case id of
-        Settings ->
+toolbarHovercardView vc m ( hcid, hc ) =
+    case ( hcid, m.selection ) of
+        ( Settings, _ ) ->
             settingsHovercardView vc m hc
 
-        Annotation ->
-            annotationHovercardView vc m hc
+        ( Annotation, Pathfinder.SelectedAddress id ) ->
+            annotationHovercardView vc id (Annotations.getAnnotation id m.annotations) hc
+
+        _ ->
+            none
 
 
-annotationHovercardView : View.Config -> Pathfinder.Model -> Hovercard.Model -> Html Msg
-annotationHovercardView vc _ hc =
-    Sc.annotation { labelField = { variant = none } }
+annotationHovercardView : View.Config -> Id -> Maybe Annotations.AnnotationItem -> Hovercard.Model -> Html Msg
+annotationHovercardView vc id annotation hc =
+    let
+        labelValue =
+            annotation |> Maybe.map .label |> Maybe.withDefault ""
+
+        inputField =
+            input [ Css.annotationInputStyle vc "" |> css, onInput (UserInputsAnnotation id), HA.value labelValue ] []
+
+        inputBody =
+            form []
+                [ Sc.labelFieldStateActiveWithInstances
+                    Sc.labelFieldStateActiveAttributes
+                    (Sc.labelFieldStateActiveInstances |> Rs.s_placeholderText (Just inputField))
+                    { stateActive = { deleteVisible = False, iconInstance = none } }
+                ]
+
+        cattr _ =
+            [ css [ Css.cursor Css.pointer ], onClick NoOp ]
+    in
+    Sc.annotationWithAttributes
+        (Sc.annotationAttributes
+            |> Rs.s_darkBlue (cattr "")
+            |> Rs.s_green (cattr "")
+            |> Rs.s_lightBlue (cattr "")
+            |> Rs.s_pink (cattr "")
+            |> Rs.s_purple (cattr "")
+            |> Rs.s_turquoise (cattr "")
+            |> Rs.s_yellow (cattr "")
+            |> Rs.s_noColorOfColors (cattr "")
+        )
+        { labelField = { variant = inputBody } }
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc hc (Css.zIndexMainValue + 1)

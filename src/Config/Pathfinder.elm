@@ -1,5 +1,6 @@
 module Config.Pathfinder exposing (Config, addressRadius, nodeXOffset, nodeYOffset)
 
+
 addressRadius : Float
 addressRadius =
     1

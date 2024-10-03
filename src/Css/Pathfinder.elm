@@ -1,4 +1,4 @@
-module Css.Pathfinder exposing (ButtonType(..), alertColor, dateStyle, dateTimeRangeBoxStyle, dateTimeRangeHighlightedDateStyle, detailsActionButtonStyle, emptyTableMsg, fullWidth, graphActionButtonStyle, graphActionsViewStyle, iconWithTextStyle, inIconStyle, inoutStyle, ioOutIndicatorStyle, kVTableKeyTdStyle, kVTableTdStyle, kVTableValueTdStyle, lGap, lightGreyColor, linkButtonStyle, mGap, mlGap, no, outIconStyle, panelHeadingStyle3, sGap, searchBoxMinWidth, searchInputStyle, smPaddingBottom, smPaddingRight, successColor, tagLinkButtonStyle, tooltipMargin, topLeftPanelStyle, topPanelStyle, topRightPanelStyle, warningColor)
+module Css.Pathfinder exposing (ButtonType(..), alertColor, annotationInputStyle, dateStyle, dateTimeRangeBoxStyle, dateTimeRangeHighlightedDateStyle, detailsActionButtonStyle, emptyTableMsg, fullWidth, graphActionButtonStyle, graphActionsViewStyle, iconWithTextStyle, inIconStyle, inoutStyle, ioOutIndicatorStyle, kVTableKeyTdStyle, kVTableTdStyle, kVTableValueTdStyle, lGap, lightGreyColor, linkButtonStyle, mGap, mlGap, no, outIconStyle, panelHeadingStyle3, sGap, searchBoxMinWidth, searchInputStyle, smPaddingBottom, smPaddingRight, successColor, tagLinkButtonStyle, tooltipMargin, topLeftPanelStyle, topPanelStyle, topRightPanelStyle, warningColor)
 
 import Config.View as View
 import Css exposing (..)
@@ -156,6 +156,18 @@ tooltipMargin =
 searchInputStyle : View.Config -> String -> List Style
 searchInputStyle vc _ =
     [ width (ex 40)
+    , calc (pct 100) minus (px 2) |> height
+    , padding <| px 1
+    , display block
+    , emphTextColor vc |> color
+    , boxBorderColor vc |> border3 no solid
+    , outline none
+    ]
+
+
+annotationInputStyle : View.Config -> String -> List Style
+annotationInputStyle vc _ =
+    [ width (pct 95)
     , calc (pct 100) minus (px 2) |> height
     , padding <| px 1
     , display block

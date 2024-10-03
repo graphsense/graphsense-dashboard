@@ -14,6 +14,7 @@ import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Task
 import Time
+import Util.Annotations as Annotations
 
 
 init : UserSettings -> Maybe Api.Data.Stats -> ( Model, Cmd Msg )
@@ -22,6 +23,7 @@ init us _ =
       , actors = Dict.empty
       , tagSummaries = Dict.empty
       , colors = Colors.init
+      , annotations = Annotations.empty
       , clusters = Dict.empty
       , selection = NoSelection
       , hovered = NoHover

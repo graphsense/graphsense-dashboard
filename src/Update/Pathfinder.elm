@@ -63,6 +63,7 @@ import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
+import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
@@ -1055,6 +1056,9 @@ updateByMsg plugins uc msg model =
                 |> CmdEffect
                 |> List.singleton
             )
+
+        UserInputsAnnotation id str ->
+            n { model | annotations = Annotations.setLabel id str model.annotations }
 
 
 deleteSelection : Model -> ( Model, List Effect )
