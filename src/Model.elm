@@ -111,6 +111,7 @@ type Msg
     | UserClosesNotification
     | SettingsMsg SettingsMsg
     | SelectBoxMsg SelectBoxes.SelectBoxesAvailable SelectBox.Msg
+    | UserClickedNavBack
 
 
 type SettingsMsg
@@ -155,6 +156,7 @@ type Auth
 type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
+    | NavBackEffect
     | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
@@ -180,8 +182,6 @@ userSettingsFromMainModel model =
     { selectedLanguage = model.config.locale.locale
     , lightMode = Just model.config.lightmode
     , valueDetail = Just model.config.locale.valueDetail
-
-    -- , valueDenomination = Just model.config.locale.currency
     , preferredFiatCurrency = Just model.config.preferredFiatCurrency
     , showValuesInFiat = Just model.config.showValuesInFiat
     , addressLabel = Just model.graph.config.addressLabelType

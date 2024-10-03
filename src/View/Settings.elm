@@ -1,13 +1,10 @@
 module View.Settings exposing (view)
 
--- import Config.Graph as Graph
--- import Css
--- import Css.View
--- import Html.Styled.Events exposing (onClick, onInput)
--- import Time
-
 import Config.View exposing (Config)
-import Html.Styled exposing (..)
+import Css
+import Html.Styled exposing (Html, div)
+import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onClick)
 import Model exposing (Model, Msg(..), SettingsMsg(..), SettingsTabs(..))
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
 import Plugin.View exposing (Plugins)
@@ -138,7 +135,9 @@ view _ vc m =
     div
         []
         [ Sp.settingsPageWithInstances
-            Sp.settingsPageAttributes
+            (Sp.settingsPageAttributes
+                |> Rs.s_backButton [ css [ Css.cursor Css.pointer ], onClick UserClickedNavBack ]
+            )
             (Sp.settingsPageInstances
                 |> Rs.s_settingsTabs (Just Util.View.none)
             )

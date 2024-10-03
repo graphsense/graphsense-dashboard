@@ -387,7 +387,11 @@ update plugins uc msg model =
                     | user =
                         model.user
                             |> s_hovercard Nothing
+                    , selectBoxes = TSelectBoxes.closeAll model.selectBoxes
                 }
+
+        UserClickedNavBack ->
+            ( model, [ NavBackEffect ] )
 
         TimeUpdateReset _ ->
             { model

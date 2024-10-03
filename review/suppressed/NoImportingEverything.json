@@ -140,7 +140,6 @@
     { "count": 1, "filePath": "src/Update/Pathfinder/Address.elm" },
     { "count": 1, "filePath": "src/Update/Pathfinder/TxDetails.elm" },
     { "count": 1, "filePath": "src/Update/Pathfinder/WorkflowNextTxByTime.elm" },
-    { "count": 1, "filePath": "src/Update/Search.elm" },
-    { "count": 1, "filePath": "src/View/Settings.elm" }
+    { "count": 1, "filePath": "src/Update/Search.elm" }
   ]
 }

@@ -52,6 +52,9 @@ messageFromEffect model effect =
         Model.NavPushUrlEffect _ ->
             Nothing
 
+        Model.NavBackEffect ->
+            Nothing
+
         Model.GetElementEffect _ ->
             Nothing
 

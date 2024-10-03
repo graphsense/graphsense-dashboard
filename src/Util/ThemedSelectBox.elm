@@ -1,4 +1,4 @@
-module Util.ThemedSelectBox exposing (Model, Msg(..), SelectOption, empty, fromList, init, mapLabel, select, update, view)
+module Util.ThemedSelectBox exposing (Model, Msg(..), SelectOption, close, empty, fromList, init, mapLabel, select, update, view)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -54,6 +54,11 @@ mapLabel f (SelectBox m) =
 empty : Model
 empty =
     SelectBox { options = [], open = False }
+
+
+close : Model -> Model
+close (SelectBox m) =
+    { m | open = False } |> SelectBox
 
 
 select : String -> Model -> Model

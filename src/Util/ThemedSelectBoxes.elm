@@ -1,4 +1,4 @@
-module Util.ThemedSelectBoxes exposing (Model, SelectBoxesAvailable(..), get, init, update)
+module Util.ThemedSelectBoxes exposing (Model, SelectBoxesAvailable(..), closeAll, get, init, update)
 
 import Dict exposing (Dict)
 import Tuple
@@ -43,6 +43,11 @@ update sb msg m =
 get : SelectBoxesAvailable -> Model -> Maybe TSb.Model
 get sb (SBs model) =
     Dict.get (toId sb) model.selectStates
+
+
+closeAll : Model -> Model
+closeAll (SBs m) =
+    { m | selectStates = Dict.map (\_ -> TSb.close) m.selectStates } |> SBs
 
 
 set : SelectBoxesAvailable -> Model -> TSb.Model -> Model
