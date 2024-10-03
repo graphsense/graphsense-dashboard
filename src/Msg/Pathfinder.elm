@@ -21,6 +21,7 @@ type Msg
     | UserPushesLeftMouseButtonOnAddress Id Coords
     | UserMovesMouseOnGraph Coords
     | UserReleasesMouseButton
+    | UserToggleAnnotationSettings
     | UserClickedRestart
     | UserClickedRestartYes
     | UserClickedUndo
@@ -66,6 +67,7 @@ type Msg
     | UserMovesMouseOverTagLabel String
     | UserMovesMouseOutTagLabel String
     | HovercardMsg Hovercard.Msg
+    | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsPNG String
     | UserClickedToggleClusterDetailsOpen
     | UserClickedToggleDisplayAllTagsInDetails
@@ -85,7 +87,6 @@ type DisplaySettingsMsg
     | UserClickedToggleShowTimeZoneOffset
     | UserClickedToggleHighlightClusterFriends
     | UserClickedToggleSnapToGrid
-    | DisplaySettingsHovercardMsg Hovercard.Msg
     | UserClickedToggleValueDisplay
     | UserClickedToggleValueDetail
 

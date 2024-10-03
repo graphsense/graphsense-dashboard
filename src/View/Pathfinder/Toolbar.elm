@@ -4,7 +4,7 @@ import Config.View as View
 import Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as HA exposing (css, id)
-import Model.Pathfinder.Tools exposing (PointerTool(..))
+import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
 import RecordSetter exposing (..)
 import Theme.Colors
@@ -18,6 +18,7 @@ type alias Config =
     { undoDisabled : Bool
     , redoDisabled : Bool
     , deleteDisabled : Bool
+    , annotateDisabled : Bool
     , pointerTool : PointerTool
     , exportName : String
     }
@@ -60,6 +61,19 @@ view vc config =
                                )
                        )
                 )
+            |> s_iconsAnnotate
+                (onClickWithStop UserToggleAnnotationSettings
+                    :: id (toolbarHovercardTypeToId Annotation)
+                    :: title (Locale.string vc.locale "Annotate")
+                    :: (iconsAttr
+                            ++ (if config.annotateDisabled then
+                                    [ css [ Css.opacity <| Css.num 0.3 ] ]
+
+                                else
+                                    []
+                               )
+                       )
+                )
             |> s_iconsNewFile
                 (onClickWithStop UserClickedRestart
                     :: title (Locale.string vc.locale "Restart")
@@ -72,8 +86,8 @@ view vc config =
                     :: iconsAttr
                 )
             |> s_iconsDisplayConfiguration
-                (id "toolbar-display-settings"
-                    :: title "Display settings"
+                (id (toolbarHovercardTypeToId Settings)
+                    :: title (Locale.string vc.locale "Display settings")
                     :: onClickWithStop (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
                     :: iconsAttr
                 )

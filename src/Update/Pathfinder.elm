@@ -33,7 +33,7 @@ import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
-import Model.Pathfinder.Tools exposing (PointerTool(..))
+import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Search as Search
@@ -313,7 +313,9 @@ updateByMsg plugins uc msg model =
                             draggingToClick start current
 
                 m1 =
-                    model |> s_tooltip Nothing |> s_config (model.config |> s_displaySettingsHovercard Nothing)
+                    model
+                        |> s_tooltip Nothing
+                        |> s_toolbarHovercard Nothing
             in
             if click then
                 ( m1
@@ -878,17 +880,6 @@ updateByMsg plugins uc msg model =
                 }
 
         ChangedDisplaySettingsMsg submsg ->
-            let
-                toEffect =
-                    Cmd.map
-                        (DisplaySettingsHovercardMsg >> ChangedDisplaySettingsMsg)
-                        >> CmdEffect
-                        >> List.singleton
-
-                updateHovercard =
-                    flip s_displaySettingsHovercard model.config
-                        >> flip s_config model
-            in
             case submsg of
                 UserClickedToggleSnapToGrid ->
                     -- handled Upstream
@@ -919,27 +910,71 @@ updateByMsg plugins uc msg model =
                     n model
 
                 UserClickedToggleDisplaySettings ->
-                    case model.config.displaySettingsHovercard of
-                        Nothing ->
-                            "toolbar-display-settings"
+                    let
+                        choosenHc =
+                            Settings
+
+                        nhcm =
+                            toolbarHovercardTypeToId choosenHc
                                 |> Hovercard.init
-                                |> mapFirst (Just >> updateHovercard)
-                                |> mapSecond toEffect
+                                |> mapFirst (\hcm -> model |> s_toolbarHovercard (Just ( choosenHc, hcm )))
+                                |> mapSecond
+                                    (Cmd.map
+                                        ToolbarHovercardMsg
+                                        >> CmdEffect
+                                        >> List.singleton
+                                    )
+                    in
+                    case model.toolbarHovercard of
+                        Nothing ->
+                            nhcm
 
-                        Just _ ->
-                            s_displaySettingsHovercard Nothing model.config
-                                |> flip s_config model
-                                |> n
+                        Just ( Settings, _ ) ->
+                            n { model | toolbarHovercard = Nothing }
 
-                DisplaySettingsHovercardMsg hcMsg ->
-                    model.config.displaySettingsHovercard
-                        |> Maybe.map
-                            (\hc ->
-                                Hovercard.update hcMsg hc
-                                    |> mapFirst (Just >> updateHovercard)
-                                    |> mapSecond toEffect
+                        _ ->
+                            nhcm
+
+        ToolbarHovercardMsg hcMsg ->
+            model.toolbarHovercard
+                |> Maybe.map
+                    (\( hovercardId, hc ) ->
+                        Hovercard.update hcMsg hc
+                            |> mapFirst (\hcm -> model |> s_toolbarHovercard (Just ( hovercardId, hcm )))
+                            |> mapSecond
+                                (Cmd.map
+                                    ToolbarHovercardMsg
+                                    >> CmdEffect
+                                    >> List.singleton
+                                )
+                    )
+                |> Maybe.withDefault (n model)
+
+        UserToggleAnnotationSettings ->
+            let
+                choosenHc =
+                    Annotation
+
+                nhcm =
+                    toolbarHovercardTypeToId choosenHc
+                        |> Hovercard.init
+                        |> mapFirst (\hcm -> model |> s_toolbarHovercard (Just ( choosenHc, hcm )))
+                        |> mapSecond
+                            (Cmd.map
+                                ToolbarHovercardMsg
+                                >> CmdEffect
+                                >> List.singleton
                             )
-                        |> Maybe.withDefault (n model)
+            in
+            case model.toolbarHovercard of
+                Nothing ->
+                    nhcm
+
+                Just ( Annotation, _ ) ->
+                    n { model | toolbarHovercard = Nothing }
+
+                _ ->
+                    nhcm
 
         UserClickedToggleClusterDetailsOpen ->
             n (model |> s_config (model.config |> s_isClusterDetailsOpen (not model.config.isClusterDetailsOpen)))

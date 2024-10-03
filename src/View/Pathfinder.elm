@@ -33,7 +33,7 @@ import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Model.Pathfinder.Tools exposing (PointerTool(..))
+import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Tx as Tx
@@ -294,8 +294,8 @@ graph plugins states vc gc model =
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
-        ++ (model.config.displaySettingsHovercard
-                |> Maybe.map (settingsView vc model)
+        ++ (model.toolbarHovercard
+                |> Maybe.map (toolbarHovercardView vc model)
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
@@ -319,6 +319,13 @@ topCenterPanel plugins ms vc gc model =
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
                 , deleteDisabled = model.selection == Pathfinder.NoSelection
+                , annotateDisabled =
+                    case model.selection of
+                        Pathfinder.SelectedAddress _ ->
+                            False
+
+                        _ ->
+                            True
                 , pointerTool = model.pointerTool
                 , exportName = model.name
                 }
@@ -336,8 +343,26 @@ topLeftPanel vc =
         []
 
 
-settingsView : View.Config -> Pathfinder.Model -> Hovercard.Model -> Html Msg
-settingsView vc _ hc =
+toolbarHovercardView : View.Config -> Pathfinder.Model -> ToolbarHovercardModel -> Html Msg
+toolbarHovercardView vc m ( id, hc ) =
+    case id of
+        Settings ->
+            settingsHovercardView vc m hc
+
+        Annotation ->
+            annotationHovercardView vc m hc
+
+
+annotationHovercardView : View.Config -> Pathfinder.Model -> Hovercard.Model -> Html Msg
+annotationHovercardView vc _ hc =
+    Sc.annotation { labelField = { variant = none } }
+        |> Html.toUnstyled
+        |> List.singleton
+        |> hovercard vc hc (Css.zIndexMainValue + 1)
+
+
+settingsHovercardView : View.Config -> Pathfinder.Model -> Hovercard.Model -> Html Msg
+settingsHovercardView vc _ hc =
     let
         switchWithText primary text enabled msg =
             let

@@ -1,8 +1,5 @@
 module Config.Pathfinder exposing (Config, addressRadius, nodeXOffset, nodeYOffset)
 
-import Hovercard
-
-
 addressRadius : Float
 addressRadius =
     1
@@ -19,4 +16,4 @@ nodeYOffset =
 
 
 type alias Config =
-    { displaySettingsHovercard : Maybe Hovercard.Model, isClusterDetailsOpen : Bool, displayAllTagsInDetails : Bool, snapToGrid : Bool }
+    { isClusterDetailsOpen : Bool, displayAllTagsInDetails : Bool, snapToGrid : Bool }

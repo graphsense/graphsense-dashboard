@@ -31,8 +31,7 @@ init us _ =
       , history = History.init
       , details = Nothing
       , config =
-            { displaySettingsHovercard = Nothing
-            , isClusterDetailsOpen = False
+            { isClusterDetailsOpen = False
             , displayAllTagsInDetails = False
             , snapToGrid = us.snapToGrid |> Maybe.withDefault False
             }
@@ -41,6 +40,7 @@ init us _ =
       , modPressed = False
       , isDirty = False
       , tooltip = Nothing
+      , toolbarHovercard = Nothing
       , name = "graph"
       }
     , Task.perform Tick Time.now

@@ -12,7 +12,7 @@ import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
-import Model.Pathfinder.Tools exposing (PointerTool)
+import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
 import Model.Pathfinder.Tooltip exposing (Tooltip)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
@@ -45,6 +45,7 @@ type alias Model =
     , modPressed : Bool
     , isDirty : Bool
     , tooltip : Maybe Tooltip
+    , toolbarHovercard : Maybe ToolbarHovercardModel
     , name : String
     }
 

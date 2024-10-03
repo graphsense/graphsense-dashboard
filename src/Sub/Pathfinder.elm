@@ -5,7 +5,7 @@ import Hovercard
 import Json.Decode as Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Model)
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
+import Msg.Pathfinder exposing (Msg(..))
 import Set
 import Sub.Graph.Transform as Transform
 import Time
@@ -107,8 +107,8 @@ subscriptions model =
     , model.tooltip
         |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map HovercardMsg)
         |> Maybe.withDefault Sub.none
-    , model.config.displaySettingsHovercard
-        |> Maybe.map (Hovercard.subscriptions >> Sub.map (DisplaySettingsHovercardMsg >> ChangedDisplaySettingsMsg))
+    , model.toolbarHovercard
+        |> Maybe.map (Tuple.second >> Hovercard.subscriptions >> Sub.map ToolbarHovercardMsg)
         |> Maybe.withDefault Sub.none
     ]
         |> Sub.batch
