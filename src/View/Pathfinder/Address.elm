@@ -132,7 +132,8 @@ view _ vc _ colors address getCluster =
                 address.id
                     |> Id.id
                     |> truncateLongIdentifierWithLengths 8 4
-            , highlightVisible = (clusterColor /= Nothing) && vc.highlightClusterFriends
+            , highlightVisible = address.selected
+            , clusterVisible = (clusterColor /= Nothing) && vc.highlightClusterFriends
             , expandLeftVisible = expandVisible Incoming
             , expandRightVisible = expandVisible Outgoing
             , iconInstance = toNodeIcon vc.highlightClusterFriends address cluster Nothing

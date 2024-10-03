@@ -70,7 +70,7 @@ view _ vc _ tx utxo =
         }
         { txNodeUtxo =
             { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
-            , highlightVisible = False
+            , highlightVisible = tx.selected
             , date = Locale.timestampDateUniform vc.locale utxo.raw.timestamp
             , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
             , timestampVisible = vc.showTimestampOnTxEdge

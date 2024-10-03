@@ -64,7 +64,7 @@ view _ vc _ tx accTx =
                 ]
         }
         { txNodeEth =
-            { highlightVisible = False
+            { highlightVisible = tx.selected
             , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
             , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
             , inputValue = Locale.currency vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
