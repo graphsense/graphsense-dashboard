@@ -57,7 +57,6 @@ import Theme.Html.SettingsComponents as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
-import Theme.Svg.SettingsComponents as SvgSc
 import Update.Graph.Transform as Transform
 import Util.Annotations as Annotations
 import Util.Css as Css
