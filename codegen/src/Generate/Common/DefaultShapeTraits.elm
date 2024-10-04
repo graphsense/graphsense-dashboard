@@ -4,9 +4,10 @@ import Api.Raw exposing (..)
 import Basics.Extra exposing (flip)
 import Dict exposing (Dict)
 import Elm
+import Gen.Css as Css
 import Generate.Util exposing (..)
 import RecordSetter exposing (..)
-import Types exposing (Details, OriginAdjust)
+import Types exposing (Config, Details, OriginAdjust)
 
 
 adjustBoundingBox : OriginAdjust -> { a | defaultShapeTraits : DefaultShapeTraits } -> { a | defaultShapeTraits : DefaultShapeTraits }
@@ -70,3 +71,16 @@ isHidden : { a | defaultShapeTraits : DefaultShapeTraits } -> Bool
 isHidden { defaultShapeTraits } =
     Maybe.map not defaultShapeTraits.isLayerTrait.visible
         |> Maybe.withDefault False
+
+
+positionRelatively : Config -> { a | absoluteBoundingBox : Rectangle } -> List Elm.Expression
+positionRelatively config node =
+    case config.positionRelatively of
+        Just { x, y } ->
+            [ Css.position Css.absolute
+            , Css.top <| Css.px (node.absoluteBoundingBox.y - y)
+            , Css.left <| Css.px (node.absoluteBoundingBox.x - x)
+            ]
+
+        Nothing ->
+            []

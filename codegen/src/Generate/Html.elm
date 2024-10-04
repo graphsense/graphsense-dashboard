@@ -8,6 +8,7 @@ import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
 import Elm.Op
+import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
@@ -35,7 +36,11 @@ subcanvasNodeToExpressions : Config -> String -> SubcanvasNode -> List Elm.Expre
 subcanvasNodeToExpressions config name node =
     case node of
         SubcanvasNodeTextNode n ->
-            TextNode.toExpressions config name n
+            if Generate.Common.DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                TextNode.toExpressions config name n
 
         SubcanvasNodeGroupNode n ->
             if Generate.Common.FrameTraits.isHidden n then
@@ -56,16 +61,32 @@ subcanvasNodeToExpressions config name node =
                     |> List.singleton
 
         SubcanvasNodeInstanceNode n ->
-            instanceNodeToExpressions config name n
+            if Generate.Common.FrameTraits.isHidden n then
+                []
+
+            else
+                instanceNodeToExpressions config name n
 
         SubcanvasNodeRectangleNode n ->
-            Generate.Svg.DefaultShapeTraits.toExpressions config name n.rectangularShapeTraits
+            if Generate.Common.DefaultShapeTraits.isHidden n.rectangularShapeTraits then
+                []
+
+            else
+                DefaultShapeTraits.toExpressions config name n.rectangularShapeTraits
 
         SubcanvasNodeVectorNode n ->
-            Generate.Svg.DefaultShapeTraits.toExpressions config name n.cornerRadiusShapeTraits
+            if Generate.Common.DefaultShapeTraits.isHidden n.cornerRadiusShapeTraits then
+                []
+
+            else
+                DefaultShapeTraits.toExpressions config name n.cornerRadiusShapeTraits
 
         SubcanvasNodeLineNode n ->
-            Generate.Svg.DefaultShapeTraits.toExpressions config name n
+            if Generate.Common.DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                DefaultShapeTraits.toExpressions config name n
 
         _ ->
             []
@@ -253,7 +274,7 @@ frameTraitsToExpressions config componentName node =
         config_ =
             { config
                 | positionRelatively =
-                    if node.layoutMode == Just LayoutModeNONE then
+                    if layoutIsAbsolute node then
                         Just { x = node.absoluteBoundingBox.x, y = node.absoluteBoundingBox.y }
 
                     else
@@ -263,6 +284,11 @@ frameTraitsToExpressions config componentName node =
     node.children
         |> List.map (subcanvasNodeToExpressions config_ componentName)
         |> List.concat
+
+
+layoutIsAbsolute : FrameTraits -> Bool
+layoutIsAbsolute node =
+    node.layoutMode == Just LayoutModeNONE || node.layoutMode == Nothing
 
 
 isSvgChild : SubcanvasNode -> Bool
@@ -281,9 +307,6 @@ isSvgChild child =
             True
 
         SubcanvasNodeGroupNode n ->
-            List.all isSvgChild n.frameTraits.children
-
-        SubcanvasNodeInstanceNode n ->
             List.all isSvgChild n.frameTraits.children
 
         _ ->
@@ -321,23 +344,30 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                         |> Gen.Svg.Styled.Attributes.viewBox
                      ]
                         |> Elm.list
-                        |> Elm.Op.append (getElementAttributes config name)
-                        |> Elm.Op.append
-                            (FrameTraits.toStyles config.colorMap node.frameTraits
-                                |> Attributes.css
-                                |> List.singleton
-                                |> Elm.list
-                            )
                     )
                     (Svg.frameTraitsToExpressions config componentNameForChildren node.frameTraits
                         |> Elm.list
                     )
+                    |> List.singleton
+                    |> Elm.list
+                    |> Gen.Html.Styled.call_.div
+                        (getElementAttributes config name
+                            |> Elm.Op.append
+                                (FrameTraits.toStyles config.colorMap node.frameTraits
+                                    ++ Generate.Common.DefaultShapeTraits.positionRelatively config node.frameTraits
+                                    |> Attributes.css
+                                    |> List.singleton
+                                    |> Elm.list
+                                )
+                        )
 
             else
                 Gen.Html.Styled.call_.div
                     (getElementAttributes config name
                         |> Elm.Op.append
                             (FrameTraits.toStyles config.colorMap node.frameTraits
+                                ++ Generate.Common.DefaultShapeTraits.positionRelatively config node.frameTraits
+                                ++ cssDimensionsIfAbsolute node.frameTraits
                                 |> Attributes.css
                                 |> List.singleton
                                 |> Elm.list
@@ -349,6 +379,17 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
     in
     frame
         |> withVisibility componentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+
+
+cssDimensionsIfAbsolute : FrameTraits -> List Elm.Expression
+cssDimensionsIfAbsolute node =
+    if layoutIsAbsolute node then
+        [ node.absoluteBoundingBox.width |> Css.px |> Css.width
+        , node.absoluteBoundingBox.height |> Css.px |> Css.height
+        ]
+
+    else
+        []
 
 
 instanceNodeToExpressions : Config -> String -> InstanceNode -> List Elm.Expression
