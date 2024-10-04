@@ -283,6 +283,9 @@ isSvgChild child =
         SubcanvasNodeGroupNode n ->
             List.all isSvgChild n.frameTraits.children
 
+        SubcanvasNodeInstanceNode n ->
+            List.all isSvgChild n.frameTraits.children
+
         _ ->
             False
 
@@ -298,7 +301,6 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
 
         bbox =
             node.frameTraits.absoluteBoundingBox
-
 
         frame =
             if hasOnlySvgChildren then
