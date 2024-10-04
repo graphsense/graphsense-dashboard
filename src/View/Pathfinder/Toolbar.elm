@@ -30,6 +30,7 @@ view vc config =
         iconsAttr =
             [ css
                 [ Css.cursor Css.pointer
+                , Css.property "pointer-events" "fill"
                 ]
             ]
 

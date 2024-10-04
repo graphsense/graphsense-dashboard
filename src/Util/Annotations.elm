@@ -36,9 +36,9 @@ setLabel item lbl (Annotation m) =
     { m | annotations = Dict.insert item ((Dict.get item m.annotations |> Maybe.withDefault defaultAnnotation) |> Rs.s_label lbl) m.annotations } |> Annotation
 
 
-setColor : Id -> Color -> AnnotationModel -> AnnotationModel
+setColor : Id -> Maybe Color -> AnnotationModel -> AnnotationModel
 setColor item clr (Annotation m) =
-    { m | annotations = Dict.insert item ((Dict.get item m.annotations |> Maybe.withDefault defaultAnnotation) |> Rs.s_color (Just clr)) m.annotations } |> Annotation
+    { m | annotations = Dict.insert item ((Dict.get item m.annotations |> Maybe.withDefault defaultAnnotation) |> Rs.s_color clr) m.annotations } |> Annotation
 
 
 getAnnotation : Id -> AnnotationModel -> Maybe AnnotationItem

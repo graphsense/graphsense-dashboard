@@ -24,12 +24,13 @@ import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events exposing (..)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
+import Util.Annotations as Annotations
 import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Svg Msg
-view _ vc _ colors address getCluster =
+view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Maybe Annotations.AnnotationItem -> Svg Msg
+view _ vc _ colors address getCluster annotation =
     let
         data =
             RemoteData.toMaybe address.data
@@ -93,88 +94,114 @@ view _ vc _ colors address getCluster =
 
         adjY =
             fd.y + fd.height / 2
+
+        label =
+            case annotation of
+                Just ann ->
+                    GraphComponents.annotationLabelWithAttributes
+                        (GraphComponents.annotationLabelAttributes
+                            |> s_annotationLabel
+                                [ translate
+                                    (((address.x + address.dx) * unit - adjX) + (GraphComponents.addressNode_details.width / 2 - GraphComponents.annotationLabel_details.width / 2))
+                                    ((A.animate address.clock address.y + address.dy) * unit - adjY + GraphComponents.addressNode_details.height)
+                                    |> transform
+                                , A.animate address.clock address.opacity
+                                    |> String.fromFloat
+                                    |> opacity
+                                , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
+                                , css [ Css.cursor Css.pointer ]
+                                ]
+                        )
+                        { annotationLabel = { labelText = ann.label } }
+                        |> List.singleton
+
+                _ ->
+                    []
     in
-    GraphComponents.addressNodeWithAttributes
-        (GraphComponents.addressNodeAttributes
-            |> s_addressNode
-                [ translate
-                    ((address.x + address.dx) * unit - adjX)
-                    ((A.animate address.clock address.y + address.dy) * unit - adjY)
-                    |> transform
-                , A.animate address.clock address.opacity
-                    |> String.fromFloat
-                    |> opacity
-                , UserClickedAddress address.id |> onClickWithStop
-                , UserPushesLeftMouseButtonOnAddress address.id
-                    |> Util.Graph.mousedown
-                , css [ Css.cursor Css.pointer ]
-                ]
-            |> s_nodeBody
-                [ Id.toString address.id
-                    |> Svg.id
-                , UserMovesMouseOverAddress address.id
-                    |> onMouseOver
-                , UserMovesMouseOutAddress address.id
-                    |> onMouseLeave
-                ]
-            |> s_clusterColor
-                (case ( clusterColorLight, vc.highlightClusterFriends ) of
-                    ( Just c, True ) ->
-                        [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
+    g []
+        (GraphComponents.addressNodeWithAttributes
+            (GraphComponents.addressNodeAttributes
+                |> s_addressNode
+                    [ translate
+                        ((address.x + address.dx) * unit - adjX)
+                        ((A.animate address.clock address.y + address.dy) * unit - adjY)
+                        |> transform
+                    , A.animate address.clock address.opacity
+                        |> String.fromFloat
+                        |> opacity
+                    , UserClickedAddress address.id |> onClickWithStop
+                    , UserPushesLeftMouseButtonOnAddress address.id
+                        |> Util.Graph.mousedown
+                    , css [ Css.cursor Css.pointer ]
+                    ]
+                |> s_nodeBody
+                    [ Id.toString address.id
+                        |> Svg.id
+                    , UserMovesMouseOverAddress address.id
+                        |> onMouseOver
+                    , UserMovesMouseOutAddress address.id
+                        |> onMouseLeave
+                    ]
+                |> s_clusterColor
+                    (case ( clusterColorLight, vc.highlightClusterFriends ) of
+                        ( Just c, True ) ->
+                            [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
 
-                    _ ->
-                        []
-                )
-         -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
+                        _ ->
+                            []
+                    )
+             -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
+            )
+            { addressNode =
+                { addressId =
+                    address.id
+                        |> Id.id
+                        |> truncateLongIdentifierWithLengths 8 4
+                , highlightVisible = address.selected
+                , clusterVisible = (clusterColor /= Nothing) && vc.highlightClusterFriends
+                , expandLeftVisible = expandVisible Incoming
+                , expandRightVisible = expandVisible Outgoing
+                , iconInstance = toNodeIcon vc.highlightClusterFriends address cluster Nothing
+                , exchangeLabel =
+                    address.exchange
+                        |> Maybe.withDefault ""
+                , exchangeLabelVisible = address.exchange /= Nothing
+                , isStartingPoint = address.isStartingPoint || address.selected
+                , tagIconVisible = address.hasTags
+                }
+            , iconsNodeOpenLeft =
+                { variant =
+                    expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
+                        |> Maybe.withDefault
+                            (Icons.iconsNodeOpenLeftStateActivWithAttributes
+                                (Icons.iconsNodeOpenLeftStateActivAttributes |> s_stateActiv (expand Incoming))
+                                {}
+                            )
+                }
+            , iconsNodeOpenRight =
+                { variant =
+                    expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
+                        |> Maybe.withDefault
+                            (Icons.iconsNodeOpenRightStateActivWithAttributes
+                                (Icons.iconsNodeOpenRightStateActivAttributes |> s_stateActiv (expand Outgoing))
+                                {}
+                            )
+                }
+            , iconsNodeMarker =
+                { variant =
+                    case ( address.selected, address.isStartingPoint ) of
+                        ( True, _ ) ->
+                            Icons.iconsNodeMarkerPurposeSelectedNode {}
+
+                        ( False, False ) ->
+                            text ""
+
+                        ( False, True ) ->
+                            Icons.iconsNodeMarkerPurposeStartingPoint {}
+                }
+            }
+            :: label
         )
-        { addressNode =
-            { addressId =
-                address.id
-                    |> Id.id
-                    |> truncateLongIdentifierWithLengths 8 4
-            , highlightVisible = address.selected
-            , clusterVisible = (clusterColor /= Nothing) && vc.highlightClusterFriends
-            , expandLeftVisible = expandVisible Incoming
-            , expandRightVisible = expandVisible Outgoing
-            , iconInstance = toNodeIcon vc.highlightClusterFriends address cluster Nothing
-            , exchangeLabel =
-                address.exchange
-                    |> Maybe.withDefault ""
-            , exchangeLabelVisible = address.exchange /= Nothing
-            , isStartingPoint = address.isStartingPoint || address.selected
-            , tagIconVisible = address.hasTags
-            }
-        , iconsNodeOpenLeft =
-            { variant =
-                expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
-                    |> Maybe.withDefault
-                        (Icons.iconsNodeOpenLeftStateActivWithAttributes
-                            (Icons.iconsNodeOpenLeftStateActivAttributes |> s_stateActiv (expand Incoming))
-                            {}
-                        )
-            }
-        , iconsNodeOpenRight =
-            { variant =
-                expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
-                    |> Maybe.withDefault
-                        (Icons.iconsNodeOpenRightStateActivWithAttributes
-                            (Icons.iconsNodeOpenRightStateActivAttributes |> s_stateActiv (expand Outgoing))
-                            {}
-                        )
-            }
-        , iconsNodeMarker =
-            { variant =
-                case ( address.selected, address.isStartingPoint ) of
-                    ( True, _ ) ->
-                        Icons.iconsNodeMarkerPurposeSelectedNode {}
-
-                    ( False, False ) ->
-                        text ""
-
-                    ( False, True ) ->
-                        Icons.iconsNodeMarkerPurposeStartingPoint {}
-            }
-        }
 
 
 expandHandleLoadingSpinner : View.Config -> Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)

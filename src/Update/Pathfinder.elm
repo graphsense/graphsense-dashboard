@@ -977,6 +977,24 @@ updateByMsg plugins uc msg model =
                 _ ->
                     nhcm
 
+        UserOpensAddressAnnotationDialog id ->
+            let
+                ( mn, effn ) =
+                    selectAddress uc id model
+
+                ( resultModel, eff ) =
+                    toolbarHovercardTypeToId Annotation
+                        |> Hovercard.init
+                        |> mapFirst (\hcm -> mn |> s_toolbarHovercard (Just ( Annotation, hcm )))
+                        |> mapSecond
+                            (Cmd.map
+                                ToolbarHovercardMsg
+                                >> CmdEffect
+                                >> List.singleton
+                            )
+            in
+            ( resultModel, effn ++ eff )
+
         UserClickedToggleClusterDetailsOpen ->
             n (model |> s_config (model.config |> s_isClusterDetailsOpen (not model.config.isClusterDetailsOpen)))
 
@@ -1059,6 +1077,9 @@ updateByMsg plugins uc msg model =
 
         UserInputsAnnotation id str ->
             n { model | annotations = Annotations.setLabel id str model.annotations }
+
+        UserSelectsAnnotationColor id clr ->
+            n { model | annotations = Annotations.setColor id clr model.annotations }
 
 
 deleteSelection : Model -> ( Model, List Effect )

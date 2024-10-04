@@ -364,8 +364,11 @@ annotationHovercardView vc id annotation hc =
         labelValue =
             annotation |> Maybe.map .label |> Maybe.withDefault ""
 
+        selectedColor =
+            annotation |> Maybe.andThen .color
+
         inputField =
-            input [ Css.annotationInputStyle vc "" |> css, onInput (UserInputsAnnotation id), HA.value labelValue ] []
+            input [ Css.annotationInputStyle vc "" |> css, onInput (UserInputsAnnotation id), HA.value labelValue, HA.placeholder (Locale.string vc.locale "Label") ] []
 
         inputBody =
             form []
@@ -375,37 +378,40 @@ annotationHovercardView vc id annotation hc =
                     { stateActive = { deleteVisible = False, iconInstance = none, textPlaceholder = "test" } }
                 ]
 
-        colorBtn color =
+        colorBtn sColor color =
+            let
+                isSelected =
+                    sColor == color
+            in
             case color of
                 Just c ->
                     Sc.colorSquareStyleColorFillWithAttributes
                         (Sc.colorSquareStyleColorFillAttributes
-                            |> Rs.s_styleColorFill [ css [ Css.cursor Css.pointer, Css.important (Css.fill (c |> Util.View.toCssColor)) ], onClick NoOp ]
-                            |> Rs.s_vector [ css [ Css.cursor Css.pointer, Css.important (Css.fill (c |> Util.View.toCssColor)) ], onClick NoOp ]
+                            |> Rs.s_styleColorFill [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor id color) ]
                             |> Rs.s_vectorShape [ css [ Css.important (Css.fill (c |> Util.View.toCssColor)) ] ]
                         )
-                        { styleColorFill = { selectionVisible = False } }
+                        { styleColorFill = { selectionVisible = isSelected } }
 
                 Nothing ->
                     Sc.colorSquareStyleNoColorWithAttributes
                         (Sc.colorSquareStyleNoColorAttributes
-                         -- |> Rs.s_styleNoColor ([ css [ Css.cursor Css.pointer ], onClick NoOp ])
+                            |> Rs.s_styleNoColor [ css [ Css.cursor Css.pointer ], onClick NoOp ]
                         )
-                        { styleNoColor = { selectionVisible = True } }
+                        { styleNoColor = { selectionVisible = isSelected } }
     in
     Sc.annotationWithAttributes
         Sc.annotationAttributes
         { annotation = { colorText = Locale.string vc.locale "Color", labelText = Locale.string vc.locale "Label" }
-        , darkBlue4 = { variant = colorBtn (Just annotationDarkBlue) }
-        , green2 = { variant = colorBtn (Just annotationGreen) }
+        , darkBlue4 = { variant = colorBtn selectedColor (Just annotationDarkBlue) }
+        , green2 = { variant = colorBtn selectedColor (Just annotationGreen) }
         , labelField = { variant = inputBody }
-        , lightBlue5 = { variant = colorBtn (Just annotationLightBlue) }
-        , noColor1 = { variant = colorBtn Nothing }
-        , pink7 = { variant = colorBtn (Just annotationPink) }
-        , purple8 = { variant = colorBtn (Just annotationPurple) }
-        , red3 = { variant = colorBtn (Just annotationRed) }
-        , turquoise9 = { variant = colorBtn (Just annotationTurquoise) }
-        , yellow6 = { variant = colorBtn (Just annotationYellow) }
+        , lightBlue5 = { variant = colorBtn selectedColor (Just annotationLightBlue) }
+        , noColor1 = { variant = colorBtn selectedColor Nothing }
+        , pink7 = { variant = colorBtn selectedColor (Just annotationPink) }
+        , purple8 = { variant = colorBtn selectedColor (Just annotationPurple) }
+        , red3 = { variant = colorBtn selectedColor (Just annotationRed) }
+        , turquoise9 = { variant = colorBtn selectedColor (Just annotationTurquoise) }
+        , yellow6 = { variant = colorBtn selectedColor (Just annotationYellow) }
         }
         |> Html.toUnstyled
         |> List.singleton
@@ -1365,7 +1371,7 @@ graphSvg plugins _ vc gc model bbox =
             , gradient "accountOutEdgeBack" Colors.pathOut Colors.pathIn
             , gradient "accountInEdgeBack" Colors.pathOut Colors.pathIn
             ]
-        , Svg.lazy6 Network.addresses plugins vc gc model.colors model.clusters model.network.addresses
+        , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         , drawDragSelector vc model

@@ -1,6 +1,7 @@
 module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), TxDetailsMsg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
 
 import Api.Data
+import Color exposing (Color)
 import Hovercard
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
@@ -22,6 +23,7 @@ type Msg
     | UserMovesMouseOnGraph Coords
     | UserReleasesMouseButton
     | UserToggleAnnotationSettings
+    | UserOpensAddressAnnotationDialog Id
     | UserClickedRestart
     | UserClickedRestartYes
     | UserClickedUndo
@@ -67,6 +69,7 @@ type Msg
     | UserMovesMouseOverTagLabel String
     | UserMovesMouseOutTagLabel String
     | UserInputsAnnotation Id String
+    | UserSelectsAnnotationColor Id (Maybe Color)
     | HovercardMsg Hovercard.Msg
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsPNG String
