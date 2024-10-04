@@ -112,36 +112,16 @@ view vc config =
                     :: iconsAttr
                 )
         )
-        (SettingsComponents.toolbarInstances
-            |> s_iconsUndo
-                (Just <|
-                    if config.undoDisabled then
-                        Icons.iconsUndoWithAttributes
-                            (Icons.iconsUndoAttributes
-                                |> s_iconsUndo
-                                    [ title (Locale.string vc.locale "Undo")
-                                    , css [ Css.opacity <| Css.num 0.3 ]
-                                    ]
-                            )
-                            {}
-
-                    else
-                        Icons.iconsUndoWithAttributes
-                            (Icons.iconsUndoAttributes
-                                |> s_iconsUndo
-                                    (onClickWithStop UserClickedUndo
-                                        :: title (Locale.string vc.locale "Undo")
-                                        :: iconsAttr
-                                    )
-                            )
-                            {}
-                )
-        )
+        SettingsComponents.toolbarInstances
         { iconsRedo =
             { variant =
                 if config.redoDisabled then
                     Icons.iconsRedoStateDisabledWithAttributes
-                        Icons.iconsRedoStateDisabledAttributes
+                        (Icons.iconsRedoStateDisabledAttributes
+                            |> s_stateDisabled
+                                [ title (Locale.string vc.locale "Redo")
+                                ]
+                        )
                         {}
 
                 else
@@ -150,6 +130,28 @@ view vc config =
                             |> s_stateActive
                                 (onClickWithStop UserClickedRedo
                                     :: title (Locale.string vc.locale "Redo")
+                                    :: iconsAttr
+                                )
+                        )
+                        {}
+            }
+        , iconsUndo =
+            { variant =
+                if config.undoDisabled then
+                    Icons.iconsUndoStateDisabledWithAttributes
+                        (Icons.iconsUndoStateDisabledAttributes
+                            |> s_stateDisabled
+                                [ title (Locale.string vc.locale "Undo")
+                                ]
+                        )
+                        {}
+
+                else
+                    Icons.iconsUndoStateActiveWithAttributes
+                        (Icons.iconsUndoStateActiveAttributes
+                            |> s_stateActive
+                                (onClickWithStop UserClickedUndo
+                                    :: title (Locale.string vc.locale "Undo")
                                     :: iconsAttr
                                 )
                         )
