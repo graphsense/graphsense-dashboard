@@ -98,12 +98,32 @@ view _ vc _ colors address getCluster annotation =
         label =
             case annotation of
                 Just ann ->
+                    let
+                        colorAttributes =
+                            case ann.color of
+                                Just c ->
+                                    [ Css.important (Css.property "fill" (Color.toCssString c)) ]
+
+                                _ ->
+                                    []
+                    in
                     GraphComponents.annotationLabelWithAttributes
                         (GraphComponents.annotationLabelAttributes
                             |> s_annotationLabel
                                 [ translate
                                     (((address.x + address.dx) * unit - adjX) + (GraphComponents.addressNode_details.width / 2 - GraphComponents.annotationLabel_details.width / 2))
-                                    ((A.animate address.clock address.y + address.dy) * unit - adjY + GraphComponents.addressNode_details.height)
+                                    ((A.animate address.clock address.y + address.dy)
+                                        * unit
+                                        - adjY
+                                        + GraphComponents.addressNode_details.height
+                                        + (if address.exchange == Nothing then
+                                            -GraphComponents.addressNodeExchangeLabel_details.height
+
+                                           else
+                                            0
+                                          )
+                                        + 2
+                                    )
                                     |> transform
                                 , A.animate address.clock address.opacity
                                     |> String.fromFloat
@@ -111,6 +131,7 @@ view _ vc _ colors address getCluster annotation =
                                 , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
                                 , css [ Css.cursor Css.pointer ]
                                 ]
+                            |> s_label [ css colorAttributes ]
                         )
                         { annotationLabel = { labelText = ann.label } }
                         |> List.singleton

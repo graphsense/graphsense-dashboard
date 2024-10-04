@@ -18,6 +18,7 @@ type alias Config =
     { undoDisabled : Bool
     , redoDisabled : Bool
     , deleteDisabled : Bool
+    , newDisabled : Bool
     , annotateDisabled : Bool
     , pointerTool : PointerTool
     , exportName : String
@@ -30,7 +31,7 @@ view vc config =
         iconsAttr =
             [ css
                 [ Css.cursor Css.pointer
-                , Css.property "pointer-events" "fill"
+                , Css.property "pointer-events" "bounding-box"
                 ]
             ]
 
@@ -78,7 +79,14 @@ view vc config =
             |> s_iconsNewFile
                 (onClickWithStop UserClickedRestart
                     :: title (Locale.string vc.locale "Restart")
-                    :: iconsAttr
+                    :: (iconsAttr
+                            ++ (if config.newDisabled then
+                                    [ css [ Css.opacity <| Css.num 0.3 ] ]
+
+                                else
+                                    []
+                               )
+                       )
                 )
             |> s_iconsSelectionTool
                 (onClickWithStop UserClickedSelectionTool

@@ -1,6 +1,7 @@
-module Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedThing, Deserializing)
+module Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedAnnotation, DeserializedThing, Deserializing)
 
 import Api.Data
+import Color exposing (Color)
 import Model.Pathfinder.Id exposing (Id)
 
 
@@ -12,8 +13,17 @@ type alias Deserializing =
 
 
 type alias Deserialized =
-    { addresses : List DeserializedThing
+    { name : String
+    , addresses : List DeserializedThing
     , txs : List DeserializedThing
+    , annotations : List DeserializedAnnotation
+    }
+
+
+type alias DeserializedAnnotation =
+    { id : Id
+    , label : String
+    , color : Maybe Color
     }
 
 

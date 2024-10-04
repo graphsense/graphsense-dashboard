@@ -321,6 +321,7 @@ topCenterPanel plugins ms vc gc model =
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
                 , deleteDisabled = model.selection == Pathfinder.NoSelection
+                , newDisabled = not model.isDirty
                 , annotateDisabled =
                     case model.selection of
                         Pathfinder.SelectedAddress _ ->
@@ -368,7 +369,14 @@ annotationHovercardView vc id annotation hc =
             annotation |> Maybe.andThen .color
 
         inputField =
-            input [ Css.annotationInputStyle vc "" |> css, onInput (UserInputsAnnotation id), HA.value labelValue, HA.placeholder (Locale.string vc.locale "Label") ] []
+            input
+                [ Css.annotationInputStyle vc "" |> css
+                , onInput (UserInputsAnnotation id)
+                , HA.value labelValue
+                , HA.placeholder (Locale.string vc.locale "Label")
+                , HA.autofocus True
+                ]
+                []
 
         inputBody =
             form []
@@ -395,7 +403,7 @@ annotationHovercardView vc id annotation hc =
                 Nothing ->
                     Sc.colorSquareStyleNoColorWithAttributes
                         (Sc.colorSquareStyleNoColorAttributes
-                            |> Rs.s_styleNoColor [ css [ Css.cursor Css.pointer ], onClick NoOp ]
+                            |> Rs.s_styleNoColor [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor id Nothing) ]
                         )
                         { styleNoColor = { selectionVisible = isSelected } }
     in

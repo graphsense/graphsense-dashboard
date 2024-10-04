@@ -163,6 +163,7 @@ app.ports.deserialize.subscribe(() => {
 })
 
 app.ports.serialize.subscribe(([filename, body]) => {
+  console.log(body)
   download(filename, compress(body))
 })
 

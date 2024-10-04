@@ -1690,19 +1690,32 @@ multiSelect m sel keepOld =
             case m.selection of
                 MultiSelect x ->
                     if keepOld then
-                        x ++ sel
+                        List.Extra.unique (x ++ sel)
 
                     else
-                        sel
+                        List.Extra.unique sel
 
                 SelectedAddress oid ->
-                    MSelectedAddress oid :: sel
+                    List.Extra.unique (MSelectedAddress oid :: sel)
 
                 SelectedTx oid ->
-                    MSelectedTx oid :: sel
+                    List.Extra.unique (MSelectedTx oid :: sel)
 
                 _ ->
                     sel
+
+        liftedNewSelection =
+            case newSelection of
+                x :: [] ->
+                    case x of
+                        MSelectedAddress id ->
+                            SelectedAddress id
+
+                        MSelectedTx id ->
+                            SelectedTx id
+
+                _ ->
+                    MultiSelect newSelection
 
         selectItem s item n =
             case item of
@@ -1715,7 +1728,7 @@ multiSelect m sel keepOld =
         nNet =
             List.foldl (selectItem True) (Network.clearSelection m.network) newSelection
     in
-    ( { m | selection = MultiSelect newSelection, network = nNet }, [] )
+    ( { m | selection = liftedNewSelection, network = nNet }, [] )
 
 
 deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized
@@ -1782,7 +1795,9 @@ fromDeserialized deserialized model =
     in
     ( { model
         | network = ingestAddresses Network.init deserialized.addresses
+        , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
+        , name = deserialized.name
       }
     , txsRequests
         ++ addressesRequests
