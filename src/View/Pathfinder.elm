@@ -18,6 +18,7 @@ import Hovercard
 import Html.Styled as Html exposing (Html, button, div, form, h2, img, input, span, table, td, tr)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave)
+import Iknaio.ColorScheme exposing (annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency as Asset exposing (Currency(..), asset, assetFromBase)
@@ -371,24 +372,41 @@ annotationHovercardView vc id annotation hc =
                 [ Sc.labelFieldStateActiveWithInstances
                     Sc.labelFieldStateActiveAttributes
                     (Sc.labelFieldStateActiveInstances |> Rs.s_placeholderText (Just inputField))
-                    { stateActive = { deleteVisible = False, iconInstance = none } }
+                    { stateActive = { deleteVisible = False, iconInstance = none, textPlaceholder = "test" } }
                 ]
 
-        cattr _ =
-            [ css [ Css.cursor Css.pointer ], onClick NoOp ]
+        colorBtn color =
+            case color of
+                Just c ->
+                    Sc.colorSquareStyleColorFillWithAttributes
+                        (Sc.colorSquareStyleColorFillAttributes
+                            |> Rs.s_styleColorFill [ css [ Css.cursor Css.pointer, Css.important (Css.fill (c |> Util.View.toCssColor)) ], onClick NoOp ]
+                            |> Rs.s_vector [ css [ Css.cursor Css.pointer, Css.important (Css.fill (c |> Util.View.toCssColor)) ], onClick NoOp ]
+                            |> Rs.s_vectorShape [ css [ Css.important (Css.fill (c |> Util.View.toCssColor)) ] ]
+                        )
+                        { styleColorFill = { selectionVisible = False } }
+
+                Nothing ->
+                    Sc.colorSquareStyleNoColorWithAttributes
+                        (Sc.colorSquareStyleNoColorAttributes
+                         -- |> Rs.s_styleNoColor ([ css [ Css.cursor Css.pointer ], onClick NoOp ])
+                        )
+                        { styleNoColor = { selectionVisible = True } }
     in
     Sc.annotationWithAttributes
-        (Sc.annotationAttributes
-            |> Rs.s_darkBlue (cattr "")
-            |> Rs.s_green (cattr "")
-            |> Rs.s_lightBlue (cattr "")
-            |> Rs.s_pink (cattr "")
-            |> Rs.s_purple (cattr "")
-            |> Rs.s_turquoise (cattr "")
-            |> Rs.s_yellow (cattr "")
-            |> Rs.s_noColorOfColors (cattr "")
-        )
-        { labelField = { variant = inputBody } }
+        Sc.annotationAttributes
+        { annotation = { colorText = Locale.string vc.locale "Color", labelText = Locale.string vc.locale "Label" }
+        , darkBlue4 = { variant = colorBtn (Just annotationDarkBlue) }
+        , green2 = { variant = colorBtn (Just annotationGreen) }
+        , labelField = { variant = inputBody }
+        , lightBlue5 = { variant = colorBtn (Just annotationLightBlue) }
+        , noColor1 = { variant = colorBtn Nothing }
+        , pink7 = { variant = colorBtn (Just annotationPink) }
+        , purple8 = { variant = colorBtn (Just annotationPurple) }
+        , red3 = { variant = colorBtn (Just annotationRed) }
+        , turquoise9 = { variant = colorBtn (Just annotationTurquoise) }
+        , yellow6 = { variant = colorBtn (Just annotationYellow) }
+        }
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc hc (Css.zIndexMainValue + 1)
