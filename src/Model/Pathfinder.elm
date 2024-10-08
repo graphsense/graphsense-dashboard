@@ -55,6 +55,7 @@ type alias Model =
 type HavingTags
     = LoadingTags
     | HasTagSummary Api.Data.TagSummary
+    | HasExchangeTag
     | HasTags
     | NoTags
 

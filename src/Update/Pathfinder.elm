@@ -1036,8 +1036,12 @@ updateByMsg plugins uc msg model =
                                     ( HasTagSummary _, _ ) ->
                                         curr
 
-                                    ( _, Just _ ) ->
-                                        HasTags
+                                    ( _, Just { category } ) ->
+                                        if category == Just "exchange" then
+                                            HasExchangeTag
+
+                                        else
+                                            HasTags
 
                                     ( _, Nothing ) ->
                                         NoTags
