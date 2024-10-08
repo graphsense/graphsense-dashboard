@@ -5,6 +5,26 @@ import { Base64 } from 'js-base64'
 import { fileDialog } from 'file-select-dialog'
 import plugins from '../generated/plugins/index.js'
 
+
+const getTheme = () => {
+  const rootStyles = window.getComputedStyle(document.documentElement);
+  return Object.fromEntries(
+    Array.from(document.styleSheets)
+      .flatMap((styleSheet) => {
+        try {
+          return Array.from(styleSheet.cssRules);
+        } catch (error) {
+          return [];
+        }
+      })
+      .filter((cssRule) => cssRule instanceof CSSStyleRule)
+      .flatMap((cssRule) => Array.from(cssRule.style))
+      .filter((style) => style.startsWith("--"))
+      .map((variable) => [variable, rootStyles.getPropertyValue(variable)]),
+  );
+};
+
+
 const getNavigatorLanguage = () => {
   if (navigator.languages && navigator.languages.length) {
     return navigator.languages[0]
@@ -54,10 +74,18 @@ window.onbeforeunload = function (evt) {
 
 app.ports.console.subscribe(console.error)
 
-app.ports.exportGraphPNG.subscribe((filename) => {
+app.ports.exportGraphImage.subscribe((filename) => {
     let svg = document.querySelector('svg#graph')
     let canvas = document.createElement("canvas");
-    const svgData = new XMLSerializer().serializeToString(svg)
+    var svgData = new XMLSerializer().serializeToString(svg)
+
+    // replace css variables with actual values, since
+    // currently css variables are not supported in canvas
+    const cssVariables = getTheme()
+    for (const [key, value] of Object.entries(cssVariables)) {
+      svgData = svgData.replaceAll("var(" + key + ")", value)
+    }
+
     const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
 
     var width = svg.innerWidth
@@ -163,7 +191,6 @@ app.ports.deserialize.subscribe(() => {
 })
 
 app.ports.serialize.subscribe(([filename, body]) => {
-  console.log(body)
   download(filename, compress(body))
 })
 

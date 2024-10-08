@@ -769,8 +769,8 @@ update plugins uc msg model =
 
         PathfinderMsg (Pathfinder.UserClickedExportGraphAsPNG name) ->
             ( model
-            , (name ++ ".png")
-                |> Ports.exportGraphPNG
+            , (name ++ ".jpg")
+                |> Ports.exportGraphImage
                 |> Pathfinder.CmdEffect
                 |> PathfinderEffect
                 |> List.singleton
