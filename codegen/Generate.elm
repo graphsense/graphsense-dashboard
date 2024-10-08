@@ -32,6 +32,7 @@ main =
 generate : Api.Raw.DocumentNode -> List Generate.File
 generate { children } =
     children
+        |> List.filter (.isLayerTrait >> .name >> String.startsWith "Final")
         |> List.map canvasNodeToFiles
         |> List.concat
 
