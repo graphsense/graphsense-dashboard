@@ -95,19 +95,25 @@ view _ vc _ colors address getCluster annotation =
         adjY =
             fd.y + fd.height / 2
 
-        label =
+        ( annAttr, label ) =
             case annotation of
                 Just ann ->
                     let
                         colorAttributes =
                             case ann.color of
                                 Just c ->
-                                    [ Css.important (Css.property "fill" (Color.toCssString c)) ]
+                                    Color.toCssString c
+                                        |> Css.property "fill"
+                                        |> Css.important
+                                        |> List.singleton
+                                        |> css
+                                        |> List.singleton
 
                                 _ ->
                                     []
                     in
-                    GraphComponents.annotationLabelWithAttributes
+                    ( colorAttributes
+                    , GraphComponents.annotationLabelWithAttributes
                         (GraphComponents.annotationLabelAttributes
                             |> s_annotationLabel
                                 [ translate
@@ -131,13 +137,14 @@ view _ vc _ colors address getCluster annotation =
                                 , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
                                 , css [ Css.cursor Css.pointer ]
                                 ]
-                            |> s_label [ css colorAttributes ]
+                            |> s_label colorAttributes
                         )
                         { annotationLabel = { labelText = ann.label } }
                         |> List.singleton
+                    )
 
                 _ ->
-                    []
+                    ( [], [] )
     in
     g []
         (GraphComponents.addressNodeWithAttributes
@@ -163,6 +170,7 @@ view _ vc _ colors address getCluster annotation =
                     , UserMovesMouseOutAddress address.id
                         |> onMouseLeave
                     ]
+                |> s_nodeFrame annAttr
                 |> s_clusterColor
                     (case ( clusterColorLight, vc.highlightClusterFriends ) of
                         ( Just c, True ) ->
