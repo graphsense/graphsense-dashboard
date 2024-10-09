@@ -574,7 +574,7 @@ txDetailsContentView vc _ model id viewState =
                         let
                             headerTitle =
                                 { sidePanelListHeaderTitleInputs =
-                                    { title = Locale.string vc.locale "Inputs"
+                                    { title = Locale.string vc.locale "Sending Addresses"
                                     , totalNumber = Locale.int vc.locale tx.raw.noInputs
                                     }
                                 }
@@ -606,7 +606,7 @@ txDetailsContentView vc _ model id viewState =
                     , outputListInstance =
                         let
                             headerTitle =
-                                { title = Locale.string vc.locale "Outputs"
+                                { title = Locale.string vc.locale "Receiving Addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs
                                 }
 
@@ -1015,7 +1015,7 @@ addressDetailsContentView vc gc model id viewState =
                 )
                 { stateNeutral =
                     { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
-                    , tokenCode = String.toUpper symbol
+                    , tokenCode = ""
                     , tokenName = String.toUpper symbol
                     , tokenValue = value
                     }
