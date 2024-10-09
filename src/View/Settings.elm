@@ -17,6 +17,7 @@ import Util.ThemedSelectBoxes as TSelectBoxes
 import Util.View
 import View.Controls as Vc
 import View.Locale as Locale
+import Util.View exposing (none)
 
 
 view : Plugins -> Config -> Model x -> Html Model.Msg
@@ -119,7 +120,8 @@ generalSettings vc m =
             authContent vc m.user
 
         generalSettingsPageDummyData =
-            { dropDownExtraTextClosed = { primaryText = "a", secondaryText = "b" }
+            { button = { variant = none }
+            , dropDownExtraTextClosed = { primaryText = "a", secondaryText = "b" }
             , languageDropDown = { text = "" }
             , leftCell = { variant = Util.View.none }
             , modeToggle = { variant = modeToggle }
