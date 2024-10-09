@@ -1,14 +1,13 @@
 module Generate.Svg.TextNode exposing (..)
 
 import Api.Raw exposing (..)
-import Dict
 import Elm
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.TextNode exposing (getName)
-import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
+import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.TypeStyle as TypeStyle
 import Generate.Util exposing (getElementAttributes, getTextProperty, m, mm, withVisibility)
 import Types exposing (ColorMap, Config, Details)
@@ -38,7 +37,7 @@ toExpressions config componentName node =
 toStyles : ColorMap -> TextNode -> List Elm.Expression
 toStyles colorMap node =
     TypeStyle.toStyles colorMap node.style
-        ++ DefaultShapeTraits.toStyles colorMap node.defaultShapeTraits
+        ++ HasGeometryTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait
 
 
 toDetails : ColorMap -> TextNode -> Details

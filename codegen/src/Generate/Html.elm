@@ -20,12 +20,12 @@ import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.FrameTraits as FrameTraits
-import Generate.Html.LineNode as LineNode
-import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
-import Generate.Html.VectorNode as VectorNode
 import Generate.Svg as Svg
-import Generate.Svg.DefaultShapeTraits
+import Generate.Svg.EllipseNode
+import Generate.Svg.LineNode
+import Generate.Svg.RectangleNode
+import Generate.Svg.VectorNode
 import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (..)
@@ -72,21 +72,32 @@ subcanvasNodeToExpressions config name node =
                 []
 
             else
-                DefaultShapeTraits.toExpressions config name n.rectangularShapeTraits
+                Generate.Svg.RectangleNode.toExpressions config name n
+                    |> DefaultShapeTraits.toExpressions config n.rectangularShapeTraits
+
+        SubcanvasNodeEllipseNode n ->
+            if Generate.Common.DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                Generate.Svg.EllipseNode.toExpressions config name n
+                    |> DefaultShapeTraits.toExpressions config n
 
         SubcanvasNodeVectorNode n ->
             if Generate.Common.DefaultShapeTraits.isHidden n.cornerRadiusShapeTraits then
                 []
 
             else
-                DefaultShapeTraits.toExpressions config name n.cornerRadiusShapeTraits
+                Generate.Svg.VectorNode.toExpressions config name n.cornerRadiusShapeTraits
+                    |> DefaultShapeTraits.toExpressions config n.cornerRadiusShapeTraits
 
         SubcanvasNodeLineNode n ->
             if Generate.Common.DefaultShapeTraits.isHidden n then
                 []
 
             else
-                DefaultShapeTraits.toExpressions config name n
+                Generate.Svg.LineNode.toExpressions config name n
+                    |> DefaultShapeTraits.toExpressions config n
 
         _ ->
             []
@@ -464,14 +475,6 @@ subcanvasNodeToDetails colorMap node =
                 TextNode.toDetails colorMap n
                     |> List.singleton
 
-        SubcanvasNodeEllipseNode n ->
-            if Generate.Common.DefaultShapeTraits.isHidden n then
-                []
-
-            else
-                DefaultShapeTraits.toDetails colorMap n
-                    |> List.singleton
-
         SubcanvasNodeGroupNode n ->
             if Generate.Common.FrameTraits.isHidden n then
                 []
@@ -505,7 +508,8 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                RectangleNode.toDetails colorMap n
+                Generate.Svg.RectangleNode.toDetails colorMap n
+                    |> s_styles []
                     |> List.singleton
 
         SubcanvasNodeVectorNode n ->
@@ -513,7 +517,8 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                VectorNode.toDetails colorMap n
+                Generate.Svg.VectorNode.toDetails colorMap n.cornerRadiusShapeTraits
+                    |> s_styles []
                     |> List.singleton
 
         SubcanvasNodeLineNode n ->
@@ -521,7 +526,17 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                LineNode.toDetails colorMap n
+                Generate.Svg.LineNode.toDetails colorMap n
+                    |> s_styles []
+                    |> List.singleton
+
+        SubcanvasNodeEllipseNode n ->
+            if Generate.Common.DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                Generate.Svg.EllipseNode.toDetails colorMap n
+                    |> s_styles []
                     |> List.singleton
 
         _ ->

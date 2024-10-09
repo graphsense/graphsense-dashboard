@@ -5,10 +5,11 @@ import Elm exposing (Expression)
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (cx, cy, rx, ry)
-import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
+import Generate.Common.DefaultShapeTraits as Common
+import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Util exposing (getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
-import Types exposing (ColorMap, Config)
+import Types exposing (ColorMap, Config, Details)
 
 
 toExpressions : Config -> String -> EllipseNode -> List Elm.Expression
@@ -39,7 +40,7 @@ getName node =
 
 toStyles : ColorMap -> EllipseNode -> List Elm.Expression
 toStyles colorMap node =
-    DefaultShapeTraits.toStyles colorMap node.defaultShapeTraits
+    HasGeometryTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait
 
 
 toAttributes : EllipseNode -> List Elm.Expression
@@ -83,3 +84,8 @@ toSize shape =
     [ shape.absoluteBoundingBox.width / 2 + adjustStrokeAlign |> String.fromFloat |> rx
     , shape.absoluteBoundingBox.height / 2 + adjustStrokeAlign |> String.fromFloat |> ry
     ]
+
+
+toDetails : ColorMap -> EllipseNode -> Details
+toDetails colorMap node =
+    Common.toDetails (toStyles colorMap node) node

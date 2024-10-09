@@ -202,62 +202,61 @@ coloredPath vc c =
             ]
                 |> pathD
                 |> d
+
+        gradientStyles =
+            [ "url(#{{ prefix }}{{ direction }}Edge{{ back }})"
+                |> Format.namedValue "prefix"
+                    (if c.isUtxo then
+                        "utxo"
+
+                     else
+                        "account"
+                    )
+                |> Format.namedValue "direction"
+                    (if c.isOutgoing then
+                        "Out"
+
+                     else
+                        "In"
+                    )
+                |> Format.namedValue "back"
+                    (if dx > 0 then
+                        "Forth"
+
+                     else
+                        "Back"
+                    )
+                |> Css.property "stroke"
+            ]
+        path det =
+            Svg.path
+                [ p
+                , 
+                  Css.property "stroke-width" (String.fromFloat det.strokeWidth)
+                  ::det.styles
+                    ++ gradientStyles
+                    |> css
+                ]
+                []
     in
     [ if c.highlight then
-        let
-            det =
-                if c.isOutgoing then
-                    GraphComponents.outputPathHighlightLine_details
+            path
+                ( if c.isOutgoing then
+                                    GraphComponents.outputPathHighlightLine_details
 
-                else
-                    GraphComponents.inputPathHighlightLine_details
-        in
-        Svg.path
-            [ p
-            , css det.styles
-            ]
-            []
+                                else
+                                    GraphComponents.inputPathHighlightLine_details
+                )
 
       else
         g [] []
-    , Svg.path
-        [ p
-        , let
-            det =
-                if c.isOutgoing then
-                    GraphComponents.outputPathMainLine_details
+    , path
+        ( if c.isOutgoing then
+                            GraphComponents.outputPathMainLine_details
 
-                else
-                    GraphComponents.inputPathMainLine_details
-          in
-          det.styles
-            ++ [ "url(#{{ prefix }}{{ direction }}Edge{{ back }})"
-                    |> Format.namedValue "prefix"
-                        (if c.isUtxo then
-                            "utxo"
-
-                         else
-                            "account"
-                        )
-                    |> Format.namedValue "direction"
-                        (if c.isOutgoing then
-                            "Out"
-
-                         else
-                            "In"
-                        )
-                    |> Format.namedValue "back"
-                        (if dx > 0 then
-                            "Forth"
-
-                         else
-                            "Back"
-                        )
-                    |> Css.property "stroke"
-               ]
-            |> css
-        ]
-        []
+                        else
+                            GraphComponents.inputPathMainLine_details
+        )
     , if c.isOutgoing then
         Svg.path
             [ d <|

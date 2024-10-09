@@ -4,6 +4,7 @@ import Api.Raw exposing (..)
 import Elm
 import Gen.Css as Css
 import Generate.Svg.MinimalFillsTrait as MinimalFillsTrait
+import Generate.Svg.MinimalStrokesTrait as MinimalStrokesTrait
 import Generate.Util exposing (..)
 import Generate.Util.Paint as Paint
 import Types exposing (ColorMap)
@@ -12,8 +13,7 @@ import Types exposing (ColorMap)
 toStyles : ColorMap -> HasGeometryTrait -> List Elm.Expression
 toStyles colorMap node =
     MinimalFillsTrait.toStyles colorMap node.minimalFillsTrait
-        |> (++) (toStroke colorMap node.strokes)
-        |> m (String.fromFloat >> Css.property "stroke-width") node.strokeWeight
+        ++ MinimalStrokesTrait.toStyles colorMap node.minimalStrokesTrait
 
 
 toStroke : ColorMap -> Maybe (List Paint) -> List Elm.Expression

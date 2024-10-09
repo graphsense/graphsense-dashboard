@@ -9,7 +9,7 @@ import Gen.Svg.Styled.Attributes exposing (height, width, x, y)
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.RectangleNode exposing (getName)
 import Generate.Svg.CornerTrait as CornerTrait
-import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
+import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Util exposing (getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details, OriginAdjust)
@@ -35,7 +35,7 @@ toExpressions config componentName node =
 
 toStyles : ColorMap -> RectangleNode -> List Elm.Expression
 toStyles colorMap node =
-    DefaultShapeTraits.toStyles colorMap node.rectangularShapeTraits.defaultShapeTraits
+    HasGeometryTrait.toStyles colorMap node.rectangularShapeTraits.defaultShapeTraits.hasGeometryTrait
 
 
 toDetails : ColorMap -> RectangleNode -> Details

@@ -11,8 +11,6 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Html.HasEffectsTrait as HasEffectsTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
-import Generate.Html.HasLayoutTrait as HasLayoutTrait
-import Generate.Svg.DefaultShapeTraits
 import Generate.Util exposing (..)
 import Types exposing (ColorMap, Config, Details)
 
@@ -29,8 +27,8 @@ toDetails colorMap node =
     Common.toDetails (toStyles colorMap node.defaultShapeTraits) node
 
 
-toExpressions : Config -> String -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
-toExpressions config componentName node =
+toExpressions : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression -> List Elm.Expression
+toExpressions config node children =
     let
         name =
             node.defaultShapeTraits.isLayerTrait.name
@@ -73,7 +71,7 @@ toExpressions config componentName node =
                             )
                     )
     in
-    Generate.Svg.DefaultShapeTraits.toExpressions config componentName node
+    children
         |> Elm.list
         |> toHtml
         |> List.singleton

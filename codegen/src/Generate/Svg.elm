@@ -6,18 +6,18 @@ import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
 import Elm.Op
-import Gen.Css as Css
 import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty)
 import Generate.Common.DefaultShapeTraits
 import Generate.Common.FrameTraits
-import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.EllipseNode as EllipseNode
 import Generate.Svg.FrameTraits as FrameTraits
+import Generate.Svg.LineNode as LineNode
 import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
+import Generate.Svg.VectorNode as VectorNode
 import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, toTranslate, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (..)
@@ -67,7 +67,7 @@ subcanvasNodeToExpressions config name node =
                 []
 
             else
-                DefaultShapeTraits.toExpressions config name n.cornerRadiusShapeTraits
+                VectorNode.toExpressions config name n.cornerRadiusShapeTraits
 
         SubcanvasNodeRectangleNode n ->
             if Generate.Common.DefaultShapeTraits.isHidden n.rectangularShapeTraits then
@@ -81,7 +81,7 @@ subcanvasNodeToExpressions config name node =
                 []
 
             else
-                DefaultShapeTraits.toExpressions config name n
+                LineNode.toExpressions config name n
 
         _ ->
             []
@@ -119,7 +119,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                DefaultShapeTraits.toDetails colorMap n
+                EllipseNode.toDetails colorMap n
                     |> List.singleton
 
         SubcanvasNodeGroupNode n ->
@@ -160,7 +160,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                DefaultShapeTraits.toDetails colorMap n.cornerRadiusShapeTraits
+                VectorNode.toDetails colorMap n.cornerRadiusShapeTraits
                     |> List.singleton
 
         SubcanvasNodeLineNode n ->
@@ -168,7 +168,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                DefaultShapeTraits.toDetails colorMap n
+                LineNode.toDetails colorMap n
                     |> List.singleton
 
         _ ->

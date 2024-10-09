@@ -47,6 +47,7 @@ import RecordSetter as Rs
 import RemoteData
 import Route
 import Route.Graph exposing (AddressTable(..))
+import String.Format
 import Svg.Styled exposing (Svg, defs, linearGradient, stop, svg)
 import Svg.Styled.Attributes exposing (css, height, id, offset, preserveAspectRatio, stopColor, transform, viewBox, width)
 import Svg.Styled.Events as Svg
@@ -1310,17 +1311,56 @@ graphSvg plugins _ vc gc model bbox =
         pointerStyle =
             [ Css.cursor pointer ]
 
-        gradient name from to =
+        gradient prefix { outgoing, reverse } =
+            let
+                ( from, to ) =
+                    case ( outgoing, reverse ) of
+                        ( True, False ) ->
+                            ( Colors.pathMiddle, Colors.pathOut )
+
+                        ( False, False ) ->
+                            ( Colors.pathIn, Colors.pathMiddle )
+
+                        ( True, True ) ->
+                            ( Colors.pathOut, Colors.pathMiddle )
+
+                        ( False, True ) ->
+                            ( Colors.pathMiddle, Colors.pathIn )
+
+                ( fromOffset, toOffset ) =
+                    if outgoing then
+                        ( "10%", "50%" )
+
+                    else
+                        ( "50%", "80%" )
+            in
             linearGradient
-                [ id name
+                [ "{{ prefix }}{{ direction }}Edge{{ reverse }}"
+                    |> String.Format.namedValue "prefix" prefix
+                    |> String.Format.namedValue "direction"
+                        (if outgoing then
+                            "Out"
+
+                         else
+                            "In"
+                        )
+                    |> String.Format.namedValue "reverse"
+                        (if reverse then
+                            "Back"
+
+                         else
+                            "Forth"
+                        )
+                    |> id
                 ]
                 [ stop
                     [ from
                         |> stopColor
+                    , offset fromOffset
                     ]
                     []
                 , stop
-                    [ offset "70%"
+                    [ offset toOffset
                     , to
                         |> stopColor
                     ]
@@ -1370,14 +1410,14 @@ graphSvg plugins _ vc gc model bbox =
         )
         [ defs
             []
-            [ gradient "utxoOutEdgeForth" Colors.pathMiddle Colors.pathOut
-            , gradient "utxoInEdgeForth" Colors.pathIn Colors.pathMiddle
-            , gradient "utxoOutEdgeBack" Colors.pathOut Colors.pathMiddle
-            , gradient "utxoInEdgeBack" Colors.pathMiddle Colors.pathIn
-            , gradient "accountOutEdgeForth" Colors.pathIn Colors.pathOut
-            , gradient "accountInEdgeForth" Colors.pathOut Colors.pathIn
-            , gradient "accountOutEdgeBack" Colors.pathOut Colors.pathIn
-            , gradient "accountInEdgeBack" Colors.pathOut Colors.pathIn
+            [ gradient "utxo" { outgoing = True, reverse = False }
+            , gradient "utxo" { outgoing = False, reverse = False }
+            , gradient "utxo" { outgoing = True, reverse = True }
+            , gradient "utxo" { outgoing = False, reverse = True }
+            , gradient "account" { outgoing = True, reverse = False }
+            , gradient "account" { outgoing = False, reverse = False }
+            , gradient "account" { outgoing = True, reverse = True }
+            , gradient "account" { outgoing = False, reverse = True }
             ]
         , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
