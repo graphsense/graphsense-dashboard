@@ -1,4 +1,4 @@
-port module Ports exposing (console, deserialize, deserialized, exportGraphPNG, exportGraphics, newTab, pluginsIn, pluginsOut, saveToLocalStorage, serialize, setDirty)
+port module Ports exposing (console, deserialize, deserialized, exportGraphImage, exportGraphics, newTab, pluginsIn, pluginsOut, saveToLocalStorage, serialize, setDirty)
 
 import Json.Encode exposing (Value)
 
@@ -9,7 +9,7 @@ port console : String -> Cmd msg
 port exportGraphics : String -> Cmd msg
 
 
-port exportGraphPNG : String -> Cmd msg
+port exportGraphImage : String -> Cmd msg
 
 
 port deserialize : () -> Cmd msg

@@ -130,6 +130,7 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
                     (SidePanelComponents.paginationListPartStartAttributes
                         |> s_listPartStart paggingBlockAttributes
                         |> s_iconsChevronRightThin nextActiveAttributes
+                        |> s_next nextActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartStartInstances
                      -- |> s_iconsChevronRightEnd (Just Util.View.none)
@@ -141,6 +142,7 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
                     (SidePanelComponents.paginationListPartOnePageAttributes
                         |> s_listPartOnePage paggingBlockAttributes
                         |> s_iconsChevronRightThin nextActiveAttributes
+                        |> s_next nextActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartOnePageInstances
                      -- |> s_iconsChevronRightEnd (Just Util.View.none)
@@ -154,6 +156,8 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
                         |> s_iconsChevronRightThin nextActiveAttributes
                         |> s_iconsChevronLeftThin prevActiveAttributes
                         |> s_iconsChevronLeftEnd firstActiveAttributes
+                        |> s_next nextActiveAttributes
+                        |> s_previous prevActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartMiddleInstances
                      -- |> s_iconsChevronRightEnd (Just Util.View.none)
@@ -165,8 +169,10 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
                     (SidePanelComponents.paginationListPartEndAttributes
                         |> s_listPartEnd paggingBlockAttributes
                         |> s_nextCell nextActiveAttributes
+                        |> s_next nextActiveAttributes
                         |> s_iconsChevronLeftThin prevActiveAttributes
                         |> s_iconsChevronLeftEnd firstActiveAttributes
+                        |> s_previous prevActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartEndInstances
                      -- |> s_iconsChevronRightEnd (Just Util.View.none)
