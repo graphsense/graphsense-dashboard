@@ -228,34 +228,34 @@ coloredPath vc c =
                     )
                 |> Css.property "stroke"
             ]
+
         path det =
             Svg.path
                 [ p
-                , 
-                  Css.property "stroke-width" (String.fromFloat det.strokeWidth)
-                  ::det.styles
+                , Css.property "stroke-width" (String.fromFloat det.strokeWidth)
+                    :: det.styles
                     ++ gradientStyles
                     |> css
                 ]
                 []
     in
     [ if c.highlight then
-            path
-                ( if c.isOutgoing then
-                                    GraphComponents.outputPathHighlightLine_details
+        path
+            (if c.isOutgoing then
+                GraphComponents.outputPathHighlightLine_details
 
-                                else
-                                    GraphComponents.inputPathHighlightLine_details
-                )
+             else
+                GraphComponents.inputPathHighlightLine_details
+            )
 
       else
         g [] []
     , path
-        ( if c.isOutgoing then
-                            GraphComponents.outputPathMainLine_details
+        (if c.isOutgoing then
+            GraphComponents.outputPathMainLine_details
 
-                        else
-                            GraphComponents.inputPathMainLine_details
+         else
+            GraphComponents.inputPathMainLine_details
         )
     , if c.isOutgoing then
         Svg.path

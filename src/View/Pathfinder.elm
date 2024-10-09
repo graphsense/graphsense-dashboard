@@ -53,6 +53,7 @@ import Svg.Styled.Attributes exposing (css, height, id, offset, preserveAspectRa
 import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
+import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as HIcons
 import Theme.Html.SettingsComponents as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -86,16 +87,6 @@ type alias BtnConfig =
     { icon : Bool -> Html Msg, text : String, msg : Msg, enable : Bool }
 
 
-inlineCloseSmallIcon : Html Msg
-inlineCloseSmallIcon =
-    HIcons.iconsCloseSmallWithAttributes HIcons.iconsCloseSmallAttributes {}
-
-
-inlineDoneSmallIcon : Html Msg
-inlineDoneSmallIcon =
-    HIcons.iconsDoneSmallWithAttributes HIcons.iconsDoneSmallAttributes {}
-
-
 inlineClusterIcon : Bool -> Color -> Html Msg
 inlineClusterIcon highlight clr =
     let
@@ -115,12 +106,6 @@ inlineClusterIcon highlight clr =
 
 
 -- Helpers
-
-
-graphActionButtons : String -> List BtnConfig
-graphActionButtons name =
-    [-- BtnConfig (\_ -> inlineExportIcon) "Export" (UserClickedExportGraphAsPNG name) True
-    ]
 
 
 type ValueType
@@ -480,7 +465,7 @@ topRightPanel _ _ vc gc model =
 graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 graphActionsView vc _ m =
     div [ Css.graphActionsViewStyle vc |> css ]
-        (graphActionButtons m.name |> List.map (graphActionButton vc))
+        []
 
 
 graphActionButton : View.Config -> BtnConfig -> Html Msg
@@ -1224,15 +1209,15 @@ clusterInfoView vc open colors _ clstr =
                     |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends)
                     |> Maybe.withDefault none
         in
-        div [ css [ Css.color Css.lightGreyColor, Css.width (Css.pct 100) ] ]
-            [ div [ css [ Css.paddingLeft (Css.px 8), Css.paddingBottom Css.mGap, Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center, Css.cursor Css.pointer ], Svg.onClick UserClickedToggleClusterDetailsOpen ]
+        div [ css [ Css.width (Css.pct 100) ] ]
+            [ div [ Css.clusterDetailsClosedStyle |> css, onClick UserClickedToggleClusterDetailsOpen ]
                 [ div
                     [ css
                         [ Css.displayFlex
                         , Css.alignItems Css.center
                         ]
                     ]
-                    [ -- left sind of the bar
+                    [ -- left side of the bar
                       span [ css Css.smPaddingRight ]
                         [ if open then
                             openIcon
@@ -1249,7 +1234,7 @@ clusterInfoView vc open colors _ clstr =
                     ]
                 ]
             , if open then
-                div [ css [ Css.fontSize (Css.px 12), Css.color Css.lightGreyColor, Css.marginLeft (Css.px 8) ] ]
+                div [ Css.clusterDetailsOpenStyle |> css ]
                     [ detailsFactTableView vc (apiEntityToRows clstrid clstr)
                     ]
 
@@ -1265,30 +1250,30 @@ detailsFactTableView vc rows =
 
 primaryButton : View.Config -> BtnConfig -> Html Msg
 primaryButton vc btn =
-    optionalTextButton vc Css.Primary btn
+    Btns.buttonTypeTextIconStateRegularStylePrimaryWithAttributes
+        (Btns.buttonTypeTextIconStateRegularStylePrimaryAttributes
+            |> Rs.s_typeTextIconStateRegularStylePrimary [ onClick btn.msg, [ Css.cursor Css.pointer ] |> css ]
+        )
+        { typeTextIconStateRegularStylePrimary =
+            { buttonText = Locale.string vc.locale btn.text
+            , iconInstance = btn.icon btn.enable
+            , iconVisible = True
+            }
+        }
 
 
 secondaryButton : View.Config -> BtnConfig -> Html Msg
 secondaryButton vc btn =
-    optionalTextButton vc Css.Secondary btn
-
-
-optionalTextButton : View.Config -> Css.ButtonType -> BtnConfig -> Html Msg
-optionalTextButton vc bt btn =
-    let
-        ( iconattr, content ) =
-            if String.isEmpty btn.text then
-                ( [], [] )
-
-            else
-                ( [ (Css.smPaddingRight ++ [ Css.verticalAlign Css.middle ]) |> css ], [ Html.text (Locale.string vc.locale btn.text) ] )
-    in
-    disableableButton (Css.detailsActionButtonStyle vc bt)
-        btn
-        []
-        (span iconattr [ btn.icon btn.enable ]
-            :: content
+    Btns.buttonTypeTextIconStateRegularStyleOutlinedWithAttributes
+        (Btns.buttonTypeTextIconStateRegularStyleOutlinedAttributes
+            |> Rs.s_typeTextIconStateRegularStyleOutlined [ onClick btn.msg, [ Css.cursor Css.pointer ] |> css ]
         )
+        { typeTextIconStateRegularStyleOutlined =
+            { buttonText = Locale.string vc.locale btn.text
+            , iconInstance = btn.icon btn.enable
+            , iconVisible = True
+            }
+        }
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> BBox -> Svg Msg
@@ -1552,7 +1537,7 @@ transactionTableView vc addressId txOnGraphFn model =
                     ]
                 ]
                 [ drp
-                , graphActionButton vc (BtnConfig (\_ -> HIcons.iconsFilterWithAttributes { iconsFilter = [ css [ Css.padding Css.no ] ], filter = [ css [ Css.fill Css.lightGreyColor |> Css.important ] ] } {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
+                , graphActionButton vc (BtnConfig (\_ -> HIcons.iconsFilterWithAttributes { iconsFilter = [ css [ Css.padding Css.no ] ], filter = [ css Css.filterButtonIconStyleDateRangePicker ] } {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
                 ]
 
         showSelectionRow =
@@ -1561,11 +1546,11 @@ transactionTableView vc addressId txOnGraphFn model =
     (case model.dateRangePicker of
         Just drp ->
             if DatePicker.isOpen drp.dateRangePicker then
-                [ span [ css [ Css.paddingLeft Css.mlGap ] ]
-                    [ primaryButton vc (BtnConfig (\_ -> inlineDoneSmallIcon) "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
-                    , secondaryButton vc (BtnConfig (\_ -> inlineCloseSmallIcon) "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
+                [ div [ Css.datepickerButtonsStyle vc |> css ]
+                    [ primaryButton vc (BtnConfig (\_ -> HIcons.iconsDoneSmallWithAttributes HIcons.iconsDoneSmallAttributes {}) "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
+                    , secondaryButton vc (BtnConfig (\_ -> HIcons.iconsCloseSmallWithAttributes HIcons.iconsCloseSmallAttributes {}) "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
                     ]
-                , span [ css [ Css.fontSize (Css.px 12) ] ]
+                , div [ css [ Css.fontSize (Css.px 12) ] ]
                     [ DatePicker.view drp.settings drp.dateRangePicker
                         |> Html.fromUnstyled
                         |> Html.map AddressDetailsMsg

@@ -12,46 +12,46 @@
     --edtp-duration-calendars-gap: 1rem;
     --edtp-transition: all cubic-bezier(0.4, 0, 0.2, 1) 150ms;
 
-    --edtp-container-color: #333333;
-    --edtp-container-background-color: #fff;
+    --edtp-container-color: var(--c-black);
+    --edtp-container-background-color: transparent;
 
-    --edtp-header-text-color: #333333;
-    --edtp-header-chevron-color: #333333;
+    --edtp-header-text-color: var(--c-black);
+    --edtp-header-chevron-color: var(--c-black);
     --edtp-header-chevron-background-color: transparent;
-    --edtp-header-chevron-hover-color: #333333;
-    --edtp-header-chevron-hover-background-color: #f1f5f8;
-    --edtp-header-week-color: #626262;
+    --edtp-header-chevron-hover-color: var(--c-black);
+    --edtp-header-chevron-hover-background-color: var(--c-greyLight);
+    --edtp-header-week-color: var(--c-greyDarker);
 
     --edtp-day-size: 42px;
-    --edtp-day-color: #333333;
+    --edtp-day-color: var(--c-black);
     --edtp-day-background-color: transparent;
-    --edtp-day-hover-color: #333333;
-    --edtp-day-hover-background-color: #626262;
-    --edtp-day-between-color: #333333;
-    --edtp-day-between-background-color: #6BCBBA4D;
-    --edtp-day-disabled-color: #616161;
+    --edtp-day-hover-color: var(--c-black);
+    --edtp-day-hover-background-color: var(--c-greyDarker);
+    --edtp-day-between-color: var(--c-black);
+    --edtp-day-between-background-color: var(--c-brandLight);
+    --edtp-day-disabled-color: var(--c-greyDarker);
     --edtp-day-disabled-background-color: transparent;
-    --edtp-day-picked-color: #fff;
-    --edtp-day-picked-background-color: #369D8F;
-    --edtp-day-today-color: #369D8F;
+    --edtp-day-picked-color: var(--c-white);
+    --edtp-day-picked-background-color: var(--c-brandSketch);
+    --edtp-day-today-color: var(--c-brandSketch);
     --edtp-day-today-background-color: transparent;
 
-    --edtp-week-number-color: #bfc8d4;
-    --edtp-week-number-background-color: #f1f5f8;
+    --edtp-week-number-color: var(--c-textSecondary);
+    --edtp-week-number-background-color: var(--c-greyLight);
     
     --edtp-footer-border-width: 1px;
-    --edtp-footer-border-color: #626262;
-    --edtp-footer-color: #333333;
+    --edtp-footer-border-color: var(--c-greyDarker);
+    --edtp-footer-color: var(--c-black);
     --edtp-footer-background-color: transparent;
-    --edtp-footer-empty-color: #626262;
+    --edtp-footer-empty-color: var(--c-greyDarker);
     --edtp-footer-font-weight: normal;
 
-    --edtp-footer-toggle-button-color: #369D8F;
+    --edtp-footer-toggle-button-color: var(--c-brandSketch);
     --edtp-footer-toggle-button-background-color: transparent;
-    --edtp-footer-toggle-button-hover-color: #369D8F;
-    --edtp-footer-toggle-button-hover-background-color: #f1f5f8;
+    --edtp-footer-toggle-button-hover-color: var(--c-brandSketch);
+    --edtp-footer-toggle-button-hover-background-color: var(--c-greyLight);
 
-    --edtp-footer-select-color: #333333;
-    --edtp-footer-select-background-color: #fff;
-    --edtp-footer-select-border-color: #626262;
+    --edtp-footer-select-color: var(--c-black);
+    --edtp-footer-select-background-color: var(--c-white);
+    --edtp-footer-select-border-color: var(--c-greyDarker);
 }

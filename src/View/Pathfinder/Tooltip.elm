@@ -45,13 +45,13 @@ view vc ts tt =
 getConfidenceIndicator : View.Config -> Float -> Html msg
 getConfidenceIndicator vc x =
     if x >= 0.8 then
-        span [ css [ Css.color (Css.successColor vc) ] ] [ Locale.text vc.locale "High" ]
+        span [ Css.tagConfidenceTextHighStyle vc |> css ] [ Locale.text vc.locale "High" ]
 
     else if x >= 0.4 then
-        span [ css [ Css.color (Css.warningColor vc) ] ] [ Locale.text vc.locale "Medium" ]
+        span [ Css.tagConfidenceTextMediumStyle vc |> css ] [ Locale.text vc.locale "Medium" ]
 
     else
-        span [ css [ Css.color (Css.alertColor vc) ] ] [ Locale.text vc.locale "Low" ]
+        span [ Css.tagConfidenceTextLowStyle vc |> css ] [ Locale.text vc.locale "Low" ]
 
 
 val : View.Config -> String -> { firstRow : String, secondRow : String, secondRowVisible : Bool }

@@ -14,10 +14,9 @@ import Theme.Html.SettingsPage as Sp
 import Time
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
-import Util.View
+import Util.View exposing (none)
 import View.Controls as Vc
 import View.Locale as Locale
-import Util.View exposing (none)
 
 
 view : Plugins -> Config -> Model x -> Html Model.Msg

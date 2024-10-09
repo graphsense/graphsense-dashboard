@@ -97,7 +97,6 @@
     { "count": 1, "filePath": "src/Css/Graph.elm" },
     { "count": 1, "filePath": "src/Css/Header.elm" },
     { "count": 1, "filePath": "src/Css/Landingpage.elm" },
-    { "count": 1, "filePath": "src/Css/Pathfinder.elm" },
     { "count": 1, "filePath": "src/Css/Search.elm" },
     { "count": 1, "filePath": "src/Css/Stats.elm" },
     { "count": 1, "filePath": "src/Css/Statusbar.elm" },

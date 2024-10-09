@@ -1,7 +1,109 @@
-module Css.Pathfinder exposing (ButtonType(..), alertColor, annotationInputStyle, dateStyle, dateTimeRangeBoxStyle, dateTimeRangeHighlightedDateStyle, detailsActionButtonStyle, emptyTableMsg, fullWidth, graphActionButtonStyle, graphActionsViewStyle, iconWithTextStyle, inIconStyle, inoutStyle, ioOutIndicatorStyle, kVTableKeyTdStyle, kVTableTdStyle, kVTableValueTdStyle, lGap, lightGreyColor, linkButtonStyle, mGap, mlGap, no, outIconStyle, panelHeadingStyle3, sGap, searchBoxMinWidth, searchInputStyle, smPaddingBottom, smPaddingRight, successColor, tagLinkButtonStyle, tooltipMargin, topLeftPanelStyle, topPanelStyle, topRightPanelStyle, warningColor)
+module Css.Pathfinder exposing
+    ( annotationInputStyle
+    , clusterDetailsClosedStyle
+    , clusterDetailsOpenStyle
+    , dateStyle
+    , dateTimeRangeBoxStyle
+    , dateTimeRangeHighlightedDateStyle
+    , datepickerButtonsStyle
+    , emptyTableMsg
+    , filterButtonIconStyleDateRangePicker
+    , fullWidth
+    , graphActionButtonStyle
+    , graphActionsViewStyle
+    , iconWithTextStyle
+    , inIconStyle
+    , inoutStyle
+    , ioOutIndicatorStyle
+    , kVTableKeyTdStyle
+    , kVTableTdStyle
+    , kVTableValueTdStyle
+    , lGap
+    , linkButtonStyle
+    , mGap
+    , mlGap
+    , no
+    , outIconStyle
+    , sGap
+    , searchBoxMinWidth
+    , searchInputStyle
+    , smPaddingBottom
+    , smPaddingRight
+    , tagConfidenceTextHighStyle
+    , tagConfidenceTextLowStyle
+    , tagConfidenceTextMediumStyle
+    , tagLinkButtonStyle
+    , tooltipMargin
+    , topLeftPanelStyle
+    , topPanelStyle
+    , topRightPanelStyle
+    )
 
 import Config.View as View
-import Css exposing (..)
+import Css
+    exposing
+        ( Color
+        , Pct
+        , Px
+        , Style
+        , absolute
+        , alignItems
+        , backgroundColor
+        , block
+        , border2
+        , borderRadius
+        , borderWidth
+        , bottom
+        , calc
+        , center
+        , ch
+        , color
+        , cursor
+        , display
+        , displayFlex
+        , ex
+        , fill
+        , flexEnd
+        , flexGrow
+        , fontSize
+        , fontWeight
+        , height
+        , hex
+        , important
+        , int
+        , justifyContent
+        , left
+        , margin
+        , margin4
+        , marginLeft
+        , marginRight
+        , minus
+        , none
+        , notAllowed
+        , num
+        , outline
+        , padding
+        , padding4
+        , paddingBottom
+        , paddingLeft
+        , paddingRight
+        , paddingTop
+        , pct
+        , pointer
+        , pointerEvents
+        , position
+        , property
+        , px
+        , rgb
+        , right
+        , solid
+        , spaceBetween
+        , textAlign
+        , top
+        , verticalAlign
+        , width
+        )
+import Theme.Colors as TColors
 
 
 xsGap : Px
@@ -48,31 +150,6 @@ no =
 -- colors
 
 
-type ButtonType
-    = Primary
-    | Secondary
-
-
-primaryFrostedColor : Color
-primaryFrostedColor =
-    rgb 107 203 186
-
-
-lighterGreyColor : Color
-lighterGreyColor =
-    rgb 208 216 220
-
-
-lightGreyColor : Color
-lightGreyColor =
-    rgb 120 144 156
-
-
-blackColor : Color
-blackColor =
-    rgb 33 33 33
-
-
 whiteColor : Color
 whiteColor =
     rgb 255 255 255
@@ -105,6 +182,46 @@ orangeColor =
 -- Styles
 
 
+filterButtonIconStyleDateRangePicker : List Style
+filterButtonIconStyleDateRangePicker =
+    [ Css.property "fill" TColors.greyLight |> Css.important ]
+
+
+clusterDetailsClosedStyle : List Style
+clusterDetailsClosedStyle =
+    [ Css.paddingLeft (Css.px 8)
+    , Css.paddingBottom mGap
+    , Css.property "color" TColors.greyLight
+    , Css.displayFlex
+    , Css.justifyContent Css.spaceBetween
+    , Css.alignItems Css.center
+    , Css.cursor Css.pointer
+    ]
+
+
+clusterDetailsOpenStyle : List Style
+clusterDetailsOpenStyle =
+    [ Css.fontSize (Css.px 12)
+    , Css.property "color" TColors.greyLight
+    , Css.marginLeft (Css.px 8)
+    ]
+
+
+tagConfidenceTextHighStyle : View.Config -> List Style
+tagConfidenceTextHighStyle vc =
+    [ color (successColor vc) ]
+
+
+tagConfidenceTextMediumStyle : View.Config -> List Style
+tagConfidenceTextMediumStyle vc =
+    [ color (warningColor vc) ]
+
+
+tagConfidenceTextLowStyle : View.Config -> List Style
+tagConfidenceTextLowStyle vc =
+    [ color (alertColor vc) ]
+
+
 alertColor : View.Config -> Color
 alertColor _ =
     redColor
@@ -120,23 +237,18 @@ warningColor _ =
     orangeColor
 
 
-highlightPrimaryFrostedColor : View.Config -> Color
-highlightPrimaryFrostedColor _ =
-    primaryFrostedColor
-
-
-boxBorderColor : View.Config -> Color
+boxBorderColor : View.Config -> String
 boxBorderColor vc =
     if vc.lightmode then
-        lighterGreyColor
+        TColors.greyLight
 
     else
-        blackColor
+        TColors.black
 
 
-emphTextColor : View.Config -> Color
+emphTextColor : View.Config -> String
 emphTextColor _ =
-    lightGreyColor
+    TColors.textSecondary
 
 
 defaultBackgroundColor : View.Config -> Color
@@ -159,8 +271,8 @@ searchInputStyle vc _ =
     , calc (pct 100) minus (px 2) |> height
     , padding <| px 1
     , display block
-    , emphTextColor vc |> color
-    , boxBorderColor vc |> border3 no solid
+    , emphTextColor vc |> property "color"
+    , border2 no solid
     , outline none
     ]
 
@@ -171,17 +283,9 @@ annotationInputStyle vc _ =
     , calc (pct 100) minus (px 2) |> height
     , padding <| px 1
     , display block
-    , emphTextColor vc |> color
-    , boxBorderColor vc |> border3 no solid
+    , emphTextColor vc |> property "color"
+    , border2 no solid
     , outline none
-    ]
-
-
-panelHeadingStyle3 : View.Config -> List Style
-panelHeadingStyle3 _ =
-    [ fontWeight bold
-    , Css.marginTop (Css.px 15)
-    , mlGap |> marginBottom
     ]
 
 
@@ -191,13 +295,13 @@ linkButtonStyle vc enabled =
         clr =
             case ( vc.lightmode, enabled ) of
                 ( True, True ) ->
-                    blackColor
+                    TColors.black
 
                 ( False, True ) ->
-                    whiteColor
+                    TColors.white
 
                 _ ->
-                    lighterGreyColor
+                    TColors.greyLight
     in
     [ defaultBackgroundColor vc |> backgroundColor
     , no |> borderWidth
@@ -211,13 +315,13 @@ linkButtonStyle vc enabled =
     , no |> padding
     , mGap |> paddingLeft
     , mGap |> paddingRight
-    , clr |> color
+    , clr |> property "color"
     ]
 
 
 tagLinkButtonStyle : View.Config -> List Style
 tagLinkButtonStyle vc =
-    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, blackColor |> color ]
+    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.black |> property "color" ]
 
 
 topLeftPanelStyle : View.Config -> List Style
@@ -265,13 +369,18 @@ graphActionButtonStyle : View.Config -> Bool -> List Style
 graphActionButtonStyle vc _ =
     [ cursor pointer
     , padding4 xsGap mlGap xsGap mlGap
-    , emphTextColor vc |> color
+    , emphTextColor vc |> property "color"
     , defaultBackgroundColor vc |> backgroundColor
-    , boxBorderColor vc |> border3 xsGap solid
+    , property "border" ("1px solid " ++ boxBorderColor vc)
     , px 3 |> borderRadius
     , displayFlex
     , alignItems center
     ]
+
+
+datepickerButtonsStyle : View.Config -> List Style
+datepickerButtonsStyle _ =
+    [ Css.paddingLeft mlGap, Css.paddingTop mlGap, Css.displayFlex, Css.justifyContent Css.flexStart, Css.property "gap" "5px" ]
 
 
 dateTimeRangeBoxStyle : View.Config -> List Style
@@ -279,9 +388,9 @@ dateTimeRangeBoxStyle vc =
     [ padding4 xsGap mGap xsGap mGap
     , marginRight sGap
     , marginLeft sGap
-    , emphTextColor vc |> color
+    , emphTextColor vc |> property "color"
     , defaultBackgroundColor vc |> backgroundColor
-    , boxBorderColor vc |> border3 xsGap solid
+    , property "border" ("1px solid " ++ boxBorderColor vc)
     , px 3 |> borderRadius
     , displayFlex
     , alignItems center
@@ -293,35 +402,8 @@ dateTimeRangeBoxStyle vc =
 dateTimeRangeHighlightedDateStyle : View.Config -> List Style
 dateTimeRangeHighlightedDateStyle vc =
     -- [ padding4 zero mGap  zero mGap
-    [ primaryFrostedColor |> color
+    [ TColors.brandSketch |> property "color"
     ]
-
-
-detailsActionButtonStyle : View.Config -> ButtonType -> Bool -> List Style
-detailsActionButtonStyle vc bt _ =
-    let
-        base =
-            [ mGap |> marginRight
-            , cursor pointer
-            , fontWeight bold
-            , px 3 |> borderRadius
-            ]
-    in
-    case bt of
-        Primary ->
-            base
-                ++ [ color whiteColor
-                   , fontWeight bold
-                   , highlightPrimaryFrostedColor vc |> backgroundColor
-                   , highlightPrimaryFrostedColor vc |> border3 xsGap solid
-                   ]
-
-        Secondary ->
-            base
-                ++ [ highlightPrimaryFrostedColor vc |> color
-                   , backgroundColor whiteColor
-                   , highlightPrimaryFrostedColor vc |> border3 xsGap solid
-                   ]
 
 
 emptyTableMsg : List Style
