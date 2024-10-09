@@ -176,21 +176,21 @@ sidebar plugins vc model =
                         |> href
                     ]
                     [ text (Locale.string vc.locale "Statistics") ]
-               , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLightmode ]
-                    [ text
-                        (Locale.string vc.locale
-                            (if vc.lightmode then
-                                "Dark Mode"
+            --    , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLightmode ]
+            --         [ text
+            --             (Locale.string vc.locale
+            --                 (if vc.lightmode then
+            --                     "Dark Mode"
 
-                             else
-                                "Light Mode"
-                            )
-                        )
-                    ]
-               , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLogout ]
-                    [ text
-                        (Locale.string vc.locale "Logout")
-                    ]
+            --                  else
+            --                     "Light Mode"
+            --                 )
+            --             )
+            --         ]
+            --    , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLogout ]
+            --         [ text
+            --             (Locale.string vc.locale "Logout")
+            --         ]
                ]
          -- ++ [ div [ model.page == Stats |> Css.View.sidebarIconsBottom vc |> css ]
          --         [-- FontAwesome.icon FontAwesome.chartPie

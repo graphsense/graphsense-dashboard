@@ -243,7 +243,7 @@ inOutIndicator vc title mnr inNr outNr =
             { totalNumber = Locale.int vc.locale mnr
             , incomingNumber = Locale.int vc.locale inNr
             , outgoingNumber = Locale.int vc.locale outNr
-            , title = title
+            , title = (Locale.string vc.locale title)
             }
         }
 
@@ -574,7 +574,7 @@ txDetailsContentView vc _ model id viewState =
                         let
                             headerTitle =
                                 { sidePanelListHeaderTitleInputs =
-                                    { title = Locale.string vc.locale "Sending Addresses"
+                                    { title = Locale.string vc.locale "Sending addresses"
                                     , totalNumber = Locale.int vc.locale tx.raw.noInputs
                                     }
                                 }
@@ -606,7 +606,7 @@ txDetailsContentView vc _ model id viewState =
                     , outputListInstance =
                         let
                             headerTitle =
-                                { title = Locale.string vc.locale "Receiving Addresses"
+                                { title = Locale.string vc.locale "Receiving addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs
                                 }
 
@@ -998,7 +998,7 @@ addressDetailsContentView vc gc model id viewState =
         fiatCurr =
             vc.preferredFiatCurrency
 
-        toTokenRow i ( symbol, values ) =
+        toTokenRow _ ( symbol, values ) =
             let
                 ass =
                     asset viewState.data.currency symbol

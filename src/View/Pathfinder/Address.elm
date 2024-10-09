@@ -12,16 +12,16 @@ import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
-import Model.Pathfinder.Address exposing (..)
+import Model.Pathfinder.Address exposing (Address, Txs(..), getTxs, txsGetSet)
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
-import RecordSetter exposing (..)
+import RecordSetter as Rs
 import RemoteData
-import Svg.Styled exposing (..)
-import Svg.Styled.Attributes as Svg exposing (..)
-import Svg.Styled.Events exposing (..)
+import Svg.Styled exposing (Svg, g, image, text)
+import Svg.Styled.Attributes as Svg exposing (css, transform, opacity)
+import Svg.Styled.Events exposing (stopPropagationOn, onMouseOver)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations
@@ -115,7 +115,7 @@ view _ vc _ colors address getCluster annotation =
                     ( colorAttributes
                     , GraphComponents.annotationLabelWithAttributes
                         (GraphComponents.annotationLabelAttributes
-                            |> s_annotationLabel
+                            |> Rs.s_annotationLabel
                                 [ translate
                                     (((address.x + address.dx) * unit - adjX) + (GraphComponents.addressNode_details.width / 2 - GraphComponents.annotationLabel_details.width / 2))
                                     ((A.animate address.clock address.y + address.dy)
@@ -137,7 +137,7 @@ view _ vc _ colors address getCluster annotation =
                                 , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
                                 , css [ Css.cursor Css.pointer ]
                                 ]
-                            |> s_label colorAttributes
+                            |> Rs.s_label colorAttributes
                         )
                         { annotationLabel = { labelText = ann.label } }
                         |> List.singleton
@@ -149,7 +149,7 @@ view _ vc _ colors address getCluster annotation =
     g []
         (GraphComponents.addressNodeWithAttributes
             (GraphComponents.addressNodeAttributes
-                |> s_addressNode
+                |> Rs.s_addressNode
                     [ translate
                         ((address.x + address.dx) * unit - adjX)
                         ((A.animate address.clock address.y + address.dy) * unit - adjY)
@@ -162,7 +162,7 @@ view _ vc _ colors address getCluster annotation =
                         |> Util.Graph.mousedown
                     , css [ Css.cursor Css.pointer ]
                     ]
-                |> s_nodeBody
+                |> Rs.s_nodeBody
                     [ Id.toString address.id
                         |> Svg.id
                     , UserMovesMouseOverAddress address.id
@@ -170,8 +170,8 @@ view _ vc _ colors address getCluster annotation =
                     , UserMovesMouseOutAddress address.id
                         |> onMouseLeave
                     ]
-                |> s_nodeFrame annAttr
-                |> s_clusterColor
+                |> Rs.s_nodeFrame annAttr
+                |> Rs.s_clusterColor
                     (case ( clusterColorLight, vc.highlightClusterFriends ) of
                         ( Just c, True ) ->
                             [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
@@ -203,7 +203,8 @@ view _ vc _ colors address getCluster annotation =
                     expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
                         |> Maybe.withDefault
                             (Icons.iconsNodeOpenLeftStateActivWithAttributes
-                                (Icons.iconsNodeOpenLeftStateActivAttributes |> s_stateActiv (expand Incoming))
+                                (Icons.iconsNodeOpenLeftStateActivAttributes 
+                                    |> Rs.s_stateActiv (expand Incoming))
                                 {}
                             )
                 }
@@ -212,7 +213,8 @@ view _ vc _ colors address getCluster annotation =
                     expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
                         |> Maybe.withDefault
                             (Icons.iconsNodeOpenRightStateActivWithAttributes
-                                (Icons.iconsNodeOpenRightStateActivAttributes |> s_stateActiv (expand Outgoing))
+                                (Icons.iconsNodeOpenRightStateActivAttributes 
+                                    |> Rs.s_stateActiv (expand Outgoing))
                                 {}
                             )
                 }
@@ -309,14 +311,14 @@ toNodeIcon highlight address cluster clusterColor =
 
                else
             -}
-            Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> s_ellipse25 (getHighlight c)) {}
+            Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> Rs.s_ellipse25 (getHighlight c)) {}
 
         ( Just _, Just c, _ ) ->
             let
                 cattr =
                     getHighlight c
             in
-            Icons.iconsExchangeWithAttributes (Icons.iconsExchangeAttributes |> s_dollar cattr |> s_arrows cattr) {}
+            Icons.iconsExchangeWithAttributes (Icons.iconsExchangeAttributes |> Rs.s_dollar cattr |> Rs.s_arrows cattr) {}
 
         ( Just _, _, _ ) ->
             Icons.iconsExchange {}

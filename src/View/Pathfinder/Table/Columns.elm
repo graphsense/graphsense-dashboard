@@ -5,17 +5,16 @@ import Config.View as View
 import Css
 import Css.Pathfinder as PCSS exposing (inoutStyle)
 import Css.Statusbar
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
+import Html.Styled exposing (text, span, input)
+import Html.Styled.Attributes exposing (css, title, checked, type_)
 import Html.Styled.Events
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..))
-import RecordSetter exposing (..)
+import RecordSetter as Rs
 import Table
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Theme.Svg.Icons as SvgIcons
-import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 
@@ -68,48 +67,54 @@ identifierColumn lblfn vc { label, accessor, onClick } =
         { name = label
         , viewData =
             \data ->
-                SidePanelComponents.sidePanelListIdentifierCellWithTagWithAttributes
+                SidePanelComponents.sidePanelListIdentifierCellWithTagWithInstances
                     SidePanelComponents.sidePanelListIdentifierCellWithTagAttributes
+                    (SidePanelComponents.sidePanelListIdentifierCellWithTagInstances
+                        |> Rs.s_iconsFrame
+                            (case lblfn data of
+                                LoadingTags ->
+                                    Just
+                                        (span
+                                            [ Locale.string vc.locale "Loading tags" |> title
+                                            , css SidePanelComponents.sidePanelListIdentifierCellWithTagIconsFrame_details.styles
+                                            , css
+                                                [ -Icons.iconsTagSmall_details.width
+                                                    + Icons.iconsTagSmallTagIcon_details.x
+                                                    - 2
+                                                    |> Css.px
+                                                    |> Css.left
+                                                , Icons.iconsTagSmallTagIcon_details.y
+                                                    + 2
+                                                    |> Css.px
+                                                    |> Css.top
+                                                ]
+                                            ]
+                                            [ loadingSpinner vc Css.Statusbar.loadingSpinner
+                                            ]
+                                        )
+
+                                _ ->
+                                    Nothing
+                            )
+                    )
                     { sidePanelListIdentifierCellWithTag =
                         { tagIconVisible = lblfn data /= NoTags
-                        , iconInstance =
+                        , exchangeIconVisible =
                             case lblfn data of
                                 LoadingTags ->
-                                    span
-                                        [ Locale.string vc.locale "Loading tags" |> title
-                                        , css SidePanelComponents.sidePanelListIdentifierCellWithTagIconFrame_details.styles
-                                        , css
-                                            [ -Icons.iconsTagSmall_details.width
-                                                + Icons.iconsTagSmallTagIcon_details.x
-                                                - 2
-                                                |> Css.px
-                                                |> Css.left
-                                            , Icons.iconsTagSmallTagIcon_details.y
-                                                + 2
-                                                |> Css.px
-                                                |> Css.top
-                                            ]
-                                        ]
-                                        [ loadingSpinner vc Css.Statusbar.loadingSpinner
-                                        ]
+                                    False
 
                                 HasTagSummary ts ->
-                                    if ts.broadCategory == "exchange" then
-                                        SvgIcons.iconsExchangeSvg [] {}
-
-                                    else
-                                        SvgIcons.iconsTagSmallSvg
-                                            []
-                                            {}
+                                    ts.broadCategory == "exchange"
 
                                 HasExchangeTag ->
-                                    SvgIcons.iconsExchangeSvg [] {}
+                                    True
 
                                 HasTags ->
-                                    SvgIcons.iconsTagSmallSvg [] {}
+                                    True
 
                                 NoTags ->
-                                    none
+                                    False
                         }
                     , sidePanelListIdentifierCell =
                         { copyIconInstance =
@@ -258,7 +263,7 @@ valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
     Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
         [ SidePanelComponents.sidePanelListValueCellWithAttributes
             (SidePanelComponents.sidePanelListValueCellAttributes
-                |> s_value [ addCss |> List.map Css.important |> css ]
+                |> Rs.s_value [ addCss |> List.map Css.important |> css ]
             )
             { sidePanelListValueCell =
                 { value = value

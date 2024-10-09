@@ -107,7 +107,7 @@ view vc config =
                 )
             |> s_iconsSave
                 (onClickWithStop (UserClickedSaveGraph Nothing)
-                    :: title (Locale.string vc.locale "Save graph")
+                    :: title (Locale.string vc.locale "Save")
                     :: iconsAttr
                 )
             |> s_iconsScrennshot
@@ -117,7 +117,7 @@ view vc config =
                 )
             |> s_iconsOpen
                 (onClickWithStop UserClickedOpenGraph
-                    :: title (Locale.string vc.locale "Open graph")
+                    :: title (Locale.string vc.locale "Open")
                     :: iconsAttr
                 )
         )

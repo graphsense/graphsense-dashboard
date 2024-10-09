@@ -4,11 +4,11 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (emptyTableMsg, fullWidth)
 import Css.Table exposing (Styles, loadingSpinner, styles)
-import Html.Styled exposing (..)
-import Html.Styled.Attributes as HA exposing (..)
-import Html.Styled.Events exposing (..)
+import Html.Styled exposing (Html, div, text, Attribute)
+import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onClick)
 import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
-import RecordSetter exposing (..)
+import RecordSetter as Rs
 import Set exposing (Set)
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -38,21 +38,21 @@ alignColumnsRight vc columns tc =
             ( name
             , x
             , if Set.member name columns then
-                ([ Css.textAlign Css.right ] |> HA.css) :: attr
+                ([ Css.textAlign Css.right ] |> css) :: attr
 
               else
                 attr
             )
     in
-    tc |> s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles vc)
+    tc |> Rs.s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles vc)
 
 
 customizations : View.Config -> Table.Customizations data msg
 customizations vc =
     Table.defaultCustomizations
-        |> s_tableAttrs [ fullWidth ++ Css.Table.table vc |> css ]
-        |> s_thead (List.map (Tuple3.mapThird List.singleton) >> simpleThead styles vc)
-        |> s_rowAttrs (\_ -> [ Css.Table.row vc |> css ])
+        |> Rs.s_tableAttrs [ fullWidth ++ Css.Table.table vc |> css ]
+        |> Rs.s_thead (List.map (Tuple3.mapThird List.singleton) >> simpleThead styles vc)
+        |> Rs.s_rowAttrs (\_ -> [ Css.Table.row vc |> css ])
 
 
 
@@ -128,9 +128,9 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
             , if tblPaged.currentPage == 1 && nextPageAvailable then
                 SidePanelComponents.paginationListPartStartWithInstances
                     (SidePanelComponents.paginationListPartStartAttributes
-                        |> s_listPartStart paggingBlockAttributes
-                        |> s_iconsChevronRightThin nextActiveAttributes
-                        |> s_next nextActiveAttributes
+                        |> Rs.s_listPartStart paggingBlockAttributes
+                        |> Rs.s_iconsChevronRightThin nextActiveAttributes
+                        |> Rs.s_next nextActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartStartInstances
                      -- |> s_iconsChevronRightEnd (Just Util.View.none)
@@ -140,9 +140,9 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
               else if tblPaged.currentPage == 1 && not nextPageAvailable then
                 SidePanelComponents.paginationListPartOnePageWithInstances
                     (SidePanelComponents.paginationListPartOnePageAttributes
-                        |> s_listPartOnePage paggingBlockAttributes
-                        |> s_iconsChevronRightThin nextActiveAttributes
-                        |> s_next nextActiveAttributes
+                        |> Rs.s_listPartOnePage paggingBlockAttributes
+                        |> Rs.s_iconsChevronRightThin nextActiveAttributes
+                        |> Rs.s_next nextActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartOnePageInstances
                      -- |> s_iconsChevronRightEnd (Just Util.View.none)
@@ -152,12 +152,12 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
               else if nextPageAvailable then
                 SidePanelComponents.paginationListPartMiddleWithInstances
                     (SidePanelComponents.paginationListPartMiddleAttributes
-                        |> s_listPartMiddle paggingBlockAttributes
-                        |> s_iconsChevronRightThin nextActiveAttributes
-                        |> s_iconsChevronLeftThin prevActiveAttributes
-                        |> s_iconsChevronLeftEnd firstActiveAttributes
-                        |> s_next nextActiveAttributes
-                        |> s_previous prevActiveAttributes
+                        |> Rs.s_listPartMiddle paggingBlockAttributes
+                        |> Rs.s_iconsChevronRightThin nextActiveAttributes
+                        |> Rs.s_iconsChevronLeftThin prevActiveAttributes
+                        |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
+                        |> Rs.s_next nextActiveAttributes
+                        |> Rs.s_previous prevActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartMiddleInstances
                      -- |> s_iconsChevronRightEnd (Just Util.View.none)
@@ -167,12 +167,12 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
               else
                 SidePanelComponents.paginationListPartEndWithInstances
                     (SidePanelComponents.paginationListPartEndAttributes
-                        |> s_listPartEnd paggingBlockAttributes
-                        |> s_nextCell nextActiveAttributes
-                        |> s_next nextActiveAttributes
-                        |> s_iconsChevronLeftThin prevActiveAttributes
-                        |> s_iconsChevronLeftEnd firstActiveAttributes
-                        |> s_previous prevActiveAttributes
+                        |> Rs.s_listPartEnd paggingBlockAttributes
+                        |> Rs.s_nextCell nextActiveAttributes
+                        |> Rs.s_next nextActiveAttributes
+                        |> Rs.s_iconsChevronLeftThin prevActiveAttributes
+                        |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
+                        |> Rs.s_previous prevActiveAttributes
                     )
                     (SidePanelComponents.paginationListPartEndInstances
                      -- |> s_iconsChevronRightEnd (Just Util.View.none)

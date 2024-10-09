@@ -11,10 +11,11 @@ import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
+import Theme.Html.Buttons as Btns
 import Time
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
-import Util.View exposing (none)
+import Util.View
 import View.Controls as Vc
 import View.Locale as Locale
 
@@ -118,8 +119,10 @@ generalSettings vc m =
         ( expr, ( rqlPrim, rqlSec ) ) =
             authContent vc m.user
 
-        generalSettingsPageDummyData =
-            { button = { variant = none }
+        generalSettingsProperties =
+            { button = { variant = Btns.buttonTypeTextStateRegularStyleTextWithAttributes
+                                    (Btns.buttonTypeTextStateRegularStyleTextAttributes |> Rs.s_button ([[Css.cursor Css.pointer] |> css, onClick UserClickedLogout ]))
+                                    { typeTextStateRegularStyleText  = { buttonText = Locale.string vc.locale "Logout", iconInstance = Util.View.none , iconVisible = False }}}
             , dropDownExtraTextClosed = { primaryText = "a", secondaryText = "b" }
             , languageDropDown = { text = "" }
             , leftCell = { variant = Util.View.none }
@@ -151,7 +154,7 @@ generalSettings vc m =
             |> Rs.s_languageDropDown (Just languageSb)
             |> Rs.s_settingsTimeZoneItem (Just Util.View.none)
         )
-        generalSettingsPageDummyData
+        generalSettingsProperties
 
 
 authContent : Config -> UserModel -> ( String, ( String, Maybe String ) )
