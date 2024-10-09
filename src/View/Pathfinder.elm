@@ -1009,25 +1009,17 @@ addressDetailsContentView vc gc model id viewState =
                 fvalue =
                     Locale.getFiatValue fiatCurr values
             in
-            if modBy 2 (i + 1) == 0 then
-                SidePanelComponents.tokenRowStateNeutral
-                    { stateNeutral =
-                        { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
-                        , tokenCode = String.toUpper symbol
-                        , tokenName = String.toUpper symbol
-                        , tokenValue = value
-                        }
+            SidePanelComponents.tokenRowStateNeutralWithAttributes
+                (SidePanelComponents.tokenRowStateNeutralAttributes
+                    |> Rs.s_stateNeutral [ [ Css.hover SidePanelComponents.tokenRowStateHighlight_details.styles ] |> css ]
+                )
+                { stateNeutral =
+                    { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
+                    , tokenCode = String.toUpper symbol
+                    , tokenName = String.toUpper symbol
+                    , tokenValue = value
                     }
-
-            else
-                SidePanelComponents.tokenRowStateHighlight
-                    { stateHighlight =
-                        { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
-                        , tokenCode = String.toUpper symbol
-                        , tokenName = String.toUpper symbol
-                        , tokenValue = value
-                        }
-                    }
+                }
 
         tokenRows =
             div
