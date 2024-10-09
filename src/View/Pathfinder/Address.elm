@@ -19,9 +19,9 @@ import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled exposing (Svg, g, image, text)
-import Svg.Styled.Attributes as Svg exposing (css, transform, opacity)
-import Svg.Styled.Events exposing (stopPropagationOn, onMouseOver)
+import Svg.Styled exposing (Svg, foreignObject, g, image, text)
+import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
+import Svg.Styled.Events exposing (onMouseOver, stopPropagationOn)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations
@@ -203,8 +203,9 @@ view _ vc _ colors address getCluster annotation =
                     expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
                         |> Maybe.withDefault
                             (Icons.iconsNodeOpenLeftStateActivWithAttributes
-                                (Icons.iconsNodeOpenLeftStateActivAttributes 
-                                    |> Rs.s_stateActiv (expand Incoming))
+                                (Icons.iconsNodeOpenLeftStateActivAttributes
+                                    |> Rs.s_stateActiv (expand Incoming)
+                                )
                                 {}
                             )
                 }
@@ -213,8 +214,9 @@ view _ vc _ colors address getCluster annotation =
                     expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
                         |> Maybe.withDefault
                             (Icons.iconsNodeOpenRightStateActivWithAttributes
-                                (Icons.iconsNodeOpenRightStateActivAttributes 
-                                    |> Rs.s_stateActiv (expand Outgoing))
+                                (Icons.iconsNodeOpenRightStateActivAttributes
+                                    |> Rs.s_stateActiv (expand Outgoing)
+                                )
                                 {}
                             )
                 }

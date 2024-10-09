@@ -4,7 +4,7 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (emptyTableMsg, fullWidth)
 import Css.Table exposing (Styles, loadingSpinner, styles)
-import Html.Styled exposing (Html, div, text, Attribute)
+import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model.Pathfinder.PagedTable as PT exposing (PagedTable)

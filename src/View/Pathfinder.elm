@@ -15,7 +15,7 @@ import DurationDatePicker as DatePicker
 import FontAwesome
 import Hex
 import Hovercard
-import Html.Styled as Html exposing (Html, button, div, form, h2, img, input, span, table, td, tr)
+import Html.Styled as Html exposing (Html, button, div, form, img, input, span, table, td, tr)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave)
 import Iknaio.ColorScheme exposing (annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
@@ -55,6 +55,7 @@ import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as HIcons
+import Theme.Html.Navbar as Nb
 import Theme.Html.SettingsComponents as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
@@ -243,7 +244,7 @@ inOutIndicator vc title mnr inNr outNr =
             { totalNumber = Locale.int vc.locale mnr
             , incomingNumber = Locale.int vc.locale inNr
             , outgoingNumber = Locale.int vc.locale outNr
-            , title = (Locale.string vc.locale title)
+            , title = Locale.string vc.locale title
             }
         }
 
@@ -294,7 +295,7 @@ topCenterPanel plugins ms vc gc model =
     div
         [ css Css.topPanelStyle
         ]
-        [ h2 [ vc.theme.heading2 |> css ] [ Html.text "Pathfinder" ]
+        [ Nb.navbarPageTitle { navbarPageTitle = { productLabel = Locale.string vc.locale "Pathfinder" } }
         , div
             [ css
                 [ Css.displayFlex

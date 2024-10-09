@@ -5,8 +5,8 @@ import Config.View as View
 import Css
 import Css.Pathfinder as PCSS exposing (inoutStyle)
 import Css.Statusbar
-import Html.Styled exposing (text, span, input)
-import Html.Styled.Attributes exposing (css, title, checked, type_)
+import Html.Styled exposing (input, span, text)
+import Html.Styled.Attributes exposing (checked, css, title, type_)
 import Html.Styled.Events
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..))

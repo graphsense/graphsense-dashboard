@@ -9,9 +9,9 @@ import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(.
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
+import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
-import Theme.Html.Buttons as Btns
 import Time
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
@@ -120,9 +120,12 @@ generalSettings vc m =
             authContent vc m.user
 
         generalSettingsProperties =
-            { button = { variant = Btns.buttonTypeTextStateRegularStyleTextWithAttributes
-                                    (Btns.buttonTypeTextStateRegularStyleTextAttributes |> Rs.s_button ([[Css.cursor Css.pointer] |> css, onClick UserClickedLogout ]))
-                                    { typeTextStateRegularStyleText  = { buttonText = Locale.string vc.locale "Logout", iconInstance = Util.View.none , iconVisible = False }}}
+            { button =
+                { variant =
+                    Btns.buttonTypeTextStateRegularStyleTextWithAttributes
+                        (Btns.buttonTypeTextStateRegularStyleTextAttributes |> Rs.s_button [ [ Css.cursor Css.pointer ] |> css, onClick UserClickedLogout ])
+                        { typeTextStateRegularStyleText = { buttonText = Locale.string vc.locale "Logout", iconInstance = Util.View.none, iconVisible = False } }
+                }
             , dropDownExtraTextClosed = { primaryText = "a", secondaryText = "b" }
             , languageDropDown = { text = "" }
             , leftCell = { variant = Util.View.none }
