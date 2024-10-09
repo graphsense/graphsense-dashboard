@@ -19,7 +19,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled exposing (Svg, foreignObject, g, image, text)
+import Svg.Styled exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, stopPropagationOn)
 import Theme.Svg.GraphComponents as GraphComponents
