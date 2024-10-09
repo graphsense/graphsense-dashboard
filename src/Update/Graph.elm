@@ -1751,7 +1751,7 @@ updateByMsg plugins uc msg model =
                             (String.toInt search.breadth)
                             (String.toInt search.maxAddresses)
                     )
-                |> Maybe.map (mapFirst (\s -> { model | search = Nothing }))
+                |> Maybe.map (mapFirst (\_ -> { model | search = Nothing }))
                 |> Maybe.withDefault (n model)
 
         UserClicksCloseSearchHovercard ->

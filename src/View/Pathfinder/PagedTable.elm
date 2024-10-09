@@ -23,7 +23,7 @@ type alias PagingMsg data msg =
 
 
 tableHint : Styles -> View.Config -> String -> Html msg
-tableHint styles vc msg =
+tableHint _ vc msg =
     div
         [ emptyTableMsg |> css
         ]

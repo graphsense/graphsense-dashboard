@@ -48,7 +48,7 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn styles vc (\x -> assetFromBase coinCode) titleInputValue .inputValue
+            , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleInputValue .inputValue
             , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleOutputValue .outputValue
             , T.intColumnWithoutValueDetailFormatting styles vc titleHeight .height
             , T.timestampColumn styles vc titleTimestamp .timestamp

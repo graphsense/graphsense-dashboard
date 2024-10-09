@@ -55,7 +55,7 @@ config =
     -- , NoUnused.CustomTypeConstructorArgs.rule
     -- , NoUnused.Dependencies.rule
     -- , NoUnused.Exports.rule
-    -- , NoUnused.Parameters.rule
+    , NoUnused.Parameters.rule
     -- , NoUnused.Patterns.rule
     , Simplify.rule Simplify.defaults
     -- NoUnused.CustomTypeConstructors.rule []

@@ -320,7 +320,7 @@ linkButtonStyle vc enabled =
 
 
 tagLinkButtonStyle : View.Config -> List Style
-tagLinkButtonStyle vc =
+tagLinkButtonStyle _ =
     [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.black |> property "color" ]
 
 
@@ -400,8 +400,7 @@ dateTimeRangeBoxStyle vc =
 
 
 dateTimeRangeHighlightedDateStyle : View.Config -> List Style
-dateTimeRangeHighlightedDateStyle vc =
-    -- [ padding4 zero mGap  zero mGap
+dateTimeRangeHighlightedDateStyle _ =
     [ TColors.brandSketch |> property "color"
     ]
 

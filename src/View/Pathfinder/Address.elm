@@ -281,7 +281,7 @@ toNodeIconHtml highlight address cluster clusterColor =
 
 
 toNodeIcon : Bool -> Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
-toNodeIcon highlight address cluster clusterColor =
+toNodeIcon highlight address _ clusterColor =
     let
         -- clstrSize =
         --     cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0

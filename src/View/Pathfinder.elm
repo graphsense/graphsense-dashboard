@@ -463,7 +463,7 @@ topRightPanel _ _ vc gc model =
 
 
 graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-graphActionsView vc _ m =
+graphActionsView vc _ _ =
     div [ Css.graphActionsViewStyle vc |> css ]
         []
 

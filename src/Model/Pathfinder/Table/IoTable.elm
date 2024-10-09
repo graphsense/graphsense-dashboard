@@ -7,7 +7,7 @@ import Model.Graph.Table as Table
 filter : Table.Filter Api.Data.TxValue
 filter =
     { search =
-        \term a -> True
+        \_ _ -> True
     , filter = always True
     }
 

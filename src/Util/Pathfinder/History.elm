@@ -5,7 +5,7 @@ import Msg.Pathfinder exposing (Msg(..))
 
 
 shallPushHistory : Msg -> Model -> Bool
-shallPushHistory msg model =
+shallPushHistory msg _ =
     case msg of
         UserClickedGraph _ ->
             False

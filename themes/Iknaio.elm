@@ -185,7 +185,7 @@ theme =
                        )
             )
         |> s_sidebarIconsBottom
-            (\lightmode active ->
+            (\_ _ ->
                 [ marginTop auto
                 , px 0 |> padding
                 ]
@@ -940,7 +940,7 @@ theme =
                         ]
                     )
                 |> s_link
-                    (\lightmode nodeType hovered selected highlight ->
+                    (\lightmode _ hovered selected highlight ->
                         [ (if hovered then
                             Util.Theme.switchColor lightmode colors.black
 

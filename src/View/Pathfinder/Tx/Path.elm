@@ -108,7 +108,7 @@ arrowLength =
 
 
 coloredPath : View.Config -> ColoredPathConfig -> Svg Msg
-coloredPath vc c =
+coloredPath _ c =
     let
         x2 =
             if c.x1 == c.x2 then
