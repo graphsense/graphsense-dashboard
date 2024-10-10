@@ -70,13 +70,13 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                 SidePanelComponents.sidePanelListIdentifierCellWithTagWithInstances
                     SidePanelComponents.sidePanelListIdentifierCellWithTagAttributes
                     (SidePanelComponents.sidePanelListIdentifierCellWithTagInstances
-                        |> Rs.s_iconsFrame
+                        |> Rs.s_iconsTagSmall
                             (case lblfn data of
                                 LoadingTags ->
                                     Just
                                         (span
                                             [ Locale.string vc.locale "Loading tags" |> title
-                                            , css SidePanelComponents.sidePanelListIdentifierCellWithTagIconsFrame_details.styles
+                                            , css SidePanelComponents.sidePanelListIdentifierCellWithTagIconsTagSmallIconsTagSmall_details.styles
                                             , css
                                                 [ -Icons.iconsTagSmall_details.width
                                                     + Icons.iconsTagSmallTagIcon_details.x
@@ -98,7 +98,22 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                             )
                     )
                     { sidePanelListIdentifierCellWithTag =
-                        { tagIconVisible = lblfn data /= NoTags
+                        { tagIconVisible =
+                            case lblfn data of
+                                LoadingTags ->
+                                    True
+
+                                HasTagSummary ts ->
+                                    ts.broadCategory /= "exchange"
+
+                                HasExchangeTag ->
+                                    True
+
+                                HasTags ->
+                                    True
+
+                                NoTags ->
+                                    False
                         , exchangeIconVisible =
                             case lblfn data of
                                 LoadingTags ->
@@ -111,7 +126,7 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                                     True
 
                                 HasTags ->
-                                    True
+                                    False
 
                                 NoTags ->
                                     False
@@ -176,7 +191,12 @@ checkboxColumn _ { isChecked, onClick } =
         { name = ""
         , viewData =
             \data ->
-                Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
+                Table.HtmlDetails
+                    [ [ PCSS.mGap |> Css.padding
+                      , Css.width <| Css.px 50
+                      ]
+                        |> css
+                    ]
                     [ input
                         [ type_ "checkbox"
                         , onClick data |> Html.Styled.Events.onClick
