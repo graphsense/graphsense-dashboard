@@ -30,6 +30,7 @@ import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Deserialize exposing (Deserialized)
+import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
@@ -69,8 +70,6 @@ import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-import Model.Pathfinder.Error exposing (Error(..))
-import Model.Pathfinder.Error exposing (InfoError(..))
 
 
 delay : Float -> msg -> Cmd msg
@@ -1273,14 +1272,15 @@ loadAddressWithPosition position _ id model =
                 Network.addAddressWithPosition position id model.network
         in
         ( { model | network = nw } |> updateTagDataOnAddress id
-        , BrowserGotAddressData id
-            |> Api.GetAddressEffect
-                { currency = Id.network id
-                , address = Id.id id
-                , includeActors = True
-                }
-            |> ApiEffect
-            |> List.singleton
+        , [ BrowserGotAddressData id
+                |> Api.GetAddressEffect
+                    { currency = Id.network id
+                    , address = Id.id id
+                    , includeActors = True
+                    }
+                |> ApiEffect
+          , resizeAnnotationLabelsEffect
+          ]
         )
 
 
@@ -1837,7 +1837,7 @@ fromDeserialized deserialized model =
         , history = History.init
         , name = deserialized.name
       }
-    , (delay 1 ResizeAnnotationLabels |> CmdEffect)
+    , resizeAnnotationLabelsEffect
         :: (txsRequests
                 ++ addressesRequests
            )
@@ -1872,3 +1872,8 @@ autoLoadAddresses plugins tx model =
     [ src, dst ]
         |> List.filterMap identity
         |> List.foldl aggAddressAdd (n model)
+
+
+resizeAnnotationLabelsEffect : Effect
+resizeAnnotationLabelsEffect =
+    delay 1 ResizeAnnotationLabels |> CmdEffect

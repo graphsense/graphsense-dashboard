@@ -13,9 +13,7 @@ import Theme.Html.ErrorMessagesAlerts
         ( errorMessageComponentProperty1AlertAttributes
         , errorMessageComponentProperty1AlertWithAttributes
         , errorMessageComponentProperty1ErrorAttributes
-        , errorMessageComponentProperty1ErrorInstances
         , errorMessageComponentProperty1ErrorWithAttributes
-        , errorMessageComponentProperty1ErrorWithInstances
         )
 import Theme.Html.Icons as Icons
 import Util.Css as Css
