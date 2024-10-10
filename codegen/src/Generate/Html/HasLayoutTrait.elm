@@ -12,8 +12,8 @@ toStyles node =
     [ Css.boxSizing Css.borderBox ]
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
         |> mm2 layoutPositioning node.layoutPositioning node.absoluteBoundingBox
-        |> a2 (width node.minWidth) node.layoutSizingHorizontal node.size
-        |> a2 (height node.minHeight) node.layoutSizingVertical node.size
+        |> a2 (width node.minWidth) node.layoutSizingHorizontal node.absoluteRenderBounds
+        |> a2 (height node.minHeight) node.layoutSizingVertical node.absoluteRenderBounds
         |> a minWidth node.minWidth
         |> a minHeight node.minHeight
 
@@ -36,12 +36,12 @@ minHeight w =
         Css.minHeight (Css.px w) |> Just
 
 
-width : Maybe Float -> LayoutSizingHorizontal -> Vector -> Maybe Elm.Expression
-width minW sizing { x } =
+width : Maybe Float -> LayoutSizingHorizontal -> Rectangle -> Maybe Elm.Expression
+width minW sizing r =
     case sizing of
         LayoutSizingHorizontalFIXED ->
             if minW == Nothing || minW == Just 0 then
-                x
+                r.width
                     |> Css.px
                     |> Css.width
                     |> Just
@@ -58,12 +58,12 @@ width minW sizing { x } =
             Nothing
 
 
-height : Maybe Float -> LayoutSizingVertical -> Vector -> Maybe Elm.Expression
-height minH sizing { y } =
+height : Maybe Float -> LayoutSizingVertical -> Rectangle -> Maybe Elm.Expression
+height minH sizing r =
     case sizing of
         LayoutSizingVerticalFIXED ->
             if minH == Nothing || minH == Just 0 then
-                y
+                r.height
                     |> Css.px
                     |> Css.height
                     |> Just
@@ -97,7 +97,7 @@ layoutPositioning : LayoutPositioning -> Rectangle -> List Elm.Expression
 layoutPositioning pos { x, y } =
     case pos of
         LayoutPositioningAUTO ->
-            [Css.position Css.relative
+            [ Css.position Css.relative
             ]
 
         LayoutPositioningABSOLUTE ->
