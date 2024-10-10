@@ -95,6 +95,9 @@ view _ vc _ colors address getCluster annotation =
         adjY =
             fd.y + fd.height / 2
 
+        addressIdString =
+            Id.toString address.id
+
         ( annAttr, label ) =
             case annotation of
                 Just ann ->
@@ -103,7 +106,7 @@ view _ vc _ colors address getCluster annotation =
                             case ann.color of
                                 Just c ->
                                     Color.toCssString c
-                                        |> Css.property "fill"
+                                        |> Css.property "stroke"
                                         |> Css.important
                                         |> List.singleton
                                         |> css
@@ -113,48 +116,54 @@ view _ vc _ colors address getCluster annotation =
                                     []
                     in
                     ( colorAttributes
-                    , GraphComponents.annotationLabelWithAttributes
-                        (GraphComponents.annotationLabelAttributes
-                            |> Rs.s_annotationLabel
-                                [ translate
-                                    (((address.x + address.dx) * unit - adjX) + (GraphComponents.addressNode_details.width / 2 - GraphComponents.annotationLabel_details.width / 2))
-                                    ((A.animate address.clock address.y + address.dy)
-                                        * unit
-                                        - adjY
-                                        + GraphComponents.addressNode_details.height
-                                        + (if address.exchange == Nothing then
-                                            -GraphComponents.addressNodeExchangeLabel_details.height
+                    , (if String.length ann.label > 0 then
+                        GraphComponents.annotationLabel2WithAttributes
+                            (GraphComponents.annotationLabel2Attributes
+                                |> Rs.s_annotationLabel2
+                                    [ translate
+                                        (GraphComponents.addressNode_details.width / 2 - GraphComponents.annotationLabel_details.width / 2)
+                                        (GraphComponents.addressNode_details.height
+                                            + (if address.exchange == Nothing then
+                                                -GraphComponents.addressNodeExchangeLabel_details.height
 
-                                           else
-                                            0
-                                          )
-                                        + 2
-                                    )
-                                    |> transform
-                                , A.animate address.clock address.opacity
-                                    |> String.fromFloat
-                                    |> opacity
-                                , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
-                                , css [ Css.cursor Css.pointer ]
-                                ]
-                            |> Rs.s_label colorAttributes
-                        )
-                        { annotationLabel = { labelText = ann.label } }
+                                               else
+                                                0
+                                              )
+                                            + 2
+                                        )
+                                        |> transform
+                                    , A.animate address.clock address.opacity
+                                        |> String.fromFloat
+                                        |> opacity
+                                    , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
+                                    , css [ Css.cursor Css.pointer ]
+                                    , Svg.class "AnnotationLabel"
+                                    ]
+                                |> Rs.s_rectangle186 (colorAttributes ++ [ (addressIdString ++ "_lbl_rect") |> Svg.id ])
+                                -- The ids are needed for resizing of the rect when text is entered
+                                |> Rs.s_label [ (addressIdString ++ "_lbl_text") |> Svg.id ]
+                            )
+                            { annotationLabel2 = { labelText = ann.label } }
+
+                       else
+                        text ""
+                      )
                         |> List.singleton
                     )
 
                 _ ->
                     ( [], [] )
     in
-    g []
+    g
+        [ translate
+            ((address.x + address.dx) * unit - adjX)
+            ((A.animate address.clock address.y + address.dy) * unit - adjY)
+            |> transform
+        ]
         (GraphComponents.addressNodeWithAttributes
             (GraphComponents.addressNodeAttributes
                 |> Rs.s_addressNode
-                    [ translate
-                        ((address.x + address.dx) * unit - adjX)
-                        ((A.animate address.clock address.y + address.dy) * unit - adjY)
-                        |> transform
-                    , A.animate address.clock address.opacity
+                    [ A.animate address.clock address.opacity
                         |> String.fromFloat
                         |> opacity
                     , UserClickedAddress address.id |> onClickWithStop

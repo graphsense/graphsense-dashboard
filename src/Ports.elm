@@ -1,4 +1,4 @@
-port module Ports exposing (console, deserialize, deserialized, exportGraphImage, exportGraphics, newTab, pluginsIn, pluginsOut, saveToLocalStorage, serialize, setDirty)
+port module Ports exposing (console, deserialize, deserialized, exportGraphImage, exportGraphics, newTab, pluginsIn, pluginsOut, resizeAnnotationLabels, saveToLocalStorage, serialize, setDirty)
 
 import Json.Encode exposing (Value)
 
@@ -34,6 +34,9 @@ port setDirty : Bool -> Cmd msg
 
 
 port saveToLocalStorage : Value -> Cmd msg
+
+
+port resizeAnnotationLabels : () -> Cmd msg
 
 
 

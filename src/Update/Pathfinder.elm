@@ -47,10 +47,12 @@ import Msg.Search as Search
 import Number.Bounded exposing (value)
 import Plugin.Update exposing (Plugins)
 import Ports
+import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route.Pathfinder as Route exposing (Route)
 import Set exposing (..)
+import Task
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
@@ -67,6 +69,13 @@ import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
+
+
+delay : Float -> msg -> Cmd msg
+delay time msg =
+    Process.sleep time
+        |> Task.map (always <| msg)
+        |> Task.perform identity
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -1080,10 +1089,16 @@ updateByMsg plugins uc msg model =
             )
 
         UserInputsAnnotation id str ->
-            n { model | annotations = Annotations.setLabel id str model.annotations }
+            ( { model | annotations = Annotations.setLabel id str model.annotations }, [ Ports.resizeAnnotationLabels () |> CmdEffect ] )
 
         UserSelectsAnnotationColor id clr ->
             n { model | annotations = Annotations.setColor id clr model.annotations }
+
+        ResizeAnnotationLabels ->
+            -- This code is needed to ensure that annotations labels are resized
+            -- properly after importing a graph. Directly using the port
+            -- executes before the rendering and thus fails to resize
+            ( model, [ Ports.resizeAnnotationLabels () |> CmdEffect ] )
 
 
 deleteSelection : Model -> ( Model, List Effect )
@@ -1803,8 +1818,10 @@ fromDeserialized deserialized model =
         , history = History.init
         , name = deserialized.name
       }
-    , txsRequests
-        ++ addressesRequests
+    , (delay 1 ResizeAnnotationLabels |> CmdEffect)
+        :: (txsRequests
+                ++ addressesRequests
+           )
     )
 
 

@@ -74,6 +74,24 @@ window.onbeforeunload = function (evt) {
 
 app.ports.console.subscribe(console.error)
 
+
+app.ports.resizeAnnotationLabels.subscribe(() => {
+    let svg = document.querySelector('svg#graph')
+    let allLabels = svg.querySelectorAll(".AnnotationLabel")
+
+    allLabels.forEach((annotation) => {
+      const txtNode = annotation.querySelector("text")
+      const rectNode = annotation.querySelector("rect")
+      const paddingX = 5;
+      const bboxGroup = txtNode.getBBox();
+      rectNode.setAttribute("x", bboxGroup.x - paddingX);
+      rectNode.setAttribute("width", bboxGroup.width + (2 * paddingX));
+
+  })
+
+  console.log("resize")
+})
+
 app.ports.exportGraphImage.subscribe((filename) => {
     let svg = document.querySelector('svg#graph')
     let canvas = document.createElement("canvas");
@@ -183,7 +201,6 @@ app.ports.deserialize.subscribe(() => {
         data = decompress(data)
         data[0] = data[0].split(' ')[0]
         data[0] = data[0].split('-')[0]
-        console.log(data)
         app.ports.deserialized.send([file.name, data])
       }
       reader.readAsArrayBuffer(file)
