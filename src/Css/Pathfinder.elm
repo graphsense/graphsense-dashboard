@@ -350,7 +350,7 @@ topPanelStyle =
 topRightPanelStyle : View.Config -> List Style
 topRightPanelStyle _ =
     [ position absolute
-    , mlGap |> right
+    , px 0 |> right
     , top (px 70)
     ]
 
