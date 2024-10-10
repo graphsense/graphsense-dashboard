@@ -44,8 +44,7 @@ toExpressions config componentName node =
 
 toStyles : ColorMap -> TextNode -> List Elm.Expression
 toStyles colorMap node =
-    Css.whiteSpace Css.noWrap
-        :: TypeStyle.toStyles colorMap node.style
+    TypeStyle.toStyles colorMap node.style
         ++ MinimalFillsTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait
         ++ DefaultShapeTraits.toStyles colorMap node.defaultShapeTraits
 
