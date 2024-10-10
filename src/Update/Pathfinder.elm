@@ -1064,7 +1064,9 @@ updateByMsg plugins uc msg model =
             )
 
         UserInputsAnnotation id str ->
-            ( { model | annotations = Annotations.setLabel id str model.annotations }, [ Ports.resizeAnnotationLabels () |> CmdEffect ] )
+            ( { model | annotations = Annotations.setLabel id str model.annotations }
+            , [ Ports.resizeAnnotationLabels () |> CmdEffect ]
+            )
 
         UserSelectsAnnotationColor id clr ->
             n { model | annotations = Annotations.setColor id clr model.annotations }
@@ -1876,4 +1878,4 @@ autoLoadAddresses plugins tx model =
 
 resizeAnnotationLabelsEffect : Effect
 resizeAnnotationLabelsEffect =
-    delay 1 ResizeAnnotationLabels |> CmdEffect
+    delay 0 ResizeAnnotationLabels |> CmdEffect

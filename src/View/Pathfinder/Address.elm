@@ -117,7 +117,7 @@ view _ vc _ colors address getCluster annotation =
                             (GraphComponents.annotationLabel2Attributes
                                 |> Rs.s_annotationLabel2
                                     [ translate
-                                        (GraphComponents.addressNode_details.width / 2 - GraphComponents.annotationLabel_details.width / 2)
+                                        (GraphComponents.addressNode_details.width / 2)
                                         (GraphComponents.addressNode_details.height
                                             + (if address.exchange == Nothing then
                                                 -GraphComponents.addressNodeExchangeLabel_details.height
@@ -135,7 +135,8 @@ view _ vc _ colors address getCluster annotation =
                                     , css [ Css.cursor Css.pointer ]
                                     , Svg.class "AnnotationLabel"
                                     ]
-                                |> Rs.s_rectangle186 colorAttributes
+                                |> Rs.s_rectangle186 (Svg.width "10px" :: Svg.x "-5px" :: colorAttributes)
+                                |> Rs.s_label [ Svg.x "0" ]
                             )
                             { annotationLabel2 = { labelText = ann.label } }
 
