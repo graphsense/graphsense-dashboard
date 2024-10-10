@@ -17,8 +17,15 @@ txsSetMap : (Set Id -> Set Id) -> Txs -> Txs
 txsSetMap map txs =
     case txs of
         Txs set ->
-            map set
-                |> Txs
+            let
+                newSet =
+                    map set
+            in
+            if Set.isEmpty newSet then
+                TxsNotFetched
+
+            else
+                Txs newSet
 
         _ ->
             txs
