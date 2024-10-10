@@ -295,7 +295,7 @@ topCenterPanel plugins ms vc gc model =
     div
         [ css Css.topPanelStyle
         ]
-        [ Nb.navbarPageTitle { navbarPageTitle = { productLabel = Locale.string vc.locale "Pathfinder" } }
+        [ div [] []
         , div
             [ css
                 [ Css.displayFlex
