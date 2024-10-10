@@ -55,7 +55,6 @@ import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as HIcons
-import Theme.Html.Navbar as Nb
 import Theme.Html.SettingsComponents as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
