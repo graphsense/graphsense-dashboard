@@ -336,19 +336,23 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
         bbox =
             node.frameTraits.absoluteBoundingBox
 
+        rbox =
+            node.frameTraits.absoluteRenderBounds
+                |> Maybe.withDefault bbox
+
         frame =
             if hasOnlySvgChildren then
                 Gen.Svg.Styled.call_.svg
-                    ([ max 3 bbox.width
+                    ([ max 3 rbox.width
                         |> String.fromFloat
                         |> Gen.Svg.Styled.Attributes.width
-                     , max 3 bbox.height
+                     , max 3 rbox.height
                         |> String.fromFloat
                         |> Gen.Svg.Styled.Attributes.height
                      , [ bbox.x
                        , bbox.y
-                       , max 1 bbox.width
-                       , max 1 bbox.height
+                       , max 1 rbox.width
+                       , max 1 rbox.height
                        ]
                         |> List.map String.fromFloat
                         |> String.join " "
