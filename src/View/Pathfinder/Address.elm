@@ -98,11 +98,11 @@ view _ vc _ colors address getCluster annotation =
             case annotation of
                 Just ann ->
                     let
-                        colorAttributes =
+                        colorAttributes prop =
                             case ann.color of
                                 Just c ->
                                     Color.toCssString c
-                                        |> Css.property "stroke"
+                                        |> Css.property prop
                                         |> Css.important
                                         |> List.singleton
                                         |> css
@@ -111,7 +111,7 @@ view _ vc _ colors address getCluster annotation =
                                 _ ->
                                     []
                     in
-                    ( colorAttributes
+                    ( colorAttributes "fill"
                     , (if String.length ann.label > 0 then
                         GraphComponents.annotationLabel2WithAttributes
                             (GraphComponents.annotationLabel2Attributes
@@ -135,7 +135,7 @@ view _ vc _ colors address getCluster annotation =
                                     , css [ Css.cursor Css.pointer ]
                                     , Svg.class "AnnotationLabel"
                                     ]
-                                |> Rs.s_rectangle186 (Svg.width "10px" :: Svg.x "-5px" :: colorAttributes)
+                                |> Rs.s_rectangle186 (Svg.width "10px" :: Svg.x "-5px" :: colorAttributes "stroke")
                                 |> Rs.s_label [ Svg.x "0" ]
                             )
                             { annotationLabel2 = { labelText = ann.label } }
