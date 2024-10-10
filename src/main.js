@@ -89,7 +89,6 @@ app.ports.resizeAnnotationLabels.subscribe(() => {
 
   })
 
-  console.log("resize")
 })
 
 app.ports.exportGraphImage.subscribe((filename) => {

@@ -94,9 +94,6 @@ view _ vc _ colors address getCluster annotation =
         adjY =
             fd.y + fd.height / 2
 
-        addressIdString =
-            Id.toString address.id
-
         ( annAttr, label ) =
             case annotation of
                 Just ann ->
@@ -138,9 +135,7 @@ view _ vc _ colors address getCluster annotation =
                                     , css [ Css.cursor Css.pointer ]
                                     , Svg.class "AnnotationLabel"
                                     ]
-                                |> Rs.s_rectangle186 (colorAttributes ++ [ (addressIdString ++ "_lbl_rect") |> Svg.id ])
-                                -- The ids are needed for resizing of the rect when text is entered
-                                |> Rs.s_label [ (addressIdString ++ "_lbl_text") |> Svg.id ]
+                                |> Rs.s_rectangle186 colorAttributes
                             )
                             { annotationLabel2 = { labelText = ann.label } }
 
