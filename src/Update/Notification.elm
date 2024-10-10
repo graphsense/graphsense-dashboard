@@ -5,8 +5,10 @@ import Effect.Pathfinder as Pathfinder
 import Http
 import Model exposing (Model)
 import Model.Notification as Notify
-import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
+import Model.Pathfinder.Error exposing (Error(..), InfoError(..), InternalError(..))
+import Model.Pathfinder.Id as Id
 import RecordSetter exposing (..)
+import Util.View exposing (truncateLongIdentifierWithLengths)
 
 
 notificationsFromEffects : Model key -> List Model.Effect -> ( Model key, List Model.Effect )
@@ -39,6 +41,25 @@ pathFinderErrorToNotifications err =
 
         InternalError (NoTxInputsOutputsFoundInDict _) ->
             Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
+
+        InfoError (TxTracingThroughService id exchangeLabel) ->
+            Notify.Info
+                { title = "Transaction tracing not reasonable"
+                , message =
+                    exchangeLabel
+                        |> Maybe.map
+                            (\_ ->
+                                "Since {0} belongs to an exchange service ({1}) automatic tracing of individual transactions is not reasonable. Please try to pick a transaction from the address's transaction list."
+                            )
+                        |> Maybe.withDefault "Since {0} seems to belong to a service automatic tracing of individual transactions is not reasonable. Please try to pick a transaction from the address's transaction list."
+                , variables =
+                    (Id.id id |> truncateLongIdentifierWithLengths 8 4)
+                        :: (exchangeLabel
+                                |> Maybe.map List.singleton
+                                |> Maybe.withDefault []
+                           )
+                }
+                |> List.singleton
 
         Errors x ->
             x |> List.concatMap pathFinderErrorToNotifications

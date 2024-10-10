@@ -1,4 +1,19 @@
-module Model.Pathfinder.Address exposing (Address, Txs(..), getActivityRange, getBalance, getCoords, getInDegree, getNrTxs, getOutDegree, getTotalReceived, getTxs, txsGetSet, txsSetter, txsToSet)
+module Model.Pathfinder.Address exposing
+    ( Address
+    , Txs(..)
+    , expandAllowed
+    , getActivityRange
+    , getBalance
+    , getCoords
+    , getInDegree
+    , getNrTxs
+    , getOutDegree
+    , getTotalReceived
+    , getTxs
+    , txsGetSet
+    , txsSetter
+    , txsToSet
+    )
 
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
@@ -118,3 +133,8 @@ txsSetter direction =
 
         Outgoing ->
             s_outgoingTxs
+
+
+expandAllowed : Address -> Bool
+expandAllowed address =
+    address.exchange == Nothing

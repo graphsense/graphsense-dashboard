@@ -27,7 +27,7 @@ import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.Address as Addr exposing (Txs(..), getTxs, txsSetter)
+import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.History.Entry as Entry
@@ -69,6 +69,8 @@ import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
+import Model.Pathfinder.Error exposing (Error(..))
+import Model.Pathfinder.Error exposing (InfoError(..))
 
 
 delay : Float -> msg -> Cmd msg
@@ -766,42 +768,16 @@ updateByMsg plugins uc msg model =
             Dict.get id model.network.addresses
                 |> Maybe.map
                     (\address ->
-                        let
-                            ( newmodel, eff ) =
-                                model
-                                    |> selectAddress uc id
+                        if expandAllowed address then
+                            expandAddress uc address direction model
 
-                            setter =
-                                txsSetter direction
-
-                            setLoading =
-                                s_network
-                                    (Network.updateAddress id (setter TxsLoading) newmodel.network)
-                        in
-                        case getTxs address direction of
-                            Txs _ ->
-                                n newmodel
-
-                            TxsLoading ->
-                                n newmodel
-
-                            TxsLastCheckedChangeTx tx ->
-                                ( newmodel
-                                    |> setLoading
-                                , WorkflowNextUtxoTx.loadReferencedTx
-                                    { addressId = id
-                                    , direction = direction
-                                    , hops = 0
-                                    }
-                                    tx
-                                    |> List.singleton
-                                )
-
-                            TxsNotFetched ->
-                                ( newmodel |> setLoading
-                                , getNextTxEffects newmodel id direction
-                                    ++ eff
-                                )
+                        else
+                            ( model
+                            , TxTracingThroughService id address.exchange
+                                |> InfoError
+                                |> ErrorEffect
+                                |> List.singleton
+                            )
                     )
                 |> Maybe.withDefault (n model)
 
@@ -1099,6 +1075,49 @@ updateByMsg plugins uc msg model =
             -- properly after importing a graph. Directly using the port
             -- executes before the rendering and thus fails to resize
             ( model, [ Ports.resizeAnnotationLabels () |> CmdEffect ] )
+
+
+expandAddress : Update.Config -> Address -> Direction -> Model -> ( Model, List Effect )
+expandAddress uc address direction model =
+    let
+        id =
+            address.id
+
+        ( newmodel, eff ) =
+            model
+                |> selectAddress uc id
+
+        setter =
+            txsSetter direction
+
+        setLoading =
+            s_network
+                (Network.updateAddress id (setter TxsLoading) newmodel.network)
+    in
+    case getTxs address direction of
+        Txs _ ->
+            n newmodel
+
+        TxsLoading ->
+            n newmodel
+
+        TxsLastCheckedChangeTx tx ->
+            ( newmodel
+                |> setLoading
+            , WorkflowNextUtxoTx.loadReferencedTx
+                { addressId = id
+                , direction = direction
+                , hops = 0
+                }
+                tx
+                |> List.singleton
+            )
+
+        TxsNotFetched ->
+            ( newmodel |> setLoading
+            , getNextTxEffects newmodel id direction
+                ++ eff
+            )
 
 
 deleteSelection : Model -> ( Model, List Effect )

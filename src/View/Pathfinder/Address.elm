@@ -12,7 +12,7 @@ import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
-import Model.Pathfinder.Address exposing (Address, Txs(..), getTxs, txsGetSet)
+import Model.Pathfinder.Address exposing (Address, Txs(..), expandAllowed, getTxs, txsGetSet)
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
@@ -70,7 +70,6 @@ view _ vc _ colors address getCluster annotation =
                         |> txsGetSet
                         |> (==) Nothing
                    )
-                && (address.exchange == Nothing)
 
         expand direction =
             case getTxs address direction of
@@ -211,22 +210,38 @@ view _ vc _ colors address getCluster annotation =
                 { variant =
                     expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
                         |> Maybe.withDefault
-                            (Icons.iconsNodeOpenLeftStateActivWithAttributes
-                                (Icons.iconsNodeOpenLeftStateActivAttributes
-                                    |> Rs.s_stateActiv (expand Incoming)
-                                )
-                                {}
+                            (if expandAllowed address then
+                                Icons.iconsNodeOpenLeftStateActivWithAttributes
+                                    (Icons.iconsNodeOpenLeftStateActivAttributes
+                                        |> Rs.s_stateActiv (expand Incoming)
+                                    )
+                                    {}
+
+                             else
+                                Icons.iconsNodeOpenLeftStateDisabledWithAttributes
+                                    (Icons.iconsNodeOpenRightStateDisabledAttributes
+                                        |> Rs.s_stateDisabled (expand Incoming)
+                                    )
+                                    {}
                             )
                 }
             , iconsNodeOpenRight =
                 { variant =
                     expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
                         |> Maybe.withDefault
-                            (Icons.iconsNodeOpenRightStateActivWithAttributes
-                                (Icons.iconsNodeOpenRightStateActivAttributes
-                                    |> Rs.s_stateActiv (expand Outgoing)
-                                )
-                                {}
+                            (if expandAllowed address then
+                                Icons.iconsNodeOpenRightStateActivWithAttributes
+                                    (Icons.iconsNodeOpenRightStateActivAttributes
+                                        |> Rs.s_stateActiv (expand Outgoing)
+                                    )
+                                    {}
+
+                             else
+                                Icons.iconsNodeOpenRightStateDisabledWithAttributes
+                                    (Icons.iconsNodeOpenRightStateDisabledAttributes
+                                        |> Rs.s_stateDisabled (expand Outgoing)
+                                    )
+                                    {}
                             )
                 }
             , iconsNodeMarker =

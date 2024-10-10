@@ -1,4 +1,4 @@
-module Model.Pathfinder.Error exposing (Error(..), InternalError(..))
+module Model.Pathfinder.Error exposing (Error(..), InfoError(..), InternalError(..))
 
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
@@ -6,7 +6,12 @@ import Model.Pathfinder.Id exposing (Id)
 
 type Error
     = InternalError InternalError
+    | InfoError InfoError
     | Errors (List Error)
+
+
+type InfoError
+    = TxTracingThroughService Id (Maybe String)
 
 
 type InternalError

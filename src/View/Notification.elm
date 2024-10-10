@@ -14,6 +14,7 @@ import Theme.Html.ErrorMessagesAlerts
         , errorMessageComponentProperty1AlertWithAttributes
         , errorMessageComponentProperty1ErrorAttributes
         , errorMessageComponentProperty1ErrorInstances
+        , errorMessageComponentProperty1ErrorWithAttributes
         , errorMessageComponentProperty1ErrorWithInstances
         )
 import Theme.Html.Icons as Icons
@@ -42,10 +43,21 @@ view vc model =
                 buttonAttrOk =
                     [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm UserClosesNotification) ]
             in
-            errorMessageComponentProperty1ErrorWithInstances
-                (errorMessageComponentProperty1ErrorAttributes |> s_iconsCloseSmall buttonAttrOk)
-                errorMessageComponentProperty1ErrorInstances
-                { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = Locale.interpolated vc.locale message variables }, property1Error = { bodyText = "", headlineText = "" } }
+            errorMessageComponentProperty1ErrorWithAttributes
+                (errorMessageComponentProperty1ErrorAttributes
+                    |> s_iconsCloseSmall buttonAttrOk
+                )
+                { header =
+                    { iconInstance = icon
+                    , title = Locale.string vc.locale title
+                    }
+                , messageText =
+                    { messageText = Locale.interpolated vc.locale message variables }
+                , property1Error =
+                    { bodyText = ""
+                    , headlineText = ""
+                    }
+                }
                 |> List.singleton
                 |> overlay
 
@@ -59,7 +71,13 @@ view vc model =
             in
             errorMessageComponentProperty1AlertWithAttributes
                 (errorMessageComponentProperty1AlertAttributes |> s_iconsCloseSmall buttonAttrOk)
-                { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = Locale.interpolated vc.locale message variables }, property1Alert = { bodyText = "", headlineText = "" } }
+                { header =
+                    { iconInstance = icon
+                    , title = Locale.string vc.locale title
+                    }
+                , messageText = { messageText = Locale.interpolated vc.locale message variables }
+                , property1Alert = { bodyText = "", headlineText = "" }
+                }
                 |> List.singleton
                 |> overlay
 
