@@ -16,6 +16,7 @@ import Plugin.View as Plugin exposing (Plugins)
 import Route
 import Route.Pathfinder as Pathfinder
 import Theme.Colors
+import Theme.ColorsDark
 import Util.Css
 import Util.View exposing (hovercard)
 import View.Dialog as Dialog
@@ -40,7 +41,17 @@ view plugins vc model =
             |> String.join " | "
     , body =
         [ Css.Reset.meyerV2 |> toUnstyled
-        , Theme.Colors.style |> toUnstyled
+        , (if vc.lightmode then
+            Theme.Colors.style
+
+           else
+            Theme.ColorsDark.style
+          )
+            |> toUnstyled
+        , node "style" [] [ text """
+            * {
+                transition: color 0.5s, background-color 0.5s;
+            }""" ] |> toUnstyled
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
         , body plugins vc model |> toUnstyled
         ]
