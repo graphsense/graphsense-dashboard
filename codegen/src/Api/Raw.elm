@@ -1596,7 +1596,7 @@ type alias IsLayerTrait =
     , rotation : Maybe Float
     , componentPropertyReferences : Maybe ComponentPropertyReferences
     , boundVariables : Maybe IsLayerTraitBoundVariables
-    , explicitVariableModes : Maybe String
+    , explicitVariableModes : Maybe (Dict String String)
     }
 
 
@@ -4807,7 +4807,7 @@ isLayerTraitDecoder =
         |> maybeDecode "rotation" Json.Decode.float (Just 0)
         |> maybeDecode "componentPropertyReferences" componentPropertyReferencesDecoder Nothing
         |> maybeDecode "boundVariables" isLayerTraitBoundVariablesDecoder Nothing
-        |> maybeDecode "explicitVariableModes" Json.Decode.string Nothing
+        |> maybeDecode "explicitVariableModes" (Json.Decode.dict Json.Decode.string) Nothing
 
 
 componentPropertyReferencesDecoder : Json.Decode.Decoder ComponentPropertyReferences

@@ -11,8 +11,11 @@ import Generate.Colors as Colors
 import Generate.Common as Common
 import Generate.Html
 import Generate.Svg
+import Http
 import Json.Decode
 import String.Case exposing (toCamelCaseUpper)
+import String.Format
+import Tuple exposing (pair)
 import Types exposing (ColorMap)
 
 
@@ -22,19 +25,146 @@ onlyFrames =
     []
 
 
-main : Program Json.Decode.Value () ()
+type alias Flags =
+    ( String, String )
+
+
+type Msg
+    = GotFigmaMain Flags (Result Http.Error Api.Raw.CanvasNode)
+    | GotFrameNodes (Result Http.Error String)
+
+
+get : Flags -> { url : String, expect : Http.Expect msg } -> Cmd msg
+get ( file_id, api_key ) { url, expect } =
+    Http.request
+        { method = "GET"
+        , headers =
+            Http.header "X-Figma-Token" api_key
+                |> List.singleton
+        , url =
+            "https://api.figma.com/v1/files/{{ file_id }}"
+                ++ url
+                |> String.Format.namedValue "file_id" file_id
+                |> Debug.log "fetching"
+        , body = Http.emptyBody
+        , expect = expect
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+main : Program Json.Decode.Value () Msg
 main =
-    Generate.fromJson
-        (Json.Decode.field "document" Api.Raw.documentNodeDecoder)
-        generate
+    let
+        decodeFlags =
+            Json.Decode.map2 pair
+                (Json.Decode.field "figma_file_id" Json.Decode.string)
+                (Json.Decode.field "api_key" Json.Decode.string)
+    in
+    Platform.worker
+        { init =
+            \input ->
+                case Json.Decode.decodeValue decodeFlags input of
+                    Ok flags ->
+                        ( ()
+                        , get flags
+                            { url = "/nodes?ids=0:1&depth=1"
+                            , expect =
+                                Json.Decode.at [ "nodes", "0:1", "document" ] Api.Raw.canvasNodeDecoder
+                                    |> Http.expectJson (GotFigmaMain flags)
+                            }
+                        )
+
+                    Err _ ->
+                        case Json.Decode.decodeValue decodeFigmaNodesFile input of
+                            Ok nodes ->
+                                ( ()
+                                , frameNodesToFiles nodes
+                                    |> Generate.files
+                                )
+
+                            Err err ->
+                                ( ()
+                                , Generate.error
+                                    [ { title = "Error decoding flags"
+                                      , description = Json.Decode.errorToString err
+                                      }
+                                    ]
+                                )
+        , update =
+            \msg _ ->
+                case msg of
+                    GotFigmaMain flags result ->
+                        case result of
+                            Ok canvas ->
+                                ( ()
+                                , canvasNodeToRequests flags canvas
+                                )
+
+                            Err err ->
+                                ( ()
+                                , Generate.error
+                                    [ { title = "Error decoding figma main"
+                                      , description = Debug.toString err
+                                      }
+                                    ]
+                                )
+
+                    GotFrameNodes result ->
+                        case result of
+                            Err err ->
+                                ( ()
+                                , Generate.error
+                                    [ { title = "Error fetching figma frames"
+                                      , description = Debug.toString err
+                                      }
+                                    ]
+                                )
+
+                            Ok text ->
+                                case Json.Decode.decodeString decodeFigmaNodesFile text of
+                                    Ok nodes ->
+                                        ( ()
+                                        , { path = "figma.json"
+                                          , contents = text
+                                          , warnings = []
+                                          }
+                                            :: frameNodesToFiles nodes
+                                            |> Generate.files
+                                        )
+
+                                    Err err ->
+                                        ( ()
+                                        , Generate.error
+                                            [ { title = "Error decoding figma frames"
+                                              , description = Debug.toString err
+                                              }
+                                            ]
+                                        )
+        , subscriptions = \_ -> Sub.none
+        }
 
 
-generate : Api.Raw.DocumentNode -> List Generate.File
-generate { children } =
-    children
-        |> List.filter (.isLayerTrait >> .name >> String.startsWith "Final")
-        |> List.map canvasNodeToFiles
-        |> List.concat
+decodeFigmaNodesFile : Json.Decode.Decoder (List FrameNode)
+decodeFigmaNodesFile =
+    Json.Decode.dict (Json.Decode.field "document" Api.Raw.frameNodeDecoder)
+        |> Json.Decode.map Dict.values
+        |> Json.Decode.field "nodes"
+
+
+canvasNodeToRequests : Flags -> CanvasNode -> Cmd Msg
+canvasNodeToRequests flags { children } =
+    get flags
+        { url =
+            "/nodes?ids={{ ids }}&geometry=paths"
+                |> String.Format.namedValue "ids"
+                    (children
+                        |> List.filterMap isFrame
+                        |> List.map (.frameTraits >> .isLayerTrait >> .id)
+                        |> String.join ","
+                    )
+        , expect = Http.expectString GotFrameNodes
+        }
 
 
 themeFolder : String
@@ -42,20 +172,16 @@ themeFolder =
     "Theme"
 
 
-canvasNodeToFiles : CanvasNode -> List Generate.File
-canvasNodeToFiles node =
+frameNodesToFiles : List FrameNode -> List Generate.File
+frameNodesToFiles frames =
     let
-        frames =
-            node.children
-                |> List.filterMap isFrame
-
         colorMap =
             frames
                 |> findColorMap
     in
     (Colors.colorMapToStylesheet colorMap
         :: Colors.colorMapToDeclarations colorMap
-        |> Elm.file [ themeFolder, "Colors" ]
+        |> Elm.file [ themeFolder, colorsFrame ]
     )
         :: (List.map (frameToFiles (Dict.fromList colorMap)) frames
                 |> List.concat
@@ -79,7 +205,11 @@ isFrame : SubcanvasNode -> Maybe FrameNode
 isFrame arg1 =
     case arg1 of
         SubcanvasNodeFrameNode n ->
-            Just n
+            if n.frameTraits.readyForDev then
+                Just n
+
+            else
+                Nothing
 
         _ ->
             Nothing
@@ -102,7 +232,7 @@ frameToFiles colorMap n =
             List.isEmpty onlyFrames
                 || List.any (flip String.startsWith nameLowered) onlyFrames
     in
-    if n.frameTraits.readyForDev && matchOnlyFrames && nameLowered /= String.toLower colorsFrame then
+    if matchOnlyFrames && nameLowered /= String.toLower colorsFrame then
         [ frameNodeToDeclarations
             (Common.subcanvasNodeComponentsToDeclarations (Generate.Svg.componentNodeToDeclarations colorMap))
             n

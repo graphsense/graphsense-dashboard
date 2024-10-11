@@ -60,11 +60,11 @@ lint-fix:
 lint-ci:
 	npx elm-review --ignore-files src/Util/View.elm,src/View/Box.elm,src/View/Locale.elm,src/Update/Search.elm,src/Route/Graph.elm,src/Route.elm,src/View/Graph/Table.elm,src/Css/Button.elm,config/Config.elm
 
-./theme/figma.json:
+theme-refresh: 
 	mkdir -p theme
-	curl 'https://api.figma.com/v1/files/$(FIGMA_FILE_ID)?geometry=paths' -H 'X-Figma-Token: $(FIGMA_API_TOKEN)' | jq > theme/figma.json
+	npx elm-codegen run --debug --flags='{"figma_file_id": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output theme
 
-theme: ./theme/figma.json
+theme:
 	npx elm-codegen run --debug --flags-from=./theme/figma.json --output theme
 
 gen:
