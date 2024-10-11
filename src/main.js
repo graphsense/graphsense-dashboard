@@ -76,24 +76,6 @@ window.onbeforeunload = function (evt) {
 app.ports.console.subscribe(console.error)
 
 
-app.ports.resizeAnnotationLabels.subscribe(() => {
-    let svg = document.querySelector('svg#graph')
-    if (svg == null) {return}
-    let allLabels = svg.querySelectorAll(".AnnotationLabel")
-    if (allLabels == null) {return}
-
-    allLabels.forEach((annotation) => {
-      const txtNode = annotation.querySelector("text")
-      const rectNode = annotation.querySelector("rect")
-      const paddingX = 5;
-      const bboxGroup = txtNode.getBBox();
-      rectNode.setAttribute("x", bboxGroup.x - paddingX);
-      rectNode.setAttribute("width", bboxGroup.width + (2 * paddingX));
-
-  })
-
-})
-
 app.ports.exportGraphImage.subscribe((filename) => {
     let svg = document.querySelector('svg#graph')
     let canvas = document.createElement("canvas");

@@ -1064,18 +1064,10 @@ updateByMsg plugins uc msg model =
             )
 
         UserInputsAnnotation id str ->
-            ( { model | annotations = Annotations.setLabel id str model.annotations }
-            , [ Ports.resizeAnnotationLabels () |> CmdEffect ]
-            )
+            n { model | annotations = Annotations.setLabel id str model.annotations }
 
         UserSelectsAnnotationColor id clr ->
             n { model | annotations = Annotations.setColor id clr model.annotations }
-
-        ResizeAnnotationLabels ->
-            -- This code is needed to ensure that annotations labels are resized
-            -- properly after importing a graph. Directly using the port
-            -- executes before the rendering and thus fails to resize
-            ( model, [ Ports.resizeAnnotationLabels () |> CmdEffect ] )
 
 
 expandAddress : Update.Config -> Address -> Direction -> Model -> ( Model, List Effect )
@@ -1281,7 +1273,6 @@ loadAddressWithPosition position _ id model =
                     , includeActors = True
                     }
                 |> ApiEffect
-          , resizeAnnotationLabelsEffect
           ]
         )
 
@@ -1839,10 +1830,8 @@ fromDeserialized deserialized model =
         , history = History.init
         , name = deserialized.name
       }
-    , resizeAnnotationLabelsEffect
-        :: (txsRequests
-                ++ addressesRequests
-           )
+    , txsRequests
+        ++ addressesRequests
     )
 
 
@@ -1874,8 +1863,3 @@ autoLoadAddresses plugins tx model =
     [ src, dst ]
         |> List.filterMap identity
         |> List.foldl aggAddressAdd (n model)
-
-
-resizeAnnotationLabelsEffect : Effect
-resizeAnnotationLabelsEffect =
-    delay 0 ResizeAnnotationLabels |> CmdEffect

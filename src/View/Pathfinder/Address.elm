@@ -6,6 +6,7 @@ import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
+import Html.Styled
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
@@ -22,6 +23,7 @@ import RemoteData
 import Svg.Styled exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, stopPropagationOn)
+import Theme.Html.GraphComponents as HtmlGraphComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations
@@ -113,32 +115,53 @@ view _ vc _ colors address getCluster annotation =
                     in
                     ( colorAttributes "fill"
                     , (if String.length ann.label > 0 then
-                        GraphComponents.annotationLabel2WithAttributes
-                            (GraphComponents.annotationLabel2Attributes
-                                |> Rs.s_annotationLabel2
-                                    [ translate
-                                        (GraphComponents.addressNode_details.width / 2)
-                                        (GraphComponents.addressNode_details.height
-                                            + (if address.exchange == Nothing then
-                                                -GraphComponents.addressNodeExchangeLabel_details.height
-
-                                               else
-                                                0
-                                              )
-                                            + 2
-                                        )
-                                        |> transform
-                                    , A.animate address.clock address.opacity
-                                        |> String.fromFloat
-                                        |> opacity
-                                    , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
-                                    , css [ Css.cursor Css.pointer ]
-                                    , Svg.class "AnnotationLabel"
-                                    ]
-                                |> Rs.s_rectangle186 (Svg.width "10px" :: Svg.x "-5px" :: colorAttributes "stroke")
-                                |> Rs.s_label [ Svg.x "0" ]
+                        HtmlGraphComponents.annotationLabelWithAttributes
+                            (HtmlGraphComponents.annotationLabelAttributes
+                                |> Rs.s_annotationLabel
+                                    (css
+                                        [ Css.display Css.inlineBlock
+                                        ]
+                                        :: colorAttributes "border-color"
+                                    )
                             )
-                            { annotationLabel2 = { labelText = ann.label } }
+                            { annotationLabel = { labelText = ann.label } }
+                            |> List.singleton
+                            |> Html.Styled.div
+                                [ css
+                                    [ Css.pct 100 |> Css.width
+                                    , Css.textAlign Css.center
+                                    ]
+                                ]
+                            |> List.singleton
+                            |> Svg.Styled.foreignObject
+                                [ translate
+                                    0
+                                    (GraphComponents.addressNode_details.height
+                                        + (if address.exchange == Nothing then
+                                            -GraphComponents.addressNodeExchangeLabel_details.height
+
+                                           else
+                                            0
+                                          )
+                                        + 2
+                                    )
+                                    |> transform
+                                , GraphComponents.addressNode_details.width
+                                    |> String.fromFloat
+                                    |> Svg.width
+                                , (GraphComponents.annotationLabel_details.height
+                                    + GraphComponents.annotationLabel_details.strokeWidth
+                                    * 2
+                                  )
+                                    * (1 + (toFloat <| String.length ann.label // 13))
+                                    |> String.fromFloat
+                                    |> Svg.height
+                                , A.animate address.clock address.opacity
+                                    |> String.fromFloat
+                                    |> opacity
+                                , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
+                                , css [ Css.cursor Css.pointer ]
+                                ]
 
                        else
                         text ""
@@ -257,7 +280,7 @@ view _ vc _ colors address getCluster annotation =
         )
 
 
-expandHandleLoadingSpinner : View.Config -> Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)
+expandHandleLoadingSpinner : View.Config -> Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, renderedWidth : Float, renderedHeight : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)
 expandHandleLoadingSpinner vc address direction details =
     if getTxs address direction == TxsLoading then
         let

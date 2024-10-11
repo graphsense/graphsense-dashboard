@@ -82,7 +82,6 @@ type Msg
     | UserClickedOpenGraph
     | BrowserGotBulkAddresses (List Api.Data.Address)
     | BrowserGotBulkTxs Deserializing (List Api.Data.Tx)
-    | ResizeAnnotationLabels
 
 
 type DisplaySettingsMsg
