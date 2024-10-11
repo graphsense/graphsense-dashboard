@@ -48,12 +48,10 @@ import Msg.Search as Search
 import Number.Bounded exposing (value)
 import Plugin.Update exposing (Plugins)
 import Ports
-import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route.Pathfinder as Route exposing (Route)
 import Set exposing (..)
-import Task
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
@@ -70,13 +68,6 @@ import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-
-
-delay : Float -> msg -> Cmd msg
-delay time msg =
-    Process.sleep time
-        |> Task.map (always <| msg)
-        |> Task.perform identity
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
