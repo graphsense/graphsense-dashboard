@@ -18,17 +18,20 @@ toStyles colorMap node =
         |> a (Paint.toStylesString colorMap >> Maybe.map (Css.property "color")) node.fills
         |> m (Css.px >> Css.letterSpacing) node.letterSpacing
         |> m (Css.px >> Css.lineHeight) node.lineHeightPx
-        |> m textAutoResize node.textAutoResize
+        |> mm textAutoResize node.textAutoResize
 
 
-textAutoResize : TypeStyleTextAutoResize -> Elm.Expression
+textAutoResize : TypeStyleTextAutoResize -> List Elm.Expression
 textAutoResize arg1 =
     case arg1 of
         TypeStyleTextAutoResizeHEIGHT ->
-            Css.property "white-space" "wrap"
+            [ Css.property "white-space" "wrap"
+            , Css.property "word-break" "break-word"
+            ]
 
         _ ->
-            Css.whiteSpace Css.noWrap
+            [ Css.whiteSpace Css.noWrap
+            ]
 
 
 
