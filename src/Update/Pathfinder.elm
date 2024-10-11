@@ -134,11 +134,11 @@ updateByMsg plugins uc msg model =
             deleteSelection model
 
         UserPressedNormalKey key ->
-            case key of
-                "z" ->
+            case (model.modPressed, key) of
+                (True, "z") ->
                     update plugins uc UserClickedUndo model
 
-                "y" ->
+                (True, "y") ->
                     update plugins uc UserClickedRedo model
 
                 _ ->
