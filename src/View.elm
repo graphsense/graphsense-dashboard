@@ -164,25 +164,15 @@ sidebar plugins vc model =
     in
     Nb.navbarMenuNewWithInstances
         (Nb.navbarMenuNewAttributes
-            |> Rs.s_navbarMenuNew [ [ model.height |> toFloat |> Css.px |> Css.height ] |> css ]
+            |> Rs.s_navbarMenuNew
+                [ [ Css.unset |> Css.height
+                  ]
+                    |> css
+                ]
         )
         (Nb.navbarMenuNewInstances
             |> Rs.s_products (Just products)
             |> Rs.s_statistics (Just statisticsLink)
-            |> Rs.s_navbarIknaioLogo
-                (Just
-                    (Nb.navbarIknaioLogoWithAttributes
-                        (Nb.navbarIknaioLogoAttributes
-                            |> Rs.s_navbarIknaioLogo
-                                [ css
-                                    [ Css.paddingBottom (Css.px 0)
-                                    , Css.paddingTop (Css.px 0)
-                                    ]
-                                ]
-                        )
-                        {}
-                    )
-                )
             |> Rs.s_help (Just Util.View.none)
         )
         { caseconnectItem = { variant = Util.View.none }

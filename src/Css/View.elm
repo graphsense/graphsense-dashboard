@@ -35,6 +35,7 @@ sectionBelowHeader vc =
     [ displayFlex
     , flexDirection row
     , flexGrow (num 1)
+    , alignItems stretch
     ]
         ++ vc.theme.sectionBelowHeader
 
