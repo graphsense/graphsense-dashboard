@@ -1,22 +1,23 @@
-module View exposing (view)
+module View exposing (sidebarMenuItem, view)
 
 import Browser exposing (Document)
 import Config.View exposing (Config)
 import Css
-import Css.Header as Css
 import Css.Reset
 import Css.View
-import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
 import Model exposing (Auth(..), Model, Msg(..), Page(..))
 import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
+import RecordSetter as Rs
 import Route
 import Route.Pathfinder as Pathfinder
 import Theme.Colors
 import Theme.ColorsDark
+import Theme.Html.Icons as Icons
+import Theme.Html.Navbar as Nb
 import Util.Css
 import Util.View exposing (hovercard)
 import View.Dialog as Dialog
@@ -93,22 +94,36 @@ body plugins vc model =
             ++ [ Notification.view vc model.notifications ]
         )
 
+sidebarMenuItem : Html msg -> String -> String -> Bool -> String -> Html msg
+sidebarMenuItem img label titleStr selected link =
+    if not selected then
+        Nb.navbarProductItemStateNeutralWithInstances
+            (Nb.navbarProductItemStateNeutralAttributes
+                |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
+                |> Rs.s_stateNeutral
+                    [ [ Css.hover Nb.navbarProductItemStateHover_details.styles
+                      , Nb.navbarMenuNewNavbarIknaioLogoNavbarIknaioLogo_details.width |> Css.px |> Css.width
+                      ]
+                        |> css
+                    ]
+            )
+            Nb.navbarProductItemStateNeutralInstances
+            { stateNeutral = { iconInstance = img, productLabel = label } }
+            |> List.singleton
+            |> a
+                [ title titleStr
+                , link
+                    |> href
+                , css [ Css.textDecoration Css.none ]
+                ]
 
-logo : Config -> Html Msg
-logo vc =
-    div
-        [ css [ Css.padding4 (Css.px 5) (Css.px 15) (Css.px 5) (Css.px 15) ] ]
-        [ img
-            [ src <|
-                if vc.lightmode then
-                    vc.theme.logo_lightmode
-
-                else
-                    vc.theme.logo
-            , Css.headerLogo vc |> css
-            ]
-            []
-        ]
+    else
+        Nb.navbarProductItemStateSelectedWithInstances
+            (Nb.navbarProductItemStateSelectedAttributes
+                |> Rs.s_stateSelected [ [ Nb.navbarMenuNewNavbarIknaioLogoNavbarIknaioLogo_details.width |> Css.px |> Css.width ] |> css ]
+            )
+            Nb.navbarProductItemStateSelectedInstances
+            { stateSelected = { iconInstance = img, productLabel = label } }
 
 
 sidebar : Plugins -> Config -> Model key -> Html Msg
@@ -116,108 +131,51 @@ sidebar plugins vc model =
     let
         plugin_menu_items =
             Plugin.sidebar plugins model.plugins model.page vc
+
+        products =
+            div [ Nb.navbarMenuNewProducts_details.styles |> css ]
+                ([ sidebarMenuItem (Nb.iconsPathfinderNew {}) "Network" "Network" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
+                 , sidebarMenuItem (Nb.iconsPathfinderNew {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl)
+                 ]
+                    ++ (if List.length plugin_menu_items > 0 then
+                            plugin_menu_items
+
+                        else
+                            []
+                       )
+                )
+
+        statisticsLink =
+            Locale.string vc.locale "Statistics"
+                |> text
+                |> List.singleton
+                |> a
+                    [ Route.statsRoute
+                        |> Route.toUrl
+                        |> href
+                    , Nb.navbarMenuNewStatistics_details.styles |> css
+                    , [ Css.textDecoration Css.none ] |> css
+                    ]
     in
-    div
-        [ Css.View.sidebar vc |> css
-        ]
-        ([ logo vc
-         , hr [ Css.View.sidebarRule vc |> css ] []
-         , FontAwesome.icon FontAwesome.home
-            |> Html.Styled.fromUnstyled
-            |> List.singleton
-            |> a
-                [ model.page == Home |> Css.View.sidebarIcon vc |> css
-                , title (Locale.string vc.locale "Home")
-                , Route.homeRoute
-                    |> Route.toUrl
-                    |> href
-                ]
-         , FontAwesome.icon FontAwesome.shareAlt
-            |> Html.Styled.fromUnstyled
-            |> List.singleton
-            |> a
-                [ model.page == Graph |> Css.View.sidebarIcon vc |> css
-                , title (Locale.string vc.locale "Overview Network")
-                , model.graph.route
-                    |> Route.graphRoute
-                    |> Route.toUrl
-                    |> href
-                ]
-         , [ FontAwesome.icon FontAwesome.shareAlt
-                |> Html.Styled.fromUnstyled
-           , span
-                [ css [ Css.fontSize <| Css.px 9 ]
-                ]
-                [ text "NEW" ]
-           ]
-            |> a
-                [ model.page == Pathfinder |> Css.View.sidebarIcon vc |> css
-                , title (Locale.string vc.locale "Pathfinder")
-                , Route.pathfinderRoute Pathfinder.Root
-                    |> Route.toUrl
-                    |> href
-                , css
-                    [ Css.displayFlex
-                    , Css.flexDirection Css.column
-                    , Css.alignItems Css.center
-                    , Css.color (Css.rgba 151 219 207 1)
-                    , Css.property "gap" "3px"
-                    , Css.textDecoration Css.none
-                    ]
-                ]
-         ]
-            ++ (if List.length plugin_menu_items > 0 then
-                    plugin_menu_items
-
-                else
-                    []
-               )
-            ++ [ hr [ Css.View.sidebarRule vc |> css ] []
-               , a
-                    [ Css.View.sidebarLink vc |> css
-                    , Route.settingsRoute
-                        |> Route.toUrl
-                        |> href
-                    ]
-                    [ text (Locale.string vc.locale "Settings") ]
-               , a
-                    [ Css.View.sidebarLink vc |> css
-                    , Route.statsRoute
-                        |> Route.toUrl
-                        |> href
-                    ]
-                    [ text (Locale.string vc.locale "Statistics") ]
-
-               --    , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLightmode ]
-               --         [ text
-               --             (Locale.string vc.locale
-               --                 (if vc.lightmode then
-               --                     "Dark Mode"
-               --                  else
-               --                     "Light Mode"
-               --                 )
-               --             )
-               --         ]
-               --    , span [ Css.View.sidebarLink vc |> css, onClick UserClickedLogout ]
-               --         [ text
-               --             (Locale.string vc.locale "Logout")
-               --         ]
-               ]
-         -- ++ [ div [ model.page == Stats |> Css.View.sidebarIconsBottom vc |> css ]
-         --         [-- FontAwesome.icon FontAwesome.chartPie
-         --          --     |> Html.Styled.fromUnstyled
-         --          --     |> List.singleton
-         --          --     |> a
-         --          --         [ model.page == Stats |> Css.View.sidebarIcon vc |> css
-         --          --         , title (Locale.string vc.locale "Statistics")
-         --          --         , Route.statsRoute
-         --          --             |> Route.toUrl
-         --          --             |> href
-         --          --         ]
-         --          --   div [ model.page == Stats |> Css.View.sidebarIcon vc |> css ] [ User.user vc model.user ]
-         --         ]
-         --    ]
+    Nb.navbarMenuNewWithInstances
+        (Nb.navbarMenuNewAttributes
+            |> Rs.s_navbarMenuNew [ [ model.height |> toFloat |> Css.px |> Css.height ] |> css ]
         )
+        (Nb.navbarMenuNewInstances
+            |> Rs.s_products (Just products)
+            |> Rs.s_statistics (Just statisticsLink)
+            |> Rs.s_help (Just Util.View.none)
+        )
+        { caseconnectItem = { variant = Util.View.none }
+        , navbarMenuNew =
+            { helpLabel = ""
+            , iconInstance = sidebarMenuItem (Icons.iconsSettingsLarge {}) "" (Locale.string vc.locale "Settings") (model.page == Settings) (Route.settingsRoute |> Route.toUrl)
+            , statisticsLabel = ""
+            }
+        , pathfinderItem = { variant = Util.View.none }
+        , quicklockItem = { variant = Util.View.none }
+        , taxreportItem = { variant = Util.View.none }
+        }
 
 
 hovercards : Plugins -> Config -> Model key -> List (Html Msg)
