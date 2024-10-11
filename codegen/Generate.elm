@@ -175,22 +175,36 @@ themeFolder =
 frameNodesToFiles : List FrameNode -> List Generate.File
 frameNodesToFiles frames =
     let
-        colorMap =
+        colorsFrameLight =
+            colorsFrame ++ " Light"
+
+        colorsFrameDark =
+            colorsFrame ++ " Dark"
+
+        colorMapLight =
             frames
-                |> findColorMap
+                |> findColorMap colorsFrameLight
+
+        colorMapDark =
+            frames
+                |> findColorMap colorsFrameDark
     in
-    (Colors.colorMapToStylesheet colorMap
-        :: Colors.colorMapToDeclarations colorMap
-        |> Elm.file [ themeFolder, colorsFrame ]
+    (Colors.colorMapToStylesheet colorMapLight
+        :: Colors.colorMapToDeclarations colorMapLight
+        |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrame ]
     )
-        :: (List.map (frameToFiles (Dict.fromList colorMap)) frames
+        :: (Colors.colorMapToStylesheet colorMapDark
+                :: Colors.colorMapToDeclarations colorMapDark
+                |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrameDark ]
+           )
+        :: (List.map (frameToFiles (Dict.fromList colorMapLight)) frames
                 |> List.concat
            )
 
 
-findColorMap : List FrameNode -> List ( String, String )
-findColorMap =
-    List.filter (.frameTraits >> .isLayerTrait >> .name >> (==) colorsFrame)
+findColorMap : String -> List FrameNode -> List ( String, String )
+findColorMap name =
+    List.filter (.frameTraits >> .isLayerTrait >> .name >> (==) name)
         >> List.head
         >> Maybe.map Colors.frameNodeToColorMap
         >> Maybe.withDefault []
@@ -232,7 +246,7 @@ frameToFiles colorMap n =
             List.isEmpty onlyFrames
                 || List.any (flip String.startsWith nameLowered) onlyFrames
     in
-    if matchOnlyFrames && nameLowered /= String.toLower colorsFrame then
+    if matchOnlyFrames && not (String.startsWith (String.toLower colorsFrame) nameLowered) then
         [ frameNodeToDeclarations
             (Common.subcanvasNodeComponentsToDeclarations (Generate.Svg.componentNodeToDeclarations colorMap))
             n

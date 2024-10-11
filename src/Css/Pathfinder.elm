@@ -184,14 +184,14 @@ orangeColor =
 
 filterButtonIconStyleDateRangePicker : List Style
 filterButtonIconStyleDateRangePicker =
-    [ Css.property "fill" TColors.greyLight |> Css.important ]
+    [ Css.property "fill" TColors.grey50 |> Css.important ]
 
 
 clusterDetailsClosedStyle : List Style
 clusterDetailsClosedStyle =
     [ Css.paddingLeft (Css.px 8)
     , Css.paddingBottom mGap
-    , Css.property "color" TColors.greyLight
+    , Css.property "color" TColors.grey50
     , Css.displayFlex
     , Css.justifyContent Css.spaceBetween
     , Css.alignItems Css.center
@@ -202,7 +202,7 @@ clusterDetailsClosedStyle =
 clusterDetailsOpenStyle : List Style
 clusterDetailsOpenStyle =
     [ Css.fontSize (Css.px 12)
-    , Css.property "color" TColors.greyLight
+    , Css.property "color" TColors.grey50
     , Css.marginLeft (Css.px 8)
     ]
 
@@ -240,15 +240,15 @@ warningColor _ =
 boxBorderColor : View.Config -> String
 boxBorderColor vc =
     if vc.lightmode then
-        TColors.greyLight
+        TColors.grey50
 
     else
-        TColors.black
+        TColors.black0
 
 
 emphTextColor : View.Config -> String
 emphTextColor _ =
-    TColors.textSecondary
+    TColors.grey100
 
 
 defaultBackgroundColor : View.Config -> Color
@@ -295,13 +295,13 @@ linkButtonStyle vc enabled =
         clr =
             case ( vc.lightmode, enabled ) of
                 ( True, True ) ->
-                    TColors.black
+                    TColors.black0
 
                 ( False, True ) ->
                     TColors.white
 
                 _ ->
-                    TColors.greyLight
+                    TColors.grey50
     in
     [ defaultBackgroundColor vc |> backgroundColor
     , no |> borderWidth
@@ -321,7 +321,7 @@ linkButtonStyle vc enabled =
 
 tagLinkButtonStyle : View.Config -> List Style
 tagLinkButtonStyle _ =
-    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.black |> property "color" ]
+    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.black0 |> property "color" ]
 
 
 topLeftPanelStyle : View.Config -> List Style
@@ -401,7 +401,7 @@ dateTimeRangeBoxStyle vc =
 
 dateTimeRangeHighlightedDateStyle : View.Config -> List Style
 dateTimeRangeHighlightedDateStyle _ =
-    [ TColors.brandSketch |> property "color"
+    [ TColors.greenText |> property "color"
     ]
 
 

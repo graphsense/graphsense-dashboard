@@ -557,6 +557,7 @@ txDetailsContentView vc _ model id viewState =
                         [ sidePanelCss
                             |> css
                         ]
+                    |> Rs.s_sidePanelTxDetails [ css fullWidth ]
                 )
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
@@ -1131,6 +1132,7 @@ addressDetailsContentView vc gc model id viewState =
                     [ sidePanelCss
                         |> css
                     ]
+                |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
             )
             (SidePanelComponents.sidePanelAddressInstances
                 |> Rs.s_labelOfTags
@@ -1201,7 +1203,7 @@ clusterInfoView vc open colors _ clstr =
                     |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends)
                     |> Maybe.withDefault none
         in
-        div [ css [ Css.width (Css.pct 100) ] ]
+        div [ css fullWidth ]
             [ div [ Css.clusterDetailsClosedStyle |> css, onClick UserClickedToggleClusterDetailsOpen ]
                 [ div
                     [ css
