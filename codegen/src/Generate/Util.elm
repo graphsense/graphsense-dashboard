@@ -184,6 +184,8 @@ detailsToDeclaration parentName componentName details =
     , ( "y", Elm.float details.bbox.y )
     , ( "width", Elm.float details.bbox.width )
     , ( "height", Elm.float details.bbox.height )
+    , ( "renderedWidth", Elm.float details.renderedSize.width )
+    , ( "renderedHeight", Elm.float details.renderedSize.height )
     , ( "strokeWidth", Elm.float details.strokeWidth )
     , ( "styles", Elm.list details.styles )
     ]

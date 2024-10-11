@@ -1,6 +1,6 @@
 module Types exposing (..)
 
-import Api.Raw exposing (Rectangle)
+import Api.Raw exposing (Rectangle, Size)
 import Dict exposing (Dict)
 import Elm exposing (Expression)
 
@@ -20,6 +20,7 @@ type alias Details =
     -- enclosing instance name
     , instanceName : String
     , bbox : Rectangle
+    , renderedSize : Size
     , strokeWidth : Float
     , styles : List Elm.Expression
     }
