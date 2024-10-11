@@ -94,15 +94,20 @@ body plugins vc model =
             ++ [ Notification.view vc model.notifications ]
         )
 
+
 sidebarMenuItem : Html msg -> String -> String -> Bool -> String -> Html msg
 sidebarMenuItem img label titleStr selected link =
+    let
+        itemWidth =
+            85
+    in
     if not selected then
         Nb.navbarProductItemStateNeutralWithInstances
             (Nb.navbarProductItemStateNeutralAttributes
                 |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
                 |> Rs.s_stateNeutral
                     [ [ Css.hover Nb.navbarProductItemStateHover_details.styles
-                      , Nb.navbarMenuNewNavbarIknaioLogoNavbarIknaioLogo_details.width |> Css.px |> Css.width
+                      , itemWidth |> Css.px |> Css.width
                       ]
                         |> css
                     ]
@@ -120,7 +125,7 @@ sidebarMenuItem img label titleStr selected link =
     else
         Nb.navbarProductItemStateSelectedWithInstances
             (Nb.navbarProductItemStateSelectedAttributes
-                |> Rs.s_stateSelected [ [ Nb.navbarMenuNewNavbarIknaioLogoNavbarIknaioLogo_details.width |> Css.px |> Css.width ] |> css ]
+                |> Rs.s_stateSelected [ [ itemWidth |> Css.px |> Css.width ] |> css ]
             )
             Nb.navbarProductItemStateSelectedInstances
             { stateSelected = { iconInstance = img, productLabel = label } }
@@ -164,6 +169,20 @@ sidebar plugins vc model =
         (Nb.navbarMenuNewInstances
             |> Rs.s_products (Just products)
             |> Rs.s_statistics (Just statisticsLink)
+            |> Rs.s_navbarIknaioLogo
+                (Just
+                    (Nb.navbarIknaioLogoWithAttributes
+                        (Nb.navbarIknaioLogoAttributes
+                            |> Rs.s_navbarIknaioLogo
+                                [ css
+                                    [ Css.paddingBottom (Css.px 0)
+                                    , Css.paddingTop (Css.px 0)
+                                    ]
+                                ]
+                        )
+                        {}
+                    )
+                )
             |> Rs.s_help (Just Util.View.none)
         )
         { caseconnectItem = { variant = Util.View.none }
