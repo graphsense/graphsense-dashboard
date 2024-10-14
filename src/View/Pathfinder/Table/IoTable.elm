@@ -41,7 +41,7 @@ config styles vc ioDirection network isCheckedFn lblFn =
             , PT.addressColumn vc
                 { label = "Address"
                 , accessor = .address >> String.join ","
-                , onClick = Nothing
+                , onClick = Just (toId >> Maybe.map UserClickedAddress >> Maybe.withDefault NoOp)
                 , tagsPlaceholder = True
                 }
                 (lblFn |> Maybe.map (\fn -> \data -> toId data |> Maybe.map fn |> Maybe.withDefault NoTags))
