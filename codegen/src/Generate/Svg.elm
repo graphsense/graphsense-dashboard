@@ -480,9 +480,14 @@ componentNodeToDetails =
 
 frameTraitsToExpressions : Config -> String -> FrameTraits -> List Elm.Expression
 frameTraitsToExpressions config componentName node =
-    node.children
-        |> List.map (subcanvasNodeToExpressions config componentName)
-        |> List.concat
+    if Generate.Common.FrameTraits.isList { frameTraits = node } then
+        -- maybe add config.children here later like in Html
+        []
+
+    else
+        node.children
+            |> List.map (subcanvasNodeToExpressions config componentName)
+            |> List.concat
 
 
 withFrameTraitsNodeToExpressions : Config -> String -> { a | frameTraits : FrameTraits } -> List Elm.Expression
