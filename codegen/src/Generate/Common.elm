@@ -97,7 +97,7 @@ subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
             []
 
 
-adjustBoundingBoxes : ComponentNode -> ComponentNode
+adjustBoundingBoxes : { a | frameTraits : FrameTraits } -> { a | frameTraits : FrameTraits }
 adjustBoundingBoxes node =
     let
         originAdjust =
@@ -403,10 +403,11 @@ withFrameTraitsToProperties : { a | frameTraits : FrameTraits } -> List ( String
 withFrameTraitsToProperties node =
     if FrameTraits.isList node then
         []
+
     else
-    node.frameTraits.children
-        |> List.map subcanvasNodeToProperties
-        |> List.concat
+        node.frameTraits.children
+            |> List.map subcanvasNodeToProperties
+            |> List.concat
 
 
 hasVariantProperty : InstanceNode -> Bool

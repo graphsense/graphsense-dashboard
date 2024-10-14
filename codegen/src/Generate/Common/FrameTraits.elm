@@ -1,6 +1,5 @@
 module Generate.Common.FrameTraits exposing (..)
 
-import Regex
 import Api.Raw exposing (FrameTraits, Rectangle)
 import Basics.Extra exposing (flip)
 import Dict exposing (Dict)
@@ -95,4 +94,3 @@ isList =
 nameIsList : String -> Bool
 nameIsList =
     String.endsWith "List"
-
