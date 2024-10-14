@@ -9,6 +9,7 @@ import Model.Graph.Transform as Transform
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
+import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
@@ -48,6 +49,7 @@ type alias Model =
     , isDirty : Bool
     , tooltip : Maybe Tooltip
     , toolbarHovercard : Maybe ToolbarHovercardModel
+    , contextMenu : Maybe ContextMenu
     , name : String
     }
 

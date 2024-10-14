@@ -6,6 +6,7 @@ import Hovercard
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
+import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder.AddressDetails as AddressDetails
@@ -84,6 +85,7 @@ type Msg
     | UserClickedOpenGraph
     | BrowserGotBulkAddresses (List Api.Data.Address)
     | BrowserGotBulkTxs Deserializing (List Api.Data.Tx)
+    | UserOpensContextMenu Coords ContextMenuType
 
 
 type DisplaySettingsMsg

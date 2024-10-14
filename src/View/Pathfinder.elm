@@ -31,6 +31,7 @@ import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
@@ -54,6 +55,7 @@ import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.Buttons as Btns
+import Theme.Html.GraphComponents as HGraphComponents
 import Theme.Html.Icons as HIcons
 import Theme.Html.SettingsComponents as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -287,6 +289,49 @@ graph plugins states vc gc model =
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
+        ++ (model.contextMenu
+                |> Maybe.map (contextMenuView vc model)
+                |> Maybe.map List.singleton
+                |> Maybe.withDefault []
+           )
+
+
+contextMenuView : View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
+contextMenuView vc _ ( coords, menu ) =
+    let
+        getItem icon text =
+            HGraphComponents.rightClickItemStateNeutralWithAttributes
+                (HGraphComponents.rightClickItemStateNeutralAttributes
+                    |> Rs.s_stateNeutral
+                        [ [ HGraphComponents.rightClickItemStateHover_details.styles
+                                |> Css.hover
+                          , Css.cursor Css.pointer
+                          ]
+                            |> css
+                        ]
+                )
+                { stateNeutral = { iconInstance = icon, text = Locale.string vc.locale text } }
+    in
+    div
+        [ [ Css.top (Css.px (coords.y - 5))
+          , Css.left (Css.px (coords.x - 100))
+          , Css.position Css.absolute
+          , Css.zIndex (Css.int 100)
+          ]
+            |> css
+        ]
+        [ case menu of
+            ContextMenu.AddressContextMenu _ ->
+                HGraphComponents.rightClickMenu
+                    { annotate2 = { variant = getItem (HIcons.iconsAnnotateSmall {}) "test" }
+                    , annotate4 = { variant = getItem (HIcons.iconsAnnotateSmall {}) "test" }
+                    , delete = { variant = getItem (HIcons.iconsAnnotateSmall {}) "test" }
+                    , newTab = { variant = getItem (HIcons.iconsAnnotateSmall {}) "test" }
+                    }
+
+            ContextMenu.TransactionContextMenu id ->
+                Util.View.none
+        ]
 
 
 topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg

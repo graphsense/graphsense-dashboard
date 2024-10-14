@@ -43,6 +43,7 @@ init us _ =
       , isDirty = False
       , tooltip = Nothing
       , toolbarHovercard = Nothing
+      , contextMenu = Nothing
       , name = "graph"
       }
     , Task.perform Tick Time.now

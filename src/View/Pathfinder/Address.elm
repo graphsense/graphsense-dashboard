@@ -12,9 +12,11 @@ import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Direction exposing (Direction(..))
+import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, Txs(..), expandAllowed, getTxs, txsGetSet)
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
@@ -22,12 +24,12 @@ import RecordSetter as Rs
 import RemoteData
 import Svg.Styled exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
-import Svg.Styled.Events exposing (onMouseOver, stopPropagationOn)
+import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
 import Theme.Html.GraphComponents as HtmlGraphComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations
-import Util.Graph exposing (translate)
+import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 
 
@@ -187,6 +189,9 @@ view _ vc _ colors address getCluster annotation =
                     , UserClickedAddress address.id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnAddress address.id
                         |> Util.Graph.mousedown
+                    , decodeCoords Coords.Coords
+                        |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.AddressContextMenu address.id), True ))
+                        |> preventDefaultOn "contextmenu"
                     , css [ Css.cursor Css.pointer ]
                     ]
                 |> Rs.s_nodeBody

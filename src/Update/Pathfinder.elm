@@ -1064,6 +1064,9 @@ updateByMsg plugins uc msg model =
         UserSelectsAnnotationColor id clr ->
             n { model | annotations = Annotations.setColor id clr model.annotations }
 
+        UserOpensContextMenu coords cmtype ->
+            n { model | contextMenu = Just ( coords, cmtype ) }
+
 
 expandAddress : Update.Config -> Address -> Direction -> Model -> ( Model, List Effect )
 expandAddress uc address direction model =
