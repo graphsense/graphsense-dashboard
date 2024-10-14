@@ -312,6 +312,7 @@ coloredPath _ c =
         -}
         , textAnchor "middle"
         , dominantBaseline "hanging"
+        , 12 |> Css.px |> Css.fontSize |> List.singleton |> css -- fix font size to ensure scaling in export (screenshot)
         ]
         [ text c.label ]
     ]

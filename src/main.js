@@ -115,15 +115,16 @@ app.ports.exportGraphImage.subscribe((filename) => {
     svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
     const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
 
+    const pixelScaleFactor = 2;
     var width = (svg.innerWidth
     || window.innerWidth
     || document.documentElement.clientWidth
-    || document.body.clientWidth) * 2; 
+    || document.body.clientWidth) * pixelScaleFactor; 
 
     var height = (svg.innerHeight 
     || window.innerHeight
     || document.documentElement.clientHeight
-    || document.body.clientHeight) * 2;
+    || document.body.clientHeight) * pixelScaleFactor;
 
     canvas.width = width; // Set the canvas width
     canvas.height = height; // Set the canvas height
@@ -133,9 +134,9 @@ app.ports.exportGraphImage.subscribe((filename) => {
       let ctx = canvas.getContext("2d");
 
       ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, canvas.width, canvas.height, 0, 0, canvas.width /2, canvas.height/2 );
 
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0, width, height);
       canvas.toBlob((blob) => download(filename, blob))
     };
     img.src = "data:image/svg+xml;base64," + svgDataBase64;
