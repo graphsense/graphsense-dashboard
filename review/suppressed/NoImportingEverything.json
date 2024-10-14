@@ -81,8 +81,6 @@
     { "count": 2, "filePath": "src/View/Header.elm" },
     { "count": 2, "filePath": "src/View/Main.elm" },
     { "count": 2, "filePath": "src/View/Pathfinder/Network.elm" },
-    { "count": 2, "filePath": "src/View/Pathfinder/Toolbar.elm" },
-    { "count": 2, "filePath": "src/View/Pathfinder/Tooltip.elm" },
     { "count": 2, "filePath": "src/View/Pathfinder/Tx.elm" },
     { "count": 2, "filePath": "src/View/Stats.elm" },
     { "count": 2, "filePath": "src/View/User.elm" },

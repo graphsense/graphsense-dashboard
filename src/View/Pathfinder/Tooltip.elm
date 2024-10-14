@@ -1,21 +1,22 @@
 module View.Pathfinder.Tooltip exposing (view)
 
-import Api.Data exposing (TagSummary)
+import Api.Data exposing (Actor, TagSummary)
 import Config.View as View
 import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled exposing (Html, div, span, text, toUnstyled)
+import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags)
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
-import RecordSetter exposing (..)
+import RecordSetter as Rs
 import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util.Css as Css
+import Util.Flags exposing (getFlagEmoji)
 import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
@@ -34,10 +35,13 @@ view vc ts tt =
 
         TagLabel lblid x ->
             tagLabel vc lblid x
+
+        ActorDetails ac ->
+            showActor vc ac
     )
         |> List.singleton
         |> div [ Css.tooltipMargin |> css ]
-        |> Html.toUnstyled
+        |> toUnstyled
         |> List.singleton
         |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)
 
@@ -66,8 +70,47 @@ row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : Str
 row =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
-            |> s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
         )
+
+
+showActor : View.Config -> Actor -> Html msg
+showActor vc a =
+    div []
+        [ row
+            { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
+            , tooltipRowValue = a.label |> val vc
+            }
+        , row
+            { tooltipRowLabel = { title = Locale.string vc.locale "Url" }
+            , tooltipRowValue = a.uri |> val vc
+            }
+        , GraphComponents.tooltipRowWithInstances
+            (GraphComponents.tooltipRowAttributes
+                |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            )
+            (GraphComponents.tooltipRowInstances
+                |> Rs.s_tooltipRowValue
+                    (a.jurisdictions
+                        |> List.map
+                            (\z ->
+                                span
+                                    [ title (Locale.string vc.locale z.label)
+                                    , Css.mGap
+                                        |> Css.paddingRight
+                                        |> List.singleton
+                                        |> css
+                                    ]
+                                    [ text (getFlagEmoji z.id) ]
+                            )
+                        |> div []
+                        |> Just
+                    )
+            )
+            { tooltipRowLabel = { title = Locale.string vc.locale "Jurisdictions" }
+            , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+            }
+        ]
 
 
 tagLabel : View.Config -> String -> TagSummary -> Html msg
@@ -87,10 +130,10 @@ tagLabel vc lbl tag =
                     }
                 , GraphComponents.tooltipRowWithInstances
                     (GraphComponents.tooltipRowAttributes
-                        |> s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+                        |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
                     )
                     (GraphComponents.tooltipRowInstances
-                        |> s_tooltipRowValue
+                        |> Rs.s_tooltipRowValue
                             (getConfidenceIndicator vc lbldata.confidence |> Just)
                     )
                     { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }

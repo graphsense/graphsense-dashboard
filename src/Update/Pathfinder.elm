@@ -630,6 +630,27 @@ updateByMsg plugins uc msg model =
         UserMovesMouseOutTagLabel _ ->
             n { model | tooltip = Nothing }
 
+        UserMovesMouseOverActorLabel x ->
+            case Dict.get x model.actors of
+                Just actor ->
+                    let
+                        ( hc, cmd ) =
+                            (x ++ "_actor") |> Hovercard.init
+                    in
+                    ( { model
+                        | tooltip = Just (Tooltip.ActorDetails actor |> Tooltip.init hc)
+                      }
+                    , Cmd.map HovercardMsg cmd
+                        |> CmdEffect
+                        |> List.singleton
+                    )
+
+                _ ->
+                    n model
+
+        UserMovesMouseOutActorLabel _ ->
+            n { model | tooltip = Nothing }
+
         HovercardMsg hcMsg ->
             model.tooltip
                 |> Maybe.map

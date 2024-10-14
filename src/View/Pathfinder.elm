@@ -808,8 +808,6 @@ addressDetailsContentView vc gc model id viewState =
             Html.a
                 [ onMouseEnter (UserMovesMouseOverTagLabel tid)
                 , onMouseLeave (UserMovesMouseOutTagLabel tid)
-
-                --, Css.tagLinkButtonStyle vc |> css
                 , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
                 , HA.id tid
                 , HA.href link
@@ -991,6 +989,9 @@ addressDetailsContentView vc gc model id viewState =
                         Html.a
                             [ HA.href link
                             , css SidePanelComponents.sidePanelAddressLabelOfActor_details.styles
+                            , onMouseEnter (UserMovesMouseOverActorLabel aid)
+                            , onMouseLeave (UserMovesMouseOutActorLabel aid)
+                            , HA.id (aid ++ "_actor")
                             ]
                             [ Html.text text
                             ]
@@ -1088,6 +1089,11 @@ addressDetailsContentView vc gc model id viewState =
 
             else
                 tokensDropDownClosed
+
+        closeAttrs =
+            [ Css.cursor Css.pointer |> List.singleton |> css
+            , onClick UserClosedDetailsView
+            ]
     in
     if Data.isAccountLike (Id.network id) then
         SidePanelComponents.sidePanelEthAddressWithInstances
@@ -1096,6 +1102,7 @@ addressDetailsContentView vc gc model id viewState =
                     [ sidePanelCss
                         |> css
                     ]
+                |> Rs.s_iconsCloseSmall closeAttrs
             )
             (SidePanelComponents.sidePanelEthAddressInstances
                 |> Rs.s_labelOfTags
@@ -1133,6 +1140,7 @@ addressDetailsContentView vc gc model id viewState =
                         |> css
                     ]
                 |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
+                |> Rs.s_iconsCloseSmall closeAttrs
             )
             (SidePanelComponents.sidePanelAddressInstances
                 |> Rs.s_labelOfTags

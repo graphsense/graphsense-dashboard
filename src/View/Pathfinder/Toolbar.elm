@@ -2,11 +2,11 @@ module View.Pathfinder.Toolbar exposing (Config, view)
 
 import Config.View as View
 import Css
-import Html.Styled exposing (..)
+import Html.Styled exposing (Html)
 import Html.Styled.Attributes as HA exposing (css, id)
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
-import RecordSetter exposing (..)
+import RecordSetter as Rs
 import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as SettingsComponents
@@ -51,7 +51,7 @@ view vc config =
     in
     SettingsComponents.toolbarWithInstances
         (SettingsComponents.toolbarAttributes
-            |> s_iconsDelete
+            |> Rs.s_iconsDelete
                 (onClickWithStop UserClickedToolbarDeleteIcon
                     :: title (Locale.string vc.locale "Delete")
                     :: (iconsAttr
@@ -63,7 +63,7 @@ view vc config =
                                )
                        )
                 )
-            |> s_iconsAnnotate
+            |> Rs.s_iconsAnnotate
                 (onClickWithStop UserToggleAnnotationSettings
                     :: id (toolbarHovercardTypeToId Annotation)
                     :: title (Locale.string vc.locale "Annotate")
@@ -76,7 +76,7 @@ view vc config =
                                )
                        )
                 )
-            |> s_iconsNewFile
+            |> Rs.s_iconsNewFile
                 (onClickWithStop UserClickedRestart
                     :: title (Locale.string vc.locale "Restart")
                     :: (iconsAttr
@@ -88,34 +88,34 @@ view vc config =
                                )
                        )
                 )
-            |> s_iconsSelectionTool
+            |> Rs.s_iconsSelectionTool
                 (onClickWithStop UserClickedSelectionTool
                     :: title (Locale.string vc.locale "Selection tool")
                     :: css (highlightBackground Select)
                     :: iconsAttr
                 )
-            |> s_iconsDisplayConfiguration
+            |> Rs.s_iconsDisplayConfiguration
                 (id (toolbarHovercardTypeToId Settings)
                     :: title (Locale.string vc.locale "Display settings")
                     :: onClickWithStop (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
                     :: iconsAttr
                 )
-            |> s_iconsCenterGraph
+            |> Rs.s_iconsCenterGraph
                 (onClickWithStop UserClickedFitGraph
                     :: title (Locale.string vc.locale "Center graph")
                     :: iconsAttr
                 )
-            |> s_iconsSave
+            |> Rs.s_iconsSave
                 (onClickWithStop (UserClickedSaveGraph Nothing)
                     :: title (Locale.string vc.locale "Save")
                     :: iconsAttr
                 )
-            |> s_iconsScrennshot
+            |> Rs.s_iconsScrennshot
                 (onClickWithStop (UserClickedExportGraphAsPNG config.exportName)
                     :: title (Locale.string vc.locale "Screenshot")
                     :: iconsAttr
                 )
-            |> s_iconsOpen
+            |> Rs.s_iconsOpen
                 (onClickWithStop UserClickedOpenGraph
                     :: title (Locale.string vc.locale "Open")
                     :: iconsAttr
@@ -127,7 +127,7 @@ view vc config =
                 if config.redoDisabled then
                     Icons.iconsRedoStateDisabledWithAttributes
                         (Icons.iconsRedoStateDisabledAttributes
-                            |> s_stateDisabled
+                            |> Rs.s_stateDisabled
                                 [ title (Locale.string vc.locale "Redo")
                                 ]
                         )
@@ -136,7 +136,7 @@ view vc config =
                 else
                     Icons.iconsRedoStateActiveWithAttributes
                         (Icons.iconsRedoStateActiveAttributes
-                            |> s_stateActive
+                            |> Rs.s_stateActive
                                 (onClickWithStop UserClickedRedo
                                     :: title (Locale.string vc.locale "Redo")
                                     :: iconsAttr
@@ -149,7 +149,7 @@ view vc config =
                 if config.undoDisabled then
                     Icons.iconsUndoStateDisabledWithAttributes
                         (Icons.iconsUndoStateDisabledAttributes
-                            |> s_stateDisabled
+                            |> Rs.s_stateDisabled
                                 [ title (Locale.string vc.locale "Undo")
                                 ]
                         )
@@ -158,7 +158,7 @@ view vc config =
                 else
                     Icons.iconsUndoStateActiveWithAttributes
                         (Icons.iconsUndoStateActiveAttributes
-                            |> s_stateActive
+                            |> Rs.s_stateActive
                                 (onClickWithStop UserClickedUndo
                                     :: title (Locale.string vc.locale "Undo")
                                     :: iconsAttr

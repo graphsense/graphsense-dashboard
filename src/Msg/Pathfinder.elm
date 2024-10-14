@@ -68,6 +68,8 @@ type Msg
     | UserMovesMouseOutAddress Id
     | UserMovesMouseOverTagLabel String
     | UserMovesMouseOutTagLabel String
+    | UserMovesMouseOverActorLabel String
+    | UserMovesMouseOutActorLabel String
     | UserInputsAnnotation Id String
     | UserSelectsAnnotationColor Id (Maybe Color)
     | HovercardMsg Hovercard.Msg

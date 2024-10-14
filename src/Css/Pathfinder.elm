@@ -267,13 +267,14 @@ tooltipMargin =
 
 searchInputStyle : View.Config -> String -> List Style
 searchInputStyle vc _ =
-    [ width (ex 40)
+    [ width (ex 50)
     , calc (pct 100) minus (px 2) |> height
     , padding <| px 1
     , display block
     , emphTextColor vc |> property "color"
     , border2 no solid
     , outline none
+    , paddingLeft (px 10)
     ]
 
 

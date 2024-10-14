@@ -1,6 +1,6 @@
 module Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 
-import Api.Data exposing (TagSummary)
+import Api.Data exposing (Actor, TagSummary)
 import Hovercard
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Tx as Tx
@@ -17,3 +17,4 @@ type TooltipType
     | AccountTx Tx.AccountTx
     | Address Address
     | TagLabel String TagSummary
+    | ActorDetails Actor
