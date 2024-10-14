@@ -207,174 +207,176 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                 |> Elm.declaration declarationNameInstances
             , if List.isEmpty namesWithList then
                 Elm.fn3
-                attributesParam
-                instancesParam
-                propertiesParam
-                (\attributes instances properties_ ->
-                    let
-                        config =
-                            { propertyExpressions =
-                                Common.propertiesToPropertyExpressions properties_ properties
-                            , positionRelatively = Nothing
-                            , attributes = attributes
-                            , instances = instances
-                            , children = Elm.record []
-                            , colorMap = colorMap
-                            }
-                    in
-                    withFrameTraitsNodeToExpression config details.name details.name node
-                )
-                |> Elm.withType
-                    (Annotation.function
-                        [ attributesType, instancesType, propertiesType ]
-                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    attributesParam
+                    instancesParam
+                    propertiesParam
+                    (\attributes instances properties_ ->
+                        let
+                            config =
+                                { propertyExpressions =
+                                    Common.propertiesToPropertyExpressions properties_ properties
+                                , positionRelatively = Nothing
+                                , attributes = attributes
+                                , instances = instances
+                                , children = Elm.record []
+                                , colorMap = colorMap
+                                }
+                        in
+                        withFrameTraitsNodeToExpression config details.name details.name node
                     )
-                |> Elm.declaration declarationNameWithInstances
-              else
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, instancesType, propertiesType ]
+                            (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithInstances
 
+              else
                 Elm.fn4
-                attributesParam
-                instancesParam
-                childrenParam
-                propertiesParam
-                (\attributes instances children properties_ ->
-                    let
-                        config =
-                            { propertyExpressions =
-                                Common.propertiesToPropertyExpressions properties_ properties
-                            , positionRelatively = Nothing
-                            , attributes = attributes
-                            , instances = instances
-                            , children = children
-                            , colorMap = colorMap
-                            }
-                    in
-                    withFrameTraitsNodeToExpression config details.name details.name node
-                )
-                |> Elm.withType
-                    (Annotation.function
-                        [ attributesType, instancesType, childrenType, propertiesType ]
-                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    attributesParam
+                    instancesParam
+                    childrenParam
+                    propertiesParam
+                    (\attributes instances children properties_ ->
+                        let
+                            config =
+                                { propertyExpressions =
+                                    Common.propertiesToPropertyExpressions properties_ properties
+                                , positionRelatively = Nothing
+                                , attributes = attributes
+                                , instances = instances
+                                , children = children
+                                , colorMap = colorMap
+                                }
+                        in
+                        withFrameTraitsNodeToExpression config details.name details.name node
                     )
-                |> Elm.declaration declarationNameWithInstances
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, instancesType, childrenType, propertiesType ]
+                            (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithInstances
             , if List.isEmpty namesWithList then
                 Elm.fn
-                propertiesParam
-                (\properties_ ->
-                    Elm.apply
-                        (Elm.value
-                            { importFrom = []
-                            , name = declarationNameWithInstances
-                            , annotation = Nothing
-                            }
-                        )
-                        [ Elm.value
-                            { importFrom = []
-                            , name = declarationNameAttributes
-                            , annotation = Nothing
-                            }
-                        , Elm.value
-                            { importFrom = []
-                            , name = declarationNameInstances
-                            , annotation = Nothing
-                            }
-                        , properties_
-                        ]
-                )
-                |> Elm.withType
-                    (Annotation.function
-                        [ propertiesType ]
-                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    propertiesParam
+                    (\properties_ ->
+                        Elm.apply
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameWithInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            [ Elm.value
+                                { importFrom = []
+                                , name = declarationNameAttributes
+                                , annotation = Nothing
+                                }
+                            , Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            , properties_
+                            ]
                     )
-                |> Elm.declaration (sanitize declarationName)
+                    |> Elm.withType
+                        (Annotation.function
+                            [ propertiesType ]
+                            (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration (sanitize declarationName)
+
               else
                 Elm.fn2
-                childrenParam
-                propertiesParam
-                (\children properties_ ->
-                    Elm.apply
-                        (Elm.value
-                            { importFrom = []
-                            , name = declarationNameWithInstances
-                            , annotation = Nothing
-                            }
-                        )
-                        [ Elm.value
-                            { importFrom = []
-                            , name = declarationNameAttributes
-                            , annotation = Nothing
-                            }
-                        , Elm.value
-                            { importFrom = []
-                            , name = declarationNameInstances
-                            , annotation = Nothing
-                            }
-                        , children
-                        , properties_
-                        ]
-                )
-                |> Elm.withType
-                    (Annotation.function
-                        [ childrenType, propertiesType ]
-                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    childrenParam
+                    propertiesParam
+                    (\children properties_ ->
+                        Elm.apply
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameWithInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            [ Elm.value
+                                { importFrom = []
+                                , name = declarationNameAttributes
+                                , annotation = Nothing
+                                }
+                            , Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            , children
+                            , properties_
+                            ]
                     )
-                |> Elm.declaration (sanitize declarationName)
+                    |> Elm.withType
+                        (Annotation.function
+                            [ childrenType, propertiesType ]
+                            (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration (sanitize declarationName)
             , if List.isEmpty namesWithList then
                 Elm.fn2
-                attributesParam
-                propertiesParam
-                (\attributes properties_ ->
-                    Elm.apply
-                        (Elm.value
-                            { importFrom = []
-                            , name = declarationNameWithInstances
-                            , annotation = Nothing
-                            }
-                        )
-                        [ attributes
-                        , Elm.value
-                            { importFrom = []
-                            , name = declarationNameInstances
-                            , annotation = Nothing
-                            }
-                        , properties_
-                        ]
-                )
-                |> Elm.withType
-                    (Annotation.function
-                        [ attributesType, propertiesType ]
-                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    attributesParam
+                    propertiesParam
+                    (\attributes properties_ ->
+                        Elm.apply
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameWithInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            [ attributes
+                            , Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            , properties_
+                            ]
                     )
-                |> Elm.declaration (sanitize <| declarationName ++ " with attributes")
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, propertiesType ]
+                            (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration (sanitize <| declarationName ++ " with attributes")
+
               else
                 Elm.fn3
-                attributesParam
-                childrenParam
-                propertiesParam
-                (\attributes children properties_ ->
-                    Elm.apply
-                        (Elm.value
-                            { importFrom = []
-                            , name = declarationNameWithInstances
-                            , annotation = Nothing
-                            }
-                        )
-                        [ attributes
-                        , Elm.value
-                            { importFrom = []
-                            , name = declarationNameInstances
-                            , annotation = Nothing
-                            }
-                        , children 
-                        , properties_
-                        ]
-                )
-                |> Elm.withType
-                    (Annotation.function
-                        [ attributesType, childrenType, propertiesType ]
-                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    attributesParam
+                    childrenParam
+                    propertiesParam
+                    (\attributes children properties_ ->
+                        Elm.apply
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameWithInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            [ attributes
+                            , Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            , children
+                            , properties_
+                            ]
                     )
-                |> Elm.declaration (sanitize <| declarationName ++ " with attributes")
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, childrenType, propertiesType ]
+                            (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration (sanitize <| declarationName ++ " with attributes")
             ]
 
 
