@@ -114,14 +114,6 @@ adjustNames node =
                 |> Dict.map (\_ -> List.map sanitize)
                 |> disambiguateCollectedNames
                 |> Dict.map (\_ -> sanitize)
-
-        log tit =
-            if FrameTraits.getName node == "Icons/Report" then
-                identity
-                -- Debug.log tit
-
-            else
-                identity
     in
     withFrameTraitsAdjustNames names node
 
@@ -129,14 +121,6 @@ adjustNames node =
 disambiguateCollectedNames : Dict String (List String) -> Dict String String
 disambiguateCollectedNames dict =
     let
-        log id tit =
-            if id == "2914:463" then
-                identity
-                -- Debug.log tit
-
-            else
-                identity
-
         list id prefix =
             Dict.toList dict
                 |> List.filter (first >> (/=) id)
