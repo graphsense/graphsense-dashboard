@@ -591,16 +591,8 @@ updateByMsg plugins uc msg model =
                     _ ->
                         showHover
 
-        UserMovesMouseOutAddress id ->
-            { model
-                | tooltip = Nothing
-                , hovered =
-                    if model.hovered == HoveredAddress id then
-                        NoHover
-
-                    else
-                        model.hovered
-            }
+        UserMovesMouseOutAddress _ ->
+            unhover model
                 |> n
 
         UserMovesMouseOverTagLabel x ->
@@ -670,16 +662,7 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault (n model)
 
         UserMovesMouseOutUtxoTx id ->
-            { model
-                | tooltip = Nothing
-                , network = Network.updateTx id (s_hovered False) model.network
-                , hovered =
-                    if model.hovered == HoveredTx id then
-                        NoHover
-
-                    else
-                        model.hovered
-            }
+            unhover model
                 |> n
 
         UserPushesLeftMouseButtonOnUtxoTx id coords ->
@@ -1407,6 +1390,27 @@ unselect model =
         |> s_selection NoSelection
 
 
+unhover : Model -> Model
+unhover model =
+    let
+        network =
+            case model.hovered of
+                HoveredAddress _ ->
+                    model.network
+
+                --Network.updateAddress a (s_hovered False) model.network
+                HoveredTx a ->
+                    Network.updateTx a (s_hovered False) model.network
+
+                _ ->
+                    model.network
+    in
+    network
+        |> flip s_network model
+        |> s_tooltip Nothing
+        |> s_hovered NoHover
+
+
 pushHistory : Msg -> Model -> Model
 pushHistory msg model =
     if History.shallPushHistory msg model then
@@ -1427,7 +1431,7 @@ forcePushHistory model =
 
 makeHistoryEntry : Model -> Entry.Model
 makeHistoryEntry model =
-    { network = model.network
+    { network = (unselect model |> unhover).network
     }
 
 

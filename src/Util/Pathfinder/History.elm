@@ -25,5 +25,188 @@ shallPushHistory msg _ =
         PluginMsg _ ->
             False
 
-        _ ->
+        UserPushesLeftMouseButtonOnAddress _ _ ->
+            False
+
+        UserReleasesMouseButton ->
+            False
+
+        UserToggleAnnotationSettings ->
+            False
+
+        UserOpensAddressAnnotationDialog _ ->
+            False
+
+        UserClickedRestart ->
+            False
+
+        UserClickedRestartYes ->
+            True
+
+        UserClickedUndo ->
+            False
+
+        UserClickedRedo ->
+            False
+
+        UserClickedExportGraph ->
+            False
+
+        UserClickedImportFile ->
+            False
+
+        UserClosedDetailsView ->
+            False
+
+        UserPressedModKey ->
+            False
+
+        UserReleasedModKey ->
+            False
+
+        UserReleasedEscape ->
+            False
+
+        UserPressedNormalKey _ ->
+            False
+
+        UserReleasedNormalKey _ ->
+            False
+
+        AddressDetailsMsg _ ->
+            False
+
+        TxDetailsMsg _ ->
+            False
+
+        AnimationFrameDeltaForTransform _ ->
+            False
+
+        AnimationFrameDeltaForMove _ ->
+            False
+
+        BrowserGotAddressData _ _ ->
+            False
+
+        BrowserGotClusterData _ _ ->
+            False
+
+        BrowserGotAddressesTags _ _ ->
+            False
+
+        BrowserGotTagSummary _ _ ->
+            False
+
+        UserClickedAddressExpandHandle _ _ ->
+            True
+
+        UserClickedAddress _ ->
+            False
+
+        NoOp ->
+            False
+
+        BrowserGotTxForAddress _ _ _ ->
+            False
+
+        BrowserGotActor _ _ ->
+            False
+
+        BrowserGotTx _ ->
+            False
+
+        ChangedDisplaySettingsMsg _ ->
+            False
+
+        Tick _ ->
+            False
+
+        UserClickedTx _ ->
+            False
+
+        UserClickedTxCheckboxInTable _ ->
+            True
+
+        UserClickedAddressCheckboxInTable _ ->
+            True
+
+        WorkflowNextUtxoTx _ _ ->
+            False
+
+        WorkflowNextTxByTime _ _ ->
+            False
+
+        UserPushesLeftMouseButtonOnUtxoTx _ _ ->
+            False
+
+        UserClickedRemoveAddressFromGraph _ ->
+            True
+
+        UserReleasedDeleteKey ->
+            True
+
+        UserMovesMouseOverUtxoTx _ ->
+            False
+
+        UserMovesMouseOutUtxoTx _ ->
+            False
+
+        UserMovesMouseOverAddress _ ->
+            False
+
+        UserMovesMouseOutAddress _ ->
+            False
+
+        UserMovesMouseOverTagLabel _ ->
+            False
+
+        UserMovesMouseOutTagLabel _ ->
+            False
+
+        UserMovesMouseOverActorLabel _ ->
+            False
+
+        UserMovesMouseOutActorLabel _ ->
+            False
+
+        UserInputsAnnotation _ _ ->
+            False
+
+        UserSelectsAnnotationColor _ _ ->
+            False
+
+        HovercardMsg _ ->
+            False
+
+        ToolbarHovercardMsg _ ->
+            False
+
+        UserClickedExportGraphAsPNG _ ->
+            False
+
+        UserClickedToggleClusterDetailsOpen ->
+            False
+
+        UserClickedToggleDisplayAllTagsInDetails ->
+            False
+
+        UserClickedToolbarDeleteIcon ->
+            True
+
+        UserClickedFitGraph ->
+            False
+
+        UserClickedSelectionTool ->
+            False
+
+        UserClickedSaveGraph _ ->
+            False
+
+        UserClickedOpenGraph ->
+            False
+
+        BrowserGotBulkAddresses _ ->
+            False
+
+        BrowserGotBulkTxs _ _ ->
             False
