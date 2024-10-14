@@ -146,6 +146,27 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                 |> Just
             )
 
+        namesWithList =
+            names
+                |> List.filter Generate.Common.FrameTraits.nameIsList
+
+        childrenType =
+            namesWithList
+                |> List.map
+                    (\n ->
+                        ( n
+                        , Gen.Html.Styled.annotation_.html (Annotation.var "msg")
+                            |> Annotation.list
+                        )
+                    )
+                |> Annotation.record
+
+        childrenParam =
+            ( "children"
+            , childrenType
+                |> Just
+            )
+
         attributesType =
             names
                 |> List.map (\n -> ( n, Gen.Html.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list ))
@@ -184,7 +205,8 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
             , names
                 |> Common.defaultInstancesConfig Gen.Html.Styled.annotation_.html
                 |> Elm.declaration declarationNameInstances
-            , Elm.fn3
+            , if List.isEmpty namesWithList then
+                Elm.fn3
                 attributesParam
                 instancesParam
                 propertiesParam
@@ -196,24 +218,11 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                             , positionRelatively = Nothing
                             , attributes = attributes
                             , instances = instances
+                            , children = Elm.record []
                             , colorMap = colorMap
                             }
                     in
                     withFrameTraitsNodeToExpression config details.name details.name node
-                 {-
-                    Gen.Html.Styled.call_.div
-                        (getElementAttributes config details.name
-                            |> Elm.Op.append
-                                (ComponentNode.toStyles node
-                                    |> Attributes.css
-                                    |> List.singleton
-                                    |> Elm.list
-                                )
-                        )
-                        (frameTraitsToExpressions config details.name node.frameTraits
-                            |> Elm.list
-                        )
-                 -}
                 )
                 |> Elm.withType
                     (Annotation.function
@@ -221,7 +230,35 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                         (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
                     )
                 |> Elm.declaration declarationNameWithInstances
-            , Elm.fn
+              else
+
+                Elm.fn4
+                attributesParam
+                instancesParam
+                childrenParam
+                propertiesParam
+                (\attributes instances children properties_ ->
+                    let
+                        config =
+                            { propertyExpressions =
+                                Common.propertiesToPropertyExpressions properties_ properties
+                            , positionRelatively = Nothing
+                            , attributes = attributes
+                            , instances = instances
+                            , children = children
+                            , colorMap = colorMap
+                            }
+                    in
+                    withFrameTraitsNodeToExpression config details.name details.name node
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ attributesType, instancesType, childrenType, propertiesType ]
+                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    )
+                |> Elm.declaration declarationNameWithInstances
+            , if List.isEmpty namesWithList then
+                Elm.fn
                 propertiesParam
                 (\properties_ ->
                     Elm.apply
@@ -250,7 +287,40 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                         (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
                     )
                 |> Elm.declaration (sanitize declarationName)
-            , Elm.fn2
+              else
+                Elm.fn2
+                childrenParam
+                propertiesParam
+                (\children properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = declarationNameWithInstances
+                            , annotation = Nothing
+                            }
+                        )
+                        [ Elm.value
+                            { importFrom = []
+                            , name = declarationNameAttributes
+                            , annotation = Nothing
+                            }
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameInstances
+                            , annotation = Nothing
+                            }
+                        , children
+                        , properties_
+                        ]
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ childrenType, propertiesType ]
+                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    )
+                |> Elm.declaration (sanitize declarationName)
+            , if List.isEmpty namesWithList then
+                Elm.fn2
                 attributesParam
                 propertiesParam
                 (\attributes properties_ ->
@@ -276,25 +346,60 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                         (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
                     )
                 |> Elm.declaration (sanitize <| declarationName ++ " with attributes")
+              else
+                Elm.fn3
+                attributesParam
+                childrenParam
+                propertiesParam
+                (\attributes children properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = declarationNameWithInstances
+                            , annotation = Nothing
+                            }
+                        )
+                        [ attributes
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameInstances
+                            , annotation = Nothing
+                            }
+                        , children 
+                        , properties_
+                        ]
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ attributesType, childrenType, propertiesType ]
+                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    )
+                |> Elm.declaration (sanitize <| declarationName ++ " with attributes")
             ]
 
 
-frameTraitsToExpressions : Config -> String -> FrameTraits -> List Elm.Expression
-frameTraitsToExpressions config componentName node =
-    let
-        config_ =
-            { config
-                | positionRelatively =
-                    if layoutIsAbsolute node then
-                        Just { x = node.absoluteBoundingBox.x, y = node.absoluteBoundingBox.y }
+frameTraitsToExpression : Config -> String -> FrameTraits -> Elm.Expression
+frameTraitsToExpression config componentName node =
+    if Generate.Common.FrameTraits.isList { frameTraits = node } then
+        config.children
+            |> Elm.get (Generate.Common.FrameTraits.getName { frameTraits = node })
 
-                    else
-                        Nothing
-            }
-    in
-    node.children
-        |> List.map (subcanvasNodeToExpressions config_ componentName)
-        |> List.concat
+    else
+        let
+            config_ =
+                { config
+                    | positionRelatively =
+                        if layoutIsAbsolute node then
+                            Just { x = node.absoluteBoundingBox.x, y = node.absoluteBoundingBox.y }
+
+                        else
+                            Nothing
+                }
+        in
+        node.children
+            |> List.map (subcanvasNodeToExpressions config_ componentName)
+            |> List.concat
+            |> Elm.list
 
 
 layoutIsAbsolute : FrameTraits -> Bool
@@ -388,9 +493,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                                 |> Elm.list
                             )
                     )
-                    (frameTraitsToExpressions config componentNameForChildren node.frameTraits
-                        |> Elm.list
-                    )
+                    (frameTraitsToExpression config componentNameForChildren node.frameTraits)
     in
     frame
         |> withVisibility componentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
@@ -560,7 +663,11 @@ componentNodeToDetails colorMap node =
 withFrameTraitsNodeToDetails : ColorMap -> { a | frameTraits : FrameTraits } -> ( Details, List Details )
 withFrameTraitsNodeToDetails colorMap node =
     ( FrameTraits.toDetails colorMap node
-    , node.frameTraits.children
-        |> List.map (subcanvasNodeToDetails colorMap)
-        |> List.concat
+    , if Generate.Common.FrameTraits.isList node then
+        []
+
+      else
+        node.frameTraits.children
+            |> List.map (subcanvasNodeToDetails colorMap)
+            |> List.concat
     )

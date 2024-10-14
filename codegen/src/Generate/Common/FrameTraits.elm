@@ -1,5 +1,6 @@
 module Generate.Common.FrameTraits exposing (..)
 
+import Regex
 import Api.Raw exposing (FrameTraits, Rectangle)
 import Basics.Extra exposing (flip)
 import Dict exposing (Dict)
@@ -84,3 +85,14 @@ isHidden : { a | frameTraits : FrameTraits } -> Bool
 isHidden { frameTraits } =
     Maybe.map not frameTraits.isLayerTrait.visible
         |> Maybe.withDefault False
+
+
+isList : { a | frameTraits : FrameTraits } -> Bool
+isList =
+    getName >> nameIsList
+
+
+nameIsList : String -> Bool
+nameIsList =
+    String.endsWith "List"
+

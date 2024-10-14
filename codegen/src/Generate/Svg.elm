@@ -285,6 +285,7 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                                 Common.propertiesToPropertyExpressions properties_ properties
                             , positionRelatively = Nothing
                             , attributes = attributes
+                            , children = Elm.record []
                             , instances = instances
                             , colorMap = colorMap
                             }

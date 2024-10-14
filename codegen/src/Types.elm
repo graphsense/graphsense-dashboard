@@ -10,6 +10,7 @@ type alias Config =
     , positionRelatively : Maybe OriginAdjust
     , attributes : Expression
     , instances : Expression
+    , children : Expression
     , colorMap : ColorMap
     }
 

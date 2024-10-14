@@ -401,6 +401,9 @@ componentNodeToProperties name node =
 
 withFrameTraitsToProperties : { a | frameTraits : FrameTraits } -> List ( String, Dict String ComponentPropertyType )
 withFrameTraitsToProperties node =
+    if FrameTraits.isList node then
+        []
+    else
     node.frameTraits.children
         |> List.map subcanvasNodeToProperties
         |> List.concat

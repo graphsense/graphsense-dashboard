@@ -1024,16 +1024,10 @@ addressDetailsContentView vc gc model id viewState =
                 }
 
         tokenRows =
-            div
-                [ SidePanelComponents.tokensDropDownOpenTokensListTokensList_details.styles
-                    ++ [ Css.position Css.absolute
-                       , Css.zIndex (Css.int (Css.zIndexMainValue + 1))
-                       , Css.top (Css.px SidePanelComponents.tokensDropDownClosed_details.height)
-                       , Css.width (Css.px SidePanelComponents.tokensDropDownOpen_details.width)
-                       ]
-                    |> css
-                ]
-                (viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.indexedMap toTokenRow)
+            viewState.data.tokenBalances
+                |> Maybe.withDefault Dict.empty
+                |> Dict.toList
+                |> List.indexedMap toTokenRow
 
         ntokens =
             viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size
@@ -1055,23 +1049,20 @@ addressDetailsContentView vc gc model id viewState =
                 [ [ Css.cursor Css.notAllowed ] |> css ]
 
         tokensDropDownOpen =
-            SidePanelComponents.tokensDropDownOpenWithInstances
+            SidePanelComponents.tokensDropDownOpenWithAttributes
                 (SidePanelComponents.tokensDropDownOpenAttributes
                     |> Rs.s_tokensDropDownHeaderOpen attrClickSelect
+                    |> Rs.s_tokensList
+                        [ [ Css.position Css.absolute
+                          , Css.zIndex (Css.int (Css.zIndexMainValue + 1))
+                          , Css.top (Css.px SidePanelComponents.tokensDropDownClosed_details.height)
+                          , Css.width (Css.px SidePanelComponents.tokensDropDownOpen_details.width)
+                          ]
+                            |> css
+                        ]
                 )
-                (SidePanelComponents.tokensDropDownOpenInstances
-                    |> Rs.s_tokensList (Just tokenRows)
-                )
-                { tokenRow1 =
-                    { variant = none
-                    }
-                , tokenRow2 =
-                    { variant = none
-                    }
-                , tokenRow3 =
-                    { variant = none
-                    }
-                , tokensDropDownHeaderOpen =
+                { tokensList = tokenRows }
+                { tokensDropDownHeaderOpen =
                     { numberOfToken = ntokensString, totalTokenValue = valueSumString }
                 }
 

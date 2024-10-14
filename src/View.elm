@@ -134,21 +134,12 @@ sidebarMenuItem img label titleStr selected link =
 sidebar : Plugins -> Config -> Model key -> Html Msg
 sidebar plugins vc model =
     let
-        plugin_menu_items =
-            Plugin.sidebar plugins model.plugins model.page vc
-
         products =
-            div [ Nb.navbarMenuNewProducts_details.styles |> css ]
-                ([ sidebarMenuItem (Nb.iconsPathfinderNew {}) "Network" "Network" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
-                 , sidebarMenuItem (Nb.iconsPathfinderNew {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl)
-                 ]
-                    ++ (if List.length plugin_menu_items > 0 then
-                            plugin_menu_items
+            [ sidebarMenuItem (Nb.iconsPathfinderNew {}) "Network" "Network" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
+            , sidebarMenuItem (Nb.iconsPathfinderNew {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl)
+            ]
+                ++ Plugin.sidebar plugins model.plugins model.page vc
 
-                        else
-                            []
-                       )
-                )
 
         statisticsLink =
             Locale.string vc.locale "Statistics"
@@ -171,19 +162,15 @@ sidebar plugins vc model =
                 ]
         )
         (Nb.navbarMenuNewInstances
-            |> Rs.s_products (Just products)
             |> Rs.s_statistics (Just statisticsLink)
             |> Rs.s_help (Just Util.View.none)
         )
-        { caseconnectItem = { variant = Util.View.none }
-        , navbarMenuNew =
+        { productsList = products }
+        { navbarMenuNew =
             { helpLabel = ""
             , iconInstance = sidebarMenuItem (Icons.iconsSettingsLarge {}) "" (Locale.string vc.locale "Settings") (model.page == Settings) (Route.settingsRoute |> Route.toUrl)
             , statisticsLabel = ""
             }
-        , pathfinderItem = { variant = Util.View.none }
-        , quicklockItem = { variant = Util.View.none }
-        , taxreportItem = { variant = Util.View.none }
         }
 
 
