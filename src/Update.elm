@@ -767,9 +767,9 @@ update plugins uc msg model =
             in
             ( nm |> s_dialog Nothing |> s_notifications (nm.notifications |> Notification.pop), neff )
 
-        PathfinderMsg (Pathfinder.UserClickedExportGraphAsPNG name) ->
+        PathfinderMsg (Pathfinder.UserClickedExportGraphAsImage name) ->
             ( model
-            , (name ++ ".jpg")
+            , (name ++ ".png")
                 |> Ports.exportGraphImage
                 |> Pathfinder.CmdEffect
                 |> PathfinderEffect

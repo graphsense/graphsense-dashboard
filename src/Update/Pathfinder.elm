@@ -109,7 +109,7 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
-        UserClickedExportGraphAsPNG _ ->
+        UserClickedExportGraphAsImage _ ->
             -- handled in src/Update.elm
             n model
 
@@ -297,14 +297,6 @@ updateByMsg plugins uc msg model =
 
         UserClickedRedo ->
             undoRedo History.redo model
-
-        --n Init.Pathfinder.init
-        -- TODO: Implement
-        UserClickedImportFile ->
-            n model
-
-        UserClickedExportGraph ->
-            n model
 
         UserClickedGraph dragging ->
             let

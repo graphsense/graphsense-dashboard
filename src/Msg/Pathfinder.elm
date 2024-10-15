@@ -29,8 +29,6 @@ type Msg
     | UserClickedRestartYes
     | UserClickedUndo
     | UserClickedRedo
-    | UserClickedExportGraph
-    | UserClickedImportFile
     | UserClosedDetailsView
     | UserPressedModKey
     | UserReleasedModKey
@@ -75,7 +73,7 @@ type Msg
     | UserSelectsAnnotationColor Id (Maybe Color)
     | HovercardMsg Hovercard.Msg
     | ToolbarHovercardMsg Hovercard.Msg
-    | UserClickedExportGraphAsPNG String
+    | UserClickedExportGraphAsImage String
     | UserClickedToggleClusterDetailsOpen
     | UserClickedToggleDisplayAllTagsInDetails
     | UserClickedToolbarDeleteIcon

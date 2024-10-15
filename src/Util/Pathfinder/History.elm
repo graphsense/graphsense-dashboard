@@ -49,12 +49,6 @@ shallPushHistory msg _ =
         UserClickedRedo ->
             False
 
-        UserClickedExportGraph ->
-            False
-
-        UserClickedImportFile ->
-            False
-
         UserClosedDetailsView ->
             False
 
@@ -181,7 +175,7 @@ shallPushHistory msg _ =
         ToolbarHovercardMsg _ ->
             False
 
-        UserClickedExportGraphAsPNG _ ->
+        UserClickedExportGraphAsImage _ ->
             False
 
         UserClickedToggleClusterDetailsOpen ->

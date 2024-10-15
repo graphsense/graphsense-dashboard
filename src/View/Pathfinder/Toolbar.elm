@@ -111,7 +111,7 @@ view vc config =
                     :: iconsAttr
                 )
             |> Rs.s_iconsScrennshot
-                (onClickWithStop (UserClickedExportGraphAsPNG config.exportName)
+                (onClickWithStop (UserClickedExportGraphAsImage config.exportName)
                     :: title (Locale.string vc.locale "Screenshot")
                     :: iconsAttr
                 )
