@@ -318,6 +318,7 @@ updateByMsg plugins uc msg model =
                     model
                         |> s_tooltip Nothing
                         |> s_toolbarHovercard Nothing
+                        |> s_contextMenu Nothing
             in
             if click then
                 ( m1
