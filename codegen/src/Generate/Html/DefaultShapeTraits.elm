@@ -38,15 +38,25 @@ toExpressions config node children =
                 bbox =
                     node.defaultShapeTraits.absoluteBoundingBox
 
+                rbox =
+                    node.defaultShapeTraits.absoluteRenderBounds
+                        |> Maybe.withDefault bbox
+
+                width =
+                    max 3 rbox.width
+                        |> String.fromFloat
+
+                height =
+                    max 3 rbox.height
+                        |> String.fromFloat
+
                 positionRelatively =
                     Common.positionRelatively config node.defaultShapeTraits
             in
             Gen.Svg.Styled.call_.svg
-                ([ max 3 bbox.width
-                    |> String.fromFloat
+                ([ width
                     |> Attributes.width
-                 , max 3 bbox.height
-                    |> String.fromFloat
+                 , height
                     |> Attributes.height
                  , [ bbox.x
                    , bbox.y
@@ -65,6 +75,9 @@ toExpressions config node children =
                     (getElementAttributes config name
                         |> Elm.Op.append
                             (positionRelatively
+                                ++ [ width ++ "px" |> Css.property "width"
+                                   , height ++ "px" |> Css.property "height"
+                                   ]
                                 |> Attributes.css
                                 |> List.singleton
                                 |> Elm.list

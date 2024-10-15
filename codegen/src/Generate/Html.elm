@@ -447,14 +447,20 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
             node.frameTraits.absoluteRenderBounds
                 |> Maybe.withDefault bbox
 
+        width =
+            max 3 rbox.width
+                |> String.fromFloat
+
+        height =
+            max 3 rbox.height
+                |> String.fromFloat
+
         frame =
             if hasOnlySvgChildren then
                 Gen.Svg.Styled.call_.svg
-                    ([ max 3 rbox.width
-                        |> String.fromFloat
+                    ([ width
                         |> Gen.Svg.Styled.Attributes.width
-                     , max 3 rbox.height
-                        |> String.fromFloat
+                     , height
                         |> Gen.Svg.Styled.Attributes.height
                      , [ bbox.x
                        , bbox.y
@@ -477,6 +483,9 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                             |> Elm.Op.append
                                 (FrameTraits.toStyles config.colorMap node.frameTraits
                                     ++ Generate.Common.DefaultShapeTraits.positionRelatively config node.frameTraits
+                                    ++ [ width ++ "px" |> Css.property "width"
+                                       , height ++ "px" |> Css.property "height"
+                                       ]
                                     |> Attributes.css
                                     |> List.singleton
                                     |> Elm.list
