@@ -6,6 +6,7 @@ import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
+import Css.DateTimePicker as DateTimePicker
 import Css.Graph
 import Css.Pathfinder as Css exposing (fullWidth)
 import Css.Table
@@ -86,7 +87,11 @@ import View.Search
 
 
 type alias BtnConfig =
-    { icon : Bool -> Html Msg, text : String, msg : Msg, enable : Bool }
+    { icon : Maybe (Html Msg)
+    , text : String
+    , onClick : Msg
+    , disabled : Bool
+    }
 
 
 inlineClusterIcon : Bool -> Color -> Html Msg
@@ -223,19 +228,6 @@ renderValueTypeExtension vc val =
 
         _ ->
             none
-
-
-disableableButton : (Bool -> List Css.Style) -> BtnConfig -> List (Html.Attribute Msg) -> List (Html Msg) -> Html Msg
-disableableButton style btn attrs content =
-    let
-        addattr =
-            if btn.enable then
-                [ btn.msg |> Svg.onClick ]
-
-            else
-                [ HA.disabled True ]
-    in
-    button (((style btn.enable |> css) :: addattr) ++ attrs) content
 
 
 inOutIndicator : View.Config -> String -> Int -> Int -> Int -> Html Msg
@@ -529,24 +521,6 @@ graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html 
 graphActionsView vc _ _ =
     div [ Css.graphActionsViewStyle vc |> css ]
         []
-
-
-graphActionButton : View.Config -> BtnConfig -> Html Msg
-graphActionButton vc btn =
-    disableableButton (Css.graphActionButtonStyle vc) btn [] (iconWithText vc (btn.icon True) (Locale.string vc.locale btn.text))
-
-
-iconWithText : View.Config -> Html Msg -> String -> List (Html Msg)
-iconWithText _ faIcon text =
-    let
-        s =
-            if String.length text > 0 then
-                Css.iconWithTextStyle
-
-            else
-                []
-    in
-    [ span [ s |> css ] [ faIcon ], Html.text text ]
 
 
 searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
@@ -1306,30 +1280,80 @@ detailsFactTableView vc rows =
 
 primaryButton : View.Config -> BtnConfig -> Html Msg
 primaryButton vc btn =
-    Btns.buttonTypeTextIconStateRegularStylePrimaryWithAttributes
-        (Btns.buttonTypeTextIconStateRegularStylePrimaryAttributes
-            |> Rs.s_typeTextIconStateRegularStylePrimary [ onClick btn.msg, [ Css.cursor Css.pointer ] |> css ]
-        )
-        { typeTextIconStateRegularStylePrimary =
-            { buttonText = Locale.string vc.locale btn.text
-            , iconInstance = btn.icon btn.enable
-            , iconVisible = True
-            }
-        }
+    let
+        style =
+            [ onClick btn.onClick
+            , [ Css.cursor Css.pointer
+              , Css.paddingTop <| Css.px 2
+              ]
+                |> css
+            ]
+    in
+    case btn.icon of
+        Just icon ->
+            Btns.buttonTypeTextIconStateRegularStylePrimaryWithAttributes
+                (Btns.buttonTypeTextIconStateRegularStylePrimaryAttributes
+                    |> Rs.s_typeTextIconStateRegularStylePrimary
+                        style
+                )
+                { typeTextIconStateRegularStylePrimary =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = icon
+                    , iconVisible = True
+                    }
+                }
+
+        Nothing ->
+            Btns.buttonTypeTextStateRegularStylePrimaryWithAttributes
+                (Btns.buttonTypeTextStateRegularStylePrimaryAttributes
+                    |> Rs.s_typeTextStateRegularStylePrimary
+                        style
+                )
+                { typeTextStateRegularStylePrimary =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = none
+                    , iconVisible = False
+                    }
+                }
 
 
 secondaryButton : View.Config -> BtnConfig -> Html Msg
 secondaryButton vc btn =
-    Btns.buttonTypeTextIconStateRegularStyleOutlinedWithAttributes
-        (Btns.buttonTypeTextIconStateRegularStyleOutlinedAttributes
-            |> Rs.s_typeTextIconStateRegularStyleOutlined [ onClick btn.msg, [ Css.cursor Css.pointer ] |> css ]
-        )
-        { typeTextIconStateRegularStyleOutlined =
-            { buttonText = Locale.string vc.locale btn.text
-            , iconInstance = btn.icon btn.enable
-            , iconVisible = True
-            }
-        }
+    let
+        style =
+            [ onClick btn.onClick
+            , [ Css.cursor Css.pointer
+              , Css.paddingTop <| Css.px 2
+              ]
+                |> css
+            ]
+    in
+    case btn.icon of
+        Just icon ->
+            Btns.buttonTypeTextIconStateRegularStyleOutlinedWithAttributes
+                (Btns.buttonTypeTextIconStateRegularStyleOutlinedAttributes
+                    |> Rs.s_typeTextIconStateRegularStyleOutlined
+                        style
+                )
+                { typeTextIconStateRegularStyleOutlined =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = icon
+                    , iconVisible = True
+                    }
+                }
+
+        Nothing ->
+            Btns.buttonTypeTextStateRegularStyleOutlinedWithAttributes
+                (Btns.buttonTypeTextStateRegularStyleOutlinedAttributes
+                    |> Rs.s_typeTextStateRegularStyleOutlined
+                        style
+                )
+                { typeTextStateRegularStyleOutlined =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = none
+                    , iconVisible = False
+                    }
+                }
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> BBox -> Svg Msg
@@ -1530,35 +1554,53 @@ drawDragSelector _ m =
             none
 
 
-dateRangePickerSelectionView : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html Msg
+dateRangePickerSelectionView : View.Config -> Maybe (DateRangePicker.Model AddressDetails.Msg) -> Html Msg
 dateRangePickerSelectionView vc model =
     let
         startP =
-            model.fromDate
+            Maybe.map .fromDate model
+                |> Maybe.map
+                    (Locale.posixToTimestampSeconds
+                        >> Locale.timestampDateUniform vc.locale
+                    )
+                |> Maybe.withDefault ""
 
         endP =
-            model.toDate
-
-        -- selectedDuration =
-        --     Locale.durationPosix vc.locale 1 startP endP
-        startML =
-            dateFromTimestamp vc (Locale.posixToTimestampSeconds startP)
-
-        endML =
-            dateFromTimestamp vc (Locale.posixToTimestampSeconds endP)
-
-        attr =
-            [ css [ Css.cursor Css.pointer ], Svg.onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) ]
+            Maybe.map .toDate model
+                |> Maybe.map
+                    (Locale.posixToTimestampSeconds
+                        >> Locale.timestampDateUniform vc.locale
+                    )
+                |> Maybe.withDefault ""
     in
-    div [ Css.dateTimeRangeBoxStyle vc |> css ]
-        [ span attr [ HIcons.iconsCalendar {} ]
-
-        -- , span [] [ Html.text selectedDuration ]
-        , span ((Css.dateTimeRangeHighlightedDateStyle vc |> css) :: attr) [ startML ]
-        , span attr [ Html.text (Locale.string vc.locale "to") ]
-        , span ((Css.dateTimeRangeHighlightedDateStyle vc |> css) :: attr) [ endML ]
-        , button [ Css.linkButtonStyle vc True |> css, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> Svg.onClick ] [ HIcons.iconsCloseSmall {} ]
-        ]
+    SidePanelComponents.sidePanelListFilterRowWithInstances
+        (SidePanelComponents.sidePanelListFilterRowAttributes
+            |> Rs.s_sidePanelListFilterRow [ css fullWidth ]
+            |> Rs.s_iconsCloseBlack
+                [ onClick (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker)
+                , css [ Css.cursor Css.pointer ]
+                ]
+            |> Rs.s_framedIcon
+                [ onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker)
+                ]
+        )
+        (SidePanelComponents.sidePanelListFilterRowInstances
+            |> Rs.s_timePicker
+                (model
+                    |> Maybe.map (\_ -> Nothing)
+                    |> Maybe.withDefault (Just none)
+                )
+        )
+        { framedIcon =
+            { iconInstance =
+                HIcons.iconsFilter {}
+            }
+        , timePicker =
+            { from = startP
+            , to = endP
+            , pronoun = Locale.string vc.locale "to"
+            }
+        }
 
 
 transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html Msg
@@ -1585,50 +1627,49 @@ transactionTableView vc addressId txOnGraphFn model =
                 nextMsg
                 firstMsg
 
-        filterRow drp =
-            div
-                [ css
-                    [ Css.displayFlex
-                    , Css.justifyContent Css.spaceBetween
-                    , Css.marginBottom Css.lGap
-                    , Css.marginTop Css.mGap
-                    , Css.marginRight Css.sGap
-                    ]
-                ]
-                [ drp
-                , graphActionButton vc (BtnConfig (\_ -> HIcons.iconsFilterWithAttributes { iconsFilter = [ css [ Css.padding Css.no ] ], filter = [ css Css.filterButtonIconStyleDateRangePicker ] } {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
-                ]
-
         showSelectionRow =
             (model.txMaxBlock /= Nothing) || (model.txMinBlock /= Nothing)
     in
     (case model.dateRangePicker of
         Just drp ->
             if DatePicker.isOpen drp.dateRangePicker then
-                [ div [ Css.datepickerButtonsStyle vc |> css ]
-                    [ primaryButton vc (BtnConfig (\_ -> HIcons.iconsDoneSmallWithAttributes HIcons.iconsDoneSmallAttributes {}) "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
-                    , secondaryButton vc (BtnConfig (\_ -> HIcons.iconsCloseSmallWithAttributes HIcons.iconsCloseSmallAttributes {}) "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
-                    ]
+                [ DateTimePicker.stylesheet
                 , div [ css [ Css.fontSize (Css.px 12) ] ]
                     [ DatePicker.view drp.settings drp.dateRangePicker
                         |> Html.fromUnstyled
                         |> Html.map AddressDetailsMsg
                     ]
+                , div
+                    [ SidePanelComponents.sidePanelListFilterRow_details.styles
+                        ++ [ Css.justifyContent Css.flexEnd
+                           , Css.property "gap" "10px"
+                           ]
+                        ++ fullWidth
+                        |> css
+                    ]
+                    [ secondaryButton vc
+                        { icon = Nothing
+                        , text = "Reset"
+                        , onClick = AddressDetailsMsg <| AddressDetails.ResetDateRangePicker
+                        , disabled = False
+                        }
+                    , primaryButton vc
+                        { icon = Nothing
+                        , text = "Apply filter"
+                        , onClick = AddressDetailsMsg <| AddressDetails.CloseDateRangePicker
+                        , disabled = False
+                        }
+                    ]
                 ]
 
             else
-                [ (if showSelectionRow then
-                    dateRangePickerSelectionView vc drp
-
-                   else
-                    none
-                  )
-                    |> filterRow
+                [ Just drp
+                    |> dateRangePickerSelectionView vc
                 , table
                 ]
 
         Nothing ->
-            [ filterRow none
+            [ dateRangePickerSelectionView vc Nothing
             , table
             ]
     )
