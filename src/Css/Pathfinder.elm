@@ -381,7 +381,8 @@ graphActionButtonStyle vc _ =
 
 datepickerButtonsStyle : View.Config -> List Style
 datepickerButtonsStyle _ =
-    [ Css.paddingLeft mlGap, Css.paddingTop mlGap, Css.displayFlex, Css.justifyContent Css.flexStart, Css.property "gap" "5px" ]
+    [ Css.paddingLeft mlGap
+    , Css.paddingTop mlGap, Css.displayFlex, Css.justifyContent Css.flexEnd, Css.property "gap" "5px" ]
 
 
 dateTimeRangeBoxStyle : View.Config -> List Style
