@@ -2,8 +2,8 @@ module Decode.Pathfinder1 exposing (decoder)
 
 import Color exposing (Color)
 import Init.Pathfinder.Id as Id
-import Json.Decode exposing (..)
-import Model.Pathfinder.Deserialize exposing (..)
+import Json.Decode exposing (Decoder, bool, float, index, list, map2, map3, map4, maybe, string)
+import Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedAnnotation, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 
 

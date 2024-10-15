@@ -417,3 +417,6 @@ Display Settings: Anzeige Einstellungen
 Open: Öffnen
 "Since {0} belongs to an exchange service ({1}) automatic tracing of individual transactions is not reasonable. Please try to pick a transaction from the address's transaction list.": "Da {0} zu einer Handelsbörse gehört ({1}), ist ein automatisches Nachverfolgen einzelner Transaktionen nicht sinnvoll. Bitte wähle eine Transaktion aus der Transaktionsliste der Adresse."
 "Since {0} seems to belong to a service automatic tracing of individual transactions is not reasonable. Please try to pick a transaction from the address's transaction list.": "Da {0} zu einem Wechseldienst gehören dürfte, ist ein automatisches Nachverfolgen einzelner Transaktionen nicht sinnvoll. Bitte wähle eine Transaktion aus der Transaktionsliste der Adresse."
+Copy address ID: Adress ID kopieren
+Copy transaction ID: Transaktions ID kopieren
+Remove from Graph: Vom Graphen entfernen

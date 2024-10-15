@@ -3,6 +3,7 @@ module Update.Pathfinder exposing (deserialize, fromDeserialized, update, update
 import Animation as A
 import Api.Data
 import Basics.Extra exposing (flip)
+import Browser.Dom as Dom
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -29,6 +30,7 @@ import Model.Graph.Transform as Transform
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
@@ -38,6 +40,7 @@ import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Search as Search
+import Model.Tx as GTx exposing (parseTxIdentifier)
 import Msg.Pathfinder
     exposing
         ( DisplaySettingsMsg(..)
@@ -50,8 +53,10 @@ import Plugin.Update exposing (Plugins)
 import Ports
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
+import Route as GlobalRoute
 import Route.Pathfinder as Route exposing (Route)
 import Set exposing (..)
+import Task
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
@@ -973,7 +978,7 @@ updateByMsg plugins uc msg model =
                                 >> List.singleton
                             )
             in
-            ( resultModel, effn ++ eff )
+            ( resultModel, effn ++ eff ++ [ Task.attempt (\_ -> NoOp) (Dom.focus "annotation-label-textbox") |> CmdEffect ] )
 
         UserClickedToggleClusterDetailsOpen ->
             n (model |> s_config (model.config |> s_isClusterDetailsOpen (not model.config.isClusterDetailsOpen)))
@@ -1041,6 +1046,14 @@ updateByMsg plugins uc msg model =
         UserClickedToolbarDeleteIcon ->
             deleteSelection model
 
+        UserClickedContextMenuDeleteIcon menuType ->
+            case menuType of
+                ContextMenu.AddressContextMenu id ->
+                    removeAddress id model
+
+                ContextMenu.TransactionContextMenu id ->
+                    removeTx id model
+
         BrowserGotBulkAddresses addresses ->
             addresses
                 |> List.foldl
@@ -1067,6 +1080,50 @@ updateByMsg plugins uc msg model =
 
         UserOpensContextMenu coords cmtype ->
             n { model | contextMenu = Just ( coords, cmtype ) }
+
+        UserClosesContextMenu ->
+            n { model | contextMenu = Nothing }
+
+        UserClickedContextMenuOpenInNewTab cm ->
+            ( model
+            , (case cm of
+                ContextMenu.AddressContextMenu id ->
+                    Route.Network (Id.network id) (Route.Address (Id.id id))
+
+                ContextMenu.TransactionContextMenu id ->
+                    Route.Network (Id.network id) (Route.Tx (Id.id id))
+              )
+                |> GlobalRoute.pathfinderRoute
+                |> GlobalRoute.toUrl
+                |> Ports.newTab
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        UserClickedContextMenuIdToClipboard cm ->
+            ( model
+            , (case cm of
+                ContextMenu.AddressContextMenu id ->
+                    Id.id id
+
+                ContextMenu.TransactionContextMenu id ->
+                    case Id.id id |> parseTxIdentifier of
+                        Nothing ->
+                            Id.id id
+
+                        Just (GTx.External hash) ->
+                            hash
+
+                        Just (GTx.Internal hash _) ->
+                            hash
+
+                        Just (GTx.Token hash _) ->
+                            hash
+              )
+                |> Ports.toClipboard
+                |> CmdEffect
+                |> List.singleton
+            )
 
 
 expandAddress : Update.Config -> Address -> Direction -> Model -> ( Model, List Effect )

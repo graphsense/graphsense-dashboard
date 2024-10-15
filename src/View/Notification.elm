@@ -16,6 +16,7 @@ import Theme.Html.ErrorMessagesAlerts
         , errorMessageComponentProperty1ErrorWithAttributes
         )
 import Theme.Html.Icons as Icons
+import Theme.Html.Navbar as Nb
 import Util.Css as Css
 import Util.View exposing (none, onClickWithStop)
 import View.Locale as Locale
@@ -23,7 +24,14 @@ import View.Locale as Locale
 
 overlay : List (Html msg) -> Html msg
 overlay =
-    div [ css [ Css.position Css.absolute, Css.left (Css.px 90), Css.bottom (Css.px 30), Css.zIndex (Css.int (Css.zIndexMainValue + 10)) ] ]
+    div
+        [ css
+            [ Css.position Css.absolute
+            , Css.left (Css.px (Nb.navbarMenuNew_details.renderedWidth + 5))
+            , Css.bottom (Css.px 30)
+            , Css.zIndex (Css.int (Css.zIndexMainValue + 10))
+            ]
+        ]
 
 
 view : View.Config -> Model -> Html Msg

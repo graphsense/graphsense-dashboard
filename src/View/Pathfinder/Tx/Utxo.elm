@@ -7,7 +7,10 @@ import Css
 import Dict
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
+import Json.Decode
+import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
+import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
@@ -20,7 +23,7 @@ import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeUtxoAttributes)
 import Theme.Svg.Icons as Icons
 import Tuple exposing (pair, second)
-import Util.Graph exposing (translate)
+import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
@@ -66,6 +69,9 @@ view _ vc _ tx utxo =
                 , css [ Css.cursor Css.pointer ]
                 , Id.toString id
                     |> Svg.Styled.Attributes.id
+                , decodeCoords Coords.Coords
+                    |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu id), True ))
+                    |> preventDefaultOn "contextmenu"
                 ]
         }
         { txNodeUtxo =

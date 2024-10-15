@@ -2,7 +2,7 @@ module Route.Pathfinder exposing (Config, Route(..), Thing(..), addressRoute, pa
 
 import List.Extra
 import Url.Builder exposing (QueryParameter, absolute)
-import Util.Url.Parser as P exposing (..)
+import Util.Url.Parser as P exposing (Parser, map, oneOf, s)
 
 
 type alias Config =

@@ -193,6 +193,9 @@ shallPushHistory msg _ =
         UserClickedToolbarDeleteIcon ->
             True
 
+        UserClickedContextMenuDeleteIcon _ ->
+            True
+
         UserClickedFitGraph ->
             False
 
@@ -209,4 +212,16 @@ shallPushHistory msg _ =
             False
 
         BrowserGotBulkTxs _ _ ->
+            False
+
+        UserOpensContextMenu _ _ ->
+            False
+
+        UserClosesContextMenu ->
+            False
+
+        UserClickedContextMenuOpenInNewTab _ ->
+            False
+
+        UserClickedContextMenuIdToClipboard _ ->
             False

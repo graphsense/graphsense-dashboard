@@ -8,7 +8,7 @@ import List.Nonempty as NList
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
-import Model.Pathfinder.Error exposing (..)
+import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import Model.Pathfinder.Id exposing (Id)
 import Tuple exposing (pair)
 import Util.Pathfinder exposing (getAddress)

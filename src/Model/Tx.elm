@@ -1,4 +1,4 @@
-module Model.Tx exposing (AccountTxType, Tx, TxAccount, parseTxIdentifier, txTypeToLabel)
+module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, parseTxIdentifier, txTypeToLabel)
 
 import Parser exposing ((|.), (|=), Parser, backtrackable, end, int, keyword, oneOf, run, succeed, symbol, variable)
 import Set

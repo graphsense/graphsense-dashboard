@@ -7,9 +7,12 @@ import Css
 import Dict exposing (Dict)
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
+import Json.Decode
 import Model.Currency exposing (asset)
+import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
@@ -21,7 +24,7 @@ import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeEthAttributes)
 import Theme.Svg.Icons as Icons
-import Util.Graph exposing (translate)
+import Util.Graph exposing (decodeCoords, translate)
 import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
@@ -61,6 +64,9 @@ view _ vc _ tx accTx =
                 , css [ Css.cursor Css.pointer ]
                 , Id.toString tx.id
                     |> Svg.Styled.Attributes.id
+                , decodeCoords Coords.Coords
+                    |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id), True ))
+                    |> preventDefaultOn "contextmenu"
                 ]
         }
         { txNodeEth =

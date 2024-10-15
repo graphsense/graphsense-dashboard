@@ -140,7 +140,6 @@ sidebar plugins vc model =
             ]
                 ++ Plugin.sidebar plugins model.plugins model.page vc
 
-
         statisticsLink =
             Locale.string vc.locale "Statistics"
                 |> text

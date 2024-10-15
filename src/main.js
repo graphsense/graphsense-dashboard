@@ -114,6 +114,8 @@ app.ports.exportGraphImage.subscribe((filename) => {
     
     svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
     const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
+    
+    const bgColor = cssVariables["--c-white"]
 
     const pixelScaleFactor = 2;
     var width = (svg.innerWidth
@@ -132,8 +134,7 @@ app.ports.exportGraphImage.subscribe((filename) => {
 
     img.onload = function () {
       let ctx = canvas.getContext("2d");
-
-      ctx.fillStyle = "white";
+      ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height, 0, 0, canvas.width /2, canvas.height/2 );
 
       ctx.drawImage(img, 0, 0, width, height);
@@ -257,6 +258,10 @@ if(!customElements.get('copy-icon')) {
 }
 
 app.ports.newTab.subscribe( url => window.open(url, '_blank'));
+
+app.ports.toClipboard.subscribe(text => {
+  navigator.clipboard.writeText(text);
+})
 
 app.ports.setDirty.subscribe(dirty => {
   isDirty = dirty

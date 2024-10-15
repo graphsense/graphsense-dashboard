@@ -55,9 +55,7 @@
     { "count": 2, "filePath": "src/Css/Reset.elm" },
     { "count": 2, "filePath": "src/Decode/Graph044.elm" },
     { "count": 2, "filePath": "src/Decode/Graph045.elm" },
-    { "count": 2, "filePath": "src/Decode/Pathfinder1.elm" },
     { "count": 2, "filePath": "src/Encode/Graph.elm" },
-    { "count": 2, "filePath": "src/Encode/Pathfinder.elm" },
     { "count": 2, "filePath": "src/Init/Graph/Address.elm" },
     { "count": 2, "filePath": "src/Init/Graph/ContextMenu.elm" },
     { "count": 2, "filePath": "src/Init/Graph/Entity.elm" },
@@ -81,7 +79,6 @@
     { "count": 2, "filePath": "src/View/Header.elm" },
     { "count": 2, "filePath": "src/View/Main.elm" },
     { "count": 2, "filePath": "src/View/Pathfinder/Network.elm" },
-    { "count": 2, "filePath": "src/View/Pathfinder/Tx.elm" },
     { "count": 2, "filePath": "src/View/Stats.elm" },
     { "count": 2, "filePath": "src/View/User.elm" },
     { "count": 1, "filePath": "src/Css/Autocomplete.elm" },
@@ -121,8 +118,6 @@
     { "count": 1, "filePath": "src/Model/Graph/Highlighter.elm" },
     { "count": 1, "filePath": "src/Model/Graph/Id.elm" },
     { "count": 1, "filePath": "src/Model/Locale.elm" },
-    { "count": 1, "filePath": "src/Model/Pathfinder/Tx.elm" },
-    { "count": 1, "filePath": "src/Route/Pathfinder.elm" },
     { "count": 1, "filePath": "src/Sub/Graph/Transform.elm" },
     { "count": 1, "filePath": "src/Switch.elm" },
     { "count": 1, "filePath": "src/Update/Dialog.elm" },
@@ -131,9 +126,6 @@
     { "count": 1, "filePath": "src/Update/Graph/Search.elm" },
     { "count": 1, "filePath": "src/Update/Graph/Table.elm" },
     { "count": 1, "filePath": "src/Update/Notification.elm" },
-    { "count": 1, "filePath": "src/Update/Pathfinder/Address.elm" },
-    { "count": 1, "filePath": "src/Update/Pathfinder/TxDetails.elm" },
-    { "count": 1, "filePath": "src/Update/Pathfinder/WorkflowNextTxByTime.elm" },
     { "count": 1, "filePath": "src/Update/Search.elm" }
   ]
 }

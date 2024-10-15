@@ -5,10 +5,10 @@ import Config.View as View
 import Dict exposing (Dict)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Tx exposing (..)
+import Model.Pathfinder.Tx exposing (Tx, TxType(..))
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
-import Svg.Styled exposing (..)
+import Svg.Styled exposing (Svg)
 import Svg.Styled.Lazy as Svg
 import View.Pathfinder.Tx.AccountTx as AccountTx
 import View.Pathfinder.Tx.Utxo as Utxo

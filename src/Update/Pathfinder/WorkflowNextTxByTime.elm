@@ -7,7 +7,7 @@ import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
 import Msg.Pathfinder exposing (Msg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext)
-import RecordSetter exposing (..)
+import RecordSetter as Rs
 import Set
 import Update.Pathfinder.Network as Network
 
@@ -53,7 +53,7 @@ update ctx msg model =
                     else
                         model.network
             in
-            ( model |> s_network net
+            ( model |> Rs.s_network net
             , data.addressTxs
                 |> List.head
                 |> Maybe.map getTxId

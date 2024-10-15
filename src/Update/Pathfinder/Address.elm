@@ -1,6 +1,6 @@
 module Update.Pathfinder.Address exposing (removeTx, txsInsertId)
 
-import Model.Pathfinder.Address exposing (..)
+import Model.Pathfinder.Address exposing (Address, Txs(..), txsToSet)
 import Model.Pathfinder.Id exposing (Id)
 import Set exposing (Set)
 

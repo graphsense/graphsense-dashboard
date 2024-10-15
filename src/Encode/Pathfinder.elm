@@ -3,8 +3,8 @@ module Encode.Pathfinder exposing (encode)
 import Animation
 import Color exposing (Color)
 import Dict
-import Json.Encode exposing (..)
-import Model.Pathfinder exposing (..)
+import Json.Encode exposing (Value, bool, float, list, null, string)
+import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx)

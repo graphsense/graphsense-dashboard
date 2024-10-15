@@ -86,6 +86,10 @@ type Msg
     | BrowserGotBulkAddresses (List Api.Data.Address)
     | BrowserGotBulkTxs Deserializing (List Api.Data.Tx)
     | UserOpensContextMenu Coords ContextMenuType
+    | UserClickedContextMenuDeleteIcon ContextMenuType
+    | UserClickedContextMenuOpenInNewTab ContextMenuType
+    | UserClickedContextMenuIdToClipboard ContextMenuType
+    | UserClosesContextMenu
 
 
 type DisplaySettingsMsg

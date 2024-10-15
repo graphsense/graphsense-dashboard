@@ -17,14 +17,14 @@ import Hex
 import Hovercard
 import Html.Styled as Html exposing (Html, button, div, form, img, input, span, table, td, tr)
 import Html.Styled.Attributes as HA exposing (src)
-import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave)
+import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn)
 import Iknaio.ColorScheme exposing (annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency as Asset exposing (Currency(..), asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords exposing (BBox, Coords)
+import Model.Graph.Coords as Coords exposing (BBox, Coords)
 import Model.Graph.Table
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Locale as Locale
@@ -299,7 +299,7 @@ graph plugins states vc gc model =
 contextMenuView : View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
 contextMenuView vc _ ( coords, menu ) =
     let
-        getItem icon text =
+        contextMenuItemView icon text msg =
             HGraphComponents.rightClickItemStateNeutralWithAttributes
                 (HGraphComponents.rightClickItemStateNeutralAttributes
                     |> Rs.s_stateNeutral
@@ -308,29 +308,39 @@ contextMenuView vc _ ( coords, menu ) =
                           , Css.cursor Css.pointer
                           ]
                             |> css
+                        , onClick msg
                         ]
                 )
                 { stateNeutral = { iconInstance = icon, text = Locale.string vc.locale text } }
     in
     div
-        [ [ Css.top (Css.px (coords.y - 5))
-          , Css.left (Css.px (coords.x - 100))
+        [ [ Css.top (Css.px coords.y)
+          , Css.left (Css.px (coords.x - (HGraphComponents.rightClickItemStateNeutral_details.renderedWidth / 2)))
           , Css.position Css.absolute
           , Css.zIndex (Css.int 100)
           ]
             |> css
+        , onClick UserClosesContextMenu
         ]
-        [ case menu of
-            ContextMenu.AddressContextMenu _ ->
-                HGraphComponents.rightClickMenu
-                    { annotate2 = { variant = getItem (HIcons.iconsAnnotateSmall {}) "test" }
-                    , annotate4 = { variant = getItem (HIcons.iconsAnnotateSmall {}) "test" }
-                    , delete = { variant = getItem (HIcons.iconsAnnotateSmall {}) "test" }
-                    , newTab = { variant = getItem (HIcons.iconsAnnotateSmall {}) "test" }
-                    }
+        [ HGraphComponents.rightClickMenuListWithInstances
+            HGraphComponents.rightClickMenuListAttributes
+            HGraphComponents.rightClickMenuListInstances
+            { rightClickMenuList =
+                case menu of
+                    ContextMenu.AddressContextMenu aid ->
+                        [ contextMenuItemView (HIcons.iconsAnnotateSmall {}) "Annotate address" (UserOpensAddressAnnotationDialog aid)
+                        , contextMenuItemView (HIcons.iconsCopySmall {}) "Copy address ID" (UserClickedContextMenuIdToClipboard menu)
+                        , contextMenuItemView (HIcons.iconsDeleteSmall {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
+                        , contextMenuItemView (HIcons.iconsGoToSmall {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
+                        ]
 
-            ContextMenu.TransactionContextMenu id ->
-                Util.View.none
+                    ContextMenu.TransactionContextMenu _ ->
+                        [ contextMenuItemView (HIcons.iconsCopySmall {}) "Copy transaction ID" (UserClickedContextMenuIdToClipboard menu)
+                        , contextMenuItemView (HIcons.iconsDeleteSmall {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
+                        , contextMenuItemView (HIcons.iconsGoToSmall {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
+                        ]
+            }
+            {}
         ]
 
 
@@ -406,6 +416,7 @@ annotationHovercardView vc id annotation hc =
                 , HA.value labelValue
                 , HA.placeholder (Locale.string vc.locale "Label")
                 , HA.autofocus True
+                , HA.id "annotation-label-textbox"
                 ]
                 []
 
@@ -1419,6 +1430,9 @@ graphSvg plugins _ vc gc model bbox =
             (Util.Graph.decodeCoords Coords
                 |> Json.Decode.map UserPushesLeftMouseButtonOnGraph
             )
+         , Util.Graph.decodeCoords Coords.Coords
+            |> Json.Decode.map (\_ -> ( NoOp, True ))
+            |> preventDefaultOn "contextmenu"
          ]
             ++ (if model.dragging /= NoDragging then
                     Svg.preventDefaultOn "mousemove"
