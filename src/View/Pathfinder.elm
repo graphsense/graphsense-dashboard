@@ -534,7 +534,11 @@ searchBoxView plugins _ vc _ model =
             |> Rs.s_searchInputField
                 (View.Search.searchWithMoreCss plugins
                     vc
-                    { css = Css.searchInputStyle vc
+                    { css =
+                        \_ ->
+                            Css.outline Css.none
+                                :: Sc.toolbarSearchFieldSearchInputField_details.styles
+                                ++ Sc.toolbarSearchFieldSearchText_details.styles
                     , formCss =
                         Just
                             [ Css.flexGrow <| Css.num 1
