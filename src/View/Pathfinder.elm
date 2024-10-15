@@ -310,6 +310,13 @@ contextMenuView vc _ ( coords, menu ) =
                             |> css
                         , onClick msg
                         ]
+                    |> Rs.s_placeholder
+                        [ [ HGraphComponents.rightClickItemStateHoverPlaceholder_details.styles
+                                |> Css.hover
+                          ]
+                            |> css
+                        , onClick msg
+                        ]
                 )
                 { stateNeutral = { iconInstance = icon, text = Locale.string vc.locale text } }
     in

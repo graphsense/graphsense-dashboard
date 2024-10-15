@@ -112,6 +112,7 @@ type Msg
     | SettingsMsg SettingsMsg
     | SelectBoxMsg SelectBoxes.SelectBoxesAvailable SelectBox.Msg
     | UserClickedNavBack
+    | UserClickedNavHome
 
 
 type SettingsMsg

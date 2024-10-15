@@ -16,7 +16,6 @@ import Route
 import Route.Pathfinder as Pathfinder
 import Theme.Colors
 import Theme.ColorsDark
-import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
 import Util.Css
 import Util.View exposing (hovercard)
@@ -155,9 +154,13 @@ sidebar plugins vc model =
     Nb.navbarMenuNewWithInstances
         (Nb.navbarMenuNewAttributes
             |> Rs.s_navbarMenuNew
-                [ [ Css.unset |> Css.height
+                (model.height |> toFloat |> Css.px |> Css.height |> List.singleton |> css |> List.singleton)
+            |> Rs.s_iknaioLogo
+                [ [ Css.pointer |> Css.cursor
+                  , Css.pointerEventsAll
                   ]
                     |> css
+                , onClick UserClickedNavHome
                 ]
         )
         (Nb.navbarMenuNewInstances
@@ -167,7 +170,22 @@ sidebar plugins vc model =
         { productsList = products }
         { navbarMenuNew =
             { helpLabel = ""
-            , iconInstance = sidebarMenuItem (Icons.iconsSettingsLarge {}) "" (Locale.string vc.locale "Settings") (model.page == Settings) (Route.settingsRoute |> Route.toUrl)
+
+            -- , iconInstance = sidebarMenuItem (Nb.iconsSettingsLargeStateNeutral {}) "" (Locale.string vc.locale "Settings") (model.page == Settings) (Route.settingsRoute |> Route.toUrl)
+            , iconInstance =
+                (if model.page == Settings then
+                    Nb.iconsSettingsLargeStateSelected {}
+
+                 else
+                    Nb.iconsSettingsLargeStateNeutral {}
+                )
+                    |> List.singleton
+                    |> a
+                        [ title (Locale.string vc.locale "Settings")
+                        , (Route.settingsRoute |> Route.toUrl)
+                            |> href
+                        , css [ Css.textDecoration Css.none ]
+                        ]
             , statisticsLabel = ""
             }
         }

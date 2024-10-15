@@ -391,7 +391,10 @@ update plugins uc msg model =
                 }
 
         UserClickedNavBack ->
-            ( model, [ NavBackEffect ] )
+            ( model, NavBackEffect |> List.singleton )
+
+        UserClickedNavHome ->
+            ( model, NavPushUrlEffect "/" |> List.singleton )
 
         TimeUpdateReset _ ->
             { model
