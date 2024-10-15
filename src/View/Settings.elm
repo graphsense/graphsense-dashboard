@@ -38,33 +38,33 @@ view _ vc m =
     --                 )
     --         )
     -- in
-    div
-        []
-        [ Sp.settingsPageWithInstances
-            (Sp.settingsPageAttributes
-                |> Rs.s_backButton [ css [ Css.cursor Css.pointer ], onClick UserClickedNavBack ]
-            )
-            (Sp.settingsPageInstances
-                |> Rs.s_settingsTabs (Just Util.View.none)
-            )
-            { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBack {} }
-            , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
-            , settingsPage =
-                { instance =
-                    case m.selectedSettingsTab of
-                        GeneralTab ->
-                            generalSettings vc m
+    Sp.settingsPageWithInstances
+        (Sp.settingsPageAttributes
+            |> Rs.s_backButton [ css [ Css.cursor Css.pointer ], onClick UserClickedNavBack ]
+            |> Rs.s_settingsPage
+                [ css [ Css.width <| Css.pct 100 ]
+                ]
+        )
+        (Sp.settingsPageInstances
+            |> Rs.s_settingsTabs (Just Util.View.none)
+        )
+        { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBack {} }
+        , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
+        , settingsPage =
+            { instance =
+                case m.selectedSettingsTab of
+                    GeneralTab ->
+                        generalSettings vc m
 
-                        GraphTab ->
-                            graphSettings vc m
+                    GraphTab ->
+                        graphSettings vc m
 
-                        PathfinderTab ->
-                            pathfinderSettings vc m
-                }
-            , singleTab1 = { variant = Util.View.none }
-            , singleTab2 = { variant = Util.View.none }
+                    PathfinderTab ->
+                        pathfinderSettings vc m
             }
-        ]
+        , singleTab1 = { variant = Util.View.none }
+        , singleTab2 = { variant = Util.View.none }
+        }
 
 
 pathfinderSettings : Config -> Model x -> Html Model.Msg

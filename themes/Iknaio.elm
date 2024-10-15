@@ -213,11 +213,6 @@ theme =
                 , opacity <| num 0.5
                 ]
             )
-        |> s_main
-            (\lightmode ->
-                [ backgroundColorWithLightmode lightmode colors.brandLightest
-                ]
-            )
         |> s_navbar
             (\lightmode ->
                 [ backgroundColorWithLightmode lightmode colors.brandWhite

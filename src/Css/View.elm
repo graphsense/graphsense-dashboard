@@ -2,6 +2,7 @@ module Css.View exposing (body, box, buttonsRow, contents, copyIcon, disabled, f
 
 import Config.View exposing (Config)
 import Css exposing (..)
+import Theme.Colors as Colors
 import Util.Css
 
 
@@ -36,6 +37,7 @@ sectionBelowHeader vc =
     , flexDirection row
     , flexGrow (num 1)
     , alignItems stretch
+    , Css.property "background-color" Colors.greyBlue20
     ]
         ++ vc.theme.sectionBelowHeader
 
@@ -75,7 +77,6 @@ main_ vc =
     , flexDirection column
     , position relative
     ]
-        ++ vc.theme.main vc.lightmode
 
 
 navbar : Config -> List Style
