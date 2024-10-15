@@ -203,6 +203,18 @@ address vc _ adr =
                     |> Maybe.withDefault ""
                     |> val vc
             }
+        , row
+            { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
+            , tooltipRowValue =
+                Addr.getTotalSpent adr
+                    |> Maybe.map
+                        (pair (assetFromBase net)
+                            >> List.singleton
+                            >> Locale.currency vc.locale
+                        )
+                    |> Maybe.withDefault ""
+                    |> val vc
+            }
         ]
 
 

@@ -72,7 +72,7 @@ import Update.Search as Search
 import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
-import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
+import Util.Pathfinder.TagSummary as TagSummary
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -1014,7 +1014,7 @@ updateByMsg plugins uc msg model =
                                         curr
 
                                     ( _, Just { category } ) ->
-                                        if category == Just "exchange" then
+                                        if category == Just TagSummary.exchangeCategory then
                                             HasExchangeTag
 
                                         else
@@ -1196,7 +1196,7 @@ updateTagDataOnAddress addressId m =
         net td =
             case td of
                 HasTagSummary tagdata ->
-                    (if tagdata.broadCategory == "exchange" then
+                    (if TagSummary.isExchangeNode tagdata then
                         Network.updateAddress addressId
                             (s_exchange tagdata.bestLabel)
                             m.network
@@ -1204,7 +1204,7 @@ updateTagDataOnAddress addressId m =
                      else
                         m.network
                     )
-                        |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (hasOnlyExchangeTags tagdata)))
+                        |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
                         |> Network.updateAddress addressId (s_hasActor (tagdata.bestActor /= Nothing))
 
                 HasTags ->

@@ -139,16 +139,38 @@ sidebar plugins vc model =
             ]
                 ++ Plugin.sidebar plugins model.plugins model.page vc
 
+        statsLinkItem =
+            if model.page == Stats then
+                Nb.textItremStateSelected
+                    { stateSelected = { textLabel = Locale.string vc.locale "Statistics" } }
+
+            else
+                Nb.textItremStateNeutral
+                    { stateNeutral = { textLabel = Locale.string vc.locale "Statistics" } }
+
         statisticsLink =
-            Locale.string vc.locale "Statistics"
-                |> text
+            statsLinkItem
                 |> List.singleton
                 |> a
                     [ Route.statsRoute
                         |> Route.toUrl
                         |> href
-                    , Nb.navbarMenuNewStatistics_details.styles |> css
-                    , [ Css.textDecoration Css.none ] |> css
+                    , Css.none |> Css.textDecoration |> List.singleton |> css
+                    ]
+
+        settingsLink =
+            (if model.page == Settings then
+                Nb.iconsSettingsLargeStateSelected {}
+
+             else
+                Nb.iconsSettingsLargeStateNeutral {}
+            )
+                |> List.singleton
+                |> a
+                    [ title (Locale.string vc.locale "Settings")
+                    , (Route.settingsRoute |> Route.toUrl)
+                        |> href
+                    , Css.none |> Css.textDecoration |> List.singleton |> css
                     ]
     in
     Nb.navbarMenuNewWithInstances
@@ -164,30 +186,20 @@ sidebar plugins vc model =
                 ]
         )
         (Nb.navbarMenuNewInstances
-            |> Rs.s_statistics (Just statisticsLink)
-            |> Rs.s_help (Just Util.View.none)
+         -- |> Rs.s_statistics (Just statisticsLink)
+         -- |> Rs.s_help (Just Util.View.none)
         )
         { productsList = products }
         { navbarMenuNew =
             { helpLabel = ""
 
             -- , iconInstance = sidebarMenuItem (Nb.iconsSettingsLargeStateNeutral {}) "" (Locale.string vc.locale "Settings") (model.page == Settings) (Route.settingsRoute |> Route.toUrl)
-            , iconInstance =
-                (if model.page == Settings then
-                    Nb.iconsSettingsLargeStateSelected {}
-
-                 else
-                    Nb.iconsSettingsLargeStateNeutral {}
-                )
-                    |> List.singleton
-                    |> a
-                        [ title (Locale.string vc.locale "Settings")
-                        , (Route.settingsRoute |> Route.toUrl)
-                            |> href
-                        , css [ Css.textDecoration Css.none ]
-                        ]
+            , iconInstance = Util.View.none
             , statisticsLabel = ""
             }
+        , statisticsItrem = { variant = statisticsLink }
+        , helpItrem = { variant = Util.View.none }
+        , iconsSettingsLarge = { variant = settingsLink }
         }
 
 

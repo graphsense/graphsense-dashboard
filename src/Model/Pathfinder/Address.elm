@@ -9,6 +9,7 @@ module Model.Pathfinder.Address exposing
     , getNrTxs
     , getOutDegree
     , getTotalReceived
+    , getTotalSpent
     , getTxs
     , txsGetSet
     , txsSetter
@@ -106,6 +107,11 @@ getBalance a =
 getTotalReceived : Address -> Maybe Values
 getTotalReceived a =
     RemoteData.unwrap Nothing (.totalReceived >> Just) a.data
+
+
+getTotalSpent : Address -> Maybe Values
+getTotalSpent a =
+    RemoteData.unwrap Nothing (.totalSpent >> Just) a.data
 
 
 getActivityRange : Api.Data.Address -> ( Posix, Posix )

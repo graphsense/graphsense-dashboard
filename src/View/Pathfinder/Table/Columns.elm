@@ -14,6 +14,7 @@ import RecordSetter as Rs
 import Table
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
@@ -104,7 +105,7 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                                     True
 
                                 HasTagSummary ts ->
-                                    ts.broadCategory /= "exchange"
+                                    not (TagSummary.isExchangeNode ts)
 
                                 HasExchangeTag ->
                                     True
@@ -120,7 +121,7 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                                     False
 
                                 HasTagSummary ts ->
-                                    ts.broadCategory == "exchange"
+                                    TagSummary.isExchangeNode ts
 
                                 HasExchangeTag ->
                                     True

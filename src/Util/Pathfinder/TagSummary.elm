@@ -1,9 +1,19 @@
-module Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
+module Util.Pathfinder.TagSummary exposing (exchangeCategory, hasOnlyExchangeTags, isExchangeNode)
 
 import Api.Data
 import Dict
 
 
+exchangeCategory : String
+exchangeCategory =
+    "exchange"
+
+
 hasOnlyExchangeTags : Api.Data.TagSummary -> Bool
 hasOnlyExchangeTags tagdata =
-    Dict.member "exchange" tagdata.conceptTagCloud && Dict.size tagdata.conceptTagCloud == 1
+    Dict.member exchangeCategory tagdata.conceptTagCloud && Dict.size tagdata.conceptTagCloud == 1
+
+
+isExchangeNode : Api.Data.TagSummary -> Bool
+isExchangeNode tagdata =
+    tagdata.broadCategory == exchangeCategory

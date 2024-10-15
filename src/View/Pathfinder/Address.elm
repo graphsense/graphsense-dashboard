@@ -331,10 +331,20 @@ toNodeIconHtml highlight address cluster clusterColor =
 
 
 toNodeIcon : Bool -> Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
-toNodeIcon highlight address _ clusterColor =
+toNodeIcon highlight address cluster clusterColor =
     let
-        -- clstrSize =
-        --     cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
+        clstrSize =
+            cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
+
+        clusterIndegree =
+            cluster |> Maybe.map .inDegree |> Maybe.withDefault 0
+
+        maxClusterSizeUser =
+            100
+
+        maxInDegreeUser =
+            7500
+
         getHighlight c =
             if highlight then
                 [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
@@ -347,21 +357,18 @@ toNodeIcon highlight address _ clusterColor =
             Icons.iconsSmartContract {}
 
         ( Nothing, Nothing, _ ) ->
-            {-
-               if clstrSize > 1 then
-                   Icons.iconsCluster {}
+            if clstrSize > maxClusterSizeUser || clusterIndegree > maxInDegreeUser then
+                Icons.iconsUnknownService {}
 
-               else
-            -}
-            Icons.iconsUntagged {}
+            else
+                Icons.iconsUntagged {}
 
         ( Nothing, Just c, _ ) ->
-            {- if clstrSize > 1 then
-                   Icons.iconsClusterWithAttributes (Icons.iconsClusterAttributes |> s_vector (getHighlight c)) {}
+            if clstrSize > maxClusterSizeUser || clusterIndegree > maxInDegreeUser then
+                Icons.iconsUnknownService {}
 
-               else
-            -}
-            Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> Rs.s_ellipse25 (getHighlight c)) {}
+            else
+                Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> Rs.s_ellipse25 (getHighlight c)) {}
 
         ( Just _, Just c, _ ) ->
             let
