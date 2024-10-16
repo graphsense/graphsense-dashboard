@@ -3,7 +3,6 @@ module Css.Pathfinder exposing
     , clusterDetailsClosedStyle
     , clusterDetailsOpenStyle
     , dateStyle
-    , dateTimeRangeBoxStyle
     , dateTimeRangeHighlightedDateStyle
     , datepickerButtonsStyle
     , emptyTableMsg
@@ -383,22 +382,6 @@ datepickerButtonsStyle : View.Config -> List Style
 datepickerButtonsStyle _ =
     [ Css.paddingLeft mlGap
     , Css.paddingTop mlGap, Css.displayFlex, Css.justifyContent Css.flexEnd, Css.property "gap" "5px" ]
-
-
-dateTimeRangeBoxStyle : View.Config -> List Style
-dateTimeRangeBoxStyle vc =
-    [ padding4 xsGap mGap xsGap mGap
-    , marginRight sGap
-    , marginLeft sGap
-    , emphTextColor vc |> property "color"
-    , defaultBackgroundColor vc |> backgroundColor
-    , property "border" ("1px solid " ++ boxBorderColor vc)
-    , px 3 |> borderRadius
-    , displayFlex
-    , alignItems center
-    , justifyContent spaceBetween
-    , flexGrow <| num 1
-    ]
 
 
 dateTimeRangeHighlightedDateStyle : View.Config -> List Style

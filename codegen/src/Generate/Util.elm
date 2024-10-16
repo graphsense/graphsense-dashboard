@@ -46,6 +46,14 @@ a2 fun a_ b =
         |> (++)
 
 
+a3 : (a -> b -> c -> Maybe Elm.Expression) -> Maybe a -> Maybe b -> Maybe c -> List Elm.Expression -> List Elm.Expression
+a3 fun a_ b c =
+    Maybe.Extra.andThen3 fun a_ b c
+        |> Maybe.map List.singleton
+        |> Maybe.withDefault []
+        |> (++)
+
+
 lengthOrAutoType : Elm.Expression -> Elm.Expression
 lengthOrAutoType =
     Elm.withType
