@@ -9,14 +9,14 @@ import Elm.Annotation as Annotation exposing (Annotation)
 import Elm.Op
 import Gen.Css as Css
 import Gen.Html.Styled
-import Gen.Html.Styled.Attributes
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
 import Generate.Common.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Common.FrameTraits as FrameTraits
 import Generate.Common.RectangleNode as RectangleNode
 import Generate.Common.VectorNode as VectorNode
-import Generate.Util exposing (getElementAttributes, getMainComponentProperty, sanitize)
+import Generate.Html.HasLayoutTrait as HasLayoutTrait
+import Generate.Util exposing (getElementAttributes, getMainComponentProperty, mm2, sanitize)
 import List.Extra
 import RecordSetter exposing (s_children, s_frameTraits)
 import Set
@@ -573,10 +573,11 @@ wrapInSvg :
         { a
             | absoluteRenderBounds : Maybe Rectangle
             , absoluteBoundingBox : Rectangle
+            , layoutPositioning : Maybe LayoutPositioning
         }
     -> List Elm.Expression
     -> Elm.Expression
-wrapInSvg config name { absoluteRenderBounds, absoluteBoundingBox } =
+wrapInSvg config name { absoluteRenderBounds, absoluteBoundingBox, layoutPositioning } =
     let
         bbox =
             absoluteBoundingBox
@@ -619,7 +620,8 @@ wrapInSvg config name { absoluteRenderBounds, absoluteBoundingBox } =
         >> Gen.Html.Styled.call_.div
             (getElementAttributes config name
                 |> Elm.Op.append
-                    (positionRelatively
+                    (mm2 HasLayoutTrait.layoutPositioning layoutPositioning (Just absoluteBoundingBox) []
+                        ++ positionRelatively
                         ++ [ width ++ "px" |> Css.property "width"
                            , height ++ "px" |> Css.property "height"
                            ]
