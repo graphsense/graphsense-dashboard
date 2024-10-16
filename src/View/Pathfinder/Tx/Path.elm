@@ -110,8 +110,14 @@ arrowLength =
 coloredPath : View.Config -> ColoredPathConfig -> Svg Msg
 coloredPath _ c =
     let
+        equals a b =
+            a
+                - b
+                |> abs
+                |> (>) 1.0e-6
+
         x2 =
-            if c.x1 == c.x2 then
+            if equals c.x1 c.x2 then
                 c.x2 + 0.01
                 -- need to add this for the gradient to work
 
@@ -119,7 +125,7 @@ coloredPath _ c =
                 c.x2
 
         y2 =
-            if c.y1 == c.y2 then
+            if equals c.y1 c.y2 then
                 c.y2 + 0.01
 
             else
