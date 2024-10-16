@@ -9,6 +9,7 @@ import RecordSetter exposing (..)
 import Theme.Autocomplete as Autocomplete
 import Theme.Browser as Browser
 import Theme.Button as Button
+import Theme.Colors as NewColors
 import Theme.ContextMenu as ContextMenu
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
@@ -1349,7 +1350,7 @@ theme =
             (Statusbar.default
                 |> s_root
                     (\lightmode visible ->
-                        [ switchColor lightmode colors.brandWhite |> toCssColor |> backgroundColor
+                        [ Css.property "background-color" NewColors.white
                         , (if visible then
                             50
 
