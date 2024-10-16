@@ -702,6 +702,7 @@ txDetailsContentView vc _ model id viewState =
                         [ sidePanelCss
                             |> css
                         ]
+                    |> Rs.s_iconsCloseSmall closeAttrs
                 )
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
