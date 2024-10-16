@@ -1586,6 +1586,7 @@ dateRangePickerSelectionView vc model =
                 ]
             |> Rs.s_framedIcon
                 [ onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker)
+                , css [ Css.cursor Css.pointer ]
                 ]
         )
         (SidePanelComponents.sidePanelListFilterRowInstances
