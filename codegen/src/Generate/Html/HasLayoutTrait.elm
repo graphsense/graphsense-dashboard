@@ -40,28 +40,27 @@ width : Maybe Float -> LayoutGrow -> LayoutSizingHorizontal -> Rectangle -> Mayb
 width minW grow sizing r =
     if grow == LayoutGrow1 then
         Css.num 1
-                |> Css.flexGrow
-                |> 
-Just
+            |> Css.flexGrow
+            |> Just
 
-        else
-            case sizing of
-                LayoutSizingHorizontalFIXED ->
-                    if minW == Nothing || minW == Just 0 then
-                        r.width
-                            |> Css.px
-                            |> Css.width
-                        |> Just
-    
-                    else
-                    Nothing
-    
-                LayoutSizingHorizontalFILL ->
-                    Css.pct 100
+    else
+        case sizing of
+            LayoutSizingHorizontalFIXED ->
+                if minW == Nothing || minW == Just 0 then
+                    r.width
+                        |> Css.px
                         |> Css.width
+                        |> Just
+
+                else
+                    Nothing
+
+            LayoutSizingHorizontalFILL ->
+                Css.pct 100
+                    |> Css.width
                     |> Just
-    
-                _ ->
+
+            _ ->
                 Nothing
 
 
