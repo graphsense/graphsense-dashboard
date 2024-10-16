@@ -552,7 +552,7 @@ searchBoxView plugins _ vc _ model =
                         |> Rs.s_resultLine
                             [ Css.property "background-color" Colors.white
                             , Css.hover
-                                [ Css.property "background-color" Colors.greyBlue50 
+                                [ Css.property "background-color" Colors.greyBlue50
                                     |> Css.important
                                 ]
                             ]

@@ -1,4 +1,4 @@
-module View.Autocomplete exposing (Config, dropdown, dropdownStyled)
+module View.Autocomplete exposing (Config, Styles, dropdown, dropdownStyled)
 
 import Config.View as View
 import Css exposing (Style)

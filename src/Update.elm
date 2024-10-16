@@ -570,6 +570,27 @@ update plugins uc msg model =
                                         }
                                         |> Route.pathfinderRoute
 
+                                ( Pathfinder, Search.Tx currency tx ) ->
+                                    Route.Pathfinder.txRoute
+                                        { network = currency
+                                        , txHash = tx
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( Home, Search.Address currency address ) ->
+                                    Route.Pathfinder.addressRoute
+                                        { network = currency
+                                        , address = address
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( Home, Search.Tx currency tx ) ->
+                                    Route.Pathfinder.txRoute
+                                        { network = currency
+                                        , txHash = tx
+                                        }
+                                        |> Route.pathfinderRoute
+
                                 ( _, s ) ->
                                     Route.Graph.resultLineToRoute s
                                         |> Route.graphRoute

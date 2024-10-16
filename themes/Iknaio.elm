@@ -1262,7 +1262,7 @@ theme =
                     [ scaled 1 |> rem |> padding
                     ]
                 |> s_headCell
-                    (\lightmode ->
+                    (\_ ->
                         [ tableCell
                         , paddingTop zero
                         , position sticky
