@@ -13,7 +13,6 @@ import Css.Table
 import Css.View
 import Dict
 import DurationDatePicker as DatePicker
-import FontAwesome
 import Hex
 import Hovercard
 import Html.Styled as Html exposing (Html, div, form, img, input, span, table, td, tr)
@@ -1248,13 +1247,6 @@ clusterInfoView vc open colors _ clstr =
             clstrid =
                 Id.initClusterId clstr.currency clstr.entity
 
-            openIcon =
-                FontAwesome.icon FontAwesome.minus |> Html.fromUnstyled
-
-            --inlineChevronUpThinIcon
-            closeIcon =
-                FontAwesome.icon FontAwesome.plus |> Html.fromUnstyled
-
             --inlineChevronDownThinIcon
             clusterColor =
                 Colors.getAssignedColor Colors.Clusters clstrid colors
@@ -1263,44 +1255,60 @@ clusterInfoView vc open colors _ clstr =
                 clusterColor
                     |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends)
                     |> Maybe.withDefault none
-        in
-        div [ css fullWidth ]
-            [ div [ Css.clusterDetailsClosedStyle |> css, onClick UserClickedToggleClusterDetailsOpen ]
-                [ div
-                    [ css
-                        [ Css.displayFlex
-                        , Css.alignItems Css.center
-                        ]
-                    ]
-                    [ -- left side of the bar
-                      span [ css Css.smPaddingRight ]
-                        [ if open then
-                            openIcon
 
-                          else
-                            closeIcon
-                        ]
-                    , span [ css Css.smPaddingRight ] [ Locale.text vc.locale "Cluster Information" ]
-                    , if vc.highlightClusterFriends then
-                        span [ css Css.smPaddingRight, HA.title (Id.id clstrid), css [ Css.display Css.inline ] ] [ clusterIcon ]
+            clusterIndicator =
+                if vc.highlightClusterFriends then
+                    span [ css Css.smPaddingRight, HA.title (Id.id clstrid), css [ Css.display Css.inline ] ] [ clusterIcon ]
 
-                      else
-                        none
-                    ]
+                else
+                    none
+
+            headerAttr =
+                [ Css.cursor Css.pointer
+                    :: fullWidth
+                    |> css
+                , onClick UserClickedToggleClusterDetailsOpen
                 ]
-            , if open then
-                div [ Css.clusterDetailsOpenStyle |> css ]
-                    [ detailsFactTableView vc (apiEntityToRows clstrid clstr)
-                    ]
 
-              else
-                none
-            ]
+            label =
+                Locale.string vc.locale "Cluster information"
 
+            assetId =
+                assetFromBase clstr.currency
+        in
+        if open then
+            SidePanelComponents.clusterInformationOpenWithAttributes
+                (SidePanelComponents.clusterInformationOpenAttributes
+                    |> Rs.s_clusterInformationOpen headerAttr
+                )
+                { clusterInformationOpen = { label = label }
+                , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number of addresses" }
+                , valueOfNumberOfAddresses =
+                    { firstRowText = String.fromInt clstr.noAddresses
+                    , secondRowText = ""
+                    , secondRowVisible = False
+                    }
+                , sidePanelRowCustomValueCell = { valueCell = none }
+                , titleOfSidePanelRowCustomValueCell = { infoLabel = "" }
+                , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
+                , valueOfBalance = valuesToCell vc assetId clstr.balance
+                , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
+                , valueOfTotalReceived = valuesToCell vc assetId clstr.totalReceived
+                , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
+                , valueOfTotalSent = valuesToCell vc assetId clstr.totalSpent
+                , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
+                , valueOfLastUsage = timeToCell vc clstr.lastTx.timestamp
+                , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
+                , valueOfFirstUsage = timeToCell vc clstr.firstTx.timestamp
+                }
 
-detailsFactTableView : View.Config -> List KVTableRow -> Html Msg
-detailsFactTableView vc rows =
-    div [ Css.smPaddingBottom |> css ] [ renderKVTable vc rows ]
+        else
+            SidePanelComponents.clusterInformationClosedWithAttributes
+                (SidePanelComponents.clusterInformationClosedAttributes
+                    |> Rs.s_clusterInformationClosed headerAttr
+                )
+                { clusterInformationClosed = { label = label }
+                }
 
 
 primaryButton : View.Config -> BtnConfig -> Html Msg
