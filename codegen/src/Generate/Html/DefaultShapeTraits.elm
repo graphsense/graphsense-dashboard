@@ -7,6 +7,7 @@ import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
+import Generate.Common exposing (wrapSvg)
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Html.HasEffectsTrait as HasEffectsTrait
@@ -28,66 +29,9 @@ toDetails colorMap node =
 
 
 toExpressions : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression -> List Elm.Expression
-toExpressions config node children =
-    let
-        name =
-            node.defaultShapeTraits.isLayerTrait.name
-
-        toHtml =
-            let
-                bbox =
-                    node.defaultShapeTraits.absoluteBoundingBox
-
-                rbox =
-                    node.defaultShapeTraits.absoluteRenderBounds
-                        |> Maybe.withDefault bbox
-
-                width =
-                    max 3 rbox.width
-                        |> String.fromFloat
-
-                height =
-                    max 3 rbox.height
-                        |> String.fromFloat
-
-                positionRelatively =
-                    Common.positionRelatively config node.defaultShapeTraits
-            in
-            Gen.Svg.Styled.call_.svg
-                ([ width
-                    |> Attributes.width
-                 , height
-                    |> Attributes.height
-                 , [ bbox.x
-                   , bbox.y
-                   , max 1 bbox.width
-                   , max 1 bbox.height
-                   ]
-                    |> List.map String.fromFloat
-                    |> String.join " "
-                    |> Attributes.viewBox
-                 ]
-                    |> Elm.list
-                )
-                >> List.singleton
-                >> Elm.list
-                >> Gen.Html.Styled.call_.div
-                    (getElementAttributes config name
-                        |> Elm.Op.append
-                            (positionRelatively
-                                ++ [ width ++ "px" |> Css.property "width"
-                                   , height ++ "px" |> Css.property "height"
-                                   ]
-                                |> Attributes.css
-                                |> List.singleton
-                                |> Elm.list
-                            )
-                    )
-    in
-    children
-        |> Elm.list
-        |> toHtml
-        |> List.singleton
+toExpressions config node =
+    wrapSvg config (Common.getName node) node.defaultShapeTraits
+        >> List.singleton
 
 
 

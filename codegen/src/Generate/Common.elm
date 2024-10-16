@@ -6,17 +6,23 @@ import Dict exposing (Dict)
 import Dict.Extra
 import Elm exposing (Expression)
 import Elm.Annotation as Annotation exposing (Annotation)
+import Elm.Op
+import Gen.Css as Css
+import Gen.Html.Styled
+import Gen.Html.Styled.Attributes
+import Gen.Svg.Styled
+import Gen.Svg.Styled.Attributes
 import Generate.Common.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Common.FrameTraits as FrameTraits
 import Generate.Common.RectangleNode as RectangleNode
 import Generate.Common.VectorNode as VectorNode
-import Generate.Util exposing (getMainComponentProperty, sanitize)
+import Generate.Util exposing (getElementAttributes, getMainComponentProperty, sanitize)
 import List.Extra
 import RecordSetter exposing (s_children, s_frameTraits)
 import Set
 import String.Extra
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
-import Types exposing (ComponentPropertyExpressions, OriginAdjust)
+import Types exposing (ComponentPropertyExpressions, Config, OriginAdjust)
 
 
 subcanvasNodeComponentsToDeclarations : (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration) -> SubcanvasNode -> List Elm.Declaration
@@ -558,3 +564,67 @@ defaultInstancesConfig elementType =
             )
         )
         >> Elm.record
+
+
+wrapSvg :
+    Config
+    -> String
+    ->
+        { a
+            | absoluteRenderBounds : Maybe Rectangle
+            , absoluteBoundingBox : Rectangle
+        }
+    -> List Elm.Expression
+    -> Elm.Expression
+wrapSvg config name { absoluteRenderBounds, absoluteBoundingBox } =
+    let
+        bbox =
+            absoluteBoundingBox
+
+        rbox =
+            absoluteRenderBounds
+                |> Maybe.withDefault bbox
+
+        width =
+            max 3 rbox.width
+                |> String.fromFloat
+
+        height =
+            max 3 rbox.height
+                |> String.fromFloat
+
+        positionRelatively =
+            DefaultShapeTraits.positionRelatively config
+                { absoluteBoundingBox = absoluteBoundingBox }
+    in
+    Elm.list
+        >> Gen.Svg.Styled.call_.svg
+            ([ width
+                |> Gen.Svg.Styled.Attributes.width
+             , height
+                |> Gen.Svg.Styled.Attributes.height
+             , [ bbox.x
+               , bbox.y
+               , max 1 rbox.width
+               , max 1 rbox.height
+               ]
+                |> List.map String.fromFloat
+                |> String.join " "
+                |> Gen.Svg.Styled.Attributes.viewBox
+             ]
+                |> Elm.list
+            )
+        >> List.singleton
+        >> Elm.list
+        >> Gen.Html.Styled.call_.div
+            (getElementAttributes config name
+                |> Elm.Op.append
+                    (positionRelatively
+                        ++ [ width ++ "px" |> Css.property "width"
+                           , height ++ "px" |> Css.property "height"
+                           ]
+                        |> Gen.Svg.Styled.Attributes.css
+                        |> List.singleton
+                        |> Elm.list
+                    )
+            )

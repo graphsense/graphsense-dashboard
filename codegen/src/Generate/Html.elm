@@ -14,7 +14,7 @@ import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
-import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty)
+import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty, wrapSvg)
 import Generate.Common.DefaultShapeTraits
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
@@ -440,57 +440,10 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
         hasOnlySvgChildren =
             List.all isSvgChild node.frameTraits.children
 
-        bbox =
-            node.frameTraits.absoluteBoundingBox
-
-        rbox =
-            node.frameTraits.absoluteRenderBounds
-                |> Maybe.withDefault bbox
-
-        width =
-            max 3 rbox.width
-                |> String.fromFloat
-
-        height =
-            max 3 rbox.height
-                |> String.fromFloat
-
         frame =
             if hasOnlySvgChildren then
-                Gen.Svg.Styled.call_.svg
-                    ([ width
-                        |> Gen.Svg.Styled.Attributes.width
-                     , height
-                        |> Gen.Svg.Styled.Attributes.height
-                     , [ bbox.x
-                       , bbox.y
-                       , max 1 rbox.width
-                       , max 1 rbox.height
-                       ]
-                        |> List.map String.fromFloat
-                        |> String.join " "
-                        |> Gen.Svg.Styled.Attributes.viewBox
-                     ]
-                        |> Elm.list
-                    )
-                    (Svg.frameTraitsToExpressions config componentNameForChildren node.frameTraits
-                        |> Elm.list
-                    )
-                    |> List.singleton
-                    |> Elm.list
-                    |> Gen.Html.Styled.call_.div
-                        (getElementAttributes config name
-                            |> Elm.Op.append
-                                (FrameTraits.toStyles config.colorMap node.frameTraits
-                                    ++ Generate.Common.DefaultShapeTraits.positionRelatively config node.frameTraits
-                                    ++ [ width ++ "px" |> Css.property "width"
-                                       , height ++ "px" |> Css.property "height"
-                                       ]
-                                    |> Attributes.css
-                                    |> List.singleton
-                                    |> Elm.list
-                                )
-                        )
+                Svg.frameTraitsToExpressions config componentNameForChildren node.frameTraits
+                    |> wrapSvg config name node.frameTraits
 
             else
                 Gen.Html.Styled.call_.div
