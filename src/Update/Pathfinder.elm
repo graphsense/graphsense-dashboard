@@ -4,6 +4,7 @@ import Animation as A
 import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
+import Config.Pathfinder exposing (nodeXOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -1293,6 +1294,30 @@ updateByRoute_ plugins uc route model =
             in
             loadTx plugins id m1
                 |> and (selectTx id)
+
+        Route.Path net list ->
+            let
+                accf i ( m, eff, ( _, x ) ) =
+                    let
+                        id =
+                            ( net, i )
+
+                        action =
+                            if String.length i == 64 then
+                                loadTx plugins id
+
+                            else
+                                loadAddressWithPosition (Fixed x 0) plugins id
+
+                        ( nm, effn ) =
+                            m |> action
+                    in
+                    ( nm, eff ++ effn, ( Just id, x + nodeXOffset ) )
+
+                ( totalM, totalEff, _ ) =
+                    List.foldl accf ( model, [], ( Nothing, 0 ) ) list
+            in
+            ( totalM, totalEff )
 
         _ ->
             n model

@@ -96,6 +96,7 @@ import Css
         , width
         )
 import Theme.Colors as TColors
+import Util.View
 
 
 xsGap : Px
@@ -144,14 +145,19 @@ no =
 
 greenColor : Color
 greenColor =
-    -- rgb 141 194 153
-    hex "#369D8F"
+    TColors.pathOut_color |> Util.View.toCssColor
+
+
+
+-- rgb 141 194 153
+-- hex "#369D8F"
 
 
 redColor : Color
 redColor =
     -- rgb 194 141 141
-    hex "#E84137"
+    -- hex "#E84137"
+    TColors.pathIn_color |> Util.View.toCssColor
 
 
 orangeColor : Color

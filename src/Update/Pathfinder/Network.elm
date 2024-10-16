@@ -109,6 +109,9 @@ addAddressWithPosition position id model =
                                     (\_ ->
                                         findAddressCoords id model
                                     )
+
+                        Fixed x y ->
+                            { x = x, y = y }
         in
         Address.init id coords
             |> s_isStartingPoint (isEmpty model)
@@ -426,6 +429,7 @@ findAddressCoords id network =
 type FindPosition
     = Auto
     | NextTo ( Direction, Id )
+    | Fixed Float Float
 
 
 addTx : Api.Data.Tx -> Network -> ( Tx, Network )
@@ -479,6 +483,9 @@ addTxWithPosition position tx network =
                                                     (\_ ->
                                                         findUtxoTxCoords network t
                                                     )
+
+                                        Fixed x y ->
+                                            { x = x, y = y }
 
                             newNetwork =
                                 freeSpaceAroundCoords coords network

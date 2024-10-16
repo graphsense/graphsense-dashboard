@@ -599,6 +599,11 @@ txDetailsContentView vc _ model id viewState =
         getLbl id_ =
             Dict.get id_ model.tagSummaries
                 |> Maybe.withDefault Pathfinder.NoTags
+
+        closeAttrs =
+            [ Css.cursor Css.pointer |> List.singleton |> css
+            , onClick UserClosedDetailsView
+            ]
     in
     case viewState.tx.type_ of
         Tx.Utxo tx ->
@@ -613,6 +618,7 @@ txDetailsContentView vc _ model id viewState =
                             |> css
                         ]
                     |> Rs.s_sidePanelTxDetails [ css fullWidth ]
+                    |> Rs.s_iconsCloseSmall closeAttrs
                 )
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4

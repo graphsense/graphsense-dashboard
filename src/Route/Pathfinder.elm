@@ -1,4 +1,4 @@
-module Route.Pathfinder exposing (Config, Route(..), Thing(..), addressRoute, parser, toUrl, txRoute)
+module Route.Pathfinder exposing (Config, Route(..), Thing(..), addressRoute, parser, pathRoute, toUrl, txRoute)
 
 import List.Extra
 import Url.Builder exposing (QueryParameter, absolute)
@@ -15,6 +15,7 @@ type Route
     | Actor String
     | Label String
     | Network String Thing
+    | Path String (List String)
 
 
 type Thing
@@ -42,6 +43,14 @@ toUrl r =
             in
             absolute (c :: itemPath) itemQuery
 
+        Path net steps ->
+            absolute
+                [ net
+                , pathSegment
+                , String.join pathSeparator steps
+                ]
+                []
+
 
 thingToUrl : Thing -> ( List String, List QueryParameter )
 thingToUrl t =
@@ -60,6 +69,7 @@ parser : Config -> Parser (Route -> a) a
 parser c =
     oneOf
         [ map Network (parseCurrency c |> P.slash thing)
+        , map Path (parseCurrency c |> P.slash (P.s pathSegment) |> P.slash parsePath)
         , map Label (P.s "label" |> P.slash P.string)
         , map Actor (P.s "actor" |> P.slash P.string)
         , map Root P.top
@@ -81,6 +91,16 @@ txSegment =
     "tx"
 
 
+pathSegment : String
+pathSegment =
+    "path"
+
+
+pathSeparator : String
+pathSeparator =
+    ","
+
+
 thing : Parser (Thing -> a) a
 thing =
     oneOf
@@ -91,6 +111,13 @@ thing =
         , s txSegment |> P.slash P.string |> map Tx
         , s blockSegment |> P.slash P.int |> map Block
         ]
+
+
+parsePath : Parser (List String -> a) a
+parsePath =
+    P.custom "PATH" <|
+        \segment ->
+            Just (String.split pathSeparator segment)
 
 
 addressRoute : { network : String, address : String } -> Route
@@ -108,3 +135,8 @@ parseCurrency c =
     P.custom "CURRENCY" <|
         \segment ->
             List.Extra.find ((==) segment) c.networks
+
+
+pathRoute : String -> List String -> Route
+pathRoute network path =
+    Path network path
