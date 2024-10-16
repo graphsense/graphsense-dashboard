@@ -1,9 +1,10 @@
-module View.Search exposing (SearchConfig, SearchConfigWithMoreCss, search, searchWithMoreCss)
+module View.Search exposing (SearchConfig, SearchConfigWithMoreCss, default, search, searchWithMoreCss)
 
 import Autocomplete
 import Autocomplete.Styled as Autocomplete
 import Config.View exposing (Config)
 import Css exposing (Style)
+import Css.Autocomplete
 import Css.Button
 import Css.Search as Css
 import FontAwesome
@@ -16,7 +17,7 @@ import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import String.Extra
-import Util.View exposing (nona)
+import Util.View exposing (loadingSpinner)
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
 
@@ -31,11 +32,40 @@ type alias SearchConfig =
 
 type alias SearchConfigWithMoreCss =
     { css : String -> List Style
-    , formCss : Maybe (List Style)
-    , frameCss : Maybe (List Style)
+    , formCss : List Style
+    , frameCss : List Style
+    , button : List Style
+    , resultLine : List Style
+    , resultLineHighlighted : List Style
+    , resultGroup : List Style
+    , resultGroupTitle : List Style
+    , resultLineIcon : List Style
+    , resultTextEmphasized : List Style
     , resultsAsLink : Bool
+    , dropdownFrame : List Style
+    , dropdownResult : List Style
     , multiline : Bool
     , showIcon : Bool
+    }
+
+
+default : SearchConfigWithMoreCss
+default =
+    { css = \_ -> []
+    , resultsAsLink = False
+    , multiline = False
+    , showIcon = False
+    , formCss = []
+    , frameCss = []
+    , button = []
+    , resultLine = []
+    , resultLineHighlighted = []
+    , resultGroup = []
+    , resultGroupTitle = []
+    , resultLineIcon = []
+    , resultTextEmphasized = []
+    , dropdownFrame = []
+    , dropdownResult = []
     }
 
 
@@ -47,8 +77,17 @@ search plugins vc sc model =
         , resultsAsLink = sc.resultsAsLink
         , multiline = sc.multiline
         , showIcon = sc.showIcon
-        , formCss = Nothing
-        , frameCss = Nothing
+        , formCss = []
+        , frameCss = []
+        , button = []
+        , resultLine = []
+        , resultLineHighlighted = []
+        , resultGroup = []
+        , resultGroupTitle = []
+        , resultLineIcon = []
+        , resultTextEmphasized = []
+        , dropdownFrame = []
+        , dropdownResult = []
         }
         model
 
@@ -67,17 +106,13 @@ searchWithMoreCss plugins vc sc model =
     in
     Html.Styled.form
         [ Css.form vc sc.showIcon |> css
-        , sc.formCss
-            |> Maybe.map css
-            |> Maybe.withDefault nona
+        , css sc.formCss
         , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         , onSubmit UserClicksResultLine
         ]
         [ div
             [ Css.frame vc |> css
-            , sc.frameCss
-                |> Maybe.map css
-                |> Maybe.withDefault nona
+            , css sc.frameCss
             ]
             [ input
                 ([ sc.css query |> css
@@ -122,6 +157,7 @@ searchWithMoreCss plugins vc sc model =
                   , Css.button vc |> Css.batch
                   ]
                     |> css
+                , css sc.button
                 , type_ "submit"
                 ]
                 [ FontAwesome.icon FontAwesome.search
@@ -141,7 +177,12 @@ searchResult plugins vc sc model =
     in
     if model.visible then
         resultList plugins vc sc model
-            |> Autocomplete.dropdown vc
+            |> Autocomplete.dropdownStyled
+                { frame = sc.dropdownFrame
+                , result = sc.dropdownResult
+                , loadingSpinner = loadingSpinner vc Css.Autocomplete.loadingSpinner
+                }
+                vc
                 { loading = viewState.status == Autocomplete.Fetching
                 , visible = model.visible
                 , onClick = NoOp
@@ -152,7 +193,7 @@ searchResult plugins vc sc model =
 
 
 resultList : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> List (Html Msg)
-resultList plugins vc sc { autocomplete, searchType } =
+resultList _ vc sc { autocomplete, searchType } =
     let
         choices =
             Autocomplete.choices autocomplete
@@ -223,9 +264,11 @@ resultList plugins vc sc { autocomplete, searchType } =
             else
                 div
                     [ Css.resultGroup vc |> css
+                    , css sc.resultGroup
                     ]
                     [ div
                         [ Css.resultGroupTitle vc |> css
+                        , css sc.resultGroupTitle
                         ]
                         [ text title
                         ]
@@ -233,7 +276,7 @@ resultList plugins vc sc { autocomplete, searchType } =
                         (\( index, rl ) ->
                             resultLineToHtml vc
                                 q
-                                sc.resultsAsLink
+                                sc
                                 selectedValue
                                 (choiceEvents index)
                                 rl
@@ -263,8 +306,8 @@ resultList plugins vc sc { autocomplete, searchType } =
 --++ Plugin.searchResultList plugins pluginStates vc
 
 
-resultLineToHtml : Config -> String -> Bool -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
-resultLineToHtml vc query asLink selectedValue choiceEvents resultLine =
+resultLineToHtml : Config -> String -> SearchConfigWithMoreCss -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
+resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
     let
         ( icon, label ) =
             case resultLine of
@@ -293,22 +336,36 @@ resultLineToHtml vc query asLink selectedValue choiceEvents resultLine =
         ((Css.resultLine vc
             ++ (if selectedValue == Just resultLine then
                     Css.resultLineHighlighted vc
+                        ++ sc.resultLineHighlighted
 
                 else
                     []
                )
             |> css
          )
+            :: css sc.resultLine
             :: choiceEvents
         )
         [ FontAwesome.icon icon
             |> Html.Styled.fromUnstyled
             |> List.singleton
-            |> span [ Css.resultLineIcon vc |> css ]
+            |> span
+                [ Css.resultLineIcon vc |> css
+                , css sc.resultLineIcon
+                ]
         , if String.contains query label then
-            span []
+            span
+                []
                 [ text query
-                , span [ css [ Css.fontWeight Css.bold ] ] [ text (String.Extra.rightOf query label) ]
+                , span
+                    [ css
+                        [ Css.fontWeight Css.bold
+                        ]
+                    , css sc.resultTextEmphasized
+                    ]
+                    [ text
+                        (String.Extra.rightOf query label)
+                    ]
                 ]
 
           else

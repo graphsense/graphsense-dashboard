@@ -534,25 +534,39 @@ searchBoxView plugins _ vc _ model =
             |> Rs.s_searchInputField
                 (View.Search.searchWithMoreCss plugins
                     vc
-                    { css =
-                        \_ ->
-                            Css.outline Css.none
-                                :: Sc.toolbarSearchFieldSearchInputField_details.styles
-                                ++ Sc.toolbarSearchFieldSearchText_details.styles
-                    , formCss =
-                        Just
+                    (View.Search.default
+                        |> Rs.s_css
+                            (\_ ->
+                                Css.outline Css.none
+                                    :: Sc.toolbarSearchFieldSearchInputField_details.styles
+                                    ++ Sc.toolbarSearchFieldSearchText_details.styles
+                            )
+                        |> Rs.s_formCss
                             [ Css.flexGrow <| Css.num 1
                             , Css.height Css.auto |> Css.important
                             ]
-                    , frameCss =
-                        Just
+                        |> Rs.s_frameCss
                             [ Css.height <| Css.pct 100
                             , Css.marginRight Css.zero |> Css.important
                             ]
-                    , multiline = False
-                    , resultsAsLink = True
-                    , showIcon = False
-                    }
+                        |> Rs.s_resultLine
+                            [ Css.property "background-color" Colors.white
+                            , Css.hover
+                                [ Css.property "background-color" Colors.greyBlue50 
+                                    |> Css.important
+                                ]
+                            ]
+                        |> Rs.s_resultLineHighlighted
+                            [ Css.property "background-color" Colors.greyBlue50
+                            ]
+                        |> Rs.s_resultsAsLink True
+                        |> Rs.s_dropdownResult
+                            [ Css.property "background-color" Colors.white
+                            ]
+                        |> Rs.s_dropdownFrame
+                            [ Css.property "background-color" Colors.white
+                            ]
+                    )
                     model.search
                     |> Html.map SearchMsg
                     |> Just

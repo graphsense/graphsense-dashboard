@@ -54,21 +54,20 @@ header plugins states vc hc =
                     |> s_searchInputField
                         (Search.searchWithMoreCss plugins
                             vc
-                            { css = searchInputStyle vc
-                            , formCss =
-                                Just
+                            (Search.default
+                                |> s_css (searchInputStyle vc)
+                                |> s_formCss
                                     [ Css.flexGrow <| Css.num 1
                                     , Css.height Css.auto |> Css.important
                                     ]
-                            , frameCss =
-                                Just
+                                |> s_frameCss
                                     [ Css.height <| Css.pct 100
                                     , Css.marginRight Css.zero |> Css.important
                                     ]
-                            , multiline = True
-                            , resultsAsLink = True
-                            , showIcon = False
-                            }
+                                |> s_multiline True
+                                |> s_resultsAsLink True
+                                |> s_showIcon False
+                            )
                             hc.search
                             |> Html.Styled.map SearchMsg
                             |> Just

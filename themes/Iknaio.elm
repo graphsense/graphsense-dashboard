@@ -1267,7 +1267,6 @@ theme =
                         , position sticky
                         , top <| px 0
                         , zIndex <| int 2
-                        , backgroundColorWithLightmode lightmode colors.brandWhite
                         ]
                     )
                 |> s_headRow
