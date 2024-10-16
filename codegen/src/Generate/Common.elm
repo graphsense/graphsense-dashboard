@@ -566,7 +566,7 @@ defaultInstancesConfig elementType =
         >> Elm.record
 
 
-wrapSvg :
+wrapInSvg :
     Config
     -> String
     ->
@@ -576,7 +576,7 @@ wrapSvg :
         }
     -> List Elm.Expression
     -> Elm.Expression
-wrapSvg config name { absoluteRenderBounds, absoluteBoundingBox } =
+wrapInSvg config name { absoluteRenderBounds, absoluteBoundingBox } =
     let
         bbox =
             absoluteBoundingBox

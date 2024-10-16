@@ -7,7 +7,7 @@ import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
-import Generate.Common exposing (wrapSvg)
+import Generate.Common exposing (wrapInSvg)
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Html.HasEffectsTrait as HasEffectsTrait
@@ -30,7 +30,7 @@ toDetails colorMap node =
 
 toExpressions : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression -> List Elm.Expression
 toExpressions config node =
-    wrapSvg config (Common.getName node) node.defaultShapeTraits
+    wrapInSvg config (Common.getName node) node.defaultShapeTraits
         >> List.singleton
 
 

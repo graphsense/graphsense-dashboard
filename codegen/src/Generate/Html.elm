@@ -14,7 +14,7 @@ import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
-import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty, wrapSvg)
+import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty, wrapInSvg)
 import Generate.Common.DefaultShapeTraits
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
@@ -443,7 +443,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
         frame =
             if hasOnlySvgChildren then
                 Svg.frameTraitsToExpressions config componentNameForChildren node.frameTraits
-                    |> wrapSvg config name node.frameTraits
+                    |> wrapInSvg config name node.frameTraits
 
             else
                 Gen.Html.Styled.call_.div
