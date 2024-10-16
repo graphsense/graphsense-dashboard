@@ -2,7 +2,6 @@ module View.Pathfinder exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -13,15 +12,14 @@ import Css.Table
 import Css.View
 import Dict
 import DurationDatePicker as DatePicker
-import Hex
 import Hovercard
-import Html.Styled as Html exposing (Html, div, form, img, input, span, table, td, tr)
+import Html.Styled as Html exposing (Html, div, form, img, input)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn)
 import Iknaio.ColorScheme exposing (annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
 import Init.Pathfinder.Id as Id
 import Json.Decode
-import Model.Currency as Asset exposing (Currency(..), asset, assetFromBase)
+import Model.Currency as Asset exposing (asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (BBox, Coords)
@@ -74,14 +72,12 @@ import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
-import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.Tooltip as Tooltip
-import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 import View.Search
 
 
@@ -93,141 +89,25 @@ type alias BtnConfig =
     }
 
 
-inlineClusterIcon : Bool -> Color -> Html Msg
-inlineClusterIcon highlight clr =
-    let
-        getHighlight c =
-            if highlight then
-                [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
+-- inlineClusterIcon : Bool -> Color -> Html Msg
+-- inlineClusterIcon highlight clr =
+--     let
+--         getHighlight c =
+--             if highlight then
+--                 [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
 
-            else
-                []
-    in
-    HIcons.iconsUntaggedWithAttributes
-        (HIcons.iconsUntaggedAttributes
-            |> Rs.s_ellipse25 (getHighlight clr)
-        )
-        {}
+--             else
+--                 []
+--     in
+--     HIcons.iconsUntaggedWithAttributes
+--         (HIcons.iconsUntaggedAttributes
+--             |> Rs.s_ellipse25 (getHighlight clr)
+--         )
+--         {}
 
 
 
 -- Helpers
-
-
-type ValueType
-    = ValueInt Int
-    | ValueHex Int
-    | Boolean Bool
-    | Text String
-    | Currency Api.Data.Values Asset.AssetIdentifier
-    | CurrencyWithCode Api.Data.Values Asset.AssetIdentifier
-    | InOut (Maybe Int) Int Int
-    | Timestamp Int
-    | TimestampWithTime Int
-    | CopyIdent String
-
-
-type KVTableRow
-    = Row String ValueType
-    | LinkRow String String
-    | Gap
-
-
-renderKVTable : View.Config -> List KVTableRow -> Html Msg
-renderKVTable vc rows =
-    table [ fullWidth |> css ] (rows |> List.map (renderKVRow vc))
-
-
-renderKVRow : View.Config -> KVTableRow -> Html Msg
-renderKVRow vc row =
-    case row of
-        Row key value ->
-            tr []
-                [ td [ Css.kVTableKeyTdStyle vc |> css ] [ Html.text (Locale.string vc.locale key) ]
-                , td [ Css.kVTableValueTdStyle vc |> css ] (renderValueTypeValue vc value |> List.singleton)
-                , td [ Css.kVTableTdStyle vc |> css ] (renderValueTypeExtension vc value |> List.singleton)
-                ]
-
-        Gap ->
-            tr []
-                [ td [ Css.kVTableKeyTdStyle vc |> css ] []
-                , td [] []
-                , td [] []
-                ]
-
-        LinkRow n l ->
-            tr []
-                [ td [ Css.kVTableKeyTdStyle vc |> css ] []
-                , td [] []
-                , td [] [ Html.a [ HA.href l, Css.View.link vc |> css ] [ Locale.text vc.locale n ] ]
-                ]
-
-
-renderValueTypeValue : View.Config -> ValueType -> Html Msg
-renderValueTypeValue vc val =
-    case val of
-        ValueInt v ->
-            span [] [ Html.text (Locale.int vc.locale v) ]
-
-        ValueHex v ->
-            span [] [ Html.text (Hex.toString v) ]
-
-        InOut total inv outv ->
-            inOutIndicatorOld vc total inv outv
-
-        Text txt ->
-            span [] [ Html.text txt ]
-
-        Currency v asset ->
-            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.currencyWithoutCode2 vc.locale [ ( asset, v ) ]) ]
-
-        CurrencyWithCode v asset ->
-            -- span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value ++ " " ++ ticker) ]
-            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.currencyWithoutCode vc.locale [ ( asset, v ) ]) ]
-
-        CopyIdent ident ->
-            Util.View.copyableLongIdentifierPathfinder vc [] ident
-
-        Timestamp ts ->
-            span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
-
-        TimestampWithTime ts ->
-            span [] [ multiLineDateTimeFromTimestamp vc ts ]
-
-        Boolean tv ->
-            span []
-                [ Html.text
-                    (Locale.string vc.locale
-                        (if tv then
-                            "yes"
-
-                         else
-                            "no"
-                        )
-                    )
-                ]
-
-
-renderValueTypeExtension : View.Config -> ValueType -> Html Msg
-renderValueTypeExtension vc val =
-    case val of
-        Currency _ asset ->
-            span []
-                [ Html.text
-                    (String.toUpper
-                        (case vc.locale.currency of
-                            Coin ->
-                                asset.asset
-
-                            Fiat x ->
-                                x
-                        )
-                    )
-                ]
-
-        _ ->
-            none
-
 
 inOutIndicator : View.Config -> String -> Int -> Int -> Int -> Html Msg
 inOutIndicator vc title mnr inNr outNr =
@@ -239,17 +119,6 @@ inOutIndicator vc title mnr inNr outNr =
             , title = Locale.string vc.locale title
             }
         }
-
-
-inOutIndicatorOld : View.Config -> Maybe Int -> Int -> Int -> Html Msg
-inOutIndicatorOld vc mnr inNr outNr =
-    let
-        prefix =
-            String.trim (String.join " " [ mnr |> Maybe.map (Locale.int vc.locale >> (++) " - ") |> Maybe.withDefault "", "(" ])
-    in
-    span [ Css.ioOutIndicatorStyle |> css ] [ Html.text prefix, inIcon, Html.text (Locale.int vc.locale inNr), outIcon, Html.text (Locale.int vc.locale outNr), Html.text ")" ]
-
-
 
 -- View
 
@@ -1219,49 +1088,24 @@ addressDetailsContentView vc gc model id viewState =
             }
 
 
-apiEntityToRows : Id -> Api.Data.Entity -> List KVTableRow
-apiEntityToRows clstrid clstr =
-    [ Gap
-    , Row "Number of Addresses" (ValueInt clstr.noAddresses)
-    , Row "Total received" (Currency clstr.totalReceived (Asset.assetFromBase clstr.currency))
-    , Row "Total sent" (Currency clstr.totalSpent (Asset.assetFromBase clstr.currency))
-    , Row "Balance" (Currency clstr.balance (Asset.assetFromBase clstr.currency))
-    , Gap
-    , Row "First usage" (Timestamp clstr.firstTx.timestamp)
-    , Row "Last usage" (Timestamp clstr.lastTx.timestamp)
-    , LinkRow "more..."
-        (Route.Graph.entityRoute { currency = Id.network clstrid, entity = Id.id clstrid |> Hex.fromString |> Result.withDefault 0, layer = Nothing, table = Nothing }
-            |> Route.Graph
-            |> Route.toUrl
-        )
-    ]
-
-
 clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Int -> Api.Data.Entity -> Html Msg
-clusterInfoView vc open colors _ clstr =
+clusterInfoView vc open _ _ clstr =
     if clstr.noAddresses <= 1 then
         none
 
     else
         let
-            clstrid =
-                Id.initClusterId clstr.currency clstr.entity
+            -- clstrid =
+            --     Id.initClusterId clstr.currency clstr.entity
 
             --inlineChevronDownThinIcon
-            clusterColor =
-                Colors.getAssignedColor Colors.Clusters clstrid colors
+            -- clusterColor =
+            --     Colors.getAssignedColor Colors.Clusters clstrid colors
 
-            clusterIcon =
-                clusterColor
-                    |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends)
-                    |> Maybe.withDefault none
-
-            clusterIndicator =
-                if vc.highlightClusterFriends then
-                    span [ css Css.smPaddingRight, HA.title (Id.id clstrid), css [ Css.display Css.inline ] ] [ clusterIcon ]
-
-                else
-                    none
+            -- clusterIcon =
+            --     clusterColor
+            --         |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends)
+            --         |> Maybe.withDefault none
 
             headerAttr =
                 [ Css.cursor Css.pointer

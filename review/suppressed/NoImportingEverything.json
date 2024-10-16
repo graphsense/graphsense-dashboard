@@ -49,7 +49,6 @@
     { "count": 3, "filePath": "src/View/Graph/Table/TxsUtxoTable.elm" },
     { "count": 3, "filePath": "src/View/Graph/Table/UserAddressTagsTable.elm" },
     { "count": 3, "filePath": "src/View/Landingpage.elm" },
-    { "count": 3, "filePath": "src/View/Pathfinder/Icons.elm" },
     { "count": 3, "filePath": "src/View/Pathfinder/Tx/Path.elm" },
     { "count": 3, "filePath": "themes/Iknaio.elm" },
     { "count": 2, "filePath": "src/Css/Reset.elm" },

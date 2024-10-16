@@ -1,32 +1,17 @@
 module Css.Pathfinder exposing
     ( annotationInputStyle
-    , clusterDetailsClosedStyle
-    , clusterDetailsOpenStyle
-    , dateStyle
-    , dateTimeRangeHighlightedDateStyle
-    , datepickerButtonsStyle
     , emptyTableMsg
-    , filterButtonIconStyleDateRangePicker
     , fullWidth
     , graphActionsViewStyle
-    , iconWithTextStyle
-    , inIconStyle
     , inoutStyle
-    , ioOutIndicatorStyle
-    , kVTableKeyTdStyle
-    , kVTableTdStyle
-    , kVTableValueTdStyle
     , lGap
     , linkButtonStyle
     , mGap
     , mlGap
     , no
-    , outIconStyle
     , sGap
     , searchBoxMinWidth
     , searchInputStyle
-    , smPaddingBottom
-    , smPaddingRight
     , tagConfidenceTextHighStyle
     , tagConfidenceTextLowStyle
     , tagConfidenceTextMediumStyle
@@ -49,23 +34,17 @@ import Css
         , block
         , border2
         , borderWidth
-        , bottom
         , calc
         , center
-        , ch
         , color
         , cursor
         , display
         , displayFlex
         , ex
-        , fill
         , flexEnd
         , fontSize
-        , fontWeight
         , height
         , hex
-        , important
-        , int
         , justifyContent
         , left
         , margin
@@ -77,10 +56,8 @@ import Css
         , notAllowed
         , outline
         , padding
-        , paddingBottom
         , paddingLeft
         , paddingRight
-        , paddingTop
         , pct
         , pointer
         , pointerEvents
@@ -92,7 +69,6 @@ import Css
         , spaceBetween
         , textAlign
         , top
-        , verticalAlign
         , width
         )
 import Theme.Colors as TColors
@@ -107,11 +83,6 @@ xsGap =
 sGap : Px
 sGap =
     px 3
-
-
-smGap : Px
-smGap =
-    px 5
 
 
 mGap : Px
@@ -168,32 +139,6 @@ orangeColor =
 
 
 -- Styles
-
-
-filterButtonIconStyleDateRangePicker : List Style
-filterButtonIconStyleDateRangePicker =
-    [ Css.property "fill" TColors.grey50 |> Css.important ]
-
-
-clusterDetailsClosedStyle : List Style
-clusterDetailsClosedStyle =
-    [ Css.paddingLeft (Css.px 8)
-    , Css.paddingBottom mGap
-    , Css.property "color" TColors.grey50
-    , Css.displayFlex
-    , Css.justifyContent Css.spaceBetween
-    , Css.alignItems Css.center
-    , Css.cursor Css.pointer
-    ]
-
-
-clusterDetailsOpenStyle : List Style
-clusterDetailsOpenStyle =
-    [ Css.fontSize (Css.px 12)
-    , Css.property "color" TColors.grey50
-    , Css.marginLeft (Css.px 8)
-    ]
-
 
 tagConfidenceTextHighStyle : View.Config -> List Style
 tagConfidenceTextHighStyle vc =
@@ -335,56 +280,12 @@ graphActionsViewStyle : View.Config -> List Style
 graphActionsViewStyle _ =
     [ displayFlex, justifyContent flexEnd, paddingRight lGap ]
 
-
-datepickerButtonsStyle : View.Config -> List Style
-datepickerButtonsStyle _ =
-    [ Css.paddingLeft mlGap
-    , Css.paddingTop mlGap
-    , Css.displayFlex
-    , Css.justifyContent Css.flexEnd
-    , Css.property "gap" "5px"
-    ]
-
-
-dateTimeRangeHighlightedDateStyle : View.Config -> List Style
-dateTimeRangeHighlightedDateStyle _ =
-    [ TColors.greenText |> property "color"
-    ]
-
-
 emptyTableMsg : List Style
 emptyTableMsg =
     [ margin (px 20), textAlign center ]
 
 
-kVTableTdStyle : View.Config -> List Style
-kVTableTdStyle _ =
-    [ mGap |> paddingLeft ]
-
-
-kVTableKeyTdStyle : View.Config -> List Style
-kVTableKeyTdStyle vc =
-    [ mGap |> paddingTop, mGap |> paddingBottom ] ++ kVTableTdStyle vc
-
-
-kVTableValueTdStyle : View.Config -> List Style
-kVTableValueTdStyle vc =
-    textAlign right :: kVTableTdStyle vc ++ [ mGap |> paddingTop, mGap |> paddingBottom ]
-
-
-
 -- non vc dependent styles
-
-
-inIconStyle : List Style
-inIconStyle =
-    [ fill greenColor, verticalAlign bottom ] |> List.map important
-
-
-outIconStyle : List Style
-outIconStyle =
-    [ fill redColor, verticalAlign bottom ] |> List.map important
-
 
 inoutStyle : Bool -> List Style
 inoutStyle out =
@@ -394,31 +295,6 @@ inoutStyle out =
       else
         color greenColor
     ]
-
-
-dateStyle : List Style
-dateStyle =
-    [ fontWeight (int 600) ]
-
-
-ioOutIndicatorStyle : List Style
-ioOutIndicatorStyle =
-    [ ch 0.5 |> paddingLeft ]
-
-
-iconWithTextStyle : List Style
-iconWithTextStyle =
-    [ mGap |> paddingRight ]
-
-
-smPaddingBottom : List Style
-smPaddingBottom =
-    [ paddingBottom mlGap ]
-
-
-smPaddingRight : List Style
-smPaddingRight =
-    [ paddingRight smGap ]
 
 
 fullWidth : List Style
