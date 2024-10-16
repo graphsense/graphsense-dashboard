@@ -11,11 +11,12 @@ import Generate.Colors as Colors
 import Generate.Common as Common
 import Generate.Html
 import Generate.Svg
+import Generate.Util.RGBA as RGBA
 import Http
 import Json.Decode
 import String.Case exposing (toCamelCaseUpper)
 import String.Format
-import Tuple exposing (pair)
+import Tuple exposing (mapFirst, pair)
 import Types exposing (ColorMap)
 
 
@@ -188,6 +189,10 @@ frameNodesToFiles frames =
         colorMapDark =
             frames
                 |> findColorMap colorsFrameDark
+
+        colorMapLightDict =
+            List.map (mapFirst (RGBA.toStylesString Dict.empty)) colorMapLight
+                |> Dict.fromList
     in
     (Colors.colorMapToStylesheet colorMapLight
         :: Colors.colorMapToDeclarations colorMapLight
@@ -197,12 +202,12 @@ frameNodesToFiles frames =
                 :: Colors.colorMapToDeclarations colorMapDark
                 |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrameDark ]
            )
-        :: (List.map (frameToFiles (Dict.fromList colorMapLight)) frames
+        :: (List.map (frameToFiles colorMapLightDict) frames
                 |> List.concat
            )
 
 
-findColorMap : String -> List FrameNode -> List ( String, String )
+findColorMap : String -> List FrameNode -> List ( RGBA, String )
 findColorMap name =
     List.filter (.frameTraits >> .isLayerTrait >> .name >> (==) name)
         >> List.head
