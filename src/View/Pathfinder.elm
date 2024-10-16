@@ -16,7 +16,7 @@ import DurationDatePicker as DatePicker
 import FontAwesome
 import Hex
 import Hovercard
-import Html.Styled as Html exposing (Html, button, div, form, img, input, span, table, td, tr)
+import Html.Styled as Html exposing (Html, div, form, img, input, span, table, td, tr)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn)
 import Iknaio.ColorScheme exposing (annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
@@ -82,7 +82,7 @@ import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.Tooltip as Tooltip
-import View.Pathfinder.Utils exposing (dateFromTimestamp, multiLineDateTimeFromTimestamp)
+import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 import View.Search
 
 
@@ -1645,9 +1645,6 @@ transactionTableView vc addressId txOnGraphFn model =
                 prevMsg
                 nextMsg
                 firstMsg
-
-        showSelectionRow =
-            (model.txMaxBlock /= Nothing) || (model.txMinBlock /= Nothing)
     in
     (case model.dateRangePicker of
         Just drp ->

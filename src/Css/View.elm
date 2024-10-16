@@ -71,7 +71,7 @@ sidebarRule vc =
 
 
 main_ : Config -> List Style
-main_ vc =
+main_ _ =
     [ flexGrow (num 1)
     , displayFlex
     , flexDirection column

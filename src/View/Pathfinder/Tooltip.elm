@@ -8,7 +8,7 @@ import Dict exposing (Dict)
 import Html.Styled exposing (Html, div, span, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
-import Model.Pathfinder exposing (HavingTags)
+import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
@@ -17,6 +17,7 @@ import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Flags exposing (getFlagEmoji)
+import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
@@ -122,8 +123,7 @@ tagLabel vc lbl tag =
     case mlbldata of
         Just lbldata ->
             div
-                [--css tooltipBaseCss
-                ]
+                []
                 [ row
                     { tooltipRowLabel = { title = Locale.string vc.locale "Tag label" }
                     , tooltipRowValue = lbldata.label |> val vc
@@ -172,14 +172,14 @@ tagLabel vc lbl tag =
 
 
 address : View.Config -> Maybe HavingTags -> Addr.Address -> Html msg
-address vc _ adr =
+address vc tags adr =
     let
         net =
             Id.network adr.id
     in
     div
         []
-        [ row
+        ([ row
             { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
             , tooltipRowValue =
                 Addr.getBalance adr
@@ -191,7 +191,7 @@ address vc _ adr =
                     |> Maybe.withDefault ""
                     |> val vc
             }
-        , row
+         , row
             { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
             , tooltipRowValue =
                 Addr.getTotalReceived adr
@@ -203,7 +203,7 @@ address vc _ adr =
                     |> Maybe.withDefault ""
                     |> val vc
             }
-        , row
+         , row
             { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
             , tooltipRowValue =
                 Addr.getTotalSpent adr
@@ -215,7 +215,22 @@ address vc _ adr =
                     |> Maybe.withDefault ""
                     |> val vc
             }
-        ]
+         ]
+            ++ (case tags of
+                    Just (HasTagSummary ts) ->
+                        [ row
+                            { tooltipRowLabel = { title = Locale.string vc.locale "Tags" }
+                            , tooltipRowValue =
+                                ts
+                                    |> TagSummary.getLabelPreview 20
+                                    |> val vc
+                            }
+                        ]
+
+                    _ ->
+                        []
+               )
+        )
 
 
 genericTx : View.Config -> { txId : String, timestamp : Int } -> Html msg

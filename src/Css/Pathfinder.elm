@@ -8,7 +8,6 @@ module Css.Pathfinder exposing
     , emptyTableMsg
     , filterButtonIconStyleDateRangePicker
     , fullWidth
-    , graphActionButtonStyle
     , graphActionsViewStyle
     , iconWithTextStyle
     , inIconStyle
@@ -47,10 +46,8 @@ import Css
         , Style
         , absolute
         , alignItems
-        , backgroundColor
         , block
         , border2
-        , borderRadius
         , borderWidth
         , bottom
         , calc
@@ -63,7 +60,6 @@ import Css
         , ex
         , fill
         , flexEnd
-        , flexGrow
         , fontSize
         , fontWeight
         , height
@@ -79,10 +75,8 @@ import Css
         , minus
         , none
         , notAllowed
-        , num
         , outline
         , padding
-        , padding4
         , paddingBottom
         , paddingLeft
         , paddingRight
@@ -93,7 +87,6 @@ import Css
         , position
         , property
         , px
-        , rgb
         , right
         , solid
         , spaceBetween
@@ -147,16 +140,6 @@ no =
 
 
 -- colors
-
-
-whiteColor : Color
-whiteColor =
-    rgb 255 255 255
-
-
-darkBlue : Color
-darkBlue =
-    rgb 3 31 53
 
 
 greenColor : Color
@@ -236,27 +219,9 @@ warningColor _ =
     orangeColor
 
 
-boxBorderColor : View.Config -> String
-boxBorderColor vc =
-    if vc.lightmode then
-        TColors.grey50
-
-    else
-        TColors.black0
-
-
 emphTextColor : View.Config -> String
 emphTextColor _ =
     TColors.grey100
-
-
-defaultBackgroundColor : View.Config -> Color
-defaultBackgroundColor vc =
-    if vc.lightmode then
-        whiteColor
-
-    else
-        darkBlue
 
 
 tooltipMargin : List Style
@@ -271,6 +236,7 @@ searchInputStyle vc _ =
     , padding <| px 1
     , display block
     , emphTextColor vc |> property "color"
+    , TColors.white |> property "background-color"
     , border2 no solid
     , outline none
     , paddingLeft (px 10)
@@ -303,8 +269,7 @@ linkButtonStyle vc enabled =
                 _ ->
                     TColors.grey50
     in
-    [ defaultBackgroundColor vc |> backgroundColor
-    , no |> borderWidth
+    [ no |> borderWidth
     , cursor
         (if enabled then
             pointer
@@ -365,23 +330,14 @@ graphActionsViewStyle _ =
     [ displayFlex, justifyContent flexEnd, paddingRight lGap ]
 
 
-graphActionButtonStyle : View.Config -> Bool -> List Style
-graphActionButtonStyle vc _ =
-    [ cursor pointer
-    , padding4 xsGap mlGap xsGap mlGap
-    , emphTextColor vc |> property "color"
-    , defaultBackgroundColor vc |> backgroundColor
-    , property "border" ("1px solid " ++ boxBorderColor vc)
-    , px 3 |> borderRadius
-    , displayFlex
-    , alignItems center
-    ]
-
-
 datepickerButtonsStyle : View.Config -> List Style
 datepickerButtonsStyle _ =
     [ Css.paddingLeft mlGap
-    , Css.paddingTop mlGap, Css.displayFlex, Css.justifyContent Css.flexEnd, Css.property "gap" "5px" ]
+    , Css.paddingTop mlGap
+    , Css.displayFlex
+    , Css.justifyContent Css.flexEnd
+    , Css.property "gap" "5px"
+    ]
 
 
 dateTimeRangeHighlightedDateStyle : View.Config -> List Style

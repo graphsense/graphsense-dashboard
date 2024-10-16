@@ -2,7 +2,7 @@ module View.Settings exposing (view)
 
 import Config.View exposing (Config)
 import Css
-import Html.Styled exposing (Html, div)
+import Html.Styled exposing (Html)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), SettingsTabs(..), UserModel)

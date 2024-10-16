@@ -66,6 +66,6 @@ config =
     -- , NoUnused.Patterns.rule
      , NoUnused.Variables.rule 
     ]
-    |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins", "codegen/", "theme/", "plugins/", "src/PluginInterface"])
-    |> List.map (Rule.ignoreErrorsForFiles [ "src/PluginInterface.elm"])
+    |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins", "codegen/", "theme/", "plugins/casemgm", "src/PluginInterface"])
+    |> List.map (Rule.ignoreErrorsForFiles [ "src/PluginInterface.elm", "plugins/blockpit/src/Blockpit/OpenApi.elm", "plugins/quicklock/src/QuicklockBackend.elm"])
 

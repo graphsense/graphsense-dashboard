@@ -1,7 +1,8 @@
-module Util.Pathfinder.TagSummary exposing (exchangeCategory, hasOnlyExchangeTags, isExchangeNode)
+module Util.Pathfinder.TagSummary exposing (exchangeCategory, getLabelPreview, hasOnlyExchangeTags, isExchangeNode)
 
 import Api.Data
 import Dict
+import Util.View
 
 
 exchangeCategory : String
@@ -17,3 +18,14 @@ hasOnlyExchangeTags tagdata =
 isExchangeNode : Api.Data.TagSummary -> Bool
 isExchangeNode tagdata =
     tagdata.broadCategory == exchangeCategory
+
+
+getLabelPreview : Int -> Api.Data.TagSummary -> String
+getLabelPreview n td =
+    td.labelSummary
+        |> Dict.values
+        |> List.sortBy .relevance
+        |> List.reverse
+        |> List.map .label
+        |> String.join ", "
+        |> Util.View.truncate n

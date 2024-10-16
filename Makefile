@@ -49,7 +49,10 @@ serve-docker: build-docker
 	docker run -it --network='host' -e REST_URL=http://localhost:9000 localhost/graphsense-dashboard:latest
 
 format:
-	npx elm-format --yes src tests
+	npx elm-format --yes src tests plugins
+
+format-plugins:
+	npx elm-format --yes plugins
 
 lint:
 	npx elm-review
@@ -75,4 +78,4 @@ gen:
 	make setem
 	
 
-.PHONY: openapi serve test format lint lint-fix lint-ci build build-docker serve-docker gen theme
+.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme
