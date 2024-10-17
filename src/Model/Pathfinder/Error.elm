@@ -12,6 +12,7 @@ type Error
 
 type InfoError
     = TxTracingThroughService Id (Maybe String)
+    | NoAdjaccentTxForAddressFound Id
 
 
 type InternalError

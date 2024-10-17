@@ -9,6 +9,7 @@ import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Address exposing (Txs(..), txsSetter)
+import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.Id as Id
 import Msg.Pathfinder exposing (Msg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
 import RecordSetter exposing (s_network)
@@ -22,26 +23,31 @@ update : WorkflowNextTxContext -> WorkflowNextUtxoTxMsg -> Model -> ( Model, Lis
 update context msg model =
     case msg of
         BrowserGotReferencedTxs refs ->
-            ( if List.isEmpty refs then
-                model
+            if List.isEmpty refs then
+                ( model
                     |> s_network (Network.updateAddress context.addressId (Txs Set.empty |> txsSetter context.direction) model.network)
+                , NoAdjaccentTxForAddressFound context.addressId
+                    |> InfoError
+                    |> ErrorEffect
+                    |> List.singleton
+                )
 
-              else
-                model
-            , refs
-                |> List.map
-                    (\ref ->
-                        BrowserGotTxForReferencedTx
-                            >> WorkflowNextUtxoTx context
-                            |> Api.GetTxEffect
-                                { currency = Id.network context.addressId
-                                , txHash = ref.txHash
-                                , includeIo = True
-                                , tokenTxId = Nothing
-                                }
-                            |> ApiEffect
-                    )
-            )
+            else
+                ( model
+                , refs
+                    |> List.map
+                        (\ref ->
+                            BrowserGotTxForReferencedTx
+                                >> WorkflowNextUtxoTx context
+                                |> Api.GetTxEffect
+                                    { currency = Id.network context.addressId
+                                    , txHash = ref.txHash
+                                    , includeIo = True
+                                    , tokenTxId = Nothing
+                                    }
+                                |> ApiEffect
+                        )
+                )
 
         BrowserGotTxForReferencedTx (Api.Data.TxTxUtxo tx) ->
             let

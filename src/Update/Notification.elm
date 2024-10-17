@@ -42,6 +42,15 @@ pathFinderErrorToNotifications err =
         InternalError (NoTxInputsOutputsFoundInDict _) ->
             Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
 
+        InfoError (NoAdjaccentTxForAddressFound tid) ->
+            Notify.Info
+                { title = "Transaction tracing not possible"
+                , message = "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent."
+                , variables =
+                    Id.id tid |> List.singleton
+                }
+                |> List.singleton
+
         InfoError (TxTracingThroughService id exchangeLabel) ->
             Notify.Info
                 { title = "Transaction tracing not reasonable"

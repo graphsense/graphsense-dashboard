@@ -422,3 +422,5 @@ Copy transaction ID: Transaktions ID kopieren
 Remove from Graph: Vom Graphen entfernen
 victim: Opfer
 perpetrator: Täter
+"Transaction tracing not possible": "Nachverfolgung der Transaktion nicht möglich"
+"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Warscheinlich würden der Betrag noch nicht weiter verwendet."
