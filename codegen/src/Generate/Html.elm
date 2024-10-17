@@ -406,7 +406,16 @@ frameTraitsToExpression config componentName node =
 
 layoutIsAbsolute : FrameTraits -> Bool
 layoutIsAbsolute node =
-    node.layoutMode == Just LayoutModeNONE || node.layoutMode == Nothing
+    (node.layoutGrow
+        == Nothing
+        || node.layoutGrow
+        == Just LayoutGrow0
+    )
+        && (node.layoutMode
+                == Just LayoutModeNONE
+                || node.layoutMode
+                == Nothing
+           )
 
 
 isSvgChild : SubcanvasNode -> Bool
