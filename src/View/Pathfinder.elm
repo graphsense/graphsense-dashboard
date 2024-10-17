@@ -278,22 +278,16 @@ annotationHovercardView vc id annotation hc =
 
         inputField =
             input
-                [ Css.annotationInputStyle vc "" |> css
+                [ Sc.labelFieldStateActive_details.styles
+                    ++ Sc.labelFieldStateActivePlaceholderText_details.styles
+                    |> css
                 , onInput (UserInputsAnnotation id)
                 , HA.value labelValue
-                , HA.placeholder (Locale.string vc.locale "Label")
+                , HA.placeholder (Locale.string vc.locale "Optional")
                 , HA.autofocus True
                 , HA.id "annotation-label-textbox"
                 ]
                 []
-
-        inputBody =
-            form []
-                [ Sc.labelFieldStateActiveWithInstances
-                    Sc.labelFieldStateActiveAttributes
-                    (Sc.labelFieldStateActiveInstances |> Rs.s_placeholderText (Just inputField))
-                    { stateActive = { deleteVisible = False, iconInstance = none, textPlaceholder = "test" } }
-                ]
 
         colorBtn sColor color =
             let
@@ -319,16 +313,16 @@ annotationHovercardView vc id annotation hc =
     Sc.annotationWithAttributes
         Sc.annotationAttributes
         { annotation = { colorText = Locale.string vc.locale "Color", labelText = Locale.string vc.locale "Label" }
-        , darkBlue4 = { variant = colorBtn selectedColor (Just annotationDarkBlue) }
-        , green2 = { variant = colorBtn selectedColor (Just annotationGreen) }
-        , labelField = { variant = inputBody }
-        , lightBlue5 = { variant = colorBtn selectedColor (Just annotationLightBlue) }
+        , labelField = { variant = inputField }
         , noColor1 = { variant = colorBtn selectedColor Nothing }
+        , green2 = { variant = colorBtn selectedColor (Just annotationGreen) }
+        , red3 = { variant = colorBtn selectedColor (Just annotationRed) }
+        , darkBlue4 = { variant = colorBtn selectedColor (Just annotationDarkBlue) }
+        , lightBlue5 = { variant = colorBtn selectedColor (Just annotationLightBlue) }
+        , yellow6 = { variant = colorBtn selectedColor (Just annotationYellow) }
         , pink7 = { variant = colorBtn selectedColor (Just annotationPink) }
         , purple8 = { variant = colorBtn selectedColor (Just annotationPurple) }
-        , red3 = { variant = colorBtn selectedColor (Just annotationRed) }
         , turquoise9 = { variant = colorBtn selectedColor (Just annotationTurquoise) }
-        , yellow6 = { variant = colorBtn selectedColor (Just annotationYellow) }
         }
         |> Html.toUnstyled
         |> List.singleton
