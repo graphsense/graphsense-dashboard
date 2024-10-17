@@ -13,7 +13,7 @@ import Css.View
 import Dict
 import DurationDatePicker as DatePicker
 import Hovercard
-import Html.Styled as Html exposing (Html, div, form, img, input)
+import Html.Styled as Html exposing (Html, div, img, input)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn)
 import Iknaio.ColorScheme exposing (annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
@@ -89,13 +89,13 @@ type alias BtnConfig =
     }
 
 
+
 -- inlineClusterIcon : Bool -> Color -> Html Msg
 -- inlineClusterIcon highlight clr =
 --     let
 --         getHighlight c =
 --             if highlight then
 --                 [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
-
 --             else
 --                 []
 --     in
@@ -104,10 +104,8 @@ type alias BtnConfig =
 --             |> Rs.s_ellipse25 (getHighlight clr)
 --         )
 --         {}
-
-
-
 -- Helpers
+
 
 inOutIndicator : View.Config -> String -> Int -> Int -> Int -> Html Msg
 inOutIndicator vc title mnr inNr outNr =
@@ -119,6 +117,8 @@ inOutIndicator vc title mnr inNr outNr =
             , title = Locale.string vc.locale title
             }
         }
+
+
 
 -- View
 
@@ -1083,23 +1083,27 @@ addressDetailsContentView vc gc model id viewState =
 
 
 clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Int -> Api.Data.Entity -> Html Msg
-clusterInfoView vc open _ _ clstr =
+clusterInfoView vc open colors _ clstr =
     if clstr.noAddresses <= 1 then
         none
 
     else
         let
-            -- clstrid =
-            --     Id.initClusterId clstr.currency clstr.entity
+            clstrid =
+                Id.initClusterId clstr.currency clstr.entity
 
-            --inlineChevronDownThinIcon
-            -- clusterColor =
-            --     Colors.getAssignedColor Colors.Clusters clstrid colors
-
-            -- clusterIcon =
-            --     clusterColor
-            --         |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends)
-            --         |> Maybe.withDefault none
+            clusterColor =
+                Colors.getAssignedColor Colors.Clusters clstrid colors
+                    |> Maybe.map
+                        (.color
+                            >> Util.View.toCssColor
+                            >> Css.fill
+                            >> Css.important
+                            >> List.singleton
+                            >> css
+                            >> List.singleton
+                        )
+                    |> Maybe.withDefault []
 
             headerAttr =
                 [ Css.cursor Css.pointer
@@ -1118,8 +1122,11 @@ clusterInfoView vc open _ _ clstr =
             SidePanelComponents.clusterInformationOpenWithAttributes
                 (SidePanelComponents.clusterInformationOpenAttributes
                     |> Rs.s_clusterInformationOpen headerAttr
+                    |> Rs.s_ellipse25 clusterColor
                 )
                 { clusterInformationOpen = { label = label }
+                , titleOfClusterId = { infoLabel = Locale.string vc.locale "Cluster" }
+                , valueOfClusterId = { label = String.fromInt clstr.entity }
                 , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number of addresses" }
                 , valueOfNumberOfAddresses =
                     { firstRowText = String.fromInt clstr.noAddresses
