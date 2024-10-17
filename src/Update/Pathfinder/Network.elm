@@ -470,22 +470,23 @@ addTxWithPosition position tx network =
                                     |> List.map second
 
                             coords =
-                                avoidOverlappingEdges things <|
-                                    case position of
-                                        Auto ->
-                                            findUtxoTxCoords network t
+                                case position of
+                                    Auto ->
+                                        avoidOverlappingEdges things <| findUtxoTxCoords network t
 
-                                        NextTo ( direction, id_ ) ->
-                                            Dict.get id_ network.addresses
+                                    NextTo ( direction, id_ ) ->
+                                        avoidOverlappingEdges things <|
+                                            (Dict.get id_ network.addresses
                                                 |> Maybe.map
                                                     (findUtxoTxCoordsNextToAddress network direction)
                                                 |> Maybe.Extra.withDefaultLazy
                                                     (\_ ->
                                                         findUtxoTxCoords network t
                                                     )
+                                            )
 
-                                        Fixed x y ->
-                                            { x = x, y = y }
+                                    Fixed x y ->
+                                        { x = x, y = y }
 
                             newNetwork =
                                 freeSpaceAroundCoords coords network

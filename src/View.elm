@@ -96,17 +96,12 @@ body plugins vc model =
 
 sidebarMenuItem : Html msg -> String -> String -> Bool -> String -> Html msg
 sidebarMenuItem img label titleStr selected link =
-    let
-        itemWidth =
-            85
-    in
     if not selected then
         Nb.navbarProductItemStateNeutralWithInstances
             (Nb.navbarProductItemStateNeutralAttributes
                 |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
                 |> Rs.s_stateNeutral
                     [ [ Css.hover Nb.navbarProductItemStateHover_details.styles
-                      , itemWidth |> Css.px |> Css.width
                       ]
                         |> css
                     ]
@@ -123,9 +118,7 @@ sidebarMenuItem img label titleStr selected link =
 
     else
         Nb.navbarProductItemStateSelectedWithInstances
-            (Nb.navbarProductItemStateSelectedAttributes
-                |> Rs.s_stateSelected [ [ itemWidth |> Css.px |> Css.width ] |> css ]
-            )
+            Nb.navbarProductItemStateSelectedAttributes
             Nb.navbarProductItemStateSelectedInstances
             { stateSelected = { iconInstance = img, productLabel = label } }
 
@@ -134,8 +127,8 @@ sidebar : Plugins -> Config -> Model key -> Html Msg
 sidebar plugins vc model =
     let
         products =
-            [ sidebarMenuItem (Nb.iconsPathfinderNew {}) "Network" "Network" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
-            , sidebarMenuItem (Nb.iconsPathfinderNew {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl)
+            [ sidebarMenuItem (Nb.iconsPathfinder10 {}) "Network" "Network" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
+            , sidebarMenuItem (Nb.iconsPathfinder20 {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl)
             ]
                 ++ Plugin.sidebar plugins model.plugins model.page vc
 

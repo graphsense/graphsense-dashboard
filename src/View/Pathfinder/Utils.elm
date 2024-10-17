@@ -6,6 +6,7 @@ import Html.Styled exposing (Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import View.Locale as Locale
 
+
 dateFromTimestamp : View.Config -> Int -> Html msg
 dateFromTimestamp vc d =
     let

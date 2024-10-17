@@ -13,6 +13,7 @@ import Effect exposing (and, n)
 import Effect.Api as Api exposing (Effect(..))
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Hovercard
+import Iknaio.ColorScheme exposing (annotationGreen, annotationRed)
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
 import Init.Pathfinder.AddressDetails as AddressDetails
@@ -55,7 +56,7 @@ import Ports
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route as GlobalRoute
-import Route.Pathfinder as Route exposing (Route)
+import Route.Pathfinder as Route exposing (AddressHopType(..), Route)
 import Set exposing (..)
 import Task
 import Tuple exposing (first, mapFirst, mapSecond, second)
@@ -838,10 +839,10 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
 
-        BrowserGotTx tx ->
+        BrowserGotTx pos tx ->
             let
                 ( newTx, newNetwork ) =
-                    Network.addTx tx model.network
+                    Network.addTxWithPosition pos tx model.network
             in
             (model |> s_network newNetwork)
                 |> checkSelection uc
@@ -1297,25 +1298,42 @@ updateByRoute_ plugins uc route model =
 
         Route.Path net list ->
             let
-                accf i ( m, eff, ( _, x ) ) =
+                accf i ( m, eff, x ) =
                     let
-                        id =
-                            ( net, i )
-
                         action =
-                            if String.length i == 64 then
-                                loadTx plugins id
+                            case i of
+                                Route.AddressHop _ adr ->
+                                    loadAddressWithPosition (Fixed x 0) plugins ( net, adr )
 
-                            else
-                                loadAddressWithPosition (Fixed x 0) plugins id
+                                Route.TxHop h ->
+                                    loadTxWithPosition (Fixed x 0) plugins ( net, h )
+
+                        annotations =
+                            case i of
+                                Route.AddressHop VictimAddress adr ->
+                                    Annotations.set
+                                        ( net, adr )
+                                        "victim"
+                                        (Just annotationGreen)
+                                        m.annotations
+
+                                Route.AddressHop PerpetratorAddress adr ->
+                                    Annotations.set
+                                        ( net, adr )
+                                        "perpetrator"
+                                        (Just annotationRed)
+                                        m.annotations
+
+                                _ ->
+                                    m.annotations
 
                         ( nm, effn ) =
-                            m |> action
+                            m |> s_annotations annotations |> action
                     in
-                    ( nm, eff ++ effn, ( Just id, x + nodeXOffset ) )
+                    ( nm, eff ++ effn, x + nodeXOffset )
 
                 ( totalM, totalEff, _ ) =
-                    List.foldl accf ( model, [], ( Nothing, 0 ) ) list
+                    List.foldl accf ( model, [], 0 ) list
             in
             ( totalM, totalEff )
 
@@ -1350,14 +1368,14 @@ loadAddressWithPosition position _ id model =
         )
 
 
-loadTx : Plugins -> Id -> Model -> ( Model, List Effect )
-loadTx _ id model =
+loadTxWithPosition : FindPosition -> Plugins -> Id -> Model -> ( Model, List Effect )
+loadTxWithPosition pos _ id model =
     if Dict.member id model.network.txs then
         n model
 
     else
         ( model
-        , BrowserGotTx
+        , BrowserGotTx pos
             |> Api.GetTxEffect
                 { currency = Id.network id
                 , txHash = Id.id id
@@ -1367,6 +1385,11 @@ loadTx _ id model =
             |> ApiEffect
             |> List.singleton
         )
+
+
+loadTx : Plugins -> Id -> Model -> ( Model, List Effect )
+loadTx =
+    loadTxWithPosition Auto
 
 
 selectTx : Id -> Model -> ( Model, List Effect )

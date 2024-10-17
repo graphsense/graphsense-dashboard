@@ -106,7 +106,7 @@ shallPushHistory msg _ =
         BrowserGotActor _ _ ->
             False
 
-        BrowserGotTx _ ->
+        BrowserGotTx _ _ ->
             False
 
         ChangedDisplaySettingsMsg _ ->

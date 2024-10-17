@@ -1,4 +1,4 @@
-module Route.Pathfinder exposing (Config, Route(..), Thing(..), addressRoute, parser, pathRoute, toUrl, txRoute)
+module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, parser, pathRoute, toUrl, txRoute)
 
 import List.Extra
 import Url.Builder exposing (QueryParameter, absolute)
@@ -15,7 +15,52 @@ type Route
     | Actor String
     | Label String
     | Network String Thing
-    | Path String (List String)
+    | Path String (List PathHopType)
+
+
+type PathHopType
+    = AddressHop AddressHopType String
+    | TxHop String
+
+
+type AddressHopType
+    = VictimAddress
+    | PerpetratorAddress
+    | NormalAddress
+
+
+hopToString : PathHopType -> String
+hopToString h =
+    case h of
+        AddressHop VictimAddress a ->
+            "VA_" ++ a
+
+        AddressHop PerpetratorAddress a ->
+            "PA_" ++ a
+
+        AddressHop NormalAddress a ->
+            "HA_" ++ a
+
+        TxHop t ->
+            "T_" ++ t
+
+
+stringToHop : String -> Maybe PathHopType
+stringToHop s =
+    if String.startsWith "VA_" s then
+        Just (AddressHop VictimAddress (String.dropLeft 3 s))
+
+    else if String.startsWith "PA_" s then
+        Just (AddressHop PerpetratorAddress (String.dropLeft 3 s))
+
+    else if String.startsWith "HA_" s then
+        Just (AddressHop NormalAddress (String.dropLeft 3 s))
+
+    else if String.startsWith "T_" s then
+        Just (TxHop (String.dropLeft 2 s))
+
+    else
+        Nothing
 
 
 type Thing
@@ -47,7 +92,7 @@ toUrl r =
             absolute
                 [ net
                 , pathSegment
-                , String.join pathSeparator steps
+                , String.join pathSeparator (steps |> List.map hopToString)
                 ]
                 []
 
@@ -113,11 +158,11 @@ thing =
         ]
 
 
-parsePath : Parser (List String -> a) a
+parsePath : Parser (List PathHopType -> a) a
 parsePath =
     P.custom "PATH" <|
         \segment ->
-            Just (String.split pathSeparator segment)
+            Just (String.split pathSeparator segment |> List.filterMap stringToHop)
 
 
 addressRoute : { network : String, address : String } -> Route
@@ -137,6 +182,6 @@ parseCurrency c =
             List.Extra.find ((==) segment) c.networks
 
 
-pathRoute : String -> List String -> Route
+pathRoute : String -> List PathHopType -> Route
 pathRoute network path =
     Path network path

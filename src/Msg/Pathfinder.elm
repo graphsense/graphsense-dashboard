@@ -14,6 +14,7 @@ import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Table
 import Time exposing (Posix)
+import Update.Pathfinder.Network exposing (FindPosition)
 
 
 type Msg
@@ -50,7 +51,7 @@ type Msg
     | NoOp
     | BrowserGotTxForAddress Id Direction Api.Data.Tx
     | BrowserGotActor String Api.Data.Actor
-    | BrowserGotTx Api.Data.Tx
+    | BrowserGotTx FindPosition Api.Data.Tx
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | Tick Posix
     | UserClickedTx Id

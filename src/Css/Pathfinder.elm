@@ -140,6 +140,7 @@ orangeColor =
 
 -- Styles
 
+
 tagConfidenceTextHighStyle : View.Config -> List Style
 tagConfidenceTextHighStyle vc =
     [ color (successColor vc) ]
@@ -280,12 +281,15 @@ graphActionsViewStyle : View.Config -> List Style
 graphActionsViewStyle _ =
     [ displayFlex, justifyContent flexEnd, paddingRight lGap ]
 
+
 emptyTableMsg : List Style
 emptyTableMsg =
     [ margin (px 20), textAlign center ]
 
 
+
 -- non vc dependent styles
+
 
 inoutStyle : Bool -> List Style
 inoutStyle out =
