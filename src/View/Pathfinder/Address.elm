@@ -99,6 +99,18 @@ view _ vc _ colors address getCluster annotation =
         adjY =
             fd.y + fd.height / 2
 
+        nodeLabel =
+            address.exchange
+                |> Maybe.Extra.or address.actor
+                |> Maybe.Extra.or
+                    (case getAddressType address cluster of
+                        LikelyUnknownService ->
+                            Just "Service"
+
+                        _ ->
+                            Nothing
+                    )
+
         ( annAttr, label ) =
             case annotation of
                 Just ann ->
@@ -140,7 +152,7 @@ view _ vc _ colors address getCluster annotation =
                                 [ translate
                                     0
                                     (GraphComponents.addressNode_details.height
-                                        + (if address.exchange == Nothing then
+                                        + (if nodeLabel == Nothing then
                                             -GraphComponents.addressNodeExchangeLabel_details.height
 
                                            else
@@ -175,17 +187,7 @@ view _ vc _ colors address getCluster annotation =
                 _ ->
                     ( [], [] )
 
-        nodeLabel =
-            address.exchange
-                |> Maybe.Extra.or address.actor
-                |> Maybe.Extra.or
-                    (case getAddressType address cluster of
-                        LikelyUnknownService ->
-                            Just "Service"
 
-                        _ ->
-                            Nothing
-                    )
     in
     g
         [ translate
