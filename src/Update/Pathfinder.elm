@@ -1187,7 +1187,7 @@ expandAddress uc address direction model =
 
 deleteSelection : Model -> ( Model, List Effect )
 deleteSelection model =
-    case model.selection of
+    (case model.selection of
         SelectedAddress id ->
             removeAddress id model
 
@@ -1209,6 +1209,8 @@ deleteSelection model =
 
         _ ->
             n model
+    )
+        |> Tuple.mapFirst unselect
 
 
 updateTagDataOnAddress : Id -> Model -> Model

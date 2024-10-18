@@ -39,10 +39,11 @@ view vc config =
             [ Css.important <|
                 Css.property "background-color" <|
                     if config.pointerTool == pointer then
-                        Theme.Colors.newGreen
+                        Theme.Colors.oldBrandHighlight
 
                     else
                         "transparent"
+            , Css.borderRadius (Css.px 5)
             ]
 
         title str =
