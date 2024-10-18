@@ -31,6 +31,7 @@ import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
+import Color
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Maybe Annotations.AnnotationItem -> Svg Msg
