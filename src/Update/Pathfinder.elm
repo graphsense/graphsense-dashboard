@@ -661,7 +661,7 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        UserMovesMouseOutUtxoTx id ->
+        UserMovesMouseOutUtxoTx _ ->
             unhover model
                 |> n
 
@@ -1007,6 +1007,9 @@ updateByMsg plugins uc msg model =
 
         BrowserGotAddressesTags _ data ->
             let
+                isExchange =
+                    (==) (Just TagSummary.exchangeCategory)
+
                 updateHasTags ( id, tag ) =
                     Dict.update id
                         (Maybe.map
@@ -1015,15 +1018,28 @@ updateByMsg plugins uc msg model =
                                     ( HasTagSummary _, _ ) ->
                                         curr
 
+                                    ( HasTags withExchangeTag, Just { category } ) ->
+                                        withExchangeTag
+                                            || isExchange category
+                                            |> HasTags
+
                                     ( _, Just { category } ) ->
-                                        if category == Just TagSummary.exchangeCategory then
-                                            HasExchangeTag
+                                        if isExchange category then
+                                            HasExchangeTagOnly
 
                                         else
-                                            HasTags
+                                            curr
+                                                == HasExchangeTagOnly
+                                                |> HasTags
+
+                                    ( LoadingTags, Nothing ) ->
+                                        NoTags
+
+                                    ( NoTags, Nothing ) ->
+                                        NoTags
 
                                     ( _, Nothing ) ->
-                                        NoTags
+                                        curr
                             )
                         )
 
@@ -1209,7 +1225,10 @@ updateTagDataOnAddress addressId m =
                         |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
                         |> Network.updateAddress addressId (s_hasActor (tagdata.bestActor /= Nothing))
 
-                HasTags ->
+                HasExchangeTagOnly ->
+                    Network.updateAddress addressId (s_hasTags False) m.network
+
+                HasTags _ ->
                     Network.updateAddress addressId (s_hasTags True) m.network
 
                 _ ->

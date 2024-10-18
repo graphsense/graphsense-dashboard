@@ -14,8 +14,8 @@ import RecordSetter as Rs
 import Table
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.Pathfinder.TagSummary as TagSummary
-import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifierWithLengths)
+import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
+import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 
@@ -64,73 +64,82 @@ addressColumn vc cc lblfn =
 
 identifierColumn : (data -> HavingTags) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
 identifierColumn lblfn vc { label, accessor, onClick } =
+    let
+        exchangeIcon =
+            Icons.iconsExchangeSmallWithAttributes
+                (Icons.iconsExchangeSmallAttributes
+                    |> Rs.s_iconsExchangeSmall
+                        [ Locale.string vc.locale "is an exchange"
+                            |> title
+                        ]
+                )
+                {}
+
+        tagIcon =
+            Icons.iconsTagSmallWithAttributes
+                (Icons.iconsTagSmallAttributes
+                    |> Rs.s_iconsTagSmall
+                        [ Locale.string vc.locale "has tags"
+                            |> title
+                        ]
+                )
+                {}
+
+        loadingIcon =
+            span
+                [ Locale.string vc.locale "Loading tags" |> title
+                , css
+                    [ Css.px 4
+                        |> Css.left
+                    , Css.px 5
+                        |> Css.top
+                    , Css.position Css.absolute
+                    ]
+                ]
+                [ loadingSpinner vc Css.Statusbar.loadingSpinner
+                ]
+    in
     Table.veryCustomColumn
         { name = label
         , viewData =
             \data ->
-                SidePanelComponents.sidePanelListIdentifierCellWithTagWithInstances
+                SidePanelComponents.sidePanelListIdentifierCellWithTagWithAttributes
                     SidePanelComponents.sidePanelListIdentifierCellWithTagAttributes
-                    (SidePanelComponents.sidePanelListIdentifierCellWithTagInstances
-                        |> Rs.s_iconsTagSmall
-                            (case lblfn data of
+                    { sidePanelListIdentifierCellWithTag =
+                        { position1Instance =
+                            case lblfn data of
                                 LoadingTags ->
-                                    Just
-                                        (span
-                                            [ Locale.string vc.locale "Loading tags" |> title
-                                            , css SidePanelComponents.sidePanelListIdentifierCellWithTagIconsTagSmallIconsTagSmall_details.styles
-                                            , css
-                                                [ -Icons.iconsTagSmall_details.width
-                                                    + Icons.iconsTagSmallTagIcon_details.x
-                                                    - 2
-                                                    |> Css.px
-                                                    |> Css.left
-                                                , Icons.iconsTagSmallTagIcon_details.y
-                                                    + 2
-                                                    |> Css.px
-                                                    |> Css.top
-                                                ]
-                                            ]
-                                            [ loadingSpinner vc Css.Statusbar.loadingSpinner
-                                            ]
-                                        )
+                                    loadingIcon
+
+                                HasExchangeTagOnly ->
+                                    exchangeIcon
+
+                                HasTags _ ->
+                                    tagIcon
+
+                                NoTags ->
+                                    none
+
+                                HasTagSummary ts ->
+                                    if hasOnlyExchangeTags ts then
+                                        exchangeIcon
+
+                                    else
+                                        tagIcon
+                        , position2Instance =
+                            case lblfn data of
+                                HasTagSummary ts ->
+                                    if isExchangeNode ts then
+                                        exchangeIcon
+
+                                    else
+                                        none
+
+                                HasTags True ->
+                                    exchangeIcon
 
                                 _ ->
-                                    Nothing
-                            )
-                    )
-                    { sidePanelListIdentifierCellWithTag =
-                        { tagIconVisible =
-                            case lblfn data of
-                                LoadingTags ->
-                                    True
-
-                                HasTagSummary ts ->
-                                    not (TagSummary.isExchangeNode ts)
-
-                                HasExchangeTag ->
-                                    True
-
-                                HasTags ->
-                                    True
-
-                                NoTags ->
-                                    False
-                        , exchangeIconVisible =
-                            case lblfn data of
-                                LoadingTags ->
-                                    False
-
-                                HasTagSummary ts ->
-                                    TagSummary.isExchangeNode ts
-
-                                HasExchangeTag ->
-                                    True
-
-                                HasTags ->
-                                    False
-
-                                NoTags ->
-                                    False
+                                    none
                         }
                     , sidePanelListIdentifierCell =
                         { copyIconInstance =
