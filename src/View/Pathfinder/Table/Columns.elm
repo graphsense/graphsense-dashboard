@@ -5,8 +5,8 @@ import Config.View as View
 import Css
 import Css.Pathfinder as PCSS exposing (inoutStyle)
 import Css.Statusbar
-import Html.Styled exposing (input, span, text)
-import Html.Styled.Attributes exposing (checked, css, title, type_)
+import Html.Styled exposing (span, text)
+import Html.Styled.Attributes exposing (css, title)
 import Html.Styled.Events
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..))
@@ -192,18 +192,31 @@ checkboxColumn _ { isChecked, onClick } =
         { name = ""
         , viewData =
             \data ->
+                let
+                    attrs =
+                        [ onClick data |> Html.Styled.Events.onClick
+                        , [ Css.cursor Css.pointer ] |> css
+                        ]
+                in
                 Table.HtmlDetails
                     [ [ PCSS.mGap |> Css.padding
                       , Css.width <| Css.px 50
                       ]
                         |> css
                     ]
-                    [ input
-                        [ type_ "checkbox"
-                        , onClick data |> Html.Styled.Events.onClick
-                        , isChecked data |> checked
-                        ]
-                        []
+                    [ if isChecked data then
+                        Icons.checkboxesSize14pxStateSelectedWithAttributes
+                            (Icons.checkboxesSize14pxStateSelectedAttributes
+                                |> Rs.s_size14pxStateSelected attrs
+                            )
+                            {}
+
+                      else
+                        Icons.checkboxesSize14pxStateDeselectedWithAttributes
+                            (Icons.checkboxesSize14pxStateDeselectedAttributes
+                                |> Rs.s_size14pxStateDeselected attrs
+                            )
+                            {}
                     ]
         , sorter = Table.unsortable
         }
