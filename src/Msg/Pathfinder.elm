@@ -51,7 +51,7 @@ type Msg
     | NoOp
     | BrowserGotTxForAddress Id Direction Api.Data.Tx
     | BrowserGotActor String Api.Data.Actor
-    | BrowserGotTx FindPosition Api.Data.Tx
+    | BrowserGotTx FindPosition Bool Api.Data.Tx
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | Tick Posix
     | UserClickedTx Id

@@ -827,7 +827,7 @@ updateByMsg plugins uc msg model =
                             |> n
 
                     else
-                        loadTx plugins txId model
+                        loadTx True plugins txId model
             in
             case tx of
                 Api.Data.AddressTxTxAccount _ ->
@@ -839,14 +839,20 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
 
-        BrowserGotTx pos tx ->
+        BrowserGotTx pos loadAddresses tx ->
             let
                 ( newTx, newNetwork ) =
                     Network.addTxWithPosition pos tx model.network
             in
             (model |> s_network newNetwork)
                 |> checkSelection uc
-                |> and (autoLoadAddresses plugins newTx)
+                |> and
+                    (if loadAddresses then
+                        autoLoadAddresses plugins newTx
+
+                     else
+                        n
+                    )
 
         UserClickedSelectionTool ->
             n
@@ -1312,7 +1318,7 @@ updateByRoute_ plugins uc route model =
                 m1 =
                     { model | network = Network.clearSelection model.network }
             in
-            loadTx plugins id m1
+            loadTx True plugins id m1
                 |> and (selectTx id)
 
         Route.Path net list ->
@@ -1325,7 +1331,7 @@ updateByRoute_ plugins uc route model =
                                     loadAddressWithPosition (Fixed x 0) plugins ( net, adr )
 
                                 Route.TxHop h ->
-                                    loadTxWithPosition (Fixed x 0) plugins ( net, h )
+                                    loadTxWithPosition (Fixed x 0) False plugins ( net, h )
 
                         annotations =
                             case i of
@@ -1387,14 +1393,14 @@ loadAddressWithPosition position _ id model =
         )
 
 
-loadTxWithPosition : FindPosition -> Plugins -> Id -> Model -> ( Model, List Effect )
-loadTxWithPosition pos _ id model =
+loadTxWithPosition : FindPosition -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
+loadTxWithPosition pos loadAddresses _ id model =
     if Dict.member id model.network.txs then
         n model
 
     else
         ( model
-        , BrowserGotTx pos
+        , BrowserGotTx pos loadAddresses
             |> Api.GetTxEffect
                 { currency = Id.network id
                 , txHash = Id.id id
@@ -1406,7 +1412,7 @@ loadTxWithPosition pos _ id model =
         )
 
 
-loadTx : Plugins -> Id -> Model -> ( Model, List Effect )
+loadTx : Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
 loadTx =
     loadTxWithPosition Auto
 
