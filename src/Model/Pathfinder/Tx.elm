@@ -1,4 +1,4 @@
-module Model.Pathfinder.Tx exposing (AccountTx, Io, Tx, TxType(..), UtxoTx, addressToCoords, avg, calcCoords, getAccountTx, getCoords, getRawTimestamp, getTxId, getTxId2, getUtxoTx, hasAddress, hasInput, hasOutput, isInFlow, isOutFlow, listAddressesForTx)
+module Model.Pathfinder.Tx exposing (AccountTx, Io, Tx, TxType(..), UtxoTx, addressToCoords, avg, calcCoords, getAccountTx, getCoords, getInputAddressIds, getRawTimestamp, getTxId, getTxIdForAddressTx, getUtxoTx, hasAddress, hasInput, hasOutput, isInFlow, isOutFlow, listAddressesForTx)
 
 import Animation exposing (Animation, Clock)
 import Api.Data
@@ -9,7 +9,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Tuple exposing (pair)
 import Util.Pathfinder exposing (getAddress)
 
@@ -113,6 +113,16 @@ listAddressesForTx addresses tx =
             )
 
 
+getInputAddressIds : Tx -> List String
+getInputAddressIds tx =
+    case tx.type_ of
+        Account { from } ->
+            [ from |> Id.id ]
+
+        Utxo { raw } ->
+            raw.inputs |> Maybe.withDefault [] |> List.concatMap .address
+
+
 calcCoords : NList.Nonempty Address -> Coords
 calcCoords =
     NList.map addressToCoords >> Coords.avg
@@ -188,8 +198,8 @@ getTxId tx =
             Id.init t.currency t.txHash
 
 
-getTxId2 : Api.Data.AddressTx -> Id
-getTxId2 tx =
+getTxIdForAddressTx : Api.Data.AddressTx -> Id
+getTxIdForAddressTx tx =
     case tx of
         Api.Data.AddressTxTxAccount t ->
             Id.init t.network t.identifier

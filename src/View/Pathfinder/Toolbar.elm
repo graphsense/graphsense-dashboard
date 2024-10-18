@@ -39,7 +39,7 @@ view vc config =
             [ Css.important <|
                 Css.property "background-color" <|
                     if config.pointerTool == pointer then
-                        Theme.Colors.brandLight
+                        Theme.Colors.newGreen
 
                     else
                         "transparent"

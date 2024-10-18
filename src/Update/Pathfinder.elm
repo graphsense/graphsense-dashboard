@@ -831,10 +831,10 @@ updateByMsg plugins uc msg model =
             in
             case tx of
                 Api.Data.AddressTxTxAccount _ ->
-                    addOrRemoveTx (Tx.getTxId2 tx)
+                    addOrRemoveTx (Tx.getTxIdForAddressTx tx)
 
                 Api.Data.AddressTxAddressTxUtxo _ ->
-                    addOrRemoveTx (Tx.getTxId2 tx)
+                    addOrRemoveTx (Tx.getTxIdForAddressTx tx)
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
@@ -1655,14 +1655,11 @@ fetchActors d existing =
         |> List.map fetchActor
 
 
-getBiggestIO : Maybe (List Api.Data.TxValue) -> Maybe String -> Maybe String
-getBiggestIO io exceptAddress =
-    Maybe.withDefault [] io
-        |> (exceptAddress
-                |> Maybe.map
-                    (\a -> List.filter (.address >> List.all ((/=) a)))
-                |> Maybe.withDefault identity
-           )
+getBiggestIO : Maybe (List Api.Data.TxValue) -> Set String -> Maybe String
+getBiggestIO io exceptAddresses =
+    io
+        |> Maybe.withDefault []
+        |> List.filter (\x -> x.address |> Set.fromList |> Set.intersect exceptAddresses |> Set.isEmpty)
         |> List.sortBy (.value >> .value)
         |> List.reverse
         |> List.head
@@ -1670,7 +1667,7 @@ getBiggestIO io exceptAddress =
         |> Maybe.andThen List.head
 
 
-getAddressForDirection : Tx -> Direction -> Maybe String -> Maybe Id
+getAddressForDirection : Tx -> Direction -> Set String -> Maybe Id
 getAddressForDirection tx direction exceptAddress =
     case tx.type_ of
         Tx.Utxo { raw } ->
@@ -1720,7 +1717,7 @@ addTx plugins _ addressId direction tx model =
 
         -- TODO what if multisig?
         firstAddress =
-            getAddressForDirection newTx direction (Just address) |> Maybe.map Id.id
+            getAddressForDirection newTx direction (Set.fromList [ address ]) |> Maybe.map Id.id
     in
     firstAddress
         |> Maybe.map
@@ -1986,14 +1983,15 @@ autoLoadAddresses plugins tx model =
                 Nothing
 
             else
-                getAddressForDirection tx Incoming Nothing
+                getAddressForDirection tx Incoming Set.empty
 
         dst =
             if List.member Outgoing addresses then
                 Nothing
 
             else
-                (src |> Maybe.map Id.id)
+                (tx |> Tx.getInputAddressIds)
+                    |> Set.fromList
                     |> getAddressForDirection tx Outgoing
     in
     [ src, dst ]
