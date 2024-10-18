@@ -124,11 +124,11 @@ tagLabel vc lbl tag =
         Just lbldata ->
             div
                 []
-                [ row
+                ([ row
                     { tooltipRowLabel = { title = Locale.string vc.locale "Tag label" }
                     , tooltipRowValue = lbldata.label |> val vc
                     }
-                , GraphComponents.tooltipRowWithInstances
+                 , GraphComponents.tooltipRowWithInstances
                     (GraphComponents.tooltipRowAttributes
                         |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
                     )
@@ -139,33 +139,50 @@ tagLabel vc lbl tag =
                     { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }
                     , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
                     }
-                , row
-                    { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
-                    , tooltipRowValue =
-                        List.length lbldata.sources
-                            |> String.fromInt
-                            |> val vc
-                    }
-                , row
-                    { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
-                    , tooltipRowValue = lbldata.count |> String.fromInt |> val vc
-                    }
-                , row
-                    { tooltipRowLabel = { title = Locale.string vc.locale "Last modified" }
-                    , tooltipRowValue =
-                        let
-                            date =
-                                Locale.timestampDateUniform vc.locale lbldata.lastmod
+                 ]
+                    ++ (if List.isEmpty lbldata.concepts then
+                            []
 
-                            time =
-                                Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset lbldata.lastmod
-                        in
-                        { firstRow = date
-                        , secondRow = time
-                        , secondRowVisible = True
-                        }
-                    }
-                ]
+                        else
+                            row
+                                { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
+                                , tooltipRowValue =
+                                    lbldata.concepts
+                                        |> String.join ","
+                                        |> Locale.string vc.locale
+                                        |> Util.View.truncate 20
+                                        |> val vc
+                                }
+                                |> List.singleton
+                       )
+                    ++ [ row
+                            { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
+                            , tooltipRowValue =
+                                List.length lbldata.sources
+                                    |> String.fromInt
+                                    |> val vc
+                            }
+                       , row
+                            { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
+                            , tooltipRowValue = lbldata.count |> String.fromInt |> val vc
+                            }
+                       , row
+                            { tooltipRowLabel = { title = Locale.string vc.locale "Last modified" }
+                            , tooltipRowValue =
+                                let
+                                    date =
+                                        Locale.timestampDateUniform vc.locale lbldata.lastmod
+
+                                    time =
+                                        Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset lbldata.lastmod
+                                in
+                                { firstRow = date
+                                , secondRow = time
+                                , secondRowVisible = True
+                                }
+                            }
+                       ]
+                )
 
         _ ->
             none

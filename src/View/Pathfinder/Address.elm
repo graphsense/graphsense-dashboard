@@ -2,7 +2,6 @@ module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 
 import Animation as A
 import Api.Data
-import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -11,6 +10,7 @@ import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
+import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
@@ -173,6 +173,18 @@ view _ vc _ colors address getCluster annotation =
 
                 _ ->
                     ( [], [] )
+
+        nodeLabel =
+            address.exchange
+                |> Maybe.Extra.or address.actor
+                |> Maybe.Extra.or
+                    (case getAddressType address cluster of
+                        LikelyUnknownService ->
+                            Just "Service"
+
+                        _ ->
+                            Nothing
+                    )
     in
     g
         [ translate
@@ -222,11 +234,9 @@ view _ vc _ colors address getCluster annotation =
                 , clusterVisible = (clusterColor /= Nothing) && vc.highlightClusterFriends
                 , expandLeftVisible = expandVisible Incoming
                 , expandRightVisible = expandVisible Outgoing
-                , iconInstance = toNodeIcon vc.highlightClusterFriends address cluster Nothing
-                , exchangeLabel =
-                    address.exchange
-                        |> Maybe.withDefault ""
-                , exchangeLabelVisible = address.exchange /= Nothing
+                , iconInstance = toNodeIcon address cluster
+                , exchangeLabel = nodeLabel |> Maybe.withDefault ""
+                , exchangeLabelVisible = nodeLabel /= Nothing
                 , isStartingPoint = address.isStartingPoint || address.selected
                 , tagIconVisible = address.hasTags
                 }
@@ -314,11 +324,11 @@ expandHandleLoadingSpinner vc address direction details =
         Nothing
 
 
-toNodeIconHtml : Bool -> Maybe Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
-toNodeIconHtml highlight address cluster clusterColor =
+toNodeIconHtml : Maybe Address -> Maybe Api.Data.Entity -> Svg msg
+toNodeIconHtml address cluster =
     (case address of
         Just addr ->
-            toNodeIcon highlight addr cluster clusterColor
+            toNodeIcon addr cluster
 
         Nothing ->
             Icons.iconsUntagged {}
@@ -330,8 +340,14 @@ toNodeIconHtml highlight address cluster clusterColor =
             ]
 
 
-toNodeIcon : Bool -> Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
-toNodeIcon highlight address cluster clusterColor =
+type AddressServiceType
+    = KnownService
+    | LikelyUnknownService
+    | Unknown
+
+
+getAddressType : Address -> Maybe Api.Data.Entity -> AddressServiceType
+getAddressType address cluster =
     let
         clstrSize =
             cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
@@ -344,38 +360,34 @@ toNodeIcon highlight address cluster clusterColor =
 
         maxInDegreeUser =
             7500
-
-        getHighlight c =
-            if highlight then
-                [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
-
-            else
-                []
     in
-    case ( address.exchange, clusterColor, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract ) of
-        ( _, _, Just True ) ->
+    if clstrSize > maxClusterSizeUser || clusterIndegree > maxInDegreeUser then
+        if address.actor == Nothing then
+            LikelyUnknownService
+
+        else
+            KnownService
+
+    else
+        Unknown
+
+
+toNodeIcon : Address -> Maybe Api.Data.Entity -> Svg msg
+toNodeIcon address cluster =
+    case ( address.exchange, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract ) of
+        ( Just _, _ ) ->
+            Icons.iconsExchange {}
+
+        ( Nothing, Just True ) ->
             Icons.iconsSmartContract {}
 
-        ( Nothing, Nothing, _ ) ->
-            if clstrSize > maxClusterSizeUser || clusterIndegree > maxInDegreeUser then
-                Icons.iconsUnknownService {}
+        ( Nothing, _ ) ->
+            case getAddressType address cluster of
+                KnownService ->
+                    Icons.iconsInstitution {}
 
-            else
-                Icons.iconsUntagged {}
+                LikelyUnknownService ->
+                    Icons.iconsUnknownService {}
 
-        ( Nothing, Just c, _ ) ->
-            if clstrSize > maxClusterSizeUser || clusterIndegree > maxInDegreeUser then
-                Icons.iconsUnknownService {}
-
-            else
-                Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> Rs.s_ellipse25 (getHighlight c)) {}
-
-        ( Just _, Just c, _ ) ->
-            let
-                cattr =
-                    getHighlight c
-            in
-            Icons.iconsExchangeWithAttributes (Icons.iconsExchangeAttributes |> Rs.s_dollar cattr |> Rs.s_arrows cattr) {}
-
-        ( Just _, _, _ ) ->
-            Icons.iconsExchange {}
+                Unknown ->
+                    Icons.iconsUntagged {}

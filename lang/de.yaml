@@ -426,3 +426,5 @@ perpetrator: Täter
 "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Warscheinlich würden der Betrag noch nicht weiter verwendet."
 is an exchange: ist eine Handelbörse
 has tags: hat Tags
+"Tag label": "Beschriftung"
+copy: kopieren

@@ -1,8 +1,8 @@
 module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, hovercard, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
-import Color
+import Color as BColor
 import Config.View as View
-import Css exposing (Color, Style)
+import Css exposing (Color, Style, paddingLeft, px)
 import Css.Graph
 import Css.View as Css
 import FontAwesome
@@ -35,9 +35,9 @@ aa toAttr value =
     (++) (value |> Maybe.map (toAttr >> List.singleton) |> Maybe.withDefault [])
 
 
-toCssColor : Color.Color -> Color
+toCssColor : BColor.Color -> Color
 toCssColor color =
-    Color.toRgba color
+    BColor.toRgba color
         |> (\{ red, green, blue, alpha } ->
                 Css.rgba (red * 255 |> Basics.round) (green * 255 |> Basics.round) (blue * 255 |> Basics.round) alpha
            )
@@ -98,11 +98,11 @@ truncateLongIdentifierWithLengths start end str =
         str
 
 
-setAlpha : Float -> Color.Color -> Color.Color
+setAlpha : Float -> BColor.Color -> BColor.Color
 setAlpha alpha =
-    Color.toRgba
+    BColor.toRgba
         >> (\c -> { c | alpha = alpha })
-        >> Color.fromRgba
+        >> BColor.fromRgba
 
 
 hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
@@ -245,7 +245,7 @@ copyIconWithAttrPathfinder attr vc value =
 
 copyIcon : View.Config -> String -> Html msg
 copyIcon =
-    copyIconWithAttr []
+    copyIconWithAttr ([ paddingLeft (px 3) ] |> css |> List.singleton)
 
 
 copyIconWithAttr : List (Attribute msg) -> View.Config -> String -> Html msg
@@ -274,11 +274,11 @@ longIdentifier vc address =
         ]
 
 
-colorToHex : Color.Color -> String
+colorToHex : BColor.Color -> String
 colorToHex cl =
     let
         { red, green, blue } =
-            Color.toRgba cl
+            BColor.toRgba cl
     in
     List.map (round >> Hex.toString) [ red * 255, green * 255, blue * 255 ]
         |> List.map (String.padLeft 2 '0')

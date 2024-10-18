@@ -1220,6 +1220,15 @@ updateTagDataOnAddress addressId m =
         net td =
             case td of
                 HasTagSummary tagdata ->
+                    let
+                        actorlabel =
+                            case tagdata.bestActor of
+                                Just _ ->
+                                    tagdata.bestLabel
+
+                                _ ->
+                                    Nothing
+                    in
                     (if TagSummary.isExchangeNode tagdata then
                         Network.updateAddress addressId
                             (s_exchange tagdata.bestLabel)
@@ -1229,7 +1238,7 @@ updateTagDataOnAddress addressId m =
                         m.network
                     )
                         |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
-                        |> Network.updateAddress addressId (s_hasActor (tagdata.bestActor /= Nothing))
+                        |> Network.updateAddress addressId (s_actor actorlabel)
 
                 HasExchangeTagOnly ->
                     Network.updateAddress addressId (s_hasTags False) m.network

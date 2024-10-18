@@ -42,7 +42,7 @@ type alias Address =
     , selected : Bool
     , exchange : Maybe String
     , hasTags : Bool
-    , hasActor : Bool
+    , actor : Maybe String
     , isStartingPoint : Bool
     }
 

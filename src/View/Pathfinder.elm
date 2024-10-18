@@ -857,7 +857,7 @@ addressDetailsContentView vc gc model id viewState =
 
         sidePanelAddressHeader =
             { iconInstance =
-                Address.toNodeIconHtml False address (Dict.get clstrId model.clusters) (Colors.getAssignedColor Colors.Clusters clstrId model.colors |> Maybe.map .color)
+                Address.toNodeIconHtml address (Dict.get clstrId model.clusters)
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "
