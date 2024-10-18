@@ -118,12 +118,13 @@ addAddressWithPosition position id model =
             |> insertAddress (freeSpaceAroundCoords coords model)
 
 
-avoidOverlappingEdges : List { a | y : Animation } -> Coords -> Coords
+avoidOverlappingEdges : List { a | x : Float, y : Animation } -> Coords -> Coords
 avoidOverlappingEdges things coords =
     let
         sameY =
             things
                 |> List.filter (\tx -> A.getTo tx.y |> round |> (==) (round coords.y))
+                |> List.filter (\tx -> tx.x < coords.x - nodeXOffset || tx.x > coords.x + nodeXOffset)
                 |> List.length
     in
     if sameY > 1 then
