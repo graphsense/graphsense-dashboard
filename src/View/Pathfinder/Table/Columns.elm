@@ -129,7 +129,7 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                         , position2Instance =
                             case lblfn data of
                                 HasTagSummary ts ->
-                                    if isExchangeNode ts then
+                                    if isExchangeNode ts && not (hasOnlyExchangeTags ts) then
                                         exchangeIcon
 
                                     else
