@@ -1717,7 +1717,7 @@ addTx plugins _ addressId direction tx model =
 
         -- TODO what if multisig?
         firstAddress =
-            getAddressForDirection newTx direction (Set.fromList [ address ]) |> Maybe.map Id.id
+            getAddressForDirection newTx direction (Set.singleton address) |> Maybe.map Id.id
     in
     firstAddress
         |> Maybe.map
