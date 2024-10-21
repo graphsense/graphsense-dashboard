@@ -127,6 +127,18 @@ sidebarMenuItem img label titleStr selected link =
 
 sidebarMenuItemWithNewParam : Html msg -> String -> String -> Bool -> String -> Bool -> Html msg
 sidebarMenuItemWithNewParam img label titleStr selected link new =
+    let
+        ifNewAddEvenOdd =
+            if new then
+                [ Css.property "fill-rule" "evenodd"
+                ]
+                    |> css
+                    |> List.singleton
+                    |> Rs.s_subtract
+
+            else
+                identity
+    in
     if not selected then
         Nb.navbarProductItemStateNeutralWithInstances
             (Nb.navbarProductItemStateNeutralAttributes
@@ -136,6 +148,7 @@ sidebarMenuItemWithNewParam img label titleStr selected link new =
                       ]
                         |> css
                     ]
+                |> ifNewAddEvenOdd
             )
             Nb.navbarProductItemStateNeutralInstances
             { stateNeutral = { iconInstance = img, productLabel = label, newLabelVisible = new } }
@@ -149,7 +162,9 @@ sidebarMenuItemWithNewParam img label titleStr selected link new =
 
     else
         Nb.navbarProductItemStateSelectedWithInstances
-            Nb.navbarProductItemStateSelectedAttributes
+            (Nb.navbarProductItemStateSelectedAttributes
+                |> ifNewAddEvenOdd
+            )
             Nb.navbarProductItemStateSelectedInstances
             { stateSelected = { iconInstance = img, productLabel = label, newLabelVisible = new } }
 
