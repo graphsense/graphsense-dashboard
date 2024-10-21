@@ -1094,16 +1094,13 @@ clusterInfoView vc open colors _ clstr =
 
             clusterColor =
                 Colors.getAssignedColor Colors.Clusters clstrid colors
-                    |> Maybe.map
-                        (.color
-                            >> Util.View.toCssColor
-                            >> Css.fill
-                            >> Css.important
-                            >> List.singleton
-                            >> css
-                            >> List.singleton
-                        )
-                    |> Maybe.withDefault []
+                    |> Maybe.map (.color >> Util.View.toCssColor)
+                    |> Maybe.withDefault (Css.rgba 0 0 0 0)
+                    |> Css.fill
+                    |> Css.important
+                    |> List.singleton
+                    |> css
+                    |> List.singleton
 
             headerAttr =
                 [ Css.cursor Css.pointer
