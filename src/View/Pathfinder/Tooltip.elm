@@ -16,7 +16,6 @@ import RecordSetter as Rs
 import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util.Css as Css
-import Util.Flags exposing (getFlagEmoji)
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
@@ -102,7 +101,7 @@ showActor vc a =
                                         |> List.singleton
                                         |> css
                                     ]
-                                    [ text (getFlagEmoji z.id) ]
+                                    [ text (Locale.string vc.locale z.label ++ ", ") ]
                             )
                         |> div []
                         |> Just

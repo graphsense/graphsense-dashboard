@@ -48,11 +48,12 @@ view plugins vc model =
             Theme.ColorsDark.style
           )
             |> toUnstyled
-            {-, node "style" [] [ text """
-            * {
-                transition: color 0.5s, background-color 0.5s;
-            }""" ] |> toUnstyled
-            -}
+
+        {- , node "style" [] [ text """
+           * {
+               transition: color 0.5s, background-color 0.5s;
+           }""" ] |> toUnstyled
+        -}
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
         , body plugins vc model |> toUnstyled
         ]
@@ -108,7 +109,7 @@ sidebarMenuItem img label titleStr selected link =
                     ]
             )
             Nb.navbarProductItemStateNeutralInstances
-            { stateNeutral = { iconInstance = img, productLabel = label } }
+            { stateNeutral = { iconInstance = img, productLabel = label, newLabelVisible = False } }
             |> List.singleton
             |> a
                 [ title titleStr
@@ -121,15 +122,44 @@ sidebarMenuItem img label titleStr selected link =
         Nb.navbarProductItemStateSelectedWithInstances
             Nb.navbarProductItemStateSelectedAttributes
             Nb.navbarProductItemStateSelectedInstances
-            { stateSelected = { iconInstance = img, productLabel = label } }
+            { stateSelected = { iconInstance = img, productLabel = label, newLabelVisible = False } }
+
+
+sidebarMenuItemWithNewParam : Html msg -> String -> String -> Bool -> String -> Bool -> Html msg
+sidebarMenuItemWithNewParam img label titleStr selected link new =
+    if not selected then
+        Nb.navbarProductItemStateNeutralWithInstances
+            (Nb.navbarProductItemStateNeutralAttributes
+                |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
+                |> Rs.s_stateNeutral
+                    [ [ Css.hover Nb.navbarProductItemStateHover_details.styles
+                      ]
+                        |> css
+                    ]
+            )
+            Nb.navbarProductItemStateNeutralInstances
+            { stateNeutral = { iconInstance = img, productLabel = label, newLabelVisible = new } }
+            |> List.singleton
+            |> a
+                [ title titleStr
+                , link
+                    |> href
+                , css [ Css.textDecoration Css.none ]
+                ]
+
+    else
+        Nb.navbarProductItemStateSelectedWithInstances
+            Nb.navbarProductItemStateSelectedAttributes
+            Nb.navbarProductItemStateSelectedInstances
+            { stateSelected = { iconInstance = img, productLabel = label, newLabelVisible = new } }
 
 
 sidebar : Plugins -> Config -> Model key -> Html Msg
 sidebar plugins vc model =
     let
         products =
-            [ sidebarMenuItem (Nb.iconsPathfinder10 {}) "Network" "Network" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
-            , sidebarMenuItem (Nb.iconsPathfinder20 {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl)
+            [ sidebarMenuItem (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
+            , sidebarMenuItemWithNewParam (Nb.iconsPathfinder20 {}) "Pathfinder 2.0" "Pathfinder 2.0" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl) True
             ]
                 ++ Plugin.sidebar plugins model.plugins model.page vc
 

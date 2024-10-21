@@ -108,7 +108,7 @@ view vc config =
                 )
             |> Rs.s_iconsSave
                 (onClickWithStop (UserClickedSaveGraph Nothing)
-                    :: title (Locale.string vc.locale "Save")
+                    :: title (Locale.string vc.locale "Save file")
                     :: iconsAttr
                 )
             |> Rs.s_iconsScrennshot

@@ -293,12 +293,17 @@ emptyTableMsg =
 
 inoutStyle : Bool -> List Style
 inoutStyle out =
-    [ if out then
-        color redColor
+    if out then
+        [ color redColor
+        ]
 
-      else
-        color greenColor
-    ]
+    else
+        []
+
+
+
+--   else
+-- color greenColor
 
 
 fullWidth : List Style
