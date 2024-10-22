@@ -14,6 +14,7 @@ import RecordSetter as Rs
 import Set
 import Table
 import Theme.Colors as Colors
+import Theme.Html.SidePanelComponents as SidePanelComponents
 import View.Graph.Table exposing (customizations)
 import View.Pathfinder.PagedTable exposing (alignColumnsRight)
 import View.Pathfinder.Table.Columns as PT
@@ -41,9 +42,10 @@ config styles vc ioDirection network isCheckedFn lblFn =
                 |> Rs.s_headCell
                     (styles.headCell
                         >> flip (++)
-                            [ Css.paddingTop <| Css.px 5
-                            , Css.paddingBottom <| Css.px 5
-                            ]
+                            (SidePanelComponents.sidePanelListHeadCell_details.styles
+                                ++ SidePanelComponents.sidePanelListHeadCellPlaceholder_details.styles
+                                ++ [ Css.display Css.tableCell ]
+                            )
                     )
     in
     Table.customConfig
