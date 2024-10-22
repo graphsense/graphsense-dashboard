@@ -606,8 +606,8 @@ wrapInSvg config name { absoluteRenderBounds, absoluteBoundingBox, layoutPositio
                 |> Gen.Svg.Styled.Attributes.height
              , [ bbox.x
                , bbox.y
-               , max 1 rbox.width
-               , max 1 rbox.height
+               , max 3 rbox.width
+               , max 3 rbox.height
                ]
                 |> List.map String.fromFloat
                 |> String.join " "
