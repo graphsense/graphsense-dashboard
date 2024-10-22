@@ -2,13 +2,13 @@ module Update.Graph.Search exposing (Config, selectCategory, selectCriterion, se
 
 import Api.Data
 import Api.Request.Entities
-import Effect exposing (n)
 import Effect.Api
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Search exposing (initCriterion)
 import Model.Graph.Id as Id
 import Model.Graph.Search exposing (..)
 import Msg.Graph exposing (Msg(..))
+import Util exposing (n)
 
 
 type alias Config =

@@ -4,7 +4,6 @@ import Api.Data
 import DateFormat.Language
 import DateFormat.Relative
 import Dict
-import Effect exposing (n)
 import Effect.Locale exposing (Effect)
 import Languages.German
 import Locale.English
@@ -14,6 +13,7 @@ import Model.Locale exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
 import Time
+import Util exposing (n)
 
 
 duration : Float

@@ -1,7 +1,6 @@
 module Update.Pathfinder.WorkflowNextUtxoTx exposing (loadReferencedTx, update)
 
 import Api.Data
-import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.Pathfinder.Id as Id
@@ -17,6 +16,7 @@ import Set
 import Task
 import Tuple exposing (pair)
 import Update.Pathfinder.Network as Network
+import Util exposing (n)
 
 
 update : WorkflowNextTxContext -> WorkflowNextUtxoTxMsg -> Model -> ( Model, List Effect )

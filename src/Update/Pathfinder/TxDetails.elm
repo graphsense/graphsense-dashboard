@@ -1,10 +1,10 @@
 module Update.Pathfinder.TxDetails exposing (update)
 
-import Effect exposing (n)
 import Effect.Pathfinder exposing (Effect)
 import Model.Pathfinder.TxDetails exposing (Model)
 import Msg.Pathfinder exposing (IoDirection(..), TxDetailsMsg(..))
 import RecordSetter exposing (s_state)
+import Util exposing (n)
 
 
 update : TxDetailsMsg -> Model -> ( Model, List Effect )

@@ -1,4 +1,4 @@
-module Effect exposing (and, n, perform)
+module Effect exposing (perform)
 
 --import Plugin.Effect
 
@@ -20,22 +20,6 @@ import Plugin.Effects as Plugin exposing (Plugins)
 import Ports
 import Route
 import Task
-
-
-n : m -> ( m, List eff )
-n m =
-    ( m, [] )
-
-
-and : (m -> ( m, List eff )) -> ( m, List eff ) -> ( m, List eff )
-and update ( m, eff ) =
-    let
-        ( m2, eff2 ) =
-            update m
-    in
-    ( m2
-    , eff ++ eff2
-    )
 
 
 perform : Plugins -> Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg

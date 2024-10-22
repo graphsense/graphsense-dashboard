@@ -1,7 +1,7 @@
 module Util.ThemedSelectBoxes exposing (Model, SelectBoxesAvailable(..), closeAll, get, init, update)
 
 import Dict exposing (Dict)
-import Tuple
+import Tuple exposing (mapFirst)
 import Util.ThemedSelectBox as TSb
 
 
@@ -32,12 +32,14 @@ init lst =
         }
 
 
-update : SelectBoxesAvailable -> TSb.Msg -> Model -> Model
+update : SelectBoxesAvailable -> TSb.Msg -> Model -> ( Model, Maybe TSb.OutMsg )
 update sb msg m =
     get sb m
-        |> Maybe.map (TSb.update msg)
-        |> Maybe.map (set sb m)
-        |> Maybe.withDefault m
+        |> Maybe.map
+            (TSb.update msg
+                >> mapFirst (set sb m)
+            )
+        |> Maybe.withDefault ( m, Nothing )
 
 
 get : SelectBoxesAvailable -> Model -> Maybe TSb.Model

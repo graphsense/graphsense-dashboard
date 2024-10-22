@@ -3,7 +3,7 @@ module Update.Graph.Browser exposing (filterTable, hideTable, infiniteScroll, lo
 import Api.Data
 import Config.Graph as Graph
 import Dict
-import Effect exposing (n)
+import Util exposing (n)
 import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Table.AddressNeighborsTable as AddressNeighborsTable

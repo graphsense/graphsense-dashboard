@@ -2,12 +2,12 @@ module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, update
 
 import Api.Data
 import Autocomplete
-import Effect exposing (n)
 import Effect.Search exposing (Effect(..))
 import Init.Search exposing (init)
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Tuple exposing (pair)
+import Util exposing (n)
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine

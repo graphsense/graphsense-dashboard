@@ -12,7 +12,6 @@ import Decode.Graph045 as Graph045
 import Decode.Graph050 as Graph050
 import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
-import Effect exposing (n)
 import Effect.Api exposing (Effect(..), getAddressEgonet, getEntityEgonet)
 import Effect.Graph exposing (Effect(..))
 import Encode.Graph as Encode
@@ -75,6 +74,7 @@ import Update.Graph.Search as Search
 import Update.Graph.Table as Table
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
+import Util exposing (n)
 import Util.Data as Data
 import Util.Graph
 import Util.Graph.History as History

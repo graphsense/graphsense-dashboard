@@ -1,4 +1,16 @@
-module Util.ThemedSelectBox exposing (Model, Msg(..), SelectOption, close, empty, fromList, init, mapLabel, select, update, view)
+module Util.ThemedSelectBox exposing
+    ( Model
+    , Msg(..)
+    , OutMsg(..)
+    , SelectOption
+    , close
+    , empty
+    , fromList
+    , init
+    , mapLabel
+    , update
+    , view
+    )
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -18,6 +30,12 @@ type alias SelectOption =
 
 type Msg
     = Select String
+    | Open
+    | Close
+
+
+type OutMsg
+    = Selected String
 
 
 type Model
@@ -61,16 +79,31 @@ close (SelectBox m) =
     { m | open = False } |> SelectBox
 
 
-select : String -> Model -> Model
-select _ (SelectBox m) =
-    { m | open = not m.open } |> SelectBox
+open : Model -> Model
+open (SelectBox m) =
+    { m | open = True }
+        |> SelectBox
 
 
-update : Msg -> Model -> Model
-update msg m =
+select : Model -> Model
+select (SelectBox m) =
+    { m | open = not m.open }
+        |> SelectBox
+
+
+update : Msg -> Model -> ( Model, Maybe OutMsg )
+update msg model =
     case msg of
         Select x ->
-            select x m
+            ( select model
+            , Selected x |> Just
+            )
+
+        Open ->
+            ( open model, Nothing )
+
+        Close ->
+            ( close model, Nothing )
 
 
 view : Model -> String -> Html Msg
@@ -132,7 +165,12 @@ view (SelectBox sBox) selected =
                         ]
         in
         Sc.dropDownOpenWithInstances
-            Sc.dropDownOpenAttributes
+            (Sc.dropDownOpenAttributes
+                |> Rs.s_dropDownOpen
+                    [ Util.View.onClickWithStop Close
+                    , css [ Css.cursor Css.pointer ]
+                    ]
+            )
             (Sc.dropDownOpenInstances
                 |> Rs.s_dropDownListNormal (Just dropDownList)
                 |> Rs.s_text (Just selectedRow)
@@ -145,7 +183,12 @@ view (SelectBox sBox) selected =
 
     else
         Sc.dropDownClosedWithInstances
-            Sc.dropDownClosedAttributes
+            (Sc.dropDownClosedAttributes
+                |> Rs.s_dropDownClosed
+                    [ Util.View.onClickWithStop Open
+                    , css [ Css.cursor Css.pointer ]
+                    ]
+            )
             (Sc.dropDownClosedInstances
                 |> Rs.s_text (Just selectedRow)
             )

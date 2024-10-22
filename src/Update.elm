@@ -6,7 +6,6 @@ import Browser.Dom
 import Config.Update exposing (Config)
 import DateFormat
 import Dict exposing (Dict)
-import Effect exposing (n)
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
@@ -62,6 +61,7 @@ import Update.Pathfinder as Pathfinder
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
+import Util exposing (n)
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
 import View.Locale as Locale
@@ -271,23 +271,7 @@ update plugins uc msg model =
                 |> n
 
         UserSwitchesLocale loc ->
-            let
-                locale =
-                    Locale.switch loc model.config.locale
-
-                newModel =
-                    { model
-                        | config =
-                            model.config
-                                |> s_locale locale
-                    }
-            in
-            ( newModel
-            , [ Locale.getTranslationEffect loc
-                    |> LocaleEffect
-              , SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel)
-              ]
-            )
+            switchLocale loc model
 
         UserClickedLightmode ->
             let
@@ -1129,16 +1113,43 @@ update plugins uc msg model =
 
         SelectBoxMsg sb subMsg ->
             let
-                newModel =
-                    { model | selectBoxes = model.selectBoxes |> TSelectBoxes.update sb subMsg }
+                ( selectBoxes, outMsg ) =
+                    model.selectBoxes
+                        |> TSelectBoxes.update sb subMsg
 
-                ( TSelectBoxes.SupportedLanguages, TSelectBox.Select x ) =
-                    ( sb, subMsg )
+                newModel =
+                    { model | selectBoxes = selectBoxes }
             in
-            update plugins uc (UserSwitchesLocale x) newModel
+            case ( sb, outMsg ) of
+                ( TSelectBoxes.SupportedLanguages, Just (TSelectBox.Selected x) ) ->
+                    switchLocale x newModel
+
+                _ ->
+                    n newModel
 
         NotificationMsg ms ->
             n { model | notifications = Notification.update ms model.notifications }
+
+
+switchLocale : String -> Model key -> ( Model key, List Effect )
+switchLocale loc model =
+    let
+        locale =
+            Locale.switch loc model.config.locale
+
+        newModel =
+            { model
+                | config =
+                    model.config
+                        |> s_locale locale
+            }
+    in
+    ( newModel
+    , [ Locale.getTranslationEffect loc
+            |> LocaleEffect
+      , SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel)
+      ]
+    )
 
 
 updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
