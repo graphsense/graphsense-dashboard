@@ -59,7 +59,13 @@ stylesheet =
                 |> List.map (\( a, b ) -> "--" ++ a ++ ": " ++ b)
                 |> String.join ";\n"
     in
-    ":root {{{ }}}"
+    """
+    :root {{{ }}}
+    .elm-datetimepicker--picker-container { 
+        display: flex;
+        flex-flow: column-reverse;
+    }
+    """
         |> String.Format.value vars
         |> Html.text
         |> List.singleton
