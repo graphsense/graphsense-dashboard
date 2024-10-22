@@ -25,7 +25,8 @@ addresses plugins vc gc colors clusters annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
-            , Svg.lazy7 Address.view plugins vc gc colors address (flip Dict.get clusters) (Annotations.getAnnotation id annotations)
+            , (Annotations.getAnnotation id annotations)
+                |> Svg.lazy7 Address.view plugins vc gc colors address (flip Dict.get clusters) 
             )
                 :: svg
         )
@@ -33,12 +34,13 @@ addresses plugins vc gc colors clusters annotations =
         >> Keyed.node "g" []
 
 
-txs : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Tx -> Svg Msg
-txs plugins vc gc =
+txs : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Svg Msg
+txs plugins vc gc annotations =
     Dict.foldl
         (\id tx svg ->
             ( Id.toString id
-            , Svg.lazy4 Tx.view plugins vc gc tx
+            , (Annotations.getAnnotation id annotations)
+                |> Svg.lazy5 Tx.view plugins vc gc tx
             )
                 :: svg
         )

@@ -1,7 +1,8 @@
 module Update.Pathfinder.Node exposing (Node, move, release)
 
-import Animation exposing (Animation)
+import Animation exposing (Animation, Clock)
 import Model.Graph.Coords exposing (Coords)
+import Model.Pathfinder.Id exposing (Id)
 
 
 type alias Node a =
@@ -10,6 +11,9 @@ type alias Node a =
         , dy : Float
         , x : Float
         , y : Animation
+        , clock : Clock
+        , opacity : Animation
+        , id : Id
     }
 
 

@@ -24,6 +24,7 @@ import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeEthAttributes)
 import Theme.Svg.Icons as Icons
+import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (onClickWithStop)
@@ -32,8 +33,8 @@ import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPath
 import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> AccountTx -> Svg Msg
-view _ vc _ tx accTx =
+view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> AccountTx -> Maybe Annotations.AnnotationItem -> Svg Msg
+view _ vc _ tx accTx annotation =
     let
         fd =
             GraphComponents.txNodeEthNodeEllipse_details
@@ -43,53 +44,77 @@ view _ vc _ tx accTx =
 
         adjY =
             fd.y + fd.height / 2
+
+        offset =
+            2
+                + (if vc.showTimestampOnTxEdge then
+                    0
+
+                   else
+                    -GraphComponents.txNodeEthTimestamp_details.height
+                  )
+
+        ( annAttr, label ) =
+            annotation
+                |> Maybe.map
+                    (annotationToAttrAndLabel
+                        tx
+                        GraphComponents.txNodeEth_details
+                        offset
+                    )
+                |> Maybe.withDefault ( [], [] )
     in
-    GraphComponents.txNodeEthWithAttributes
-        { txNodeEthAttributes
-            | txNodeEth =
-                [ translate
-                    ((tx.x + tx.dx) * unit - adjX)
-                    ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
-                    |> transform
-                , A.animate tx.clock tx.opacity
-                    |> String.fromFloat
-                    |> opacity
-                , UserClickedTx tx.id |> onClickWithStop
-                , UserPushesLeftMouseButtonOnUtxoTx tx.id
-                    |> Util.Graph.mousedown
-                , UserMovesMouseOverUtxoTx tx.id
-                    |> onMouseOver
-                , UserMovesMouseOutUtxoTx tx.id
-                    |> onMouseLeave
-                , css [ Css.cursor Css.pointer ]
-                , Id.toString tx.id
-                    |> Svg.Styled.Attributes.id
-                , decodeCoords Coords.Coords
-                    |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id), True ))
-                    |> preventDefaultOn "contextmenu"
-                ]
-        }
-        { txNodeEth =
-            { highlightVisible = tx.selected
-            , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
-            , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
-            , inputValue = Locale.currency vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
-            , timestampVisible = vc.showTimestampOnTxEdge
-            , startingPointVisible = tx.isStartingPoint || tx.selected
+    g
+        [ translate
+            ((tx.x + tx.dx) * unit - adjX)
+            ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
+            |> transform
+        , A.animate tx.clock tx.opacity
+            |> String.fromFloat
+            |> opacity
+        ]
+        (GraphComponents.txNodeEthWithAttributes
+            { txNodeEthAttributes
+                | txNodeEth =
+                    [ UserClickedTx tx.id |> onClickWithStop
+                    , UserPushesLeftMouseButtonOnUtxoTx tx.id
+                        |> Util.Graph.mousedown
+                    , UserMovesMouseOverUtxoTx tx.id
+                        |> onMouseOver
+                    , UserMovesMouseOutUtxoTx tx.id
+                        |> onMouseLeave
+                    , css [ Css.cursor Css.pointer ]
+                    , Id.toString tx.id
+                        |> Svg.Styled.Attributes.id
+                    , decodeCoords Coords.Coords
+                        |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id), True ))
+                        |> preventDefaultOn "contextmenu"
+                    ]
+                , nodeEllipse = annAttr
             }
-        , iconsNodeMarker =
-            { variant =
-                case ( tx.selected, tx.isStartingPoint ) of
-                    ( True, _ ) ->
-                        Icons.iconsNodeMarkerPurposeSelectedNode {}
+            { txNodeEth =
+                { highlightVisible = tx.selected
+                , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
+                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
+                , inputValue = Locale.currency vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
+                , timestampVisible = vc.showTimestampOnTxEdge
+                , startingPointVisible = tx.isStartingPoint || tx.selected
+                }
+            , iconsNodeMarker =
+                { variant =
+                    case ( tx.selected, tx.isStartingPoint ) of
+                        ( True, _ ) ->
+                            Icons.iconsNodeMarkerPurposeSelectedNode {}
 
-                    ( False, False ) ->
-                        text ""
+                        ( False, False ) ->
+                            text ""
 
-                    ( False, True ) ->
-                        Icons.iconsNodeMarkerPurposeStartingPoint {}
+                        ( False, True ) ->
+                            Icons.iconsNodeMarkerPurposeStartingPoint {}
+                }
             }
-        }
+            :: label
+        )
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Dict Id Address -> AccountTx -> AnimatedPosTrait x -> Svg Msg

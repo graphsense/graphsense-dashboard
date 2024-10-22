@@ -23,7 +23,6 @@
     { "count": 4, "filePath": "src/View/Graph/Tag.elm" },
     { "count": 4, "filePath": "src/View/Graph/Tool.elm" },
     { "count": 4, "filePath": "src/View/Locale.elm" },
-    { "count": 4, "filePath": "src/View/Notification.elm" },
     { "count": 4, "filePath": "src/View/Pathfinder/Tx/AccountTx.elm" },
     { "count": 4, "filePath": "src/View/Pathfinder/Tx/Utxo.elm" },
     { "count": 4, "filePath": "src/View/Search.elm" },
@@ -49,6 +48,7 @@
     { "count": 3, "filePath": "src/View/Graph/Table/TxsUtxoTable.elm" },
     { "count": 3, "filePath": "src/View/Graph/Table/UserAddressTagsTable.elm" },
     { "count": 3, "filePath": "src/View/Landingpage.elm" },
+    { "count": 3, "filePath": "src/View/Notification.elm" },
     { "count": 3, "filePath": "src/View/Pathfinder/Tx/Path.elm" },
     { "count": 3, "filePath": "themes/Iknaio.elm" },
     { "count": 2, "filePath": "src/Css/Reset.elm" },
@@ -124,7 +124,6 @@
     { "count": 1, "filePath": "src/Update/Graph/Address.elm" },
     { "count": 1, "filePath": "src/Update/Graph/Search.elm" },
     { "count": 1, "filePath": "src/Update/Graph/Table.elm" },
-    { "count": 1, "filePath": "src/Update/Notification.elm" },
     { "count": 1, "filePath": "src/Update/Search.elm" }
   ]
 }

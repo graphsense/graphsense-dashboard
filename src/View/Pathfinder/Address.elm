@@ -6,7 +6,6 @@ import Color
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
-import Html.Styled
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
@@ -23,13 +22,12 @@ import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled exposing (Svg, g, image, text)
+import Svg.Styled as Svg exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
-import Theme.Html.GraphComponents as HtmlGraphComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
-import Util.Annotations as Annotations
+import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Data exposing (isAccountLike)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
@@ -113,81 +111,23 @@ view _ vc _ colors address getCluster annotation =
                             Nothing
                     )
 
+        offset = 
+            2 +
+            if nodeLabel == Nothing then
+                -GraphComponents.addressNodeExchangeLabel_details.height
+
+               else
+                0
+
         ( annAttr, label ) =
-            case annotation of
-                Just ann ->
-                    let
-                        colorAttributes prop =
-                            case ann.color of
-                                Just c ->
-                                    Color.toCssString c
-                                        |> Css.property prop
-                                        |> Css.important
-                                        |> List.singleton
-                                        |> css
-                                        |> List.singleton
-
-                                _ ->
-                                    []
-                    in
-                    ( colorAttributes "fill"
-                    , (if String.length ann.label > 0 then
-                        HtmlGraphComponents.annotationLabelWithAttributes
-                            (HtmlGraphComponents.annotationLabelAttributes
-                                |> Rs.s_annotationLabel
-                                    (css
-                                        [ Css.display Css.inlineBlock
-                                        ]
-                                        :: colorAttributes "border-color"
-                                    )
-                            )
-                            { annotationLabel = { labelText = ann.label } }
-                            |> List.singleton
-                            |> Html.Styled.div
-                                [ css
-                                    [ Css.pct 100 |> Css.width
-                                    , Css.textAlign Css.center
-                                    ]
-                                ]
-                            |> List.singleton
-                            |> Svg.Styled.foreignObject
-                                [ translate
-                                    0
-                                    (GraphComponents.addressNode_details.height
-                                        + (if nodeLabel == Nothing then
-                                            -GraphComponents.addressNodeExchangeLabel_details.height
-
-                                           else
-                                            0
-                                          )
-                                        + 2
-                                    )
-                                    |> transform
-                                , GraphComponents.addressNode_details.width
-                                    |> String.fromFloat
-                                    |> Svg.width
-                                , (GraphComponents.annotationLabel_details.height
-                                    + GraphComponents.annotationLabel_details.strokeWidth
-                                    * 2
-                                  )
-                                    * (1 + (toFloat <| String.length ann.label // 13))
-                                    |> String.fromFloat
-                                    |> Svg.height
-                                , A.animate address.clock address.opacity
-                                    |> String.fromFloat
-                                    |> opacity
-                                , UserOpensAddressAnnotationDialog address.id |> onClickWithStop
-                                , css [ Css.cursor Css.pointer ]
-                                ]
-
-                       else
-                        text ""
-                      )
-                        |> List.singleton
+            annotation
+                |> Maybe.map
+                    (annotationToAttrAndLabel
+                        address
+                        GraphComponents.addressNode_details
+                        offset
                     )
-
-                _ ->
-                    ( [], [] )
+                |> Maybe.withDefault ( [], [] )
     in
     g
         [ translate
@@ -337,7 +277,7 @@ toNodeIconHtml address cluster =
             Icons.iconsUntagged {}
     )
         |> List.singleton
-        |> Svg.Styled.svg
+        |> Svg.svg
             [ Svg.width "24"
             , Svg.height "24"
             ]

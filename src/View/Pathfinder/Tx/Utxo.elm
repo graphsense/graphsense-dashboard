@@ -23,6 +23,7 @@ import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeUtxoAttributes)
 import Theme.Svg.Icons as Icons
 import Tuple exposing (pair, second)
+import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
@@ -30,8 +31,8 @@ import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPath
 import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> UtxoTx -> Svg Msg
-view _ vc _ tx utxo =
+view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> UtxoTx -> Maybe Annotations.AnnotationItem -> Svg Msg
+view _ vc _ tx utxo annotation =
     let
         id =
             tx.id
@@ -48,53 +49,77 @@ view _ vc _ tx utxo =
 
         adjY =
             fd.y + fd.height / 2
+
+        offset =
+            2
+                + (if vc.showTimestampOnTxEdge then
+                    0
+
+                   else
+                    -GraphComponents.txNodeUtxoTxText_details.height
+                  )
+
+        ( annAttr, label ) =
+            annotation
+                |> Maybe.map
+                    (annotationToAttrAndLabel
+                        tx
+                        GraphComponents.txNodeUtxo_details
+                        offset
+                    )
+                |> Maybe.withDefault ( [], [] )
     in
-    GraphComponents.txNodeUtxoWithAttributes
-        { txNodeUtxoAttributes
-            | txNodeUtxo =
-                [ translate
-                    ((tx.x + tx.dx) * unit - adjX)
-                    ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
-                    |> transform
-                , A.animate tx.clock tx.opacity
-                    |> String.fromFloat
-                    |> opacity
-                , UserClickedTx id |> onClickWithStop
-                , UserPushesLeftMouseButtonOnUtxoTx id
-                    |> Util.Graph.mousedown
-                , UserMovesMouseOverUtxoTx id
-                    |> onMouseOver
-                , UserMovesMouseOutUtxoTx id
-                    |> onMouseLeave
-                , css [ Css.cursor Css.pointer ]
-                , Id.toString id
-                    |> Svg.Styled.Attributes.id
-                , decodeCoords Coords.Coords
-                    |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu id), True ))
-                    |> preventDefaultOn "contextmenu"
-                ]
-        }
-        { txNodeUtxo =
-            { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
-            , highlightVisible = tx.selected || tx.hovered
-            , date = Locale.timestampDateUniform vc.locale utxo.raw.timestamp
-            , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
-            , timestampVisible = vc.showTimestampOnTxEdge
-            , startingPointVisible = tx.isStartingPoint || tx.selected
+    g
+        [ translate
+            ((tx.x + tx.dx) * unit - adjX)
+            ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
+            |> transform
+        , A.animate tx.clock tx.opacity
+            |> String.fromFloat
+            |> opacity
+        ]
+        (GraphComponents.txNodeUtxoWithAttributes
+            { txNodeUtxoAttributes
+                | txNodeUtxo =
+                    [ UserClickedTx id |> onClickWithStop
+                    , UserPushesLeftMouseButtonOnUtxoTx id
+                        |> Util.Graph.mousedown
+                    , UserMovesMouseOverUtxoTx id
+                        |> onMouseOver
+                    , UserMovesMouseOutUtxoTx id
+                        |> onMouseLeave
+                    , css [ Css.cursor Css.pointer ]
+                    , Id.toString id
+                        |> Svg.Styled.Attributes.id
+                    , decodeCoords Coords.Coords
+                        |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu id), True ))
+                        |> preventDefaultOn "contextmenu"
+                    ]
+                , txNode = annAttr
             }
-        , iconsNodeMarker =
-            { variant =
-                case ( tx.selected, tx.isStartingPoint ) of
-                    ( True, _ ) ->
-                        Icons.iconsNodeMarkerPurposeSelectedNode {}
+            { txNodeUtxo =
+                { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
+                , highlightVisible = tx.selected || tx.hovered
+                , date = Locale.timestampDateUniform vc.locale utxo.raw.timestamp
+                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
+                , timestampVisible = vc.showTimestampOnTxEdge
+                , startingPointVisible = tx.isStartingPoint || tx.selected
+                }
+            , iconsNodeMarker =
+                { variant =
+                    case ( tx.selected, tx.isStartingPoint ) of
+                        ( True, _ ) ->
+                            Icons.iconsNodeMarkerPurposeSelectedNode {}
 
-                    ( False, False ) ->
-                        text ""
+                        ( False, False ) ->
+                            text ""
 
-                    ( False, True ) ->
-                        Icons.iconsNodeMarkerPurposeStartingPoint {}
+                        ( False, True ) ->
+                            Icons.iconsNodeMarkerPurposeStartingPoint {}
+                }
             }
-        }
+            :: label
+        )
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> AnimatedPosTrait x -> Svg Msg

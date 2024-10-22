@@ -235,6 +235,9 @@ topCenterPanel plugins ms vc gc model =
                         Pathfinder.SelectedAddress _ ->
                             False
 
+                        Pathfinder.SelectedTx _ ->
+                            False
+
                         _ ->
                             True
                 , pointerTool = model.pointerTool
@@ -261,6 +264,9 @@ toolbarHovercardView vc m ( hcid, hc ) =
             settingsHovercardView vc m hc
 
         ( Annotation, Pathfinder.SelectedAddress id ) ->
+            annotationHovercardView vc id (Annotations.getAnnotation id m.annotations) hc
+
+        ( Annotation, Pathfinder.SelectedTx id ) ->
             annotationHovercardView vc id (Annotations.getAnnotation id m.annotations) hc
 
         _ ->
@@ -1369,7 +1375,7 @@ graphSvg plugins _ vc gc model bbox =
             , gradient "account" { outgoing = False, reverse = True }
             ]
         , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
-        , Svg.lazy4 Network.txs plugins vc gc model.network.txs
+        , Svg.lazy5 Network.txs plugins vc gc model.annotations model.network.txs
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         , drawDragSelector vc model
 
