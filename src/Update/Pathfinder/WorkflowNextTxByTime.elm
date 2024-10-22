@@ -10,6 +10,7 @@ import Msg.Pathfinder exposing (Msg(..), WorkflowNextTxByTimeMsg(..), WorkflowNe
 import RecordSetter as Rs
 import Set
 import Update.Pathfinder.Network as Network
+import Api.Request.Addresses exposing (Order_(..))
 
 
 update : WorkflowNextTxContext -> WorkflowNextTxByTimeMsg -> Model -> ( Model, List Effect )
@@ -25,7 +26,7 @@ update ctx msg model =
                     , direction = Just ctx.direction
                     , pagesize = 1
                     , nextpage = Nothing
-                    , order = Nothing
+                    , order = Just Order_Asc
                     , minHeight = blockAtDate.beforeBlock
                     , maxHeight = Nothing
                     }
