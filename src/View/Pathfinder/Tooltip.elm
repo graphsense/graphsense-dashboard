@@ -17,7 +17,7 @@ import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Pathfinder.TagSummary as TagSummary
-import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (hovercard, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
