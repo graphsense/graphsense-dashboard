@@ -1,9 +1,8 @@
 module Update.Notification exposing (addHttpError, notificationsFromEffects)
 
-import Basics.Extra exposing (flip)
 import Effect.Pathfinder as Pathfinder
 import Http
-import Model exposing (Model)
+import Model exposing (Effect(..), Model)
 import Model.Notification as Notify
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..), InternalError(..))
 import Model.Pathfinder.Id as Id
@@ -14,10 +13,18 @@ import Util.View exposing (truncateLongIdentifierWithLengths)
 notificationsFromEffects : Model key -> List Model.Effect -> ( Model key, List Model.Effect )
 notificationsFromEffects model effects =
     let
-        notifications =
-            effects |> List.filterMap (notificationFromEffect model) |> List.concat
+        ( notifications, eff ) =
+            effects
+                |> List.filterMap (notificationFromEffect model)
+                |> List.concat
+                |> Notify.addMany model.notifications
     in
-    ( model |> s_notifications (model.notifications |> flip Notify.addMany notifications), effects )
+    ( { model | notifications = notifications }
+    , (eff
+        |> List.map NotificationEffect
+      )
+        ++ effects
+    )
 
 
 notificationFromEffect : Model key -> Model.Effect -> Maybe (List Notify.Notification)
@@ -74,7 +81,7 @@ pathFinderErrorToNotifications err =
             x |> List.concatMap pathFinderErrorToNotifications
 
 
-addHttpError : Notify.Model -> Maybe String -> Http.Error -> Notify.Model
+addHttpError : Notify.Model -> Maybe String -> Http.Error -> ( Notify.Model, List Notify.Effect )
 addHttpError m _ error =
     let
         nn =
@@ -94,4 +101,4 @@ addHttpError m _ error =
                 Http.Timeout ->
                     Notify.Error { title = "Request Timeout", message = "There was a problem while loading data.", variables = [] }
     in
-    m |> flip Notify.add nn
+    Notify.add nn m

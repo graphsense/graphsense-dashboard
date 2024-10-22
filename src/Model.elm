@@ -113,6 +113,7 @@ type Msg
     | SelectBoxMsg SelectBoxes.SelectBoxesAvailable SelectBox.Msg
     | UserClickedNavBack
     | UserClickedNavHome
+    | NotificationMsg Model.Notification.Msg
 
 
 type SettingsMsg
@@ -172,6 +173,7 @@ type Effect
     | SetDirtyEffect
     | SetCleanEffect
     | SaveUserSettingsEffect UserSettings
+    | NotificationEffect Model.Notification.Effect
 
 
 type Thing

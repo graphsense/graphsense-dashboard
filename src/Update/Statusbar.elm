@@ -148,6 +148,9 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.ErrorEffect _) ->
             Nothing
 
+        Model.NotificationEffect _ ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =

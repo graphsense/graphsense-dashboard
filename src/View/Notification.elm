@@ -3,10 +3,11 @@ module View.Notification exposing (view)
 import Config.View as View
 import Css
 import Css.Dialog as Css
+import Css.Transitions
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (Msg(..))
-import Model.Notification exposing (..)
+import Model.Notification as Notification
 import RecordSetter exposing (..)
 import Theme.Html.ErrorMessagesAlerts
     exposing
@@ -22,26 +23,34 @@ import Util.View exposing (none, onClickWithStop)
 import View.Locale as Locale
 
 
-overlay : List (Html msg) -> Html msg
-overlay =
+overlay : Bool -> List (Html msg) -> Html msg
+overlay moved =
     div
         [ css
             [ Css.position Css.absolute
             , Css.left (Css.px (Nb.navbarMenuNew_details.renderedWidth + 5))
-            , Css.bottom (Css.px 30)
-            , Css.zIndex (Css.int (Css.zIndexMainValue + 10))
+            , Css.Transitions.bottom 200
+                |> List.singleton
+                |> Css.Transitions.transition
+            , Css.bottom <|
+                Css.px <|
+                    if moved then
+                        30
+
+                    else
+                        -100
             ]
         ]
 
 
-view : View.Config -> Model -> Html Msg
+view : View.Config -> Notification.Model -> Html Msg
 view vc model =
     let
         not =
-            model |> peek
+            model |> Notification.peek
     in
     case not of
-        Just (Error { title, message, variables }) ->
+        Just (Notification.Error { title, message, variables }) ->
             let
                 icon =
                     Icons.iconsError {}
@@ -65,9 +74,9 @@ view vc model =
                     }
                 }
                 |> List.singleton
-                |> overlay
+                |> overlay (Notification.getMoved model)
 
-        Just (Info { title, message, variables }) ->
+        Just (Notification.Info { title, message, variables }) ->
             let
                 buttonAttrOk =
                     [ css (Css.btnBase vc), onClickWithStop UserClosesNotification ]
@@ -85,7 +94,7 @@ view vc model =
                 , property1Alert = { bodyText = "", headlineText = "" }
                 }
                 |> List.singleton
-                |> overlay
+                |> overlay (Notification.getMoved model)
 
         Nothing ->
             none

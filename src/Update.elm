@@ -168,6 +168,14 @@ update plugins uc msg model =
 
                         _ ->
                             False
+
+                ( notifications, notificationEffects ) =
+                    case ( isErrorDialogShown, result ) of
+                        ( False, Err ( httpErr, _ ) ) ->
+                            Notification.addHttpError model.notifications Nothing httpErr
+
+                        _ ->
+                            n model.notifications
             in
             { model
                 | statusbar =
@@ -196,17 +204,12 @@ update plugins uc msg model =
                                 _ ->
                                     model.statusbar
                 , dialog = newDialog
-                , notifications =
-                    case ( isErrorDialogShown, result ) of
-                        ( False, Err ( httpErr, _ ) ) ->
-                            Notification.addHttpError model.notifications Nothing httpErr
-
-                        _ ->
-                            model.notifications
+                , notifications = notifications
             }
                 |> handleResponse plugins
                     uc
                     result
+                |> mapSecond ((++) (List.map NotificationEffect notificationEffects))
 
         UserClosesDialog ->
             case model.dialog of
@@ -1031,15 +1034,19 @@ update plugins uc msg model =
                                 httpErr =
                                     Yaml.Decode.errorToString err
                                         |> Http.BadBody
+
+                                ( notifications, notificationEffects ) =
+                                    Notification.addHttpError model.notifications (Just filename) httpErr
                             in
-                            { model
+                            ( { model
                                 | statusbar =
                                     httpErr
                                         |> Just
                                         |> Statusbar.add model.statusbar filename []
-                                , notifications = Notification.addHttpError model.notifications (Just filename) httpErr
-                            }
-                                |> n
+                                , notifications = notifications
+                              }
+                            , List.map NotificationEffect notificationEffects
+                            )
 
                         Ok yaml ->
                             { model
@@ -1129,6 +1136,9 @@ update plugins uc msg model =
                     ( sb, subMsg )
             in
             update plugins uc (UserSwitchesLocale x) newModel
+
+        NotificationMsg ms ->
+            n { model | notifications = Notification.update ms model.notifications }
 
 
 updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
@@ -1449,6 +1459,10 @@ handleResponse plugins uc result model =
             )
 
         Err ( BadBody err, _ ) ->
+            let
+                ( notifications, notificationEffects ) =
+                    Notification.addHttpError model.notifications Nothing (Http.BadBody err)
+            in
             ( { model
                 | statusbar =
                     if err == Api.noExternalTransactions then
@@ -1458,10 +1472,10 @@ handleResponse plugins uc result model =
                         Http.BadBody err
                             |> Just
                             |> Statusbar.add model.statusbar "error" []
-                , notifications = Notification.addHttpError model.notifications Nothing (Http.BadBody err)
+                , notifications = notifications
               }
             , PortsConsoleEffect err
-                |> List.singleton
+                :: List.map NotificationEffect notificationEffects
             )
 
         Err ( BadStatus 404, _ ) ->
@@ -1556,18 +1570,22 @@ deserialize filename data model =
                                 "could not read"
                         )
                             |> Http.BadBody
+
+                    ( notifications, notificationEffects ) =
+                        Notification.addHttpError model.notifications Nothing httpError
                 in
                 ( { model
                     | statusbar =
                         httpError
                             |> Just
                             |> Statusbar.add model.statusbar filename []
-                    , notifications = Notification.addHttpError model.notifications Nothing httpError
+                    , notifications = notifications
                   }
-                , Json.Decode.errorToString err
+                , (Json.Decode.errorToString err
                     |> Ports.console
                     |> CmdEffect
-                    |> List.singleton
+                  )
+                    :: List.map NotificationEffect notificationEffects
                 )
             )
             identity

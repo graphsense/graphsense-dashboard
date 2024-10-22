@@ -12,6 +12,7 @@ import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Msg(..))
+import Model.Notification
 import Msg.Graph as Graph
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
@@ -160,6 +161,10 @@ perform plugins key statusbarToken apiKey effect =
 
         SearchEffect e ->
             handleSearchEffect apiKey (Just plugins) SearchMsg e
+
+        NotificationEffect e ->
+            Model.Notification.perform e
+                |> Cmd.map NotificationMsg
 
         PortsConsoleEffect msg ->
             Ports.console msg

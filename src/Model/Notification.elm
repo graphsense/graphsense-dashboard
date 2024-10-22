@@ -1,7 +1,10 @@
-module Model.Notification exposing (Model, Notification(..), NotificationData, add, addMany, empty, peek, pop)
+module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, getMoved, peek, perform, pop, setMoved, update)
 
 import Basics.Extra exposing (flip)
+import Process
 import Set exposing (Set)
+import Task
+import Tuple exposing (mapSecond, pair)
 
 
 type alias NotificationData =
@@ -13,7 +16,7 @@ type alias NotificationData =
 
 empty : Model
 empty =
-    NotificationModel { messages = [], messageIds = Set.empty }
+    NotificationModel { messages = [], messageIds = Set.empty, moved = False }
 
 
 type Notification
@@ -25,9 +28,18 @@ type Model
     = NotificationModel InternalModel
 
 
+type Effect
+    = MoveNotification
+
+
+type Msg
+    = MoveDelayPassed
+
+
 type alias InternalModel =
     { messages : List Notification
     , messageIds : Set String
+    , moved : Bool
     }
 
 
@@ -38,15 +50,20 @@ peek (NotificationModel m) =
 
 pop : Model -> Model
 pop (NotificationModel m) =
+    let
+        messages =
+            List.tail m.messages |> Maybe.withDefault []
+    in
     { m
-        | messages = List.tail m.messages |> Maybe.withDefault []
+        | messages = messages
         , messageIds = List.head m.messages |> Maybe.map (toId >> flip Set.remove m.messageIds) |> Maybe.withDefault m.messageIds
+        , moved = List.isEmpty messages |> not
     }
         |> NotificationModel
 
 
-add : Model -> Notification -> Model
-add (NotificationModel m) n =
+add : Notification -> Model -> ( Model, List Effect )
+add n (NotificationModel m) =
     let
         id =
             n |> toId
@@ -58,11 +75,12 @@ add (NotificationModel m) n =
         { m | messages = n :: m.messages, messageIds = Set.insert id m.messageIds }
     )
         |> NotificationModel
+        |> flip pair [ MoveNotification ]
 
 
-addMany : Model -> List Notification -> Model
+addMany : Model -> List Notification -> ( Model, List Effect )
 addMany m ln =
-    List.foldl (flip add) m ln
+    List.foldl (\n_ ( m_, eff ) -> add n_ m_ |> mapSecond ((++) eff)) ( m, [] ) ln
 
 
 toId : Notification -> String
@@ -73,3 +91,29 @@ toId n =
 
         Info { title, message, variables } ->
             String.join "|" ("info" :: title :: message :: variables)
+
+
+getMoved : Model -> Bool
+getMoved (NotificationModel { moved }) =
+    moved
+
+
+setMoved : Model -> Model
+setMoved (NotificationModel m) =
+    { m | moved = True }
+        |> NotificationModel
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        MoveDelayPassed ->
+            setMoved model
+
+
+perform : Effect -> Cmd Msg
+perform effect =
+    case effect of
+        MoveNotification ->
+            Process.sleep 0
+                |> Task.perform (\_ -> MoveDelayPassed)
