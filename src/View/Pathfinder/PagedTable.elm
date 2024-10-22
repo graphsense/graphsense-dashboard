@@ -11,7 +11,6 @@ import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
 import RecordSetter as Rs
 import Set exposing (Set)
 import Table
-import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
 import Util.View
