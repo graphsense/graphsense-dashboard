@@ -46,7 +46,7 @@ config _ vc addressId isCheckedFn =
             Id.network addressId
 
         rightAlignedColumns =
-            [ "Value" ]
+            Set.singleton "Value"
     in
     Table.customConfig
         { toId = toGerneric addressId >> getId >> Id.toString
@@ -74,7 +74,7 @@ config _ vc addressId isCheckedFn =
             ]
         , customizations =
             customizations vc
-                |> alignColumnsRight vc (Set.fromList rightAlignedColumns)
+                |> alignColumnsRight Css.Table.styles vc rightAlignedColumns
         }
 
 

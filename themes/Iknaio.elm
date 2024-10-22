@@ -1265,14 +1265,14 @@ theme =
                     (\_ ->
                         [ tableCell
                         , paddingTop zero
-                        , position sticky
-                        , top <| px 0
-                        , zIndex <| int 2
                         ]
                     )
                 |> s_headRow
                     [ textAlign left
                     , fontBold
+                    , position sticky
+                    , top <| px 0
+                    , zIndex <| int 2
                     ]
                 |> s_headCellSortable
                     [ cursor pointer

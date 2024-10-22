@@ -624,7 +624,13 @@ ioTableView vc dir network currency table getLbl =
 
         styles =
             Css.Table.styles
-                |> Rs.s_root (\vc_ -> Css.Table.styles.root vc_ ++ [ Css.display Css.block, Css.width (Css.pct 100), Css.paddingTop Css.lGap ])
+                |> Rs.s_root
+                    (Css.Table.styles.root
+                        >> flip (++)
+                            [ Css.display Css.block
+                            , Css.width (Css.pct 100)
+                            ]
+                    )
     in
     View.Graph.Table.table
         styles

@@ -11,6 +11,7 @@ import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
 import RecordSetter as Rs
 import Set exposing (Set)
 import Table
+import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
 import Util.View
@@ -31,8 +32,8 @@ tableHint _ vc msg =
         ]
 
 
-alignColumnsRight : View.Config -> Set String -> Table.Customizations data msg -> Table.Customizations data msg
-alignColumnsRight vc columns tc =
+alignColumnsRight : Styles -> View.Config -> Set String -> Table.Customizations data msg -> Table.Customizations data msg
+alignColumnsRight styles_ vc columns tc =
     let
         addAttr ( name, x, attr ) =
             ( name
@@ -44,7 +45,7 @@ alignColumnsRight vc columns tc =
                 attr
             )
     in
-    tc |> Rs.s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles vc)
+    tc |> Rs.s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles_ vc)
 
 
 customizations : View.Config -> Table.Customizations data msg

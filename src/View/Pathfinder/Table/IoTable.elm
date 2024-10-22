@@ -1,15 +1,19 @@
 module View.Pathfinder.Table.IoTable exposing (config)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Config.View as View
+import Css
 import Css.Table exposing (Styles)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder exposing (IoDirection, Msg(..), TxDetailsMsg(..))
+import RecordSetter as Rs
 import Set
 import Table
+import Theme.Colors as Colors
 import View.Graph.Table exposing (customizations)
 import View.Pathfinder.PagedTable exposing (alignColumnsRight)
 import View.Pathfinder.Table.Columns as PT
@@ -24,7 +28,23 @@ config styles vc ioDirection network isCheckedFn lblFn =
                 >> Maybe.map (Id.init network)
 
         rightAlignedColumns =
-            [ "Value" ]
+            Set.singleton "Value"
+
+        styles_ =
+            styles
+                |> Rs.s_headRow
+                    (styles.headRow
+                        >> flip (++)
+                            [ Css.property "background-color" Colors.white
+                            ]
+                    )
+                |> Rs.s_headCell
+                    (styles.headCell
+                        >> flip (++)
+                            [ Css.paddingTop <| Css.px 5
+                            , Css.paddingBottom <| Css.px 5
+                            ]
+                    )
     in
     Table.customConfig
         { toId = .address >> String.concat
@@ -52,5 +72,5 @@ config styles vc ioDirection network isCheckedFn lblFn =
                 "Value"
                 .value
             ]
-        , customizations = customizations styles vc |> alignColumnsRight vc (Set.fromList rightAlignedColumns)
+        , customizations = customizations styles_ vc |> alignColumnsRight styles_ vc rightAlignedColumns
         }
