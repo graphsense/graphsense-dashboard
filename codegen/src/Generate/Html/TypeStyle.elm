@@ -12,6 +12,7 @@ toStyles : ColorMap -> TypeStyle -> List Elm.Expression
 toStyles colorMap node =
     []
         |> m (List.singleton >> Css.fontFamilies) node.fontFamily
+        |> m textAlign node.textAlignHorizontal
         --|> m italic node.italic
         |> m (round >> Css.int >> intOrAutoType >> Css.fontWeight) node.fontWeight
         |> m (Css.px >> Css.fontSize) node.fontSize
@@ -19,6 +20,22 @@ toStyles colorMap node =
         |> m (Css.px >> Css.letterSpacing) node.letterSpacing
         |> m (Css.px >> Css.lineHeight) node.lineHeightPx
         |> mm textAutoResize node.textAutoResize
+
+
+textAlign : TypeStyleTextAlignHorizontal -> Elm.Expression
+textAlign arg1 =
+    case arg1 of
+        TypeStyleTextAlignHorizontalCENTER ->
+            Css.property "text-align" "center"
+
+        TypeStyleTextAlignHorizontalLEFT ->
+            Css.property "text-align" "left"
+
+        TypeStyleTextAlignHorizontalRIGHT ->
+            Css.property "text-align" "right"
+
+        TypeStyleTextAlignHorizontalJUSTIFIED ->
+            Css.property "text-align" "justifed"
 
 
 textAutoResize : TypeStyleTextAutoResize -> List Elm.Expression
