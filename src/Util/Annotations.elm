@@ -116,8 +116,9 @@ annotationToAttrAndLabel node details offset ann =
                 , (GraphComponents.annotationLabel_details.height
                     + GraphComponents.annotationLabel_details.strokeWidth
                     * 2
+                    + 2
                   )
-                    * (1 + (toFloat <| String.length ann.label // 13))
+                    * (1 + (toFloat <| String.length ann.label // 10))
                     |> String.fromFloat
                     |> Svg.height
                 , A.animate node.clock node.opacity
