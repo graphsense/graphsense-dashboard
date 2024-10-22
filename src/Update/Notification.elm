@@ -6,7 +6,6 @@ import Model exposing (Effect(..), Model)
 import Model.Notification as Notify
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..), InternalError(..))
 import Model.Pathfinder.Id as Id
-import RecordSetter exposing (..)
 import Util.View exposing (truncateLongIdentifierWithLengths)
 
 

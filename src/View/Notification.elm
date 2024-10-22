@@ -18,7 +18,6 @@ import Theme.Html.ErrorMessagesAlerts
         )
 import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
-import Util.Css as Css
 import Util.View exposing (none, onClickWithStop)
 import View.Locale as Locale
 
