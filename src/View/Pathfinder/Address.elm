@@ -30,6 +30,7 @@ import Theme.Html.GraphComponents as HtmlGraphComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations
+import Util.Data exposing (isAccountLike)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
@@ -369,6 +370,9 @@ getAddressType address cluster =
 
         else
             KnownService
+
+    else if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
+        KnownService
 
     else
         Unknown

@@ -1,8 +1,10 @@
 module Update.Pathfinder.WorkflowNextTxByTime exposing (update)
 
 import Api.Data
+import Api.Request.Addresses exposing (Order_(..))
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
+import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
@@ -10,7 +12,6 @@ import Msg.Pathfinder exposing (Msg(..), WorkflowNextTxByTimeMsg(..), WorkflowNe
 import RecordSetter as Rs
 import Set
 import Update.Pathfinder.Network as Network
-import Api.Request.Addresses exposing (Order_(..))
 
 
 update : WorkflowNextTxContext -> WorkflowNextTxByTimeMsg -> Model -> ( Model, List Effect )
@@ -26,9 +27,29 @@ update ctx msg model =
                     , direction = Just ctx.direction
                     , pagesize = 1
                     , nextpage = Nothing
-                    , order = Just Order_Asc
-                    , minHeight = blockAtDate.beforeBlock
-                    , maxHeight = Nothing
+                    , order =
+                        Just
+                            (case ctx.direction of
+                                Outgoing ->
+                                    Order_Asc
+
+                                Incoming ->
+                                    Order_Desc
+                            )
+                    , minHeight =
+                        case ctx.direction of
+                            Outgoing ->
+                                blockAtDate.beforeBlock
+
+                            Incoming ->
+                                Nothing
+                    , maxHeight =
+                        case ctx.direction of
+                            Outgoing ->
+                                Nothing
+
+                            Incoming ->
+                                blockAtDate.beforeBlock
                     }
                 |> ApiEffect
                 |> List.singleton

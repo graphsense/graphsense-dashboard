@@ -19,10 +19,10 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
+import Tuple exposing (mapFirst)
 import Update.DateRangePicker as DateRangePicker
 import Update.Graph.Table
 import Update.Pathfinder.PagedTable as PT
-import Tuple exposing (mapFirst)
 
 
 update : Update.Config -> Pathfinder.Model -> Msg -> Id -> Model -> ( Model, List Effect )
@@ -269,7 +269,7 @@ update uc pathfinderModel msg id model =
 
         ResetDateRangePicker ->
             TransactionTable.initWithoutFilter model.addressId model.data
-            |> mapFirst (flip s_txs model)
+                |> mapFirst (flip s_txs model)
 
         BrowserGotFromDateBlock _ blockAt ->
             updateDatePickerRangeBlockRange uc pathfinderModel id model (blockAt.beforeBlock |> Maybe.map Set |> Maybe.withDefault NoSet) NoSet
