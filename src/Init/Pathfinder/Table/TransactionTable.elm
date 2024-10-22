@@ -63,11 +63,11 @@ init network locale addressId data =
                 )
             )
         |> Maybe.withDefault
-            (initWithoutFilter addressId locale data)
+            (initWithoutFilter addressId data)
 
 
-initWithoutFilter : Id -> Locale.Model -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
-initWithoutFilter addressId locale data =
+initWithoutFilter : Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
+initWithoutFilter addressId data =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -82,10 +82,7 @@ initWithoutFilter addressId locale data =
     in
     ( { table = table True
       , order = Nothing
-      , dateRangePicker =
-            datePickerSettings locale (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
-                |> DateRangePicker.init UpdateDateRangePicker (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
-                |> Just
+      , dateRangePicker = Nothing
       , txMinBlock = Nothing
       , txMaxBlock = Nothing
       }
