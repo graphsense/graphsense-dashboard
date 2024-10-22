@@ -174,7 +174,7 @@ sidebar plugins vc model =
     let
         products =
             [ sidebarMenuItem (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
-            , sidebarMenuItemWithNewParam (Nb.iconsPathfinder20 {}) "Pathfinder 2.0" "Pathfinder 2.0" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl) True
+            , sidebarMenuItemWithNewParam (Nb.iconsPathfinder10 {}) "Pathfinder 2.0" "Pathfinder 2.0" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl) True
             ]
                 ++ Plugin.sidebar plugins model.plugins model.page vc
 
