@@ -47,7 +47,7 @@ update msg model =
                             | mapping =
                                 case model.mapping of
                                     Empty ->
-                                        Transition Dict.empty mapping 0
+                                        Settled mapping
 
                                     Transition start _ delta ->
                                         Transition start mapping delta
