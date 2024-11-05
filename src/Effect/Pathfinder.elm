@@ -5,7 +5,9 @@ import Effect.Search as Search
 import Model.Pathfinder.Error exposing (Error)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Msg as Plugin
+import Process
 import Route.Pathfinder exposing (Route)
+import Task
 
 
 type Effect
@@ -15,6 +17,7 @@ type Effect
     | CmdEffect (Cmd Msg)
     | SearchEffect Search.Effect
     | ErrorEffect Error
+    | PostponeUpdateByRouteEffect Route
 
 
 perform : Effect -> Cmd Msg
@@ -41,3 +44,7 @@ perform eff =
 
         ErrorEffect _ ->
             Cmd.none
+
+        PostponeUpdateByRouteEffect route ->
+            Process.sleep 10
+                |> Task.perform (\_ -> RuntimePostponedUpdateByRoute route)

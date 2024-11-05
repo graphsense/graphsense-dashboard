@@ -99,6 +99,10 @@ perform plugins key statusbarToken apiKey effect =
                 Pathfinder.ErrorEffect _ ->
                     Cmd.none
 
+                Pathfinder.PostponeUpdateByRouteEffect _ ->
+                    Pathfinder.perform eff
+                        |> Cmd.map PathfinderMsg
+
         GraphEffect eff ->
             case eff of
                 Graph.ApiEffect apiEff ->

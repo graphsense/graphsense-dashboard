@@ -108,6 +108,9 @@ resultLineToRoute search =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
+        RuntimePostponedUpdateByRoute route ->
+            updateByRoute plugins uc route model
+
         PluginMsg _ ->
             -- handled in src/Update.elm
             n model
@@ -331,33 +334,8 @@ updateByMsg plugins uc msg model =
                 n m1
 
         UserClickedFitGraph ->
-            let
-                bbox =
-                    Network.getBoundingBox model.network
-
-                bboxXUnit =
-                    { x = bbox.x * unit - unit
-                    , y = bbox.y * unit - unit
-                    , width = bbox.width * unit + (2 * unit)
-                    , height = bbox.height * unit + (2 * unit)
-                    }
-            in
-            n
-                { model
-                    | transform =
-                        uc.size
-                            |> Maybe.map
-                                (\{ width, height, x } ->
-                                    { width = width - (x * 4) -- not sure why I need this offset
-                                    , height = height
-                                    }
-                                )
-                            |> Maybe.map
-                                (bboxXUnit
-                                    |> Transform.updateByBoundingBox model.transform
-                                )
-                            |> Maybe.withDefault model.transform
-                }
+            fitGraph uc model
+                |> n
 
         UserReleasesMouseButton ->
             case model.dragging of
@@ -1143,6 +1121,36 @@ updateByMsg plugins uc msg model =
             )
 
 
+fitGraph : Update.Config -> Model -> Model
+fitGraph uc model =
+    let
+        bbox =
+            Network.getBoundingBox model.network
+
+        bboxXUnit =
+            { x = bbox.x * unit - unit
+            , y = bbox.y * unit - unit
+            , width = bbox.width * unit + (2 * unit)
+            , height = bbox.height * unit + (2 * unit)
+            }
+    in
+    { model
+        | transform =
+            uc.size
+                |> Maybe.map
+                    (\{ width, height, x } ->
+                        { width = width - (x * 4) -- not sure why I need this offset
+                        , height = height
+                        }
+                    )
+                |> Maybe.map
+                    (bboxXUnit
+                        |> Transform.updateByBoundingBox model.transform
+                    )
+                |> Maybe.withDefault model.transform
+    }
+
+
 expandAddress : Update.Config -> Address -> Direction -> Model -> ( Model, List Effect )
 expandAddress uc address direction model =
     let
@@ -1302,8 +1310,19 @@ getNextTxEffects model addressId direction =
 
 updateByRoute : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
 updateByRoute plugins uc route model =
-    forcePushHistory (model |> s_isDirty True)
-        |> updateByRoute_ plugins uc route
+    let
+        pathfinderReady =
+            uc.size /= Nothing
+    in
+    if not pathfinderReady then
+        ( model
+        , [ PostponeUpdateByRouteEffect route
+          ]
+        )
+
+    else
+        forcePushHistory (model |> s_isDirty True)
+            |> updateByRoute_ plugins uc route
 
 
 updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
@@ -1433,7 +1452,7 @@ updateByRoute_ plugins uc route model =
                             , previousAddress = Nothing
                             }
             in
-            ( result.m, result.eff )
+            ( result.m |> fitGraph uc, result.eff )
 
         _ ->
             n model

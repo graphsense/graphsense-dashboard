@@ -12,6 +12,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
+import Route.Pathfinder exposing (Route)
 import Table
 import Time exposing (Posix)
 import Update.Pathfinder.Network exposing (FindPosition)
@@ -89,6 +90,7 @@ type Msg
     | UserClickedContextMenuOpenInNewTab ContextMenuType
     | UserClickedContextMenuIdToClipboard ContextMenuType
     | UserClosesContextMenu
+    | RuntimePostponedUpdateByRoute Route
 
 
 type DisplaySettingsMsg

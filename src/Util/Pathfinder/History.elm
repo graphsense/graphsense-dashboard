@@ -219,3 +219,6 @@ shallPushHistory msg _ =
 
         UserClickedContextMenuIdToClipboard _ ->
             False
+
+        RuntimePostponedUpdateByRoute _ ->
+            False

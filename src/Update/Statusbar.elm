@@ -148,6 +148,9 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.ErrorEffect _) ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.PostponeUpdateByRouteEffect _) ->
+            Nothing
+
         Model.NotificationEffect _ ->
             Nothing
 
