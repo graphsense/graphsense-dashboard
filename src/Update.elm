@@ -92,10 +92,11 @@ update plugins uc msg model =
         BrowserChangedUrl url ->
             updateByUrl plugins uc url model
 
+        RuntimePostponedUpdateByUrl url ->
+            updateByUrl plugins uc url model
+
         BrowserGotStatistics stats ->
-            updateByUrl plugins
-                uc
-                model.url
+            n
                 { model
                     | stats = RD.Success stats
                     , statusbar = Statusbar.updateLastBlocks stats model.statusbar
@@ -1292,123 +1293,135 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
 updateByUrl : Plugins -> Config -> Url -> Model key -> ( Model key, List Effect )
 updateByUrl plugins uc url model =
     let
-        routeConfig =
-            model.stats
-                |> RD.map (.currencies >> List.map .name)
-                |> RD.withDefault []
-                |> (\c ->
-                        { graph = { currencies = c }
-                        , pathfinder = { networks = c }
-                        }
-                   )
+        modelReady =
+            not (Locale.isEmpty model.config.locale)
+                && RD.isSuccess model.stats
     in
-    Route.parse routeConfig url
-        |> Maybe.map2
-            (\oldRoute route ->
-                case route of
-                    Route.Home ->
-                        ( { model
-                            | page = Home
-                            , url = url
-                          }
-                        , []
+    if not modelReady then
+        ( model
+        , [ PostponeUpdateByUrlEffect url
+          ]
+        )
+
+    else
+        let
+            routeConfig =
+                model.stats
+                    |> RD.map (.currencies >> List.map .name)
+                    |> RD.withDefault []
+                    |> (\c ->
+                            { graph = { currencies = c }
+                            , pathfinder = { networks = c }
+                            }
+                       )
+        in
+        Route.parse routeConfig url
+            |> Maybe.map2
+                (\oldRoute route ->
+                    case route of
+                        Route.Home ->
+                            ( { model
+                                | page = Home
+                                , url = url
+                              }
+                            , []
+                            )
+
+                        Route.Stats ->
+                            ( { model
+                                | page = Stats
+                                , url = url
+                              }
+                            , case oldRoute of
+                                Route.Stats ->
+                                    []
+
+                                _ ->
+                                    [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
+                            )
+
+                        Route.Settings ->
+                            ( { model
+                                | page = Model.Settings
+                                , url = url
+                              }
+                            , []
+                            )
+
+                        Route.Graph graphRoute ->
+                            case graphRoute |> Log.log "graphRoute" of
+                                Route.Graph.Plugin ( pid, value ) ->
+                                    let
+                                        ( new, outMsg, cmd ) =
+                                            Plugin.updateGraphByUrl pid plugins value model.plugins
+                                    in
+                                    ( { model
+                                        | plugins = new
+                                        , page = Graph
+                                        , url = url
+                                      }
+                                    , [ PluginEffect cmd ]
+                                    )
+                                        |> updateByPluginOutMsg plugins uc outMsg
+
+                                _ ->
+                                    let
+                                        ( graph, graphEffect ) =
+                                            Graph.updateByRoute plugins graphRoute model.graph
+                                    in
+                                    ( { model
+                                        | page = Graph
+                                        , graph = graph
+                                        , url = url
+                                      }
+                                    , graphEffect
+                                        |> List.map GraphEffect
+                                    )
+
+                        Route.Pathfinder pfRoute ->
+                            let
+                                ( pfn, graphEffect ) =
+                                    Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
+                            in
+                            ( { model
+                                | page = Pathfinder
+                                , pathfinder = pfn
+                                , url = url
+                              }
+                            , graphEffect
+                                |> List.map PathfinderEffect
+                            )
+
+                        Route.Plugin ( pluginType, urlValue ) ->
+                            let
+                                ( new, outMsg, cmd ) =
+                                    Plugin.updateByUrl pluginType plugins uc urlValue model.plugins
+                            in
+                            ( { model
+                                | plugins = new
+                                , page = Plugin pluginType
+                                , url = url
+                              }
+                            , [ PluginEffect cmd ]
+                            )
+                                |> updateByPluginOutMsg plugins uc outMsg
+                )
+                (Route.parse routeConfig model.url
+                    -- in case url is invalid, assume root url
+                    |> Maybe.Extra.orElse (Just Route.Stats)
+                )
+            |> Maybe.map
+                (mapSecond
+                    ((++)
+                        (if uc.size == Nothing then
+                            [ GetContentsElementEffect ]
+
+                         else
+                            []
                         )
-
-                    Route.Stats ->
-                        ( { model
-                            | page = Stats
-                            , url = url
-                          }
-                        , case oldRoute of
-                            Route.Stats ->
-                                []
-
-                            _ ->
-                                [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
-                        )
-
-                    Route.Settings ->
-                        ( { model
-                            | page = Model.Settings
-                            , url = url
-                          }
-                        , []
-                        )
-
-                    Route.Graph graphRoute ->
-                        case graphRoute |> Log.log "graphRoute" of
-                            Route.Graph.Plugin ( pid, value ) ->
-                                let
-                                    ( new, outMsg, cmd ) =
-                                        Plugin.updateGraphByUrl pid plugins value model.plugins
-                                in
-                                ( { model
-                                    | plugins = new
-                                    , page = Graph
-                                    , url = url
-                                  }
-                                , [ PluginEffect cmd ]
-                                )
-                                    |> updateByPluginOutMsg plugins uc outMsg
-
-                            _ ->
-                                let
-                                    ( graph, graphEffect ) =
-                                        Graph.updateByRoute plugins graphRoute model.graph
-                                in
-                                ( { model
-                                    | page = Graph
-                                    , graph = graph
-                                    , url = url
-                                  }
-                                , graphEffect
-                                    |> List.map GraphEffect
-                                )
-
-                    Route.Pathfinder pfRoute ->
-                        let
-                            ( pfn, graphEffect ) =
-                                Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
-                        in
-                        ( { model
-                            | page = Pathfinder
-                            , pathfinder = pfn
-                            , url = url
-                          }
-                        , graphEffect
-                            |> List.map PathfinderEffect
-                        )
-
-                    Route.Plugin ( pluginType, urlValue ) ->
-                        let
-                            ( new, outMsg, cmd ) =
-                                Plugin.updateByUrl pluginType plugins uc urlValue model.plugins
-                        in
-                        ( { model
-                            | plugins = new
-                            , page = Plugin pluginType
-                            , url = url
-                          }
-                        , [ PluginEffect cmd ]
-                        )
-                            |> updateByPluginOutMsg plugins uc outMsg
-            )
-            (Route.parse routeConfig model.url
-                -- in case url is invalid, assume root url
-                |> Maybe.Extra.orElse (Just Route.Stats)
-            )
-        |> Maybe.map
-            (mapSecond
-                ((++)
-                    (if uc.size == Nothing then
-                        [ GetContentsElementEffect ]
-
-                     else
-                        []
                     )
                 )
-            )
-        |> Maybe.withDefault (n model)
+            |> Maybe.withDefault (n model)
 
 
 updateRequestLimit : Dict String String -> UserModel -> UserModel

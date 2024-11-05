@@ -18,6 +18,7 @@ import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
 import Plugin.Effects as Plugin exposing (Plugins)
 import Ports
+import Process
 import Route
 import Task
 
@@ -159,6 +160,10 @@ perform plugins key statusbarToken apiKey effect =
 
         CmdEffect cmd ->
             cmd
+
+        PostponeUpdateByUrlEffect url ->
+            Process.sleep 50
+                |> Task.perform (\_ -> RuntimePostponedUpdateByUrl url)
 
 
 handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg

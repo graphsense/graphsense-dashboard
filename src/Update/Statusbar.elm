@@ -151,6 +151,9 @@ messageFromEffect model effect =
         Model.NotificationEffect _ ->
             Nothing
 
+        Model.PostponeUpdateByUrlEffect _ ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =

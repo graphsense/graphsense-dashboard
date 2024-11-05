@@ -58,7 +58,7 @@ import Route as GlobalRoute
 import Route.Pathfinder as Route exposing (AddressHopType(..), Route)
 import Set exposing (..)
 import Task
-import Tuple exposing (first, mapFirst, mapSecond, second)
+import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
@@ -75,6 +75,7 @@ import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
+import View.Locale as Locale
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -1334,29 +1335,77 @@ updateByRoute_ plugins uc route model =
 
         Route.Path net list ->
             let
-                accf i ( m, eff, x ) =
+                getAddress adr =
+                    case adr of
+                        Route.AddressHop _ a ->
+                            Just a
+
+                        _ ->
+                            Nothing
+
+                isDuplicateAddress i =
+                    Maybe.andThen
+                        (\adr ->
+                            list
+                                |> List.take i
+                                |> List.Extra.find (getAddress >> (==) (Just adr))
+                        )
+                        >> (/=) Nothing
+
+                addressCount =
+                    list
+                        |> List.filterMap getAddress
+                        |> List.foldl
+                            (\a -> Dict.update a (Maybe.map ((+) 1) >> Maybe.withDefault 0 >> Just))
+                            Dict.empty
+
+                accf ( i, a ) { m, eff, x, y, previousAddress } =
                     let
+                        address =
+                            getAddress a
+
+                        prevCount =
+                            previousAddress
+                                |> Maybe.andThen (flip Dict.get addressCount)
+                                |> Maybe.withDefault 0
+
+                        ( xOffset, yOffset ) =
+                            if isDuplicateAddress (i - 1) previousAddress && prevCount > 0 then
+                                ( 0, 0 )
+
+                            else if isDuplicateAddress i address then
+                                ( 0, 0 )
+
+                            else
+                                ( nodeXOffset, 0 )
+
+                        x_ =
+                            x + xOffset
+
+                        y_ =
+                            y + yOffset
+
                         action =
-                            case i of
+                            case a of
                                 Route.AddressHop _ adr ->
-                                    loadAddressWithPosition (Fixed x 0) plugins ( net, adr )
+                                    loadAddressWithPosition (Fixed x_ y_) plugins ( net, adr )
 
                                 Route.TxHop h ->
-                                    loadTxWithPosition (Fixed x 0) False plugins ( net, h )
+                                    loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
 
                         annotations =
-                            case i of
+                            case a of
                                 Route.AddressHop VictimAddress adr ->
                                     Annotations.set
                                         ( net, adr )
-                                        "victim"
+                                        (Locale.string uc.locale "victim")
                                         (Just annotationGreen)
                                         m.annotations
 
                                 Route.AddressHop PerpetratorAddress adr ->
                                     Annotations.set
                                         ( net, adr )
-                                        "perpetrator"
+                                        (Locale.string uc.locale "perpetrator")
                                         (Just annotationRed)
                                         m.annotations
 
@@ -1366,12 +1415,25 @@ updateByRoute_ plugins uc route model =
                         ( nm, effn ) =
                             m |> s_annotations annotations |> action
                     in
-                    ( nm, eff ++ effn, x + nodeXOffset )
+                    { m = nm
+                    , eff = eff ++ effn
+                    , x = x_
+                    , y = y_
+                    , previousAddress = address
+                    }
 
-                ( totalM, totalEff, _ ) =
-                    List.foldl accf ( model, [], 0 ) list
+                result =
+                    list
+                        |> List.indexedMap pair
+                        |> List.foldl accf
+                            { m = model
+                            , eff = []
+                            , x = 0
+                            , y = 0
+                            , previousAddress = Nothing
+                            }
             in
-            ( totalM, totalEff )
+            ( result.m, result.eff )
 
         _ ->
             n model

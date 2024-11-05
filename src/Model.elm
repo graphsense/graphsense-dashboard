@@ -114,6 +114,7 @@ type Msg
     | UserClickedNavBack
     | UserClickedNavHome
     | NotificationMsg Model.Notification.Msg
+    | RuntimePostponedUpdateByUrl Url
 
 
 type SettingsMsg
@@ -174,6 +175,7 @@ type Effect
     | SetCleanEffect
     | SaveUserSettingsEffect UserSettings
     | NotificationEffect Model.Notification.Effect
+    | PostponeUpdateByUrlEffect Url
 
 
 type Thing

@@ -49,7 +49,18 @@ defaultAnnotation =
 
 set : Id -> String -> Maybe Color -> AnnotationModel -> AnnotationModel
 set item lbl clr (Annotation m) =
-    { m | annotations = Dict.insert item ((Dict.get item m.annotations |> Maybe.withDefault defaultAnnotation) |> Rs.s_label lbl |> Rs.s_color clr) m.annotations } |> Annotation
+    { m
+        | annotations =
+            Dict.insert item
+                ((Dict.get item m.annotations
+                    |> Maybe.withDefault defaultAnnotation
+                 )
+                    |> Rs.s_label lbl
+                    |> Rs.s_color clr
+                )
+                m.annotations
+    }
+        |> Annotation
 
 
 setLabel : Id -> String -> AnnotationModel -> AnnotationModel

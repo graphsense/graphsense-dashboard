@@ -59,7 +59,7 @@ init plugins uc flags url key =
             , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
             , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
             }
-      , page = Stats
+      , page = Home
       , search = Search.init (Search.initSearchAll Nothing)
       , graph = Graph.init settings flags.now
       , pathfinder = pathfinderState
