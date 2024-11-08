@@ -24,14 +24,14 @@ transfers: Transaktionen
 withdrawals: Abbuchungen
 deposits: Einzahlungen
 neighbors: Nachbarn
-receiving entities: abbuchende Cluster
-sending entities: einzahlende Cluster
-receiving entity: abbuchende Cluster
-sending entity: einzahlende Cluster
-receiving addresses: abbuchende Adressen
-receiving address: abbuchende Adresse
-sending addresses: einzahlende Adressen
-sending address: einzahlende Adresse
+receiving entities: empfangende Cluster
+sending entities: sendende Cluster
+receiving entity: empfangender Cluster
+sending entity: sendender Cluster
+receiving addresses: empfangende Adressen
+receiving address: empfangende Adresse
+sending addresses: sendende Adressen
+sending address: empfangende Adresse
 first usage: erste Verwendung
 last usage: letzte Verwendung
 activity period: Nutzungsdauer
