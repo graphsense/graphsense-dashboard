@@ -11,10 +11,10 @@ import Model.Notification as Notification
 import RecordSetter exposing (..)
 import Theme.Html.ErrorMessagesAlerts
     exposing
-        ( errorMessageComponentProperty1AlertAttributes
-        , errorMessageComponentProperty1AlertWithAttributes
-        , errorMessageComponentProperty1ErrorAttributes
-        , errorMessageComponentProperty1ErrorWithAttributes
+        ( errorMessageComponentTypeAlertAttributes
+        , errorMessageComponentTypeAlertWithAttributes
+        , errorMessageComponentTypeErrorAttributes
+        , errorMessageComponentTypeErrorWithAttributes
         )
 import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
@@ -57,8 +57,8 @@ view vc model =
                 buttonAttrOk =
                     [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm UserClosesNotification) ]
             in
-            errorMessageComponentProperty1ErrorWithAttributes
-                (errorMessageComponentProperty1ErrorAttributes
+            errorMessageComponentTypeErrorWithAttributes
+                (errorMessageComponentTypeErrorAttributes
                     |> s_iconsCloseSmall buttonAttrOk
                 )
                 { header =
@@ -67,7 +67,7 @@ view vc model =
                     }
                 , messageText =
                     { messageText = Locale.interpolated vc.locale message variables }
-                , property1Error =
+                , typeError =
                     { bodyText = ""
                     , headlineText = ""
                     }
@@ -83,14 +83,14 @@ view vc model =
                 icon =
                     Icons.iconsAlert {}
             in
-            errorMessageComponentProperty1AlertWithAttributes
-                (errorMessageComponentProperty1AlertAttributes |> s_iconsCloseSmall buttonAttrOk)
+            errorMessageComponentTypeAlertWithAttributes
+                (errorMessageComponentTypeAlertAttributes |> s_iconsCloseSmall buttonAttrOk)
                 { header =
                     { iconInstance = icon
                     , title = Locale.string vc.locale title
                     }
                 , messageText = { messageText = Locale.interpolated vc.locale message variables }
-                , property1Alert = { bodyText = "", headlineText = "" }
+                , typeAlert = { bodyText = "", headlineText = "" }
                 }
                 |> List.singleton
                 |> overlay (Notification.getMoved model)

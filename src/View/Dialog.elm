@@ -18,11 +18,11 @@ import Theme.Html.ErrorMessagesAlerts
         , dialogConfirmationMessageInstances
         , dialogConfirmationMessageWithAttributes
         , dialogConfirmationMessageWithInstances
-        , errorMessageComponentProperty1AlertAttributes
-        , errorMessageComponentProperty1AlertWithAttributes
-        , errorMessageComponentProperty1ErrorAttributes
-        , errorMessageComponentProperty1ErrorInstances
-        , errorMessageComponentProperty1ErrorWithInstances
+        , errorMessageComponentTypeAlertAttributes
+        , errorMessageComponentTypeAlertWithAttributes
+        , errorMessageComponentTypeErrorAttributes
+        , errorMessageComponentTypeErrorInstances
+        , errorMessageComponentTypeErrorWithInstances
         )
 import Theme.Html.Icons as Icons
 import Util.View exposing (addDot, none, onClickWithStop)
@@ -251,10 +251,10 @@ error vc err =
         buttonAttrOk =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm err.onOk) ]
     in
-    errorMessageComponentProperty1ErrorWithInstances
-        (errorMessageComponentProperty1ErrorAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
-        (errorMessageComponentProperty1ErrorInstances |> Rs.s_messageText (Just (div [] details)))
-        { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = "" }, property1Error = { bodyText = "", headlineText = "" } }
+    errorMessageComponentTypeErrorWithInstances
+        (errorMessageComponentTypeErrorAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
+        (errorMessageComponentTypeErrorInstances |> Rs.s_messageText (Just (div [] details)))
+        { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = "" }, typeError = { bodyText = "", headlineText = "" } }
 
 
 info : Config -> InfoConfig Msg -> Html Msg
@@ -266,6 +266,6 @@ info vc inf =
         icon =
             Icons.iconsAlert {}
     in
-    errorMessageComponentProperty1AlertWithAttributes
-        (errorMessageComponentProperty1AlertAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
-        { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, property1Alert = { bodyText = "", headlineText = "" } }
+    errorMessageComponentTypeAlertWithAttributes
+        (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
+        { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, typeAlert = { bodyText = "", headlineText = "" } }
