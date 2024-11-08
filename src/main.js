@@ -249,6 +249,19 @@ class CopyIcon extends HTMLElement {
     this.addEventListener('click', (ev) => {
       ev.stopPropagation()
       navigator.clipboard.writeText(this.getAttribute('data-value'))
+      let label = this.querySelector('[data-label]')
+      if(!label) return
+      label.innerHTML = this.getAttribute('data-copied-label')
+    })
+    this.addEventListener('mouseover', () => {
+      let hint = this.querySelector('[data-hint]');
+      if(!hint) return
+      hint.style.display = 'flex'
+    })
+    this.addEventListener('mouseleave', () => {
+      let hint = this.querySelector('[data-hint]');
+      if(!hint) return
+      hint.style.display = 'none'
     })
   }
 }

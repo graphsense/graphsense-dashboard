@@ -14,9 +14,9 @@ import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
-import RecordSetter exposing (s_iconsCopySmall)
+import RecordSetter exposing (s_anchor, s_hint, s_iconsCopySmall, s_label, s_triangle)
 import Switch
-import Theme.Html.Icons
+import Theme.Html.GraphComponents
 import View.Locale as Locale
 
 
@@ -230,15 +230,45 @@ copyIconPathfinder =
 copyIconWithAttrPathfinder : List (Attribute msg) -> View.Config -> String -> Html msg
 copyIconWithAttrPathfinder attr vc value =
     Html.Styled.a
-        ([ Css.copyIcon vc |> css
-         , title (Locale.string vc.locale "copy to clipboard")
-         ]
-            ++ attr
+        ((Css.copyIcon vc |> css)
+            :: attr
         )
         [ Html.Styled.node "copy-icon"
             [ Html.Styled.Attributes.attribute "data-value" value
+            , Locale.string vc.locale "Copied!"
+                |> Html.Styled.Attributes.attribute "data-copied-label"
             ]
-            [ Theme.Html.Icons.iconsCopySmallWithAttributes (Theme.Html.Icons.iconsCopySmallAttributes |> s_iconsCopySmall [ css [ Css.display Css.inlineBlock, Css.color Css.inherit ] ]) {}
+            [ Theme.Html.GraphComponents.copyShortcutWithAttributes
+                (Theme.Html.GraphComponents.copyShortcutAttributes
+                    |> s_iconsCopySmall
+                        [ css
+                            [ Css.display Css.inlineBlock
+                            , Css.color Css.inherit
+                            ]
+                        ]
+                    |> s_hint
+                        [ Html.Styled.Attributes.attribute "data-hint" ""
+                        , css
+                            [ Css.display Css.none
+                            , Css.zIndex <| Css.int 50
+                            ]
+                        ]
+                    |> s_label
+                        [ Html.Styled.Attributes.attribute "data-label" ""
+                        ]
+                    |> s_anchor
+                        [ css
+                            [ Css.px 1 |> Css.width |> Css.important
+                            ]
+                        ]
+                    |> s_triangle
+                        [ css
+                            [ Css.px -3 |> Css.top
+                            ]
+                        ]
+                )
+                { copyShortcut = { hint = Locale.string vc.locale "Copy to clipboard" }
+                }
             ]
         ]
 
