@@ -1650,6 +1650,7 @@ forcePushHistory model =
 makeHistoryEntry : Model -> Entry.Model
 makeHistoryEntry model =
     { network = (unselect model |> unhover).network
+    , annotations = model.annotations
     }
 
 
@@ -1663,6 +1664,7 @@ undoRedo fun model =
                     | history = history
                     , network = entry.network
                     , selection = NoSelection
+                    , annotations = entry.annotations
                 }
             )
         |> Maybe.withDefault model
