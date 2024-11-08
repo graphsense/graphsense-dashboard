@@ -467,11 +467,6 @@ txDetailsContentView vc _ model id viewState =
         getLbl id_ =
             Dict.get id_ model.tagSummaries
                 |> Maybe.withDefault Pathfinder.NoTags
-
-        closeAttrs =
-            [ Css.cursor Css.pointer |> List.singleton |> css
-            , onClick UserClosedDetailsView
-            ]
     in
     case viewState.tx.type_ of
         Tx.Utxo tx ->
@@ -669,6 +664,18 @@ sidePanelCss =
     , Css.overflowY Css.auto
     , Css.overflowX Css.hidden
     , Css.paddingTop (Css.px 10)
+    ]
+
+
+closeAttrs : List (Svg.Styled.Attribute Msg)
+closeAttrs =
+    [ css
+        [ Css.cursor Css.pointer
+        , Css.important <| Css.right <| Css.px 6
+        , Css.important <| Css.top <| Css.px 0
+        , Css.important <| Css.left <| Css.unset
+        ]
+    , onClick UserClosedDetailsView
     ]
 
 
@@ -1016,11 +1023,6 @@ addressDetailsContentView vc gc model id viewState =
 
             else
                 tokensDropDownClosed
-
-        closeAttrs =
-            [ Css.cursor Css.pointer |> List.singleton |> css
-            , onClick UserClosedDetailsView
-            ]
     in
     if Data.isAccountLike (Id.network id) then
         SidePanelComponents.sidePanelEthAddressWithInstances
