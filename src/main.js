@@ -245,13 +245,20 @@ app.ports.pluginsOut.subscribe(packetWithKey => {
 
 class CopyIcon extends HTMLElement {
   constructor () {
+    let label, original
+    setTimeout(() => {
+      label = this.querySelector('[data-label]')
+      original = label?.innerText
+    }, 0)
     super()
     this.addEventListener('click', (ev) => {
       ev.stopPropagation()
       navigator.clipboard.writeText(this.getAttribute('data-value'))
-      let label = this.querySelector('[data-label]')
       if(!label) return
       label.innerHTML = this.getAttribute('data-copied-label')
+      setTimeout(() => {
+        label.innerHTML = original
+      }, 3000)
     })
     this.addEventListener('mouseover', () => {
       let hint = this.querySelector('[data-hint]');
