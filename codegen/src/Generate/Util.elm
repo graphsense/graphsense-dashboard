@@ -54,6 +54,30 @@ a3 fun a_ b c =
         |> (++)
 
 
+i : Elm.Expression -> Bool -> List Elm.Expression -> List Elm.Expression
+i expression condition =
+    (++)
+        (if condition then
+            [ expression
+            ]
+
+         else
+            []
+        )
+
+
+n : Elm.Expression -> Bool -> List Elm.Expression -> List Elm.Expression
+n expression condition =
+    (++)
+        (if not condition then
+            [ expression
+            ]
+
+         else
+            []
+        )
+
+
 lengthOrAutoType : Elm.Expression -> Elm.Expression
 lengthOrAutoType =
     Elm.withType

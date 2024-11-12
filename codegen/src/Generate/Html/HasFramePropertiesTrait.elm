@@ -20,6 +20,7 @@ toStyles colorMap node =
         |> m primaryAxisAlignItems node.primaryAxisAlignItems
         |> m counterAxisAlignItems node.counterAxisAlignItems
         |> a2 gap node.primaryAxisAlignItems node.itemSpacing
+        |> i (Css.overflow Css.hidden) node.clipsContent
 
 
 gap : PrimaryAxisAlignItems -> Float -> Maybe Elm.Expression
