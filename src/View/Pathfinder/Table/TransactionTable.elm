@@ -13,8 +13,9 @@ import RecordSetter as Rs
 import Set
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
 import View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations)
-import View.Pathfinder.Table.Columns as PT
+import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
 
 
 type alias GenericTx =
@@ -74,11 +75,10 @@ config styles vc addressId isCheckedFn =
             , PT.timestampDateMultiRowColumn vc
                 "Timestamp"
                 (toGerneric addressId >> .timestamp)
-            , PT.txColumn vc
+            , txColumn vc
                 { label = "Hash"
                 , accessor = toGerneric addressId >> .txHash
                 , onClick = Just (toGerneric addressId >> getId >> UserClickedTx)
-                , tagsPlaceholder = False
                 }
             , PT.debitCreditColumn
                 (toGerneric addressId >> .isOutgoing)
@@ -90,4 +90,28 @@ config styles vc addressId isCheckedFn =
         , customizations =
             customizations vc
                 |> alignColumnsRight styles_ vc rightAlignedColumns
+        }
+
+
+txColumn : View.Config -> ColumnConfig Api.Data.AddressTx msg -> Table.Column Api.Data.AddressTx msg
+txColumn vc { label, accessor, onClick } =
+    Table.veryCustomColumn
+        { name = label
+        , viewData =
+            \data ->
+                SidePanelComponents.sidePanelListIdentifierCellWithAttributes
+                    SidePanelComponents.sidePanelListIdentifierCellAttributes
+                    { sidePanelListIdentifierCell =
+                        { copyIconInstance =
+                            accessor data |> copyIconPathfinder vc
+                        , identifier =
+                            accessor data
+                                |> truncateLongIdentifierWithLengths 8 4
+                        }
+                    }
+                    |> List.singleton
+                    |> wrapCell onClick data
+
+        --, sorter = Table.increasingOrDecreasingBy accessor
+        , sorter = Table.unsortable
         }

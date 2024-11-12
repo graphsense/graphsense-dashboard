@@ -1,33 +1,41 @@
-module View.Pathfinder.Table.IoTable exposing (config)
+module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
-import Init.Pathfinder.Id as Id
+import Html.Styled exposing (span)
+import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Tx exposing (ioToId)
 import Msg.Pathfinder exposing (IoDirection, Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
 import Set
 import Table
 import Theme.Colors as Colors
+import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
+import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
+import View.Locale as Locale
 import View.Pathfinder.PagedTable exposing (alignColumnsRight)
-import View.Pathfinder.Table.Columns as PT
+import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
 
 
-config : Styles -> View.Config -> IoDirection -> String -> (Id -> Bool) -> Maybe (Id -> HavingTags) -> Table.Config Api.Data.TxValue Msg
-config styles vc ioDirection network isCheckedFn lblFn =
+type alias IoColumnConfig =
+    { network : String
+    , hasTags : Id -> HavingTags
+    , isChange : Api.Data.TxValue -> Bool
+    }
+
+
+config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> IoColumnConfig -> Table.Config Api.Data.TxValue Msg
+config styles vc ioDirection isCheckedFn ioColumnConfig =
     let
-        toId =
-            .address
-                >> List.head
-                >> Maybe.map (Id.init network)
-
         rightAlignedColumns =
             Set.singleton "Value"
 
@@ -47,6 +55,9 @@ config styles vc ioDirection network isCheckedFn lblFn =
                                 ++ [ Css.display Css.tableCell ]
                             )
                     )
+
+        network =
+            ioColumnConfig.network
     in
     Table.customConfig
         { toId = .address >> String.concat
@@ -54,19 +65,18 @@ config styles vc ioDirection network isCheckedFn lblFn =
         , columns =
             [ PT.checkboxColumn vc
                 { isChecked =
-                    toId
+                    ioToId network
                         >> Maybe.map isCheckedFn
                         >> Maybe.withDefault False
                 , onClick =
-                    toId >> Maybe.map UserClickedAddressCheckboxInTable >> Maybe.withDefault NoOp
+                    ioToId network >> Maybe.map UserClickedAddressCheckboxInTable >> Maybe.withDefault NoOp
                 }
-            , PT.addressColumn vc
+            , ioColumn vc
                 { label = "Address"
                 , accessor = .address >> String.join ","
-                , onClick = Just (toId >> Maybe.map UserClickedAddress >> Maybe.withDefault NoOp)
-                , tagsPlaceholder = True
+                , onClick = Just (ioToId network >> Maybe.map UserClickedAddress >> Maybe.withDefault NoOp)
                 }
-                (lblFn |> Maybe.map (\fn -> \data -> toId data |> Maybe.map fn |> Maybe.withDefault NoTags))
+                ioColumnConfig
             , PT.sortableDebitCreditColumn
                 (.value >> .value >> (>=) 0)
                 vc
@@ -75,4 +85,106 @@ config styles vc ioDirection network isCheckedFn lblFn =
                 .value
             ]
         , customizations = customizations styles_ vc |> alignColumnsRight styles_ vc rightAlignedColumns
+        }
+
+
+ioColumn : View.Config -> ColumnConfig Api.Data.TxValue msg -> IoColumnConfig -> Table.Column Api.Data.TxValue msg
+ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
+    let
+        exchangeIcon =
+            Icons.iconsExchangeSmallWithAttributes
+                (Icons.iconsExchangeSmallAttributes
+                    |> Rs.s_iconsExchangeSmall
+                        [ Locale.string vc.locale "is an exchange"
+                            |> title
+                        ]
+                )
+                {}
+
+        tagIcon =
+            Icons.iconsTagSmallWithAttributes
+                (Icons.iconsTagSmallAttributes
+                    |> Rs.s_iconsTagSmall
+                        [ Locale.string vc.locale "has tags"
+                            |> title
+                        ]
+                )
+                {}
+
+        loadingIcon =
+            span
+                [ Locale.string vc.locale "Loading tags" |> title
+                , css
+                    [ Css.px 4
+                        |> Css.left
+                    , Css.px 5
+                        |> Css.top
+                    , Css.position Css.absolute
+                    ]
+                ]
+                [ loadingSpinner vc (\_ -> [])
+                ]
+
+        hasTags_ =
+            ioToId network
+                >> Maybe.map hasTags
+                >> Maybe.withDefault NoTags
+    in
+    Table.veryCustomColumn
+        { name = label
+        , viewData =
+            \data ->
+                SidePanelComponents.sidePanelIoListIdentifierCellWithAttributes
+                    SidePanelComponents.sidePanelIoListIdentifierCellAttributes
+                    { sidePanelIoListIdentifierCell =
+                        { position1Instance =
+                            case hasTags_ data of
+                                LoadingTags ->
+                                    loadingIcon
+
+                                HasExchangeTagOnly ->
+                                    exchangeIcon
+
+                                HasTags _ ->
+                                    tagIcon
+
+                                NoTags ->
+                                    none
+
+                                HasTagSummary ts ->
+                                    if hasOnlyExchangeTags ts then
+                                        exchangeIcon
+
+                                    else
+                                        tagIcon
+                        , position2Instance =
+                            case hasTags_ data of
+                                HasTagSummary ts ->
+                                    if isExchangeNode ts && not (hasOnlyExchangeTags ts) then
+                                        exchangeIcon
+
+                                    else
+                                        none
+
+                                HasTags True ->
+                                    exchangeIcon
+
+                                _ ->
+                                    none
+                        , changeVisible = isChange data
+                        }
+                    , changeTag = { text = Locale.string vc.locale "change" }
+                    , sidePanelListIdentifierCell =
+                        { copyIconInstance =
+                            accessor data |> copyIconPathfinder vc
+                        , identifier =
+                            accessor data
+                                |> truncateLongIdentifierWithLengths 8 4
+                        }
+                    }
+                    |> List.singleton
+                    |> wrapCell onClick data
+
+        --, sorter = Table.increasingOrDecreasingBy accessor
+        , sorter = Table.unsortable
         }

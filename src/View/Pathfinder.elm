@@ -19,6 +19,7 @@ import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave
 import Iknaio.ColorScheme exposing (annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
 import Init.Pathfinder.Id as Id
 import Json.Decode
+import List.Extra
 import Model.Currency as Asset exposing (asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
 import Model.Graph exposing (Dragging(..))
@@ -74,7 +75,7 @@ import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Network as Network
 import View.Pathfinder.PagedTable as PagedTable
-import View.Pathfinder.Table.IoTable as IoTable
+import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.Tooltip as Tooltip
@@ -508,6 +509,12 @@ txDetailsContentView vc _ model id viewState =
                                 [ Svg.onClick (TxDetailsMsg (UserClickedToggleIoTable Inputs))
                                 , css [ Css.cursor Css.pointer ]
                                 ]
+
+                            ioTableConfig =
+                                { network = tx.raw.currency
+                                , hasTags = getLbl
+                                , isChange = always False
+                                }
                         in
                         if viewState.inputsTableOpen then
                             SidePanelComponents.sidePanelInputListOpenWithAttributes
@@ -516,7 +523,7 @@ txDetailsContentView vc _ model id viewState =
                                     |> Rs.s_sidePanelInputListHeaderOpen headerEvent
                                 )
                                 { sidePanelInputListOpen =
-                                    { listInstance = ioTableView vc Inputs model.network tx.raw.currency viewState.inputsTable getLbl
+                                    { listInstance = ioTableView vc Inputs model.network viewState.inputsTable ioTableConfig
                                     }
                                 , sidePanelInputListHeaderOpen =
                                     { titleInstance = SidePanelComponents.sidePanelListHeaderTitleInputs headerTitle }
@@ -539,11 +546,27 @@ txDetailsContentView vc _ model id viewState =
                                 [ Svg.onClick (TxDetailsMsg (UserClickedToggleIoTable Outputs))
                                 , css [ Css.cursor Css.pointer ]
                                 ]
+
+                            ioTableConfig =
+                                { network = tx.raw.currency
+                                , hasTags = getLbl
+                                , isChange =
+                                    .address
+                                        >> List.head
+                                        >> Maybe.andThen
+                                            (\id_ ->
+                                                Maybe.withDefault [] tx.raw.inputs
+                                                    |> List.Extra.find (.address >> List.head >> Maybe.map ((==) id_) >> Maybe.withDefault False)
+                                            )
+                                        >> (/=) Nothing
+                                }
                         in
                         if viewState.outputsTableOpen then
                             SidePanelComponents.sidePanelOutputListOpenWithAttributes
                                 (SidePanelComponents.sidePanelOutputListOpenAttributes |> Rs.s_sidePanelOutputListOpen style |> Rs.s_sidePanelOutputListHeaderOpen headerEvent)
-                                { sidePanelOutputListOpen = { listInstance = ioTableView vc Outputs model.network tx.raw.currency viewState.outputsTable getLbl }
+                                { sidePanelOutputListOpen =
+                                    { listInstance = ioTableView vc Outputs model.network viewState.outputsTable ioTableConfig
+                                    }
                                 , sidePanelListHeaderTitleOutputs = headerTitle
                                 }
 
@@ -617,8 +640,8 @@ txDetailsContentView vc _ model id viewState =
                 }
 
 
-ioTableView : View.Config -> IoDirection -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> Pathfinder.HavingTags) -> Html Msg
-ioTableView vc dir network currency table getLbl =
+ioTableView : View.Config -> IoDirection -> Network -> Model.Graph.Table.Table Api.Data.TxValue -> IoColumnConfig -> Html Msg
+ioTableView vc dir network table ioColumnConfig =
     let
         isCheckedFn =
             flip Network.hasAddress network
@@ -638,7 +661,7 @@ ioTableView vc dir network currency table getLbl =
         vc
         [ css [ Css.overflowY Css.auto, Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 500) * 0.5)) ] ]
         noTools
-        (IoTable.config styles vc dir currency isCheckedFn (Just getLbl))
+        (IoTable.config styles vc dir isCheckedFn ioColumnConfig)
         table
 
 

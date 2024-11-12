@@ -1,4 +1,4 @@
-module Model.Pathfinder.Tx exposing (AccountTx, Io, Tx, TxType(..), UtxoTx, addressToCoords, avg, calcCoords, getAccountTx, getCoords, getInputAddressIds, getRawTimestamp, getTxId, getTxIdForAddressTx, getUtxoTx, hasAddress, hasInput, hasOutput, isInFlow, isOutFlow, listAddressesForTx)
+module Model.Pathfinder.Tx exposing (AccountTx, Io, Tx, TxType(..), UtxoTx, addressToCoords, avg, calcCoords, getAccountTx, getCoords, getInputAddressIds, getRawTimestamp, getTxId, getTxIdForAddressTx, getUtxoTx, hasAddress, hasInput, hasOutput, ioToId, isInFlow, isOutFlow, listAddressesForTx)
 
 import Animation exposing (Animation, Clock)
 import Api.Data
@@ -206,3 +206,10 @@ getTxIdForAddressTx tx =
 
         Api.Data.AddressTxAddressTxUtxo t ->
             Id.init t.currency t.txHash
+
+
+ioToId : String -> Api.Data.TxValue -> Maybe Id
+ioToId network =
+    .address
+        >> List.head
+        >> Maybe.map (Id.init network)

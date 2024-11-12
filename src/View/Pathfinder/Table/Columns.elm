@@ -1,15 +1,16 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, ValueColumnOptions, addressColumn, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, txColumn, valueColumn, valueColumnWithOptions)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS exposing (inoutStyle)
 import Css.Statusbar
-import Html.Styled exposing (span, text)
+import Html.Styled exposing (Html, span, text)
 import Html.Styled.Attributes exposing (css, title)
 import Html.Styled.Events
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..))
+import Model.Pathfinder.Id exposing (Id)
 import RecordSetter as Rs
 import Table
 import Theme.Html.Icons as Icons
@@ -53,127 +54,26 @@ type alias ColumnConfig data msg =
     { label : String
     , accessor : data -> String
     , onClick : Maybe (data -> msg)
-    , tagsPlaceholder : Bool
     }
 
 
-addressColumn : View.Config -> ColumnConfig data msg -> Maybe (data -> HavingTags) -> Table.Column data msg
-addressColumn vc cc lblfn =
-    identifierColumn (lblfn |> Maybe.withDefault (\_ -> NoTags)) vc cc
-
-
-identifierColumn : (data -> HavingTags) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
-identifierColumn lblfn vc { label, accessor, onClick } =
-    let
-        exchangeIcon =
-            Icons.iconsExchangeSmallWithAttributes
-                (Icons.iconsExchangeSmallAttributes
-                    |> Rs.s_iconsExchangeSmall
-                        [ Locale.string vc.locale "is an exchange"
-                            |> title
-                        ]
-                )
-                {}
-
-        tagIcon =
-            Icons.iconsTagSmallWithAttributes
-                (Icons.iconsTagSmallAttributes
-                    |> Rs.s_iconsTagSmall
-                        [ Locale.string vc.locale "has tags"
-                            |> title
-                        ]
-                )
-                {}
-
-        loadingIcon =
-            span
-                [ Locale.string vc.locale "Loading tags" |> title
-                , css
-                    [ Css.px 4
-                        |> Css.left
-                    , Css.px 5
-                        |> Css.top
-                    , Css.position Css.absolute
-                    ]
-                ]
-                [ loadingSpinner vc Css.Statusbar.loadingSpinner
-                ]
-    in
-    Table.veryCustomColumn
-        { name = label
-        , viewData =
-            \data ->
-                SidePanelComponents.sidePanelListIdentifierCellWithTagWithAttributes
-                    SidePanelComponents.sidePanelListIdentifierCellWithTagAttributes
-                    { sidePanelListIdentifierCellWithTag =
-                        { position1Instance =
-                            case lblfn data of
-                                LoadingTags ->
-                                    loadingIcon
-
-                                HasExchangeTagOnly ->
-                                    exchangeIcon
-
-                                HasTags _ ->
-                                    tagIcon
-
-                                NoTags ->
-                                    none
-
-                                HasTagSummary ts ->
-                                    if hasOnlyExchangeTags ts then
-                                        exchangeIcon
-
-                                    else
-                                        tagIcon
-                        , position2Instance =
-                            case lblfn data of
-                                HasTagSummary ts ->
-                                    if isExchangeNode ts && not (hasOnlyExchangeTags ts) then
-                                        exchangeIcon
-
-                                    else
-                                        none
-
-                                HasTags True ->
-                                    exchangeIcon
-
-                                _ ->
-                                    none
-                        }
-                    , sidePanelListIdentifierCell =
-                        { copyIconInstance =
-                            accessor data |> copyIconPathfinder vc
-                        , identifier =
-                            accessor data
-                                |> truncateLongIdentifierWithLengths 8 4
-                        }
-                    }
-                    |> List.singleton
-                    |> Table.HtmlDetails
-                        (([ Css.verticalAlign Css.middle
-                          ]
-                            |> css
-                         )
-                            :: (onClick
-                                    |> Maybe.map
-                                        (\cl ->
-                                            [ cl data |> Html.Styled.Events.onClick
-                                            , css [ Css.cursor Css.pointer ]
-                                            ]
-                                        )
-                                    |> Maybe.withDefault []
-                               )
+wrapCell : Maybe (data -> msg) -> data -> List (Html msg) -> Table.HtmlDetails msg
+wrapCell onClick data =
+    Table.HtmlDetails
+        (([ Css.verticalAlign Css.middle
+          ]
+            |> css
+         )
+            :: (onClick
+                    |> Maybe.map
+                        (\cl ->
+                            [ cl data |> Html.Styled.Events.onClick
+                            , css [ Css.cursor Css.pointer ]
+                            ]
                         )
-
-        --, sorter = Table.increasingOrDecreasingBy accessor
-        , sorter = Table.unsortable
-        }
-
-
-txColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
-txColumn =
-    identifierColumn (\_ -> NoTags)
+                    |> Maybe.withDefault []
+               )
+        )
 
 
 stringColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
