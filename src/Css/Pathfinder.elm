@@ -11,7 +11,6 @@ module Css.Pathfinder exposing
     , no
     , sGap
     , searchBoxMinWidth
-    , searchInputStyle
     , tagConfidenceTextHighStyle
     , tagConfidenceTextLowStyle
     , tagConfidenceTextMediumStyle
@@ -40,7 +39,6 @@ import Css
         , cursor
         , display
         , displayFlex
-        , ex
         , flexEnd
         , fontSize
         , height
@@ -179,20 +177,6 @@ emphTextColor _ =
 tooltipMargin : List Style
 tooltipMargin =
     [ margin4 sGap mGap sGap mGap ]
-
-
-searchInputStyle : View.Config -> String -> List Style
-searchInputStyle vc _ =
-    [ width (ex 50)
-    , calc (pct 100) minus (px 2) |> height
-    , padding <| px 1
-    , display block
-    , emphTextColor vc |> property "color"
-    , TColors.white |> property "background-color"
-    , border2 no solid
-    , outline none
-    , paddingLeft (px 10)
-    ]
 
 
 annotationInputStyle : View.Config -> String -> List Style

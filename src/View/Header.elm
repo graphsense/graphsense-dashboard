@@ -3,19 +3,17 @@ module View.Header exposing (HeaderConfig, header)
 import Config.View exposing (Config)
 import Css
 import Css.Header as Css
-import Css.Pathfinder exposing (searchInputStyle)
-import Css.Search
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (css, id, src)
+import Html.Styled.Attributes exposing (css, id)
 import Model exposing (Msg(..), UserModel)
 import Model.Search as Search
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
-import RecordSetter exposing (..)
+import RecordSetter as Rs
+import Theme.Colors as Colors
 import Theme.Html.SettingsComponents as SettingsComponents
 import Util.View as View
 import View.Search as Search
-import View.User as User
 
 
 type alias HeaderConfig =
@@ -26,7 +24,7 @@ type alias HeaderConfig =
 
 
 header : Plugins -> ModelState -> Config -> HeaderConfig -> Html Msg
-header plugins states vc hc =
+header plugins _ vc hc =
     Html.Styled.header
         [ css
             [ Css.position Css.absolute
@@ -45,28 +43,56 @@ header plugins states vc hc =
             View.none
 
           else
-            SettingsComponents.toolbarSearchFieldWithInstances
-                (SettingsComponents.toolbarSearchFieldAttributes
-                    |> s_toolbarSearchField
-                        [ css [ Css.alignItems Css.stretch |> Css.important ] ]
+            SettingsComponents.searchBarFieldStateTypingWithInstances
+                (SettingsComponents.searchBarFieldStateTypingAttributes
+                    |> Rs.s_fieldStateTyping
+                        [ css
+                            [ Css.alignItems Css.stretch |> Css.important
+                            , Css.px 325 |> Css.width |> Css.important
+                            ]
+                        ]
                 )
-                (SettingsComponents.toolbarSearchFieldInstances
-                    |> s_searchInputField
+                (SettingsComponents.searchBarFieldStateTypingInstances
+                    |> Rs.s_searchInputField
                         (Search.searchWithMoreCss plugins
                             vc
                             (Search.default
-                                |> s_css (searchInputStyle vc)
-                                |> s_formCss
+                                |> Rs.s_css
+                                    (\_ ->
+                                        Css.outline Css.none
+                                            :: Css.pseudoClass "placeholder" SettingsComponents.searchBarFieldStatePlaceholderSearchInputField_details.styles
+                                            :: (Css.width <| Css.pct 100)
+                                            :: SettingsComponents.searchBarFieldStateTypingSearchInputField_details.styles
+                                            ++ SettingsComponents.searchBarFieldStateTypingSearchText_details.styles
+                                    )
+                                |> Rs.s_formCss
                                     [ Css.flexGrow <| Css.num 1
                                     , Css.height Css.auto |> Css.important
                                     ]
-                                |> s_frameCss
+                                |> Rs.s_frameCss
                                     [ Css.height <| Css.pct 100
                                     , Css.marginRight Css.zero |> Css.important
                                     ]
-                                |> s_multiline True
-                                |> s_resultsAsLink True
-                                |> s_showIcon False
+                                |> Rs.s_resultLine
+                                    [ Css.property "background-color" Colors.white
+                                    , Css.hover
+                                        [ Css.property "background-color" Colors.greyBlue50
+                                            |> Css.important
+                                        ]
+                                    ]
+                                |> Rs.s_resultLineHighlighted
+                                    [ Css.property "background-color" Colors.greyBlue50
+                                    ]
+                                |> Rs.s_resultsAsLink True
+                                |> Rs.s_dropdownResult
+                                    [ Css.property "background-color" Colors.white
+                                    ]
+                                |> Rs.s_dropdownFrame
+                                    [ Css.property "background-color" Colors.white
+                                    ]
+                                |> Rs.s_multiline True
+                                |> Rs.s_resultsAsLink True
+                                |> Rs.s_showIcon False
                             )
                             hc.search
                             |> Html.Styled.map SearchMsg

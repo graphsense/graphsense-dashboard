@@ -360,9 +360,7 @@ settingsHovercardView vc _ hc =
                     , switch = { variant = toggle }
                     }
     in
-    Sc.displayPropertiesWithInstances
-        Sc.displayPropertiesAttributes
-        Sc.displayPropertiesInstances
+    Sc.displayProperties
         { exactValueSwitch = { variant = switchWithText True "Show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
         , fiatSwitch = { variant = switchWithText False "Amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
         , gridSwitch = { variant = switchWithText True "Snap to Grid" vc.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
@@ -394,12 +392,9 @@ graphActionsView vc _ _ =
 
 searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 searchBoxView plugins _ vc _ model =
-    Sc.toolbarSearchFieldWithInstances
-        (Sc.toolbarSearchFieldAttributes
-            |> Rs.s_toolbarSearchField
-                [ css [ Css.alignItems Css.stretch |> Css.important ] ]
-        )
-        (Sc.toolbarSearchFieldInstances
+    Sc.searchBarFieldStateTypingWithInstances
+        Sc.searchBarFieldStateTypingAttributes
+        (Sc.searchBarFieldStateTypingInstances
             |> Rs.s_searchInputField
                 (View.Search.searchWithMoreCss plugins
                     vc
@@ -407,8 +402,10 @@ searchBoxView plugins _ vc _ model =
                         |> Rs.s_css
                             (\_ ->
                                 Css.outline Css.none
-                                    :: Sc.toolbarSearchFieldSearchInputField_details.styles
-                                    ++ Sc.toolbarSearchFieldSearchText_details.styles
+                                    :: Css.pseudoClass "placeholder" Sc.searchBarFieldStatePlaceholderSearchInputField_details.styles
+                                    :: (Css.width <| Css.pct 100)
+                                    :: Sc.searchBarFieldStateTypingSearchInputField_details.styles
+                                    ++ Sc.searchBarFieldStateTypingSearchText_details.styles
                             )
                         |> Rs.s_formCss
                             [ Css.flexGrow <| Css.num 1
