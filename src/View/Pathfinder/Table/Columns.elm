@@ -4,19 +4,14 @@ import Api.Data
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS exposing (inoutStyle)
-import Css.Statusbar
-import Html.Styled exposing (Html, span, text)
-import Html.Styled.Attributes exposing (css, title)
+import Html.Styled exposing (Html, text)
+import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events
 import Model.Currency exposing (AssetIdentifier)
-import Model.Pathfinder exposing (HavingTags(..))
-import Model.Pathfinder.Id exposing (Id)
 import RecordSetter as Rs
 import Table
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
-import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 
