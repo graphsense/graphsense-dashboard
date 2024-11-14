@@ -595,7 +595,7 @@ theme =
                     |> s_borderWidth 1
                     |> s_root
                         [ ( "box-shadow", "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)" )
-                        , ( "border-radius", scaled borderRadiusSmValue |> String.fromFloat |> (\s -> s ++ "rem") )
+                        , ( "border-radius", "5px" )
                         ]
             )
         |> s_user
