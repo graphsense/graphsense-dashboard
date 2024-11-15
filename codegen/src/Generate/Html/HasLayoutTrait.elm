@@ -12,8 +12,8 @@ toStyles node =
     [ Css.boxSizing Css.borderBox ]
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
         |> mm2 layoutPositioning node.layoutPositioning node.absoluteBoundingBox
-        |> a3 (width node.minWidth) node.layoutGrow node.layoutSizingHorizontal node.absoluteRenderBounds
-        |> a2 (height node.minHeight) node.layoutSizingVertical node.absoluteRenderBounds
+        |> a3 (width node.minWidth) node.layoutGrow node.layoutSizingHorizontal node.absoluteBoundingBox
+        |> a2 (height node.minHeight) node.layoutSizingVertical node.absoluteBoundingBox
         |> a minWidth node.minWidth
         |> a minHeight node.minHeight
 
