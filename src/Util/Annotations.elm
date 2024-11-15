@@ -111,6 +111,7 @@ annotationToAttrAndLabel node details offset ann =
                 [ css
                     [ Css.pct 100 |> Css.width
                     , Css.textAlign Css.center
+                    , Css.position Css.fixed
                     ]
                 ]
             |> List.singleton
