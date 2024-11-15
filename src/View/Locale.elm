@@ -168,7 +168,7 @@ formatWithValueDetail : Model -> String -> String
 formatWithValueDetail model fmtStr =
     case model.valueDetail of
         Exact ->
-            fmtStr
+            fmtStr ++ "[00000000000000000]"
 
         Magnitude ->
             if String.endsWith fmtStr "a" then
@@ -381,7 +381,7 @@ percentage model =
 
 
 bestAssetAsInt : Model -> List ( AssetIdentifier, Api.Data.Values ) -> Maybe ( AssetIdentifier, Int )
-bestAssetAsInt model =
+bestAssetAsInt _ =
     let
         fiatValue v =
             v.fiatValues
@@ -521,18 +521,22 @@ coinWithOptions vis model asset v =
             (\value ->
                 let
                     fmt =
-                        if value == 0.0 then
-                            "1,000"
+                        formatWithValueDetail model <|
+                            if value == 0.0 then
+                                "1,000"
 
-                        else if abs value >= 1.0 then
-                            "1,000.00"
+                            else if abs value > 1.0 then
+                                "1,000.00"
 
-                        else
-                            let
-                                n =
-                                    find (\exp -> (abs value * (10 ^ toFloat exp)) >= 1) (List.range 0 14) |> Maybe.withDefault 2
-                            in
-                            "1,000." ++ String.repeat (n + 2) "0"
+                            else
+                                let
+                                    n =
+                                        List.range 0 14
+                                            |> find
+                                                (\exp -> (abs value * (10 ^ toFloat exp)) > 1)
+                                            |> Maybe.withDefault 2
+                                in
+                                "1,000." ++ String.repeat (n + 1) "0"
                 in
                 floatWithFormat model fmt value
                     ++ (if vis == Hidden then
