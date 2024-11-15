@@ -18,9 +18,12 @@ keyDecoder kMap =
 
 toKeyDown : String -> Decode.Decoder Msg
 toKeyDown keyValue =
-    case keyValue of
+    case Debug.log "keyvalue" keyValue of
+        -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
         "Control" ->
-            -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
+            Decode.succeed UserPressedModKey
+
+        "Meta" ->
             Decode.succeed UserPressedModKey
 
         "Shift" ->
@@ -54,8 +57,12 @@ toKeyUp keyValue =
                     )
     in
     case keyValue of
+        -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
         "Control" ->
-            -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
+            UserReleasedModKey
+                |> Decode.succeed
+
+        "Meta" ->
             UserReleasedModKey
                 |> Decode.succeed
 
