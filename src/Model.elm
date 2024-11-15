@@ -89,6 +89,7 @@ type Msg
     | UserClickedLayout
     | UserClickedConfirm Msg
     | UserClickedOption Msg
+    | UserClickedOutsideDialog Msg
     | UserClickedLogout
     | UserClickedLightmode
     | TimeUpdateReset Time.Posix

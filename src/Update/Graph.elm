@@ -3207,6 +3207,9 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.ShowDialog _ ->
                         ( mo, [] )
+
+                    PluginInterface.CloseDialog ->
+                        ( mo, [] )
             )
             ( model, [] )
 

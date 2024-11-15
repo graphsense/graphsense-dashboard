@@ -1,5 +1,6 @@
 module Update.Dialog exposing (addressNotFoundError, confirm, generalError, httpError, info, mapMsg, options)
 
+import Html.Styled as Html
 import Http
 import Model.Dialog exposing (..)
 import Set
@@ -94,3 +95,9 @@ mapMsg map model =
             , onOk = map conf.onOk
             }
                 |> Info
+
+        Custom conf ->
+            { html = Html.map map conf.html
+            , defaultMsg = map conf.defaultMsg
+            }
+                |> Custom

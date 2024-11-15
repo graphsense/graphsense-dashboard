@@ -1106,6 +1106,9 @@ update plugins uc msg model =
         UserClickedOption ms ->
             update plugins uc ms { model | dialog = Nothing }
 
+        UserClickedOutsideDialog ms ->
+            update plugins uc ms { model | dialog = Nothing }
+
         PluginMsg msgValue ->
             updatePlugins plugins uc msgValue model
 
@@ -1283,6 +1286,13 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                             | dialog =
                                 Dialog.mapMsg PluginMsg conf
                                     |> Just
+                          }
+                        , eff
+                        )
+
+                    PluginInterface.CloseDialog ->
+                        ( { model
+                            | dialog = Nothing
                           }
                         , eff
                         )

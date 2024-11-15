@@ -262,7 +262,7 @@ overlay plugins vc model =
             List.singleton
                 >> div
                     [ Css.View.overlay vc |> css
-                    , onClick onClickOutside
+                    , onClick (UserClickedOutsideDialog onClickOutside)
                     ]
                 >> List.singleton
     in

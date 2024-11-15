@@ -1,5 +1,6 @@
-module Model.Dialog exposing (ConfirmConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, defaultMsg)
+module Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, defaultMsg)
 
+import Html.Styled exposing (Html)
 import Http
 
 
@@ -8,6 +9,7 @@ type Model msg
     | Options (OptionsConfig msg)
     | Error (ErrorConfig msg)
     | Info (InfoConfig msg)
+    | Custom (CustomConfig msg)
 
 
 type alias ConfirmConfig msg =
@@ -41,6 +43,12 @@ type alias InfoConfig msg =
     }
 
 
+type alias CustomConfig msg =
+    { html : Html msg
+    , defaultMsg : msg
+    }
+
+
 type ErrorType
     = AddressNotFound (List String)
     | Http String Http.Error
@@ -68,3 +76,6 @@ defaultMsg model =
 
         Info { onOk } ->
             onOk
+
+        Custom c ->
+            c.defaultMsg

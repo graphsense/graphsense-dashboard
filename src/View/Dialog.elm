@@ -9,7 +9,7 @@ import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick, stopPropagationOn)
 import Json.Decode
 import Model exposing (Msg(..))
-import Model.Dialog exposing (ConfirmConfig, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig)
+import Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig)
 import RecordSetter as Rs
 import Theme.Html.Buttons as Buttons
 import Theme.Html.ErrorMessagesAlerts
@@ -46,6 +46,9 @@ view vc model =
 
             Info conf ->
                 info vc conf
+
+            Custom conf ->
+                custom conf
         ]
 
 
@@ -269,3 +272,8 @@ info vc inf =
     errorMessageComponentTypeAlertWithAttributes
         (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
         { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, typeAlert = { bodyText = "", headlineText = "" } }
+
+
+custom : CustomConfig Msg -> Html Msg
+custom { html } =
+    html

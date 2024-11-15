@@ -18,7 +18,7 @@ keyDecoder kMap =
 
 toKeyDown : String -> Decode.Decoder Msg
 toKeyDown keyValue =
-    case Debug.log "keyvalue" keyValue of
+    case keyValue of
         -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
         "Control" ->
             Decode.succeed UserPressedModKey
