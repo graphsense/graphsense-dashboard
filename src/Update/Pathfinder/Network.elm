@@ -127,7 +127,7 @@ avoidOverlappingEdges things coords =
                 |> List.filter (\tx -> tx.x < coords.x - nodeXOffset || tx.x > coords.x + nodeXOffset)
                 |> List.length
     in
-    if sameY > 1 then
+    if sameY > 0 then
         { coords | y = coords.y - toFloat sameY - 1 }
 
     else
