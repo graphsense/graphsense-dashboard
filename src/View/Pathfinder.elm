@@ -16,7 +16,6 @@ import Hovercard
 import Html.Styled as Html exposing (Html, div, img, input)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn)
-import Iknaio.ColorScheme exposing (annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import List.Extra
@@ -321,15 +320,15 @@ annotationHovercardView vc id annotation hc =
         Sc.annotationAttributes
         { annotation = { colorText = Locale.string vc.locale "Color", labelText = Locale.string vc.locale "Label" }
         , labelField = { variant = inputField }
-        , noColor1 = { variant = colorBtn selectedColor Nothing }
-        , green2 = { variant = colorBtn selectedColor (Just annotationGreen) }
-        , red3 = { variant = colorBtn selectedColor (Just annotationRed) }
-        , darkBlue4 = { variant = colorBtn selectedColor (Just annotationDarkBlue) }
-        , lightBlue5 = { variant = colorBtn selectedColor (Just annotationLightBlue) }
-        , yellow6 = { variant = colorBtn selectedColor (Just annotationYellow) }
-        , pink7 = { variant = colorBtn selectedColor (Just annotationPink) }
-        , purple8 = { variant = colorBtn selectedColor (Just annotationPurple) }
-        , turquoise9 = { variant = colorBtn selectedColor (Just annotationTurquoise) }
+        , noColor = { variant = colorBtn selectedColor Nothing }
+        , color1 = { variant = colorBtn selectedColor (Just Colors.annotation1_color) }
+        , color2 = { variant = colorBtn selectedColor (Just Colors.annotation2_color) }
+        , color3 = { variant = colorBtn selectedColor (Just Colors.annotation3_color) }
+        , color4 = { variant = colorBtn selectedColor (Just Colors.annotation4_color) }
+        , color5 = { variant = colorBtn selectedColor (Just Colors.annotation5_color) }
+        , color6 = { variant = colorBtn selectedColor (Just Colors.annotation6_color) }
+        , color7 = { variant = colorBtn selectedColor (Just Colors.annotation7_color) }
+        , color8 = { variant = colorBtn selectedColor (Just Colors.annotation8_color) }
         }
         |> Html.toUnstyled
         |> List.singleton
