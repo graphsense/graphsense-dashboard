@@ -59,14 +59,9 @@ pathFinderErrorToNotifications err =
 
         InfoError (TxTracingThroughService id exchangeLabel) ->
             Notify.Info
-                { title = "Transaction tracing not reasonable"
+                { title = "Auto trace limit"
                 , message =
-                    exchangeLabel
-                        |> Maybe.map
-                            (\_ ->
-                                "Since {0} belongs to an exchange service ({1}) automatic tracing of individual transactions is not reasonable. Please try to pick a transaction from the address's transaction list."
-                            )
-                        |> Maybe.withDefault "Since {0} seems to belong to a service automatic tracing of individual transactions is not reasonable. Please try to pick a transaction from the address's transaction list."
+                    "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel."
                 , variables =
                     (Id.id id |> truncateLongIdentifierWithLengths 8 4)
                         :: (exchangeLabel

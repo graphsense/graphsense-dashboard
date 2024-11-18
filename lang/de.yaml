@@ -415,14 +415,13 @@ Screenshot: Als Bild speichern
 Selection tool: Auswahl Werkzeug
 Display Settings: Anzeige Einstellungen
 Open: Öffnen
-"Since {0} belongs to an exchange service ({1}) automatic tracing of individual transactions is not reasonable. Please try to pick a transaction from the address's transaction list.": "Da {0} zu einer Handelsbörse gehört ({1}), ist ein automatisches Nachverfolgen einzelner Transaktionen nicht sinnvoll. Bitte wähle eine Transaktion aus der Transaktionsliste der Adresse."
-"Since {0} seems to belong to a service automatic tracing of individual transactions is not reasonable. Please try to pick a transaction from the address's transaction list.": "Da {0} zu einem Wechseldienst gehören dürfte, ist ein automatisches Nachverfolgen einzelner Transaktionen nicht sinnvoll. Bitte wähle eine Transaktion aus der Transaktionsliste der Adresse."
+"Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel.": "Die automatische Nachverfolgung endet an Adressen von Diensten, da die Vermögensströme in der Regel nicht über diese Dienste verfolgt werden können. Diese Einschränkung ist darauf zurückzuführen, dass Dienste oft als Blackboxen fungieren und Gelder von Nutzern vermischen. Sie können ausgehende Transaktionen immer noch manuell verfolgen, indem Sie die im Seitenbereich verfügbaren Verfolgungsoptionen verwenden."
 Copy address ID: Adress ID kopieren
 Copy transaction ID: Transaktions ID kopieren
 Remove from Graph: Vom Graphen entfernen
 victim: Opfer
 perpetrator: Täter
-"Transaction tracing not possible": "Nachverfolgung der Transaktion nicht möglich"
+"Auto trace limit": "Beschränkung der Auto-Nachverfolgung"
 "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Warscheinlich würden der Betrag noch nicht weiter verwendet."
 is an exchange: ist eine Handelbörse
 has tags: hat Tags
