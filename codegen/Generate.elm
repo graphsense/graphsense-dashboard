@@ -15,6 +15,7 @@ import Generate.Util.RGBA as RGBA
 import Http
 import Json.Decode
 import String.Case exposing (toCamelCaseUpper)
+import String.Extra
 import String.Format
 import Tuple exposing (mapFirst, pair)
 import Types exposing (ColorMap)
@@ -22,21 +23,23 @@ import Types exposing (ColorMap)
 
 onlyFrames : List String
 onlyFrames =
-    --[ "side panel components" ]
     []
 
 
 type alias Flags =
-    ( String, String )
+    { api_key : String
+    , file_id : String
+    , plugin_name : Maybe String
+    }
 
 
 type Msg
     = GotFigmaMain Flags (Result Http.Error Api.Raw.CanvasNode)
-    | GotFrameNodes (Result Http.Error String)
+    | GotFrameNodes (Maybe String) (Result Http.Error String)
 
 
 get : Flags -> { url : String, expect : Http.Expect msg } -> Cmd msg
-get ( file_id, api_key ) { url, expect } =
+get { api_key, file_id } { url, expect } =
     Http.request
         { method = "GET"
         , headers =
@@ -57,9 +60,27 @@ get ( file_id, api_key ) { url, expect } =
 main : Program Json.Decode.Value () Msg
 main =
     let
+        decodeFileId str =
+            case String.split ":" str of
+                name :: file_id :: [] ->
+                    Json.Decode.succeed ( Just name, file_id )
+
+                file_id :: [] ->
+                    Json.Decode.succeed ( Nothing, file_id )
+
+                _ ->
+                    Json.Decode.fail ("invalid tuple: " ++ str)
+
         decodeFlags =
-            Json.Decode.map2 pair
-                (Json.Decode.field "figma_file_id" Json.Decode.string)
+            Json.Decode.map3
+                (\plugin_name file_id api_key ->
+                    { plugin_name = plugin_name
+                    , file_id = file_id
+                    , api_key = api_key
+                    }
+                )
+                (Json.Decode.field "plugin_name" Json.Decode.string |> Json.Decode.maybe)
+                (Json.Decode.field "figma_file" Json.Decode.string)
                 (Json.Decode.field "api_key" Json.Decode.string)
     in
     Platform.worker
@@ -77,10 +98,10 @@ main =
                         )
 
                     Err _ ->
-                        case Json.Decode.decodeValue decodeFigmaNodesFile input of
-                            Ok nodes ->
+                        case Json.Decode.decodeValue decodeFigmaNodesFileWithModuleName input of
+                            Ok ( plugin_name, nodes ) ->
                                 ( ()
-                                , frameNodesToFiles nodes
+                                , frameNodesToFiles plugin_name nodes
                                     |> Generate.files
                                 )
 
@@ -111,7 +132,7 @@ main =
                                     ]
                                 )
 
-                    GotFrameNodes result ->
+                    GotFrameNodes plugin_name result ->
                         case result of
                             Err err ->
                                 ( ()
@@ -122,26 +143,24 @@ main =
                                     ]
                                 )
 
-                            Ok text ->
-                                case Json.Decode.decodeString decodeFigmaNodesFile text of
-                                    Ok nodes ->
-                                        ( ()
-                                        , { path = "figma.json"
-                                          , contents = text
-                                          , warnings = []
-                                          }
-                                            :: frameNodesToFiles nodes
-                                            |> Generate.files
-                                        )
-
-                                    Err err ->
-                                        ( ()
-                                        , Generate.error
-                                            [ { title = "Error decoding figma frames"
-                                              , description = Debug.toString err
-                                              }
-                                            ]
-                                        )
+                            Ok json ->
+                                let
+                                    mn =
+                                        plugin_name
+                                            |> Maybe.map (\mn_ -> "\"" ++ mn_ ++ "\"")
+                                            |> Maybe.withDefault "null"
+                                in
+                                ( ()
+                                , { path = "figma.json"
+                                  , warnings = []
+                                  , contents =
+                                        """{ "plugin_name": {{ plugin_name }}, "figma": {{ json }}}"""
+                                            |> String.Format.namedValue "plugin_name" mn
+                                            |> String.Format.namedValue "json" json
+                                  }
+                                    |> List.singleton
+                                    |> Generate.files
+                                )
         , subscriptions = \_ -> Sub.none
         }
 
@@ -151,6 +170,13 @@ decodeFigmaNodesFile =
     Json.Decode.dict (Json.Decode.field "document" Api.Raw.frameNodeDecoder)
         |> Json.Decode.map Dict.values
         |> Json.Decode.field "nodes"
+
+
+decodeFigmaNodesFileWithModuleName : Json.Decode.Decoder ( Maybe String, List FrameNode )
+decodeFigmaNodesFileWithModuleName =
+    Json.Decode.map2 pair
+        (Json.Decode.field "plugin_name" Json.Decode.string |> Json.Decode.maybe)
+        (Json.Decode.field "figma" decodeFigmaNodesFile)
 
 
 canvasNodeToRequests : Flags -> CanvasNode -> Cmd Msg
@@ -164,7 +190,7 @@ canvasNodeToRequests flags { children } =
                         |> List.map (.frameTraits >> .isLayerTrait >> .id)
                         |> String.join ","
                     )
-        , expect = Http.expectString GotFrameNodes
+        , expect = Http.expectString (GotFrameNodes flags.plugin_name)
         }
 
 
@@ -173,8 +199,8 @@ themeFolder =
     "Theme"
 
 
-frameNodesToFiles : List FrameNode -> List Generate.File
-frameNodesToFiles frames =
+frameNodesToFiles : Maybe String -> List FrameNode -> List Generate.File
+frameNodesToFiles plugin_name frames =
     let
         colorsFrameLight =
             colorsFrame ++ " Light"
@@ -193,18 +219,24 @@ frameNodesToFiles frames =
         colorMapLightDict =
             List.map (mapFirst (RGBA.toStylesString Dict.empty)) colorMapLight
                 |> Dict.fromList
+
+        colorGen =
+            if plugin_name == Nothing then
+                [ Colors.colorMapToStylesheet colorMapLight
+                    :: Colors.colorMapToDeclarations colorMapLight
+                    |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrame ]
+                , Colors.colorMapToStylesheet colorMapDark
+                    :: Colors.colorMapToDeclarations colorMapDark
+                    |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrameDark ]
+                ]
+
+            else
+                []
     in
-    (Colors.colorMapToStylesheet colorMapLight
-        :: Colors.colorMapToDeclarations colorMapLight
-        |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrame ]
+    (List.map (frameToFiles plugin_name colorMapLightDict) frames
+        |> List.concat
     )
-        :: (Colors.colorMapToStylesheet colorMapDark
-                :: Colors.colorMapToDeclarations colorMapDark
-                |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrameDark ]
-           )
-        :: (List.map (frameToFiles colorMapLightDict) frames
-                |> List.concat
-           )
+        ++ colorGen
 
 
 findColorMap : String -> List FrameNode -> List ( RGBA, String )
@@ -234,15 +266,20 @@ isFrame arg1 =
             Nothing
 
 
-frameToFiles : ColorMap -> FrameNode -> List Generate.File
-frameToFiles colorMap n =
+frameToFiles : Maybe String -> ColorMap -> FrameNode -> List Generate.File
+frameToFiles plugin_name colorMap n =
     let
         name sub =
             n.frameTraits.isLayerTrait.name
                 |> toCamelCaseUpper
                 |> List.singleton
                 |> (::) sub
-                |> (::) themeFolder
+                |> (plugin_name
+                        |> Maybe.map String.Extra.toSentenceCase
+                        |> Maybe.map (::)
+                        |> Maybe.withDefault identity
+                   )
+                |> (::) "Theme"
 
         nameLowered =
             String.toLower n.frameTraits.isLayerTrait.name

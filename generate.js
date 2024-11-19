@@ -3,6 +3,7 @@ var fse = require('fs-extra')
 var mustache = require('mustache')
 var path = require('path')
 var yaml = require('yaml')
+var codegen = require('elm-codegen')
 const { execSync } = require("child_process");
 
 const isDir = fileName => {
@@ -20,6 +21,7 @@ const templatesFolder = './plugin_templates'
 const genFolder = './generated'
 const genPluginsFolder = path.join(genFolder, pluginsFolder)
 const langFolder = './lang'
+const themeFolder = './theme'
 const publicFolder = './public'
 const genPublicFolder = path.join(genFolder, publicFolder)
 const genLangFolder = path.join(genFolder, publicFolder, langFolder)
@@ -94,11 +96,23 @@ const copyPublic = (plugin) => {
   console.log('Copied public folder', pluginPublicFolder)
 }
 
+const makeTheme = (plugin) => {
+  const pluginThemeFile = path.join(pluginsFolder, plugin, themeFolder, 'figma.json')
+  if (!fs.existsSync(pluginThemeFile)) return
+  codegen.run("Generate.elm", {
+    debug: true,
+    output: "theme",
+    flags: JSON.parse(fs.readFileSync(pluginThemeFile, 'utf8')),
+    cwd: "./codegen",
+  })
+}
+
 transform('./')
 
 for(const plugin in plugins) {
   appendLang(plugins[plugin].name)
   copyPublic(plugins[plugin].name)
+  makeTheme(plugins[plugin].name)
 }
 
 
@@ -130,4 +144,3 @@ plugins.forEach(plugin => {
     }
   })
 })
-

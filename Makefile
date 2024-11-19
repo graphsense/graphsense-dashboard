@@ -2,6 +2,7 @@
 
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
+ELM_CODEGEN=./node_modules/.bin/elm-codegen run --debug 
 
 install:
 	pip install pre-commit
@@ -65,14 +66,20 @@ lint-ci:
 
 theme-refresh: 
 	mkdir -p theme
-	npx elm-codegen run --debug --flags='{"figma_file_id": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output theme
+	$(ELM_CODEGEN) --flags='{"figma_file": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output theme
 
-theme:
-	npx elm-codegen run --debug --flags-from=./theme/figma.json --output theme
+theme: 
+	$(ELM_CODEGEN) --output theme --flags-from=./theme/figma.json
+
+plugin-theme-refresh:
+	$(ELM_CODEGEN) --flags='{"plugin_name": "$(PLUGIN_NAME)", "figma_file": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output plugins/$(PLUGIN_NAME)/theme
+
+plugin-theme:
+	$(ELM_CODEGEN) --output theme --flags-from=./plugins/$(PLUGIN_NAME)/theme/figma.json
 
 gen:
 	rm -rf generated/*
-	node generate.js
+	-node generate.js
 	make setem
 	-make theme
 	make setem
