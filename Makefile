@@ -67,12 +67,14 @@ lint-ci:
 theme-refresh: 
 	mkdir -p theme
 	$(ELM_CODEGEN) --flags='{"figma_file": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output theme
+	make theme
 
 theme: 
 	$(ELM_CODEGEN) --output theme --flags-from=./theme/figma.json
 
 plugin-theme-refresh:
 	$(ELM_CODEGEN) --flags='{"plugin_name": "$(PLUGIN_NAME)", "figma_file": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output plugins/$(PLUGIN_NAME)/theme
+	make plugin-theme
 
 plugin-theme:
 	$(ELM_CODEGEN) --output theme --flags-from=./plugins/$(PLUGIN_NAME)/theme/figma.json
