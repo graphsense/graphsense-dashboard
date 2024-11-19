@@ -98,13 +98,21 @@ const copyPublic = (plugin) => {
 
 const makeTheme = (plugin) => {
   const pluginThemeFile = path.join(pluginsFolder, plugin, themeFolder, 'figma.json')
+  console.log("Making theme from " + pluginThemeFile)
   if (!fs.existsSync(pluginThemeFile)) return
+    /*
   codegen.run("Generate.elm", {
     debug: true,
     output: "theme",
     flags: JSON.parse(fs.readFileSync(pluginThemeFile, 'utf8')),
     cwd: "./codegen",
   })
+  */
+  try {
+    execSync(`./node_modules/.bin/elm-codegen run --debug --output theme --flags-from=${pluginThemeFile}`)
+  } catch(e) {
+    console.log(e.message)
+  }
 }
 
 transform('./')
