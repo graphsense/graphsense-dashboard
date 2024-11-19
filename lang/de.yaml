@@ -147,8 +147,8 @@ password: Passwort
 sign in: anmelden
 signing in: anmelden
 annotate: annotieren
-annotate entity: cluster annotieren
-annotate address: addresse annotieren
+annotate entity: Cluster annotieren
+annotate address: Adresse annotieren
 remove from graph: vom Graphen entfernen
 remove: entfernen
 remove link: verbindung entfernen
@@ -233,7 +233,7 @@ proprietary tag: Proprietäres Tag
 "{1}: loading incoming neighbors of entity {0}": "{1}: lade eingehende Nachbarn von Cluster {0}"
 "{1}: loading outgoing neighbors of address {0}": "{1}: lade ausgehende Nachbarn von Adresse {0}"
 "{1}: loading incoming neighbors of address {0}": "{1}: lade eingehende Nachbarn von Adresse {0}"
-"{1}: loading {0} addresses": "{1}: lade {0} Addressen"
+"{1}: loading {0} addresses": "{1}: lade {0} Adressen"
 "{1}: loading {0} entities": "{1}: lade {0} Cluster"
 "{1}: loading entities of {0} addresses": "{1}: lade Cluster zu {0} Adressen"
 "{1}: loading outgoing neighbors of {0} entities": "{1}: lade ausgehende Nachbarn von {0} Cluster"
@@ -275,7 +275,7 @@ download table as CSV: Tabelle als CSV herunterladen
 "final balance assets of address {0} ({1})": Bilanz aller Assets der Adresse {0} ({1})
 "total received assets of entity {0} ({1})": Eingänge aller Assets des Clusters {0} ({1})
 "final balance assets of entity {0} ({1})": Bilanz aller Assets des Clusters {0} ({1})
-user address tags: Benutzerdefinierte Address-Schlagwörter
+user address tags: Benutzerdefinierte Adress-Schlagwörter
 "transactions of block {0} ({1})": Transaktionen des Blocks {0} ({1})
 "transactions between entities {0} and {1} ({2})": Transaktionen zwischen Clustern {0} und {1} ({2})
 "transactions between addresses {0} and {1} ({2})": Transaktionen zwischen Adressen {0} und {1} ({2})
@@ -346,7 +346,7 @@ In- and Outputs: In- und Outputs
 Total Input: Eingänge
 Total Output: Ausgänge
 Settings: Einstellungen
-Number of addresses: Anzahl Addressen
+Number of addresses: Anzahl Adressen
 Cluster Information: Cluster Information
 Cluster has additional tags: Zusätzliche Schlagwörter auf Clusterebene
 Date: Datum
