@@ -13,6 +13,7 @@
     "test": "elm-test-rs"
   },
   "devDependencies": {
+    "elm-codegen": "^0.6.1",
     "elm-format": "^0.8.7",
     "elm-test": "^0.19.1-revision7",
     "fs-extra": "^11.1.1",
