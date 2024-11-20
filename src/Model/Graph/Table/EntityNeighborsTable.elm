@@ -1,4 +1,4 @@
-module Model.Graph.Table.EntityNeighborsTable exposing (..)
+module Model.Graph.Table.EntityNeighborsTable exposing (filter, titleEntityBalance, titleEntityReceived, titleNoAddresses)
 
 import Api.Data
 import Config.Graph as Graph

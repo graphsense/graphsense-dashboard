@@ -1,4 +1,4 @@
-module Init.Graph.Table.EntityNeighborsTable exposing (..)
+module Init.Graph.Table.EntityNeighborsTable exposing (init)
 
 import Api.Data
 import Init.Graph.Table

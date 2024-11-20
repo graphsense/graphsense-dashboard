@@ -1,4 +1,4 @@
-module Model.Locale exposing (..)
+module Model.Locale exposing (Flags, Model, State(..), ValueDetail(..), getFiatValue, isEmpty, locales)
 
 import Api.Data
 import DateFormat.Language
@@ -57,3 +57,13 @@ getFiatValue code values =
         |> List.filter (.code >> String.toLower >> (==) code)
         |> List.head
         |> Maybe.map .value
+
+
+isEmpty : Model -> Bool
+isEmpty { mapping } =
+    case mapping of
+        Settled _ ->
+            False
+
+        _ ->
+            True

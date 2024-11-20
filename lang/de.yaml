@@ -24,22 +24,24 @@ transfers: Transaktionen
 withdrawals: Abbuchungen
 deposits: Einzahlungen
 neighbors: Nachbarn
-receiving entities: abbuchende Cluster
-sending entities: einzahlende Cluster
-receiving entity: abbuchende Cluster
-sending entity: einzahlende Cluster
-receiving addresses: abbuchende Adressen
-receiving address: abbuchende Adresse
-sending addresses: einzahlende Adressen
-sending address: einzahlende Adresse
+receiving entities: empfangende Cluster
+sending entities: sendende Cluster
+receiving entity: empfangender Cluster
+sending entity: sendender Cluster
+receiving addresses: empfangende Adressen
+receiving address: empfangende Adresse
+sending addresses: sendende Adressen
+sending address: empfangende Adresse
 first usage: erste Verwendung
 last usage: letzte Verwendung
 activity period: Nutzungsdauer
 total received: Eingänge
+total sent: Ausgänge
 "total received {0}": Eingänge {0}
 total received assets: Eingänge Assets
 final balance assets: Bilanz Assets
 final balance: Bilanz
+balance: Saldo
 "final balance {0}": Bilanz {0}
 entity balance: Bilanz Cluster
 "entity balance {0}": Bilanz Cluster {0}
@@ -145,8 +147,8 @@ password: Passwort
 sign in: anmelden
 signing in: anmelden
 annotate: annotieren
-annotate entity: cluster annotieren
-annotate address: addresse annotieren
+annotate entity: Cluster annotieren
+annotate address: Adresse annotieren
 remove from graph: vom Graphen entfernen
 remove: entfernen
 remove link: verbindung entfernen
@@ -231,7 +233,7 @@ proprietary tag: Proprietäres Tag
 "{1}: loading incoming neighbors of entity {0}": "{1}: lade eingehende Nachbarn von Cluster {0}"
 "{1}: loading outgoing neighbors of address {0}": "{1}: lade ausgehende Nachbarn von Adresse {0}"
 "{1}: loading incoming neighbors of address {0}": "{1}: lade eingehende Nachbarn von Adresse {0}"
-"{1}: loading {0} addresses": "{1}: lade {0} Addressen"
+"{1}: loading {0} addresses": "{1}: lade {0} Adressen"
 "{1}: loading {0} entities": "{1}: lade {0} Cluster"
 "{1}: loading entities of {0} addresses": "{1}: lade Cluster zu {0} Adressen"
 "{1}: loading outgoing neighbors of {0} entities": "{1}: lade ausgehende Nachbarn von {0} Cluster"
@@ -273,7 +275,7 @@ download table as CSV: Tabelle als CSV herunterladen
 "final balance assets of address {0} ({1})": Bilanz aller Assets der Adresse {0} ({1})
 "total received assets of entity {0} ({1})": Eingänge aller Assets des Clusters {0} ({1})
 "final balance assets of entity {0} ({1})": Bilanz aller Assets des Clusters {0} ({1})
-user address tags: Benutzerdefinierte Address-Schlagwörter
+user address tags: Benutzerdefinierte Adress-Schlagwörter
 "transactions of block {0} ({1})": Transaktionen des Blocks {0} ({1})
 "transactions between entities {0} and {1} ({2})": Transaktionen zwischen Clustern {0} und {1} ({2})
 "transactions between addresses {0} and {1} ({2})": Transaktionen zwischen Adressen {0} und {1} ({2})
@@ -337,3 +339,97 @@ show zero value transactions: Transaktionen ohne Wert anzeigen
 no rows match your filter criteria: Keine Einträge vorhanden, die Ihren Filtereinstellungen entsprechen
 add label: Beschriftung 
 pick a color to highlight things: Bitte Farbe wählen um Dinge einzufärben
+Reset Filter: Filter Zurücksetzen
+open: öffnen
+restart: neu
+In- and Outputs: In- und Outputs
+Total Input: Eingänge
+Total Output: Ausgänge
+Settings: Einstellungen
+Number of addresses: Anzahl Adressen
+Cluster Information: Cluster Information
+Cluster has additional tags: Zusätzliche Schlagwörter auf Clusterebene
+Date: Datum
+Show timezone: Zeitzone anzeigen
+Highlight clusters: Cluster hervorheben
+Show timestamp: Zeitstempel anzeigen
+Selection Tool: Selektieren
+Move Tool: Verschieben
+more...: mehr...
+Display: Anzeige
+copy to clipboard: in die Zwischenablage kopieren
+copied!: kopiert!
+Tag Label: Schlagwort
+Confidence: Zuversicht
+Last Modified: Letzte Änderung
+Sources: Quellen
+Mentions: Erwähnungen
+High: Hoch
+Medium: Mittel
+Low: Niedrig
+Detailed Tracing: Transaktionsnachverfolgung
+Aggregated Network: Überblicksnetzwerk
+Center graph: Graph zentrieren
+Cluster has addidional tags: Cluster hat zusätzliche Annotationen
+show more...: mehr...
+show less...: weniger...
+less...: weniger...
+No records found: Keine Einträge gefunden
+From Address: Von
+To Address: Nach
+Token-Transaction: Token-Transaktion
+Sub-Transaction: Sub-Transaktion
+Sender: Absender
+Receiver: Empfänger
+Show date in user locale: Datum in Benutzerzeitzone anzeigen
+Values: Wertedarstellung
+Show Shadow Links ...: Zusammenhänge hervorheben ...
+Overview Network: Übersichtsnetzwerk
+General: Allgemein
+Highlight on graph: Am Graph hervorheben
+Request limit: Anfragenbeschränkung
+Expiration: Ablaufdatum
+Next: Weiter
+Previous: Zurück
+Page: Seite
+Snap to Grid: Am Raster ausrichten
+Clear dashboard?: Dashboard leeren?
+You will not be able to recover it.: Nicht gespeichtere Änderungen werden verworfen.
+Yes, delete all: Ja, alles löschen
+Please select...: Bitte auswählen...
+Please choose a crypto ledger: Bitte wähle eine Kryptowährung
+contract creation: Contract erstellt
+Token holdings: Token Saldo
+Show in fiat: In Fiat anzeigen
+Preferred fiat currency: Bevorzugte Fiatwährung
+Show exact values: Genaue Werte anzeigen
+Amount in Fiat: In Fiatwährung
+with zone code: mit Zeitzone
+Plan Details: Abo Details
+Never: Nie
+Expires on: Ablaufdatum
+Usage Limit: Benutzungslimit
+Color: Farbe
+Transactions: Transaktionen
+Save: Speichern
+Screenshot: Als Bild speichern
+Selection tool: Auswahl Werkzeug
+Display Settings: Anzeige Einstellungen
+Display settings: Anzeige Einstellungen
+Open: Öffnen
+"Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel.": "Die automatische Nachverfolgung endet an Adressen von Diensten, da die Vermögensströme in der Regel nicht über diese Dienste verfolgt werden können. Diese Einschränkung ist darauf zurückzuführen, dass Dienste oft als Blackboxen fungieren und Gelder von Nutzern vermischen. Sie können ausgehende Transaktionen immer noch manuell verfolgen, indem Sie die im Seitenbereich verfügbaren Verfolgungsoptionen verwenden."
+Copy address ID: Adress ID kopieren
+Copy transaction ID: Transaktions ID kopieren
+Remove from Graph: Vom Graphen entfernen
+victim: Opfer
+perpetrator: Täter
+"Auto trace limit": "Beschränkung der Auto-Nachverfolgung"
+"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Wahrscheinlich würden der Betrag noch nicht weiter verwendet."
+is an exchange: ist eine Handelbörse
+has tags: hat Tags
+"Tag label": "Beschriftung"
+copy: kopieren
+possible service: mögl. service
+Save file: Als Datei speichen
+change: retour
+transaction tracing not possible: Transaktions-Verfolgung nicht möglich

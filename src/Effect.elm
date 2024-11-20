@@ -1,4 +1,4 @@
-module Effect exposing (n, perform)
+module Effect exposing (perform)
 
 --import Plugin.Effect
 
@@ -8,20 +8,19 @@ import Config.UserSettings
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
+import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Msg(..))
+import Model.Notification
 import Msg.Graph as Graph
+import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
 import Plugin.Effects as Plugin exposing (Plugins)
 import Ports
+import Process
 import Route
 import Task
-
-
-n : m -> ( m, List eff )
-n m =
-    ( m, [] )
 
 
 perform : Plugins -> Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg
@@ -32,6 +31,9 @@ perform plugins key statusbarToken apiKey effect =
 
         NavPushUrlEffect url ->
             Nav.pushUrl key url
+
+        NavBackEffect ->
+            Nav.back key 1
 
         GetElementEffect { id, msg } ->
             Dom.getElement id
@@ -68,6 +70,38 @@ perform plugins key statusbarToken apiKey effect =
 
         ApiEffect eff ->
             Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff
+
+        PathfinderEffect eff ->
+            case eff of
+                Pathfinder.ApiEffect apiEff ->
+                    Effect.Api.map PathfinderMsg apiEff
+                        |> Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken)
+
+                Pathfinder.NavPushRouteEffect route ->
+                    Route.pathfinderRoute route
+                        |> Route.toUrl
+                        |> Nav.pushUrl key
+
+                Pathfinder.PluginEffect _ ->
+                    Pathfinder.perform eff
+                        |> Cmd.map PathfinderMsg
+
+                Pathfinder.CmdEffect cmd ->
+                    cmd
+                        |> Cmd.map PathfinderMsg
+
+                Pathfinder.SearchEffect e ->
+                    handleSearchEffect apiKey
+                        Nothing
+                        (Pathfinder.SearchMsg >> PathfinderMsg)
+                        e
+
+                Pathfinder.ErrorEffect _ ->
+                    Cmd.none
+
+                Pathfinder.PostponeUpdateByRouteEffect _ ->
+                    Pathfinder.perform eff
+                        |> Cmd.map PathfinderMsg
 
         GraphEffect eff ->
             case eff of
@@ -117,6 +151,10 @@ perform plugins key statusbarToken apiKey effect =
         SearchEffect e ->
             handleSearchEffect apiKey (Just plugins) SearchMsg e
 
+        NotificationEffect e ->
+            Model.Notification.perform e
+                |> Cmd.map NotificationMsg
+
         PortsConsoleEffect msg ->
             Ports.console msg
 
@@ -126,6 +164,10 @@ perform plugins key statusbarToken apiKey effect =
 
         CmdEffect cmd ->
             cmd
+
+        PostponeUpdateByUrlEffect url ->
+            Process.sleep 50
+                |> Task.perform (\_ -> RuntimePostponedUpdateByUrl url)
 
 
 handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg

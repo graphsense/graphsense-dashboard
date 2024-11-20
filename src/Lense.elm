@@ -1,4 +1,4 @@
-module Lense exposing (..)
+module Lense exposing (model2Dialog, model2Dialog2ConfirmConfig)
 
 import Lense.Dialog as Dialog
 import Model exposing (..)

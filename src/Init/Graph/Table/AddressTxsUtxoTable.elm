@@ -1,4 +1,4 @@
-module Init.Graph.Table.AddressTxsUtxoTable exposing (..)
+module Init.Graph.Table.AddressTxsUtxoTable exposing (init)
 
 import Api.Data
 import Init.Graph.Table

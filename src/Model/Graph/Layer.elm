@@ -1,4 +1,4 @@
-module Model.Graph.Layer exposing (..)
+module Model.Graph.Layer exposing (Layer, addresses, entities, getAddress, getAddressLink, getAddressLinksByTarget, getAddressOfLayer, getAddresses, getBoundingBox, getBoundingBoxOfEntities, getEntities, getEntity, getEntityForAddress, getEntityForAddressHelp, getEntityForAddressHelp2, getEntityLink, getEntityLinksByTarget, getFirstAddress, getFirstEntity, getLeftBound, getRightBound, getX, isContentWithinViewPort)
 
 import Api.Data
 import Config.Graph exposing (entityWidth, expandHandleWidth)

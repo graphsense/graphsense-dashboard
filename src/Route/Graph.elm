@@ -21,16 +21,16 @@ module Route.Graph exposing
     , labelRoute
     , parser
     , pluginRoute
+    , resultLineToRoute
     , rootRoute
     , toUrl
     , txRoute
     )
 
 import List.Extra
-import Model.Graph.Table exposing (AddressTable(..))
+import Model.Search as Search exposing (ResultLine)
 import Plugin.Model
 import Plugin.Route as Plugin
-import Url
 import Url.Builder as B exposing (..)
 import Util.Url.Parser as P exposing (..)
 import Util.Url.Parser.Query as Q
@@ -550,11 +550,6 @@ parseCurrency c =
             List.Extra.find ((==) segment) c.currencies
 
 
-encodedString : Parser (String -> a) a
-encodedString =
-    P.custom "ENCODED_STRING" Url.percentDecode
-
-
 parseAddressPath : Parser (( String, List String ) -> a) a
 parseAddressPath =
     P.custom "ADDRESS_PATH" <|
@@ -636,3 +631,36 @@ getAddresslinkTable route =
 
         _ ->
             Nothing
+
+
+resultLineToRoute : ResultLine -> Route
+resultLineToRoute resultLine =
+    case resultLine of
+        Search.Address currency address ->
+            addressRoute
+                { currency = currency
+                , address = address
+                , table = Nothing
+                , layer = Nothing
+                }
+
+        Search.Tx currency tx ->
+            txRoute
+                { currency = currency
+                , txHash = tx
+                , table = Nothing
+                , tokenTxId = Nothing
+                }
+
+        Search.Block currency block ->
+            blockRoute
+                { currency = currency
+                , block = block
+                , table = Nothing
+                }
+
+        Search.Label label ->
+            labelRoute label
+
+        Search.Actor ( id, _ ) ->
+            actorRoute id Nothing

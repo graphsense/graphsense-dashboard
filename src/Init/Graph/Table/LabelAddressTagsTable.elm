@@ -1,4 +1,4 @@
-module Init.Graph.Table.LabelAddressTagsTable exposing (..)
+module Init.Graph.Table.LabelAddressTagsTable exposing (init)
 
 import Api.Data
 import Init.Graph.Table

@@ -1,5 +1,6 @@
-module Model.Dialog exposing (..)
+module Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, defaultMsg)
 
+import Html.Styled exposing (Html)
 import Http
 
 
@@ -8,10 +9,14 @@ type Model msg
     | Options (OptionsConfig msg)
     | Error (ErrorConfig msg)
     | Info (InfoConfig msg)
+    | Custom (CustomConfig msg)
 
 
 type alias ConfirmConfig msg =
-    { message : String
+    { confirmText : Maybe String
+    , cancelText : Maybe String
+    , title : String
+    , message : String
     , onYes : msg
     , onNo : msg
     }
@@ -32,8 +37,15 @@ type alias ErrorConfig msg =
 
 type alias InfoConfig msg =
     { info : String
+    , title : Maybe String
     , variables : List String
     , onOk : msg
+    }
+
+
+type alias CustomConfig msg =
+    { html : Html msg
+    , defaultMsg : msg
     }
 
 
@@ -64,3 +76,6 @@ defaultMsg model =
 
         Info { onOk } ->
             onOk
+
+        Custom c ->
+            c.defaultMsg

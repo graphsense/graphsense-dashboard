@@ -1,4 +1,4 @@
-module Stub.Model exposing (..)
+module Stub.Model exposing (namespace, Flags, Model, AddressState, EntityState)
 
 
 namespace : String

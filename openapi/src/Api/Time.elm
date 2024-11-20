@@ -1,21 +1,21 @@
 module Api.Time exposing
     ( Posix
-    , dateDecoder
-    , dateTimeDecoder
-    , dateTimeToString
     , dateToString
+    , dateTimeToString
     , encodeDate
     , encodeDateTime
+    , dateDecoder
+    , dateTimeDecoder
     )
 
+import Http
 import Iso8601
 import Json.Decode
 import Json.Encode
 import Time
 
 
-type alias Posix =
-    Time.Posix
+type alias Posix = Time.Posix
 
 
 dateToString : Posix -> String

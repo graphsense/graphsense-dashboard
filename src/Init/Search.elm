@@ -1,4 +1,4 @@
-module Init.Search exposing (..)
+module Init.Search exposing (init, initSearchAddressAndTxs, initSearchAll)
 
 import Api.Data
 import Autocomplete
@@ -18,4 +18,11 @@ initSearchAll stats =
     SearchAll
         { latestBlocks = Maybe.map getLatestBlocks stats |> Maybe.withDefault []
         , pickingCurrency = False
+        }
+
+
+initSearchAddressAndTxs : List String -> SearchType
+initSearchAddressAndTxs currencies =
+    SearchAddressAndTx
+        { currencies = currencies
         }

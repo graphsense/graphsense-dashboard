@@ -1,6 +1,7 @@
-module View.Autocomplete exposing (..)
+module View.Autocomplete exposing (Config, Styles, dropdown, dropdownStyled)
 
 import Config.View as View
+import Css exposing (Style)
 import Css.Autocomplete as Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -15,21 +16,38 @@ type alias Config msg =
     }
 
 
+type alias Styles msg =
+    { frame : List Style
+    , result : List Style
+    , loadingSpinner : Html msg
+    }
+
+
 dropdown : View.Config -> Config msg -> List (Html msg) -> Html msg
-dropdown vc config content =
+dropdown vc =
+    dropdownStyled
+        { frame = []
+        , result = []
+        , loadingSpinner = loadingSpinner vc Css.loadingSpinner
+        }
+        vc
+
+
+dropdownStyled : Styles msg -> View.Config -> Config msg -> List (Html msg) -> Html msg
+dropdownStyled styles vc config content =
     div
-        [ Css.frame vc |> css
+        [ Css.frame vc ++ styles.frame |> css
         ]
         [ if not config.visible || not config.loading && List.isEmpty content then
             span [] []
 
           else
             div
-                [ css (Css.result vc)
+                [ css (Css.result vc ++ styles.result)
                 , onClick config.onClick
                 ]
                 ((if config.loading then
-                    [ loadingSpinner vc Css.loadingSpinner ]
+                    [ styles.loadingSpinner ]
 
                   else
                     []

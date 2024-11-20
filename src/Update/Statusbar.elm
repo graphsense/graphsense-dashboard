@@ -1,4 +1,4 @@
-module Update.Statusbar exposing (..)
+module Update.Statusbar exposing (add, messagesFromEffects, toggle, update, updateLastBlocks)
 
 import Api.Data
 import Api.Request.Entities
@@ -6,6 +6,7 @@ import Dict
 import Effect.Api as Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
+import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
 import Http
 import List.Extra
@@ -25,7 +26,7 @@ messagesFromEffects model effects =
                         (\( key, message ) ->
                             let
                                 keyJoined =
-                                    key ++ String.join "" message
+                                    key ++ String.concat message
                             in
                             ( { statusbar
                                 | messages = Dict.insert keyJoined ( key, message ) statusbar.messages
@@ -49,6 +50,9 @@ messageFromEffect model effect =
             Nothing
 
         Model.NavPushUrlEffect _ ->
+            Nothing
+
+        Model.NavBackEffect ->
             Nothing
 
         Model.GetElementEffect _ ->
@@ -126,6 +130,33 @@ messageFromEffect model effect =
         Model.GraphEffect (Graph.DownloadCSVEffect _) ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.ApiEffect eff) ->
+            messageFromApiEffect model eff
+
+        Model.PathfinderEffect (Pathfinder.CmdEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.PluginEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.NavPushRouteEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.SearchEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.ErrorEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.PostponeUpdateByRouteEffect _) ->
+            Nothing
+
+        Model.NotificationEffect _ ->
+            Nothing
+
+        Model.PostponeUpdateByUrlEffect _ ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =
@@ -153,17 +184,6 @@ update key error model =
                 { model
                     | messages = Dict.remove key model.messages
                     , log = addLog ( first msg, second msg, error ) model.log
-                    , visible =
-                        if first msg == loadingAddressKey then
-                            model.visible
-
-                        else if first msg == loadingAddressEntityKey then
-                            model.visible
-
-                        else
-                            error
-                                |> Maybe.map (\_ -> True)
-                                |> Maybe.withDefault model.visible
                 }
             )
         |> Maybe.withDefault model
@@ -187,10 +207,11 @@ add : Model -> String -> List String -> Maybe Http.Error -> Model
 add model key values error =
     { model
         | log = ( key, values, error ) :: model.log
-        , visible =
-            error
-                |> Maybe.map (\_ -> True)
-                |> Maybe.withDefault model.visible
+
+        -- , visible =
+        --     error
+        --         |> Maybe.map (\_ -> True)
+        --         |> Maybe.withDefault model.visible
     }
 
 
@@ -212,17 +233,22 @@ messageFromApiEffect model effect =
         Api.SearchEffect _ _ ->
             Nothing
 
+        Api.GetAddressTagSummaryEffect _ _ ->
+            Nothing
+
         Api.GetStatisticsEffect _ ->
+            Nothing
+
+        Api.GetBlockByDateEffect _ _ ->
             Nothing
 
         Api.SearchEntityNeighborsEffect e _ ->
             ( searchNeighborsKey
-            , [ case e.isOutgoing of
-                    False ->
-                        "for incoming neighbors"
+            , [ if e.isOutgoing then
+                    "for outgoing neighbors"
 
-                    True ->
-                        "for outgoing neighbors"
+                else
+                    "for incoming neighbors"
               , e.entity |> String.fromInt
               , case e.key of
                     Api.Request.Entities.KeyCategory ->
@@ -235,7 +261,7 @@ messageFromApiEffect model effect =
                                         |> Maybe.withDefault cat
                                 )
                             |> Maybe.withDefault ""
-                            |> (\s -> Locale.string model.locale "category" ++ " " ++ s)
+                            |> (\s -> Locale.string model.config.locale "category" ++ " " ++ s)
 
                     _ ->
                         ""
@@ -283,6 +309,14 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.GetEntityEffectWithDetails e _ ->
+            ( "{1}: loading entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
         Api.GetBlockEffect e _ ->
             ( "{1}: loading block {0}"
             , [ String.fromInt e.height
@@ -301,6 +335,22 @@ messageFromApiEffect model effect =
 
         Api.GetTxUtxoAddressesEffect e _ ->
             ( "{1}: loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.ListSpendingTxRefsEffect e _ ->
+            ( "{1}: loading transactions which {0} is spending"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.ListSpentInTxRefsEffect e _ ->
+            ( "{1}: loading transactions where {0} got spent"
             , [ e.txHash
               , e.currency |> String.toUpper
               ]
@@ -446,6 +496,14 @@ messageFromApiEffect model effect =
         Api.BulkGetAddressTagsEffect e _ ->
             ( "{1}: loading tags of {0} addresses"
             , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.BulkGetTxEffect e _ ->
+            ( "{1}: loading {0} transactions"
+            , [ List.length e.txs |> String.fromInt
               , e.currency |> String.toUpper
               ]
             )

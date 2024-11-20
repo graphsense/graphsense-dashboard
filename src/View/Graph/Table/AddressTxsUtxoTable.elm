@@ -1,4 +1,4 @@
-module View.Graph.Table.AddressTxsUtxoTable exposing (..)
+module View.Graph.Table.AddressTxsUtxoTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
@@ -56,9 +56,8 @@ config vc coinCode =
 
 prepareCSV : Model.Locale.Model -> String -> Api.Data.AddressTxUtxo -> List ( ( String, List String ), String )
 prepareCSV locModel currency row =
-    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
-    ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel currency
+    ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
+        :: Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel currency
         ++ [ ( ( "height", [] ), Util.Csv.int row.height )
            , ( ( "timestamp", [] ), Util.Csv.timestamp locModel row.timestamp )
            ]

@@ -1,10 +1,9 @@
-module Update.Locale exposing (..)
+module Update.Locale exposing (changeCurrency, changeTimeZone, changeValueDetail, setSupportedTokens, switch, update)
 
 import Api.Data
 import DateFormat.Language
 import DateFormat.Relative
 import Dict
-import Effect exposing (n)
 import Effect.Locale exposing (Effect)
 import Languages.German
 import Locale.English
@@ -14,6 +13,7 @@ import Model.Locale exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
 import Time
+import Util exposing (n)
 
 
 duration : Float
@@ -47,7 +47,7 @@ update msg model =
                             | mapping =
                                 case model.mapping of
                                     Empty ->
-                                        Transition Dict.empty mapping 0
+                                        Settled mapping
 
                                     Transition start _ delta ->
                                         Transition start mapping delta

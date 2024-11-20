@@ -1,10 +1,9 @@
-module Init.Graph.History exposing (..)
+module Init.Graph.History exposing (init)
 
-import IntDict
 import Model.Graph.History exposing (Model)
 
 
-init : Model
+init : Model entry
 init =
     { past = []
     , future = []

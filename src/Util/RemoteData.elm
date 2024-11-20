@@ -1,6 +1,6 @@
-module Util.RemoteData exposing (webdata)
+module Util.RemoteData exposing (WebDataConfig, webdata)
 
-import Html.Styled exposing (..)
+import Html.Styled exposing (Html)
 import Http
 import RemoteData exposing (RemoteData(..), WebData)
 

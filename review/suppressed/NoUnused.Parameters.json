@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "automatically created by": "elm-review suppress",
+  "learn more": "elm-review suppress --help",
+  "suppressions": [
+    { "count": 27, "filePath": "src/View/Graph/Browser.elm" },
+    { "count": 5, "filePath": "src/Update/Graph.elm" },
+    { "count": 4, "filePath": "src/View/Graph/Entity.elm" },
+    { "count": 4, "filePath": "src/View/Graph/Link.elm" },
+    { "count": 3, "filePath": "src/Log.elm" },
+    { "count": 3, "filePath": "src/View/Graph/Table/AddressNeighborsTable.elm" },
+    { "count": 3, "filePath": "src/View/Graph/Table/EntityNeighborsTable.elm" },
+    { "count": 2, "filePath": "src/Update/Graph/Entity.elm" },
+    { "count": 2, "filePath": "src/View/Stats.elm" },
+    { "count": 1, "filePath": "src/Config/Graph.elm" },
+    { "count": 1, "filePath": "src/Css/Browser.elm" },
+    { "count": 1, "filePath": "src/Css/Dialog.elm" },
+    { "count": 1, "filePath": "src/Model/Graph/Address.elm" },
+    { "count": 1, "filePath": "src/Update/Graph/Browser.elm" },
+    { "count": 1, "filePath": "src/Update/Graph/Layer.elm" },
+    { "count": 1, "filePath": "src/Update/Graph/Search.elm" },
+    { "count": 1, "filePath": "src/Update/Search.elm" },
+    { "count": 1, "filePath": "src/Util/Graph.elm" },
+    { "count": 1, "filePath": "src/Util/Url/Parser.elm" },
+    { "count": 1, "filePath": "src/View/Graph/Address.elm" },
+    { "count": 1, "filePath": "src/View/Graph/Node.elm" },
+    { "count": 1, "filePath": "src/View/Graph/Search.elm" },
+    { "count": 1, "filePath": "src/View/Graph/Table/TxsAccountTable.elm" },
+    { "count": 1, "filePath": "src/View/Graph/Table/TxUtxoTable.elm" },
+    { "count": 1, "filePath": "src/View/User.elm" }
+  ]
+}

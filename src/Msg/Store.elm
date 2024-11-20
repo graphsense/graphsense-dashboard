@@ -1,4 +1,4 @@
-module Msg.Store exposing (..)
+module Msg.Store exposing (Msg(..))
 
 
 type Msg

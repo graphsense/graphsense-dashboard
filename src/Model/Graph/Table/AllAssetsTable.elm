@@ -1,4 +1,4 @@
-module Model.Graph.Table.AllAssetsTable exposing (..)
+module Model.Graph.Table.AllAssetsTable exposing (filter)
 
 import Api.Data
 import Model.Currency exposing (AssetIdentifier)

@@ -1,4 +1,4 @@
-module Util.Css exposing (..)
+module Util.Css exposing (zIndexMain, zIndexMainValue)
 
 import Css exposing (Style, int, zIndex)
 

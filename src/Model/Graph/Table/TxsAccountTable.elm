@@ -1,4 +1,4 @@
-module Model.Graph.Table.TxsAccountTable exposing (..)
+module Model.Graph.Table.TxsAccountTable exposing (filter, titleHeight, titleReceivingAddress, titleSendingAddress, titleTimestamp, titleTx)
 
 import Api.Data
 import Config.Graph as Graph

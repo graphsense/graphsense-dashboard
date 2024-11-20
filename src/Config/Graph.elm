@@ -1,4 +1,4 @@
-module Config.Graph exposing (..)
+module Config.Graph exposing (AddressLabelType(..), Config, TxLabelType(..), addressHeight, addressLabelToString, addressWidth, addressesCountHeight, arrowHeight, arrowWidth, entityMinHeight, entityOneAddressHeight, entityPaddingTop, entityToAddressesPaddingLeft, entityToAddressesPaddingTop, entityTotalWidth, entityWidth, expandHandleWidth, init, labelHeight, layerMargin, linkLabelHeight, maxExpandableAddresses, maxExpandableNeighbors, minGapBetweenLayers, padding, stringToAddressLabel, txMaxWidth)
 
 import Api.Data
 import Color exposing (Color)
@@ -176,7 +176,6 @@ type alias Config =
     , highlighter : Bool
     , showEntityShadowLinks : Bool
     , showAddressShadowLinks : Bool
-    , showDatesInUserLocale : Bool
     , showZeroTransactions : Bool
     }
 
@@ -191,6 +190,7 @@ init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks s
     , highlighter = False
     , showEntityShadowLinks = showEntityShadowLinks |> Maybe.withDefault True
     , showAddressShadowLinks = showAddressShadowLinks |> Maybe.withDefault False
-    , showDatesInUserLocale = showDatesInUserLocale |> Maybe.withDefault True
+
+    -- , showDatesInUserLocale = showDatesInUserLocale |> Maybe.withDefault True
     , showZeroTransactions = showZeroTransactions |> Maybe.withDefault True
     }

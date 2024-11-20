@@ -1,10 +1,11 @@
-module Locale.TestDurations exposing (..)
+module Locale.TestDurations exposing (suite)
 
 import Expect
 import Locale.Durations as Durations
-import Test exposing (..)
+import Test exposing (Test)
 
 
+data : List ( Float, Int, String )
 data =
     [ ( 0, 3, "" )
     , ( 12, 3, "12 Seconds" )
@@ -28,6 +29,7 @@ data =
     ]
 
 
+config : { unitToString : Int -> x -> String, separator : String, precision : Int }
 config =
     { unitToString = \i u -> String.fromInt i ++ " " ++ Debug.toString u
     , separator = " "
@@ -37,11 +39,11 @@ config =
 
 suite : Test
 suite =
-    describe "The Durations module"
+    Test.describe "The Durations module"
         (data
             |> List.map
                 (\( d, precision, result ) ->
-                    test ("test: " ++ result) <|
+                    Test.test ("test: " ++ result) <|
                         \_ ->
                             Durations.durationToString
                                 { config | precision = precision }

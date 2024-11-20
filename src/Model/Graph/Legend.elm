@@ -1,4 +1,4 @@
-module Model.Graph.Legend exposing (..)
+module Model.Graph.Legend exposing (Item)
 
 import Color exposing (Color)
 

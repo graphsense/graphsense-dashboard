@@ -1,4 +1,4 @@
-module View.User exposing (hovercard, user)
+module View.User exposing (hovercard, localeSwitch, user)
 
 import Config.View exposing (Config)
 import Css.Button

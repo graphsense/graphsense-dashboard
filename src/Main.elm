@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Basics.Extra exposing (uncurry)
 import Browser
 import Browser.Navigation as Nav
 import Config exposing (config)
@@ -12,6 +13,7 @@ import Plugin
 import Sub exposing (subscriptions)
 import Tuple exposing (..)
 import Update exposing (update, updateByUrl)
+import Update.Notification as Notification
 import Update.Statusbar as Statusbar
 import View exposing (view)
 
@@ -25,7 +27,8 @@ main : Program Flags (Model Nav.Key) Msg
 main =
     let
         performEffect ( model, effects ) =
-            Statusbar.messagesFromEffects model effects
+            Notification.notificationsFromEffects model effects
+                |> uncurry Statusbar.messagesFromEffects
                 |> mapSecond
                     (List.map
                         (\( statusbarToken, eff ) ->

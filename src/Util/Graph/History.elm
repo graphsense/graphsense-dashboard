@@ -1,4 +1,4 @@
-module Util.Graph.History exposing (..)
+module Util.Graph.History exposing (shallPushHistory)
 
 import Model.Graph exposing (Model)
 import Model.Graph.Highlighter as Highlighter

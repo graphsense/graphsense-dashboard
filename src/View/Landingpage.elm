@@ -1,4 +1,4 @@
-module View.Landingpage exposing (..)
+module View.Landingpage exposing (view)
 
 import Config.View as View
 import Css.Landingpage as CssLanding

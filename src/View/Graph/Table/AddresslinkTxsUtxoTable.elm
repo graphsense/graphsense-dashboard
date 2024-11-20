@@ -1,4 +1,4 @@
-module View.Graph.Table.AddresslinkTxsUtxoTable exposing (..)
+module View.Graph.Table.AddresslinkTxsUtxoTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
@@ -48,7 +48,7 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn styles vc (\x -> assetFromBase coinCode) titleInputValue .inputValue
+            , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleInputValue .inputValue
             , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleOutputValue .outputValue
             , T.intColumnWithoutValueDetailFormatting styles vc titleHeight .height
             , T.timestampColumn styles vc titleTimestamp .timestamp
@@ -59,9 +59,8 @@ config vc coinCode =
 
 prepareCSV : Model.Locale.Model -> String -> Api.Data.LinkUtxo -> List ( ( String, List String ), String )
 prepareCSV locModel currency row =
-    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
-    ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "input_value" row.inputValue locModel currency
+    ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
+        :: Util.Csv.valuesWithBaseCurrencyFloat "input_value" row.inputValue locModel currency
         ++ Util.Csv.valuesWithBaseCurrencyFloat "output_value" row.outputValue locModel currency
         ++ [ ( ( "height", [] ), Util.Csv.int row.height )
            , ( ( "timestamp", [] ), Util.Csv.timestamp locModel row.timestamp )

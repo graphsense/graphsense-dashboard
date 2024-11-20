@@ -1,4 +1,4 @@
-module View.Graph.Configuration exposing (..)
+module View.Graph.Configuration exposing (configuration)
 
 import Config.Graph as Graph
 import Config.View as View
@@ -150,14 +150,14 @@ configuration vc config =
         , Dialog.part vc
             "Timezone"
             [ Locale.string vc.locale
-                (if config.showDatesInUserLocale then
+                (if vc.showDatesInUserLocale then
                     "User"
 
                  else
                     "UTC"
                 )
                 |> onOffSwitch vc
-                    [ checked config.showDatesInUserLocale
+                    [ checked vc.showDatesInUserLocale
                     , onClick UserClickedToggleShowDatesInUserLocale
                     ]
             ]

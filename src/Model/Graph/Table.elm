@@ -1,4 +1,4 @@
-module Model.Graph.Table exposing (..)
+module Model.Graph.Table exposing (ActorTable(..), AddressTable(..), AddresslinkTable(..), AllAssetsTable, BlockTable(..), EntityTable(..), Filter, Table, TxAccountTable(..), TxUtxoTable(..), titleAddress, titleCurrency, titleHeight, titleLabel, titleTimestamp, titleTx, titleValue)
 
 import Api.Data
 import Model.Currency exposing (AssetIdentifier)

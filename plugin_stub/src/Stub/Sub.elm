@@ -1,4 +1,4 @@
-module Stub.Sub exposing (..)
+module Stub.Sub exposing (subscriptions, inPort)
 
 import Json.Decode
 import Stub.Model exposing (Model)

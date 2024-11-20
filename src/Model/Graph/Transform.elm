@@ -1,10 +1,8 @@
-module Model.Graph.Transform exposing (..)
+module Model.Graph.Transform exposing (Coords, Model, Transition(..), defaultDuration, equals, getBoundingBox, getCurrent, getZ)
 
 import Bounce exposing (Bounce)
 import Model.Graph.Coords exposing (BBox)
-import Model.Graph.Id as Id
 import Number.Bounded as Bounded exposing (Bounded)
-import RecordSetter exposing (..)
 import Set exposing (Set)
 
 
@@ -20,9 +18,9 @@ type alias Coords =
     }
 
 
-type alias Model =
+type alias Model comparable =
     { state : Transition
-    , collectingAddedEntityIds : Set Id.EntityId
+    , collectingAddedEntityIds : Set comparable
     , bounce : Bounce
     }
 
@@ -39,7 +37,7 @@ type Transition
     | Settled Coords
 
 
-getZ : Model -> Float
+getZ : Model comparable -> Float
 getZ model =
     case model.state of
         Transitioning { current } ->
@@ -49,7 +47,7 @@ getZ model =
             Bounded.value z
 
 
-getCurrent : Model -> Coords
+getCurrent : Model comparable -> Coords
 getCurrent model =
     case model.state of
         Transitioning { current } ->
@@ -59,7 +57,7 @@ getCurrent model =
             c
 
 
-getBoundingBox : Model -> { width : Float, height : Float } -> BBox
+getBoundingBox : Model comparable -> { width : Float, height : Float } -> BBox
 getBoundingBox model { width, height } =
     let
         current =

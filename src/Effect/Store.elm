@@ -1,4 +1,4 @@
-module Effect.Store exposing (..)
+module Effect.Store exposing (Effect(..))
 
 import Api.Data
 import Msg.Store exposing (Msg)

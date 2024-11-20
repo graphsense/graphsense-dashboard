@@ -20,7 +20,7 @@ RUN mkdir $WORKDIR && \
 
 WORKDIR $WORKDIR
 
-COPY ./elm.json.base ./elm-tooling.json ./index.html ./package*.json ./vite.config.js $WORKDIR/
+COPY ./elm.json.base ./elm-tooling.json ./index.html ./package*.json ./vite.config.js ./Makefile $WORKDIR/
 
 COPY ./config $WORKDIR/config
 RUN cp $WORKDIR/config/Config.elm.tmp $WORKDIR/config/Config.elm
@@ -31,6 +31,8 @@ COPY ./lang $WORKDIR/lang
 COPY ./plugins $WORKDIR/plugins
 COPY ./plugin_templates $WORKDIR/plugin_templates
 COPY ./themes $WORKDIR/themes
+COPY ./theme $WORKDIR/theme
+COPY ./codegen $WORKDIR/codegen
 COPY ./lib $WORKDIR/lib
 COPY ./docker/site.conf /etc/nginx/http.d/
 COPY ./generate.js $WORKDIR/generate.js

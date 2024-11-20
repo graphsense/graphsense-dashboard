@@ -1,15 +1,13 @@
-module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, resultLineToRoute, update)
+module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, update)
 
 import Api.Data
 import Autocomplete
-import Effect exposing (n)
 import Effect.Search exposing (Effect(..))
 import Init.Search exposing (init)
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
-import Route.Graph as Graph
 import Tuple exposing (pair)
-import Util.Data as Data
+import Util exposing (n)
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
@@ -25,6 +23,19 @@ currencyToResult query found ( currency, latestBlock ) =
         |> Maybe.withDefault []
     )
         ++ blocksToResult query currency latestBlock
+
+
+currencyToResultWithoutBlock : String -> Api.Data.SearchResult -> String -> List ResultLine
+currencyToResultWithoutBlock query found currency =
+    found.currencies
+        |> List.filter (.currency >> (==) currency)
+        |> List.head
+        |> Maybe.map
+            (\{ addresses, txs } ->
+                List.map (Address currency) addresses
+                    ++ List.map (Tx currency) txs
+            )
+        |> Maybe.withDefault []
 
 
 blocksToResult : String -> String -> Int -> List ResultLine
@@ -44,8 +55,7 @@ blocksToResult input currency latestBlock =
 searchResultToResultLines : String -> List ( String, Int ) -> Api.Data.SearchResult -> List ResultLine
 searchResultToResultLines query latestBlocks searchResult =
     latestBlocks
-        |> List.map (currencyToResult query searchResult)
-        |> List.concat
+        |> List.concatMap (currencyToResult query searchResult)
 
 
 labelResultLines : Api.Data.SearchResult -> List ResultLine
@@ -114,6 +124,9 @@ update msg model =
                                     ++ actorResultLines result
                                     ++ labelResultLines result
 
+                            SearchAddressAndTx conf ->
+                                List.concatMap (currencyToResultWithoutBlock query result) conf.currencies
+
                             SearchTagsOnly ->
                                 labelResultLines result
                     , query = query
@@ -143,6 +156,10 @@ update msg model =
                         hide model
                             |> n
 
+                SearchAddressAndTx _ ->
+                    hide model
+                        |> n
+
                 SearchTagsOnly ->
                     hide model
                         |> n
@@ -156,6 +173,9 @@ update msg model =
                             SearchAll sa ->
                                 { sa | pickingCurrency = False }
                                     |> SearchAll
+
+                            SearchAddressAndTx x ->
+                                SearchAddressAndTx x
 
                             SearchTagsOnly ->
                                 SearchTagsOnly
@@ -185,8 +205,10 @@ update msg model =
                     case model.searchType of
                         SearchAll { latestBlocks } ->
                             latestBlocks
-                                |> List.map (\( curr, lb ) -> blocksToResult query curr lb)
-                                |> List.concat
+                                |> List.concatMap (\( curr, lb ) -> blocksToResult query curr lb)
+
+                        SearchAddressAndTx _ ->
+                            []
 
                         SearchTagsOnly ->
                             []
@@ -241,6 +263,9 @@ maybeTriggerSearch model =
                 SearchAll { pickingCurrency } ->
                     pickingCurrency
 
+                SearchAddressAndTx _ ->
+                    False
+
                 SearchTagsOnly ->
                     False
     in
@@ -255,39 +280,6 @@ maybeTriggerSearch model =
 
     else
         []
-
-
-resultLineToRoute : ResultLine -> Graph.Route
-resultLineToRoute resultLine =
-    case resultLine of
-        Address currency address ->
-            Graph.addressRoute
-                { currency = currency
-                , address = address
-                , table = Nothing
-                , layer = Nothing
-                }
-
-        Tx currency tx ->
-            Graph.txRoute
-                { currency = currency
-                , txHash = tx
-                , table = Nothing
-                , tokenTxId = Nothing
-                }
-
-        Block currency block ->
-            Graph.blockRoute
-                { currency = currency
-                , block = block
-                , table = Nothing
-                }
-
-        Label label ->
-            Graph.labelRoute label
-
-        Actor ( id, _ ) ->
-            Graph.actorRoute id Nothing
 
 
 clear : Model -> Model

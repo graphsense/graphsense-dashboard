@@ -1,4 +1,4 @@
-module Iknaio.ColorScheme exposing (..)
+module Iknaio.ColorScheme exposing (color0, color1, color2, color3, color4, color5, color6, color7, color8, color9, colorScheme, colorSchemePathfinder, defaultColor, annotationDarkBlue, annotationGreen, annotationLightBlue, annotationPink, annotationPurple, annotationRed, annotationTurquoise, annotationYellow)
 
 import Color exposing (Color, rgb255)
 
@@ -45,17 +45,17 @@ color6 =
 
 color7 : Color
 color7 =
-    rgb255 150 118 98
+    rgb255 87 120 164
 
 
 color8 : Color
 color8 =
-    rgb255 184 176 172
+    rgb255 150 118 98
 
 
 color9 : Color
 color9 =
-    rgb255 87 120 164
+    rgb255 184 176 172
 
 
 colorScheme : List Color
@@ -71,3 +71,62 @@ colorScheme =
     , color8
     , color9
     ]
+
+
+color2Pathfinder : Color
+color2Pathfinder =
+    rgb255 59 114 71
+
+
+
+-- color0 = 228 148 68
+-- color1 = 133 182 178
+-- color2 = 59 114 71
+-- color3 = 231 202 96
+-- color4 = 168 124 159
+-- color5 = 241 162 169
+-- color6 = 87 120 164
+-- color7 = 150 118 98
+-- color8 = 106 159 88
+-- color9 = 184 176 172
+
+
+colorSchemePathfinder : List Color
+colorSchemePathfinder =
+    [ color0
+    , color2
+    , color2Pathfinder
+    , color4
+    , color5
+    , color6
+    , color7
+    , color8
+    , color3
+    , color9
+    ]
+
+
+annotationRed : Color
+annotationRed = rgb255 240 101 67
+
+annotationGreen : Color
+annotationGreen = rgb255 141 194 153
+
+annotationDarkBlue : Color
+annotationDarkBlue = rgb255 36 110 185
+
+annotationLightBlue : Color
+annotationLightBlue = rgb255 91 192 235
+
+annotationYellow : Color
+annotationYellow = rgb255 255 186 8
+
+annotationPink : Color
+annotationPink = rgb255 237 175 184
+
+annotationTurquoise : Color
+annotationTurquoise = rgb255 99 105 209
+
+annotationPurple : Color
+annotationPurple = rgb255 52 138 167
+

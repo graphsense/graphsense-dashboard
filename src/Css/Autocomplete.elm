@@ -1,4 +1,4 @@
-module Css.Autocomplete exposing (..)
+module Css.Autocomplete exposing (frame, loadingSpinner, result)
 
 import Config.View exposing (Config)
 import Css exposing (..)

@@ -1,4 +1,4 @@
-module Init.Graph.Browser exposing (..)
+module Init.Graph.Browser exposing (init)
 
 import IntDict
 import Model.Graph.Browser exposing (..)

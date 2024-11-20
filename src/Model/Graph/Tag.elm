@@ -1,4 +1,4 @@
-module Model.Graph.Tag exposing (..)
+module Model.Graph.Tag exposing (Input, Model, UserTag, userTagToApiTag)
 
 import Api.Data
 import Browser.Dom as Dom
@@ -53,4 +53,6 @@ userTagToApiTag { currency, address, entity } isClusterDefiner tag =
     , tagpackTitle = ""
     , tagpackUri = Nothing
     , actor = Nothing
+    , concepts = Nothing
+    , inheritedFrom = Nothing
     }

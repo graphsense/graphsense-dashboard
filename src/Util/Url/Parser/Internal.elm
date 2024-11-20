@@ -1,7 +1,7 @@
 module Util.Url.Parser.Internal exposing (QueryParser(..))
 
-import Dict
+import Dict exposing (Dict)
 
 
 type QueryParser a
-    = Parser (Dict.Dict String (List String) -> a)
+    = Parser (Dict String (List String) -> a)

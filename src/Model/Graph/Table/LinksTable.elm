@@ -1,4 +1,4 @@
-module Model.Graph.Table.LinksTable exposing (..)
+module Model.Graph.Table.LinksTable exposing (filter, titleUrl)
 
 import Api.Data
 import Config.Graph as Graph

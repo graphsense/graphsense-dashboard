@@ -1,4 +1,4 @@
-module Locale.Durations exposing (Unit(..), durationToString)
+module Locale.Durations exposing (Config, Unit(..), durationToString)
 
 import List.Extra
 import Tuple exposing (second)
@@ -61,6 +61,5 @@ durationToString { unitToString, precision, separator } dur =
                         (\( unit, c ) ->
                             unitToString c unit
                         )
-                    |> List.intersperse separator
-                    |> String.concat
+                    |> String.join separator
            )

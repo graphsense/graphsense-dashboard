@@ -1,4 +1,4 @@
-module View.Graph.Navbar exposing (..)
+module View.Graph.Navbar exposing (navbar)
 
 --import Plugin.View.Graph.Navbar
 
@@ -7,7 +7,7 @@ import Css.Graph as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Init.Graph.History as History
+import Init.Graph.History.Entry as Entry
 import Model.Graph exposing (ActiveTool, Model)
 import Model.Graph.Browser as Browser
 import Model.Graph.History as History
@@ -35,21 +35,20 @@ navbarLeft plugins states vc model =
     div
         [ Css.navbarLeft vc |> css
         ]
-        (List.map (Tool.tool vc)
-            [ { icon = FontAwesome.icon FontAwesome.userTag
-              , title = "My tags"
-              , msg = \_ -> UserClickedUserTags
-              , color = Nothing
-              , status =
-                    case model.browser.type_ of
-                        Browser.UserTags _ ->
-                            Tool.Active
+        (Tool.tool vc
+            { icon = FontAwesome.icon FontAwesome.userTag
+            , title = "My tags"
+            , msg = \_ -> UserClickedUserTags
+            , color = Nothing
+            , status =
+                case model.browser.type_ of
+                    Browser.UserTags _ ->
+                        Tool.Active
 
-                        _ ->
-                            Tool.Inactive
-              }
-            ]
-            ++ Plugin.graphNavbarLeft plugins states vc
+                    _ ->
+                        Tool.Inactive
+            }
+            :: Plugin.graphNavbarLeft plugins states vc
         )
 
 
@@ -144,4 +143,4 @@ navbarRight vc model =
 hasPast : Model -> Bool
 hasPast model =
     makeHistoryEntry model
-        |> History.hasPast model.history
+        |> History.hasPast Entry.init model.history

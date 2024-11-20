@@ -1,4 +1,4 @@
-module Init.Graph.Table.EntityAddressesTable exposing (..)
+module Init.Graph.Table.EntityAddressesTable exposing (init)
 
 import Api.Data
 import Init.Graph.Table

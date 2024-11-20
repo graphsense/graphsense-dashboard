@@ -1,4 +1,4 @@
-module View.Statusbar exposing (..)
+module View.Statusbar exposing (view)
 
 import Api
 import Config.View as View
@@ -21,9 +21,8 @@ import View.Locale as Locale
 view : View.Config -> Model -> Html Msg
 view vc model =
     div
-        ([ Css.root vc model.visible |> css
-         ]
-            ++ (if model.visible then
+        ((Css.root vc model.visible |> css)
+            :: (if model.visible then
                     []
 
                 else
@@ -37,8 +36,7 @@ view vc model =
                 |> List.head
                 |> Maybe.map (message vc)
                 |> Maybe.withDefault none
-            , "v"
-                ++ version
+            , version
                 |> text
                 |> List.singleton
                 |> span []

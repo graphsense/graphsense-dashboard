@@ -1,13 +1,13 @@
-module Init.Graph.Transform exposing (..)
+module Init.Graph.Transform exposing (init, initTransitioning, initZ)
 
 import Bounce
 import Model.Graph.Transform exposing (..)
-import Number.Bounded as Bounded
+import Number.Bounded as Bounded exposing (Bounded)
 import RecordSetter exposing (s_state)
 import Set
 
 
-init : Model
+init : Model id
 init =
     { collectingAddedEntityIds = Set.empty
     , bounce = Bounce.init
@@ -15,14 +15,18 @@ init =
         Settled
             { x = 0
             , y = 0
-            , z =
-                Bounded.between 0.1 14
-                    |> Bounded.set 1
+            , z = initZ
             }
     }
 
 
-initTransitioning : Bool -> Float -> Coords -> Coords -> Model
+initZ : Bounded Float
+initZ =
+    Bounded.between 0.1 14
+        |> Bounded.set 1
+
+
+initTransitioning : Bool -> Float -> Coords -> Coords -> Model id
 initTransitioning withEase duration from to =
     init
         |> s_state

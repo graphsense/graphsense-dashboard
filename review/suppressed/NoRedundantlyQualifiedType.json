@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "automatically created by": "elm-review suppress",
+  "learn more": "elm-review suppress --help",
+  "suppressions": [
+    { "count": 17, "filePath": "src/Update/Graph/Browser.elm" },
+    { "count": 4, "filePath": "src/View/Graph/Browser.elm" },
+    { "count": 2, "filePath": "src/Init/Graph/ContextMenu.elm" },
+    { "count": 2, "filePath": "src/Update/Graph.elm" },
+    { "count": 1, "filePath": "src/Model/Graph/Browser.elm" }
+  ]
+}

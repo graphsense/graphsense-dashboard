@@ -3,7 +3,28 @@ import FileSaver from 'file-saver'
 import { pack, unpack } from 'lzwcompress'
 import { Base64 } from 'js-base64'
 import { fileDialog } from 'file-select-dialog'
-import plugins from '../gen/plugins/index.js'
+import plugins from '../generated/plugins/index.js'
+import robotoBase64 from "../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64"
+import robotoBoldBase64 from "../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64"
+
+const getTheme = () => {
+  const rootStyles = window.getComputedStyle(document.documentElement);
+  return Object.fromEntries(
+    Array.from(document.styleSheets)
+      .flatMap((styleSheet) => {
+        try {
+          return Array.from(styleSheet.cssRules);
+        } catch (error) {
+          return [];
+        }
+      })
+      .filter((cssRule) => cssRule instanceof CSSStyleRule)
+      .flatMap((cssRule) => Array.from(cssRule.style))
+      .filter((style) => style.startsWith("--"))
+      .map((variable) => [variable, rootStyles.getPropertyValue(variable)]),
+  );
+};
+
 
 const getNavigatorLanguage = () => {
   if (navigator.languages && navigator.languages.length) {
@@ -53,6 +74,75 @@ window.onbeforeunload = function (evt) {
 }
 
 app.ports.console.subscribe(console.error)
+
+
+app.ports.exportGraphImage.subscribe((filename) => {
+    let svg = document.querySelector('svg#graph')
+    let canvas = document.createElement("canvas");
+    var svgData = new XMLSerializer().serializeToString(svg)
+
+    // replace css variables with actual values, since
+    // currently css variables are not supported in canvas
+    const cssVariables = getTheme()
+    for (const [key, value] of Object.entries(cssVariables)) {
+      svgData = svgData.replaceAll("var(" + key + ")", value)
+    }
+
+    // Looks like loading external files on file rendering
+    // eg. link to our fonts does not work
+    // thus i embedded the data itself
+    // Embed fonts into svg as Base64Encoded string
+    let fontStyle = `
+      <style>
+        @font-face {
+          font-family: 'Roboto';
+          font-style: normal;
+          font-weight: 400;
+          src:url(data:application/font-woff;charset=utf-8;base64,${robotoBase64}) format('woff');
+        }
+        @font-face {
+          font-family: 'Roboto';
+          font-style: bold;
+          font-weight: 600;
+          src: url(data:application/font-woff;charset=utf-8;base64,${robotoBoldBase64}) format('woff');
+        }
+      svg {
+        font-family: Roboto;
+      }
+      </style>
+    `
+    
+    svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
+    const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
+    
+    const bgColor = cssVariables["--c-white"]
+
+    const pixelScaleFactor = 2;
+    var width = (svg.innerWidth
+    || window.innerWidth
+    || document.documentElement.clientWidth
+    || document.body.clientWidth) * pixelScaleFactor; 
+
+    var height = (svg.innerHeight 
+    || window.innerHeight
+    || document.documentElement.clientHeight
+    || document.body.clientHeight) * pixelScaleFactor;
+
+    canvas.width = width; // Set the canvas width
+    canvas.height = height; // Set the canvas height
+    let img = new Image();
+
+    img.onload = function () {
+      let ctx = canvas.getContext("2d");
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height, 0, 0, canvas.width /2, canvas.height/2 );
+
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => download(filename, blob))
+    };
+    img.src = "data:image/svg+xml;base64," + svgDataBase64;
+ }
+)
 
 app.ports.exportGraphics.subscribe((filename) => {
   const classMap = new Map()
@@ -127,7 +217,6 @@ app.ports.deserialize.subscribe(() => {
         data = decompress(data)
         data[0] = data[0].split(' ')[0]
         data[0] = data[0].split('-')[0]
-        // console.log(data)
         app.ports.deserialized.send([file.name, data])
       }
       reader.readAsArrayBuffer(file)
@@ -156,10 +245,30 @@ app.ports.pluginsOut.subscribe(packetWithKey => {
 
 class CopyIcon extends HTMLElement {
   constructor () {
+    let label, original
+    setTimeout(() => {
+      label = this.querySelector('[data-label]')
+      original = label?.innerText
+    }, 0)
     super()
     this.addEventListener('click', (ev) => {
       ev.stopPropagation()
       navigator.clipboard.writeText(this.getAttribute('data-value'))
+      if(!label) return
+      label.innerHTML = this.getAttribute('data-copied-label')
+      setTimeout(() => {
+        label.innerHTML = original
+      }, 3000)
+    })
+    this.addEventListener('mouseover', () => {
+      let hint = this.querySelector('[data-hint]');
+      if(!hint) return
+      hint.style.display = 'flex'
+    })
+    this.addEventListener('mouseleave', () => {
+      let hint = this.querySelector('[data-hint]');
+      if(!hint) return
+      hint.style.display = 'none'
     })
   }
 }
@@ -169,6 +278,10 @@ if(!customElements.get('copy-icon')) {
 }
 
 app.ports.newTab.subscribe( url => window.open(url, '_blank'));
+
+app.ports.toClipboard.subscribe(text => {
+  navigator.clipboard.writeText(text);
+})
 
 app.ports.setDirty.subscribe(dirty => {
   isDirty = dirty

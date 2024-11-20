@@ -1,4 +1,4 @@
-module View.Graph.Layer exposing (..)
+module View.Graph.Layer exposing (addressLinks, addressShadowLinks, addresses, calcAddressRange, calcRange, entities, entityLinks, entityShadowLinks)
 
 import Config.Graph as Graph
 import Config.View as View

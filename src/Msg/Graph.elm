@@ -1,18 +1,19 @@
-module Msg.Graph exposing (..)
+module Msg.Graph exposing (Msg(..))
 
 import Api.Data
 import Browser.Dom
-import Color
-import File
+import Color exposing (Color)
+import File exposing (File)
 import Hovercard
 import Json.Encode
 import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
-import Model.Graph exposing (Deserializing, Dragging)
+import Model.Graph exposing (Dragging)
 import Model.Graph.Browser as Browser
 import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Deserialize exposing (Deserializing)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Tag as Tag
 import Model.Tx as T
@@ -25,7 +26,7 @@ import Yaml.Decode
 
 
 type Msg
-    = UserClickedGraph Dragging
+    = UserClickedGraph (Dragging EntityId)
     | UserClickedAddress AddressId
     | UserRightClickedAddress AddressId Coords
     | UserClickedAddressActions AddressId Coords
@@ -138,7 +139,7 @@ type Msg
     | UserClickedExportGraphics (Maybe Time.Posix)
     | UserClickedExportTagPack (Maybe Time.Posix)
     | UserClickedImportTagPack
-    | BrowserGotTagPackFile File.File
+    | BrowserGotTagPackFile File
     | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.UserTag))
     | UserClickedExportGS (Maybe Time.Posix)
     | UserClickedImportGS
@@ -154,7 +155,7 @@ type Msg
     | BrowserGotBulkAddressNeighbors String Bool (List ( String, Api.Data.NeighborAddress ))
     | UserClickedNew
     | UserClickedNewYes
-    | UserClickedHighlightColor Color.Color
+    | UserClickedHighlightColor Color
     | UserClickedHighlightTrash Int
     | UserInputsHighlightTitle Int String
     | UserClicksHighlight Int

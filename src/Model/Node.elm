@@ -1,4 +1,4 @@
-module Model.Node exposing (..)
+module Model.Node exposing (Node(..))
 
 
 type Node address entity

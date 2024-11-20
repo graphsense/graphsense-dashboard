@@ -1,4 +1,4 @@
-module View.Graph.Tool exposing (..)
+module View.Graph.Tool exposing (tool, toolbox)
 
 import Config.View exposing (Config)
 import Css exposing (color)
@@ -81,13 +81,13 @@ toolbox vc model =
             |> css
         ]
         [ div
-            [ [ if isRight then
-                    Css.right (Css.px 0)
+            [ (if isRight then
+                Css.right (Css.px 0)
 
-                else
-                    Css.left (Css.px 0)
-              ]
-                ++ (model.activeTool.element
+               else
+                Css.left (Css.px 0)
+              )
+                :: (model.activeTool.element
                         |> Maybe.map second
                         |> Maybe.withDefault False
                         |> Css.toolbox vc

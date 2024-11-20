@@ -1,7 +1,6 @@
 module View.Graph.Label exposing (label, normalizeValues, split)
 
 import Api.Data
-import Basics.Extra exposing (uncurry)
 import Config.Graph as Graph exposing (labelHeight)
 import Config.View exposing (Config)
 import Css exposing (..)

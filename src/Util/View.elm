@@ -1,23 +1,22 @@
-module Util.View exposing (..)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, hovercard, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
-import Browser.Dom as Dom
-import Color
+import Color as BColor
 import Config.View as View
-import Css exposing (Color, Style)
-import Css.Browser
+import Css exposing (Color, Style, paddingLeft, px)
 import Css.Graph
 import Css.View as Css
 import FontAwesome
 import Hex
 import Hovercard
-import Html
+import Html as BHtml
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (classList, css, src, title, value)
-import Html.Styled.Events exposing (onClick, stopPropagationOn)
+import Html.Styled.Attributes exposing (classList, css, src, title)
+import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
+import RecordSetter exposing (s_anchor, s_hint, s_iconsCopySmall, s_label, s_triangle)
 import Switch
-import Util.Css
+import Theme.Html.GraphComponents
 import View.Locale as Locale
 
 
@@ -36,9 +35,9 @@ aa toAttr value =
     (++) (value |> Maybe.map (toAttr >> List.singleton) |> Maybe.withDefault [])
 
 
-toCssColor : Color.Color -> Color
+toCssColor : BColor.Color -> Color
 toCssColor color =
-    Color.toRgba color
+    BColor.toRgba color
         |> (\{ red, green, blue, alpha } ->
                 Css.rgba (red * 255 |> Basics.round) (green * 255 |> Basics.round) (blue * 255 |> Basics.round) alpha
            )
@@ -70,33 +69,43 @@ truncate len str =
 
 
 truncateLongIdentifier : String -> String
-truncateLongIdentifier str =
+truncateLongIdentifier =
+    truncateLongIdentifierWithLengths 8 8
+
+
+truncateLongIdentifierWithLengths : Int -> Int -> String -> String
+truncateLongIdentifierWithLengths start end str =
     if String.length str > 18 then
         let
+            -- sigPart =
+            --     if String.startsWith "0x" str then
+            --         String.right (String.length str - 2) str
+            --     else
+            --         str
             sigPart =
+                str
+
+            startwOffset =
                 if String.startsWith "0x" str then
-                    String.right (String.length str - 2) str
+                    start + 2
 
                 else
-                    str
-
-            len =
-                8
+                    start
         in
-        String.left len sigPart ++ "…" ++ String.right len sigPart
+        String.left startwOffset sigPart ++ "…" ++ String.right end sigPart
 
     else
         str
 
 
-setAlpha : Float -> Color.Color -> Color.Color
+setAlpha : Float -> BColor.Color -> BColor.Color
 setAlpha alpha =
-    Color.toRgba
+    BColor.toRgba
         >> (\c -> { c | alpha = alpha })
-        >> Color.fromRgba
+        >> BColor.fromRgba
 
 
-hovercard : View.Config -> Hovercard.Model -> Int -> List (Html.Html msg) -> Html.Styled.Html msg
+hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
 hovercard vc element zIndex =
     Hovercard.view
         { tickLength = 16
@@ -198,9 +207,75 @@ copyableLongIdentifier vc attr identifier =
         ]
 
 
+copyableLongIdentifierPathfinder : View.Config -> List (Attribute msg) -> String -> Html msg
+copyableLongIdentifierPathfinder vc attr identifier =
+    span
+        [ Css.longIdentifier vc |> css
+        ]
+        [ text (truncateLongIdentifierWithLengths 8 4 identifier)
+            |> List.singleton
+            |> span
+                (title identifier
+                    :: attr
+                )
+        , copyIconPathfinder vc identifier
+        ]
+
+
+copyIconPathfinder : View.Config -> String -> Html msg
+copyIconPathfinder =
+    copyIconWithAttrPathfinder (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
+
+
+copyIconWithAttrPathfinder : List (Attribute msg) -> View.Config -> String -> Html msg
+copyIconWithAttrPathfinder attr vc value =
+    Html.Styled.a
+        ((Css.copyIcon vc |> css)
+            :: attr
+        )
+        [ Html.Styled.node "copy-icon"
+            [ Html.Styled.Attributes.attribute "data-value" value
+            , Locale.string vc.locale "Copied!"
+                |> Html.Styled.Attributes.attribute "data-copied-label"
+            ]
+            [ Theme.Html.GraphComponents.copyShortcutWithAttributes
+                (Theme.Html.GraphComponents.copyShortcutAttributes
+                    |> s_iconsCopySmall
+                        [ css
+                            [ Css.display Css.inlineBlock
+                            , Css.color Css.inherit
+                            ]
+                        ]
+                    |> s_hint
+                        [ Html.Styled.Attributes.attribute "data-hint" ""
+                        , css
+                            [ Css.display Css.none
+                            , Css.zIndex <| Css.int 50
+                            ]
+                        ]
+                    |> s_label
+                        [ Html.Styled.Attributes.attribute "data-label" ""
+                        ]
+                    |> s_anchor
+                        [ css
+                            [ Css.px 1 |> Css.width |> Css.important
+                            ]
+                        ]
+                    |> s_triangle
+                        [ css
+                            [ Css.px 1 |> Css.left
+                            ]
+                        ]
+                )
+                { copyShortcut = { hint = Locale.string vc.locale "Copy" }
+                }
+            ]
+        ]
+
+
 copyIcon : View.Config -> String -> Html msg
 copyIcon =
-    copyIconWithAttr []
+    copyIconWithAttr ([ paddingLeft (px 3) ] |> css |> List.singleton)
 
 
 copyIconWithAttr : List (Attribute msg) -> View.Config -> String -> Html msg
@@ -214,7 +289,7 @@ copyIconWithAttr attr vc value =
         [ Html.Styled.node "copy-icon"
             [ Html.Styled.Attributes.attribute "data-value" value
             ]
-            [ FontAwesome.icon FontAwesome.copy
+            [ FontAwesome.icon FontAwesome.clone
                 |> Html.Styled.fromUnstyled
             ]
         ]
@@ -229,19 +304,25 @@ longIdentifier vc address =
         ]
 
 
-colorToHex : Color.Color -> String
+colorToHex : BColor.Color -> String
 colorToHex cl =
     let
         { red, green, blue } =
-            Color.toRgba cl
+            BColor.toRgba cl
     in
     List.map (round >> Hex.toString) [ red * 255, green * 255, blue * 255 ]
         |> List.map (String.padLeft 2 '0')
         |> (::) "#"
-        |> String.join ""
+        |> String.concat
 
 
 frame : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
 frame vc attr =
     div
         ((Css.frame vc |> css) :: attr)
+
+
+onClickWithStop : msg -> Attribute msg
+onClickWithStop msg =
+    Json.Decode.succeed ( msg, True )
+        |> stopPropagationOn "click"

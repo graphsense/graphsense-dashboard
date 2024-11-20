@@ -17,4 +17,7 @@ jobs:
           node-version: '18.x'
       - run: npm ci
       - run: cp config/Config.elm.tmp config/Config.elm
-      - run: npm run build --if-present
+      - run: cp env.template .env
+      - run: make build
+      - run: make test
+      - run: make lint-ci

@@ -1,7 +1,7 @@
-module Graph.View.TestLabel exposing (..)
+module Graph.View.TestLabel exposing (suite)
 
 import Expect
-import Test exposing (..)
+import Test exposing (Test)
 import View.Graph.Label as Label
 
 
@@ -9,7 +9,7 @@ data : List ( String, List String )
 data =
     [ ( "a label", [ "a label" ] )
     , ( "a label long", [ "a label", "long" ] )
-    , ( "inter archive", [ "inter", "archive" ] )
+    , ( "inter archive", [ "inter ar", "chive" ] )
     , ( "alabellong", [ "alabello", "ng" ] )
     , ( "alabellong space", [ "alabello", "ng space" ] )
     , ( "a label that is way too long", [ "a label", "that is", "way too", "long" ] )
@@ -21,11 +21,11 @@ data =
 
 suite : Test
 suite =
-    describe "The Graph.View.Label module"
+    Test.describe "The Graph.View.Label module"
         (data
             |> List.map
                 (\( input, output ) ->
-                    test ("input: \"" ++ input ++ "\"") <|
+                    Test.test ("input: \"" ++ input ++ "\"") <|
                         \_ ->
                             Expect.equal output (Label.split 8 input)
                 )

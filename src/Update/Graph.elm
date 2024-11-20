@@ -1,8 +1,7 @@
-module Update.Graph exposing (..)
+module Update.Graph exposing (At(..), More(..), SearchResult, addAddress, addAddressLinks, addAddressNeighborsWithEntity, addAddressesAtEntity, addEntity, addEntityEgonet, addEntityLinks, addEntityNeighbors, addUserTag, cleanHistory, decodeYamlTag, deleteUserTag, deselect, deselectHighlighter, deselectLayers, deserialize, deserializeByVersion, draggingToClick, extendTransformWithBoundingBox, forcePushHistory, fromDeserialized, getToolElement, handleAddressNeighbor, handleEntityNeighbors, handleEntitySearchResult, handleNotFound, hideContextmenu, importTagPack, insertAddressShadowLinks, insertEntityShadowLinks, layerDelta, loadAddress, loadAddressPath, loadEntity, loadEntityPath, loadNextAddress, loadNextEntity, makeHistoryEntry, makeLegend, makeTagPack, normalizeDeserializedEntityTag, prepareSearchResult, pushHistory, refreshBrowserAddress, refreshBrowserEntity, refreshBrowserEntityIf, repositionHovercardCmd, repositionHovercards, selectAddress, selectAddressLink, selectAddressLinkIfLoaded, selectEntity, selectEntityLink, selectEntityLinkIfLoaded, setAbuseConcepts, setEntityConcepts, storeUserTag, syncBrowser, syncLinks, syncSelection, tagId, tagInputToUserTag, toolElementResultToTool, toolVisible, undoRedo, update, updateAddresses, updateByMsg, updateByPluginOutMsg, updateByRoute, updateByRoute_, updateEntitiesIf, updateLegend, updateSearch, updateTransformByBoundingBox)
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Bounce
 import Browser.Dom as Dom
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
@@ -13,7 +12,6 @@ import Decode.Graph045 as Graph045
 import Decode.Graph050 as Graph050
 import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
-import Effect exposing (n)
 import Effect.Api exposing (Effect(..), getAddressEgonet, getEntityEgonet)
 import Effect.Graph exposing (Effect(..))
 import Encode.Graph as Encode
@@ -38,6 +36,7 @@ import Model.Graph exposing (..)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Graph.Deserialize exposing (..)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Highlighter as Highlighter
 import Model.Graph.History as History
@@ -75,6 +74,7 @@ import Update.Graph.Search as Search
 import Update.Graph.Table as Table
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
+import Util exposing (n)
 import Util.Data as Data
 import Util.Graph
 import Util.Graph.History as History
@@ -167,11 +167,19 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
                     , pagesize = 10
                     }
                 |> ApiEffect
+
+        tbl =
+            case newModel.route of
+                Route.Currency _ (Route.Address _ t _) ->
+                    t
+
+                _ ->
+                    Nothing
     in
     addedAddress
         |> Maybe.map
             (\a ->
-                selectAddress a Nothing newModel_
+                selectAddress a tbl newModel_
                     |> mapSecond
                         ((++)
                             (getAddressEgonet a.id BrowserGotAddressEgonet newModel_.layers
@@ -1079,6 +1087,7 @@ updateByMsg plugins uc msg model =
                                 , isOutgoing = isOutgoing
                                 , pagesize = 20
                                 , includeLabels = False
+                                , includeActors = True
                                 , onlyIds = Nothing
                                 , nextpage = Nothing
                                 }
@@ -1356,6 +1365,7 @@ updateByMsg plugins uc msg model =
                 |> GetAddressEffect
                     { address = address
                     , currency = Id.currency entityId
+                    , includeActors = True
                     }
                 |> ApiEffect
                 |> List.singleton
@@ -1741,7 +1751,7 @@ updateByMsg plugins uc msg model =
                             (String.toInt search.breadth)
                             (String.toInt search.maxAddresses)
                     )
-                |> Maybe.map (mapFirst (\s -> { model | search = Nothing }))
+                |> Maybe.map (mapFirst (\_ -> { model | search = Nothing }))
                 |> Maybe.withDefault (n model)
 
         UserClicksCloseSearchHovercard ->
@@ -2118,12 +2128,8 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserClickedToggleShowDatesInUserLocale ->
-            { model
-                | config =
-                    model.config
-                        |> s_showDatesInUserLocale (not model.config.showDatesInUserLocale)
-            }
-                |> n
+            -- handled upstream
+            n model
 
         UserClickedToggleShowZeroTransactions ->
             let
@@ -2737,13 +2743,12 @@ addEntityEgonet : String -> Int -> Bool -> List Api.Data.NeighborEntity -> Model
 addEntityEgonet currency entity isOutgoing neighbors model =
     let
         entities =
-            List.map
+            List.concatMap
                 (\neighbor ->
                     Layer.getEntities neighbor.entity.currency neighbor.entity.entity model.layers
                         |> List.map (pair neighbor)
                 )
                 neighbors
-                |> List.concat
 
         anchors =
             Layer.getEntities currency entity model.layers
@@ -2766,7 +2771,7 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
         |> syncLinks repositioned
         |> insertEntityShadowLinks (List.map (second >> .id) new |> Set.fromList)
     , neighbors
-        |> List.map
+        |> List.concatMap
             (\{ entity } ->
                 getEntityEgonet
                     { currency = entity.currency
@@ -2776,7 +2781,6 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
                     newModel.layers
                     |> List.map ApiEffect
             )
-        |> List.concat
         |> (::)
             (new
                 |> List.map (second >> .id)
@@ -2829,12 +2833,11 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
         |> (++)
             (added.newAddresses
                 |> List.map .id
-                |> List.map
+                |> List.concatMap
                     (\a ->
                         getAddressEgonet a BrowserGotAddressEgonet added.model.layers
                             |> List.map ApiEffect
                     )
-                |> List.concat
             )
         |> (::)
             (added.newAddresses
@@ -3204,6 +3207,9 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.ShowDialog _ ->
                         ( mo, [] )
+
+                    PluginInterface.CloseDialog ->
+                        ( mo, [] )
             )
             ( model, [] )
 
@@ -3262,8 +3268,7 @@ refreshBrowserEntityIf predicate model =
 addUserTag : Set Id.AddressId -> Dict ( String, String, String ) Tag.UserTag -> IntDict Layer -> IntDict Layer
 addUserTag ids userTags layers =
     ids
-        |> Set.toList
-        |> List.foldl
+        |> Set.foldl
             (\id layers_ ->
                 Dict.get ( Id.currency id, Id.addressId id, "address" ) userTags
                     |> Maybe.Extra.orElseLazy
@@ -3286,10 +3291,9 @@ makeLegend uc model =
                 |> List.filterMap identity
     in
     (Layer.addresses model.layers
-        |> List.map getCategories
-        |> List.concat
+        |> List.concatMap getCategories
     )
-        ++ (Layer.entities model.layers |> List.map getCategories |> List.concat)
+        ++ (Layer.entities model.layers |> List.concatMap getCategories)
         |> Set.fromList
         |> Set.toList
         |> List.filterMap
@@ -3456,15 +3460,11 @@ forcePushHistory model =
 
 cleanHistory : ( Model, List Effect ) -> ( Model, List Effect )
 cleanHistory ( model, eff ) =
-    ( if True then
-        { model
-            | history =
-                makeHistoryEntry model
-                    |> History.prune model.history
-        }
-
-      else
-        model
+    ( { model
+        | history =
+            makeHistoryEntry model
+                |> History.prune model.history
+      }
     , eff
     )
 
@@ -3506,11 +3506,6 @@ fromDeserialized deserialized model =
                     model.config
                         |> s_highlighter False
             }
-
-
-serialize : Model -> Value
-serialize =
-    Encode.encode
 
 
 setEntityConcepts : List Api.Data.Concept -> Model -> Model
@@ -3569,12 +3564,11 @@ addAddressesAtEntity plugins uc entityId addresses model =
             ((++)
                 (added.new
                     |> Set.toList
-                    |> List.map
+                    |> List.concatMap
                         (\a ->
                             getAddressEgonet a BrowserGotAddressEgonet added.layers
                                 |> List.map ApiEffect
                         )
-                    |> List.concat
                 )
             )
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
@@ -3720,6 +3714,7 @@ loadAddress plugins { currency, address, table, at } model =
                         |> GetAddressEffect
                             { address = address
                             , currency = currency
+                            , includeActors = True
                             }
                         |> ApiEffect
                   ]
@@ -3763,14 +3758,14 @@ loadEntity plugins { currency, entity, table, layer } model =
                     | browser = browser2
                     , adding = Adding.loadEntity { currency = currency, entity = entity } model.adding
                   }
-                , [ BrowserGotEntity
-                        |> GetEntityEffect
-                            { entity = entity
-                            , currency = currency
-                            }
-                        |> ApiEffect
-                  ]
-                    ++ (getEntityEgonet
+                , (BrowserGotEntity
+                    |> GetEntityEffect
+                        { entity = entity
+                        , currency = currency
+                        }
+                    |> ApiEffect
+                  )
+                    :: (getEntityEgonet
                             { currency = currency
                             , entity = entity
                             }
@@ -4082,7 +4077,7 @@ makeHistoryEntry model =
     }
 
 
-undoRedo : (History.Model -> Entry.Model -> Maybe ( History.Model, Entry.Model )) -> Model -> ( Model, List Effect )
+undoRedo : (History.Model Entry.Model -> Entry.Model -> Maybe ( History.Model Entry.Model, Entry.Model )) -> Model -> ( Model, List Effect )
 undoRedo fun model =
     makeHistoryEntry model
         |> fun model.history

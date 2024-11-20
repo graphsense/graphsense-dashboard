@@ -1,21 +1,24 @@
-module Effect.Api exposing (..)
+module Effect.Api exposing (Effect(..), getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, listWithMaybes, map, perform, send, withAuthorization)
 
 import Api
 import Api.Data
 import Api.Request.Addresses
 import Api.Request.Blocks
 import Api.Request.Entities
+import Api.Request.Experimental
 import Api.Request.General
 import Api.Request.MyBulk
 import Api.Request.Tags
 import Api.Request.Tokens
 import Api.Request.Txs
+import Api.Time exposing (Posix)
 import Dict exposing (Dict)
 import Http
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
-import Model.Graph.Id as Id exposing (AddressId, currency)
+import Model.Direction exposing (Direction(..))
+import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 
 
@@ -32,11 +35,19 @@ type Effect msg
     | GetAddressEffect
         { currency : String
         , address : String
+        , includeActors : Bool
         }
         (Api.Data.Address -> msg)
     | GetEntityEffect
         { currency : String
         , entity : Int
+        }
+        (Api.Data.Entity -> msg)
+    | GetEntityEffectWithDetails
+        { currency : String
+        , entity : Int
+        , includeActors : Bool
+        , includeBestTag : Bool
         }
         (Api.Data.Entity -> msg)
     | GetActorEffect
@@ -48,6 +59,11 @@ type Effect msg
         , height : Int
         }
         (Api.Data.Block -> msg)
+    | GetBlockByDateEffect
+        { currency : String
+        , datetime : Posix
+        }
+        (Api.Data.BlockAtDate -> msg)
     | GetEntityForAddressEffect
         { currency : String
         , address : String
@@ -69,6 +85,7 @@ type Effect msg
         , isOutgoing : Bool
         , onlyIds : Maybe (List String)
         , includeLabels : Bool
+        , includeActors : Bool
         , pagesize : Int
         , nextpage : Maybe String
         }
@@ -76,7 +93,10 @@ type Effect msg
     | GetAddressTxsEffect
         { currency : String
         , address : String
-        , isOutgoing : Maybe Bool
+        , direction : Maybe Direction
+        , minHeight : Maybe Int
+        , maxHeight : Maybe Int
+        , order : Maybe Api.Request.Addresses.Order_
         , pagesize : Int
         , nextpage : Maybe String
         }
@@ -102,6 +122,12 @@ type Effect msg
         , nextpage : Maybe String
         }
         (Api.Data.AddressTags -> msg)
+    | GetAddressTagSummaryEffect
+        { currency : String
+        , address : String
+        , includeBestClusterTag : Bool
+        }
+        (Api.Data.TagSummary -> msg)
     | GetActorTagsEffect
         { actorId : String
         , pagesize : Int
@@ -137,7 +163,7 @@ type Effect msg
         { currency : String
         , txHash : String
         , tokenTxId : Maybe Int
-        , includeIo : Maybe Bool
+        , includeIo : Bool
         }
         (Api.Data.Tx -> msg)
     | GetTxUtxoAddressesEffect
@@ -146,6 +172,18 @@ type Effect msg
         , isOutgoing : Bool
         }
         (List Api.Data.TxValue -> msg)
+    | ListSpendingTxRefsEffect
+        { currency : String
+        , txHash : String
+        , index : Maybe Int
+        }
+        (List Api.Data.TxRef -> msg)
+    | ListSpentInTxRefsEffect
+        { currency : String
+        , txHash : String
+        , index : Maybe Int
+        }
+        (List Api.Data.TxRef -> msg)
     | ListAddressTagsEffect
         { label : String
         , nextpage : Maybe String
@@ -156,6 +194,9 @@ type Effect msg
         { currency : String
         , source : String
         , target : String
+        , minHeight : Maybe Int
+        , maxHeight : Maybe Int
+        , order : Maybe Api.Request.Addresses.Order_
         , nextpage : Maybe String
         , pagesize : Int
         }
@@ -164,6 +205,9 @@ type Effect msg
         { currency : String
         , source : Int
         , target : Int
+        , minHeight : Maybe Int
+        , maxHeight : Maybe Int
+        , order : Maybe Api.Request.Entities.Order_
         , nextpage : Maybe String
         , pagesize : Int
         }
@@ -181,8 +225,10 @@ type Effect msg
     | BulkGetAddressTagsEffect
         { currency : String
         , addresses : List String
+        , pagesize : Maybe Int
+        , includeBestClusterTag : Bool
         }
-        (List Api.Data.AddressTag -> msg)
+        (List ( ( String, String ), Maybe Api.Data.AddressTag ) -> msg)
     | BulkGetEntityEffect
         { currency : String
         , entities : List Int
@@ -207,6 +253,11 @@ type Effect msg
         , onlyIds : Bool
         }
         (List ( String, Api.Data.NeighborAddress ) -> msg)
+    | BulkGetTxEffect
+        { currency : String
+        , txs : List String
+        }
+        (List Api.Data.Tx -> msg)
 
 
 getEntityEgonet :
@@ -263,6 +314,7 @@ getAddressEgonet id msg layers =
                     , pagesize = max 1 <| List.length onlyIds
                     , nextpage = Nothing
                     , includeLabels = False
+                    , includeActors = True
                     }
     in
     [ effect True
@@ -273,6 +325,11 @@ getAddressEgonet id msg layers =
 map : (msgA -> msgB) -> Effect msgA -> Effect msgB
 map mapMsg effect =
     case effect of
+        GetAddressTagSummaryEffect eff m ->
+            m
+                >> mapMsg
+                |> GetAddressTagSummaryEffect eff
+
         SearchEffect eff m ->
             m
                 >> mapMsg
@@ -303,6 +360,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetEntityEffect eff
 
+        GetEntityEffectWithDetails eff m ->
+            m
+                >> mapMsg
+                |> GetEntityEffectWithDetails eff
+
         GetActorEffect eff m ->
             m
                 >> mapMsg
@@ -312,6 +374,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetBlockEffect eff
+
+        GetBlockByDateEffect eff m ->
+            m
+                >> mapMsg
+                |> GetBlockByDateEffect eff
 
         GetEntityForAddressEffect eff m ->
             m
@@ -378,6 +445,16 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetTxUtxoAddressesEffect eff
 
+        ListSpendingTxRefsEffect eff m ->
+            m
+                >> mapMsg
+                |> ListSpendingTxRefsEffect eff
+
+        ListSpentInTxRefsEffect eff m ->
+            m
+                >> mapMsg
+                |> ListSpentInTxRefsEffect eff
+
         ListAddressTagsEffect eff m ->
             m
                 >> mapMsg
@@ -428,10 +505,19 @@ map mapMsg effect =
                 >> mapMsg
                 |> BulkGetAddressNeighborsEffect eff
 
+        BulkGetTxEffect eff m ->
+            m
+                >> mapMsg
+                |> BulkGetTxEffect eff
+
 
 perform : String -> (Result ( Http.Error, Effect msg ) ( Dict String String, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
     case effect of
+        GetAddressTagSummaryEffect { currency, address, includeBestClusterTag } toMsg ->
+            Api.Request.Experimental.getTagSummaryByAddress currency address (Just includeBestClusterTag)
+                |> send apiKey wrapMsg effect toMsg
+
         SearchEffect { query, currency, limit } toMsg ->
             Api.Request.General.search query currency limit
                 |> Api.withTracker "search"
@@ -457,25 +543,28 @@ perform apiKey wrapMsg effect =
             Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just False) (Just False) (Just True) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, nextpage } toMsg ->
+        GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, includeActors, nextpage } toMsg ->
             let
                 direction =
-                    case isOutgoing of
-                        True ->
-                            Api.Request.Addresses.DirectionOut
+                    if isOutgoing then
+                        Api.Request.Addresses.DirectionOut
 
-                        False ->
-                            Api.Request.Addresses.DirectionIn
+                    else
+                        Api.Request.Addresses.DirectionIn
             in
-            Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) nextpage (Just pagesize)
+            Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) (Just includeActors) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressEffect { currency, address } toMsg ->
-            Api.Request.Addresses.getAddress currency address
+        GetAddressEffect { currency, address, includeActors } toMsg ->
+            Api.Request.Addresses.getAddress currency address (Just includeActors)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityEffect { currency, entity } toMsg ->
             Api.Request.Entities.getEntity currency entity (Just False) (Just True)
+                |> send apiKey wrapMsg effect toMsg
+
+        GetEntityEffectWithDetails { currency, entity, includeActors, includeBestTag } toMsg ->
+            Api.Request.Entities.getEntity currency entity (Just (not includeBestTag)) (Just includeActors)
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorEffect { actorId } toMsg ->
@@ -486,28 +575,49 @@ perform apiKey wrapMsg effect =
             Api.Request.Blocks.getBlock currency height
                 |> send apiKey wrapMsg effect toMsg
 
+        GetBlockByDateEffect { currency, datetime } toMsg ->
+            Api.Request.Blocks.getBlockByDate currency datetime
+                |> send apiKey wrapMsg effect toMsg
+
         GetEntityForAddressEffect { currency, address } toMsg ->
             Api.Request.Addresses.getAddressEntity currency address
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressTxsEffect { currency, address, isOutgoing, pagesize, nextpage } toMsg ->
+        GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
             let
-                direction =
-                    Maybe.map isOutgoingToAddressDirection isOutgoing
+                dir =
+                    case direction of
+                        Nothing ->
+                            Nothing
+
+                        Just Incoming ->
+                            Just Api.Request.Addresses.DirectionIn
+
+                        Just Outgoing ->
+                            Just Api.Request.Addresses.DirectionOut
             in
-            Api.Request.Addresses.listAddressTxs currency address direction Nothing Nothing Nothing nextpage (Just pagesize)
+            -- currency_path address_path neighbor_query minHeight_query maxHeight_query order_query page_query pagesize_query
+            Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight order Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddresslinkTxsEffect { currency, source, target, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressLinks currency source target nextpage (Just pagesize)
+        ListSpendingTxRefsEffect { currency, txHash, index } toMsg ->
+            Api.Request.Txs.getSpendingTxs currency txHash index
                 |> send apiKey wrapMsg effect toMsg
 
-        GetEntitylinkTxsEffect { currency, source, target, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityLinks currency source target nextpage (Just pagesize)
+        ListSpentInTxRefsEffect { currency, txHash, index } toMsg ->
+            Api.Request.Txs.getSpentInTxs currency txHash index
+                |> send apiKey wrapMsg effect toMsg
+
+        GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
+            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight order nextpage (Just pagesize)
+                |> send apiKey wrapMsg effect toMsg
+
+        GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->
+            Api.Request.Entities.listEntityLinks currency source target minHeight maxHeight order nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTagsEffect { currency, address, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize)
+            Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize) (Just False)
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorTagsEffect { actorId, pagesize, nextpage } toMsg ->
@@ -523,7 +633,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityTxsEffect { currency, entity, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing nextpage (Just pagesize)
+            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetBlockTxsEffect { currency, block } toMsg ->
@@ -531,7 +641,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxEffect { currency, txHash, tokenTxId, includeIo } toMsg ->
-            Api.Request.Txs.getTx currency txHash includeIo tokenTxId
+            Api.Request.Txs.getTx currency txHash (Just includeIo) tokenTxId
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
@@ -574,12 +684,18 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressTagsEffect e toMsg ->
-            listWithMaybes Api.Data.addressTagDecoder
+            Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.field "_request_address" Json.Decode.string |> Json.Decode.map (Tuple.pair e.currency)) (Json.Decode.maybe Api.Data.addressTagDecoder))
                 |> Api.Request.MyBulk.bulkJson
                     e.currency
                     Api.Request.MyBulk.OperationListTagsByAddress
                     (Json.Encode.object
                         [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                        , ( "pagesize"
+                          , e.pagesize
+                                |> Maybe.map Json.Encode.int
+                                |> Maybe.withDefault Json.Encode.null
+                          )
+                        , ( "include_best_cluster_tag", Json.Encode.bool e.includeBestClusterTag )
                         ]
                     )
                 |> send apiKey wrapMsg effect toMsg
@@ -684,6 +800,18 @@ perform apiKey wrapMsg effect =
                     )
                 |> send apiKey wrapMsg effect toMsg
 
+        BulkGetTxEffect e toMsg ->
+            listWithMaybes Api.Data.txDecoder
+                |> Api.Request.MyBulk.bulkJson
+                    e.currency
+                    Api.Request.MyBulk.OperationGetTx
+                    (Json.Encode.object
+                        [ ( "tx_hash", Json.Encode.list Json.Encode.string e.txs )
+                        , ( "include_io", Json.Encode.bool True )
+                        ]
+                    )
+                |> send apiKey wrapMsg effect toMsg
+
 
 withAuthorization : String -> Api.Request a -> Api.Request a
 withAuthorization apiKey request =
@@ -702,22 +830,20 @@ send apiKey wrapMsg effect toMsg =
 
 isOutgoingToDirection : Bool -> Api.Request.Entities.Direction
 isOutgoingToDirection isOutgoing =
-    case isOutgoing of
-        True ->
-            Api.Request.Entities.DirectionOut
+    if isOutgoing then
+        Api.Request.Entities.DirectionOut
 
-        False ->
-            Api.Request.Entities.DirectionIn
+    else
+        Api.Request.Entities.DirectionIn
 
 
 isOutgoingToAddressDirection : Bool -> Api.Request.Addresses.Direction
 isOutgoingToAddressDirection isOutgoing =
-    case isOutgoing of
-        True ->
-            Api.Request.Addresses.DirectionOut
+    if isOutgoing then
+        Api.Request.Addresses.DirectionOut
 
-        False ->
-            Api.Request.Addresses.DirectionIn
+    else
+        Api.Request.Addresses.DirectionIn
 
 
 listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)

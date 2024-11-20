@@ -1,4 +1,4 @@
-module PluginInterface.Update exposing (..)
+module PluginInterface.Update exposing (Return, Update, andThen, init)
 
 import Config.Update as Update
 import Model.Graph.Id as Id

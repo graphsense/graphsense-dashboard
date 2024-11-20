@@ -1,5 +1,6 @@
-module Update.Dialog exposing (..)
+module Update.Dialog exposing (addressNotFoundError, confirm, generalError, httpError, info, mapMsg, options)
 
+import Html.Styled as Html
 import Http
 import Model.Dialog exposing (..)
 import Set
@@ -64,6 +65,9 @@ mapMsg map model =
     case model of
         Confirm conf ->
             { message = conf.message
+            , title = conf.title
+            , confirmText = conf.confirmText
+            , cancelText = conf.cancelText
             , onYes = map conf.onYes
             , onNo = map conf.onNo
             }
@@ -87,6 +91,13 @@ mapMsg map model =
         Info conf ->
             { info = conf.info
             , variables = conf.variables
+            , title = conf.title
             , onOk = map conf.onOk
             }
                 |> Info
+
+        Custom conf ->
+            { html = Html.map map conf.html
+            , defaultMsg = map conf.defaultMsg
+            }
+                |> Custom

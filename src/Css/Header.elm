@@ -1,4 +1,4 @@
-module Css.Header exposing (..)
+module Css.Header exposing (header, headerLogo, headerLogoWrap, headerTitle)
 
 import Config.View exposing (Config)
 import Css exposing (..)

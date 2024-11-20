@@ -1,8 +1,20 @@
-module Route exposing (Route(..), graphRoute, homeRoute, parse, pluginRoute, statsRoute, toUrl)
+module Route exposing
+    ( Config
+    , Route(..)
+    , graphRoute
+    , homeRoute
+    , parse
+    , pathfinderRoute
+    , pluginRoute
+    , settingsRoute
+    , statsRoute
+    , toUrl
+    )
 
 import Plugin.Model
 import Plugin.Route as Plugin
 import Route.Graph as Graph
+import Route.Pathfinder as Pathfinder
 import Url exposing (..)
 import Url.Builder exposing (..)
 import Util.Url.Parser as P exposing (..)
@@ -10,13 +22,16 @@ import Util.Url.Parser as P exposing (..)
 
 type alias Config =
     { graph : Graph.Config
+    , pathfinder : Pathfinder.Config
     }
 
 
 type Route
     = Graph Graph.Route
+    | Pathfinder Pathfinder.Route
     | Home
     | Stats
+    | Settings
     | Plugin ( Plugin.Model.PluginType, String )
 
 
@@ -25,8 +40,19 @@ graphSegment =
     "graph"
 
 
+pathfinderSegment : String
+pathfinderSegment =
+    "pathfinder"
+
+
+statsSegment : String
 statsSegment =
     "stats"
+
+
+settingsSegment : String
+settingsSegment =
+    "settings"
 
 
 parse : Config -> Url -> Maybe Route
@@ -38,7 +64,9 @@ parser : Config -> Parser (Route -> a) a
 parser c =
     oneOf
         [ map Graph (s graphSegment |> slash (Graph.parser c.graph))
+        , map Pathfinder (s pathfinderSegment |> slash (Pathfinder.parser c.pathfinder))
         , map Stats (s statsSegment)
+        , map Settings (s settingsSegment)
         , map Home top
         , map Plugin (remainder Plugin.parseUrl)
         ]
@@ -54,9 +82,19 @@ statsRoute =
     Stats
 
 
+settingsRoute : Route
+settingsRoute =
+    Settings
+
+
 graphRoute : Graph.Route -> Route
 graphRoute =
     Graph
+
+
+pathfinderRoute : Pathfinder.Route -> Route
+pathfinderRoute =
+    Pathfinder
 
 
 pluginRoute : ( String, String ) -> Route
@@ -79,8 +117,14 @@ toUrl route =
         Graph graph ->
             absolute [ graphSegment ] [] ++ Graph.toUrl graph
 
+        Pathfinder p ->
+            absolute [ pathfinderSegment ] [] ++ Pathfinder.toUrl p
+
         Stats ->
             absolute [ statsSegment ] []
+
+        Settings ->
+            absolute [ settingsSegment ] []
 
         Home ->
             absolute [] []

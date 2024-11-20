@@ -1,6 +1,6 @@
-module Theme.Theme exposing (..)
+module Theme.Theme exposing (Theme, default)
 
-import Color
+import Color exposing (Color)
 import Css exposing (Style)
 import Theme.Autocomplete as Autocomplete exposing (Autocomplete)
 import Theme.Browser as Browser exposing (Browser)
@@ -34,7 +34,8 @@ type alias Theme =
     , addonsNav : List Style
     , sidebar : Bool -> List Style
     , sidebarIcon : Bool -> Bool -> List Style
-    , sidebarIconBottom : Bool -> Bool -> List Style
+    , sidebarIconsBottom : Bool -> Bool -> List Style
+    , sidebarLink : Bool -> List Style
     , sidebarRule : Bool -> List Style
     , main : Bool -> List Style
     , navbar : Bool -> List Style
@@ -66,7 +67,7 @@ type alias Theme =
     , custom : String
     , switchLabel : List Style
     , switchRoot : List Style
-    , switchOnColor : Bool -> Color.Color
+    , switchOnColor : Bool -> Color
     , disabled : Bool -> List Style
     , copyIcon : Bool -> List Style
     , longIdentifier : List Style
@@ -92,8 +93,9 @@ default =
     , headerTitle = []
     , addonsNav = []
     , sidebar = \_ -> []
+    , sidebarLink = \_ -> []
     , sidebarIcon = \_ _ -> []
-    , sidebarIconBottom = \_ _ -> []
+    , sidebarIconsBottom = \_ _ -> []
     , sidebarRule = \_ -> []
     , main = \_ -> []
     , navbar = \_ -> []

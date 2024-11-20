@@ -1,4 +1,4 @@
-module Model.Actor exposing (..)
+module Model.Actor exposing (Actor, decoder, encoder)
 
 import Json.Decode
 import Json.Encode

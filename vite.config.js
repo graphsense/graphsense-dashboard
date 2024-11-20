@@ -1,13 +1,32 @@
 import { defineConfig } from "vite";
 import elmPlugin from "vite-plugin-elm";
+const fs = require('fs');
+
+/** @type {import('vite').Plugin} */
+const base64Loader = {
+  name: 'base64-loader',
+  transform(code, id) {
+      const [path, query] = id.split('?');
+      if (query != 'raw-base64')
+          return null;
+
+      const data = fs.readFileSync(path);
+      const hex = data.toString('base64');
+
+      return `export default '${hex}';`;
+  }
+};
 
 export default defineConfig({
-  plugins: [elmPlugin()],
-  server: { host: '0.0.0.0', hmr : { overlay : false } },
-  publicDir: "gen/public",
+  plugins: [elmPlugin(), base64Loader],
+  server: { 
+    host: '0.0.0.0',
+    hmr : { overlay : false }
+  },
+  publicDir: "generated/public",
   build: { 
     outDir: 'dist', 
     minify: 'terser'
-  }
+  },
 
 });

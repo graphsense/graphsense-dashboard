@@ -1,4 +1,4 @@
-module View.Graph.Tag exposing (..)
+module View.Graph.Tag exposing (Config, inputHovercard)
 
 import Api.Data
 import Config.View as View

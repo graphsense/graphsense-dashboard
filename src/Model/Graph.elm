@@ -1,4 +1,4 @@
-module Model.Graph exposing (..)
+module Model.Graph exposing (ActiveTool, Dragging(..), Hovered(..), Model, NodeType(..), SelectIfLoaded(..), Selected(..))
 
 import Api.Data
 import Browser.Dom as Dom
@@ -15,6 +15,7 @@ import Model.Graph.ContextMenu as ContextMenu
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Highlighter as Highlighter
 import Model.Graph.History as History
+import Model.Graph.History.Entry as Entry
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
 import Model.Graph.Search as Search
@@ -30,8 +31,8 @@ type alias Model =
     , route : Route.Graph.Route
     , browser : Browser.Model
     , adding : Adding.Model
-    , dragging : Dragging
-    , transform : Transform.Model
+    , dragging : Dragging EntityId
+    , transform : Transform.Model EntityId
     , selected : Selected
     , hovered : Hovered
     , contextMenu : Maybe ContextMenu.Model
@@ -39,7 +40,7 @@ type alias Model =
     , search : Maybe Search.Model
     , userAddressTags : Dict ( String, String, String ) Tag.UserTag
     , activeTool : ActiveTool
-    , history : History.Model
+    , history : History.Model Entry.Model
     , highlights : Highlighter.Model
     , selectIfLoaded : Maybe SelectIfLoaded
     , hovercard : Maybe Hovercard.Model
@@ -80,56 +81,7 @@ type Hovered
     | HoveredNone
 
 
-type Dragging
+type Dragging id
     = NoDragging
-    | Dragging Transform.Model Coords Coords
-    | DraggingNode EntityId Coords Coords
-
-
-type alias Deserializing =
-    { deserialized : Deserialized
-    , addresses : List Api.Data.Address
-    , entities : List Api.Data.Entity
-    }
-
-
-type alias Deserialized =
-    { addresses : List DeserializedAddress
-    , entities : List DeserializedEntity
-    , highlights : List ( String, Color.Color )
-    }
-
-
-type alias DeserializedAddress =
-    { id : AddressId
-    , x : Float
-    , y : Float
-    , userTag : Maybe Tag.UserTag
-    , color : Maybe Color.Color
-    }
-
-
-type DeserializedEntityTag
-    = TagUserTag Tag.UserTag
-    | DeserializedEntityUserTagTag DeserializedEntityUserTag
-
-
-type alias DeserializedEntity =
-    { id : EntityId
-    , rootAddress : Maybe String
-    , x : Float
-    , y : Float
-    , color : Maybe Color.Color
-    , userTag : Maybe DeserializedEntityTag
-    , noAddresses : Int
-    }
-
-
-type alias DeserializedEntityUserTag =
-    { currency : String
-    , entity : Int
-    , label : String
-    , source : String
-    , category : Maybe String
-    , abuse : Maybe String
-    }
+    | Dragging (Transform.Model id) Coords Coords
+    | DraggingNode id Coords Coords

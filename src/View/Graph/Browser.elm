@@ -419,19 +419,18 @@ tableLink vc link =
 propertyBoxButton : Bool -> FontAwesome.IconLayer msg -> Html msg
 propertyBoxButton active iconlayer =
     FontAwesome.layers
-        (iconlayer
-            :: [ FontAwesome.IconLayer FontAwesome.caretRight
-                    FontAwesome.Solid
-                    [ FontAwesome.Pull FontAwesome.Right ]
-                    [ Html.Attributes.style "opacity" <|
-                        if active then
-                            "1"
+        [ iconlayer
+        , FontAwesome.IconLayer FontAwesome.caretRight
+            FontAwesome.Solid
+            [ FontAwesome.Pull FontAwesome.Right ]
+            [ Html.Attributes.style "opacity" <|
+                if active then
+                    "1"
 
-                        else
-                            "0"
-                    ]
-               ]
-        )
+                else
+                    "0"
+            ]
+        ]
         []
         |> Html.fromUnstyled
 
@@ -939,7 +938,10 @@ rowsAddress vc now table address =
            ]
         ++ dataPart2
         ++ statusNote
-        ++ betaIndicator
+
+
+
+-- ++ betaIndicator
 
 
 unwrapTableRouteMatch : (table -> route -> Bool) -> Maybe table -> route -> Bool
@@ -1242,19 +1244,17 @@ rowsEntity vc gc now table ent =
                         }
                     )
 
-        betaIndicator =
-            [ OptionalRow (Footnote "BETA")
-                (case ent of
-                    Loaded e ->
-                        e.entity.currency == "trx"
-
-                    _ ->
-                        False
-                )
-            ]
-
-        len =
-            multiValueMaxLen vc .entity ent
+        -- betaIndicator =
+        --     [ OptionalRow (Footnote "BETA")
+        --         (case ent of
+        --             Loaded e ->
+        --                 e.entity.currency == "trx"
+        --             _ ->
+        --                 False
+        --         )
+        --     ]
+        -- len =
+        --     multiValueMaxLen vc .entity ent
     in
     [ RowWithMoreActionsButton
         ( "Entity"
@@ -1425,7 +1425,10 @@ rowsEntity vc gc now table ent =
             |> Loadable.withDefault Nothing
         )
     ]
-        ++ betaIndicator
+
+
+
+-- ++ betaIndicator
 
 
 rowsActor : View.Config -> Graph.Config -> Time.Posix -> Maybe ActorTable -> Loadable String Actor -> List (Row (Value Msg) Coords Msg)

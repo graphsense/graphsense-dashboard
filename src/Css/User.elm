@@ -1,4 +1,4 @@
-module Css.User exposing (..)
+module Css.User exposing (hovercardRoot, logoutButton, requestLimit, requestLimitRoot, requestReset, root)
 
 import Config.View exposing (Config)
 import Css exposing (..)

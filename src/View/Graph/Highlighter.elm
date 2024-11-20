@@ -1,4 +1,4 @@
-module View.Graph.Highlighter exposing (..)
+module View.Graph.Highlighter exposing (tool)
 
 import Color exposing (Color)
 import Config.View as View

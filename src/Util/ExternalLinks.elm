@@ -1,12 +1,12 @@
-module Util.ExternalLinks exposing (..)
+module Util.ExternalLinks exposing (addProtocolPrefx, getBlockExplorerLinks, getBlockExplorerTransactionLinks, getFontAwesomeIconForUris)
 
-import Dict
+import Dict exposing (Dict)
 import FontAwesome
 import List.Extra
-import Regex
+import Regex exposing (Regex)
 
 
-blockExplorerLinks : Dict.Dict String (List ( String, String ))
+blockExplorerLinks : Dict String (List ( String, String ))
 blockExplorerLinks =
     Dict.fromList
         [ ( "trx"
@@ -46,7 +46,7 @@ blockExplorerLinks =
         ]
 
 
-blockExplorerTransactionLinks : Dict.Dict String (List ( String, String ))
+blockExplorerTransactionLinks : Dict String (List ( String, String ))
 blockExplorerTransactionLinks =
     Dict.fromList
         [ ( "eth"
@@ -100,7 +100,7 @@ getBlockExplorerTransactionLinks currency txHash =
         |> List.map (\( url_template, label ) -> ( url_template ++ txHash, label ))
 
 
-fontAwesomeIconAssignments : List ( Regex.Regex, FontAwesome.Icon )
+fontAwesomeIconAssignments : List ( Regex, FontAwesome.Icon )
 fontAwesomeIconAssignments =
     [ ( Regex.fromString "github.com" |> Maybe.withDefault Regex.never, FontAwesome.github )
     , ( Regex.fromString "twitter.com" |> Maybe.withDefault Regex.never, FontAwesome.twitter )

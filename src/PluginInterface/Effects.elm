@@ -1,4 +1,4 @@
-module PluginInterface.Effects exposing (..)
+module PluginInterface.Effects exposing (Effects, init)
 
 
 type alias Effects msg =

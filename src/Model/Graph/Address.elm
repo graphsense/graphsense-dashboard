@@ -1,4 +1,4 @@
-module Model.Graph.Address exposing (..)
+module Model.Graph.Address exposing (Address, Links(..), bestTag, getActorsCount, getActorsStr, getHeight, getInnerWidth, getWidth, getX, getY, tagsToCategory)
 
 --import Plugin.Model as Plugin exposing (PluginStates)
 

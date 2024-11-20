@@ -1,4 +1,4 @@
-module Model.Graph.Table.EntityAddressesTable exposing (..)
+module Model.Graph.Table.EntityAddressesTable exposing (filter, titleAddress, titleFinalBalance, titleFirstUsage, titleLastUsage, titleTotalReceived)
 
 import Api.Data
 import Config.Graph as Graph

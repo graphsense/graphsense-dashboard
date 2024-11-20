@@ -1,4 +1,4 @@
-module View.Graph.Table.EntityNeighborsTable exposing (..)
+module View.Graph.Table.EntityNeighborsTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
@@ -172,6 +172,7 @@ zero =
     }
 
 
+n : x -> ( x, List y )
 n s =
     ( s, [] )
 
@@ -212,7 +213,7 @@ prepareCSV locale isOutgoing network row =
 prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
 prepareCsvTokens locale coinCode row =
     Locale.tokenCurrencies coinCode locale
-        |> List.map
+        |> List.concatMap
             (\token ->
                 Util.Csv.values ("entity_balance_" ++ token)
                     (row.entity.totalTokensReceived
@@ -230,4 +231,3 @@ prepareCsvTokens locale coinCode row =
                             |> Maybe.withDefault zero
                         )
             )
-        |> List.concat

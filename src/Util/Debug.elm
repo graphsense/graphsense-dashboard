@@ -1,4 +1,4 @@
-module Util.Debug exposing (..)
+module Util.Debug exposing (addDebugToUpdate)
 
 
 addDebugToUpdate : (msg -> model -> ( model, effect )) -> (msg -> model -> ( model, effect ))

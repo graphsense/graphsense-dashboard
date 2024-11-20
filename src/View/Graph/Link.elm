@@ -1,4 +1,4 @@
-module View.Graph.Link exposing (..)
+module View.Graph.Link exposing (Options, addressLink, addressLinkHovered, addressLinkOptions, addressShadowLink, arrowMarker, arrowMarkerId, bezier, bezierInv, drawLabel, drawLink, entityLink, entityLinkHovered, entityLinkOptions, entityShadowLink, getLabel, getLinkAmount, linkPrefix, shadowLink)
 
 import Basics.Extra exposing (uncurry)
 import Color

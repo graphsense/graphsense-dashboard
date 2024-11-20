@@ -4,7 +4,9 @@ module View.Locale exposing
     , currency
     , currencyAsFloat
     , currencyWithoutCode
+    , currencyWithoutCode2
     , date
+    , durationPosix
     , durationToString
     , fiat
     , fiatWithoutCode
@@ -14,18 +16,25 @@ module View.Locale exposing
     , intWithoutValueDetailFormatting
     , interpolated
     , percentage
+    , posixDate
+    , posixDateTimeUniform
+    , posixDateUniform
+    , posixToTimestampSeconds
     , relativeTime
     , string
     , text
     , time
     , timestamp
+    , timestampDateTimeUniform
+    , timestampDateUniform
+    , timestampTimeUniform
     , timestampWithFormat
     , tokenCurrencies
     , valuesToFloat
     )
 
 import Api.Data
-import Basics.Extra exposing (uncurry)
+import Basics.Extra exposing (flip)
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
@@ -40,8 +49,10 @@ import Locale.Durations
 import Model.Currency exposing (..)
 import Model.Locale exposing (..)
 import String.Interpolate
-import Time
+import Time exposing (Posix)
+import Time.Extra exposing (toOffset)
 import Tuple exposing (..)
+import Util.Data exposing (timestampToPosix)
 
 
 type CodeVisibility
@@ -157,7 +168,11 @@ formatWithValueDetail : Model -> String -> String
 formatWithValueDetail model fmtStr =
     case model.valueDetail of
         Exact ->
-            fmtStr
+            if model.currency == Coin then
+                fmtStr ++ "[00000000000000000]"
+
+            else
+                fmtStr ++ "0"
 
         Magnitude ->
             if String.endsWith fmtStr "a" then
@@ -194,6 +209,26 @@ intWithFormat model format =
     toFloat >> floatWithFormat model format
 
 
+posixToTimestampSeconds : Posix -> Int
+posixToTimestampSeconds =
+    Time.posixToMillis >> flip (//) 1000
+
+
+posixDate : Model -> Posix -> String
+posixDate m d =
+    date m (posixToTimestampSeconds d)
+
+
+posixDateUniform : Model -> Posix -> String
+posixDateUniform m d =
+    timestampDateUniform m (posixToTimestampSeconds d)
+
+
+posixDateTimeUniform : Model -> Bool -> Posix -> String
+posixDateTimeUniform m showTimeZoneOffset d =
+    timestampDateTimeUniform m showTimeZoneOffset (posixToTimestampSeconds d)
+
+
 timestamp : Model -> Int -> String
 timestamp model =
     let
@@ -226,6 +261,59 @@ timestamp model =
                     ]
     in
     timestampWithFormat format model
+
+
+timestampDateUniform : Model -> Int -> String
+timestampDateUniform model =
+    let
+        format =
+            [ monthNameAbbreviated
+            , DateFormat.text " "
+
+            --, dayOfMonthSuffix
+            , dayOfMonthFixed
+            , DateFormat.text ", "
+            , yearNumber
+            ]
+    in
+    timestampWithFormat format model
+
+
+
+-- { model | zone = Time.utc }
+
+
+timestampTimeUniform : Model -> Bool -> Int -> String
+timestampTimeUniform model showTimeZoneOffset x =
+    let
+        timezoneOffset =
+            if showTimeZoneOffset then
+                "+" ++ (toOffset model.zone (timestampToPosix x) |> flip (//) 60 |> String.fromInt)
+
+            else
+                ""
+
+        format =
+            [ hourMilitaryFixed
+            , DateFormat.text ":"
+            , minuteFixed
+            , DateFormat.text ":"
+            , secondFixed
+            , DateFormat.text " "
+
+            --, amPmUppercase
+            ]
+    in
+    timestampWithFormat format model x ++ timezoneOffset
+
+
+
+--{ model | zone = Time.utc }
+
+
+timestampDateTimeUniform : Model -> Bool -> Int -> String
+timestampDateTimeUniform model showTimeZoneOffset x =
+    timestampDateUniform model x ++ " " ++ timestampTimeUniform model showTimeZoneOffset x
 
 
 date : Model -> Int -> String
@@ -279,9 +367,8 @@ time model =
 
 
 timestampWithFormat : List Token -> Model -> Int -> String
-timestampWithFormat format { locale, timeLang, zone } =
-    (*) 1000
-        >> Time.millisToPosix
+timestampWithFormat format { timeLang, zone } =
+    timestampToPosix
         >> formatWithLanguage timeLang format zone
 
 
@@ -289,7 +376,7 @@ relativeTime : Model -> Time.Posix -> Int -> String
 relativeTime { relativeTimeOptions } from to =
     DateFormat.Relative.relativeTimeWithOptions relativeTimeOptions
         from
-        (Time.millisToPosix <| to * 1000)
+        (timestampToPosix to)
 
 
 percentage : Model -> Float -> String
@@ -298,7 +385,7 @@ percentage model =
 
 
 bestAssetAsInt : Model -> List ( AssetIdentifier, Api.Data.Values ) -> Maybe ( AssetIdentifier, Int )
-bestAssetAsInt model =
+bestAssetAsInt _ =
     let
         fiatValue v =
             v.fiatValues
@@ -357,6 +444,33 @@ currencyWithOptions vis model values =
                 |> fiat model code
 
 
+currencyWithOptions2 : CodeVisibility -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
+currencyWithOptions2 vis model values =
+    case model.currency of
+        Coin ->
+            if List.all (second >> .value >> (==) 0) values then
+                "0"
+
+            else
+                bestAssetAsInt model values
+                    |> Maybe.map
+                        (\( asset, value ) ->
+                            coinWithOptions vis model asset value
+                                ++ (if List.length values == 1 then
+                                        ""
+
+                                    else
+                                        " +"
+                                            ++ (List.length values - 1 |> String.fromInt)
+                                   )
+                        )
+                    |> Maybe.withDefault "0"
+
+        Fiat code ->
+            sumFiats code values
+                |> fiatWithOptions vis model code
+
+
 currency : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
 currency =
     currencyWithOptions One
@@ -365,6 +479,11 @@ currency =
 currencyWithoutCode : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
 currencyWithoutCode =
     currencyWithOptions Hidden
+
+
+currencyWithoutCode2 : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
+currencyWithoutCode2 =
+    currencyWithOptions2 Hidden
 
 
 fiat : Model -> String -> Float -> String
@@ -406,18 +525,22 @@ coinWithOptions vis model asset v =
             (\value ->
                 let
                     fmt =
-                        if value == 0.0 then
-                            "1,000"
+                        formatWithValueDetail model <|
+                            if value == 0.0 then
+                                "1,000"
 
-                        else if abs value >= 1.0 then
-                            "1,000.00"
+                            else if abs value > 1.0 then
+                                "1,000.00"
 
-                        else
-                            let
-                                n =
-                                    find (\exp -> (abs value * (10 ^ toFloat exp)) >= 1) (List.range 0 14) |> Maybe.withDefault 2
-                            in
-                            "1,000." ++ String.repeat (n + 2) "0"
+                            else
+                                let
+                                    n =
+                                        List.range 0 14
+                                            |> find
+                                                (\exp -> (abs value * (10 ^ toFloat exp)) > 1)
+                                            |> Maybe.withDefault 2
+                                in
+                                "1,000." ++ String.repeat (n + 1) "0"
                 in
                 floatWithFormat model fmt value
                     ++ (if vis == Hidden then
@@ -458,10 +581,20 @@ valuesToFloat model asset values =
 
 
 durationToString : Model -> Int -> String
-durationToString { unitToString } dur =
+durationToString m dur =
+    durationToStringWithPrecision m 3 dur
+
+
+durationPosix : Model -> Int -> Posix -> Posix -> String
+durationPosix m prec start end =
+    durationToStringWithPrecision m prec (Time.posixToMillis end - Time.posixToMillis start)
+
+
+durationToStringWithPrecision : Model -> Int -> Int -> String
+durationToStringWithPrecision { unitToString } prec dur =
     Locale.Durations.durationToString
         { unitToString = unitToString
-        , precision = 3
+        , precision = prec
         , separator = " "
         }
         dur

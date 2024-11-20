@@ -1,4 +1,4 @@
-module Model.Statusbar exposing (..)
+module Model.Statusbar exposing (Model, getMessage, loadingActorKey, loadingActorTagsKey, loadingAddressEntityKey, loadingAddressKey, searchNeighborsKey)
 
 import Dict exposing (Dict)
 import Http

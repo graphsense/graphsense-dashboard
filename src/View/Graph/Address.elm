@@ -190,28 +190,25 @@ getLabel vc gc addr =
 
 addFlagsOffset : (Float -> List (Svg Msg)) -> List (Svg Msg) -> List (Svg Msg)
 addFlagsOffset f acc =
-    acc ++ f -((List.length acc |> toFloat) * 20.0 - 0.0)
+    acc ++ f -((List.length acc |> toFloat) * 20.0)
 
 
 flags : Plugins -> Config -> Graph.Config -> Address -> Svg Msg
 flags plugins vc gc addr =
     List.foldl addFlagsOffset
         []
-        ((abuseFlag vc addr
-            :: contractFlag vc addr
-            :: actorsFlag vc addr
-            :: []
-         )
-            ++ [ \pluginOffsetStart ->
-                    Plugin.addressFlags plugins addr.plugins vc
-                        |> (\( pluginOffset, pluginFlags ) ->
-                                [ g [ translate (pluginOffsetStart - pluginOffset) 0 |> transform ]
-                                    pluginFlags
-                                ]
-                           )
-                        |> Log.log "View.Graph.Address flags result"
-               ]
-        )
+        [ abuseFlag vc addr
+        , contractFlag vc addr
+        , actorsFlag vc addr
+        , \pluginOffsetStart ->
+            Plugin.addressFlags plugins addr.plugins vc
+                |> (\( pluginOffset, pluginFlags ) ->
+                        [ g [ translate (pluginOffsetStart - pluginOffset) 0 |> transform ]
+                            pluginFlags
+                        ]
+                   )
+                |> Log.log "View.Graph.Address flags result"
+        ]
         |> g
             [ Css.addressFlags vc |> css
             , Graph.padding

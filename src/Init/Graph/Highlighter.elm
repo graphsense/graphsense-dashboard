@@ -1,4 +1,4 @@
-module Init.Graph.Highlighter exposing (..)
+module Init.Graph.Highlighter exposing (init)
 
 import Model.Graph.Highlighter exposing (..)
 

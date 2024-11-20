@@ -1,4 +1,4 @@
-module Model.Graph.Entity exposing (..)
+module Model.Graph.Entity exposing (Entity, Links(..), getActorById, getActorByIdApi, getActorsCount, getActorsStr, getBestActor, getBestActorApi, getHeight, getInnerWidth, getWidth, getX, getY)
 
 import Api.Data
 import Color exposing (Color)

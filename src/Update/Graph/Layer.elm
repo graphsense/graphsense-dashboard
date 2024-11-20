@@ -1,5 +1,6 @@
 module Update.Graph.Layer exposing
     ( Acc
+    , Position
     , addAddress
     , addAddressAtEntity
     , addEntitiesAt
@@ -55,9 +56,9 @@ import IntDict exposing (IntDict)
 import List.Extra
 import Maybe.Extra
 import Model.Entity as E
-import Model.Graph exposing (DeserializedAddress, Deserializing)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Deserialize exposing (DeserializedAddress, Deserializing)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
@@ -164,8 +165,7 @@ addEntityNeighbors plugins uc entity isOutgoing neighbors layers =
 
             else
                 added.new
-                    |> Set.toList
-                    |> List.foldl
+                    |> Set.foldl
                         (\new layers__ ->
                             updateEntity new
                                 (\e ->
@@ -607,44 +607,45 @@ syncLinksOnEntity entity relevant =
     relevant
         |> List.foldl
             (\updEnt ( entity_, updated ) ->
-                case ( entity_.links, entity_.shadowLinks ) of
-                    ( Entity.Links links, Entity.Links shadowLinks ) ->
-                        let
-                            syncAddresses =
-                                syncLinksOnAddresses entity_.addresses updEnt.addresses
+                let
+                    ( Entity.Links links, Entity.Links shadowLinks ) =
+                        ( entity_.links, entity_.shadowLinks )
 
-                            ( newEntity, updated_ ) =
-                                if syncAddresses /= entity_.addresses then
-                                    ( { entity_ | addresses = syncAddresses }, True )
+                    syncAddresses =
+                        syncLinksOnAddresses entity_.addresses updEnt.addresses
 
-                                else
-                                    ( entity_, updated )
-                        in
-                        case ( Dict.get updEnt.id links, Dict.get updEnt.id shadowLinks ) of
-                            ( Nothing, Nothing ) ->
-                                ( newEntity, updated_ )
+                    ( newEntity, updated_ ) =
+                        if syncAddresses /= entity_.addresses then
+                            ( { entity_ | addresses = syncAddresses }, True )
 
-                            ( link, shadowLink ) ->
-                                ( { newEntity
-                                    | links =
-                                        link
-                                            |> Maybe.map
-                                                (\l ->
-                                                    Dict.insert updEnt.id { l | node = updEnt } links
-                                                        |> Entity.Links
-                                                )
-                                            |> Maybe.withDefault entity_.links
-                                    , shadowLinks =
-                                        shadowLink
-                                            |> Maybe.map
-                                                (\l ->
-                                                    Dict.insert updEnt.id { l | node = updEnt } shadowLinks
-                                                        |> Entity.Links
-                                                )
-                                            |> Maybe.withDefault entity_.shadowLinks
-                                  }
-                                , True
-                                )
+                        else
+                            ( entity_, updated )
+                in
+                case ( Dict.get updEnt.id links, Dict.get updEnt.id shadowLinks ) of
+                    ( Nothing, Nothing ) ->
+                        ( newEntity, updated_ )
+
+                    ( link, shadowLink ) ->
+                        ( { newEntity
+                            | links =
+                                link
+                                    |> Maybe.map
+                                        (\l ->
+                                            Dict.insert updEnt.id { l | node = updEnt } links
+                                                |> Entity.Links
+                                        )
+                                    |> Maybe.withDefault entity_.links
+                            , shadowLinks =
+                                shadowLink
+                                    |> Maybe.map
+                                        (\l ->
+                                            Dict.insert updEnt.id { l | node = updEnt } shadowLinks
+                                                |> Entity.Links
+                                        )
+                                    |> Maybe.withDefault entity_.shadowLinks
+                          }
+                        , True
+                        )
             )
             ( entity, False )
 
@@ -1257,7 +1258,7 @@ insertAddressShadowLinks ids layers =
 insertEntityShadowLinksAncestors : Int -> Entity -> IntDict Layer -> IntDict Layer
 insertEntityShadowLinksAncestors layerId entity layers =
     IntDict.before layerId layers
-        |> Maybe.andThen
+        |> Maybe.map
             (\( beforeLayerId, layer ) ->
                 let
                     ancestorId =
@@ -1276,7 +1277,6 @@ insertEntityShadowLinksAncestors layerId entity layers =
                         )
                     |> Maybe.withDefault
                         (insertEntityShadowLinksAncestors beforeLayerId entity layers)
-                    |> Just
             )
         |> Maybe.withDefault layers
 
@@ -1284,7 +1284,7 @@ insertEntityShadowLinksAncestors layerId entity layers =
 insertAddressShadowLinksAncestors : Int -> Address -> IntDict Layer -> IntDict Layer
 insertAddressShadowLinksAncestors layerId address layers =
     IntDict.before layerId layers
-        |> Maybe.andThen
+        |> Maybe.map
             (\( beforeLayerId, layer ) ->
                 let
                     ancestorId =
@@ -1303,7 +1303,6 @@ insertAddressShadowLinksAncestors layerId address layers =
                         )
                     |> Maybe.withDefault
                         (insertAddressShadowLinksAncestors beforeLayerId address layers)
-                    |> Just
             )
         |> Maybe.withDefault layers
 
@@ -1311,7 +1310,7 @@ insertAddressShadowLinksAncestors layerId address layers =
 insertEntityShadowLinksDescendants : Int -> Entity -> IntDict Layer -> IntDict Layer
 insertEntityShadowLinksDescendants layerId entity layers =
     IntDict.after layerId layers
-        |> Maybe.andThen
+        |> Maybe.map
             (\( afterLayerId, layer ) ->
                 let
                     descendantId =
@@ -1330,7 +1329,6 @@ insertEntityShadowLinksDescendants layerId entity layers =
                         )
                     |> Maybe.withDefault
                         (insertEntityShadowLinksDescendants afterLayerId entity layers)
-                    |> Just
             )
         |> Maybe.withDefault layers
 
@@ -1338,7 +1336,7 @@ insertEntityShadowLinksDescendants layerId entity layers =
 insertAddressShadowLinksDescendants : Int -> Address -> IntDict Layer -> IntDict Layer
 insertAddressShadowLinksDescendants layerId address layers =
     IntDict.after layerId layers
-        |> Maybe.andThen
+        |> Maybe.map
             (\( afterLayerId, layer ) ->
                 let
                     descendantId =
@@ -1357,7 +1355,6 @@ insertAddressShadowLinksDescendants layerId address layers =
                         )
                     |> Maybe.withDefault
                         (insertAddressShadowLinksDescendants afterLayerId address layers)
-                    |> Just
             )
         |> Maybe.withDefault layers
 

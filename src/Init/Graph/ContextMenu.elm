@@ -1,4 +1,4 @@
-module Init.Graph.ContextMenu exposing (..)
+module Init.Graph.ContextMenu exposing (initAddress, initAddressLink, initEntity, initEntityLink, initTransaction)
 
 import Model.Graph.Address as Address
 import Model.Graph.ContextMenu exposing (..)

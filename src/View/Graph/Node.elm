@@ -1,4 +1,4 @@
-module View.Graph.Node exposing (..)
+module View.Graph.Node exposing (ExpandConfig, expand)
 
 import Config.Graph as Graph exposing (expandHandleWidth)
 import Config.View exposing (Config)

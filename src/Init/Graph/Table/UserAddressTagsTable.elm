@@ -1,4 +1,4 @@
-module Init.Graph.Table.UserAddressTagsTable exposing (..)
+module Init.Graph.Table.UserAddressTagsTable exposing (init)
 
 import Init.Graph.Table
 import Model.Graph.Table exposing (Table, titleLabel)

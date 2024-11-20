@@ -1,7 +1,8 @@
-module Css.View exposing (..)
+module Css.View exposing (body, box, buttonsRow, contents, copyIcon, disabled, footer, frame, heading2, hint, hovercard, iconLink, input, inputRaw, inputRawWithLength, link, listItem, loadingSpinner, longIdentifier, main_, navbar, overlay, paragraph, popup, sectionBelowHeader, sidebar, sidebarIcon, sidebarIconsBottom, sidebarLink, sidebarRule, switchLabel, switchRoot, tool)
 
 import Config.View exposing (Config)
 import Css exposing (..)
+import Theme.Colors as Colors
 import Util.Css
 
 
@@ -35,6 +36,8 @@ sectionBelowHeader vc =
     [ displayFlex
     , flexDirection row
     , flexGrow (num 1)
+    , alignItems stretch
+    , Css.property "background-color" Colors.greyBlue20
     ]
         ++ vc.theme.sectionBelowHeader
 
@@ -52,9 +55,14 @@ sidebarIcon vc active =
     vc.theme.sidebarIcon vc.lightmode active
 
 
-sidebarIconBottom : Config -> Bool -> List Style
-sidebarIconBottom vc active =
-    vc.theme.sidebarIconBottom vc.lightmode active
+sidebarIconsBottom : Config -> Bool -> List Style
+sidebarIconsBottom vc active =
+    vc.theme.sidebarIconsBottom vc.lightmode active
+
+
+sidebarLink : Config -> List Style
+sidebarLink vc =
+    vc.theme.sidebarLink vc.lightmode
 
 
 sidebarRule : Config -> List Style
@@ -63,20 +71,18 @@ sidebarRule vc =
 
 
 main_ : Config -> List Style
-main_ vc =
+main_ _ =
     [ flexGrow (num 1)
     , displayFlex
     , flexDirection column
     , position relative
     ]
-        ++ vc.theme.main vc.lightmode
 
 
 navbar : Config -> List Style
 navbar vc =
-    [ Util.Css.zIndexMain
-    ]
-        ++ vc.theme.navbar vc.lightmode
+    Util.Css.zIndexMain
+        :: vc.theme.navbar vc.lightmode
 
 
 contents : Config -> List Style
@@ -193,10 +199,7 @@ disabled vc =
 
 copyIcon : Config -> List Style
 copyIcon vc =
-    position relative
-        :: cursor pointer
-        :: left (px 5)
-        :: marginRight (px 10)
+    cursor pointer
         :: vc.theme.copyIcon vc.lightmode
 
 

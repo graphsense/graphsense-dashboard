@@ -1,6 +1,6 @@
-module Encode.Graph exposing (..)
+module Encode.Graph exposing (encode)
 
-import Color
+import Color exposing (Color)
 import Json.Encode exposing (..)
 import Model.Graph exposing (..)
 import Model.Graph.Address exposing (Address)
@@ -63,7 +63,7 @@ encodeEntity entity =
         |> list identity
 
 
-encodeColor : Maybe Color.Color -> Value
+encodeColor : Maybe Color -> Value
 encodeColor =
     Maybe.map Color.toRgba
         >> Maybe.map
@@ -98,7 +98,7 @@ encodeUserTag =
         >> Maybe.withDefault null
 
 
-encodeHighlights : List ( String, Color.Color ) -> Value
+encodeHighlights : List ( String, Color ) -> Value
 encodeHighlights colors =
     colors
         |> List.map (\( s, c ) -> list identity [ string s, Just c |> encodeColor ])

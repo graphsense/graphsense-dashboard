@@ -32,7 +32,7 @@ subscriptions model =
                         NoOp
                 )
         )
-    , Transform.subscriptions model.transform
+    , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
     , model.tag
         |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map TagHovercardMsg)
         |> Maybe.withDefault Sub.none

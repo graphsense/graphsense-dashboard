@@ -1,4 +1,4 @@
-module Model.Graph.Highlighter exposing (..)
+module Model.Graph.Highlighter exposing (Model, getColor, getSelectedColor)
 
 import Color exposing (Color)
 import List.Extra

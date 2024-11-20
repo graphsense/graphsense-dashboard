@@ -1,4 +1,4 @@
-module Stub.Msg exposing (..)
+module Stub.Msg exposing (Msg(..), AddressMsg(..), EntityMsg(..))
 
 
 type Msg

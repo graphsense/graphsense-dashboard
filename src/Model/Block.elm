@@ -1,4 +1,4 @@
-module Model.Block exposing (..)
+module Model.Block exposing (Block, decoder, encoder)
 
 import Api.Data
 import Json.Decode

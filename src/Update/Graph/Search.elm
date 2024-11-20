@@ -1,14 +1,14 @@
-module Update.Graph.Search exposing (..)
+module Update.Graph.Search exposing (Config, selectCategory, selectCriterion, selectDirection, submit)
 
 import Api.Data
 import Api.Request.Entities
-import Effect exposing (n)
 import Effect.Api
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Search exposing (initCriterion)
 import Model.Graph.Id as Id
 import Model.Graph.Search exposing (..)
 import Msg.Graph exposing (Msg(..))
+import Util exposing (n)
 
 
 type alias Config =
@@ -20,12 +20,7 @@ selectCriterion : Config -> String -> Model -> ( Model, List Effect )
 selectCriterion config criterion model =
     { model
         | criterion =
-            case criterion of
-                "category" ->
-                    initCriterion config.categories
-
-                _ ->
-                    initCriterion config.categories
+            initCriterion config.categories
     }
         |> n
 

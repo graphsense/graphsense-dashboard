@@ -1,4 +1,4 @@
-module Model.Graph.Table.AddressTxsUtxoTable exposing (..)
+module Model.Graph.Table.AddressTxsUtxoTable exposing (filter)
 
 import Api.Data
 import Model.Graph.Table as Table

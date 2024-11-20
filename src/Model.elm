@@ -1,4 +1,4 @@
-module Model exposing (..)
+module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), Page(..), RequestLimit(..), SettingsMsg(..), SettingsTabs(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -9,24 +9,28 @@ import Dict exposing (Dict)
 import Effect.Api
 import Effect.Graph
 import Effect.Locale
+import Effect.Pathfinder
 import Effect.Search
 import Hovercard
 import Http
 import Json.Encode
 import Model.Dialog
 import Model.Graph
-import Model.Locale
+import Model.Notification
+import Model.Pathfinder
 import Model.Search
 import Model.Statusbar
 import Msg.Graph
 import Msg.Locale
+import Msg.Pathfinder
 import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
-import Theme.Hovercard exposing (Hovercard)
 import Time
 import Url exposing (Url)
+import Util.ThemedSelectBox as SelectBox
+import Util.ThemedSelectBoxes as SelectBoxes
 
 
 type alias Flags =
@@ -43,9 +47,9 @@ type alias Model navigationKey =
     , key : navigationKey
     , config : Config.View.Config
     , page : Page
-    , locale : Model.Locale.Model
     , search : Model.Search.Model
     , graph : Model.Graph.Model
+    , pathfinder : Model.Pathfinder.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
     , width : Int
@@ -55,6 +59,9 @@ type alias Model navigationKey =
     , dialog : Maybe (Model.Dialog.Model Msg)
     , supportedTokens : Dict String Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
+    , notifications : Model.Notification.Model
+    , selectBoxes : SelectBoxes.Model
+    , selectedSettingsTab : SettingsTabs
     , dirty : Bool
     }
 
@@ -62,7 +69,9 @@ type alias Model navigationKey =
 type Page
     = Home
     | Stats
+    | Settings
     | Graph
+    | Pathfinder
     | Plugin Plugin.PluginType
 
 
@@ -80,6 +89,7 @@ type Msg
     | UserClickedLayout
     | UserClickedConfirm Msg
     | UserClickedOption Msg
+    | UserClickedOutsideDialog Msg
     | UserClickedLogout
     | UserClickedLightmode
     | TimeUpdateReset Time.Posix
@@ -95,9 +105,29 @@ type Msg
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
+    | PathfinderMsg Msg.Pathfinder.Msg
     | PluginMsg Plugin.Msg
     | UserClickedExampleSearch String
     | UserHovercardMsg Hovercard.Msg
+    | UserClosesNotification
+    | SettingsMsg SettingsMsg
+    | SelectBoxMsg SelectBoxes.SelectBoxesAvailable SelectBox.Msg
+    | UserClickedNavBack
+    | UserClickedNavHome
+    | NotificationMsg Model.Notification.Msg
+    | RuntimePostponedUpdateByUrl Url
+
+
+type SettingsMsg
+    = UserChangedPreferredCurrency String
+    | UserToggledValueDisplay
+    | UserChangedSettingsTab SettingsTabs
+
+
+type SettingsTabs
+    = GeneralTab
+    | GraphTab
+    | PathfinderTab
 
 
 type RequestLimit
@@ -130,11 +160,13 @@ type Auth
 type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
+    | NavBackEffect
     | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
+    | PathfinderEffect Effect.Pathfinder.Effect
     | ApiEffect (Effect.Api.Effect Msg)
     | PluginEffect (Cmd Plugin.Msg)
     | PortsConsoleEffect String
@@ -143,6 +175,8 @@ type Effect
     | SetDirtyEffect
     | SetCleanEffect
     | SaveUserSettingsEffect UserSettings
+    | NotificationEffect Model.Notification.Effect
+    | PostponeUpdateByUrlEffect Url
 
 
 type Thing
@@ -151,14 +185,19 @@ type Thing
 
 userSettingsFromMainModel : Model key -> UserSettings
 userSettingsFromMainModel model =
-    { selectedLanguage = model.locale.locale
+    { selectedLanguage = model.config.locale.locale
     , lightMode = Just model.config.lightmode
-    , valueDetail = Just model.locale.valueDetail
-    , valueDenomination = Just model.locale.currency
+    , valueDetail = Just model.config.locale.valueDetail
+    , preferredFiatCurrency = Just model.config.preferredFiatCurrency
+    , showValuesInFiat = Just model.config.showValuesInFiat
     , addressLabel = Just model.graph.config.addressLabelType
     , edgeLabel = Just model.graph.config.txLabelType
     , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks
     , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
-    , showDatesInUserLocale = Just model.graph.config.showDatesInUserLocale
+    , showDatesInUserLocale = Just model.config.showDatesInUserLocale
     , showZeroValueTxs = Just model.graph.config.showZeroTransactions
+    , showTimeZoneOffset = Just model.config.showTimeZoneOffset
+    , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
+    , highlightClusterFriends = Just model.config.highlightClusterFriends
+    , snapToGrid = Just model.config.snapToGrid
     }

@@ -1,4 +1,4 @@
-module Css.Browser exposing (..)
+module Css.Browser exposing (currencyCell, frame, loadingSpinner, propertyBoxActivityPeriod, propertyBoxEntityId, propertyBoxImage, propertyBoxIncomingTxs, propertyBoxKey, propertyBoxNote, propertyBoxOutgoingTxs, propertyBoxRoot, propertyBoxRow, propertyBoxRule, propertyBoxTable, propertyBoxTableLink, propertyBoxUsageRelative, propertyBoxUsageTimestamp, propertyBoxValue, propertyBoxValueInner, root, tableSeparator, valueCell)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -60,14 +60,15 @@ propertyBoxKey vc =
 
 propertyBoxImage : Config -> List Style
 propertyBoxImage vc =
-    display block
-        {- :: marginLeft auto
-           :: marginRight auto
-        -}
-        :: borderRadius (pct 50)
-        :: height (px 40)
-        :: width (px 40)
-        :: []
+    [ display block
+
+    {- :: marginLeft auto
+       :: marginRight auto
+    -}
+    , borderRadius (pct 50)
+    , height (px 40)
+    , width (px 40)
+    ]
 
 
 propertyBoxValue : Config -> List Style

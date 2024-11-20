@@ -1,9 +1,9 @@
-module Update.Graph.Browser exposing (..)
+module Update.Graph.Browser exposing (filterTable, hideTable, infiniteScroll, loadingActor, loadingAddress, loadingBlock, loadingEntity, loadingLabel, loadingTxAccount, loadingTxUtxo, openActor, searchTable, setHeight, showActor, showActorTable, showActorTags, showAddress, showAddressNeighbors, showAddressTable, showAddressTags, showAddressTxsAccount, showAddressTxsUtxo, showAddresslink, showAddresslinkTable, showAddresslinkTxsAccount, showAddresslinkTxsUtxo, showBlock, showBlockTable, showBlockTxsAccount, showBlockTxsUtxo, showEntity, showEntityAddressTags, showEntityAddresses, showEntityNeighbors, showEntityTable, showEntityTxsAccount, showEntityTxsUtxo, showEntitylink, showEntitylinkTable, showEntitylinkTxsAccount, showEntitylinkTxsUtxo, showLabelAddressTags, showPlugin, showTokenTxs, showTx, showTxAccountTable, showTxUtxoAddresses, showTxUtxoTable, showUserTags, tableAsCSV, tableNewState, updateAddress, updateEntityIf, updateUserTags)
 
 import Api.Data
 import Config.Graph as Graph
 import Dict
-import Effect exposing (n)
+import Util exposing (n)
 import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -130,10 +130,10 @@ loadingTxAccount id accountCurrency model =
         return table =
             ( TxAccount (Loading id.currency ( id.txHash, id.tokenTxId )) accountCurrency table
             , [ GetTxEffect
-                    { currency = id.currency
-                    , txHash = id.txHash
+                    { txHash = id.txHash
+                    , currency = id.currency
                     , tokenTxId = id.tokenTxId
-                    , includeIo = Just False
+                    , includeIo = False
                     }
                     (BrowserGotTx accountCurrency)
                     |> ApiEffect
@@ -169,7 +169,7 @@ loadingTxUtxo id model =
                     { txHash = id.txHash
                     , currency = id.currency
                     , tokenTxId = Nothing
-                    , includeIo = Just False
+                    , includeIo = False
                     }
                     (BrowserGotTx id.currency)
                     |> ApiEffect
@@ -1077,7 +1077,7 @@ showTx data accountCurrency model =
                             TxAccount loadable _ table ->
                                 if
                                     matchTxAccountId
-                                        { currency = tx.currency
+                                        { currency = tx.network
                                         , txHash = tx.txHash
                                         , tokenTxId = tx.tokenTxId
                                         }
@@ -2342,9 +2342,12 @@ getAddressTxsEffect { currency, address } nextpage =
     GetAddressTxsEffect
         { currency = currency
         , address = address
-        , isOutgoing = Nothing
+        , direction = Nothing
         , nextpage = nextpage
         , pagesize = 100
+        , order = Nothing
+        , minHeight = Nothing
+        , maxHeight = Nothing
         }
         (BrowserGotAddressTxs { currency = currency, address = address })
         |> ApiEffect
@@ -2358,6 +2361,9 @@ getAddresslinkTxsEffect id nextpage =
         , target = id.target
         , nextpage = nextpage
         , pagesize = 100
+        , order = Nothing
+        , minHeight = Nothing
+        , maxHeight = Nothing
         }
         (BrowserGotAddresslinkTxs id)
         |> ApiEffect
@@ -2371,6 +2377,9 @@ getEntitylinkTxsEffect id nextpage =
         , target = id.target
         , nextpage = nextpage
         , pagesize = 100
+        , order = Nothing
+        , minHeight = Nothing
+        , maxHeight = Nothing
         }
         (BrowserGotEntitylinkTxs id)
         |> ApiEffect
@@ -2400,6 +2409,7 @@ getAddressNeighborsEffect isOutgoing { currency, address } nextpage =
         , isOutgoing = isOutgoing
         , pagesize = 100
         , includeLabels = True
+        , includeActors = True
         , onlyIds = Nothing
         , nextpage = nextpage
         }

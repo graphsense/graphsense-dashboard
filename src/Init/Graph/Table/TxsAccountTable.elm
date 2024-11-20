@@ -1,4 +1,4 @@
-module Init.Graph.Table.TxsAccountTable exposing (..)
+module Init.Graph.Table.TxsAccountTable exposing (init)
 
 import Api.Data
 import Init.Graph.Table

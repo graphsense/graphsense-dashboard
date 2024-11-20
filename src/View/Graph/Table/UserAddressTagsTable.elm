@@ -1,4 +1,4 @@
-module View.Graph.Table.UserAddressTagsTable exposing (..)
+module View.Graph.Table.UserAddressTagsTable exposing (config, prepareCSV)
 
 import Config.Graph as Graph
 import Config.View as View
@@ -97,6 +97,7 @@ config vc gc =
         }
 
 
+n : x -> ( x, List y )
 n s =
     ( s, [] )
 

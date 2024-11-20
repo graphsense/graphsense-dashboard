@@ -1,4 +1,4 @@
-module View.Graph.Table exposing (..)
+module View.Graph.Table exposing (Tools, addressColumn, csvTool, customizations, filterTool, htmlColumn, htmlColumnWithSorter, info, intColumn, intColumnWithoutValueDetailFormatting, maybeIntColumn, noTools, simpleThead, simpleTheadHelp, stringColumn, table, tableHint, tickColumn, tickIf, timestampColumn, valueAndTokensColumnWithOptions, valueColumn, valueColumnWithOptions, valueColumnWithoutCode, valuesCell, valuesCss, valuesSorter)
 
 import Api.Data
 import Config.View as View

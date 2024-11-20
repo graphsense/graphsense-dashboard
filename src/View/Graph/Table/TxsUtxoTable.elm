@@ -1,4 +1,4 @@
-module View.Graph.Table.TxsUtxoTable exposing (..)
+module View.Graph.Table.TxsUtxoTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
@@ -26,7 +26,8 @@ config vc coinCode =
         { toId = .txHash
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn styles vc
+            [ T.htmlColumn styles
+                vc
                 titleTx
                 .txHash
                 (\data ->

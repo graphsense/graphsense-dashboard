@@ -1,7 +1,6 @@
 module Config.Update exposing (Config)
 
 import Color exposing (Color)
-import Dict exposing (Dict)
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
 

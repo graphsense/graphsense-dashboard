@@ -8,15 +8,18 @@ import Plugin.Sub as Plugin
 import Ports
 import Sub.Graph as Graph
 import Sub.Locale as Locale
+import Sub.Pathfinder as Pathfinder
 import Time
 
 
 subscriptions : Model Nav.Key -> Sub Msg
 subscriptions model =
-    [ Locale.subscriptions model.locale
+    [ Locale.subscriptions model.config.locale
         |> Sub.map LocaleMsg
     , Graph.subscriptions model.graph
         |> Sub.map GraphMsg
+    , Pathfinder.subscriptions model.pathfinder
+        |> Sub.map PathfinderMsg
     , Browser.Events.onResize
         BrowserChangedWindowSize
     , case model.user.auth of

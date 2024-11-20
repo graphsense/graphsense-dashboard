@@ -1,4 +1,4 @@
-module PluginInterface.Msg exposing (..)
+module PluginInterface.Msg exposing (OutMsg(..), mapOutMsg)
 
 import Api.Data
 import Browser.Dom
@@ -47,6 +47,8 @@ type OutMsg msg addressMsg entityMsg
     | ApiRequest (Api.Effect msg)
       -- show dialog
     | ShowDialog (Model.Dialog.Model msg)
+      -- close dialog
+    | CloseDialog
       -- load address into graph
     | LoadAddressIntoGraph Address
 
@@ -107,6 +109,9 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         ShowDialog dialog ->
             Update.Dialog.mapMsg mapMsg dialog
                 |> ShowDialog
+
+        CloseDialog ->
+            CloseDialog
 
         LoadAddressIntoGraph a ->
             LoadAddressIntoGraph a

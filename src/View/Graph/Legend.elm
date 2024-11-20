@@ -1,4 +1,4 @@
-module View.Graph.Legend exposing (..)
+module View.Graph.Legend exposing (legend)
 
 import Config.View as View
 import Css

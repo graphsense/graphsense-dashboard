@@ -1,4 +1,4 @@
-module Model.Graph.Table.AddressTagsTable exposing (..)
+module Model.Graph.Table.AddressTagsTable exposing (filter)
 
 import Api.Data
 import Config.Graph as Graph

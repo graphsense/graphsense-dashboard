@@ -1,4 +1,4 @@
-module Model.Entity exposing (..)
+module Model.Entity exposing (Entity, Entitylink, decoder, encoder, fromId)
 
 import Json.Decode
 import Json.Encode

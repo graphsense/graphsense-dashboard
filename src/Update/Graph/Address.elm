@@ -1,4 +1,4 @@
-module Update.Graph.Address exposing (..)
+module Update.Graph.Address exposing (insertAddressShadowLink, move, release, translate, updateColor, updateTags)
 
 import Api.Data
 import Color exposing (Color)
