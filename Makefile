@@ -81,6 +81,7 @@ plugin-theme:
 
 gen:
 	rm -rf generated/*
+	mkdir -p generated
 	-node generate.js
 	make setem
 	-make theme
