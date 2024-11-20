@@ -415,6 +415,7 @@ Save: Speichern
 Screenshot: Als Bild speichern
 Selection tool: Auswahl Werkzeug
 Display Settings: Anzeige Einstellungen
+Display settings: Anzeige Einstellungen
 Open: Öffnen
 "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel.": "Die automatische Nachverfolgung endet an Adressen von Diensten, da die Vermögensströme in der Regel nicht über diese Dienste verfolgt werden können. Diese Einschränkung ist darauf zurückzuführen, dass Dienste oft als Blackboxen fungieren und Gelder von Nutzern vermischen. Sie können ausgehende Transaktionen immer noch manuell verfolgen, indem Sie die im Seitenbereich verfügbaren Verfolgungsoptionen verwenden."
 Copy address ID: Adress ID kopieren

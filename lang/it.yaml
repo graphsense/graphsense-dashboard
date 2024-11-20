@@ -36,10 +36,12 @@ first usage: primo utilizzo
 last usage: ultimo utilizzo
 activity period: periodo di attività
 total received: totale ricevuto
+total sent: totale inviato
 "total received {0}": totale ricevuto {0}
 final balance: saldo finale
 "final balance {0}": saldo finale {0}
 entity balance: saldo dell'entità
+Balance: saldo
 "entity balance {0}": saldo dell'entità {0}
 address balance: saldo dell'indirizzo
 "address balance {0}": saldo dell'indirizzo {0}
@@ -311,3 +313,101 @@ Start a new investigation: inizia una nuova investigazione
 or: oppure
 Load graph from .gs file: carica grafico da un file .gs
 try an example: prova un esempio
+open in new tab: Aprire in una nuova scheda
+show zero value transactions: Visualizzare le transazioni senza valore
+no rows match your filter criteria: O le righe corrispondono ai criteri del filtro
+add label: Aggiungere l'etichetta 
+pick a color to highlight things: Scegliere un colore per evidenziare le cose
+Reset Filter: Azzeramento del filtro
+open: Aperto
+restart: Riavvio
+In- and Outputs: In- e Outputs
+Total Input: Ingressi
+Total Output: Uscite
+Settings: Impostazioni
+Number of addresses: Numero di indirizzi
+Cluster Information: Informazioni sul cluster
+Cluster information: Informazioni sul cluster
+Cluster has additional tags: Il cluster ha tag aggiuntivi
+Date: Data
+Show timezone: Mostra il fuso orario
+Highlight clusters: Evidenziare i cluster
+Show timestamp: Mostra il timestamp
+Selection Tool: Selezionare
+Move Tool: Muoversi
+more...: di più...
+Display: Display
+copy to clipboard: copia negli appunti
+copied!: copiato!
+Tag Label: Annotazione
+Confidence: Fiducia
+Last Modified: Ultima modifica
+Sources: Fonti
+Mentions: Menzioni
+High: Elevate
+Medium: Medie
+Low: Basse
+Detailed Tracing: Tracciamento dettagliato
+Aggregated Network: Panoramica della rete
+Center graph: Grafico centrale
+Cluster has addidional tags: Il cluster ha annotazioni aggiuntive
+show more...: di più...
+show less...: meno...
+less...: meno...
+No records found: Nessun record trovato
+From Address: Da
+To Address: A
+Token-Transaction: Transazione con token
+Sub-Transaction: Transazione
+Sender: Mittente
+Receiver: Ricevitore
+Show date in user locale: Mostra la data nel locale dell'utente
+Values: Presentazione dei valori
+Show Shadow Links ...: Enfatizzare le connessioni ...
+Overview Network: Panoramica della rete
+General: Generale
+Highlight on graph: Evidenziazione sul grafico
+Request limit: Limite di richiesta
+Expiration: Data di scadenza
+Next: Ulteriori
+Previous: Indietro
+Page: Pagina
+Snap to Grid: Allineamento alla griglia
+Clear dashboard?: Cruscotto chiaro?
+You will not be able to recover it.: Le modifiche non salvate vengono scartate.
+Yes, delete all: Sì, eliminare tutti
+Please select...: Selezionare...
+Please choose a crypto ledger: Scegliere un crypto ledger
+contract creation: Contratto creato
+Token holdings: Saldo del Token
+Show in fiat: Mostra in Fiat
+Preferred fiat currency: Valuta fiat preferita
+Show exact values: Mostra i valori esatti
+Amount in Fiat: In moneta fiat
+with zone code: con fuso orario
+Plan Details: Dettagli dell'abbonamento
+Never: Mai
+Expires on: Data di scadenza
+Usage Limit: Limite di utilizzo
+Color: Colore
+Transactions: Transazioni
+Save: Risparmiare
+Screenshot: Salva come immagine
+Selection tool: Selezione dello strumento
+Display Settings: Impostazioni del display
+Display settings: Impostazioni del display
+Open: Aperto
+Copy address ID: Copia indirizzo ID
+Copy transaction ID: Copia dell'ID della transazione
+Remove from Graph: Rimuovere dal grafico
+victim: Vittima
+perpetrator: Autore del reato
+"Auto trace limit": "Limite di tracciamento automatico"
+"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Impossibile trovare una transazione adiacente adeguata per l'indirizzo {0}. Questo probabilmente perché i fondi non sono ancora stati spesi."
+is an exchange: è uno scambio
+has tags: ha Annotationen
+"Tag label": "Annotazione"
+copy: copia
+possible service: possibile servizio
+Save file: Salva come file
+change: cambiamento
