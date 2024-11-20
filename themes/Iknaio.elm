@@ -9,7 +9,8 @@ import RecordSetter exposing (..)
 import Theme.Autocomplete as Autocomplete
 import Theme.Browser as Browser
 import Theme.Button as Button
-import Theme.Colors as NewColors
+import Theme.Colors
+import Theme.ColorsDark
 import Theme.ContextMenu as ContextMenu
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
@@ -75,13 +76,13 @@ colors =
     , brandText = { dark = rgb255 236 243 249, light = rgb255 51 51 51 }
     , brandDarker = { dark = rgb255 236 243 249, light = rgb255 113 133 138 }
     , brandDark = { dark = rgb255 211 227 241, light = rgb255 113 161 165 }
-    , brandBase = { dark = rgb255 132 165 194, light = rgb255 107 203 186 }
-    , brandLight = { dark = rgb255 70 109 145, light = rgb255 151 219 207 }
+    , brandBase = { dark = Theme.ColorsDark.newGreen_color, light = Theme.Colors.newGreen_color }
+    , brandLight = { dark = Theme.ColorsDark.greenText_color, light = Theme.Colors.greenText_color }
     , brandLighter = { dark = rgb255 7 69 116, light = rgb255 210 236 237 }
-    , brandLightest = { dark = rgb255 5 50 84, light = rgb255 248 250 252 }
+    , brandLightest = { dark = Theme.ColorsDark.greyBlue100_color, light = Theme.Colors.greyBlue100_color }
     , brandRed = { dark = rgb255 185 86 86, light = rgb255 204 106 66 }
     , brandRedLight = { dark = rgb255 241 182 182, light = rgb255 238 204 190 }
-    , brandWhite = { dark = rgb255 3 31 53, light = rgb255 255 255 255 }
+    , brandWhite = { dark = Theme.ColorsDark.white_color, light = Theme.Colors.white_color }
     }
 
 
@@ -289,9 +290,9 @@ theme =
             )
         |> s_copyIcon
             (\lightmode ->
-                [ colorWithLightmode lightmode colors.brandBase
+                [ colorWithLightmode lightmode colors.brandLight
                 , hover
-                    [ switchColor lightmode colors.brandBase |> toCssColor |> color
+                    [ switchColor lightmode colors.brandLight |> toCssColor |> color
                     ]
                 , active
                     [ switchColor lightmode colors.brandDark |> toCssColor |> color
@@ -1350,7 +1351,7 @@ theme =
             (Statusbar.default
                 |> s_root
                     (\lightmode visible ->
-                        [ Css.property "background-color" NewColors.white
+                        [ Css.property "background-color" Theme.Colors.white
                         , (if visible then
                             50
 
