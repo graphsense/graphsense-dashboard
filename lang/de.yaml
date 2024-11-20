@@ -424,7 +424,7 @@ Remove from Graph: Vom Graphen entfernen
 victim: Opfer
 perpetrator: Täter
 "Auto trace limit": "Beschränkung der Auto-Nachverfolgung"
-"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Warscheinlich würden der Betrag noch nicht weiter verwendet."
+"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Wahrscheinlich würden der Betrag noch nicht weiter verwendet."
 is an exchange: ist eine Handelbörse
 has tags: hat Tags
 "Tag label": "Beschriftung"
@@ -432,3 +432,4 @@ copy: kopieren
 possible service: mögl. service
 Save file: Als Datei speichen
 change: retour
+transaction tracing not possible: Transaktions-Verfolgung nicht möglich
