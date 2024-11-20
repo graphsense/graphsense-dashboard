@@ -91,6 +91,7 @@ type Msg
     | UserClickedContextMenuIdToClipboard ContextMenuType
     | UserClosesContextMenu
     | RuntimePostponedUpdateByRoute Route
+    | BrowserWaitedAfterReleasingMouseButton
 
 
 type DisplaySettingsMsg

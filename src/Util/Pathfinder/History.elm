@@ -222,3 +222,6 @@ shallPushHistory msg _ =
 
         RuntimePostponedUpdateByRoute _ ->
             False
+
+        BrowserWaitedAfterReleasingMouseButton ->
+            False

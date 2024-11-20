@@ -7,7 +7,7 @@ import Css.Reset
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Events exposing (onClick, onMouseUp)
 import Model exposing (Auth(..), Model, Msg(..), Page(..))
 import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)

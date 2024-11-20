@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fromDeserialized, update, updateByRoute)
+module Update.Pathfinder exposing (deserialize, fromDeserialized, unselect, update, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -52,6 +52,7 @@ import Msg.Search as Search
 import Number.Bounded exposing (value)
 import Plugin.Update exposing (Plugins)
 import Ports
+import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route as GlobalRoute
@@ -322,6 +323,7 @@ updateByMsg plugins uc msg model =
                         |> s_tooltip Nothing
                         |> s_toolbarHovercard Nothing
                         |> s_contextMenu Nothing
+                        |> unselect
             in
             if click then
                 ( m1
@@ -337,7 +339,7 @@ updateByMsg plugins uc msg model =
             fitGraph uc model
                 |> n
 
-        UserReleasesMouseButton ->
+        BrowserWaitedAfterReleasingMouseButton ->
             case model.dragging of
                 NoDragging ->
                     n model
@@ -398,6 +400,27 @@ updateByMsg plugins uc msg model =
                                     | dragging = NoDragging
                                     , pointerTool = Drag
                                 }
+
+                        Drag ->
+                            n model
+
+                DraggingNode _ _ _ ->
+                    n model
+
+        UserReleasesMouseButton ->
+            case model.dragging of
+                NoDragging ->
+                    n model
+
+                Dragging _ _ _ ->
+                    case model.pointerTool of
+                        Select ->
+                            ( model
+                            , Process.sleep 0
+                                |> Task.perform (\_ -> BrowserWaitedAfterReleasingMouseButton)
+                                |> CmdEffect
+                                |> List.singleton
+                            )
 
                         Drag ->
                             n
@@ -1590,15 +1613,40 @@ selectAddress uc id model =
 unselect : Model -> Model
 unselect model =
     let
+        unselectAddress a nw =
+            Network.updateAddress a (s_selected False) nw
+
+        unselectTx a nw =
+            Network.updateTx a (s_selected False) nw
+
         network =
             case model.selection of
                 SelectedAddress a ->
-                    Network.updateAddress a (s_selected False) model.network
+                    unselectAddress a model.network
 
                 SelectedTx a ->
-                    Network.updateTx a (s_selected False) model.network
+                    unselectTx a model.network
 
-                _ ->
+                MultiSelect aa ->
+                    aa
+                        |> List.foldl
+                            (\m nw ->
+                                case m of
+                                    MSelectedAddress a ->
+                                        unselectAddress a nw
+
+                                    MSelectedTx a ->
+                                        unselectTx a nw
+                            )
+                            model.network
+
+                WillSelectTx _ ->
+                    model.network
+
+                WillSelectAddress _ ->
+                    model.network
+
+                NoSelection ->
                     model.network
     in
     network
