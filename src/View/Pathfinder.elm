@@ -66,7 +66,7 @@ import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-import Util.View exposing (copyIconPathfinder, hovercard, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, hovercard, none, onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Controls as Vc
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
@@ -1480,18 +1480,21 @@ dateRangePickerSelectionView vc model =
                         >> Locale.timestampDateUniform vc.locale
                     )
                 |> Maybe.withDefault ""
+
+        open =
+            [ onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker)
+            , css [ Css.cursor Css.pointer ]
+            ]
     in
     SidePanelComponents.sidePanelListFilterRowWithInstances
         (SidePanelComponents.sidePanelListFilterRowAttributes
             |> Rs.s_sidePanelListFilterRow [ css fullWidth ]
             |> Rs.s_iconsCloseBlack
-                [ onClick (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker)
+                [ onClickWithStop (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker)
                 , css [ Css.cursor Css.pointer ]
                 ]
-            |> Rs.s_framedIcon
-                [ onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker)
-                , css [ Css.cursor Css.pointer ]
-                ]
+            |> Rs.s_framedIcon open
+            |> Rs.s_timePicker open
         )
         (SidePanelComponents.sidePanelListFilterRowInstances
             |> Rs.s_timePicker
