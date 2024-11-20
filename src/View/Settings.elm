@@ -2,12 +2,12 @@ module View.Settings exposing (view)
 
 import Config.View exposing (Config)
 import Css
-import Html.Styled exposing (Html)
+import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), SettingsTabs(..), UserModel)
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View exposing (Plugins)
+import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as Icons
@@ -21,7 +21,7 @@ import View.Locale as Locale
 
 
 view : Plugins -> Config -> Model x -> Html Model.Msg
-view _ vc m =
+view plugins vc m =
     -- let
     -- tbs =
     --     Vc.tabs
@@ -54,7 +54,7 @@ view _ vc m =
             { instance =
                 case m.selectedSettingsTab of
                     GeneralTab ->
-                        generalSettings vc m
+                        generalSettings plugins vc m
 
                     GraphTab ->
                         graphSettings vc m
@@ -77,8 +77,8 @@ graphSettings _ _ =
     Util.View.none
 
 
-generalSettings : Config -> Model x -> Html Model.Msg
-generalSettings vc m =
+generalSettings : Plugins -> Config -> Model x -> Html Model.Msg
+generalSettings plugins vc m =
     let
         usdSelected =
             vc.preferredFiatCurrency == "usd"
@@ -135,7 +135,7 @@ generalSettings vc m =
             , settingsItemLabelOfSettingsLanguageItem = { text = Locale.string vc.locale "Language" }
             , settingsItemLabelOfSettingsModeItem = { text = Locale.string vc.locale "Mode" }
             , settingsItemLabelOfSettingsTimeZoneItem = { text = Locale.string vc.locale "Timezone" }
-            , settingsSectionHeader = { text = Locale.string vc.locale "Plan Details" }
+            , settingsSectionHeaderOfPlanDetails = { text = Locale.string vc.locale "Plan Details" }
             , settingsExpirationRow3 =
                 { secondaryTextVisible = False
                 , secondaryValueText = ""
@@ -149,14 +149,43 @@ generalSettings vc m =
                 , valueText = rqlPrim
                 }
             }
+
+        pluginProfiles =
+            Plugin.profile plugins m.plugins vc
     in
     Sp.settingsPageGeneralWithInstances
-        Sp.settingsPageGeneralAttributes
+        (Sp.settingsPageGeneralAttributes
+            |> Rs.s_pluginSettingsList
+                [ css
+                    (if List.isEmpty pluginProfiles then
+                        [ Css.display Css.none
+                        ]
+
+                     else
+                        [ Css.height Css.auto
+                        ]
+                    )
+                ]
+        )
         (Sp.settingsPageGeneralInstances
             |> Rs.s_toggleSwitchText (Just currencyToggle)
             |> Rs.s_languageDropDown (Just languageSb)
             |> Rs.s_settingsTimeZoneItem (Just Util.View.none)
         )
+        { pluginSettingsList =
+            pluginProfiles
+                |> List.map
+                    (\( title, part ) ->
+                        div
+                            [ css Sp.settingsPageGeneralPlanDetails_details.styles
+                            , css [ Css.height Css.auto |> Css.important ]
+                            ]
+                            [ Sp.settingsSectionHeader
+                                { settingsSectionHeader = { text = title } }
+                            , part
+                            ]
+                    )
+        }
         generalSettingsProperties
 
 
