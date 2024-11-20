@@ -48,12 +48,10 @@ view plugins vc model =
             Theme.ColorsDark.style
           )
             |> toUnstyled
-
-        {- , node "style" [] [ text """
-           * {
-               transition: color 0.5s, background-color 0.5s;
+        , node "style" [] [ text """
+           body {
+               overflow: hidden;
            }""" ] |> toUnstyled
-        -}
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
         , body plugins vc model |> toUnstyled
         ]
