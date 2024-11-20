@@ -968,7 +968,7 @@ theme =
                            else
                             color
                                 |> Maybe.withDefault
-                                    (Util.Theme.switchColor lightmode colors.grey)
+                                    (Util.Theme.switchColor lightmode colors.black)
                           )
                             |> Color.toCssString
                             |> property "fill"
