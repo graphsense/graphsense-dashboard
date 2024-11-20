@@ -81,11 +81,11 @@ plugin-theme:
 
 gen:
 	rm -rf generated/*
-	mkdir -p generated
+	cp elm.json.base elm.json
+	make setem # for codegen/generated
 	-node generate.js
-	make setem
 	-make theme
-	make setem
+	make setem # for theme related recordsetters
 	
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme
