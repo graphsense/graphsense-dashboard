@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [24.11.0] - 2024-11-20
+
+### Added
+- Pathfinder 2.0 for transaction level tracing
+
+### Changed
+- Color scheme, side panel and user settings overhauled
+
 ## [24.04.0] - 2024-04-05
 
 ### Changed
