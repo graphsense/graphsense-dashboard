@@ -168,7 +168,11 @@ formatWithValueDetail : Model -> String -> String
 formatWithValueDetail model fmtStr =
     case model.valueDetail of
         Exact ->
-            fmtStr ++ "[00000000000000000]"
+            if model.currency == Coin then
+                fmtStr ++ "[00000000000000000]"
+
+            else
+                fmtStr ++ "0"
 
         Magnitude ->
             if String.endsWith fmtStr "a" then
