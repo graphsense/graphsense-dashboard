@@ -263,11 +263,11 @@ copyIconWithAttrPathfinder attr vc value =
                         ]
                     |> s_triangle
                         [ css
-                            [ Css.px -3 |> Css.top
+                            [ Css.px 1 |> Css.left
                             ]
                         ]
                 )
-                { copyShortcut = { hint = Locale.string vc.locale "Copy to clipboard" }
+                { copyShortcut = { hint = Locale.string vc.locale "Copy" }
                 }
             ]
         ]
