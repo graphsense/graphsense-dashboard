@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import elmPlugin from "vite-plugin-elm";
-const fs = require('fs');
+import fs from 'fs';
 
 /** @type {import('vite').Plugin} */
 const base64Loader = {
@@ -21,12 +21,14 @@ export default defineConfig({
   plugins: [elmPlugin(), base64Loader],
   server: { 
     host: '0.0.0.0',
+    port: 3000,
     hmr : { overlay : false }
   },
   publicDir: "generated/public",
   build: { 
     outDir: 'dist', 
-    minify: 'terser'
+    minify: 'terser',
+    sourcemap: false
   },
 
 });

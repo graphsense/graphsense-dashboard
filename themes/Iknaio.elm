@@ -1415,11 +1415,6 @@ theme =
                         ]
                     )
             )
-        |> s_custom
-            -- need to put these special references in separate string expressions to make the vite resolution work
-            ("[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/fonts/Octarine-Light/fonts.css]"
-                ++ " ::placeholder { color: inherit; opacity: 0.5 }"
-            )
 
 
 scaled : Float -> Float
