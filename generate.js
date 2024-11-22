@@ -29,9 +29,24 @@ fse.copySync(publicFolder, genPublicFolder, {recursive: true})
 fse.copySync(langFolder, genLangFolder, {recursive: true})
 
 console.log('Installing plugins:')
-const plugins = fs.readdirSync(pluginsFolder)
+let plugins = fs.readdirSync(pluginsFolder)
   .filter(fileName => isDir(path.join(pluginsFolder, fileName)))
-  .map(plugin => {
+
+plugins.sort((a, b) => {
+  // Check if strings end with '_preview'
+  const aEndsWithPreview = a.endsWith("_preview");
+  const bEndsWithPreview = b.endsWith("_preview");
+
+  // If both or neither strings end with '_preview', sort them lexicographically
+  if (aEndsWithPreview === bEndsWithPreview) {
+    return a.localeCompare(b);
+  }
+
+  // If only one string ends with '_preview', place it after the other
+  return aEndsWithPreview ? 1 : -1;
+});
+
+plugins = plugins.map(plugin => {
     console.log(plugin)
     return { 
       name : plugin,
