@@ -25,8 +25,8 @@ addresses plugins vc gc colors clusters annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
-            , (Annotations.getAnnotation id annotations)
-                |> Svg.lazy7 Address.view plugins vc gc colors address (flip Dict.get clusters) 
+            , Annotations.getAnnotation id annotations
+                |> Svg.lazy7 Address.view plugins vc gc colors address (flip Dict.get clusters)
             )
                 :: svg
         )
@@ -39,7 +39,7 @@ txs plugins vc gc annotations =
     Dict.foldl
         (\id tx svg ->
             ( Id.toString id
-            , (Annotations.getAnnotation id annotations)
+            , Annotations.getAnnotation id annotations
                 |> Svg.lazy5 Tx.view plugins vc gc tx
             )
                 :: svg

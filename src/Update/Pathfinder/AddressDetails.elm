@@ -3,7 +3,6 @@ module Update.Pathfinder.AddressDetails exposing (showTransactionsTable, update)
 import Basics.Extra exposing (flip)
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
-import Util exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
@@ -23,6 +22,7 @@ import Tuple exposing (mapFirst)
 import Update.DateRangePicker as DateRangePicker
 import Update.Graph.Table
 import Update.Pathfinder.PagedTable as PT
+import Util exposing (n)
 
 
 update : Update.Config -> Pathfinder.Model -> Msg -> Id -> Model -> ( Model, List Effect )

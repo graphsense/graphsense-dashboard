@@ -24,7 +24,7 @@ view plugins vc gc tx annotation =
 
         Account t ->
             annotation
-            |> AccountTx.view plugins vc gc tx t
+                |> AccountTx.view plugins vc gc tx t
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Tx -> ( String, Svg Msg )

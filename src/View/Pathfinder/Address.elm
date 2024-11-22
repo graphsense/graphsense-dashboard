@@ -111,13 +111,14 @@ view _ vc _ colors address getCluster annotation =
                             Nothing
                     )
 
-        offset = 
-            2 +
-            if nodeLabel == Nothing then
-                -GraphComponents.addressNodeExchangeLabel_details.height
+        offset =
+            2
+                + (if nodeLabel == Nothing then
+                    -GraphComponents.addressNodeExchangeLabel_details.height
 
-               else
-                0
+                   else
+                    0
+                  )
 
         ( annAttr, label ) =
             annotation
