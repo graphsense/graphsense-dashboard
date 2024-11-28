@@ -39,7 +39,8 @@ config vc =
                         data.address
                     ]
                 )
-            , T.stringColumn styles vc "Entity" (.entity >> String.fromInt)
+
+            -- , T.stringColumn styles vc "Entity" (.entity >> String.fromInt)
             , T.stringColumn styles vc "Currency" (.currency >> String.toUpper)
             , T.stringColumn styles vc "Label" .label
             , T.htmlColumn styles

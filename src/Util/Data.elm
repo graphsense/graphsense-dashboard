@@ -53,7 +53,7 @@ absValues x =
 
 negateTxValue : Api.Data.TxValue -> Api.Data.TxValue
 negateTxValue tv =
-    { address = tv.address, value = negateValues tv.value }
+    { address = tv.address, index = tv.index, value = negateValues tv.value }
 
 
 addValues : Api.Data.Values -> Api.Data.Values -> Api.Data.Values

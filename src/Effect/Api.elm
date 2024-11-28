@@ -580,7 +580,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityForAddressEffect { currency, address } toMsg ->
-            Api.Request.Addresses.getAddressEntity currency address
+            Api.Request.Addresses.getAddressEntity currency address Nothing
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
@@ -641,7 +641,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxEffect { currency, txHash, tokenTxId, includeIo } toMsg ->
-            Api.Request.Txs.getTx currency txHash (Just includeIo) tokenTxId
+            Api.Request.Txs.getTx currency txHash (Just includeIo) Nothing Nothing tokenTxId
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
@@ -653,7 +653,7 @@ perform apiKey wrapMsg effect =
                     else
                         Api.Request.Txs.IoInputs
             in
-            Api.Request.Txs.getTxIo currency txHash io
+            Api.Request.Txs.getTxIo currency txHash io Nothing Nothing
                 |> send apiKey wrapMsg effect toMsg
 
         SearchEntityNeighborsEffect e toMsg ->
