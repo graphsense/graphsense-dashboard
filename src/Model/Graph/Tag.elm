@@ -36,7 +36,7 @@ type alias Input =
 
 
 userTagToApiTag : { currency : String, entity : Int, address : String } -> Bool -> UserTag -> Api.Data.AddressTag
-userTagToApiTag { currency, address} isClusterDefiner tag =
+userTagToApiTag { currency, address } isClusterDefiner tag =
     { abuse = tag.abuse
     , address = address
 

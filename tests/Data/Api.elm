@@ -16,13 +16,13 @@ tx1 : Api.Data.TxUtxo
 tx1 =
     let
         outputs =
-            [ { address = [ Id.address3 |> Id.id ], value = values }
-            , { address = [ Id.address4 |> Id.id ], value = values }
-            , { address = [ Id.address5 |> Id.id ], value = values }
+            [ { address = [ Id.address3 |> Id.id ], value = values, index = Nothing }
+            , { address = [ Id.address4 |> Id.id ], value = values, index = Nothing }
+            , { address = [ Id.address5 |> Id.id ], value = values, index = Nothing }
             ]
 
         inputs =
-            [ { address = [ Id.address1 |> Id.id ], value = values }
+            [ { address = [ Id.address1 |> Id.id ], value = values, index = Nothing }
             ]
     in
     { coinbase = False
@@ -44,11 +44,11 @@ tx2 : Api.Data.TxUtxo
 tx2 =
     let
         inputs =
-            [ { address = [ Id.address6 |> Id.id ], value = values }
+            [ { address = [ Id.address6 |> Id.id ], value = values, index = Nothing }
             ]
 
         outputs =
-            [ { address = [ Id.address1 |> Id.id ], value = values }
+            [ { address = [ Id.address1 |> Id.id ], value = values, index = Nothing }
             ]
     in
     { coinbase = False
@@ -70,11 +70,11 @@ tx3 : Api.Data.TxUtxo
 tx3 =
     let
         inputs =
-            [ { address = [ Id.address1 |> Id.id ], value = values }
+            [ { address = [ Id.address1 |> Id.id ], value = values, index = Nothing }
             ]
 
         outputs =
-            [ { address = [ Id.address7 |> Id.id ], value = values }
+            [ { address = [ Id.address7 |> Id.id ], value = values, index = Nothing }
             ]
     in
     { coinbase = False
