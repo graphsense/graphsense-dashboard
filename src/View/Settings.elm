@@ -42,7 +42,15 @@ view plugins vc m =
         (Sp.settingsPageAttributes
             |> Rs.s_backButton [ css [ Css.cursor Css.pointer ], onClick UserClickedNavBack ]
             |> Rs.s_settingsPage
-                [ css [ Css.flexGrow <| Css.num 1 ]
+                [ css
+                    [ Css.flexGrow <| Css.num 1
+                    , Css.width Css.auto
+                    , Css.height Css.auto
+                    , Css.alignItems Css.stretch
+                    ]
+                ]
+            |> Rs.s_settingsFrame
+                [ css [ Css.alignItems Css.stretch ]
                 ]
         )
         (Sp.settingsPageInstances
@@ -167,7 +175,12 @@ generalSettings plugins vc m =
                     )
                 ]
             |> Rs.s_planDetails [ css [ Css.height Css.auto ] ]
-            |> Rs.s_settingsPageGeneral [ css [ Css.height Css.auto ] ]
+            |> Rs.s_settingsPageGeneral
+                [ css
+                    [ Css.height Css.auto
+                    , Css.alignItems Css.stretch
+                    ]
+                ]
         )
         (Sp.settingsPageGeneralInstances
             |> Rs.s_toggleSwitchText (Just currencyToggle)

@@ -38,30 +38,23 @@ minHeight w =
 
 width : Maybe Float -> LayoutGrow -> LayoutSizingHorizontal -> Rectangle -> Maybe Elm.Expression
 width minW grow sizing r =
-    if grow == LayoutGrow1 then
-        Css.num 1
-            |> Css.flexGrow
-            |> Just
-
-    else
-        case sizing of
-            LayoutSizingHorizontalFIXED ->
-                if minW == Nothing || minW == Just 0 then
-                    r.width
-                        |> Css.px
-                        |> Css.width
-                        |> Just
-
-                else
-                    Nothing
-
-            LayoutSizingHorizontalFILL ->
-                Css.pct 100
+    case sizing of
+        LayoutSizingHorizontalFIXED ->
+            if minW == Nothing || minW == Just 0 then
+                r.width
+                    |> Css.px
                     |> Css.width
                     |> Just
 
-            _ ->
+            else
                 Nothing
+
+        LayoutSizingHorizontalFILL ->
+            Css.property "align-self" "stretch"
+                |> Just
+
+        _ ->
+            Nothing
 
 
 height : Maybe Float -> LayoutSizingVertical -> Rectangle -> Maybe Elm.Expression
@@ -78,8 +71,7 @@ height minH sizing r =
                 Nothing
 
         LayoutSizingVerticalFILL ->
-            Css.pct 100
-                |> Css.height
+            Css.property "align-self" "stretch"
                 |> Just
 
         _ ->

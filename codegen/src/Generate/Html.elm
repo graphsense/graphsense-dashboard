@@ -473,6 +473,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
             else
                 Gen.Html.Styled.call_.div
                     (getElementAttributes config name
+                        --|> Elm.Op.cons (Attributes.id name)
                         |> Elm.Op.append
                             (Generate.Common.DefaultShapeTraits.positionRelatively config node.frameTraits
                                 ++ cssDimensionsIfAbsolute node.frameTraits
