@@ -12,8 +12,6 @@ import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
-import Gen.Svg.Styled
-import Gen.Svg.Styled.Attributes
 import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty, wrapInSvg)
 import Generate.Common.DefaultShapeTraits
 import Generate.Common.FrameTraits
@@ -26,7 +24,7 @@ import Generate.Svg.EllipseNode
 import Generate.Svg.LineNode
 import Generate.Svg.RectangleNode
 import Generate.Svg.VectorNode
-import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, withVisibility)
+import Generate.Util exposing (callStyles, detailsToDeclaration, getElementAttributes, sanitize, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details)
@@ -65,7 +63,19 @@ subcanvasNodeToExpressions config name node =
                 []
 
             else
-                instanceNodeToExpressions config name n
+                let
+                    config_ =
+                        { config
+                            | instanceName =
+                                -- store the name of the highest level instance node
+                                if config.instanceName == "" then
+                                    Generate.Common.FrameTraits.getName n
+
+                                else
+                                    config.instanceName
+                        }
+                in
+                instanceNodeToExpressions config_ name n
 
         SubcanvasNodeRectangleNode n ->
             if Generate.Common.DefaultShapeTraits.isHidden n.rectangularShapeTraits then
@@ -220,6 +230,9 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                                 , instances = instances
                                 , children = Elm.record []
                                 , colorMap = colorMap
+                                , parentName = parentName
+                                , componentName = details.name
+                                , instanceName = ""
                                 }
                         in
                         withFrameTraitsNodeToExpression config details.name details.name node
@@ -247,6 +260,9 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                                 , instances = instances
                                 , children = children
                                 , colorMap = colorMap
+                                , parentName = parentName
+                                , componentName = details.name
+                                , instanceName = ""
                                 }
                         in
                         withFrameTraitsNodeToExpression config details.name details.name node
@@ -458,10 +474,11 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                 Gen.Html.Styled.call_.div
                     (getElementAttributes config name
                         |> Elm.Op.append
-                            (FrameTraits.toStyles config.colorMap node.frameTraits
-                                ++ Generate.Common.DefaultShapeTraits.positionRelatively config node.frameTraits
+                            (Generate.Common.DefaultShapeTraits.positionRelatively config node.frameTraits
                                 ++ cssDimensionsIfAbsolute node.frameTraits
-                                |> Attributes.css
+                                |> Elm.list
+                                |> Elm.Op.append (callStyles config name)
+                                |> Attributes.call_.css
                                 |> List.singleton
                                 |> Elm.list
                             )
@@ -589,7 +606,6 @@ subcanvasNodeToDetails colorMap node =
 
             else
                 Generate.Svg.RectangleNode.toDetails colorMap n
-                    |> s_styles []
                     |> List.singleton
 
         SubcanvasNodeVectorNode n ->
@@ -598,7 +614,6 @@ subcanvasNodeToDetails colorMap node =
 
             else
                 Generate.Svg.VectorNode.toDetails colorMap n.cornerRadiusShapeTraits
-                    |> s_styles []
                     |> List.singleton
 
         SubcanvasNodeLineNode n ->
@@ -607,7 +622,6 @@ subcanvasNodeToDetails colorMap node =
 
             else
                 Generate.Svg.LineNode.toDetails colorMap n
-                    |> s_styles []
                     |> List.singleton
 
         SubcanvasNodeEllipseNode n ->
@@ -616,7 +630,6 @@ subcanvasNodeToDetails colorMap node =
 
             else
                 Generate.Svg.EllipseNode.toDetails colorMap n
-                    |> s_styles []
                     |> List.singleton
 
         _ ->

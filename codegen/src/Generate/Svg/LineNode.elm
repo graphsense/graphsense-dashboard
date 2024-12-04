@@ -37,8 +37,8 @@ renderPath { path } =
 toStrokePaths : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> Elm.Expression
 toStrokePaths config node =
     let
-        css =
-            toStyles config.colorMap node
+        name =
+            Common.getName node
     in
     node.defaultShapeTraits.strokeGeometry
         |> Maybe.andThen NList.fromList
@@ -47,10 +47,12 @@ toStrokePaths config node =
             (List.map renderPath
                 >> Elm.list
                 >> Gen.Svg.Styled.call_.g
-                    (Common.getName node
+                    (name
                         |> getElementAttributes config
                         |> Elm.Op.append
-                            ([ css |> Attributes.css ]
+                            (callStyles config name
+                                |> Attributes.call_.css
+                                |> List.singleton
                                 |> Elm.list
                             )
                     )

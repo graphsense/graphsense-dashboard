@@ -3,7 +3,6 @@ module Generate.Html.TextNode exposing (..)
 import Api.Raw exposing (..)
 import Elm
 import Elm.Op
-import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
@@ -11,23 +10,29 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Html.TypeStyle as TypeStyle
-import Generate.Util exposing (getElementAttributes, getTextProperty, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, getTextProperty, withVisibility)
 import Types exposing (ColorMap, Config, Details)
 
 
 toExpressions : Config -> String -> TextNode -> List Elm.Expression
 toExpressions config componentName node =
+    let
+        name =
+            Common.getName node
+    in
     if Common.isHidden node then
         []
 
     else
-        Elm.get (Common.getName node) config.instances
+        Elm.get name config.instances
             |> Gen.Maybe.withDefault
                 (Gen.Html.Styled.call_.div
-                    (Common.getName node
+                    (name
                         |> getElementAttributes config
                         |> Elm.Op.append
-                            ([ toStyles config.colorMap node |> Attributes.css ]
+                            (callStyles config name
+                                |> Attributes.call_.css
+                                |> List.singleton
                                 |> Elm.list
                             )
                     )

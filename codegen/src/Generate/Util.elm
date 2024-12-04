@@ -1,11 +1,14 @@
 module Generate.Util exposing (..)
 
 import Api.Raw exposing (ComponentPropertyReferences, Rectangle, Transform)
+import Basics.Extra exposing (flip)
 import Dict exposing (Dict)
 import Elm exposing (Expression)
 import Elm.Annotation as Annotation
+import Gen.Css as Css
 import Gen.Svg.Styled
 import Maybe.Extra
+import RecordSetter exposing (s_annotation)
 import String.Case exposing (toCamelCaseLower)
 import String.Format as Format
 import Types exposing (ComponentPropertyExpressions, Config, Details)
@@ -199,18 +202,33 @@ toMatrix ( ( a_, c, e ), ( b, d, f ) ) =
         |> Format.value ([ a_, b, c, d, 0, 0 ] |> List.map String.fromFloat |> String.join ",")
 
 
+combineDetailsName : String -> String -> String -> String -> String
+combineDetailsName parentName componentName instanceName elementName =
+    parentName
+        :: componentName
+        :: (if componentName == elementName then
+                []
+
+            else
+                [ instanceName
+                , elementName
+                ]
+           )
+        |> combineNames
+        |> sanitize
+        |> flip (++) "_details"
+
+
+combineNames : List String -> String
+combineNames =
+    String.join " "
+
+
 detailsToDeclaration : String -> String -> Details -> Elm.Declaration
 detailsToDeclaration parentName componentName details =
     let
-        prefix =
-            parentName
-                ++ " "
-                ++ (if componentName == details.name then
-                        componentName
-
-                    else
-                        componentName ++ " " ++ details.instanceName ++ " " ++ details.name
-                   )
+        name =
+            combineDetailsName parentName componentName details.instanceName details.name
     in
     [ ( "x", Elm.float details.bbox.x )
     , ( "y", Elm.float details.bbox.y )
@@ -222,7 +240,21 @@ detailsToDeclaration parentName componentName details =
     , ( "styles", Elm.list details.styles )
     ]
         |> Elm.record
-        |> Elm.declaration (sanitize prefix ++ "_details")
+        |> Elm.declaration name
+
+
+callStyles : Config -> String -> Elm.Expression
+callStyles { parentName, componentName, instanceName } elementName =
+    let
+        name =
+            combineDetailsName parentName componentName instanceName elementName
+    in
+    Elm.value
+        { importFrom = []
+        , name = name
+        , annotation = Just (Annotation.list Css.annotation_.style)
+        }
+        |> Elm.get "styles"
 
 
 sanitize : String -> String
