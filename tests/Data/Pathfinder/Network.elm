@@ -1,4 +1,4 @@
-module Data.Pathfinder.Network exposing (empty, one2ThreeAddresses, one2TwoAddresses, one2TwoTxs2ThreeAddresses, oneAddress, oneAddressWithIncomingTx, oneAddressWithOutgoingTx, oneAddressWithTwoTxs, twoConnectedAddresses, twoIndependentAddresses)
+module Data.Pathfinder.Network exposing (empty, one2ThreeAddresses, one2TwoAddresses, one2TwoTxs2ThreeAddresses, one2TwoTxs2ThreeAddressesWithOverlapping, oneAddress, oneAddressWithIncomingTx, oneAddressWithOutgoingTx, oneAddressWithTwoTxs, twoConnectedAddresses, twoIndependentAddresses)
 
 import Data.Pathfinder.Address as Address
 import Data.Pathfinder.Id as Id
@@ -11,6 +11,22 @@ import Model.Pathfinder.Network exposing (Network)
 import RecordSetter exposing (s_address, s_incomingTxs)
 import Set
 import Update.Pathfinder.Tx as Tx
+
+
+
+{-
+                        TEST NETWORK
+
+                                   ------------------> (A8)
+                                  /                    /
+   (A6) --> (T2) --> (A1) --> (T1) --> (A3) --> (T4) --
+                         \      |\
+                     (A2) \     | ---> (A4)
+                           \    \
+                            \    ----> (A5)
+                             \
+                              (T3) --> (A7)
+-}
 
 
 empty : Network
@@ -36,7 +52,7 @@ oneAddressWithOutgoingTx =
             Dict.fromList
                 [ ( Id.tx1
                   , Tx.updateUtxo
-                        (Tx.updateUtxoIo Incoming Id.address1 (s_address (Just Address.address5)))
+                        (Tx.updateUtxoIo Incoming Id.address1 (s_address (Just Address.address1)))
                         Tx.tx1
                   )
                 ]
@@ -60,7 +76,7 @@ oneAddressWithIncomingTx =
             Dict.fromList
                 [ ( Id.tx2
                   , Tx.updateUtxo
-                        (Tx.updateUtxoIo Outgoing Id.address1 (s_address (Just Address.address5)))
+                        (Tx.updateUtxoIo Outgoing Id.address1 (s_address (Just Address.address1)))
                         Tx.tx2
                   )
                 ]
@@ -183,7 +199,46 @@ one2TwoTxs2ThreeAddresses =
                 |> Dict.update Id.tx3
                     (Maybe.map
                         (Tx.updateUtxo
-                            (Tx.updateUtxoIo Incoming Id.address1 (s_address (Just Address.address5)))
+                            (Tx.updateUtxoIo Incoming Id.address1 (s_address (Just Address.address1)))
+                        )
+                    )
+    }
+
+
+one2TwoTxs2ThreeAddressesWithOverlapping : Network
+one2TwoTxs2ThreeAddressesWithOverlapping =
+    let
+        address8 =
+            Address.address8
+                |> (\a ->
+                        { a
+                            | incomingTxs =
+                                [ Id.tx1, Id.tx4 ]
+                                    |> Set.fromList
+                                    |> Address.Txs
+                        }
+                   )
+    in
+    { one2TwoTxs2ThreeAddresses
+        | addresses =
+            Dict.update Id.address3
+                (Maybe.map
+                    (\address ->
+                        { address
+                            | outgoingTxs = Address.Txs (Set.insert Id.tx4 (Address.txsToSet address.outgoingTxs))
+                        }
+                    )
+                )
+                one2TwoTxs2ThreeAddresses.addresses
+                |> Dict.insert Id.address8 address8
+        , txs =
+            Dict.insert Id.tx4 Tx.tx4 one2TwoTxs2ThreeAddresses.txs
+                |> Dict.update Id.tx4
+                    (Maybe.map
+                        (Tx.updateUtxo
+                            (Tx.updateUtxoIo Incoming Id.address3 (s_address (Just Address.address3))
+                                >> Tx.updateUtxoIo Outgoing Id.address8 (s_address (Just Address.address8))
+                            )
                         )
                     )
     }

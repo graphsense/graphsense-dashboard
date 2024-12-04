@@ -1,4 +1,4 @@
-module Data.Pathfinder.Tx exposing (tx1, tx2, tx3)
+module Data.Pathfinder.Tx exposing (tx1, tx2, tx3, tx4)
 
 import Animation
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
@@ -70,5 +70,26 @@ tx3 =
             { outputs = Dict.singleton Id.address7 <| Io Api.values Nothing 1
             , inputs = Dict.singleton Id.address1 <| Io Api.values Nothing 1
             , raw = Api.tx3
+            }
+    }
+
+
+tx4 : Tx
+tx4 =
+    { id = Id.tx4
+    , x = 3 * nodeXOffset
+    , y = Animation.static 0
+    , dx = 0
+    , dy = 0
+    , selected = False
+    , opacity = Animation.static 0
+    , clock = 0
+    , isStartingPoint = False
+    , hovered = False
+    , type_ =
+        Tx.Utxo
+            { outputs = Dict.singleton Id.address8 <| Io Api.values Nothing 1
+            , inputs = Dict.singleton Id.address3 <| Io Api.values Nothing 1
+            , raw = Api.tx4
             }
     }

@@ -1,15 +1,17 @@
 module Test.Update.Pathfinder.Network exposing (suite)
 
+import Animation
 import Api.Data
 import Data.Api as Api
 import Data.Pathfinder.Id as Id
 import Data.Pathfinder.Network as Data
 import Dict
 import Expect exposing (Expectation)
+import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Network exposing (Network)
 import Test exposing (Test)
 import Tuple
-import Update.Pathfinder.Network as Network
+import Update.Pathfinder.Network as Network exposing (FindPosition(..))
 
 
 equal : Network -> Network -> Expectation
@@ -30,13 +32,35 @@ equalIds expected result =
         expected
 
 
+equalCoords : Network -> Network -> Expectation
+equalCoords expected result =
+    let
+        toCoords a =
+            { id = a.id
+            , x = a.x
+            , y = Animation.getTo a.y
+            }
+
+        resultTxs =
+            result.txs |> Dict.values |> List.map toCoords
+
+        resultAddresses =
+            result.addresses |> Dict.values |> List.map toCoords
+    in
+    Expect.all
+        [ \e -> Expect.equalLists (e.addresses |> Dict.values |> List.map toCoords) resultAddresses
+        , \e -> Expect.equalLists (e.txs |> Dict.values |> List.map toCoords) resultTxs
+        ]
+        expected
+
+
 suite : Test
 suite =
     Test.describe "Update.Pathfinder.Network"
         [ Test.test "addAddress 1" <|
             \_ ->
                 Network.addAddress Id.address1 Data.empty
-                    |> equalIds Data.oneAddress
+                    |> equal Data.oneAddress
         , Test.test "addAddress 1 again" <|
             \_ ->
                 Network.addAddress Id.address1 Data.oneAddress
@@ -59,16 +83,16 @@ suite =
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx2) Data.oneAddress
                     |> Tuple.second
-                    |> equalIds Data.oneAddressWithIncomingTx
+                    |> equalCoords Data.oneAddressWithIncomingTx
         , Test.test "add incoming after outgoing Tx 1" <|
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx2) Data.oneAddressWithOutgoingTx
                     |> Tuple.second
-                    |> equalIds Data.oneAddressWithTwoTxs
+                    |> equalCoords Data.oneAddressWithTwoTxs
         , Test.test "addAddress 3" <|
             \_ ->
                 Network.addAddress Id.address3 Data.oneAddressWithOutgoingTx
-                    |> equalIds Data.twoConnectedAddresses
+                    |> equalCoords Data.twoConnectedAddresses
         , Test.test "addAddress 3 again" <|
             \_ ->
                 Network.addAddress Id.address3 Data.twoConnectedAddresses
@@ -76,7 +100,7 @@ suite =
         , Test.test "addAddress 4" <|
             \_ ->
                 Network.addAddress Id.address4 Data.twoConnectedAddresses
-                    |> equalIds Data.one2TwoAddresses
+                    |> equalCoords Data.one2TwoAddresses
         , Test.test "addAddress 4 again" <|
             \_ ->
                 Network.addAddress Id.address4 Data.one2TwoAddresses
@@ -84,7 +108,7 @@ suite =
         , Test.test "addAddress 5" <|
             \_ ->
                 Network.addAddress Id.address5 Data.one2TwoAddresses
-                    |> equalIds Data.one2ThreeAddresses
+                    |> equalCoords Data.one2ThreeAddresses
         , Test.test "addAddress 5 again" <|
             \_ ->
                 Network.addAddress Id.address5 Data.one2ThreeAddresses
@@ -93,5 +117,11 @@ suite =
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx3) Data.one2ThreeAddresses
                     |> Tuple.second
-                    |> equalIds Data.one2TwoTxs2ThreeAddresses
+                    |> equalCoords Data.one2TwoTxs2ThreeAddresses
+        , Test.test "add overlapping tx+address" <|
+            \_ ->
+                Network.addTx (Api.Data.TxTxUtxo Api.tx4) Data.one2TwoTxs2ThreeAddresses
+                    |> Tuple.second
+                    |> Network.addAddressWithPosition (NextTo ( Outgoing, Id.tx4 )) Id.address8
+                    |> equalCoords Data.one2TwoTxs2ThreeAddressesWithOverlapping
         ]
