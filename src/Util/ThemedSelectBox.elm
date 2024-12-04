@@ -17,6 +17,7 @@ import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import List.Extra
 import RecordSetter as Rs
+import Theme.Html.Icons as Icons
 import Theme.Html.SelectionControls as Sc
 import Util.Css
 import Util.View
@@ -175,7 +176,10 @@ view (SelectBox sBox) selected =
                 |> Rs.s_dropDownListNormal (Just dropDownList)
                 |> Rs.s_text (Just selectedRow)
             )
-            { dropDownHeaderOpen = { text = "" }
+            { dropDownHeaderOpen =
+                { iconInstance = Icons.iconsChevronUpThick {}
+                , text = ""
+                }
             , dropDownLabels3 = { variant = Util.View.none }
             , dropDownLabels4 = { variant = Util.View.none }
             , dropDownLabels5 = { variant = Util.View.none }

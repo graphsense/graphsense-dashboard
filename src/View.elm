@@ -96,31 +96,7 @@ body plugins vc model =
 
 sidebarMenuItem : Html msg -> String -> String -> Bool -> String -> Html msg
 sidebarMenuItem img label titleStr selected link =
-    if not selected then
-        Nb.navbarProductItemStateNeutralWithInstances
-            (Nb.navbarProductItemStateNeutralAttributes
-                |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
-                |> Rs.s_stateNeutral
-                    [ [ Css.hover Nb.navbarProductItemStateHover_details.styles
-                      ]
-                        |> css
-                    ]
-            )
-            Nb.navbarProductItemStateNeutralInstances
-            { stateNeutral = { iconInstance = img, productLabel = label, newLabelVisible = False } }
-            |> List.singleton
-            |> a
-                [ title titleStr
-                , link
-                    |> href
-                , css [ Css.textDecoration Css.none ]
-                ]
-
-    else
-        Nb.navbarProductItemStateSelectedWithInstances
-            Nb.navbarProductItemStateSelectedAttributes
-            Nb.navbarProductItemStateSelectedInstances
-            { stateSelected = { iconInstance = img, productLabel = label, newLabelVisible = False } }
+    sidebarMenuItemWithNewParam img label titleStr selected link False
 
 
 sidebarMenuItemWithNewParam : Html msg -> String -> String -> Bool -> String -> Bool -> Html msg
@@ -142,7 +118,10 @@ sidebarMenuItemWithNewParam img label titleStr selected link new =
             (Nb.navbarProductItemStateNeutralAttributes
                 |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
                 |> Rs.s_stateNeutral
-                    [ [ Css.hover Nb.navbarProductItemStateHover_details.styles
+                    [ [ Css.hover
+                            (Css.property Theme.Colors.sidebarNeutral_name Theme.Colors.sidebarHovered
+                                :: Nb.navbarProductItemStateHover_details.styles
+                            )
                       ]
                         |> css
                     ]
@@ -176,14 +155,24 @@ sidebar plugins vc model =
             ]
                 ++ Plugin.sidebar plugins model.plugins model.page vc
 
+        statLabel =
+            { textLabel = Locale.string vc.locale "Statistics" }
+
         statsLinkItem =
             if model.page == Stats then
                 Nb.textItremStateSelected
-                    { stateSelected = { textLabel = Locale.string vc.locale "Statistics" } }
+                    { stateSelected = statLabel }
 
             else
-                Nb.textItremStateNeutral
-                    { stateNeutral = { textLabel = Locale.string vc.locale "Statistics" } }
+                Nb.textItremStateNeutralWithAttributes
+                    (Nb.textItremStateNeutralAttributes
+                        |> Rs.s_statistics
+                            [ Css.hover Nb.textItremStateSelectedStatistics_details.styles
+                                |> List.singleton
+                                |> css
+                            ]
+                    )
+                    { stateNeutral = statLabel }
 
         statisticsLink =
             statsLinkItem
@@ -200,7 +189,17 @@ sidebar plugins vc model =
                 Nb.iconsSettingsLargeStateSelected {}
 
              else
-                Nb.iconsSettingsLargeStateNeutral {}
+                Nb.iconsSettingsLargeStateNeutralWithAttributes
+                    (Nb.iconsSettingsLargeStateNeutralAttributes
+                        |> Rs.s_stateNeutral
+                            [ Css.hover
+                                [ Css.property Theme.Colors.sidebarNeutral_name Theme.Colors.sidebarHovered
+                                ]
+                                |> List.singleton
+                                |> css
+                            ]
+                    )
+                    {}
             )
                 |> List.singleton
                 |> a

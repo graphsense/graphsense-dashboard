@@ -74,6 +74,8 @@ colorToDeclarations color name =
         ++ ")"
         |> Elm.string
         |> Elm.declaration n
+    , Elm.string ("--" ++ name)
+        |> Elm.declaration (n ++ "_name")
     , RGBA.toStylesString Dict.empty color
         |> Elm.string
         |> Elm.declaration (n ++ "_string")
