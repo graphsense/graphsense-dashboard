@@ -97,11 +97,11 @@ tx4 : Api.Data.TxUtxo
 tx4 =
     let
         inputs =
-            [ { address = [ Id.address3 |> Id.id ], value = values, index=Nothing}
+            [ { address = [ Id.address3 |> Id.id ], value = values, index = Nothing }
             ]
 
         outputs =
-            [ { address = [ Id.address8 |> Id.id ], value = values, index=Nothing}
+            [ { address = [ Id.address8 |> Id.id ], value = values, index = Nothing }
             ]
     in
     { coinbase = False
