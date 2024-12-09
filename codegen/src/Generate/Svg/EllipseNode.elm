@@ -7,7 +7,7 @@ import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (cx, cy, rx, ry)
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
-import Generate.Util exposing (getElementAttributes, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details)
 
@@ -21,8 +21,8 @@ toExpressions config componentName node =
     Gen.Svg.Styled.call_.ellipse
         (getElementAttributes config name
             |> Elm.Op.append
-                ((toStyles config.colorMap node
-                    |> Gen.Svg.Styled.Attributes.css
+                ((callStyles config name
+                    |> Gen.Svg.Styled.Attributes.call_.css
                  )
                     :: toAttributes node
                     |> Elm.list

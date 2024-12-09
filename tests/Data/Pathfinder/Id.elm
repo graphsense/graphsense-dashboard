@@ -1,4 +1,4 @@
-module Data.Pathfinder.Id exposing (address1, address2, address3, address4, address5, address6, address7, tx1, tx2, tx3)
+module Data.Pathfinder.Id exposing (address1, address2, address3, address4, address5, address6, address7, address8, tx1, tx2, tx3, tx4)
 
 import Model.Pathfinder.Id exposing (Id)
 
@@ -38,6 +38,11 @@ address7 =
     ( "btc", "a7890123" )
 
 
+address8 : Id
+address8 =
+    ( "btc", "a8901234" )
+
+
 tx1 : Id
 tx1 =
     ( "btc", "d1234567" )
@@ -51,3 +56,8 @@ tx2 =
 tx3 : Id
 tx3 =
     ( "btc", "d3456789" )
+
+
+tx4 : Id
+tx4 =
+    ( "btc", "d4567890" )

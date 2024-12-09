@@ -10,19 +10,23 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.RectangleNode exposing (getName)
 import Generate.Svg.CornerTrait as CornerTrait
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
-import Generate.Util exposing (getElementAttributes, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details, OriginAdjust)
 
 
 toExpressions : Config -> String -> RectangleNode -> List Elm.Expression
 toExpressions config componentName node =
+    let
+        name =
+            getName node
+    in
     Gen.Svg.Styled.call_.rect
-        (getName node
+        (name
             |> getElementAttributes config
             |> Elm.Op.append
-                ((toStyles config.colorMap node
-                    |> Gen.Svg.Styled.Attributes.css
+                ((callStyles config name
+                    |> Gen.Svg.Styled.Attributes.call_.css
                  )
                     :: toAttributes node
                     |> Elm.list

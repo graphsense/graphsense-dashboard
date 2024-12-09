@@ -12,6 +12,9 @@ type alias Config =
     , instances : Expression
     , children : Expression
     , colorMap : ColorMap
+    , parentName : String
+    , componentName : String
+    , instanceName : String
     }
 
 

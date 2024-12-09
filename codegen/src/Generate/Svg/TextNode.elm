@@ -9,17 +9,21 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.TextNode exposing (getName)
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.TypeStyle as TypeStyle
-import Generate.Util exposing (getElementAttributes, getTextProperty, m, mm, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, getTextProperty, m, mm, withVisibility)
 import Types exposing (ColorMap, Config, Details)
 
 
 toExpressions : Config -> String -> TextNode -> List Elm.Expression
 toExpressions config componentName node =
+    let
+        name =
+            getName node
+    in
     Gen.Svg.Styled.call_.text_
-        (getName node
+        (name
             |> getElementAttributes config
             |> Elm.Op.append
-                ((toStyles config.colorMap node |> Attributes.css)
+                ((callStyles config name |> Attributes.call_.css)
                     :: toAttributes node
                     |> Elm.list
                 )

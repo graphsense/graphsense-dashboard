@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (Network, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress)
+module Model.Pathfinder.Network exposing (Network, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -79,11 +79,29 @@ listTxsForAddress network id =
         |> Dict.values
         |> List.filterMap
             (\tx ->
-                if Tx.isInFlow id tx then
+                if Tx.hasInput id tx then
                     Just ( Incoming, tx )
                     -- TODO: Revise for UTXO, depends on total flow not only if address is on the in side.
 
-                else if Tx.isOutFlow id tx then
+                else if Tx.hasOutput id tx then
+                    Just ( Outgoing, tx )
+
+                else
+                    Nothing
+            )
+
+
+listTxsForAddressByRaw : Network -> Id -> List ( Direction, Tx )
+listTxsForAddressByRaw network id =
+    network.txs
+        |> Dict.values
+        |> List.filterMap
+            (\tx ->
+                if Tx.isRawInFlow id tx then
+                    Just ( Incoming, tx )
+                    -- TODO: Revise for UTXO, depends on total flow not only if address is on the in side.
+
+                else if Tx.isRawOutFlow id tx then
                     Just ( Outgoing, tx )
 
                 else

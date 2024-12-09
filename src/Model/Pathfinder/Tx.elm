@@ -1,9 +1,10 @@
-module Model.Pathfinder.Tx exposing (AccountTx, Io, Tx, TxType(..), UtxoTx, addressToCoords, avg, calcCoords, getAccountTx, getCoords, getInputAddressIds, getRawTimestamp, getTxId, getTxIdForAddressTx, getUtxoTx, hasAddress, hasInput, hasOutput, ioToId, isInFlow, isOutFlow, listAddressesForTx)
+module Model.Pathfinder.Tx exposing (AccountTx, Io, Tx, TxType(..), UtxoTx, addressToCoords, avg, calcCoords, getAccountTx, getCoords, getInputAddressIds, getInputs, getOutputAddressIds, getOutputs, getRawTimestamp, getTxId, getTxIdForAddressTx, getUtxoTx, hasAddress, hasInput, hasOutput, ioToId, isRawInFlow, isRawOutFlow, listAddressesForTx)
 
 import Animation exposing (Animation, Clock)
 import Api.Data
 import Dict exposing (Dict)
 import Init.Pathfinder.Id as Id
+import List.Extra
 import List.Nonempty as NList
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -61,14 +62,34 @@ hasAddress id tx =
     hasOutput id tx || hasInput id tx
 
 
-isInFlow : Id -> Tx -> Bool
-isInFlow =
-    hasInput
+isRawInFlow : Id -> Tx -> Bool
+isRawInFlow id tx =
+    case tx.type_ of
+        Account { raw } ->
+            raw.fromAddress == Id.id id
+
+        Utxo { raw } ->
+            raw.inputs
+                |> findTxValueByAddress (Id.id id)
+                |> (/=) Nothing
 
 
-isOutFlow : Id -> Tx -> Bool
-isOutFlow =
-    hasOutput
+isRawOutFlow : Id -> Tx -> Bool
+isRawOutFlow id tx =
+    case tx.type_ of
+        Account { raw } ->
+            raw.toAddress == Id.id id
+
+        Utxo { raw } ->
+            raw.outputs
+                |> findTxValueByAddress (Id.id id)
+                |> (/=) Nothing
+
+
+findTxValueByAddress : String -> Maybe (List Api.Data.TxValue) -> Maybe Api.Data.TxValue
+findTxValueByAddress id =
+    Maybe.andThen
+        (List.Extra.find (.address >> List.member id))
 
 
 hasOutput : Id -> Tx -> Bool
@@ -121,6 +142,16 @@ getInputAddressIds tx =
 
         Utxo { raw } ->
             raw.inputs |> Maybe.withDefault [] |> List.concatMap .address
+
+
+getOutputAddressIds : Tx -> List String
+getOutputAddressIds tx =
+    case tx.type_ of
+        Account { to } ->
+            [ to |> Id.id ]
+
+        Utxo { raw } ->
+            raw.outputs |> Maybe.withDefault [] |> List.concatMap .address
 
 
 calcCoords : NList.Nonempty Address -> Coords
@@ -213,3 +244,23 @@ ioToId network =
     .address
         >> List.head
         >> Maybe.map (Id.init network)
+
+
+getOutputs : Tx -> List Id
+getOutputs tx =
+    case tx.type_ of
+        Utxo { outputs } ->
+            Dict.keys outputs
+
+        Account { to } ->
+            [ to ]
+
+
+getInputs : Tx -> List Id
+getInputs tx =
+    case tx.type_ of
+        Utxo { inputs } ->
+            Dict.keys inputs
+
+        Account { from } ->
+            [ from ]

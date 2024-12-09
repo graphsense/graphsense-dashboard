@@ -14,6 +14,6 @@ find ./plugins -name node_modules -exec rm -rf {} \; || true
 
 chown -R $DOCKER_UID /usr/share/nginx/html/*
 
-sed -i "s|http://localhost:9000|$REST_URL|g" /usr/share/nginx/html/assets/index.*.js 
+sed -i "s|http://localhost:9000|$REST_URL|g" /usr/share/nginx/html/assets/index*.js 
 
 exec "$@"

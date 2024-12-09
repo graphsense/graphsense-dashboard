@@ -18,7 +18,7 @@ module Update.Pathfinder.Network exposing
 
 import Animation as A exposing (Animation)
 import Api.Data
-import Basics.Extra exposing (uncurry)
+import Basics.Extra exposing (flip, uncurry)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict
 import Init.Pathfinder.Address as Address
@@ -92,7 +92,7 @@ addAddressWithPosition position id model =
     else
         let
             things =
-                listTxsForAddress model id
+                listTxsForAddressByRaw model id
                     |> List.map Tuple.second
 
             coords =
@@ -123,12 +123,14 @@ avoidOverlappingEdges things coords =
     let
         sameY =
             things
-                |> List.filter (\tx -> A.getTo tx.y |> round |> (==) (round coords.y))
-                |> List.filter (\tx -> tx.x < coords.x - nodeXOffset || tx.x > coords.x + nodeXOffset)
+                -- keep things which are same y-axis as coords
+                |> List.filter (\th -> A.getTo th.y |> round |> (==) (round coords.y))
+                -- remove things which are direct neighbors of coords
+                |> List.filter (\th -> th.x < coords.x - nodeXOffset || th.x > coords.x + nodeXOffset)
                 |> List.length
     in
     if sameY > 0 then
-        { coords | y = coords.y - toFloat sameY - 1 }
+        { coords | y = coords.y - nodeYOffset }
 
     else
         coords
@@ -451,8 +453,36 @@ addTxWithPosition position tx network =
                 case tx of
                     Api.Data.TxTxAccount t ->
                         let
+                            fromId =
+                                Id.init t.currency t.fromAddress
+
+                            toId =
+                                Id.init t.currency t.toAddress
+
+                            things =
+                                [ Dict.get toId network.addresses
+                                , Dict.get fromId network.addresses
+                                ]
+                                    |> List.filterMap identity
+
                             coords =
-                                findTxCoords network tx
+                                case position of
+                                    Auto ->
+                                        avoidOverlappingEdges things <| findAccountTxCoords network t
+
+                                    NextTo ( direction, id_ ) ->
+                                        avoidOverlappingEdges things <|
+                                            (Dict.get id_ network.addresses
+                                                |> Maybe.map
+                                                    (findTxCoordsNextToAddress network direction)
+                                                |> Maybe.Extra.withDefaultLazy
+                                                    (\_ ->
+                                                        findAccountTxCoords network t
+                                                    )
+                                            )
+
+                                    Fixed x y ->
+                                        { x = x, y = y }
 
                             newNetwork =
                                 freeSpaceAroundCoords coords network
@@ -479,7 +509,7 @@ addTxWithPosition position tx network =
                                         avoidOverlappingEdges things <|
                                             (Dict.get id_ network.addresses
                                                 |> Maybe.map
-                                                    (findUtxoTxCoordsNextToAddress network direction)
+                                                    (findTxCoordsNextToAddress network direction)
                                                 |> Maybe.Extra.withDefaultLazy
                                                     (\_ ->
                                                         findUtxoTxCoords network t
@@ -578,69 +608,32 @@ listInOutputsOfApiTxUtxo network tx =
         ++ normalizeAddresses Incoming outputSet
 
 
-findTxCoords : Network -> Api.Data.Tx -> Coords
-findTxCoords network tx =
-    case tx of
-        Api.Data.TxTxAccount t ->
-            let
-                fromId =
-                    Id.init t.network t.fromAddress
+findAccountTxCoords : Network -> Api.Data.TxAccount -> Coords
+findAccountTxCoords network tx =
+    let
+        fromId =
+            Id.init tx.network tx.fromAddress
 
-                toId =
-                    Id.init t.network t.toAddress
-
-                minStep =
-                    nodeYOffset / 2
-
-                baseC =
-                    findTxCoordsInternal network ([ Dict.get toId network.addresses |> Maybe.map (Tuple.pair Direction.Incoming), Dict.get fromId network.addresses |> Maybe.map (Tuple.pair Direction.Outgoing) ] |> List.filterMap identity)
-
-                allTxs =
-                    Dict.values network.txs
-
-                sameParticipantsTxs =
-                    allTxs
-                        |> List.filter
-                            (\x ->
-                                case x.type_ of
-                                    Tx.Account et ->
-                                        et.from == fromId && et.to == toId
-
-                                    _ ->
-                                        False
-                            )
-
-                candidateTxs =
-                    (if List.length sameParticipantsTxs > 0 then
-                        sameParticipantsTxs
-
-                     else
-                        allTxs
-                    )
-                        |> List.filter (.x >> (==) baseC.x)
-
-                yn =
-                    if List.length candidateTxs > 0 then
-                        floor ((candidateTxs |> List.map (.y >> A.getTo) |> List.minimum |> Maybe.withDefault minStep) - minStep) |> toFloat
-
-                    else
-                        baseC.y
-            in
-            { baseC | y = yn } |> avoidOverlappingEdges (Dict.values network.txs)
-
-        Api.Data.TxTxUtxo t ->
-            findUtxoTxCoords network t
+        toId =
+            Id.init tx.network tx.toAddress
+    in
+    [ Dict.get toId network.addresses
+        |> Maybe.map (Tuple.pair Direction.Incoming)
+    , Dict.get fromId network.addresses
+        |> Maybe.map (Tuple.pair Direction.Outgoing)
+    ]
+        |> List.filterMap identity
+        |> findTxCoordsInternal network
 
 
 findTxCoordsInternal : Network -> List ( Direction, Address ) -> Coords
-findTxCoordsInternal network coords =
-    coords
-        |> NList.fromList
-        |> Maybe.map
+findTxCoordsInternal network =
+    NList.fromList
+        >> Maybe.map
             (\list ->
                 if NList.length list == 1 then
                     NList.head list
-                        |> uncurry (findUtxoTxCoordsNextToAddress network)
+                        |> uncurry (findTxCoordsNextToAddress network)
 
                 else
                     list
@@ -650,7 +643,7 @@ findTxCoordsInternal network coords =
                             )
                         |> Coords.avg
             )
-        |> Maybe.withDefault (findFreeCoords network)
+        >> Maybe.withDefault (findFreeCoords network)
 
 
 findUtxoTxCoords : Network -> Api.Data.TxUtxo -> Coords
@@ -658,32 +651,25 @@ findUtxoTxCoords network tx =
     findTxCoordsInternal network (listInOutputsOfApiTxUtxo network tx)
 
 
-findUtxoTxCoordsNextToAddress : Network -> Direction -> Address -> Coords
-findUtxoTxCoordsNextToAddress model direction address =
+findTxCoordsNextToAddress : Network -> Direction -> Address -> Coords
+findTxCoordsNextToAddress model direction address =
     let
         toSiblings io =
             io
                 |> Set.toList
                 |> List.filterMap
-                    (\a ->
-                        if a == address.id then
-                            Nothing
+                    (flip Dict.get model.txs
+                        >> Maybe.map
+                            (\tx ->
+                                (case direction of
+                                    Outgoing ->
+                                        Tx.getOutputs tx
 
-                        else
-                            Dict.get a model.txs
-                                |> Maybe.andThen Tx.getUtxoTx
-                                |> Maybe.map
-                                    (\tx ->
-                                        (case direction of
-                                            Outgoing ->
-                                                tx.outputs
-
-                                            Incoming ->
-                                                tx.inputs
-                                        )
-                                            |> Dict.keys
-                                            |> toAddresses model
-                                    )
+                                    Incoming ->
+                                        Tx.getInputs tx
+                                )
+                                    |> toAddresses model
+                            )
                     )
                 |> List.concat
 

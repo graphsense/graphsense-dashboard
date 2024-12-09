@@ -313,8 +313,7 @@ theme =
                         scaled 5
                 in
                 [ padding (rem p)
-                , calc (pct 100) minus (rem p)
-                    |> width
+                , flexGrow (num 1)
                 ]
             )
         |> s_box

@@ -24,6 +24,7 @@ import Types exposing (ColorMap)
 onlyFrames : List String
 onlyFrames =
     []
+        |> List.map String.toLower
 
 
 type alias Flags =

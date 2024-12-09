@@ -1,4 +1,4 @@
-module Data.Api exposing (tx1, tx2, tx3, values)
+module Data.Api exposing (tx1, tx2, tx3, tx4, values)
 
 import Api.Data
 import Data.Pathfinder.Id as Id
@@ -19,6 +19,7 @@ tx1 =
             [ { address = [ Id.address3 |> Id.id ], value = values, index = Nothing }
             , { address = [ Id.address4 |> Id.id ], value = values, index = Nothing }
             , { address = [ Id.address5 |> Id.id ], value = values, index = Nothing }
+            , { address = [ Id.address8 |> Id.id ], value = values, index = Nothing }
             ]
 
         inputs =
@@ -88,5 +89,31 @@ tx3 =
     , totalInput = values
     , totalOutput = values
     , txHash = Id.id Id.tx3
+    , txType = "utxo"
+    }
+
+
+tx4 : Api.Data.TxUtxo
+tx4 =
+    let
+        inputs =
+            [ { address = [ Id.address3 |> Id.id ], value = values, index=Nothing}
+            ]
+
+        outputs =
+            [ { address = [ Id.address8 |> Id.id ], value = values, index=Nothing}
+            ]
+    in
+    { coinbase = False
+    , currency = Id.network Id.tx4
+    , height = 1
+    , inputs = Just inputs
+    , noInputs = List.length inputs
+    , noOutputs = List.length outputs
+    , outputs = Just outputs
+    , timestamp = 0
+    , totalInput = values
+    , totalOutput = values
+    , txHash = Id.id Id.tx4
     , txType = "utxo"
     }

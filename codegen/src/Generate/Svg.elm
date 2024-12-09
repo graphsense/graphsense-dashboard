@@ -60,7 +60,19 @@ subcanvasNodeToExpressions config name node =
                 []
 
             else
-                instanceNodeToExpressions config name n
+                let
+                    config_ =
+                        { config
+                            | instanceName =
+                                -- store the name of the highest level instance node
+                                if config.instanceName == "" then
+                                    Generate.Common.FrameTraits.getName n
+
+                                else
+                                    config.instanceName
+                        }
+                in
+                instanceNodeToExpressions config_ name n
 
         SubcanvasNodeVectorNode n ->
             if Generate.Common.DefaultShapeTraits.isHidden n.cornerRadiusShapeTraits then
@@ -288,6 +300,9 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                             , children = Elm.record []
                             , instances = instances
                             , colorMap = colorMap
+                            , parentName = parentName
+                            , componentName = details.name
+                            , instanceName = ""
                             }
                     in
                     Gen.Svg.Styled.call_.g
