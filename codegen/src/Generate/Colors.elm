@@ -16,22 +16,34 @@ import Tuple exposing (pair)
 
 frameNodeToColorMap : FrameNode -> List ( RGBA, String )
 frameNodeToColorMap node =
-    node.frameTraits.children
-        |> List.filterMap
-            (\c ->
-                case c of
-                    SubcanvasNodeRectangleNode n ->
-                        Just n
-
-                    _ ->
-                        Nothing
-            )
+    findColorRects node.frameTraits
         |> List.filterMap
             (\r ->
                 Paint.toRGBA r.rectangularShapeTraits.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait.fills
                     --|> Maybe.map (RGBA.toStylesString Dict.empty)
                     |> Maybe.map (flip pair (RectangleNode.getName r |> sanitize |> (++) prefix))
             )
+
+
+findColorRects : Api.Raw.FrameTraits -> List Api.Raw.RectangleNode
+findColorRects frameTraits =
+    frameTraits.children
+        |> List.map
+            (\c ->
+                case c of
+                    SubcanvasNodeRectangleNode n ->
+                        [ n ]
+
+                    SubcanvasNodeFrameNode n ->
+                        findColorRects n.frameTraits
+
+                    SubcanvasNodeGroupNode n ->
+                        findColorRects n.frameTraits
+
+                    _ ->
+                        []
+            )
+        |> List.concat
 
 
 prefix : String
