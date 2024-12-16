@@ -77,7 +77,9 @@ plugin-theme-refresh:
 	make plugin-theme
 
 plugin-theme:
-	$(ELM_CODEGEN) --output theme --flags-from=./plugins/$(PLUGIN_NAME)/theme/figma.json
+	echo "{\"colormaps\": `cat ./theme/colormaps.json`, \"theme\": `cat ./plugins/$(PLUGIN_NAME)/theme/figma.json`}" > ./theme/.gen.json
+	$(ELM_CODEGEN) --output theme --flags-from=./theme/.gen.json
+	rm ./theme/.gen.json
 
 gen:
 	rm -rf generated/*

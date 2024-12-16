@@ -478,7 +478,7 @@ txDetailsContentView vc _ model id viewState =
                             |> css
                         ]
                     |> Rs.s_sidePanelTxDetails [ css fullWidth ]
-                    |> Rs.s_iconsCloseSmall closeAttrs
+                    |> Rs.s_iconsCloseBlack closeAttrs
                 )
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
@@ -584,7 +584,7 @@ txDetailsContentView vc _ model id viewState =
                         [ sidePanelCss
                             |> css
                         ]
-                    |> Rs.s_iconsCloseSmall closeAttrs
+                    |> Rs.s_iconsCloseBlack closeAttrs
                 )
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
@@ -1050,7 +1050,7 @@ addressDetailsContentView vc gc model id viewState =
                     [ sidePanelCss
                         |> css
                     ]
-                |> Rs.s_iconsCloseSmall closeAttrs
+                |> Rs.s_iconsCloseBlack closeAttrs
             )
             (SidePanelComponents.sidePanelEthAddressInstances
                 |> Rs.s_labelOfTags
@@ -1088,7 +1088,7 @@ addressDetailsContentView vc gc model id viewState =
                         |> css
                     ]
                 |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
-                |> Rs.s_iconsCloseSmall closeAttrs
+                |> Rs.s_iconsCloseBlack closeAttrs
             )
             (SidePanelComponents.sidePanelAddressInstances
                 |> Rs.s_labelOfTags

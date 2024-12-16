@@ -12,8 +12,9 @@ elm-stuff
 .venv
 plugins/*
 plugins_iknaio/*
+plugins_empty/*
 !plugins/EMPTY
-config/Config.elm
+config/Config.elm*
 testdata
 elm.js
 conv
@@ -27,4 +28,5 @@ elm.json
 !codegen/elm.json
 .idea
 .vscode/
-
+theme/.gen.json
+test_addresses.txt
