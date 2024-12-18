@@ -10,22 +10,19 @@ import Generate.Common.RectangleNode as RectangleNode
 import Generate.Util exposing (sanitize)
 import Generate.Util.Paint as Paint
 import Generate.Util.RGBA as RGBA
+import Json.Decode as Decode
+import Json.Encode as Encode
 import String.Format as Format
 import Tuple exposing (pair)
 
 
-frameNodeToColorMap : FrameNode -> List ( RGBA, String )
-frameNodeToColorMap node =
-    node.frameTraits.children
-        |> List.filterMap
-            (\c ->
-                case c of
-                    SubcanvasNodeRectangleNode n ->
-                        Just n
+type alias ColorMapRaw =
+    List ( RGBA, String )
 
-                    _ ->
-                        Nothing
-            )
+
+frameNodeToColorMap : FrameNode -> ColorMapRaw
+frameNodeToColorMap node =
+    findColorRects node.frameTraits
         |> List.filterMap
             (\r ->
                 Paint.toRGBA r.rectangularShapeTraits.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait.fills
@@ -34,12 +31,65 @@ frameNodeToColorMap node =
             )
 
 
+findColorRects : Api.Raw.FrameTraits -> List Api.Raw.RectangleNode
+findColorRects frameTraits =
+    frameTraits.children
+        |> List.map
+            (\c ->
+                case c of
+                    SubcanvasNodeRectangleNode n ->
+                        [ n ]
+
+                    SubcanvasNodeFrameNode n ->
+                        findColorRects n.frameTraits
+
+                    SubcanvasNodeGroupNode n ->
+                        findColorRects n.frameTraits
+
+                    _ ->
+                        []
+            )
+        |> List.concat
+
+
 prefix : String
 prefix =
     "c-"
 
 
-colorMapToStylesheet : List ( RGBA, String ) -> Elm.Declaration
+colorMapToJson : ColorMapRaw -> Encode.Value
+colorMapToJson =
+    (\( { r, g, b, a }, str ) ->
+        Encode.object
+            [ ( "r", Encode.float r )
+            , ( "g", Encode.float g )
+            , ( "b", Encode.float b )
+            , ( "a", Encode.float a )
+            , ( "name", Encode.string str )
+            ]
+    )
+        |> Encode.list
+
+
+colorMapFromJson : Decode.Decoder ColorMapRaw
+colorMapFromJson =
+    Api.Raw.rGBADecoder
+        |> Decode.andThen
+            (\rgba ->
+                Decode.field "name" Decode.string
+                    |> Decode.map (pair rgba)
+            )
+        |> Decode.list
+
+
+decodeColormaps : Decode.Decoder { light : ColorMapRaw, dark : ColorMapRaw }
+decodeColormaps =
+    Decode.map2 (\light dark -> { light = light, dark = dark })
+        (Decode.field "light" colorMapFromJson)
+        (Decode.field "dark" colorMapFromJson)
+
+
+colorMapToStylesheet : ColorMapRaw -> Elm.Declaration
 colorMapToStylesheet =
     List.map (uncurry toCssVar)
         >> String.join "\n"
@@ -57,7 +107,7 @@ toCssVar rgba name =
         |> Format.value (RGBA.toStylesString Dict.empty rgba)
 
 
-colorMapToDeclarations : List ( RGBA, String ) -> List Elm.Declaration
+colorMapToDeclarations : ColorMapRaw -> List Elm.Declaration
 colorMapToDeclarations =
     List.map (uncurry colorToDeclarations)
         >> List.concat

@@ -20,6 +20,7 @@
             "elm-community/dict-extra": "2.4.0",
             "elm-community/list-extra": "8.6.0",
             "elm-community/maybe-extra": "5.3.0",
+            "elm-community/result-extra": "2.4.0",
             "elm-community/string-extra": "4.0.1",
             "jorgengranseth/elm-string-format": "1.0.1",
             "mdgriffith/elm-codegen": "4.2.1",

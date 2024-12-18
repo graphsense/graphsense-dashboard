@@ -10,7 +10,8 @@ import Types exposing (ColorMap)
 
 toStyles : ColorMap -> RGBA -> Elm.Expression
 toStyles colorMap ({ r, g, b, a } as c) =
-    Dict.get (toStylesString Dict.empty c) colorMap
+    Dict.get (toStylesString Dict.empty c |> Debug.log "123 stylesstring") colorMap
+        |> Debug.log "123 found"
         |> Maybe.map (toVarString >> Elm.string)
         |> Maybe.withDefault
             (let
@@ -42,7 +43,9 @@ toStylesString colorMap { r, g, b, a } =
                 |> Format.namedValue "g" (f g)
                 |> Format.namedValue "b" (f b)
                 |> Format.namedValue "a" (String.fromFloat a)
+                |> Debug.log "123 stylestring"
     in
     Dict.get str colorMap
+        |> Debug.log "123 found"
         |> Maybe.map toVarString
         |> Maybe.withDefault str
