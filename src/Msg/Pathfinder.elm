@@ -9,13 +9,13 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Network exposing (FindPosition)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
 import Table
 import Time exposing (Posix)
-import Update.Pathfinder.Network exposing (FindPosition)
 
 
 type Msg

@@ -41,7 +41,7 @@ import Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
-import Plugin.View exposing (Plugins)
+import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
 import Route
@@ -72,6 +72,7 @@ import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
+import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.Network as Network
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
@@ -131,13 +132,13 @@ view plugins states vc model =
 
 
 graph : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> List (Html Msg)
-graph plugins states vc gc model =
+graph plugins pluginStates vc gc model =
     [ vc.size
-        |> Maybe.map (graphSvg plugins states vc gc model)
+        |> Maybe.map (graphSvg plugins pluginStates vc gc model)
         |> Maybe.withDefault none
     , topLeftPanel vc
-    , topCenterPanel plugins states vc gc model
-    , topRightPanel plugins states vc gc model
+    , topCenterPanel plugins pluginStates vc gc model
+    , topRightPanel plugins pluginStates vc gc model
     ]
         ++ (model.tooltip
                 |> Maybe.map (Tooltip.view vc model.tagSummaries)
@@ -150,36 +151,14 @@ graph plugins states vc gc model =
                 |> Maybe.withDefault []
            )
         ++ (model.contextMenu
-                |> Maybe.map (contextMenuView vc model)
+                |> Maybe.map (contextMenuView plugins pluginStates vc model)
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
 
 
-contextMenuView : View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
-contextMenuView vc _ ( coords, menu ) =
-    let
-        contextMenuItemView icon text msg =
-            HGraphComponents.rightClickItemStateNeutralWithAttributes
-                (HGraphComponents.rightClickItemStateNeutralAttributes
-                    |> Rs.s_stateNeutral
-                        [ [ HGraphComponents.rightClickItemStateHover_details.styles
-                                |> Css.hover
-                          , Css.cursor Css.pointer
-                          ]
-                            |> css
-                        , onClick msg
-                        ]
-                    |> Rs.s_placeholder
-                        [ [ HGraphComponents.rightClickItemStateHoverPlaceholder_details.styles
-                                |> Css.hover
-                          ]
-                            |> css
-                        , onClick msg
-                        ]
-                )
-                { stateNeutral = { iconInstance = icon, text = Locale.string vc.locale text } }
-    in
+contextMenuView : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
+contextMenuView plugins pluginStates vc model ( coords, menu ) =
     div
         [ [ Css.top (Css.px coords.y)
           , Css.left (Css.px (coords.x - (HGraphComponents.rightClickItemStateNeutral_details.renderedWidth / 2)))
@@ -194,17 +173,59 @@ contextMenuView vc _ ( coords, menu ) =
             HGraphComponents.rightClickMenuListInstances
             { rightClickMenuList =
                 case menu of
-                    ContextMenu.AddressContextMenu aid ->
-                        [ contextMenuItemView (HIcons.iconsAnnotateSmall {}) "Annotate address" (UserOpensAddressAnnotationDialog aid)
-                        , contextMenuItemView (HIcons.iconsCopySmall {}) "Copy address ID" (UserClickedContextMenuIdToClipboard menu)
-                        , contextMenuItemView (HIcons.iconsDeleteSmall {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
-                        , contextMenuItemView (HIcons.iconsGoToSmall {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
+                    ContextMenu.AddressContextMenu id ->
+                        [ { msg = UserOpensAddressAnnotationDialog id
+                          , icon = HIcons.iconsAnnotateSmall {}
+                          , text = "Annotate address"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuIdToClipboard menu
+                          , icon = HIcons.iconsCopySmall {}
+                          , text = "Copy address ID"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuDeleteIcon menu
+                          , icon = HIcons.iconsDeleteSmall {}
+                          , text = "Remove from Graph"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuOpenInNewTab menu
+                          , icon = HIcons.iconsGoToSmall {}
+                          , text = "Open in new tab"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
                         ]
+                            ++ (Dict.get id model.network.addresses
+                                    |> Maybe.map
+                                        (Plugin.addressContextMenuNew plugins pluginStates vc
+                                            >> List.map (ContextMenuItem.view vc)
+                                        )
+                                    |> Maybe.withDefault []
+                               )
 
                     ContextMenu.TransactionContextMenu _ ->
-                        [ contextMenuItemView (HIcons.iconsCopySmall {}) "Copy transaction ID" (UserClickedContextMenuIdToClipboard menu)
-                        , contextMenuItemView (HIcons.iconsDeleteSmall {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
-                        , contextMenuItemView (HIcons.iconsGoToSmall {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
+                        [ { msg = UserClickedContextMenuIdToClipboard menu
+                          , icon = HIcons.iconsCopySmall {}
+                          , text = "Copy transaction ID"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuDeleteIcon menu
+                          , icon = HIcons.iconsDeleteSmall {}
+                          , text = "Remove from Graph"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuOpenInNewTab menu
+                          , icon = HIcons.iconsGoToSmall {}
+                          , text = "Open in new tab"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
                         ]
             }
             {}
@@ -212,7 +233,7 @@ contextMenuView vc _ ( coords, menu ) =
 
 
 topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-topCenterPanel plugins ms vc gc model =
+topCenterPanel plugins _ vc gc model =
     div
         [ css Css.topPanelStyle
         ]
@@ -224,7 +245,7 @@ topCenterPanel plugins ms vc gc model =
                 , Css.property "pointer-events" "all"
                 ]
             ]
-            [ searchBoxView plugins ms vc gc model
+            [ searchBoxView plugins vc gc model
             , Toolbar.view vc
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
@@ -389,8 +410,8 @@ graphActionsView vc _ _ =
         []
 
 
-searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-searchBoxView plugins _ vc _ model =
+searchBoxView : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
+searchBoxView plugins vc _ model =
     Sc.searchBarFieldStateTypingWithInstances
         Sc.searchBarFieldStateTypingAttributes
         (Sc.searchBarFieldStateTypingInstances

@@ -36,7 +36,7 @@ import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Network as Network
+import Model.Pathfinder.Network as Network exposing (FindPosition(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -65,7 +65,7 @@ import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.AddressDetails as AddressDetails
-import Update.Pathfinder.Network as Network exposing (FindPosition(..), ingestAddresses, ingestTxs)
+import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestTxs)
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
@@ -1430,7 +1430,7 @@ updateByRoute_ plugins uc route model =
                         action =
                             case a of
                                 Route.AddressHop _ adr ->
-                                    loadAddressWithPosition (Fixed x_ y_) plugins ( net, adr )
+                                    loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
 
                                 Route.TxHop h ->
                                     loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
@@ -1482,19 +1482,19 @@ updateByRoute_ plugins uc route model =
 
 
 loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
-loadAddress =
-    loadAddressWithPosition Auto
+loadAddress plugins =
+    loadAddressWithPosition plugins Auto
 
 
-loadAddressWithPosition : FindPosition -> Plugins -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition position _ id model =
+loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
+loadAddressWithPosition plugins position id model =
     if Dict.member id model.network.addresses then
         n model
 
     else
         let
             nw =
-                Network.addAddressWithPosition position id model.network
+                Network.addAddressWithPosition plugins position id model.network
         in
         ( { model | network = nw } |> updateTagDataOnAddress id
         , [ BrowserGotAddressData id
@@ -1874,7 +1874,7 @@ addTx plugins _ addressId direction tx model =
                     position =
                         NextTo ( direction, newTx.id )
                 in
-                loadAddressWithPosition position plugins (Id.init (Id.network addressId) a) newmodel
+                loadAddressWithPosition plugins position (Id.init (Id.network addressId) a) newmodel
             )
         |> Maybe.withDefault (n newmodel)
 
@@ -2067,8 +2067,8 @@ deserializeByVersion version =
         Json.Decode.fail ("unknown version " ++ version)
 
 
-fromDeserialized : Deserialized -> Model -> ( Model, List Effect )
-fromDeserialized deserialized model =
+fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized plugins deserialized model =
     let
         groupByNetwork =
             List.map .id
@@ -2106,7 +2106,7 @@ fromDeserialized deserialized model =
                     )
     in
     ( { model
-        | network = ingestAddresses Network.init deserialized.addresses
+        | network = ingestAddresses plugins Network.init deserialized.addresses
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
         , name = deserialized.name
