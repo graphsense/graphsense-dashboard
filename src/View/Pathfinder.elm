@@ -483,6 +483,7 @@ txDetailsContentView vc _ model id viewState =
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc
+                    , chevronInstance = none
                     }
                 , leftTab = { variant = none }
                 , rightTab = { variant = none }
@@ -589,6 +590,7 @@ txDetailsContentView vc _ model id viewState =
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc
+                    , chevronInstance = none
                     }
                 , leftTab = { variant = none }
                 , rightTab = { variant = none }
@@ -918,6 +920,7 @@ addressDetailsContentView vc gc model id viewState =
         sidePanelAddressCopyIcon =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
+            , chevronInstance = none
             }
 
         labelOfTags =

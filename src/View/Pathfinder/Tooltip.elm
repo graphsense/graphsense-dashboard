@@ -69,9 +69,9 @@ val vc str =
 
 row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html msg
 row =
-    GraphComponents.tooltipRowWithAttributes
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+    GraphComponents.tooltipRowComponentWithAttributes
+        (GraphComponents.tooltipRowComponentAttributes
+            |> Rs.s_tooltipRowComponent [ css [ Css.width (Css.pct 100) ] ]
         )
 
 
@@ -85,15 +85,19 @@ showActor vc a =
         { tooltipRowLabel = { title = Locale.string vc.locale "Url" }
         , tooltipRowValue = a.uri |> val vc
         }
-    , GraphComponents.tooltipRowWithInstances
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+    , GraphComponents.tooltipRowComponentWithInstances
+        (GraphComponents.tooltipRowComponentAttributes
+            |> Rs.s_tooltipRowComponent [ css [ Css.width (Css.pct 100) ] ]
         )
-        (GraphComponents.tooltipRowInstances
+        (GraphComponents.tooltipRowComponentInstances
             |> Rs.s_tooltipRowValue
-                (a.jurisdictions
-                    |> List.map
-                        (\z ->
+                (
+                    let
+                        jl = List.length a.jurisdictions
+                    in 
+                    a.jurisdictions
+                    |> List.indexedMap
+                        (\i z ->
                             span
                                 [ title (Locale.string vc.locale z.label)
                                 , Css.mGap
@@ -101,7 +105,7 @@ showActor vc a =
                                     |> List.singleton
                                     |> css
                                 ]
-                                [ text (Locale.string vc.locale z.label ++ ", ") ]
+                                [ text (Locale.string vc.locale z.label ++ ( if (i /= (jl - 1)) then ", " else "")) ]
                         )
                     |> div []
                     |> Just
@@ -125,11 +129,11 @@ tagLabel vc lbl tag =
                 { tooltipRowLabel = { title = Locale.string vc.locale "Tag label" }
                 , tooltipRowValue = lbldata.label |> val vc
                 }
-            , GraphComponents.tooltipRowWithInstances
-                (GraphComponents.tooltipRowAttributes
-                    |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            , GraphComponents.tooltipRowComponentWithInstances
+                (GraphComponents.tooltipRowComponentAttributes
+                    |> Rs.s_tooltipRowComponent [ css [ Css.width (Css.pct 100) ] ]
                 )
-                (GraphComponents.tooltipRowInstances
+                (GraphComponents.tooltipRowComponentInstances
                     |> Rs.s_tooltipRowValue
                         (getConfidenceIndicator vc lbldata.confidence |> Just)
                 )
