@@ -46,6 +46,7 @@ import Msg.Pathfinder
     exposing
         ( DisplaySettingsMsg(..)
         , Msg(..)
+        , OverlayWindows(..)
         , WorkflowNextTxByTimeMsg(..)
         )
 import Msg.Search as Search
@@ -79,6 +80,19 @@ import Util.Pathfinder.TagSummary as TagSummary
 import View.Locale as Locale
 
 
+delay : Float -> msg -> Cmd msg
+delay time msg =
+    -- create a task that sleeps for `time`
+    Process.sleep time
+        |> -- once the sleep is over, ignore its output (using `always`)
+           -- and then we create a new task that simply returns a success, and the msg
+           Task.andThen (always <| Task.succeed msg)
+        |> -- finally, we ask Elm to perform the Task, which
+           -- takes the result of the above task and
+           -- returns it to our update function
+           Task.perform identity
+
+
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
@@ -109,6 +123,20 @@ resultLineToRoute search =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
+        UserOpensDialogWindow windowType ->
+            case windowType of
+                TagsList id ->
+                    ( model
+                    , UserGotDataForTagsListDialog id
+                        |> Api.GetAddressTagsEffect { currency = Id.network id, address = Id.id id, pagesize = 5000, nextpage = Nothing }
+                        |> ApiEffect
+                        |> List.singleton
+                    )
+
+        UserGotDataForTagsListDialog _ _ ->
+            -- handled in src/Update.elm
+            n model
+
         RuntimePostponedUpdateByRoute route ->
             updateByRoute plugins uc route model
 
@@ -603,26 +631,63 @@ updateByMsg plugins uc msg model =
                     let
                         ( hc, cmd ) =
                             x |> Hovercard.init
-                    in
-                    ( { model
-                        | tooltip =
-                            case Dict.get id model.tagSummaries of
-                                Just (HasTagSummary ts) ->
-                                    Just (Tooltip.TagLabel x ts |> Tooltip.init hc)
+
+                        hasToChange =
+                            case model.tooltip of
+                                Just { type_ } ->
+                                    case type_ of
+                                        Tooltip.TagLabel lbl _ ->
+                                            lbl /= x
+
+                                        _ ->
+                                            True
 
                                 _ ->
-                                    Nothing
-                      }
-                    , Cmd.map HovercardMsg cmd
-                        |> CmdEffect
-                        |> List.singleton
-                    )
+                                    True
+                    in
+                    if hasToChange then
+                        ( { model
+                            | tooltip =
+                                case Dict.get id model.tagSummaries of
+                                    Just (HasTagSummary ts) ->
+                                        Just (Tooltip.TagLabel x ts |> Tooltip.init hc)
+
+                                    _ ->
+                                        Nothing
+                          }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+
+                    else
+                        n { model | tooltip = model.tooltip |> Maybe.map (s_closing False) }
 
                 _ ->
                     n model
 
-        UserMovesMouseOutTagLabel _ ->
-            n { model | tooltip = Nothing }
+        UserMovesMouseOutTagLabel id ->
+            let
+                tt =
+                    model.tooltip |> Maybe.map (s_closing True)
+            in
+            ( { model | tooltip = tt }, (delay 2000.0 <| CloseTagLabelTooltip id) |> CmdEffect |> List.singleton )
+
+        CloseTagLabelTooltip _ ->
+            n
+                { model
+                    | tooltip =
+                        case model.tooltip of
+                            Just { closing } ->
+                                if closing then
+                                    Nothing
+
+                                else
+                                    model.tooltip
+
+                            _ ->
+                                model.tooltip
+                }
 
         UserMovesMouseOverActorLabel x ->
             case Dict.get x model.actors of

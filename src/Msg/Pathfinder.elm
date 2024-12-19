@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), TxDetailsMsg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
+module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TxDetailsMsg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -69,6 +69,7 @@ type Msg
     | UserMovesMouseOutAddress Id
     | UserMovesMouseOverTagLabel String
     | UserMovesMouseOutTagLabel String
+    | CloseTagLabelTooltip String
     | UserMovesMouseOverActorLabel String
     | UserMovesMouseOutActorLabel String
     | UserInputsAnnotation Id String
@@ -92,6 +93,12 @@ type Msg
     | UserClosesContextMenu
     | RuntimePostponedUpdateByRoute Route
     | BrowserWaitedAfterReleasingMouseButton
+    | UserOpensDialogWindow OverlayWindows
+    | UserGotDataForTagsListDialog Id Api.Data.AddressTags
+
+
+type OverlayWindows
+    = TagsList Id
 
 
 type DisplaySettingsMsg

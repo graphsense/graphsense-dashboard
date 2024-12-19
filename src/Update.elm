@@ -65,6 +65,7 @@ import Util exposing (n)
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
 import View.Locale as Locale
+import View.Pathfinder.TagDetailsList
 import Yaml.Decode
 
 
@@ -807,6 +808,24 @@ update plugins uc msg model =
                     |> PathfinderEffect
               , SetCleanEffect
               ]
+            )
+
+        PathfinderMsg (Pathfinder.UserGotDataForTagsListDialog id tags) ->
+            let
+                ( pathfinder, eff ) =
+                    Pathfinder.update plugins uc (Pathfinder.UserGotDataForTagsListDialog id tags) model.pathfinder
+            in
+            ( { model
+                | pathfinder = pathfinder
+                , dialog =
+                    Just
+                        (Dialog.Custom
+                            { html = View.Pathfinder.TagDetailsList.view model.config id (Just tags)
+                            , defaultMsg = UserClosesDialog
+                            }
+                        )
+              }
+            , List.map PathfinderEffect eff
             )
 
         PathfinderMsg m ->

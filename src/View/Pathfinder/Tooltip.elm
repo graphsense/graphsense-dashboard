@@ -7,11 +7,13 @@ import Css.Pathfinder as Css
 import Dict exposing (Dict)
 import Html.Styled exposing (Html, div, span, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, title)
+import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
+import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
@@ -21,33 +23,37 @@ import Util.View exposing (hovercard, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : View.Config -> Dict Id HavingTags -> Tooltip -> Html msg
+view : View.Config -> Dict Id HavingTags -> Tooltip -> Html Msg
 view vc ts tt =
-    (case tt.type_ of
-        UtxoTx t ->
-            genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }
+    let
+        ( content, containerAttributes ) =
+            case tt.type_ of
+                UtxoTx t ->
+                    ( genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }, [] )
 
-        AccountTx t ->
-            genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }
+                AccountTx t ->
+                    ( genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }, [] )
 
-        Address a ->
-            address vc (Dict.get a.id ts) a
+                Address a ->
+                    ( address vc (Dict.get a.id ts) a, [] )
 
-        TagLabel lblid x ->
-            tagLabel vc lblid x
+                TagLabel lblid x ->
+                    ( tagLabel vc lblid x, [ onMouseEnter (UserMovesMouseOverTagLabel lblid), onMouseLeave (UserMovesMouseOutTagLabel lblid) ] )
 
-        ActorDetails ac ->
-            showActor vc ac
-    )
+                ActorDetails ac ->
+                    ( showActor vc ac, [] )
+    in
+    content
         |> div
-            [ css GraphComponents.tooltipProperty1Down_details.styles
-            ]
+            (css GraphComponents.tooltipProperty1Down_details.styles
+                :: containerAttributes
+            )
         |> toUnstyled
         |> List.singleton
         |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)
 
 
-getConfidenceIndicator : View.Config -> Float -> Html msg
+getConfidenceIndicator : View.Config -> Float -> Html Msg
 getConfidenceIndicator vc x =
     if x >= 0.8 then
         span [ Css.tagConfidenceTextHighStyle vc |> css ] [ Locale.text vc.locale "High" ]
@@ -67,7 +73,7 @@ val vc str =
     }
 
 
-row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html msg
+row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html Msg
 row =
     GraphComponents.tooltipRowComponentWithAttributes
         (GraphComponents.tooltipRowComponentAttributes
@@ -75,7 +81,7 @@ row =
         )
 
 
-showActor : View.Config -> Actor -> List (Html msg)
+showActor : View.Config -> Actor -> List (Html Msg)
 showActor vc a =
     [ row
         { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
@@ -91,11 +97,11 @@ showActor vc a =
         )
         (GraphComponents.tooltipRowComponentInstances
             |> Rs.s_tooltipRowValue
-                (
-                    let
-                        jl = List.length a.jurisdictions
-                    in 
-                    a.jurisdictions
+                (let
+                    jl =
+                        List.length a.jurisdictions
+                 in
+                 a.jurisdictions
                     |> List.indexedMap
                         (\i z ->
                             span
@@ -105,7 +111,16 @@ showActor vc a =
                                     |> List.singleton
                                     |> css
                                 ]
-                                [ text (Locale.string vc.locale z.label ++ ( if (i /= (jl - 1)) then ", " else "")) ]
+                                [ text
+                                    (Locale.string vc.locale z.label
+                                        ++ (if i /= (jl - 1) then
+                                                ", "
+
+                                            else
+                                                ""
+                                           )
+                                    )
+                                ]
                         )
                     |> div []
                     |> Just
@@ -117,7 +132,7 @@ showActor vc a =
     ]
 
 
-tagLabel : View.Config -> String -> TagSummary -> List (Html msg)
+tagLabel : View.Config -> String -> TagSummary -> List (Html Msg)
 tagLabel vc lbl tag =
     let
         mlbldata =
@@ -188,7 +203,7 @@ tagLabel vc lbl tag =
             []
 
 
-address : View.Config -> Maybe HavingTags -> Addr.Address -> List (Html msg)
+address : View.Config -> Maybe HavingTags -> Addr.Address -> List (Html Msg)
 address vc tags adr =
     let
         net =
@@ -247,7 +262,7 @@ address vc tags adr =
            )
 
 
-genericTx : View.Config -> { txId : String, timestamp : Int } -> List (Html msg)
+genericTx : View.Config -> { txId : String, timestamp : Int } -> List (Html Msg)
 genericTx vc tx =
     [ row
         { tooltipRowLabel = { title = Locale.string vc.locale "Tx hash" }

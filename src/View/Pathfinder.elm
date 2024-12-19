@@ -37,7 +37,7 @@ import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, 
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Tx as Tx
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TxDetailsMsg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
@@ -90,20 +90,6 @@ type alias BtnConfig =
 
 
 
--- inlineClusterIcon : Bool -> Color -> Html Msg
--- inlineClusterIcon highlight clr =
---     let
---         getHighlight c =
---             if highlight then
---                 [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
---             else
---                 []
---     in
---     HIcons.iconsUntaggedWithAttributes
---         (HIcons.iconsUntaggedAttributes
---             |> Rs.s_ellipse25 (getHighlight clr)
---         )
---         {}
 -- Helpers
 
 
@@ -763,18 +749,13 @@ addressDetailsContentView vc gc model id viewState =
             List.isEmpty tagLabels |> not
 
         showTag i ( tid, t ) =
-            let
-                link =
-                    Route.Graph.addressRoute { currency = Id.network id, address = Id.id id, layer = Nothing, table = Just AddressTagsTable }
-                        |> Route.Graph
-                        |> Route.toUrl
-            in
-            Html.a
+            Html.div
                 [ onMouseEnter (UserMovesMouseOverTagLabel tid)
                 , onMouseLeave (UserMovesMouseOutTagLabel tid)
                 , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
                 , HA.id tid
-                , HA.href link
+                , css [ Css.cursor Css.pointer ]
+                , onClick (UserOpensDialogWindow (TagsList id))
                 ]
                 (Html.text t.label
                     :: (if i < (lenTagLabels - 1) then

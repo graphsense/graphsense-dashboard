@@ -225,3 +225,12 @@ shallPushHistory msg _ =
 
         BrowserWaitedAfterReleasingMouseButton ->
             False
+
+        UserOpensDialogWindow _ ->
+            False
+
+        UserGotDataForTagsListDialog _ _ ->
+            False
+
+        CloseTagLabelTooltip _ ->
+            False

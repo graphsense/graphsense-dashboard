@@ -330,7 +330,7 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
                     )
 
                 Label a ->
-                    ( FontAwesome.tag, a, False)
+                    ( FontAwesome.tag, a, False )
 
                 Actor ( _, lbl ) ->
                     ( FontAwesome.user, lbl, False )
