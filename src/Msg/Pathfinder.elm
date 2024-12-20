@@ -72,6 +72,7 @@ type Msg
     | CloseTagLabelTooltip String
     | UserMovesMouseOverActorLabel String
     | UserMovesMouseOutActorLabel String
+    | CloseActorLabelTooltip String
     | UserInputsAnnotation Id String
     | UserSelectsAnnotationColor Id (Maybe Color)
     | HovercardMsg Hovercard.Msg

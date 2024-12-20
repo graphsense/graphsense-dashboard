@@ -92,6 +92,34 @@ delay time msg =
            -- returns it to our update function
            Task.perform identity
 
+tooltipBeginClosing : Msg -> ( Model, List Effect ) ->  ( Model, List Effect )
+tooltipBeginClosing closingMsg (model, eff)  =             
+    let
+        tt =
+            model.tooltip |> Maybe.map (s_closing True)
+    in
+    ( { model | tooltip = tt }, ((delay 2000.0 <| closingMsg) |> CmdEffect) :: eff )
+
+tooltipAbortClosing: ( Model, List Effect ) ->  ( Model, List Effect )
+tooltipAbortClosing (model, eff) = ({model | tooltip = model.tooltip |> Maybe.map (s_closing False)}, eff)
+
+tooltipCloseIfNotAborted:  ( Model, List Effect ) ->  ( Model, List Effect )
+tooltipCloseIfNotAborted (model, eff) =
+            (
+                { model
+                    | tooltip =
+                        case model.tooltip of
+                            Just { closing } ->
+                                if closing then
+                                    Nothing
+
+                                else
+                                    model.tooltip
+
+                            _ ->
+                                model.tooltip
+                }, eff)
+
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
@@ -632,18 +660,13 @@ updateByMsg plugins uc msg model =
                         ( hc, cmd ) =
                             x |> Hovercard.init
 
-                        hasToChange =
-                            case model.tooltip of
-                                Just { type_ } ->
-                                    case type_ of
-                                        Tooltip.TagLabel lbl _ ->
-                                            lbl /= x
 
-                                        _ ->
-                                            True
-
-                                _ ->
-                                    True
+                        hasToChange = model.tooltip 
+                                        |> Maybe.map (\tt -> case tt.type_ of
+                                                                Tooltip.TagLabel lbl _ ->
+                                                                    lbl /= x
+                                                                _ -> True)
+                                        |> Maybe.withDefault True
                     in
                     if hasToChange then
                         ( { model
@@ -661,33 +684,16 @@ updateByMsg plugins uc msg model =
                         )
 
                     else
-                        n { model | tooltip = model.tooltip |> Maybe.map (s_closing False) }
+                       n model |> tooltipAbortClosing
 
                 _ ->
                     n model
 
         UserMovesMouseOutTagLabel id ->
-            let
-                tt =
-                    model.tooltip |> Maybe.map (s_closing True)
-            in
-            ( { model | tooltip = tt }, (delay 2000.0 <| CloseTagLabelTooltip id) |> CmdEffect |> List.singleton )
+            (n model) |> tooltipBeginClosing (CloseTagLabelTooltip id)
 
         CloseTagLabelTooltip _ ->
-            n
-                { model
-                    | tooltip =
-                        case model.tooltip of
-                            Just { closing } ->
-                                if closing then
-                                    Nothing
-
-                                else
-                                    model.tooltip
-
-                            _ ->
-                                model.tooltip
-                }
+            (n model) |> tooltipCloseIfNotAborted
 
         UserMovesMouseOverActorLabel x ->
             case Dict.get x model.actors of
@@ -695,20 +701,30 @@ updateByMsg plugins uc msg model =
                     let
                         ( hc, cmd ) =
                             (x ++ "_actor") |> Hovercard.init
+
+                        hasToChange = model.tooltip 
+                                        |> Maybe.map (\tt -> case tt.type_ of
+                                                                Tooltip.ActorDetails a ->
+                                                                    a.id /= x
+                                                                _ -> True)
+                                        |> Maybe.withDefault True
+                        newTT = Just (Tooltip.ActorDetails actor |> Tooltip.init hc)
                     in
-                    ( { model
-                        | tooltip = Just (Tooltip.ActorDetails actor |> Tooltip.init hc)
-                      }
-                    , Cmd.map HovercardMsg cmd
+                    if hasToChange then
+                        ({model | tooltip = newTT}, Cmd.map HovercardMsg cmd
                         |> CmdEffect
-                        |> List.singleton
-                    )
+                        |> List.singleton)
+                    else
+                        (n model) |> tooltipAbortClosing
 
                 _ ->
                     n model
 
-        UserMovesMouseOutActorLabel _ ->
-            n { model | tooltip = Nothing }
+        UserMovesMouseOutActorLabel id ->
+            (n model) |> tooltipBeginClosing (CloseActorLabelTooltip id)
+
+        CloseActorLabelTooltip _ -> 
+            (n model) |> tooltipCloseIfNotAborted
 
         HovercardMsg hcMsg ->
             model.tooltip

@@ -234,3 +234,6 @@ shallPushHistory msg _ =
 
         CloseTagLabelTooltip _ ->
             False
+
+        CloseActorLabelTooltip _ -> 
+            False

@@ -41,7 +41,7 @@ view vc ts tt =
                     ( tagLabel vc lblid x, [ onMouseEnter (UserMovesMouseOverTagLabel lblid), onMouseLeave (UserMovesMouseOutTagLabel lblid) ] )
 
                 ActorDetails ac ->
-                    ( showActor vc ac, [] )
+                    ( showActor vc ac, [onMouseEnter (UserMovesMouseOverActorLabel ac.id), onMouseLeave (UserMovesMouseOutActorLabel ac.id)] )
     in
     content
         |> div
