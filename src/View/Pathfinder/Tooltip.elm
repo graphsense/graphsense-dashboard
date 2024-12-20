@@ -6,7 +6,7 @@ import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
 import Html.Styled exposing (Html, div, span, text, toUnstyled)
-import Html.Styled.Attributes exposing (css, title)
+import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
@@ -41,7 +41,7 @@ view vc ts tt =
                     ( tagLabel vc lblid x, [ onMouseEnter (UserMovesMouseOverTagLabel lblid), onMouseLeave (UserMovesMouseOutTagLabel lblid) ] )
 
                 ActorDetails ac ->
-                    ( showActor vc ac, [onMouseEnter (UserMovesMouseOverActorLabel ac.id), onMouseLeave (UserMovesMouseOutActorLabel ac.id)] )
+                    ( showActor vc ac, [ onMouseEnter (UserMovesMouseOverActorLabel ac.id), onMouseLeave (UserMovesMouseOutActorLabel ac.id) ] )
     in
     content
         |> div
@@ -87,9 +87,16 @@ showActor vc a =
         { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
         , tooltipRowValue = a.label |> val vc
         }
-    , row
+    , GraphComponents.tooltipRowComponentWithInstances
+        (GraphComponents.tooltipRowComponentAttributes
+            |> Rs.s_tooltipRowComponent [ css [ Css.width (Css.pct 100) ] ]
+        )
+        (GraphComponents.tooltipRowComponentInstances
+            |> Rs.s_tooltipRowValue
+                (Just (Html.Styled.a [ Css.plainLinkStyle vc |> css, href a.uri, target "blank" ] [ text a.uri ]))
+        )
         { tooltipRowLabel = { title = Locale.string vc.locale "Url" }
-        , tooltipRowValue = a.uri |> val vc
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
         }
     , GraphComponents.tooltipRowComponentWithInstances
         (GraphComponents.tooltipRowComponentAttributes

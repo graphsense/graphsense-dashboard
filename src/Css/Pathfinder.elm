@@ -9,6 +9,7 @@ module Css.Pathfinder exposing
     , mGap
     , mlGap
     , no
+    , plainLinkStyle
     , sGap
     , searchBoxMinWidth
     , tagConfidenceTextHighStyle
@@ -189,6 +190,11 @@ annotationInputStyle vc _ =
     , border2 no solid
     , outline none
     ]
+
+
+plainLinkStyle : View.Config -> List Style
+plainLinkStyle vc =
+    [ TColors.black0 |> property "color" ]
 
 
 linkButtonStyle : View.Config -> Bool -> List Style
