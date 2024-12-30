@@ -86,7 +86,7 @@ delay time msg =
     Process.sleep time
         |> -- once the sleep is over, ignore its output (using `always`)
            -- and then we create a new task that simply returns a success, and the msg
-           Task.andThen (always <| Task.succeed msg)
+           Task.map (always <| msg)
         |> -- finally, we ask Elm to perform the Task, which
            -- takes the result of the above task and
            -- returns it to our update function

@@ -193,7 +193,7 @@ annotationInputStyle vc _ =
 
 
 plainLinkStyle : View.Config -> List Style
-plainLinkStyle vc =
+plainLinkStyle _ =
     [ TColors.black0 |> property "color" ]
 
 

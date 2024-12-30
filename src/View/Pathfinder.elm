@@ -45,7 +45,7 @@ import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
 import Route
-import Route.Graph exposing (AddressTable(..))
+import Route.Graph
 import String.Format
 import Svg.Styled exposing (Svg, defs, linearGradient, stop, svg)
 import Svg.Styled.Attributes exposing (css, height, id, offset, preserveAspectRatio, stopColor, transform, viewBox, width)

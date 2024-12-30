@@ -18,10 +18,10 @@ import RecordSetter as Rs
 import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util.Css as Css
+import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (hovercard, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
-import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 
 
 view : View.Config -> Dict Id HavingTags -> Tooltip -> Html Msg
@@ -56,14 +56,17 @@ view vc ts tt =
 
 getConfidenceIndicator : View.Config -> Float -> Html Msg
 getConfidenceIndicator vc x =
-    let 
-        r = getConfidenceRangeFromFloat x
+    let
+        r =
+            getConfidenceRangeFromFloat x
     in
-    case r of 
+    case r of
         High ->
             span [ Css.tagConfidenceTextHighStyle vc |> css ] [ Locale.text vc.locale "High" ]
-        Medium -> 
+
+        Medium ->
             span [ Css.tagConfidenceTextMediumStyle vc |> css ] [ Locale.text vc.locale "Medium" ]
+
         Low ->
             span [ Css.tagConfidenceTextLowStyle vc |> css ] [ Locale.text vc.locale "Low" ]
 

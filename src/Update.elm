@@ -815,7 +815,8 @@ update plugins uc msg model =
                 ( pathfinder, eff ) =
                     Pathfinder.update plugins uc (Pathfinder.UserGotDataForTagsListDialog id tags) model.pathfinder
 
-                closemsg = UserClosesDialog
+                closemsg =
+                    UserClosesDialog
             in
             ( { model
                 | pathfinder = pathfinder

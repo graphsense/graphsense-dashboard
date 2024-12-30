@@ -1,10 +1,9 @@
 module View.Pathfinder.TagDetailsList exposing (view)
 
-import Basics.Extra exposing (flip)
 import Api.Data
 import Config.View as View
 import Css
-import Html.Styled as Html exposing (Html, div)
+import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Table.TagsTable as TagsTable
 import Model exposing (Msg)
@@ -16,16 +15,19 @@ import View.Graph.Table
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
 
+
 view : View.Config -> Msg -> Id -> Maybe Api.Data.AddressTags -> Html Msg
 view vc closeMsg id tags =
     let
-        fullWidthAttr = Css.pct 100 |> Css.width |> List.singleton |> css |> List.singleton
+        fullWidthAttr =
+            Css.pct 100 |> Css.width |> List.singleton |> css |> List.singleton
+
         header =
             TagsComponents.dialogTagHeaderWithAttributes
                 (TagsComponents.dialogTagHeaderAttributes
-                    |> Rs.s_dialogTagHeader (fullWidthAttr)
-                    |> Rs.s_header (fullWidthAttr)
-                    |> Rs.s_closeIcon ([[Css.cursor Css.pointer] |> css, onClickWithStop closeMsg])
+                    |> Rs.s_dialogTagHeader fullWidthAttr
+                    |> Rs.s_header fullWidthAttr
+                    |> Rs.s_closeIcon [ [ Css.cursor Css.pointer ] |> css, onClickWithStop closeMsg ]
                 )
                 { dialogTagHeader = { headerTitle = Locale.string vc.locale "Tags list" }
                 , identifierWithCopyIcon =
@@ -37,7 +39,7 @@ view vc closeMsg id tags =
     in
     div
         [ css
-            (TagsComponents.dialogTagsListComponent_details.styles ++ [Css.width (Css.pct 100), Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 800) * 0.5))])
+            (TagsComponents.dialogTagsListComponent_details.styles ++ [ Css.width (Css.pct 100), Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 800) * 0.5)) ])
         ]
         [ header
         , View.Graph.Table.table
