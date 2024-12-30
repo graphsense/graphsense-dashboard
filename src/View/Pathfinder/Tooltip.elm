@@ -1,7 +1,7 @@
 module View.Pathfinder.Tooltip exposing (view)
 
 import Api.Data exposing (Actor, TagSummary)
-import Config.View as View
+import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
@@ -177,6 +177,7 @@ tagLabel vc lbl tag =
                             { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
                             , tooltipRowValue =
                                 lbldata.concepts
+                                    |> List.map (\x -> getConceptName vc (Just x) |> Maybe.withDefault x)
                                     |> String.join ","
                                     |> Locale.string vc.locale
                                     |> Util.View.truncate 20

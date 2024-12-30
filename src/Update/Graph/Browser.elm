@@ -2,6 +2,7 @@ module Update.Graph.Browser exposing (filterTable, hideTable, infiniteScroll, lo
 
 import Api.Data
 import Config.Graph as Graph
+import Config.Update
 import Dict
 import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
@@ -2783,8 +2784,8 @@ searchTable gc searchTerm model =
     }
 
 
-tableAsCSV : Locale.Model -> Graph.Config -> Model -> Maybe ( String, String )
-tableAsCSV locale gc { type_ } =
+tableAsCSV : Locale.Model -> Config.Update.Config -> Model -> Maybe ( String, String )
+tableAsCSV locale uc { type_ } =
     let
         translate =
             --List.map (mapFirst (\( str, params ) -> Locale.interpolated locale str params))
@@ -3009,7 +3010,7 @@ tableAsCSV locale gc { type_ } =
 
         UserTags t ->
             Locale.string locale "user address tags"
-                |> asCsv (UserAddressTagsTable.prepareCSV gc) t
+                |> asCsv (UserAddressTagsTable.prepareCSV uc) t
 
         Plugin ->
             Nothing

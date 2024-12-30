@@ -1,6 +1,7 @@
 module View.Graph.Table.UserAddressTagsTable exposing (config, prepareCSV)
 
 import Config.Graph as Graph
+import Config.Update
 import Config.View as View
 import Css
 import Css.Table exposing (styles)
@@ -21,8 +22,8 @@ import Util.View
 import View.Graph.Table as T exposing (customizations)
 
 
-config : View.Config -> Graph.Config -> Table.Config Tag.UserTag Msg
-config vc gc =
+config : View.Config -> Table.Config Tag.UserTag Msg
+config vc =
     let
         toMsg data =
             UserClickedAddressInTable
@@ -68,8 +69,8 @@ config vc gc =
                         text truncated
                     ]
                 )
-            , T.stringColumn styles vc titleCategory (.category >> Util.Graph.getCategory gc >> Maybe.withDefault "")
-            , T.stringColumn styles vc titleAbuse (.abuse >> Util.Graph.getAbuse gc >> Maybe.withDefault "")
+            , T.stringColumn styles vc titleCategory (.category >> Config.View.getConceptName vc >> Maybe.withDefault "")
+            , T.stringColumn styles vc titleAbuse (.abuse >> Config.View.getAbuseName vc >> Maybe.withDefault "")
             ]
         , customizations =
             customizations styles vc
@@ -102,13 +103,13 @@ n s =
     ( s, [] )
 
 
-prepareCSV : Graph.Config -> Tag.UserTag -> List ( ( String, List String ), String )
-prepareCSV gc row =
+prepareCSV : Config.Update.Config -> Tag.UserTag -> List ( ( String, List String ), String )
+prepareCSV uc row =
     [ ( n "address", Util.Csv.string row.address )
     , ( n "currency", Util.Csv.string <| String.toUpper row.currency )
     , ( n "label", Util.Csv.string row.label )
     , ( n "is_cluster_definer", Util.Csv.bool row.isClusterDefiner )
     , ( n "source", Util.Csv.string row.source )
-    , ( n "category", row.category |> Util.Graph.getCategory gc |> Maybe.withDefault "" |> Util.Csv.string )
-    , ( n "abuse", row.abuse |> Util.Graph.getAbuse gc |> Maybe.withDefault "" |> Util.Csv.string )
+    , ( n "category", row.category |> Config.View.getConceptName uc |> Maybe.withDefault "" |> Util.Csv.string )
+    , ( n "abuse", row.abuse |> Config.View.getAbuseName uc |> Maybe.withDefault "" |> Util.Csv.string )
     ]

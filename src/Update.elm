@@ -1,6 +1,7 @@
 module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 
 import Api
+import Api.Data
 import Browser
 import Browser.Dom
 import Config.Update exposing (Config)
@@ -69,6 +70,24 @@ import View.Pathfinder.TagDetailsList
 import Yaml.Decode
 
 
+setConcepts : List Api.Data.Concept -> Model t -> Model t
+setConcepts concepts model =
+    { model
+        | config =
+            model.config
+                |> s_allConcepts concepts
+    }
+
+
+setAbuseConcepts : List Api.Data.Concept -> Model t -> Model t
+setAbuseConcepts concepts model =
+    { model
+        | config =
+            model.config
+                |> s_abuseConcepts concepts
+    }
+
+
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
     case Log.truncate "msg" msg of
@@ -108,17 +127,11 @@ update plugins uc msg model =
                 }
 
         BrowserGotEntityTaxonomy concepts ->
-            { model
-                | graph =
-                    Graph.setEntityConcepts concepts model.graph
-            }
+            setConcepts concepts model
                 |> n
 
         BrowserGotAbuseTaxonomy concepts ->
-            { model
-                | graph =
-                    Graph.setAbuseConcepts concepts model.graph
-            }
+            setAbuseConcepts concepts model
                 |> n
 
         BrowserGotSupportedTokens currency configs ->

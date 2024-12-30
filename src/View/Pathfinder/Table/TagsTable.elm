@@ -1,7 +1,7 @@
 module View.Pathfinder.Table.TagsTable exposing (config, styles)
 
 import Api.Data
-import Config.View as View
+import Config.View as View exposing (getConceptName)
 import Css
 import Css.Table
 import Html.Styled exposing (a, text)
@@ -136,7 +136,22 @@ labelColumn vc =
                         else
                             None
                 in
-                cell vc (LabelCell { label = data.label, subLabel = Just (concepts |> String.join ", ") } icon)
+                cell vc
+                    (LabelCell
+                        { label = data.label
+                        , subLabel =
+                            Just
+                                (concepts
+                                    |> List.map
+                                        (\x ->
+                                            getConceptName vc (Just x)
+                                                |> Maybe.withDefault x
+                                        )
+                                    |> String.join ", "
+                                )
+                        }
+                        icon
+                    )
         , sorter = Table.unsortable
         }
 
