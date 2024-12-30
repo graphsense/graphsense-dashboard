@@ -814,7 +814,7 @@ addressDetailsContentView vc gc model id viewState =
                         ts |> Maybe.map (\x -> x.conceptTagCloud |> Dict.toList |> List.sortBy (\( _, v ) -> v.weighted)) |> Maybe.withDefault [] |> List.reverse
 
                     conceptItem ( k, _ ) =
-                        TagComponents.confidenceLevelConfidenceLevelMedium { confidenceLevelMedium = { text = View.getConceptName vc (Just k) |> Maybe.withDefault k } }
+                        TagComponents.categoryTags { categoryTags = { tagLabel = View.getConceptName vc (Just k) |> Maybe.withDefault k } }
                 in
                 Just
                     (div
