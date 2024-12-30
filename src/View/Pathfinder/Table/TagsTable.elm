@@ -1,28 +1,84 @@
-module View.Pathfinder.Table.TagsTable exposing (..)
+module View.Pathfinder.Table.TagsTable exposing (config, styles)
 
+import Url
 import Api.Data
-import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
-import Css.Table exposing (Styles)
-import Init.Pathfinder.Id as Id
 import Model exposing (Msg(..))
-import Model.Currency exposing (asset)
-import Model.Pathfinder.Id as Id exposing (Id)
-import RecordSetter as Rs
-import Set
+import Html.Styled.Attributes exposing (css, href, target)
+import Css.Table
 import Table
 import Theme.Html.TagsComponents as TagsComponents
-import Util.View exposing (copyIconPathfinder, none, truncateLongIdentifierWithLengths)
+import Theme.Html.Icons as Icons
+import Util.View exposing (none)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations)
-import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
+import View.Graph.Table exposing (customizations)
+import Theme.Colors as Colors
+import RecordSetter as Rs
+import Html.Styled exposing (Html, a, text)
+import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
+import Set
+import Util.Pathfinder.TagSummary exposing (exchangeCategory)
+import String.Extra
 
 
 tagId : Api.Data.AddressTag -> String
 tagId t =
     String.join "|" [ t.address, t.label, t.currency, t.tagpackUri |> Maybe.withDefault "-" ]
 
+type alias CellConfig = { label: String, subLabel: Maybe String}
+type alias LinkCellConfig = {link: Maybe String, label: String, subLabel: Maybe String}
+
+type TagIcon = Exchange | None
+type Cell = DefaultCell CellConfig | LinkCell LinkCellConfig | LabelCell CellConfig TagIcon
+
+
+linkCellStyle : List Css.Style
+linkCellStyle = TagsComponents.tagRowCellLabel_details.styles ++ [Css.property "color" Colors.blue400, Css.textDecoration Css.none] 
+
+cell : View.Config -> Cell -> Table.HtmlDetails msg
+cell _ c =  let
+                attrs = TagsComponents.tagRowCellAttributes |> Rs.s_line ([Css.display Css.none] |> css |> List.singleton)
+                defaultData cc tagIcon actionIcon = { tagRowCell =
+                                        { actionIconInstance = actionIcon |> Maybe.withDefault none
+                                        , iconVisible = (tagIcon /= Nothing)
+                                        , infoVisible = (actionIcon /= Nothing)
+                                        , labelText = cc.label
+                                        , subLabelTextVisible = (cc.subLabel /= Nothing)
+                                        , subLabelText = cc.subLabel |> Maybe.withDefault ""
+                                        , tagIconInstance = tagIcon |> Maybe.withDefault none
+                                        }
+                                    }
+            in
+            (case c of
+                DefaultCell cc -> TagsComponents.tagRowCellWithAttributes
+                                    (attrs)
+                                    (defaultData cc Nothing Nothing)
+                LabelCell cc ti -> 
+                                let
+                                    icon = case ti of
+                                            Exchange -> (Just (Icons.iconsExchangeSmall {}))
+                                            None -> Nothing
+                                in
+                                TagsComponents.tagRowCellWithAttributes
+                                    (attrs)
+                                    (defaultData cc icon Nothing)
+                LinkCell cc -> 
+                                let
+                                    getLink url body = a [href url, target "blank", linkCellStyle |> css] (body |> List.singleton)
+                                    linkBody = cc.link |> Maybe.map (\x -> ( getLink x (text cc.label)))
+
+                                    linkIcon = Icons.iconsGoToSmallWithAttributes (Icons.iconsGoToSmallAttributes |> Rs.s_goTo ([Css.property "fill" Colors.blue400 |> Css.important] |> css |> List.singleton)) {}
+
+                                    linkBodyIcon =  cc.link |> Maybe.map (\x -> ( getLink x (linkIcon)))
+                                in
+                                TagsComponents.tagRowCellWithInstances
+                                    (attrs)
+                                    (TagsComponents.tagRowCellInstances |> Rs.s_label (linkBody))
+                                    (defaultData cc Nothing linkBodyIcon)
+            ) |> List.singleton |> (Table.HtmlDetails
+                    [[ Css.verticalAlign Css.middle ] |> css])
+                                    
 
 labelColumn : View.Config -> Table.Column Api.Data.AddressTag msg
 labelColumn vc =
@@ -31,23 +87,13 @@ labelColumn vc =
         , viewData =
             \data ->
                 let
-                    cate =
-                        data.category |> Maybe.withDefault "-"
+                    mconcept = data.category |> Maybe.map (List.singleton) |> Maybe.withDefault []
+                    concepts = mconcept ++ (data.concepts |> Maybe.withDefault []) 
+                    conceptss = Set.fromList concepts
+                    icon = if (Set.member exchangeCategory conceptss) then Exchange else None
+
                 in
-                Table.HtmlDetails
-                    []
-                    [ TagsComponents.tagRowCell
-                        { tagRowCell =
-                            { actionIconInstance = none
-                            , iconVisible = False
-                            , infoVisible = False
-                            , labelText = data.label
-                            , subLabelTextVisible = True
-                            , subLabelText = cate
-                            , tagIconInstance = none
-                            }
-                        }
-                    ]
+                    cell vc (LabelCell {label = data.label, subLabel = Just (concepts |> String.join ", ")} icon) 
         , sorter = Table.unsortable
         }
 
@@ -59,33 +105,19 @@ typeColumn vc =
         , viewData =
             \data ->
                 let
+                    
                     conf_l =
-                        data.confidenceLevel |> Maybe.withDefault 0
+                        (data.confidenceLevel |> Maybe.withDefault 0 |> toFloat) / 100 
 
-                    conf =
-                        if conf_l > 70 then
-                            "High confidence"
+                    r = getConfidenceRangeFromFloat conf_l
 
-                        else if conf_l > 40 then
-                            "Medium confidence"
-
-                        else
-                            "Low confidence"
+                    conf = (case r of 
+                                High -> "High confidence"
+                                Medium -> "Medium confidence"
+                                Low -> "Low confidence")
+                            
                 in
-                Table.HtmlDetails
-                    []
-                    [ TagsComponents.tagRowCell
-                        { tagRowCell =
-                            { actionIconInstance = none
-                            , iconVisible = False
-                            , infoVisible = True
-                            , labelText = Locale.string vc.locale "Actor"
-                            , subLabelTextVisible = False
-                            , subLabelText = Locale.string vc.locale conf
-                            , tagIconInstance = none
-                            }
-                        }
-                    ]
+                    cell vc (DefaultCell {label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase), subLabel = (Just (Locale.string vc.locale conf))})
         , sorter = Table.unsortable
         }
 
@@ -97,26 +129,22 @@ sourceColumn vc =
         , viewData =
             \data ->
                 let
+                    url = data.source |> Maybe.withDefault "#"
                     s =
-                        data.source |> Maybe.withDefault "-" |> String.replace "https://" ""
+                       url |> String.replace "https://" ""
 
-                    truncatedSource =
-                        String.left 10 s ++ "..." ++ String.right 15 s
+                    truncatedSource = case (String.split "/" s) of
+                                            a::_ -> a
+                                            _ -> "link"
+
+                    pUrl = (Url.fromString url)
+
+                    link = case pUrl of
+                            Just _ -> Just url
+                            _ -> Nothing
+                   
                 in
-                Table.HtmlDetails
-                    []
-                    [ TagsComponents.tagRowCell
-                        { tagRowCell =
-                            { actionIconInstance = none
-                            , iconVisible = False
-                            , infoVisible = True
-                            , labelText = truncatedSource
-                            , subLabelTextVisible = True
-                            , subLabelText = data.tagpackCreator
-                            , tagIconInstance = none
-                            }
-                        }
-                    ]
+                    cell vc (LinkCell {label =truncatedSource, link=link, subLabel = Just data.tagpackCreator})
         , sorter = Table.unsortable
         }
 
@@ -131,37 +159,37 @@ lastModColumn vc =
                     ( date, t ) =
                         data.lastmod |> Maybe.map (\d -> ( Locale.timestampDateUniform vc.locale d, Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d )) |> Maybe.withDefault ( "-", "-" )
                 in
-                Table.HtmlDetails
-                    []
-                    [ TagsComponents.tagRowCell
-                        { tagRowCell =
-                            { actionIconInstance = none
-                            , iconVisible = False
-                            , infoVisible = True
-                            , labelText = date
-                            , subLabelTextVisible = True
-                            , subLabelText = t
-                            , tagIconInstance = none
-                            }
-                        }
-                    ]
-        , sorter = Table.unsortable
+                    cell vc (DefaultCell {label =date, subLabel = Just t})
+        , sorter = Table.increasingOrDecreasingBy (\data -> data.lastmod |> Maybe.withDefault 0)
         }
 
+styles : Css.Table.Styles 
+styles = Css.Table.styles
+        |> Rs.s_root
+            (\_ ->
+                    [ Css.display Css.block
+                    , Css.width (Css.pct 100)
+                    , Css.paddingTop (Css.px 16)
+                    , Css.verticalAlign Css.top
+                    ]
+            )
+        |> Rs.s_headRow (\_ -> [Css.height (Css.px 24)
+                                , Css.textAlign Css.left
+                                , Css.borderBottom2 (Css.px 1) Css.solid
+                                , Css.property "border-color" Colors.greyBlue100])
+        |> Rs.s_row (\_-> [ Css.borderBottom2 (Css.px 1) Css.solid
+                                , Css.property "border-color" Colors.greyBlue100
+                                , Css.verticalAlign Css.top])
+        |> Rs.s_headCell
+            (\_ ->
+                    (
+                        -- TagsComponents.dialogTagsListComponentCellsLayout_details.styles
+                         [ Css.display Css.tableCell, Css.verticalAlign Css.top, Css.property "color" Colors.greyBlue500 ]
+                    )
+            )
 
 config : View.Config -> Table.Config Api.Data.AddressTag Msg
 config vc =
-    let
-        styles_ =
-            Css.Table.styles
-                |> Rs.s_root
-                    (Css.Table.styles.root
-                        >> flip (++)
-                            [ Css.display Css.block
-                            , Css.width (Css.pct 100)
-                            ]
-                    )
-    in
     Table.customConfig
         { toId = tagId
         , toMsg = \_ -> NoOp
@@ -172,6 +200,5 @@ config vc =
             , lastModColumn vc
             ]
         , customizations =
-            customizations vc
-                |> alignColumnsRight styles_ vc Set.empty
+            customizations styles vc
         }

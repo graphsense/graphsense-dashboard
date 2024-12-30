@@ -218,6 +218,9 @@ update plugins uc msg model =
                 Just (Dialog.Error _) ->
                     n { model | dialog = Nothing }
 
+                Just (Dialog.Custom _) ->
+                    n { model | dialog = Nothing }
+
                 _ ->
                     n model
 
@@ -527,9 +530,6 @@ update plugins uc msg model =
             in
             ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
 
-        SettingsMsg (UserChangedSettingsTab tab) ->
-            n { model | selectedSettingsTab = tab }
-
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
@@ -814,14 +814,16 @@ update plugins uc msg model =
             let
                 ( pathfinder, eff ) =
                     Pathfinder.update plugins uc (Pathfinder.UserGotDataForTagsListDialog id tags) model.pathfinder
+
+                closemsg = UserClosesDialog
             in
             ( { model
                 | pathfinder = pathfinder
                 , dialog =
                     Just
                         (Dialog.Custom
-                            { html = View.Pathfinder.TagDetailsList.view model.config id (Just tags)
-                            , defaultMsg = UserClosesDialog
+                            { html = View.Pathfinder.TagDetailsList.view model.config closemsg id (Just tags)
+                            , defaultMsg = closemsg
                             }
                         )
               }

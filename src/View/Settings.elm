@@ -5,7 +5,7 @@ import Css
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
-import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), SettingsTabs(..), UserModel)
+import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
@@ -59,30 +59,10 @@ view plugins vc m =
         { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBack {} }
         , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
         , settingsPage =
-            { instance =
-                case m.selectedSettingsTab of
-                    GeneralTab ->
-                        generalSettings plugins vc m
-
-                    GraphTab ->
-                        graphSettings vc m
-
-                    PathfinderTab ->
-                        pathfinderSettings vc m
-            }
+            { instance = generalSettings plugins vc m }
         , singleTab1 = { variant = Util.View.none }
         , singleTab2 = { variant = Util.View.none }
         }
-
-
-pathfinderSettings : Config -> Model x -> Html Model.Msg
-pathfinderSettings _ _ =
-    Util.View.none
-
-
-graphSettings : Config -> Model x -> Html Model.Msg
-graphSettings _ _ =
-    Util.View.none
 
 
 generalSettings : Plugins -> Config -> Model x -> Html Model.Msg

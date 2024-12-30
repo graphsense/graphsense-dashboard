@@ -1,4 +1,4 @@
-module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), Page(..), RequestLimit(..), SettingsMsg(..), SettingsTabs(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), Page(..), RequestLimit(..), SettingsMsg(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -61,7 +61,6 @@ type alias Model navigationKey =
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , notifications : Model.Notification.Model
     , selectBoxes : SelectBoxes.Model
-    , selectedSettingsTab : SettingsTabs
     , dirty : Bool
     }
 
@@ -121,13 +120,6 @@ type Msg
 type SettingsMsg
     = UserChangedPreferredCurrency String
     | UserToggledValueDisplay
-    | UserChangedSettingsTab SettingsTabs
-
-
-type SettingsTabs
-    = GeneralTab
-    | GraphTab
-    | PathfinderTab
 
 
 type RequestLimit

@@ -55,4 +55,5 @@ userTagToApiTag { currency, address, entity } isClusterDefiner tag =
     , actor = Nothing
     , concepts = Nothing
     , inheritedFrom = Nothing
+    , tagType = "actor"
     }

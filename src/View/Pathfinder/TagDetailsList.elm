@@ -1,9 +1,9 @@
 module View.Pathfinder.TagDetailsList exposing (view)
 
+import Basics.Extra exposing (flip)
 import Api.Data
 import Config.View as View
 import Css
-import Css.Table
 import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Table.TagsTable as TagsTable
@@ -16,12 +16,17 @@ import View.Graph.Table
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
 
-
-view : View.Config -> Id -> Maybe Api.Data.AddressTags -> Html Msg
-view vc id tags =
+view : View.Config -> Msg -> Id -> Maybe Api.Data.AddressTags -> Html Msg
+view vc closeMsg id tags =
     let
+        fullWidthAttr = Css.pct 100 |> Css.width |> List.singleton |> css |> List.singleton
         header =
-            TagsComponents.dialogTagHeader
+            TagsComponents.dialogTagHeaderWithAttributes
+                (TagsComponents.dialogTagHeaderAttributes
+                    |> Rs.s_dialogTagHeader (fullWidthAttr)
+                    |> Rs.s_header (fullWidthAttr)
+                    |> Rs.s_closeIcon ([[Css.cursor Css.pointer] |> css, onClickWithStop closeMsg])
+                )
                 { dialogTagHeader = { headerTitle = Locale.string vc.locale "Tags list" }
                 , identifierWithCopyIcon =
                     { chevronInstance = none
@@ -29,55 +34,17 @@ view vc id tags =
                     , identifier = Id.id id
                     }
                 }
-
-        styles =
-            Css.Table.styles
     in
     div
         [ css
-            (TagsComponents.dialogTagsListComponent_details.styles ++ [])
+            (TagsComponents.dialogTagsListComponent_details.styles ++ [Css.width (Css.pct 100), Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 800) * 0.5))])
         ]
         [ header
         , View.Graph.Table.table
-            styles
+            TagsTable.styles
             vc
-            [ css [ Css.overflowY Css.auto, Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 500) * 0.5)) ] ]
+            [ css [ Css.verticalAlign Css.top, Css.overflowY Css.scroll, Css.overflowX Css.hidden ] ]
             View.Graph.Table.noTools
             (TagsTable.config vc)
             (TagsTable.init (tags |> Maybe.map .addressTags |> Maybe.withDefault []))
         ]
-
-
-
--- TagsComponents.dialogTagsListComponentWithInstances
---     TagsComponents.dialogTagsListComponentAttributes
---     (TagsComponents.dialogTagsListComponentInstances
---         |> Rs.s_dialogTagHeader (Just header)
---         |> Rs.s_dialogTagsListComponent (Just none)
---     )
---     { dialogTagHeader = { headerTitle = "dummy" }
---     , identifierWithCopyIcon =
---         { chevronInstance = none
---         , copyIconInstance = none
---         , identifier = "dummy"
---         }
---     , tagCellDate130 = cellDummy
---     , tagCellDate170 = cellDummy
---     , tagCellDate49 = cellDummy
---     , tagCellDate90 = cellDummy
---     , tagCellLabel100 = cellDummy
---     , tagCellLabel140 = cellDummy
---     , tagCellLabel19 = cellDummy
---     , tagCellLabel60 = cellDummy
---     , tagCellSource120 = cellDummy
---     , tagCellSource160 = cellDummy
---     , tagCellSource39 = cellDummy
---     , tagCellSource80 = cellDummy
---     , tagCellType110 = cellDummy
---     , tagCellType150 = cellDummy
---     , tagCellType29 = cellDummy
---     , tagCellType70 = cellDummy
---     , timeTitle = { checkboxVisible = False, sort = none }
---     }
---     |> List.singleton
---     |> div []

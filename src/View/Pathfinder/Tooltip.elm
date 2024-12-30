@@ -21,6 +21,7 @@ import Util.Css as Css
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (hovercard, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
+import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 
 
 view : View.Config -> Dict Id HavingTags -> Tooltip -> Html Msg
@@ -55,14 +56,16 @@ view vc ts tt =
 
 getConfidenceIndicator : View.Config -> Float -> Html Msg
 getConfidenceIndicator vc x =
-    if x >= 0.8 then
-        span [ Css.tagConfidenceTextHighStyle vc |> css ] [ Locale.text vc.locale "High" ]
-
-    else if x >= 0.4 then
-        span [ Css.tagConfidenceTextMediumStyle vc |> css ] [ Locale.text vc.locale "Medium" ]
-
-    else
-        span [ Css.tagConfidenceTextLowStyle vc |> css ] [ Locale.text vc.locale "Low" ]
+    let 
+        r = getConfidenceRangeFromFloat x
+    in
+    case r of 
+        High ->
+            span [ Css.tagConfidenceTextHighStyle vc |> css ] [ Locale.text vc.locale "High" ]
+        Medium -> 
+            span [ Css.tagConfidenceTextMediumStyle vc |> css ] [ Locale.text vc.locale "Medium" ]
+        Low ->
+            span [ Css.tagConfidenceTextLowStyle vc |> css ] [ Locale.text vc.locale "Low" ]
 
 
 val : View.Config -> String -> { firstRow : String, secondRow : String, secondRowVisible : Bool }

@@ -242,6 +242,7 @@ type alias AddressTag =
     , label : String
     , lastmod : Maybe Int
     , source : Maybe String
+    , tagType : String
     , tagpackCreator : String
     , tagpackIsPublic : Bool
     , tagpackTitle : String
@@ -534,6 +535,7 @@ type alias Tag =
     , label : String
     , lastmod : Maybe Int
     , source : Maybe String
+    , tagType : String
     , tagpackCreator : String
     , tagpackIsPublic : Bool
     , tagpackTitle : String
@@ -804,6 +806,7 @@ encodeAddressTagPairs model =
             , encode "label" Json.Encode.string model.label
             , maybeEncode "lastmod" Json.Encode.int model.lastmod
             , maybeEncode "source" Json.Encode.string model.source
+            , encode "tag_type" Json.Encode.string model.tagType
             , encode "tagpack_creator" Json.Encode.string model.tagpackCreator
             , encode "tagpack_is_public" Json.Encode.bool model.tagpackIsPublic
             , encode "tagpack_title" Json.Encode.string model.tagpackTitle
@@ -1584,6 +1587,7 @@ encodeTagPairs model =
             , encode "label" Json.Encode.string model.label
             , maybeEncode "lastmod" Json.Encode.int model.lastmod
             , maybeEncode "source" Json.Encode.string model.source
+            , encode "tag_type" Json.Encode.string model.tagType
             , encode "tagpack_creator" Json.Encode.string model.tagpackCreator
             , encode "tagpack_is_public" Json.Encode.bool model.tagpackIsPublic
             , encode "tagpack_title" Json.Encode.string model.tagpackTitle
@@ -1973,6 +1977,7 @@ addressTagDecoder =
         |> decode "label" Json.Decode.string 
         |> maybeDecode "lastmod" Json.Decode.int Nothing
         |> maybeDecode "source" Json.Decode.string Nothing
+        |> decode "tag_type" Json.Decode.string 
         |> decode "tagpack_creator" Json.Decode.string 
         |> decode "tagpack_is_public" Json.Decode.bool 
         |> decode "tagpack_title" Json.Decode.string 
@@ -2333,6 +2338,7 @@ tagDecoder =
         |> decode "label" Json.Decode.string 
         |> maybeDecode "lastmod" Json.Decode.int Nothing
         |> maybeDecode "source" Json.Decode.string Nothing
+        |> decode "tag_type" Json.Decode.string 
         |> decode "tagpack_creator" Json.Decode.string 
         |> decode "tagpack_is_public" Json.Decode.bool 
         |> decode "tagpack_title" Json.Decode.string 
