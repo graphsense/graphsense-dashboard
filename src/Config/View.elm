@@ -19,6 +19,7 @@ type alias Config =
     , snapToGrid : Bool
     , preferredFiatCurrency : String
     , showValuesInFiat : Bool
+    , showLabelsInTaggingOverview : Bool
     , allConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
     }

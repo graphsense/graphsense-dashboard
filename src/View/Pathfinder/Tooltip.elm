@@ -16,6 +16,7 @@ import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Theme.Html.GraphComponents as GraphComponents
+import Theme.Html.TagsComponents as TagComponents
 import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
@@ -62,13 +63,13 @@ getConfidenceIndicator vc x =
     in
     case r of
         High ->
-            span [ Css.tagConfidenceTextHighStyle vc |> css ] [ Locale.text vc.locale "High" ]
+            TagComponents.confidenceLevelConfidenceLevelHigh { confidenceLevelHigh = { text = Locale.string vc.locale "High" } }
 
         Medium ->
-            span [ Css.tagConfidenceTextMediumStyle vc |> css ] [ Locale.text vc.locale "Medium" ]
+            TagComponents.confidenceLevelConfidenceLevelMedium { confidenceLevelMedium = { text = Locale.string vc.locale "Medium" } }
 
         Low ->
-            span [ Css.tagConfidenceTextLowStyle vc |> css ] [ Locale.text vc.locale "Low" ]
+            TagComponents.confidenceLevelConfidenceLevelLow { confidenceLevelLow = { text = Locale.string vc.locale "Low" } }
 
 
 val : View.Config -> String -> { firstRow : String, secondRow : String, secondRowVisible : Bool }

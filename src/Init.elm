@@ -58,6 +58,7 @@ init plugins uc flags url key =
             , snapToGrid = settings.snapToGrid |> Maybe.withDefault False
             , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
             , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
+            , showLabelsInTaggingOverview = True
             , allConcepts = []
             , abuseConcepts = []
             }

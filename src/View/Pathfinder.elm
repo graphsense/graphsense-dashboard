@@ -57,6 +57,7 @@ import Theme.Html.GraphComponents as HGraphComponents
 import Theme.Html.Icons as HIcons
 import Theme.Html.SettingsComponents as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Theme.Html.TagsComponents as TagComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
@@ -693,32 +694,6 @@ addressDetailsContentView vc gc model id viewState =
             model.network.addresses
                 |> Dict.get id
 
-        ts =
-            case Dict.get id model.tagSummaries of
-                Just (Pathfinder.HasTagSummary t) ->
-                    Just t
-
-                _ ->
-                    Nothing
-
-        nrTagsAddress =
-            ts |> Maybe.map .tagCount |> Maybe.withDefault 0
-
-        tagLabels =
-            ts
-                |> Maybe.map
-                    (\x ->
-                        if hasOnlyExchangeTags x then
-                            []
-
-                        else
-                            (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse) x
-                    )
-                |> Maybe.withDefault []
-
-        lenTagLabels =
-            List.length tagLabels
-
         actor_id =
             ts |> Maybe.andThen .bestActor
 
@@ -745,47 +720,115 @@ addressDetailsContentView vc gc model id viewState =
         showExchangeTag =
             actorText /= Nothing
 
-        showOtherTag =
-            List.isEmpty tagLabels |> not
+        -- Tags Data
+        ts =
+            case Dict.get id model.tagSummaries of
+                Just (Pathfinder.HasTagSummary t) ->
+                    Just t
 
-        showTag i ( tid, t ) =
-            Html.div
-                [ onMouseEnter (UserMovesMouseOverTagLabel tid)
-                , onMouseLeave (UserMovesMouseOutTagLabel tid)
-                , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
-                , HA.id tid
-                , css [ Css.cursor Css.pointer ]
-                , onClick (UserOpensDialogWindow (TagsList id))
-                ]
-                (Html.text t.label
-                    :: (if i < (lenTagLabels - 1) then
-                            [ Html.text "," ]
+                _ ->
+                    Nothing
+
+        nrTagsAddress =
+            ts |> Maybe.map .tagCount |> Maybe.withDefault 0
+
+        showOtherTag =
+            nrTagsAddress > 0
+
+        labelOfTags =
+            if vc.showLabelsInTaggingOverview then
+                let
+                    showTag i ( tid, t ) =
+                        Html.div
+                            [ onMouseEnter (UserMovesMouseOverTagLabel tid)
+                            , onMouseLeave (UserMovesMouseOutTagLabel tid)
+                            , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
+                            , HA.id tid
+                            , css [ Css.cursor Css.pointer ]
+                            , onClick (UserOpensDialogWindow (TagsList id))
+                            ]
+                            (Html.text t.label
+                                :: (if i < (lenTagLabels - 1) then
+                                        [ Html.text "," ]
+
+                                    else
+                                        []
+                                   )
+                            )
+
+                    nMaxTags =
+                        3
+
+                    tagLabels =
+                        ts
+                            |> Maybe.map
+                                (\x ->
+                                    if hasOnlyExchangeTags x then
+                                        []
+
+                                    else
+                                        (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse) x
+                                )
+                            |> Maybe.withDefault []
+
+                    lenTagLabels =
+                        List.length tagLabels
+
+                    -- showOtherTag =
+                    --     List.isEmpty tagLabels |> not
+                    nTagsToShow =
+                        if gc.displayAllTagsInDetails then
+                            lenTagLabels
 
                         else
-                            []
-                       )
-                )
+                            nMaxTags
 
-        nMaxTags =
-            3
+                    tagsControl =
+                        if lenTagLabels > nMaxTags then
+                            if gc.displayAllTagsInDetails then
+                                Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text (Locale.string vc.locale "less...") ]
 
-        nTagsToShow =
-            if gc.displayAllTagsInDetails then
-                lenTagLabels
+                            else
+                                Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
+
+                        else
+                            none
+                in
+                Just
+                    (div
+                        [ css
+                            [ Css.displayFlex
+                            , Css.flexDirection Css.row
+                            , Css.flexWrap Css.wrap
+                            , Css.property "gap" "1ex"
+                            , Css.alignItems Css.center
+                            , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
+                            ]
+                        ]
+                        ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
+                    )
 
             else
-                nMaxTags
+                let
+                    concepts =
+                        ts |> Maybe.map (\x -> x.conceptTagCloud |> Dict.toList |> List.sortBy (\( _, v ) -> v.weighted)) |> Maybe.withDefault [] |> List.reverse
 
-        tagsControl =
-            if lenTagLabels > nMaxTags then
-                if gc.displayAllTagsInDetails then
-                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text (Locale.string vc.locale "less...") ]
-
-                else
-                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
-
-            else
-                none
+                    conceptItem ( k, _ ) =
+                        TagComponents.confidenceLevelConfidenceLevelMedium { confidenceLevelMedium = { text = View.getConceptName vc (Just k) |> Maybe.withDefault k } }
+                in
+                Just
+                    (div
+                        [ css
+                            [ Css.displayFlex
+                            , Css.flexDirection Css.row
+                            , Css.flexWrap Css.wrap
+                            , Css.property "gap" "1ex"
+                            , Css.alignItems Css.center
+                            , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
+                            ]
+                        ]
+                        (concepts |> List.map conceptItem)
+                    )
 
         -- clusterHighlightAttr =
         --     if vc.highlightClusterFriends then
@@ -903,21 +946,6 @@ addressDetailsContentView vc gc model id viewState =
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
             , chevronInstance = none
             }
-
-        labelOfTags =
-            Just
-                (div
-                    [ css
-                        [ Css.displayFlex
-                        , Css.flexDirection Css.row
-                        , Css.flexWrap Css.wrap
-                        , Css.property "gap" "1ex"
-                        , Css.alignItems Css.center
-                        , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
-                        ]
-                    ]
-                    ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
-                )
 
         labelOfActor =
             actor_id

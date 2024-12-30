@@ -111,14 +111,14 @@ config vc bestAddressTag entityId entityHasAddress =
                 vc
                 "Category"
                 (.category
-                    >> Config.View.getConceptName vc
+                    >> View.getConceptName vc
                     >> Maybe.withDefault ""
                 )
             , T.stringColumn styles
                 vc
                 "Abuse"
                 (.abuse
-                    >> Config.View.getAbuseName vc
+                    >> View.getAbuseName vc
                     >> Maybe.withDefault ""
                 )
             , T.stringColumn styles

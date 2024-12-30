@@ -69,8 +69,8 @@ config vc =
                         text truncated
                     ]
                 )
-            , T.stringColumn styles vc titleCategory (.category >> Config.View.getConceptName vc >> Maybe.withDefault "")
-            , T.stringColumn styles vc titleAbuse (.abuse >> Config.View.getAbuseName vc >> Maybe.withDefault "")
+            , T.stringColumn styles vc titleCategory (.category >> View.getConceptName vc >> Maybe.withDefault "")
+            , T.stringColumn styles vc titleAbuse (.abuse >> View.getAbuseName vc >> Maybe.withDefault "")
             ]
         , customizations =
             customizations styles vc
@@ -110,6 +110,6 @@ prepareCSV uc row =
     , ( n "label", Util.Csv.string row.label )
     , ( n "is_cluster_definer", Util.Csv.bool row.isClusterDefiner )
     , ( n "source", Util.Csv.string row.source )
-    , ( n "category", row.category |> Config.View.getConceptName uc |> Maybe.withDefault "" |> Util.Csv.string )
-    , ( n "abuse", row.abuse |> Config.View.getAbuseName uc |> Maybe.withDefault "" |> Util.Csv.string )
+    , ( n "category", row.category |> View.getConceptName uc |> Maybe.withDefault "" |> Util.Csv.string )
+    , ( n "abuse", row.abuse |> View.getAbuseName uc |> Maybe.withDefault "" |> Util.Csv.string )
     ]
