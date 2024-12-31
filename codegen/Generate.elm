@@ -24,7 +24,7 @@ import Types exposing (ColorMap)
 
 onlyFrames : List String
 onlyFrames =
-    ["Tags Components"]
+    []
         |> List.map String.toLower
 
 

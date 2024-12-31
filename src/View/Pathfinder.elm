@@ -848,6 +848,79 @@ addressDetailsContentView vc gc model id viewState =
         assetId =
             assetFromBase viewState.data.currency
 
+        sidePanelDataEth =
+            { actorIconInstance =
+                actorImg
+                    |> Maybe.map
+                        (\imgSrc ->
+                            let
+                                iconDetails =
+                                    HIcons.iconsAssign_details
+                            in
+                            img
+                                [ src imgSrc
+                                , HA.alt <| Maybe.withDefault "" <| actorText
+                                , HA.width <| round iconDetails.width
+                                , HA.height <| round iconDetails.height
+                                , HA.css iconDetails.styles
+                                ]
+                                []
+                                |> List.singleton
+                                |> div
+                                    [ HA.css iconDetails.styles
+                                    , HA.css
+                                        [ iconDetails.width
+                                            |> Css.px
+                                            |> Css.width
+                                        , iconDetails.height
+                                            |> Css.px
+                                            |> Css.height
+                                        ]
+                                    ]
+                        )
+                    |> Maybe.withDefault (Icons.iconsAssignSvg [] {})
+            , tabsVisible = False
+            , actorAndTagVisible = showExchangeTag || showOtherTag
+            , listInstance =
+                let
+                    titleInstance =
+                        { titleInstance = inOutIndicator vc "Transactions" (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs) viewState.data.noIncomingTxs viewState.data.noOutgoingTxs
+                        }
+
+                    style =
+                        [ css [ Css.width (Css.pct 100) ] ]
+
+                    headerEvent =
+                        [ Svg.onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
+                        , css [ Css.cursor Css.pointer ]
+                        ]
+                in
+                if viewState.transactionsTableOpen then
+                    SidePanelComponents.sidePanelTxListOpenWithAttributes
+                        (SidePanelComponents.sidePanelTxListOpenAttributes
+                            |> Rs.s_sidePanelTxListOpen style
+                            |> Rs.s_sidePanelTxListHeaderOpen headerEvent
+                        )
+                        { sidePanelTxListHeaderOpen = titleInstance
+                        , sidePanelTxListOpen =
+                            { listInstance =
+                                transactionTableView vc id txOnGraphFn viewState.txs
+                            }
+                        }
+
+                else
+                    SidePanelComponents.sidePanelTxListClosedWithAttributes
+                        (SidePanelComponents.sidePanelTxListClosedAttributes
+                            |> Rs.s_sidePanelTxListClosed (style ++ headerEvent)
+                        )
+                        { sidePanelTxListClosed = titleInstance
+                        }
+            , actorVisible = showExchangeTag
+            , tagsVisible = showOtherTag
+
+            -- , pluginElement = none
+            }
+
         sidePanelData =
             { actorIconInstance =
                 actorImg
@@ -917,6 +990,7 @@ addressDetailsContentView vc gc model id viewState =
                         }
             , actorVisible = showExchangeTag
             , tagsVisible = showOtherTag
+            , pluginElement = none
             }
 
         sidePanelAddressHeader =
@@ -1075,7 +1149,7 @@ addressDetailsContentView vc gc model id viewState =
             , leftTab = { variant = none }
             , rightTab = { variant = none }
             , sidePanelAddressHeader = sidePanelAddressHeader
-            , sidePanelEthAddress = sidePanelData
+            , sidePanelEthAddress = sidePanelDataEth
             , sidePanelEthAddressDetails = sidePanelAddressDetails
             , sidePanelRowWithDropdown = { valueCellInstance = none }
             , tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = valueSumString }
@@ -1108,6 +1182,7 @@ addressDetailsContentView vc gc model id viewState =
                 |> Rs.s_labelOfActor
                     labelOfActor
             )
+            { pluginList = [] }
             { sidePanelAddress = sidePanelData
             , leftTab = { variant = none }
             , rightTab = { variant = none }
