@@ -4,10 +4,9 @@ import Api.Data
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Table
-import Html.Styled exposing (a, text)
-import Html.Styled.Attributes exposing (css, href, target)
+import Html.Styled exposing (a, span, text)
+import Html.Styled.Attributes exposing (css, href, target, title)
 import Model exposing (Msg(..))
-import RecordSetter as Rs
 import Set
 import String.Extra
 import Table
@@ -44,6 +43,7 @@ type Cell
     = DefaultCell CellConfig
     | LinkCell LinkCellConfig
     | LabelCell CellConfig TagIcon
+    | InfoCell CellConfig String
 
 
 linkCellStyle : List Css.Style
@@ -98,7 +98,11 @@ cell _ c =
                     cc.link |> Maybe.map (\x -> getLink x (text cc.label))
 
                 linkIcon =
-                    Icons.iconsGoToSmallWithAttributes (Icons.iconsGoToSmallAttributes |> Rs.s_goTo ([ Css.property "fill" Colors.blue400 |> Css.important ] |> css |> List.singleton)) {}
+                    Icons.iconsGoToSmallWithAttributes
+                        (Icons.iconsGoToSmallAttributes
+                            |> Rs.s_goTo ([ Css.property "fill" Colors.blue400 |> Css.important ] |> css |> List.singleton)
+                        )
+                        {}
 
                 linkBodyIcon =
                     cc.link |> Maybe.map (\x -> getLink x linkIcon)
@@ -107,6 +111,16 @@ cell _ c =
                 attrs
                 (TagsComponents.tagRowCellInstances |> Rs.s_label linkBody)
                 (defaultData cc Nothing linkBodyIcon)
+
+        InfoCell cc titletext ->
+            let
+                icon =
+                    span [ title titletext ] [ Icons.iconsInfoSmall {} ]
+            in
+            TagsComponents.tagRowCellWithInstances
+                attrs
+                TagsComponents.tagRowCellInstances
+                (defaultData cc Nothing (Just icon))
     )
         |> List.singleton
         |> Table.HtmlDetails
@@ -179,8 +193,34 @@ typeColumn vc =
 
                             Low ->
                                 "Low confidence"
+
+                    inheritedFromCluster =
+                        data.inheritedFrom == Just Api.Data.AddressTagInheritedFromCluster
+
+                    titleText =
+                        Locale.string vc.locale
+                            (case data.tagType of
+                                "mention" ->
+                                    "A mention says that this address was mentioned e.g. a website. It might be of relevance, but it depends on the context."
+
+                                "actor" ->
+                                    "An actor tag is a statement about the party controlling the address."
+
+                                "event" ->
+                                    "An event tag is a statement about an event taking place with relation to this address e.g. if the address was part of a hack."
+
+                                _ ->
+                                    ""
+                            )
+
+                    titleTextWithClusterAddition =
+                        if inheritedFromCluster then
+                            titleText ++ " " ++ Locale.string vc.locale "Note: This tag was inherited from the cluster level."
+
+                        else
+                            titleText
                 in
-                cell vc (DefaultCell { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase), subLabel = Just (Locale.string vc.locale conf) })
+                cell vc (InfoCell { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase), subLabel = Just (Locale.string vc.locale conf) } titleTextWithClusterAddition)
         , sorter = Table.unsortable
         }
 

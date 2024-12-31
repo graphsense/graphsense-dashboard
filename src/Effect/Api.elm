@@ -120,6 +120,7 @@ type Effect msg
         , address : String
         , pagesize : Int
         , nextpage : Maybe String
+        , includeBestClusterTag : Bool
         }
         (Api.Data.AddressTags -> msg)
     | GetAddressTagSummaryEffect
@@ -616,8 +617,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Entities.listEntityLinks currency source target minHeight maxHeight order nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressTagsEffect { currency, address, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize) (Just False)
+        GetAddressTagsEffect { currency, address, pagesize, nextpage, includeBestClusterTag } toMsg ->
+            Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize) (Just includeBestClusterTag)
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorTagsEffect { actorId, pagesize, nextpage } toMsg ->

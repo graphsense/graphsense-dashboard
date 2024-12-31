@@ -165,6 +165,7 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
                     , currency = address.currency
                     , nextpage = Nothing
                     , pagesize = 10
+                    , includeBestClusterTag = False
                     }
                 |> ApiEffect
 
@@ -1412,6 +1413,7 @@ updateByMsg plugins uc msg model =
                     , address = address.address
                     , pagesize = 10
                     , nextpage = Nothing
+                    , includeBestClusterTag = False
                     }
                 |> ApiEffect
                 |> List.singleton
@@ -1490,6 +1492,7 @@ updateByMsg plugins uc msg model =
                                                                     , address = Id.addressId addressId
                                                                     , pagesize = 10
                                                                     , nextpage = Nothing
+                                                                    , includeBestClusterTag = False
                                                                     }
                                                                 |> ApiEffect
                                                           ]
@@ -1989,6 +1992,7 @@ updateByMsg plugins uc msg model =
                                         , address = address.address
                                         , pagesize = 10
                                         , nextpage = Nothing
+                                        , includeBestClusterTag = False
                                         }
                                     |> ApiEffect
                             )
@@ -2827,6 +2831,7 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
                         , address = neighbor.address.address
                         , pagesize = 10
                         , nextpage = Nothing
+                        , includeBestClusterTag = False
                         }
                     |> ApiEffect
             )
@@ -3538,6 +3543,7 @@ addAddressesAtEntity plugins uc entityId addresses model =
                         , address = address.address
                         , pagesize = 10
                         , nextpage = Nothing
+                        , includeBestClusterTag = False
                         }
                     |> ApiEffect
             )

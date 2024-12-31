@@ -14,8 +14,6 @@ type alias UserSettings =
     { selectedLanguage : String
     , lightMode : Maybe Bool
     , valueDetail : Maybe Model.Locale.ValueDetail
-
-    -- , valueDenomination : Maybe Currency
     , preferredFiatCurrency : Maybe String
     , showValuesInFiat : Maybe Bool
     , addressLabel : Maybe AddressLabelType
@@ -28,6 +26,8 @@ type alias UserSettings =
     , highlightClusterFriends : Maybe Bool
     , showTimestampOnTxEdge : Maybe Bool
     , snapToGrid : Maybe Bool
+
+    -- , showLabelsInTaggingOverview : Maybe Bool
     }
 
 
@@ -52,23 +52,6 @@ valueDetailToString d =
 
         Magnitude ->
             "magnitude"
-
-
-
--- currencyToString : Currency -> String
--- currencyToString c =
---     case c of
---         Coin ->
---             "coin"
---         Fiat x ->
---             x
--- stringToCurrency : String -> Currency
--- stringToCurrency s =
---     case s of
---         "coin" ->
---             Coin
---         x ->
---             Fiat x
 
 
 edgeLabelToString : TxLabelType -> String
@@ -110,7 +93,6 @@ decoder =
         |> required "selectedLanguage" string
         |> optional "lightMode" (nullable bool |> fromString) Nothing
         |> optional "valueDetail" (Decode.string |> Decode.map stringToValueDetail |> nullable) Nothing
-        -- |> optional "valueDenomination" (Decode.string |> Decode.map stringToCurrency |> nullable) Nothing
         |> optional "preferredFiatCurrency" (Decode.string |> nullable) Nothing
         |> optional "showValuesInFiat" (nullable bool |> fromString) Nothing
         |> optional "addressLabel" (Decode.string |> Decode.map stringToAddressLabel) Nothing
@@ -125,14 +107,16 @@ decoder =
         |> optional "snapToGrid" (nullable bool |> fromString) Nothing
 
 
+
+-- |> optional "showLabelsInTaggingOverview" (nullable bool |> fromString) Nothing
+
+
 encoder : UserSettings -> Json.Encode.Value
 encoder settings =
     Json.Encode.object
         [ ( "selectedLanguage", Json.Encode.string settings.selectedLanguage )
         , ( "lightMode", settings.lightMode |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "valueDetail", settings.valueDetail |> Maybe.map valueDetailToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
-
-        -- , ( "valueDenomination", settings.valueDenomination |> Maybe.map currencyToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "preferredFiatCurrency", settings.preferredFiatCurrency |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "showValuesInFiat", settings.showValuesInFiat |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "addressLabel", settings.addressLabel |> Maybe.map addressLabelToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
@@ -145,6 +129,8 @@ encoder settings =
         , ( "highlightClusterFriends", settings.highlightClusterFriends |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showTimestampOnTxEdge", settings.showTimestampOnTxEdge |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "snapToGrid", settings.snapToGrid |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+
+        -- , ( "showLabelsInTaggingOverview", settings.showLabelsInTaggingOverview |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
 
 
@@ -153,8 +139,6 @@ default =
     { selectedLanguage = "en"
     , lightMode = Nothing
     , valueDetail = Nothing
-
-    -- , valueDenomination = Nothing
     , preferredFiatCurrency = Nothing
     , showValuesInFiat = Nothing
     , addressLabel = Nothing
@@ -167,4 +151,6 @@ default =
     , highlightClusterFriends = Nothing
     , showTimestampOnTxEdge = Nothing
     , snapToGrid = Nothing
+
+    -- , showLabelsInTaggingOverview = Nothing
     }

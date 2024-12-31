@@ -8,7 +8,11 @@ import RecordSetter as Rs
 
 init : List Api.Data.AddressTag -> Table Api.Data.AddressTag
 init data =
-    Init.Graph.Table.initUnsorted
-        |> Rs.s_data data
-        |> Rs.s_filtered data
+    let
+        sdata =
+            List.sortBy (.confidenceLevel >> Maybe.withDefault 0) data |> List.reverse
+    in
+    Init.Graph.Table.initSorted False "confidenceLevel"
+        |> Rs.s_data sdata
+        |> Rs.s_filtered sdata
         |> Rs.s_loading False

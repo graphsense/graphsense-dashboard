@@ -157,6 +157,12 @@ shallPushHistory msg _ =
         UserMovesMouseOutTagLabel _ ->
             False
 
+        UserMovesMouseOverTagConcept _ ->
+            False
+
+        UserMovesMouseOutTagConcept _ ->
+            False
+
         UserMovesMouseOverActorLabel _ ->
             False
 
@@ -232,8 +238,5 @@ shallPushHistory msg _ =
         UserGotDataForTagsListDialog _ _ ->
             False
 
-        CloseTagLabelTooltip _ ->
-            False
-
-        CloseActorLabelTooltip _ ->
+        CloseTooltip _ ->
             False

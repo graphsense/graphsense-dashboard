@@ -161,7 +161,7 @@ updateByMsg plugins uc msg model =
                 TagsList id ->
                     ( model
                     , UserGotDataForTagsListDialog id
-                        |> Api.GetAddressTagsEffect { currency = Id.network id, address = Id.id id, pagesize = 5000, nextpage = Nothing }
+                        |> Api.GetAddressTagsEffect { currency = Id.network id, address = Id.id id, pagesize = 5000, nextpage = Nothing, includeBestClusterTag = True }
                         |> ApiEffect
                         |> List.singleton
                     )
@@ -658,35 +658,32 @@ updateByMsg plugins uc msg model =
             unhover model
                 |> n
 
-        UserMovesMouseOverTagLabel x ->
+        UserMovesMouseOverTagConcept x ->
             case model.details of
                 Just (AddressDetails id _) ->
                     let
                         ( hc, cmd ) =
-                            x |> Hovercard.init
+                            (x ++ "_tags_concept_tag") |> Hovercard.init
 
-                        hasToChange =
-                            model.tooltip
-                                |> Maybe.map
-                                    (\tt ->
-                                        case tt.type_ of
-                                            Tooltip.TagLabel lbl _ ->
-                                                lbl /= x
-
-                                            _ ->
-                                                True
+                        ( hasToChange, newTooltip ) =
+                            case Dict.get id model.tagSummaries of
+                                Just (HasTagSummary ts) ->
+                                    let
+                                        tt =
+                                            Tooltip.TagConcept x ts |> Tooltip.init hc
+                                    in
+                                    ( model.tooltip
+                                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                                        |> Maybe.withDefault True
+                                    , Just tt
                                     )
-                                |> Maybe.withDefault True
+
+                                _ ->
+                                    ( True, Nothing )
                     in
                     if hasToChange then
                         ( { model
-                            | tooltip =
-                                case Dict.get id model.tagSummaries of
-                                    Just (HasTagSummary ts) ->
-                                        Just (Tooltip.TagLabel x ts |> Tooltip.init hc)
-
-                                    _ ->
-                                        Nothing
+                            | tooltip = newTooltip
                           }
                         , Cmd.map HovercardMsg cmd
                             |> CmdEffect
@@ -699,37 +696,33 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        UserMovesMouseOutTagLabel id ->
-            n model |> tooltipBeginClosing (CloseTagLabelTooltip id)
-
-        CloseTagLabelTooltip _ ->
-            n model |> tooltipCloseIfNotAborted
-
-        UserMovesMouseOverActorLabel x ->
-            case Dict.get x model.actors of
-                Just actor ->
+        UserMovesMouseOverTagLabel x ->
+            case model.details of
+                Just (AddressDetails id _) ->
                     let
                         ( hc, cmd ) =
-                            (x ++ "_actor") |> Hovercard.init
+                            x |> Hovercard.init
 
-                        hasToChange =
-                            model.tooltip
-                                |> Maybe.map
-                                    (\tt ->
-                                        case tt.type_ of
-                                            Tooltip.ActorDetails a ->
-                                                a.id /= x
-
-                                            _ ->
-                                                True
+                        ( hasToChange, newTooltip ) =
+                            case Dict.get id model.tagSummaries of
+                                Just (HasTagSummary ts) ->
+                                    let
+                                        tt =
+                                            Tooltip.TagLabel x ts |> Tooltip.init hc
+                                    in
+                                    ( model.tooltip
+                                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                                        |> Maybe.withDefault True
+                                    , Just tt
                                     )
-                                |> Maybe.withDefault True
 
-                        newTT =
-                            Just (Tooltip.ActorDetails actor |> Tooltip.init hc)
+                                _ ->
+                                    ( True, Nothing )
                     in
                     if hasToChange then
-                        ( { model | tooltip = newTT }
+                        ( { model
+                            | tooltip = newTooltip
+                          }
                         , Cmd.map HovercardMsg cmd
                             |> CmdEffect
                             |> List.singleton
@@ -741,10 +734,61 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        UserMovesMouseOutActorLabel id ->
-            n model |> tooltipBeginClosing (CloseActorLabelTooltip id)
+        UserMovesMouseOverActorLabel x ->
+            case Dict.get x model.actors of
+                Just actor ->
+                    let
+                        ( hc, cmd ) =
+                            (x ++ "_actor") |> Hovercard.init
 
-        CloseActorLabelTooltip _ ->
+                        tt =
+                            Tooltip.ActorDetails actor |> Tooltip.init hc
+
+                        ( hasToChange, newTooltip ) =
+                            ( model.tooltip
+                                |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                                |> Maybe.withDefault True
+                            , Just tt
+                            )
+                    in
+                    if hasToChange then
+                        ( { model | tooltip = newTooltip }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+
+                    else
+                        n model |> tooltipAbortClosing
+
+                _ ->
+                    n model
+
+        UserMovesMouseOutActorLabel _ ->
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
+
+                _ ->
+                    n model
+
+        UserMovesMouseOutTagLabel _ ->
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
+
+                _ ->
+                    n model
+
+        UserMovesMouseOutTagConcept _ ->
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
+
+                _ ->
+                    n model
+
+        CloseTooltip _ ->
             n model |> tooltipCloseIfNotAborted
 
         HovercardMsg hcMsg ->

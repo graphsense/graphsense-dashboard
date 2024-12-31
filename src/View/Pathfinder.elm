@@ -774,8 +774,6 @@ addressDetailsContentView vc gc model id viewState =
                     lenTagLabels =
                         List.length tagLabels
 
-                    -- showOtherTag =
-                    --     List.isEmpty tagLabels |> not
                     nTagsToShow =
                         if gc.displayAllTagsInDetails then
                             lenTagLabels
@@ -786,10 +784,12 @@ addressDetailsContentView vc gc model id viewState =
                     tagsControl =
                         if lenTagLabels > nMaxTags then
                             if gc.displayAllTagsInDetails then
-                                Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text (Locale.string vc.locale "less...") ]
+                                Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ]
+                                    [ Html.text (Locale.string vc.locale "less...") ]
 
                             else
-                                Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
+                                Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ]
+                                    [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
 
                         else
                             none
@@ -814,7 +814,15 @@ addressDetailsContentView vc gc model id viewState =
                         ts |> Maybe.map (\x -> x.conceptTagCloud |> Dict.toList |> List.sortBy (\( _, v ) -> v.weighted)) |> Maybe.withDefault [] |> List.reverse
 
                     conceptItem ( k, _ ) =
-                        TagComponents.categoryTags { categoryTags = { tagLabel = View.getConceptName vc (Just k) |> Maybe.withDefault k } }
+                        Html.div
+                            [ onMouseEnter (UserMovesMouseOverTagConcept k)
+                            , onMouseLeave (UserMovesMouseOutTagConcept k)
+                            , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
+                            , HA.id (k ++ "_tags_concept_tag")
+                            , css [ Css.cursor Css.pointer ]
+                            , onClick (UserOpensDialogWindow (TagsList id))
+                            ]
+                            [ TagComponents.categoryTags { categoryTags = { tagLabel = View.getConceptName vc (Just k) |> Maybe.withDefault k } } ]
                 in
                 Just
                     (div
@@ -1175,6 +1183,7 @@ addressDetailsContentView vc gc model id viewState =
                     ]
                 |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
                 |> Rs.s_iconsCloseBlack closeAttrs
+                |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             )
             (SidePanelComponents.sidePanelAddressInstances
                 |> Rs.s_labelOfTags

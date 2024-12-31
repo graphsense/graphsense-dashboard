@@ -228,7 +228,7 @@ linkButtonStyle vc enabled =
 
 tagLinkButtonStyle : View.Config -> List Style
 tagLinkButtonStyle _ =
-    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.black0 |> property "color" ]
+    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.blue400 |> property "color" ]
 
 
 topLeftPanelStyle : View.Config -> List Style

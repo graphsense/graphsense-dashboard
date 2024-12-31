@@ -9,6 +9,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Tooltip exposing (TooltipType)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
@@ -69,10 +70,11 @@ type Msg
     | UserMovesMouseOutAddress Id
     | UserMovesMouseOverTagLabel String
     | UserMovesMouseOutTagLabel String
-    | CloseTagLabelTooltip String
+    | CloseTooltip TooltipType
+    | UserMovesMouseOverTagConcept String
+    | UserMovesMouseOutTagConcept String
     | UserMovesMouseOverActorLabel String
     | UserMovesMouseOutActorLabel String
-    | CloseActorLabelTooltip String
     | UserInputsAnnotation Id String
     | UserSelectsAnnotationColor Id (Maybe Color)
     | HovercardMsg Hovercard.Msg

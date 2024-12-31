@@ -2393,6 +2393,7 @@ getAddressTagsEffect { currency, address } nextpage =
         , address = address
         , pagesize = 100
         , nextpage = nextpage
+        , includeBestClusterTag = False
         }
         (BrowserGotAddressTagsTable
             { currency = currency

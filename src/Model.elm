@@ -192,4 +192,6 @@ userSettingsFromMainModel model =
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
     , highlightClusterFriends = Just model.config.highlightClusterFriends
     , snapToGrid = Just model.config.snapToGrid
+
+    -- , showLabelsInTaggingOverview = Just model.config.showLabelsInTaggingOverview
     }
