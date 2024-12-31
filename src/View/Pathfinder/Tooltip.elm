@@ -15,6 +15,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
+import Set
 import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.TagsComponents as TagComponents
 import Tuple exposing (pair)
@@ -152,72 +153,92 @@ showActor vc a =
 tagConcept : View.Config -> String -> TagSummary -> List (Html Msg)
 tagConcept vc concept tag =
     let
-        mlbldata =
-            Dict.get concept tag.conceptTagCloud
+        relevantLabels =
+            Dict.toList tag.labelSummary |> List.filter (Tuple.second >> (.concepts >> List.member concept)) |> List.map Tuple.second
+
+        labels =
+            relevantLabels |> List.map .label
+
+        maxConfidence =
+            relevantLabels |> List.map .confidence |> List.maximum |> Maybe.withDefault 0
+
+        tagCount =
+            relevantLabels |> List.map .count |> List.sum
+
+        sources =
+            relevantLabels |> List.map .sources |> List.foldr (++) [] |> Set.fromList
     in
-    case mlbldata of
-        Just data ->
-            [ row
-                { tooltipRowLabel = { title = Locale.string vc.locale "Concept" }
-                , tooltipRowValue = concept |> val vc
-                }
+    [ row
+        { tooltipRowLabel = { title = Locale.string vc.locale "Labels" }
+        , tooltipRowValue = String.join "," labels |> val vc
+        }
+    , GraphComponents.tooltipRowWithInstances
+        (GraphComponents.tooltipRowAttributes
+            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+        )
+        (GraphComponents.tooltipRowInstances
+            |> Rs.s_tooltipRowValue
+                (getConfidenceIndicator vc maxConfidence |> Just)
+        )
+        { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+        }
+    , row
+        { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
+        , tooltipRowValue =
+            Set.size sources
+                |> String.fromInt
+                |> val vc
+        }
+    , row
+        { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
+        , tooltipRowValue = tagCount |> String.fromInt |> val vc
+        }
+    ]
 
-            -- , GraphComponents.tooltipRowWithInstances
-            --     (GraphComponents.tooltipRowAttributes
-            --         |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
-            --     )
-            --     (GraphComponents.tooltipRowInstances
-            --         |> Rs.s_tooltipRowValue
-            --             (getConfidenceIndicator vc lbldata.confidence |> Just)
-            --     )
-            --     { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }
-            --     , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
-            --     }
-            ]
 
-        -- ++ (if List.isEmpty lbldata.concepts then
-        --         []
-        --     else
-        --         row
-        --             { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
-        --             , tooltipRowValue =
-        --                 lbldata.concepts
-        --                     |> List.map (\x -> getConceptName vc (Just x) |> Maybe.withDefault x)
-        --                     |> String.join ","
-        --                     |> Locale.string vc.locale
-        --                     |> Util.View.truncate 20
-        --                     |> val vc
-        --             }
-        --             |> List.singleton
-        --    )
-        -- ++ [ row
-        --         { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
-        --         , tooltipRowValue =
-        --             List.length lbldata.sources
-        --                 |> String.fromInt
-        --                 |> val vc
-        --         }
-        --    , row
-        --         { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
-        --         , tooltipRowValue = lbldata.count |> String.fromInt |> val vc
-        --         }
-        --    , row
-        --         { tooltipRowLabel = { title = Locale.string vc.locale "Last modified" }
-        --         , tooltipRowValue =
-        --             let
-        --                 date =
-        --                     Locale.timestampDateUniform vc.locale lbldata.lastmod
-        --                 time =
-        --                     Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset lbldata.lastmod
-        --             in
-        --             { firstRow = date
-        --             , secondRow = time
-        --             , secondRowVisible = True
-        --             }
-        --         }
-        --    ]
-        _ ->
-            []
+
+-- ++ (if List.isEmpty lbldata.concepts then
+--         []
+--     else
+--         row
+--             { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
+--             , tooltipRowValue =
+--                 lbldata.concepts
+--                     |> List.map (\x -> getConceptName vc (Just x) |> Maybe.withDefault x)
+--                     |> String.join ","
+--                     |> Locale.string vc.locale
+--                     |> Util.View.truncate 20
+--                     |> val vc
+--             }
+--             |> List.singleton
+--    )
+-- ++ [ row
+--         { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
+--         , tooltipRowValue =
+--             List.length lbldata.sources
+--                 |> String.fromInt
+--                 |> val vc
+--         }
+--    , row
+--         { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
+--         , tooltipRowValue = lbldata.count |> String.fromInt |> val vc
+--         }
+--    , row
+--         { tooltipRowLabel = { title = Locale.string vc.locale "Last modified" }
+--         , tooltipRowValue =
+--             let
+--                 date =
+--                     Locale.timestampDateUniform vc.locale lbldata.lastmod
+--                 time =
+--                     Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset lbldata.lastmod
+--             in
+--             { firstRow = date
+--             , secondRow = time
+--             , secondRowVisible = True
+--             }
+--         }
+--    ]
 
 
 tagLabel : View.Config -> String -> TagSummary -> List (Html Msg)

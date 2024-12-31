@@ -7,6 +7,7 @@ import Css.Table
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Model exposing (Msg(..))
+import RecordSetter as Rs
 import Set
 import String.Extra
 import Table
@@ -19,7 +20,7 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import RecordSetter as Rs
+
 
 tagId : Api.Data.AddressTag -> String
 tagId t =
@@ -55,7 +56,10 @@ cell : View.Config -> Cell -> Table.HtmlDetails msg
 cell _ c =
     let
         attrs =
-            TagsComponents.tagRowCellAttributes |> Rs.s_line ([ Css.display Css.none ] |> css |> List.singleton)
+            TagsComponents.tagRowCellAttributes
+                |> Rs.s_line ([ Css.display Css.none ] |> css |> List.singleton)
+                |> Rs.s_tagRowCell ([ Css.maxWidth (Css.px 200), Css.property "word-wrap" "break-word" ] |> css |> List.singleton)
+                |> Rs.s_category ([ Css.property "text-wrap" "wrap" ] |> css |> List.singleton)
 
         defaultData cc tagIcon actionIcon =
             { tagRowCell =

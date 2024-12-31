@@ -10,7 +10,9 @@ init : List Api.Data.AddressTag -> Table Api.Data.AddressTag
 init data =
     let
         sdata =
-            List.sortBy (.confidenceLevel >> Maybe.withDefault 0) data |> List.reverse
+            data
+                |> List.sortBy (.confidenceLevel >> Maybe.withDefault 0)
+                |> List.reverse
     in
     Init.Graph.Table.initSorted False "confidenceLevel"
         |> Rs.s_data sdata

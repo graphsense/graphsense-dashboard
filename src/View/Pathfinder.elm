@@ -733,7 +733,7 @@ addressDetailsContentView vc gc model id viewState =
             ts |> Maybe.map .tagCount |> Maybe.withDefault 0
 
         showOtherTag =
-            nrTagsAddress > 0
+            nrTagsAddress > 0 && (ts |> Maybe.map (hasOnlyExchangeTags >> not) |> Maybe.withDefault True)
 
         labelOfTags =
             if vc.showLabelsInTaggingOverview then
