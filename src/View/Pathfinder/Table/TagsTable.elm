@@ -19,7 +19,7 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-
+import RecordSetter as Rs
 
 tagId : Api.Data.AddressTag -> String
 tagId t =
