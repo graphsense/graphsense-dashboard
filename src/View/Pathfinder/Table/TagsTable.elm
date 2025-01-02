@@ -6,6 +6,7 @@ import Css
 import Css.Table
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
+import Html.Styled.Events exposing (onMouseOver, onMouseOut)
 import Model exposing (Msg(..))
 import RecordSetter as Rs
 import Set
@@ -20,6 +21,8 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
+
+import Msg.Pathfinder
 
 
 tagId : Api.Data.AddressTag -> String
@@ -52,18 +55,19 @@ linkCellStyle =
     TagsComponents.tagRowCellLabel_details.styles ++ [ Css.property "color" Colors.blue400, Css.textDecoration Css.none ]
 
 
-cell : View.Config -> Cell -> Table.HtmlDetails msg
+cell : View.Config -> Cell -> Table.HtmlDetails Msg
 cell _ c =
     let
         attrs =
             TagsComponents.tagRowCellAttributes
                 |> Rs.s_line ([ Css.display Css.none ] |> css |> List.singleton)
-                |> Rs.s_tagRowCell ([ Css.maxWidth (Css.px 200), Css.property "word-wrap" "break-word" ] |> css |> List.singleton)
-                |> Rs.s_category ([ Css.property "text-wrap" "wrap" ] |> css |> List.singleton)
+                |> Rs.s_tagRowCell ([ Css.maxWidth (Css.px 300), Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height)] |> css |> List.singleton)
+                |> Rs.s_iconText ([ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height)] |> css |> List.singleton)
+                |> Rs.s_category ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ] |> css |> List.singleton) -- to allow wrapping and growing of line
 
         defaultData cc tagIcon actionIcon =
             { tagRowCell =
-                { actionIconInstance = actionIcon |> Maybe.withDefault none
+                { infoIconInstance = actionIcon |> Maybe.withDefault none
                 , iconVisible = tagIcon /= Nothing
                 , infoVisible = actionIcon /= Nothing
                 , labelText = cc.label
@@ -84,7 +88,7 @@ cell _ c =
                 icon =
                     case ti of
                         Exchange ->
-                            Just (Icons.iconsExchangeSmall {})
+                            Just (Icons.iconsExchangeSnoPadding {})
 
                         None ->
                             Nothing
@@ -102,8 +106,8 @@ cell _ c =
                     cc.link |> Maybe.map (\x -> getLink x (text cc.label))
 
                 linkIcon =
-                    Icons.iconsGoToSmallWithAttributes
-                        (Icons.iconsGoToSmallAttributes
+                    Icons.iconsGoToSnoPaddingWithAttributes
+                        (Icons.iconsGoToSnoPaddingAttributes
                             |> Rs.s_goTo ([ Css.property "fill" Colors.blue400 |> Css.important ] |> css |> List.singleton)
                         )
                         {}
@@ -112,14 +116,18 @@ cell _ c =
                     cc.link |> Maybe.map (\x -> getLink x linkIcon)
             in
             TagsComponents.tagRowCellWithInstances
-                attrs
+                (attrs |> Rs.s_category ([[Css.property "color" Colors.blue400 |> Css.important] |> css])) 
                 (TagsComponents.tagRowCellInstances |> Rs.s_label linkBody)
                 (defaultData cc Nothing linkBodyIcon)
 
         InfoCell cc titletext ->
             let
+                cellid = "test"
+                ttConfig = {anchorId = cellid, text= titletext}
                 icon =
-                    span [ title titletext ] [ Icons.iconsInfoSmall {} ]
+                    span [ onMouseOver ((Msg.Pathfinder.ShowTextTooltip ttConfig )  |> PathfinderMsg)
+                            , onMouseOut ((Msg.Pathfinder.CloseTextTooltip ttConfig )  |> PathfinderMsg)
+                            , Html.Styled.Attributes.id cellid] [ Icons.iconsInfoSnoPadding {} ]
             in
             TagsComponents.tagRowCellWithInstances
                 attrs
@@ -131,7 +139,7 @@ cell _ c =
             [ [ Css.verticalAlign Css.middle ] |> css ]
 
 
-labelColumn : View.Config -> Table.Column Api.Data.AddressTag msg
+labelColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
 labelColumn vc =
     Table.veryCustomColumn
         { name = Locale.string vc.locale "Label"
@@ -174,7 +182,7 @@ labelColumn vc =
         }
 
 
-typeColumn : View.Config -> Table.Column Api.Data.AddressTag msg
+typeColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
 typeColumn vc =
     Table.veryCustomColumn
         { name = Locale.string vc.locale "Type"
@@ -225,11 +233,11 @@ typeColumn vc =
                             titleText
                 in
                 cell vc (InfoCell { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase), subLabel = Just (Locale.string vc.locale conf) } titleTextWithClusterAddition)
-        , sorter = Table.unsortable
+        , sorter =  Table.increasingOrDecreasingBy (\data -> data.confidenceLevel |> Maybe.withDefault 0)
         }
 
 
-sourceColumn : View.Config -> Table.Column Api.Data.AddressTag msg
+sourceColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
 sourceColumn vc =
     Table.veryCustomColumn
         { name = Locale.string vc.locale "Source"
@@ -240,7 +248,9 @@ sourceColumn vc =
                         data.source |> Maybe.withDefault "#"
 
                     s =
-                        url |> String.replace "https://" ""
+                        url 
+                            |> String.replace "https://" "" 
+                            |> String.replace "http://" ""
 
                     truncatedSource =
                         case String.split "/" s of
@@ -266,7 +276,7 @@ sourceColumn vc =
         }
 
 
-lastModColumn : View.Config -> Table.Column Api.Data.AddressTag msg
+lastModColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
 lastModColumn vc =
     Table.veryCustomColumn
         { name = Locale.string vc.locale "Last Modified"
@@ -297,13 +307,13 @@ styles =
                 [ Css.height (Css.px 24)
                 , Css.textAlign Css.left
                 , Css.borderBottom2 (Css.px 1) Css.solid
-                , Css.property "border-color" Colors.greyBlue100
+                , Css.property "border-color" Colors.grey50
                 ]
             )
         |> Rs.s_row
             (\_ ->
                 [ Css.borderBottom2 (Css.px 1) Css.solid
-                , Css.property "border-color" Colors.greyBlue100
+                , Css.property "border-color" Colors.grey50
                 , Css.verticalAlign Css.top
                 ]
             )
@@ -319,7 +329,7 @@ config : View.Config -> Table.Config Api.Data.AddressTag Msg
 config vc =
     Table.customConfig
         { toId = tagId
-        , toMsg = \_ -> NoOp
+        , toMsg = TagsListDialogTableUpdateMsg
         , columns =
             [ labelColumn vc
             , typeColumn vc

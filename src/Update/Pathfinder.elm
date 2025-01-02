@@ -696,6 +696,33 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
+        ShowTextTooltip config ->
+            let
+                ( hc, cmd ) = (config.anchorId) |> Hovercard.init
+                tt = Tooltip.Text config.text |> Tooltip.init hc
+                hasToChange = model.tooltip
+                                |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                                |> Maybe.withDefault True
+            in
+                if hasToChange then
+                ( { model
+                    | tooltip = Just tt
+                    }
+                , Cmd.map HovercardMsg cmd
+                    |> CmdEffect
+                    |> List.singleton
+                )
+
+                else
+                    n model |> tooltipAbortClosing
+                    
+        CloseTextTooltip _ -> case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
+
+                _ ->
+                    n model
+        
         UserMovesMouseOverTagLabel x ->
             case model.details of
                 Just (AddressDetails id _) ->

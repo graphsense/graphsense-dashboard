@@ -8,7 +8,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (Msg(..))
 import Model.Notification as Notification
-import RecordSetter exposing (..)
+import RecordSetter as Rs
 import Theme.Html.ErrorMessagesAlerts
     exposing
         ( errorMessageComponentTypeAlertAttributes
@@ -59,7 +59,7 @@ view vc model =
             in
             errorMessageComponentTypeErrorWithAttributes
                 (errorMessageComponentTypeErrorAttributes
-                    |> s_iconsCloseSmall buttonAttrOk
+                    |> Rs.s_iconsCloseSnoPadding buttonAttrOk
                 )
                 { header =
                     { iconInstance = icon
@@ -84,7 +84,7 @@ view vc model =
                     Icons.iconsAlert {}
             in
             errorMessageComponentTypeAlertWithAttributes
-                (errorMessageComponentTypeAlertAttributes |> s_iconsCloseSmall buttonAttrOk)
+                (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
                 { header =
                     { iconInstance = icon
                     , title = Locale.string vc.locale title

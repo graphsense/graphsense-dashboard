@@ -5,7 +5,6 @@ import Config.View as View
 import Css
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
-import Init.Pathfinder.Table.TagsTable as TagsTable
 import Model exposing (Msg)
 import Model.Pathfinder.Id as Id exposing (Id)
 import RecordSetter as Rs
@@ -14,9 +13,9 @@ import Util.View exposing (copyIconPathfinder, none, onClickWithStop)
 import View.Graph.Table
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
+import Model.Graph.Table exposing (Table)
 
-
-view : View.Config -> Msg -> Id -> Maybe Api.Data.AddressTags -> Html Msg
+view : View.Config -> Msg -> Id -> Table Api.Data.AddressTag -> Html Msg
 view vc closeMsg id tags =
     let
         fullWidthAttr =
@@ -48,5 +47,5 @@ view vc closeMsg id tags =
             [ css [ Css.verticalAlign Css.top, Css.overflowY Css.scroll, Css.overflowX Css.hidden ] ]
             View.Graph.Table.noTools
             (TagsTable.config vc)
-            (TagsTable.init (tags |> Maybe.map .addressTags |> Maybe.withDefault []))
+            (tags)
         ]

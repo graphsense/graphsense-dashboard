@@ -19,6 +19,7 @@ import Http exposing (Error(..))
 import Init.Graph
 import Init.Pathfinder
 import Init.Search as Search
+import Init.Pathfinder.Table.TagsTable as TagsTable
 import Json.Decode
 import Json.Encode exposing (Value)
 import List.Extra
@@ -66,7 +67,6 @@ import Util exposing (n)
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
 import View.Locale as Locale
-import View.Pathfinder.TagDetailsList
 import Yaml.Decode
 
 
@@ -231,11 +231,19 @@ update plugins uc msg model =
                 Just (Dialog.Error _) ->
                     n { model | dialog = Nothing }
 
-                Just (Dialog.Custom _) ->
+                Just (Dialog.TagsList _) ->
                     n { model | dialog = Nothing }
 
                 _ ->
                     n model
+
+        TagsListDialogTableUpdateMsg tableState -> case model.dialog of
+                                                    Just (Dialog.TagsList config) -> let
+                                                                                        newConfig = {config | tagsTable = config.tagsTable |> s_state tableState}
+                                                                                     in 
+                                                                                        n {model | dialog = Just (Dialog.TagsList newConfig)}
+                                                    _ -> n model 
+               
 
         UserClickedUserIcon id ->
             if model.user.hovercard == Nothing then
@@ -835,9 +843,10 @@ update plugins uc msg model =
                 | pathfinder = pathfinder
                 , dialog =
                     Just
-                        (Dialog.Custom
-                            { html = View.Pathfinder.TagDetailsList.view model.config closemsg id (Just tags)
-                            , defaultMsg = closemsg
+                        (Dialog.TagsList
+                            { tagsTable = TagsTable.init tags
+                            , id = id
+                            , closeMsg = closemsg
                             }
                         )
               }

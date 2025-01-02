@@ -6,11 +6,12 @@ import Model.Graph.Table exposing (Table)
 import RecordSetter as Rs
 
 
-init : List Api.Data.AddressTag -> Table Api.Data.AddressTag
+init : Api.Data.AddressTags -> Table Api.Data.AddressTag
 init data =
     let
+        tags = data.addressTags
         sdata =
-            data
+            tags
                 |> List.sortBy (.confidenceLevel >> Maybe.withDefault 0)
                 |> List.reverse
     in
@@ -18,3 +19,4 @@ init data =
         |> Rs.s_data sdata
         |> Rs.s_filtered sdata
         |> Rs.s_loading False
+        |> Rs.s_nextpage data.nextPage

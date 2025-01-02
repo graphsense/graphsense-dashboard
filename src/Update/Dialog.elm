@@ -101,3 +101,10 @@ mapMsg map model =
             , defaultMsg = map conf.defaultMsg
             }
                 |> Custom
+
+        TagsList conf ->
+            { tagsTable = conf.tagsTable
+            , closeMsg = map conf.closeMsg
+            , id = conf.id
+            }
+                |> TagsList

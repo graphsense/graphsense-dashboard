@@ -31,7 +31,7 @@ import Time
 import Url exposing (Url)
 import Util.ThemedSelectBox as SelectBox
 import Util.ThemedSelectBoxes as SelectBoxes
-
+import Table
 
 type alias Flags =
     { localStorage : Json.Encode.Value
@@ -101,6 +101,7 @@ type Msg
     | BrowserGotSupportedTokens String Api.Data.TokenConfigs
     | UserClickedStatusbar
     | UserClosesDialog
+    | TagsListDialogTableUpdateMsg Table.State
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg

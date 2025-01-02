@@ -240,3 +240,9 @@ shallPushHistory msg _ =
 
         CloseTooltip _ ->
             False
+
+        ShowTextTooltip _ ->
+            False
+
+        CloseTextTooltip _ -> 
+            False

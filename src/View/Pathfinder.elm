@@ -182,16 +182,16 @@ contextMenuView vc _ ( coords, menu ) =
             { rightClickMenuList =
                 case menu of
                     ContextMenu.AddressContextMenu aid ->
-                        [ contextMenuItemView (HIcons.iconsAnnotateSmall {}) "Annotate address" (UserOpensAddressAnnotationDialog aid)
-                        , contextMenuItemView (HIcons.iconsCopySmall {}) "Copy address ID" (UserClickedContextMenuIdToClipboard menu)
-                        , contextMenuItemView (HIcons.iconsDeleteSmall {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
-                        , contextMenuItemView (HIcons.iconsGoToSmall {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
+                        [ contextMenuItemView (HIcons.iconsAnnotateS {}) "Annotate address" (UserOpensAddressAnnotationDialog aid)
+                        , contextMenuItemView (HIcons.iconsCopyS {}) "Copy address ID" (UserClickedContextMenuIdToClipboard menu)
+                        , contextMenuItemView (HIcons.iconsDeleteS {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
+                        , contextMenuItemView (HIcons.iconsGoToS {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
                         ]
 
                     ContextMenu.TransactionContextMenu _ ->
-                        [ contextMenuItemView (HIcons.iconsCopySmall {}) "Copy transaction ID" (UserClickedContextMenuIdToClipboard menu)
-                        , contextMenuItemView (HIcons.iconsDeleteSmall {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
-                        , contextMenuItemView (HIcons.iconsGoToSmall {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
+                        [ contextMenuItemView (HIcons.iconsCopyS {}) "Copy transaction ID" (UserClickedContextMenuIdToClipboard menu)
+                        , contextMenuItemView (HIcons.iconsDeleteS {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
+                        , contextMenuItemView (HIcons.iconsGoToS {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
                         ]
             }
             {}

@@ -98,7 +98,11 @@ type Msg
     | BrowserWaitedAfterReleasingMouseButton
     | UserOpensDialogWindow OverlayWindows
     | UserGotDataForTagsListDialog Id Api.Data.AddressTags
+    | ShowTextTooltip TextTooltipConfig
+    | CloseTextTooltip TextTooltipConfig
 
+
+type alias TextTooltipConfig = {anchorId: String, text: String}
 
 type OverlayWindows
     = TagsList Id

@@ -48,6 +48,9 @@ view vc ts tt =
 
                 ActorDetails ac ->
                     ( showActor vc ac, [ onMouseEnter (UserMovesMouseOverActorLabel ac.id), onMouseLeave (UserMovesMouseOutActorLabel ac.id) ] )
+                
+                Text t ->
+                    ([span [] [ text t]], [])
     in
     content
         |> div
@@ -56,7 +59,7 @@ view vc ts tt =
             )
         |> toUnstyled
         |> List.singleton
-        |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)
+        |> hovercard vc tt.hovercard (Css.zIndexMainValue + 10000)
 
 
 getConfidenceIndicator : View.Config -> Float -> Html Msg
@@ -94,6 +97,12 @@ row =
 
 showActor : View.Config -> Actor -> List (Html Msg)
 showActor vc a =
+    let
+        mainUri = (if not (String.startsWith "http://" a.uri) || not (String.startsWith "https://" a.uri) then
+                        "https://" ++ a.uri
+                    else
+                        a.uri)
+    in
     [ row
         { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
         , tooltipRowValue = a.label |> val vc
@@ -104,7 +113,7 @@ showActor vc a =
         )
         (GraphComponents.tooltipRowInstances
             |> Rs.s_tooltipRowValue
-                (Just (Html.Styled.a [ Css.plainLinkStyle vc |> css, href a.uri, target "blank" ] [ text a.uri ]))
+                (Just (Html.Styled.a [ Css.plainLinkStyle vc |> css, href mainUri, target "blank" ] [ text a.uri ]))
         )
         { tooltipRowLabel = { title = Locale.string vc.locale "Url" }
         , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
@@ -122,7 +131,7 @@ showActor vc a =
                  a.jurisdictions
                     |> List.indexedMap
                         (\i z ->
-                            span
+                            div
                                 [ title (Locale.string vc.locale z.label)
                                 , Css.mGap
                                     |> Css.paddingRight
@@ -140,7 +149,7 @@ showActor vc a =
                                     )
                                 ]
                         )
-                    |> div []
+                    |> div [[Css.displayFlex, Css.flexDirection Css.column] |> css]
                     |> Just
                 )
         )
@@ -168,9 +177,43 @@ tagConcept vc concept tag =
         sources =
             relevantLabels |> List.map .sources |> List.foldr (++) [] |> Set.fromList
     in
-    [ row
+    [ GraphComponents.tooltipRowWithInstances
+        (GraphComponents.tooltipRowAttributes
+            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+        )
+        (GraphComponents.tooltipRowInstances
+            |> Rs.s_tooltipRowValue
+                (let
+                    jl =
+                        List.length labels
+                 in
+                 labels
+                    |> List.indexedMap
+                        (\i z ->
+                            div
+                                [ title z
+                                , Css.mGap
+                                    |> Css.paddingRight
+                                    |> List.singleton
+                                    |> css
+                                ]
+                                [ text
+                                    (z
+                                        ++ (if i /= (jl - 1) then
+                                                ", "
+
+                                            else
+                                                ""
+                                           )
+                                    )
+                                ]
+                        )
+                    |> div [[Css.displayFlex, Css.flexDirection Css.column] |> css]
+                    |> Just
+                )
+        )
         { tooltipRowLabel = { title = Locale.string vc.locale "Labels" }
-        , tooltipRowValue = String.join "," labels |> val vc
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
         }
     , GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
@@ -195,50 +238,6 @@ tagConcept vc concept tag =
         , tooltipRowValue = tagCount |> String.fromInt |> val vc
         }
     ]
-
-
-
--- ++ (if List.isEmpty lbldata.concepts then
---         []
---     else
---         row
---             { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
---             , tooltipRowValue =
---                 lbldata.concepts
---                     |> List.map (\x -> getConceptName vc (Just x) |> Maybe.withDefault x)
---                     |> String.join ","
---                     |> Locale.string vc.locale
---                     |> Util.View.truncate 20
---                     |> val vc
---             }
---             |> List.singleton
---    )
--- ++ [ row
---         { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
---         , tooltipRowValue =
---             List.length lbldata.sources
---                 |> String.fromInt
---                 |> val vc
---         }
---    , row
---         { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
---         , tooltipRowValue = lbldata.count |> String.fromInt |> val vc
---         }
---    , row
---         { tooltipRowLabel = { title = Locale.string vc.locale "Last modified" }
---         , tooltipRowValue =
---             let
---                 date =
---                     Locale.timestampDateUniform vc.locale lbldata.lastmod
---                 time =
---                     Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset lbldata.lastmod
---             in
---             { firstRow = date
---             , secondRow = time
---             , secondRowVisible = True
---             }
---         }
---    ]
 
 
 tagLabel : View.Config -> String -> TagSummary -> List (Html Msg)
@@ -274,7 +273,7 @@ tagLabel vc lbl tag =
                             , tooltipRowValue =
                                 lbldata.concepts
                                     |> List.map (\x -> getConceptName vc (Just x) |> Maybe.withDefault x)
-                                    |> String.join ","
+                                    |> String.join ", "
                                     |> Locale.string vc.locale
                                     |> Util.View.truncate 20
                                     |> val vc

@@ -445,3 +445,4 @@ shallPushHistory msg model =
 
         TagHovercardMsg _ ->
             False
+        
