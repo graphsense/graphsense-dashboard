@@ -18,8 +18,8 @@ import Hovercard
 import Http exposing (Error(..))
 import Init.Graph
 import Init.Pathfinder
-import Init.Search as Search
 import Init.Pathfinder.Table.TagsTable as TagsTable
+import Init.Search as Search
 import Json.Decode
 import Json.Encode exposing (Value)
 import List.Extra
@@ -237,13 +237,17 @@ update plugins uc msg model =
                 _ ->
                     n model
 
-        TagsListDialogTableUpdateMsg tableState -> case model.dialog of
-                                                    Just (Dialog.TagsList config) -> let
-                                                                                        newConfig = {config | tagsTable = config.tagsTable |> s_state tableState}
-                                                                                     in 
-                                                                                        n {model | dialog = Just (Dialog.TagsList newConfig)}
-                                                    _ -> n model 
-               
+        TagsListDialogTableUpdateMsg tableState ->
+            case model.dialog of
+                Just (Dialog.TagsList config) ->
+                    let
+                        newConfig =
+                            { config | tagsTable = config.tagsTable |> s_state tableState }
+                    in
+                    n { model | dialog = Just (Dialog.TagsList newConfig) }
+
+                _ ->
+                    n model
 
         UserClickedUserIcon id ->
             if model.user.hovercard == Nothing then

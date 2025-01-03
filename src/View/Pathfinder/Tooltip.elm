@@ -5,8 +5,8 @@ import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
-import Html.Styled exposing (Html, div, span, text, toUnstyled)
-import Html.Styled.Attributes exposing (css, href, target, title)
+import Html.Styled exposing (Html, div, text, toUnstyled)
+import Html.Styled.Attributes exposing (css, href, target)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
@@ -48,9 +48,9 @@ view vc ts tt =
 
                 ActorDetails ac ->
                     ( showActor vc ac, [ onMouseEnter (UserMovesMouseOverActorLabel ac.id), onMouseLeave (UserMovesMouseOutActorLabel ac.id) ] )
-                
+
                 Text t ->
-                    ([span [] [ text t]], [])
+                    ( [ div [ [ Css.width (Css.px GraphComponents.tooltipProperty1Down_details.width) ] |> css ] [ text t ] ], [] )
     in
     content
         |> div
@@ -98,10 +98,12 @@ row =
 showActor : View.Config -> Actor -> List (Html Msg)
 showActor vc a =
     let
-        mainUri = (if not (String.startsWith "http://" a.uri) || not (String.startsWith "https://" a.uri) then
-                        "https://" ++ a.uri
-                    else
-                        a.uri)
+        mainUri =
+            if not (String.startsWith "http://" a.uri) || not (String.startsWith "https://" a.uri) then
+                "https://" ++ a.uri
+
+            else
+                a.uri
     in
     [ row
         { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
@@ -149,7 +151,7 @@ showActor vc a =
                                     )
                                 ]
                         )
-                    |> div [[Css.displayFlex, Css.flexDirection Css.column] |> css]
+                    |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
                     |> Just
                 )
         )
@@ -208,7 +210,7 @@ tagConcept vc concept tag =
                                     )
                                 ]
                         )
-                    |> div [[Css.displayFlex, Css.flexDirection Css.column] |> css]
+                    |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
                     |> Just
                 )
         )

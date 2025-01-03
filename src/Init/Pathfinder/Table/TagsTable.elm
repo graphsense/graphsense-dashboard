@@ -9,7 +9,9 @@ import RecordSetter as Rs
 init : Api.Data.AddressTags -> Table Api.Data.AddressTag
 init data =
     let
-        tags = data.addressTags
+        tags =
+            data.addressTags
+
         sdata =
             tags
                 |> List.sortBy (.confidenceLevel >> Maybe.withDefault 0)

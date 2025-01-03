@@ -44,7 +44,8 @@ isSameTooltip t1 t2 =
         ( ActorDetails a1, ActorDetails a2 ) ->
             a1.id == a2.id
 
-        ( Text tt1, Text tt2) -> t1 == t2
+        ( Text tt1, Text tt2 ) ->
+            t1 == t2
 
         _ ->
             False

@@ -437,3 +437,6 @@ Reset: Zurücksetzen
 Apply filter: Filtern
 Mention: Erwähnung
 Tags list: Schlagwortliste
+mentionTagDescriptionId: Ein Erwähnungs-Tag besagt, dass diese Adresse z. B. auf einer Website erwähnt wurde. Das kann von Bedeutung sein, aber es hängt vom Kontext ab.
+actorTagDescriptionId: Ein Akteurs-Tag ist eine Aussage über die Partei, die die Adresse kontrolliert.
+eventTagDescriptionId: Ein Ereignis-Tag ist eine Aussage über ein Ereignis, das in Bezug auf diese Adresse stattgefunden hat, z. B. ob die Adresse Teil eines Hacks war.

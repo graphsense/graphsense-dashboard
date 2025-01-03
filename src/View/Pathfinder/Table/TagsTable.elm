@@ -5,9 +5,10 @@ import Config.View as View exposing (getConceptName)
 import Css
 import Css.Table
 import Html.Styled exposing (a, span, text)
-import Html.Styled.Attributes exposing (css, href, target, title)
-import Html.Styled.Events exposing (onMouseOver, onMouseOut)
+import Html.Styled.Attributes exposing (css, href, target)
+import Html.Styled.Events exposing (onMouseOut, onMouseOver)
 import Model exposing (Msg(..))
+import Msg.Pathfinder
 import RecordSetter as Rs
 import Set
 import String.Extra
@@ -21,8 +22,6 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-
-import Msg.Pathfinder
 
 
 tagId : Api.Data.AddressTag -> String
@@ -61,10 +60,11 @@ cell _ c =
         attrs =
             TagsComponents.tagRowCellAttributes
                 |> Rs.s_line ([ Css.display Css.none ] |> css |> List.singleton)
-                |> Rs.s_tagRowCell ([ Css.maxWidth (Css.px 300), Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height)] |> css |> List.singleton)
-                |> Rs.s_iconText ([ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height)] |> css |> List.singleton)
-                |> Rs.s_category ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ] |> css |> List.singleton) -- to allow wrapping and growing of line
+                |> Rs.s_tagRowCell ([ Css.maxWidth (Css.px 300), Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ] |> css |> List.singleton)
+                |> Rs.s_iconText ([ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height) ] |> css |> List.singleton)
+                |> Rs.s_category ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ] |> css |> List.singleton)
 
+        -- to allow wrapping and growing of line
         defaultData cc tagIcon actionIcon =
             { tagRowCell =
                 { infoIconInstance = actionIcon |> Maybe.withDefault none
@@ -116,18 +116,25 @@ cell _ c =
                     cc.link |> Maybe.map (\x -> getLink x linkIcon)
             in
             TagsComponents.tagRowCellWithInstances
-                (attrs |> Rs.s_category ([[Css.property "color" Colors.blue400 |> Css.important] |> css])) 
+                (attrs |> Rs.s_category [ [ Css.property "color" Colors.blue400 |> Css.important ] |> css ])
                 (TagsComponents.tagRowCellInstances |> Rs.s_label linkBody)
                 (defaultData cc Nothing linkBodyIcon)
 
         InfoCell cc titletext ->
             let
-                cellid = "test"
-                ttConfig = {anchorId = cellid, text= titletext}
+                cellid =
+                    "test"
+
+                ttConfig =
+                    { anchorId = cellid, text = titletext }
+
                 icon =
-                    span [ onMouseOver ((Msg.Pathfinder.ShowTextTooltip ttConfig )  |> PathfinderMsg)
-                            , onMouseOut ((Msg.Pathfinder.CloseTextTooltip ttConfig )  |> PathfinderMsg)
-                            , Html.Styled.Attributes.id cellid] [ Icons.iconsInfoSnoPadding {} ]
+                    span
+                        [ onMouseOver (Msg.Pathfinder.ShowTextTooltip ttConfig |> PathfinderMsg)
+                        , onMouseOut (Msg.Pathfinder.CloseTextTooltip ttConfig |> PathfinderMsg)
+                        , Html.Styled.Attributes.id cellid
+                        ]
+                        [ Icons.iconsInfoSnoPadding {} ]
             in
             TagsComponents.tagRowCellWithInstances
                 attrs
@@ -213,13 +220,13 @@ typeColumn vc =
                         Locale.string vc.locale
                             (case data.tagType of
                                 "mention" ->
-                                    "A mention says that this address was mentioned e.g. a website. It might be of relevance, but it depends on the context."
+                                    "mentionTagDescriptionId"
 
                                 "actor" ->
-                                    "An actor tag is a statement about the party controlling the address."
+                                    "actorTagDescriptionId"
 
                                 "event" ->
-                                    "An event tag is a statement about an event taking place with relation to this address e.g. if the address was part of a hack."
+                                    "eventTagDescriptionId"
 
                                 _ ->
                                     ""
@@ -233,7 +240,7 @@ typeColumn vc =
                             titleText
                 in
                 cell vc (InfoCell { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase), subLabel = Just (Locale.string vc.locale conf) } titleTextWithClusterAddition)
-        , sorter =  Table.increasingOrDecreasingBy (\data -> data.confidenceLevel |> Maybe.withDefault 0)
+        , sorter = Table.increasingOrDecreasingBy (\data -> data.confidenceLevel |> Maybe.withDefault 0)
         }
 
 
@@ -248,8 +255,8 @@ sourceColumn vc =
                         data.source |> Maybe.withDefault "#"
 
                     s =
-                        url 
-                            |> String.replace "https://" "" 
+                        url
+                            |> String.replace "https://" ""
                             |> String.replace "http://" ""
 
                     truncatedSource =

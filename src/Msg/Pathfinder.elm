@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TxDetailsMsg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
+module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -102,7 +102,9 @@ type Msg
     | CloseTextTooltip TextTooltipConfig
 
 
-type alias TextTooltipConfig = {anchorId: String, text: String}
+type alias TextTooltipConfig =
+    { anchorId : String, text : String }
+
 
 type OverlayWindows
     = TagsList Id

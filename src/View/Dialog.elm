@@ -28,7 +28,6 @@ import Theme.Html.Icons as Icons
 import Util.View exposing (addDot, none, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.TagDetailsList as TagsDetailList
-import PluginInterface.Msg exposing (OutMsg(..))
 
 
 view : Config -> Model Msg -> Html Msg
@@ -53,8 +52,7 @@ view vc model =
                 custom conf
 
             TagsList conf ->
-                TagsDetailList.view vc (conf.closeMsg) conf.id (conf.tagsTable)
-
+                TagsDetailList.view vc conf.closeMsg conf.id conf.tagsTable
         ]
 
 

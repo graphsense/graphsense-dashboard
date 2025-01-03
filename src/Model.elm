@@ -27,11 +27,12 @@ import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
+import Table
 import Time
 import Url exposing (Url)
 import Util.ThemedSelectBox as SelectBox
 import Util.ThemedSelectBoxes as SelectBoxes
-import Table
+
 
 type alias Flags =
     { localStorage : Json.Encode.Value

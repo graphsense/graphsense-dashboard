@@ -6,6 +6,7 @@ import Css
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Model exposing (Msg)
+import Model.Graph.Table exposing (Table)
 import Model.Pathfinder.Id as Id exposing (Id)
 import RecordSetter as Rs
 import Theme.Html.TagsComponents as TagsComponents
@@ -13,7 +14,7 @@ import Util.View exposing (copyIconPathfinder, none, onClickWithStop)
 import View.Graph.Table
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
-import Model.Graph.Table exposing (Table)
+
 
 view : View.Config -> Msg -> Id -> Table Api.Data.AddressTag -> Html Msg
 view vc closeMsg id tags =
@@ -47,5 +48,5 @@ view vc closeMsg id tags =
             [ css [ Css.verticalAlign Css.top, Css.overflowY Css.scroll, Css.overflowX Css.hidden ] ]
             View.Graph.Table.noTools
             (TagsTable.config vc)
-            (tags)
+            tags
         ]
