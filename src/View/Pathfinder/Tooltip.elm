@@ -6,7 +6,7 @@ import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
 import Html.Styled exposing (Html, div, text, toUnstyled)
-import Html.Styled.Attributes exposing (css, href, target)
+import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
