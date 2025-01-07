@@ -232,7 +232,11 @@ update plugins uc msg model =
                     n { model | dialog = Nothing }
 
                 Just (Dialog.TagsList _) ->
-                    n { model | dialog = Nothing }
+                    let
+                        pfm =
+                            model.pathfinder
+                    in
+                    n { model | dialog = Nothing, pathfinder = { pfm | tooltip = Nothing } }
 
                 _ ->
                     n model
@@ -1149,13 +1153,13 @@ update plugins uc msg model =
                     )
 
         UserClickedConfirm ms ->
-            update plugins uc ms { model | dialog = Nothing }
+            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         UserClickedOption ms ->
-            update plugins uc ms { model | dialog = Nothing }
+            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         UserClickedOutsideDialog ms ->
-            update plugins uc ms { model | dialog = Nothing }
+            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         PluginMsg msgValue ->
             updatePlugins plugins uc msgValue model

@@ -46,7 +46,7 @@ type Cell
     = DefaultCell CellConfig
     | LinkCell LinkCellConfig
     | LabelCell CellConfig TagIcon
-    | InfoCell CellConfig String
+    | InfoCell CellConfig String String
 
 
 linkCellStyle : List Css.Style
@@ -120,11 +120,8 @@ cell _ c =
                 (TagsComponents.tagRowCellInstances |> Rs.s_label linkBody)
                 (defaultData cc Nothing linkBodyIcon)
 
-        InfoCell cc titletext ->
+        InfoCell cc titletext cellid ->
             let
-                cellid =
-                    "test"
-
                 ttConfig =
                     { anchorId = cellid, text = titletext }
 
@@ -239,7 +236,14 @@ typeColumn vc =
                         else
                             titleText
                 in
-                cell vc (InfoCell { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase), subLabel = Just (Locale.string vc.locale conf) } titleTextWithClusterAddition)
+                cell vc
+                    (InfoCell
+                        { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase)
+                        , subLabel = Just (Locale.string vc.locale conf)
+                        }
+                        titleTextWithClusterAddition
+                        (tagId data ++ "_tag_row")
+                    )
         , sorter = Table.increasingOrDecreasingBy (\data -> data.confidenceLevel |> Maybe.withDefault 0)
         }
 

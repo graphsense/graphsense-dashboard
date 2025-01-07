@@ -95,11 +95,7 @@ delay time msg =
 
 tooltipBeginClosing : Msg -> ( Model, List Effect ) -> ( Model, List Effect )
 tooltipBeginClosing closingMsg ( model, eff ) =
-    let
-        tt =
-            model.tooltip |> Maybe.map (s_closing True)
-    in
-    ( { model | tooltip = tt }, ((delay 2000.0 <| closingMsg) |> CmdEffect) :: eff )
+    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }, ((delay 2000.0 <| closingMsg) |> CmdEffect) :: eff )
 
 
 tooltipAbortClosing : ( Model, List Effect ) -> ( Model, List Effect )
