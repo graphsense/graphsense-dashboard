@@ -398,9 +398,9 @@ settingsHovercardView vc _ hc =
 
 
 topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-topRightPanel _ _ vc gc model =
+topRightPanel plugins pluginStates vc gc model =
     div [ Css.topRightPanelStyle vc |> css ]
-        [ detailsView vc gc model
+        [ detailsView plugins pluginStates vc gc model
         ]
 
 
@@ -461,15 +461,15 @@ searchBoxView plugins vc _ model =
         {}
 
 
-detailsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-detailsView vc gc model =
+detailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
+detailsView plugin pluginStates vc gc model =
     case model.details of
         Just details ->
             case details of
                 Pathfinder.AddressDetails id state ->
                     RemoteData.unwrap
                         (Util.View.loadingSpinner vc Css.View.loadingSpinner)
-                        (addressDetailsContentView vc gc model id)
+                        (addressDetailsContentView plugin pluginStates vc gc model id)
                         state
 
                 Pathfinder.TxDetails id state ->
@@ -504,6 +504,7 @@ txDetailsContentView vc _ model id viewState =
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc
+                    , chevronInstance = none
                     }
                 , leftTab = { variant = none }
                 , rightTab = { variant = none }
@@ -610,6 +611,7 @@ txDetailsContentView vc _ model id viewState =
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc
+                    , chevronInstance = none
                     }
                 , leftTab = { variant = none }
                 , rightTab = { variant = none }
@@ -719,8 +721,8 @@ closeAttrs =
     ]
 
 
-addressDetailsContentView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
-addressDetailsContentView vc gc model id viewState =
+addressDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
+addressDetailsContentView plugins pluginStates vc gc model id viewState =
     let
         address =
             model.network.addresses
@@ -939,6 +941,7 @@ addressDetailsContentView vc gc model id viewState =
         sidePanelAddressCopyIcon =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
+            , chevronInstance = none
             }
 
         labelOfTags =
@@ -1117,6 +1120,11 @@ addressDetailsContentView vc gc model id viewState =
                 |> Rs.s_labelOfActor
                     labelOfActor
             )
+            { pluginList =
+                address
+                    |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
+                    |> Maybe.withDefault []
+            }
             { sidePanelAddress = sidePanelData
             , leftTab = { variant = none }
             , rightTab = { variant = none }

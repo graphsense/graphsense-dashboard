@@ -122,6 +122,26 @@ addressContextMenuNew plugins states vc address =
         |> List.map (ContextMenuItem.map Pathfinder.PluginMsg)
 
 
+addressSidePanelHeader : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (Html Pathfinder.Msg)
+addressSidePanelHeader plugins states vc address =
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.map3
+                    (\fun ->
+                        fun vc address
+                    )
+                    plugin.addressSidePanelHeader
+                    states.{{name}}
+                    address.plugins.{{name}}
+                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.map (Html.map Pathfinder.PluginMsg)
+
+
 addressProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.AddressState -> View.Config -> Graph.Config -> List (Html Graph.Msg)
 addressProperties plugins states addressStates vc gc =
     [ {{#plugins}}plugins.{{name}}

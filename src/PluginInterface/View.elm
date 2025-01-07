@@ -64,6 +64,9 @@ type alias View modelState addressState entityState msg =
 
     -- additional stuff for login
     , login : Maybe (View.Config -> modelState -> List (Html msg))
+
+    -- additional stuff for the new Pathfinder's address side panel header
+    , addressSidePanelHeader : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Html msg)
     }
 
 
@@ -86,4 +89,5 @@ init =
     , title = Nothing
     , profile = Nothing
     , login = Nothing
+    , addressSidePanelHeader = Nothing
     }
