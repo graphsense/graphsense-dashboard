@@ -339,7 +339,10 @@ styles =
         |> Rs.s_headCell
             (\_ ->
                 (-- TagsComponents.dialogTagsListComponentCellsLayout_details.styles
-                 [ Css.display Css.tableCell, Css.verticalAlign Css.top, Css.property "color" Colors.greyBlue500 ]
+                 [ Css.display Css.tableCell
+                 , Css.verticalAlign Css.top
+                 , Css.property "color" Colors.greyBlue500
+                 ]
                 )
             )
 
