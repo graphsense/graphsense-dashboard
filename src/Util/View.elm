@@ -14,7 +14,7 @@ import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
-import RecordSetter exposing (s_anchor, s_hint, s_iconsCopySmall, s_label, s_triangle)
+import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
 import Switch
 import Theme.Html.GraphComponents
 import View.Locale as Locale
@@ -240,7 +240,7 @@ copyIconWithAttrPathfinder attr vc value =
             ]
             [ Theme.Html.GraphComponents.copyShortcutWithAttributes
                 (Theme.Html.GraphComponents.copyShortcutAttributes
-                    |> s_iconsCopySmall
+                    |> s_iconsCopyS
                         [ css
                             [ Css.display Css.inlineBlock
                             , Css.color Css.inherit

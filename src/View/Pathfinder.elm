@@ -175,25 +175,25 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                 case menu of
                     ContextMenu.AddressContextMenu id ->
                         [ { msg = UserOpensAddressAnnotationDialog id
-                          , icon = HIcons.iconsAnnotateSmall {}
+                          , icon = HIcons.iconsAnnotateS {}
                           , text = "Annotate address"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
-                          , icon = HIcons.iconsCopySmall {}
+                          , icon = HIcons.iconsCopyS {}
                           , text = "Copy address ID"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
-                          , icon = HIcons.iconsDeleteSmall {}
+                          , icon = HIcons.iconsDeleteS {}
                           , text = "Remove from Graph"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuOpenInNewTab menu
-                          , icon = HIcons.iconsGoToSmall {}
+                          , icon = HIcons.iconsGoToS {}
                           , text = "Open in new tab"
                           }
                             |> ContextMenuItem.init
@@ -209,19 +209,19 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
 
                     ContextMenu.TransactionContextMenu _ ->
                         [ { msg = UserClickedContextMenuIdToClipboard menu
-                          , icon = HIcons.iconsCopySmall {}
+                          , icon = HIcons.iconsCopyS {}
                           , text = "Copy transaction ID"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
-                          , icon = HIcons.iconsDeleteSmall {}
+                          , icon = HIcons.iconsDeleteS {}
                           , text = "Remove from Graph"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuOpenInNewTab menu
-                          , icon = HIcons.iconsGoToSmall {}
+                          , icon = HIcons.iconsGoToS {}
                           , text = "Open in new tab"
                           }
                             |> ContextMenuItem.init

@@ -59,7 +59,7 @@ view vc model =
             in
             errorMessageComponentTypeErrorWithAttributes
                 (errorMessageComponentTypeErrorAttributes
-                    |> s_iconsCloseSmall buttonAttrOk
+                    |> s_iconsCloseSnoPadding buttonAttrOk
                 )
                 { header =
                     { iconInstance = icon
@@ -84,7 +84,7 @@ view vc model =
                     Icons.iconsAlert {}
             in
             errorMessageComponentTypeAlertWithAttributes
-                (errorMessageComponentTypeAlertAttributes |> s_iconsCloseSmall buttonAttrOk)
+                (errorMessageComponentTypeAlertAttributes |> s_iconsCloseSnoPadding buttonAttrOk)
                 { header =
                     { iconInstance = icon
                     , title = Locale.string vc.locale title

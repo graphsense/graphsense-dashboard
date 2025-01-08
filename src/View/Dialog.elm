@@ -255,7 +255,7 @@ error vc err =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm err.onOk) ]
     in
     errorMessageComponentTypeErrorWithInstances
-        (errorMessageComponentTypeErrorAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
+        (errorMessageComponentTypeErrorAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
         (errorMessageComponentTypeErrorInstances |> Rs.s_messageText (Just (div [] details)))
         { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = "" }, typeError = { bodyText = "", headlineText = "" } }
 
@@ -270,7 +270,7 @@ info vc inf =
             Icons.iconsAlert {}
     in
     errorMessageComponentTypeAlertWithAttributes
-        (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
+        (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
         { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, typeAlert = { bodyText = "", headlineText = "" } }
 
 
