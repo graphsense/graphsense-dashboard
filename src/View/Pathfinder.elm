@@ -946,8 +946,6 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         }
             , actorVisible = showExchangeTag
             , tagsVisible = showOtherTag
-
-            -- , pluginElement = none
             }
 
         sidePanelData =
@@ -1019,7 +1017,6 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         }
             , actorVisible = showExchangeTag
             , tagsVisible = showOtherTag
-            , pluginElement = none
             }
 
         sidePanelAddressHeader =
