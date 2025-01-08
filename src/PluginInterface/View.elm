@@ -5,9 +5,11 @@ import Config.View as View
 import Html.Styled exposing (Html)
 import Model.Address as A
 import Model.Entity as E
-import Model.Graph.Address exposing (Address)
+import Model.Graph.Address as Graph
 import Model.Node as Node
+import Model.Pathfinder.Address as Pathfinder
 import Svg.Styled exposing (Svg)
+import View.Pathfinder.ContextMenuItem exposing (ContextMenuItem)
 
 
 type alias View modelState addressState entityState msg =
@@ -18,7 +20,10 @@ type alias View modelState addressState entityState msg =
     , entityFlags : Maybe (View.Config -> entityState -> ( Float, List (Svg msg) ))
 
     -- address context menu
-    , addressContextMenu : Maybe (View.Config -> Address -> modelState -> addressState -> List (Html msg))
+    , addressContextMenu : Maybe (View.Config -> Graph.Address -> modelState -> addressState -> List (Html msg))
+
+    -- address context menu item for new pathfinder
+    , addressContextMenuNew : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> List (ContextMenuItem msg))
 
     -- additional properties shown in the address's property box
     , addressProperties : Maybe (View.Config -> Graph.Config -> modelState -> addressState -> List (Html msg))
@@ -59,6 +64,9 @@ type alias View modelState addressState entityState msg =
 
     -- additional stuff for login
     , login : Maybe (View.Config -> modelState -> List (Html msg))
+
+    -- additional stuff for the new Pathfinder's address side panel header
+    , addressSidePanelHeader : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Html msg)
     }
 
 
@@ -67,6 +75,7 @@ init =
     { addressFlags = Nothing
     , entityFlags = Nothing
     , addressContextMenu = Nothing
+    , addressContextMenuNew = Nothing
     , addressProperties = Nothing
     , entityProperties = Nothing
     , browser = Nothing
@@ -80,4 +89,5 @@ init =
     , title = Nothing
     , profile = Nothing
     , login = Nothing
+    , addressSidePanelHeader = Nothing
     }

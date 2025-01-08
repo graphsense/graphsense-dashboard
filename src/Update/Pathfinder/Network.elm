@@ -1,6 +1,5 @@
 module Update.Pathfinder.Network exposing
-    ( FindPosition(..)
-    , addAddress
+    ( addAddress
     , addAddressWithPosition
     , addTx
     , addTxWithPosition
@@ -33,6 +32,7 @@ import Model.Pathfinder.Deserialize exposing (DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx, listAddressesForTx)
+import Plugin.Update exposing (Plugins)
 import RecordSetter exposing (..)
 import Set
 import Tuple exposing (pair, second)
@@ -79,13 +79,13 @@ snapToGrid n =
     mn |> s_txs (mn.txs |> Dict.map updateIosAddresses)
 
 
-addAddress : Id -> Network -> Network
-addAddress =
-    addAddressWithPosition Auto
+addAddress : Plugins -> Id -> Network -> Network
+addAddress plugins =
+    addAddressWithPosition plugins Auto
 
 
-addAddressWithPosition : FindPosition -> Id -> Network -> Network
-addAddressWithPosition position id model =
+addAddressWithPosition : Plugins -> FindPosition -> Id -> Network -> Network
+addAddressWithPosition plugins position id model =
     if Dict.member id model.addresses then
         model
 
@@ -113,7 +113,7 @@ addAddressWithPosition position id model =
                         Fixed x y ->
                             { x = x, y = y }
         in
-        Address.init id coords
+        Address.init plugins id coords
             |> s_isStartingPoint (isEmpty model)
             |> insertAddress (freeSpaceAroundCoords coords model)
 
@@ -427,12 +427,6 @@ findAddressCoords id network =
                         |> Maybe.map Coords.avg
             )
         |> Maybe.withDefault (findFreeCoords network)
-
-
-type FindPosition
-    = Auto
-    | NextTo ( Direction, Id )
-    | Fixed Float Float
 
 
 addTx : Api.Data.Tx -> Network -> ( Tx, Network )
@@ -846,11 +840,12 @@ ingestTxs network things txs =
             network
 
 
-ingestAddresses : Network -> List DeserializedThing -> Network
-ingestAddresses network =
+ingestAddresses : Plugins -> Network -> List DeserializedThing -> Network
+ingestAddresses plugins network =
     List.foldl
         (\th nw ->
-            Address.init th.id
+            Address.init plugins
+                th.id
                 { x = th.x
                 , y = th.y
                 }

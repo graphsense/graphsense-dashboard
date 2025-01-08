@@ -29,7 +29,8 @@ subcanvasNodeComponentsToDeclarations : (String -> Dict String (Dict String Comp
 subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
     let
         toDeclarations parentName parentProperties n =
-            adjustBoundingBoxes n
+            filterUnneededParts n
+                |> adjustBoundingBoxes
                 |> adjustNames
                 |> componentNodeToDeclarations parentName parentProperties
     in
@@ -101,6 +102,107 @@ subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
 
         _ ->
             []
+
+
+subcanvasNodeFilter : SubcanvasNode -> Maybe SubcanvasNode
+subcanvasNodeFilter node =
+    case node of
+        SubcanvasNodeComponentNode n ->
+            if FrameTraits.isHidden n then
+                Nothing
+
+            else
+                filterUnneededParts n
+                    |> SubcanvasNodeComponentNode
+                    |> Just
+
+        SubcanvasNodeComponentSetNode n ->
+            if FrameTraits.isHidden n then
+                Nothing
+
+            else
+                filterUnneededParts n
+                    |> SubcanvasNodeComponentSetNode
+                    |> Just
+
+        SubcanvasNodeGroupNode n ->
+            if FrameTraits.isHidden n then
+                Nothing
+
+            else
+                filterUnneededParts n
+                    |> SubcanvasNodeGroupNode
+                    |> Just
+
+        SubcanvasNodeFrameNode n ->
+            if FrameTraits.isHidden n then
+                Nothing
+
+            else
+                filterUnneededParts n
+                    |> SubcanvasNodeFrameNode
+                    |> Just
+
+        SubcanvasNodeInstanceNode n ->
+            if FrameTraits.isHidden n then
+                Nothing
+
+            else if hasVariantProperty n || hasMainComponentProperty n then
+                s_children [] n.frameTraits
+                    |> flip s_frameTraits n
+                    |> SubcanvasNodeInstanceNode
+                    |> Just
+
+            else
+                filterUnneededParts n
+                    |> SubcanvasNodeInstanceNode
+                    |> Just
+
+        SubcanvasNodeTextNode n ->
+            if DefaultShapeTraits.isHidden n then
+                Nothing
+
+            else
+                Just node
+
+        SubcanvasNodeRectangleNode n ->
+            if DefaultShapeTraits.isHidden n.rectangularShapeTraits then
+                Nothing
+
+            else
+                Just node
+
+        SubcanvasNodeVectorNode n ->
+            if DefaultShapeTraits.isHidden n.cornerRadiusShapeTraits then
+                Nothing
+
+            else
+                Just node
+
+        SubcanvasNodeLineNode n ->
+            if DefaultShapeTraits.isHidden n then
+                Nothing
+
+            else
+                Just node
+
+        SubcanvasNodeEllipseNode n ->
+            if DefaultShapeTraits.isHidden n then
+                Nothing
+
+            else
+                Just node
+
+        _ ->
+            Nothing
+
+
+filterUnneededParts : { a | frameTraits : FrameTraits } -> { a | frameTraits : FrameTraits }
+filterUnneededParts a =
+    a.frameTraits.children
+        |> List.filterMap subcanvasNodeFilter
+        |> flip s_children a.frameTraits
+        |> flip s_frameTraits a
 
 
 adjustBoundingBoxes : { a | frameTraits : FrameTraits } -> { a | frameTraits : FrameTraits }
@@ -380,6 +482,7 @@ componentNodeToProperties name node =
             (Dict.toList
                 >> List.map
                     (mapSecond .type_)
+                >> List.filter (instancePropertyIsNotPartOfAList False node)
                 >> Dict.fromList
             )
         |> Maybe.map (pair name >> List.singleton)
@@ -387,6 +490,42 @@ componentNodeToProperties name node =
         |> (++)
             (withFrameTraitsToProperties node)
         |> Dict.fromList
+
+
+instancePropertyIsNotPartOfAList : Bool -> { a | frameTraits : FrameTraits } -> ( String, ComponentPropertyType ) -> Bool
+instancePropertyIsNotPartOfAList isList node ( name, type_ ) =
+    let
+        withFrameTraits : Bool -> { b | frameTraits : FrameTraits } -> Bool
+        withFrameTraits isList_ n =
+            let
+                newIsList =
+                    isList_ || FrameTraits.isList n
+            in
+            List.all (walk newIsList) n.frameTraits.children
+
+        walk isList_ nd =
+            case nd of
+                SubcanvasNodeFrameNode n ->
+                    withFrameTraits isList_ n
+
+                SubcanvasNodeGroupNode n ->
+                    withFrameTraits isList_ n
+
+                SubcanvasNodeInstanceNode n ->
+                    isList_
+                        && (getMainComponentProperty n.frameTraits.isLayerTrait.componentPropertyReferences
+                                == Just name
+                           )
+                        |> not
+
+                _ ->
+                    True
+    in
+    if type_ /= ComponentPropertyTypeINSTANCESWAP then
+        True
+
+    else
+        List.all (walk False) node.frameTraits.children
 
 
 withFrameTraitsToProperties : { a | frameTraits : FrameTraits } -> List ( String, Dict String ComponentPropertyType )
@@ -419,10 +558,7 @@ subcanvasNodeToProperties : SubcanvasNode -> List ( String, Dict String Componen
 subcanvasNodeToProperties node =
     case node of
         SubcanvasNodeInstanceNode n ->
-            if FrameTraits.isHidden n then
-                []
-
-            else if hasMainComponentProperty n then
+            if hasMainComponentProperty n then
                 []
 
             else if hasVariantProperty n then
@@ -444,18 +580,10 @@ subcanvasNodeToProperties node =
                     |> (++) (withFrameTraitsToProperties n)
 
         SubcanvasNodeFrameNode n ->
-            if FrameTraits.isHidden n then
-                []
-
-            else
-                withFrameTraitsToProperties n
+            withFrameTraitsToProperties n
 
         SubcanvasNodeGroupNode n ->
-            if FrameTraits.isHidden n then
-                []
-
-            else
-                withFrameTraitsToProperties n
+            withFrameTraitsToProperties n
 
         _ ->
             []
