@@ -59,7 +59,6 @@ cell _ c =
     let
         attrs =
             TagsComponents.tagRowCellAttributes
-                |> Rs.s_line ([ Css.display Css.none ] |> css |> List.singleton)
                 |> Rs.s_tagRowCell ([ Css.maxWidth (Css.px 300), Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ] |> css |> List.singleton)
                 |> Rs.s_iconText ([ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height) ] |> css |> List.singleton)
                 |> Rs.s_category ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ] |> css |> List.singleton)
@@ -68,10 +67,10 @@ cell _ c =
         defaultData cc tagIcon actionIcon =
             { tagRowCell =
                 { infoIconInstance = actionIcon |> Maybe.withDefault none
-                , iconVisible = tagIcon /= Nothing
-                , infoVisible = actionIcon /= Nothing
+                , tagIconVisible = tagIcon /= Nothing
+                , infoIconVisible = actionIcon /= Nothing
                 , labelText = cc.label
-                , subLabelTextVisible = cc.subLabel /= Nothing
+                , subLabelVisible = cc.subLabel /= Nothing
                 , subLabelText = cc.subLabel |> Maybe.withDefault ""
                 , tagIconInstance = tagIcon |> Maybe.withDefault none
                 }
