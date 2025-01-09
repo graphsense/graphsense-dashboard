@@ -74,6 +74,7 @@ theme:
 	{ echo '{"whitelist": {"frames": $(FIGMA_WHITELIST_FRAMES)}, "theme":'; cat ./theme/figma.json; echo '}'; } > ./theme/.gen.json
 	$(ELM_CODEGEN) --output theme --flags-from=./theme/.gen.json
 	rm ./theme/.gen.json
+	make setem
 
 plugin-theme-refresh:
 	$(ELM_CODEGEN) --flags='{"plugin_name": "$(PLUGIN_NAME)", "figma_file": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output plugins/$(PLUGIN_NAME)/theme
@@ -90,7 +91,6 @@ gen:
 	make setem # for codegen/generated
 	-node generate.js
 	-make theme
-	make setem # for theme related recordsetters
 	
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme
