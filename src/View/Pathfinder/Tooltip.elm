@@ -54,7 +54,7 @@ view vc ts tt =
     in
     content
         |> div
-            (css GraphComponents.tooltipProperty1Down_details.styles
+            (css (GraphComponents.tooltipProperty1Down_details.styles ++ [ Css.minWidth (Css.px 200) ])
                 :: containerAttributes
             )
         |> toUnstyled
@@ -235,10 +235,11 @@ tagConcept vc concept tag =
                 |> String.fromInt
                 |> val vc
         }
-    , row
-        { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
-        , tooltipRowValue = tagCount |> String.fromInt |> val vc
-        }
+
+    -- , row
+    --     { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
+    --     , tooltipRowValue = tagCount |> String.fromInt |> val vc
+    --     }
     ]
 
 

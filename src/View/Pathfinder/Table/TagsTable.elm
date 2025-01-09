@@ -61,7 +61,7 @@ cell _ c =
     let
         attrs =
             TagsComponents.tagRowCellAttributes
-                |> Rs.s_tagRowCell ([ Css.maxWidth (Css.px 300), Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height), Css.paddingLeft Css.zero |> Css.important ] |> css |> List.singleton)
+                |> Rs.s_tagRowCell ([ Css.minWidth (Css.px 200), Css.maxWidth (Css.px 300), Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ] |> css |> List.singleton)
                 |> Rs.s_iconText ([ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height) ] |> css |> List.singleton)
                 |> Rs.s_category ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ] |> css |> List.singleton)
 
