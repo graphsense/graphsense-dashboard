@@ -45,6 +45,7 @@ type TagIcon
 type Cell
     = DefaultCell CellConfig
     | LinkCell LinkCellConfig
+    | IconCell TagIcon
     | LabelCell CellConfig TagIcon
     | InfoCell CellConfig String String
 
@@ -72,7 +73,7 @@ cell _ c =
                 , labelText = cc.label
                 , subLabelVisible = cc.subLabel /= Nothing
                 , subLabelText = cc.subLabel |> Maybe.withDefault ""
-                , tagIconInstance = tagIcon |> Maybe.withDefault none
+                , tagIconInstance = none
                 }
             }
     in
@@ -82,19 +83,29 @@ cell _ c =
                 attrs
                 (defaultData cc Nothing Nothing)
 
-        LabelCell cc ti ->
-            let
-                icon =
-                    case ti of
-                        Exchange ->
-                            Just (Icons.iconsExchangeSnoPadding {})
+        IconCell ti ->
+            case ti of
+                Exchange ->
+                    TagsComponents.tagRowIconCellWithAttributes
+                        (TagsComponents.tagRowIconCellAttributes
+                            |> Rs.s_tagRowIconCell
+                                [ css
+                                    [ Css.verticalAlign Css.top
+                                    ]
+                                ]
+                        )
+                        { tagRowIconCell =
+                            { iconInstance = Icons.iconsExchangeSnoPadding {}
+                            }
+                        }
 
-                        None ->
-                            Nothing
-            in
+                None ->
+                    none
+
+        LabelCell cc _ ->
             TagsComponents.tagRowCellWithAttributes
                 attrs
-                (defaultData cc icon Nothing)
+                (defaultData cc Nothing Nothing)
 
         LinkCell cc ->
             let
@@ -148,7 +159,35 @@ cell _ c =
     )
         |> List.singleton
         |> Table.HtmlDetails
-            [ [ Css.verticalAlign Css.middle ] |> css ]
+            [ css [ Css.verticalAlign Css.top ] ]
+
+
+iconColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
+iconColumn vc =
+    Table.veryCustomColumn
+        { name = ""
+        , viewData =
+            \data ->
+                let
+                    mconcept =
+                        data.category |> Maybe.map List.singleton |> Maybe.withDefault []
+
+                    concepts =
+                        mconcept ++ (data.concepts |> Maybe.withDefault [])
+
+                    conceptss =
+                        Set.fromList concepts
+
+                    icon =
+                        if Set.member exchangeCategory conceptss then
+                            Exchange
+
+                        else
+                            None
+                in
+                cell vc (IconCell icon)
+        , sorter = Table.unsortable
+        }
 
 
 labelColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
@@ -333,7 +372,6 @@ styles =
             (\_ ->
                 [ Css.borderBottom2 (Css.px 1) Css.solid
                 , Css.property "border-color" Colors.grey50
-                , Css.verticalAlign Css.top
                 ]
             )
         |> Rs.s_headCell
@@ -353,7 +391,8 @@ config vc =
         { toId = tagId
         , toMsg = TagsListDialogTableUpdateMsg
         , columns =
-            [ labelColumn vc
+            [ iconColumn vc
+            , labelColumn vc
             , typeColumn vc
             , sourceColumn vc
             , lastModColumn vc

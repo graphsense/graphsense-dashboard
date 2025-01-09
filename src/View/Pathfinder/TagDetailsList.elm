@@ -45,7 +45,12 @@ view vc closeMsg id tags =
         , View.Graph.Table.table
             TagsTable.styles
             vc
-            [ css [ Css.verticalAlign Css.top, Css.overflowY Css.scroll, Css.overflowX Css.hidden ] ]
+            [ css 
+                [ Css.verticalAlign Css.top
+                , Css.overflowY Css.scroll
+                , Css.overflowX Css.hidden 
+                ] 
+            ]
             View.Graph.Table.noTools
             (TagsTable.config vc)
             tags
