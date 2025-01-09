@@ -3,6 +3,7 @@
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
 ELM_CODEGEN=./node_modules/.bin/elm-codegen run --debug 
+FIGMA_WHITELIST_FRAMES?=[]
 
 install:
 	pip install pre-commit
@@ -70,7 +71,9 @@ theme-refresh:
 	make theme
 
 theme: 
-	$(ELM_CODEGEN) --output theme --flags-from=./theme/figma.json
+	{ echo '{"whitelist": {"frames": $(FIGMA_WHITELIST_FRAMES)}, "theme":'; cat ./theme/figma.json; echo '}'; } > ./theme/.gen.json
+	$(ELM_CODEGEN) --output theme --flags-from=./theme/.gen.json
+	rm ./theme/.gen.json
 
 plugin-theme-refresh:
 	$(ELM_CODEGEN) --flags='{"plugin_name": "$(PLUGIN_NAME)", "figma_file": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output plugins/$(PLUGIN_NAME)/theme
