@@ -15,6 +15,7 @@ import String.Extra
 import Table
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
+import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Html.TagsComponents as TagsComponents
 import Url
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
@@ -376,12 +377,12 @@ styles =
             )
         |> Rs.s_headCell
             (\_ ->
-                (-- TagsComponents.dialogTagsListComponentCellsLayout_details.styles
-                 [ Css.display Css.tableCell
-                 , Css.verticalAlign Css.top
-                 , Css.property "color" Colors.greyBlue500
-                 ]
-                )
+                SidePanelComponents.sidePanelListHeadCell_details.styles
+                    ++ SidePanelComponents.sidePanelListHeadCellPlaceholder_details.styles
+                    ++ [ Css.verticalAlign Css.middle
+                       , Css.display Css.tableCell
+                       , Css.backgroundColor Css.transparent
+                       ]
             )
 
 
