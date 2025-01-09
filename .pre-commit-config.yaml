@@ -15,3 +15,21 @@ repos:
     language: system
     pass_filenames: false
     always_run: true
+  - id: code_formatting
+    name: Run uniform code formatting
+    entry: make format
+    language: system
+    pass_filenames: false
+    always_run: true
+  - id: linting
+    name: Run linting (elm-review)
+    entry: make lint
+    language: system
+    pass_filenames: false
+    always_run: true
+  - id: unit_tests
+    name: Run Unit Tests
+    entry: make test
+    language: system
+    pass_filenames: false
+    always_run: true

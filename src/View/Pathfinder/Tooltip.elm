@@ -173,9 +173,8 @@ tagConcept vc concept tag =
         maxConfidence =
             relevantLabels |> List.map .confidence |> List.maximum |> Maybe.withDefault 0
 
-        tagCount =
-            relevantLabels |> List.map .count |> List.sum
-
+        -- tagCount =
+        --     relevantLabels |> List.map .count |> List.sum
         sources =
             relevantLabels |> List.map .sources |> List.foldr (++) [] |> Set.fromList
     in

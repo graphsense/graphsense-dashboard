@@ -8,10 +8,11 @@ import Data.Pathfinder.Network as Data
 import Dict
 import Expect exposing (Expectation)
 import Model.Direction exposing (Direction(..))
-import Model.Pathfinder.Network exposing (Network)
+import Model.Pathfinder.Network exposing (FindPosition(..), Network)
+import Plugin.Update as Plugin
 import Test exposing (Test)
 import Tuple
-import Update.Pathfinder.Network as Network exposing (FindPosition(..))
+import Update.Pathfinder.Network as Network
 
 
 equal : Network -> Network -> Expectation
@@ -59,15 +60,15 @@ suite =
     Test.describe "Update.Pathfinder.Network"
         [ Test.test "addAddress 1" <|
             \_ ->
-                Network.addAddress Id.address1 Data.empty
+                Network.addAddress Plugin.empty Id.address1 Data.empty
                     |> equal Data.oneAddress
         , Test.test "addAddress 1 again" <|
             \_ ->
-                Network.addAddress Id.address1 Data.oneAddress
+                Network.addAddress Plugin.empty Id.address1 Data.oneAddress
                     |> equal Data.oneAddress
         , Test.test "addAddress 2" <|
             \_ ->
-                Network.addAddress Id.address2 Data.oneAddress
+                Network.addAddress Plugin.empty Id.address2 Data.oneAddress
                     |> equal Data.twoIndependentAddresses
         , Test.test "add outgoing Tx 1" <|
             \_ ->
@@ -91,27 +92,27 @@ suite =
                     |> equalCoords Data.oneAddressWithTwoTxs
         , Test.test "addAddress 3" <|
             \_ ->
-                Network.addAddress Id.address3 Data.oneAddressWithOutgoingTx
+                Network.addAddress Plugin.empty Id.address3 Data.oneAddressWithOutgoingTx
                     |> equalCoords Data.twoConnectedAddresses
         , Test.test "addAddress 3 again" <|
             \_ ->
-                Network.addAddress Id.address3 Data.twoConnectedAddresses
+                Network.addAddress Plugin.empty Id.address3 Data.twoConnectedAddresses
                     |> equal Data.twoConnectedAddresses
         , Test.test "addAddress 4" <|
             \_ ->
-                Network.addAddress Id.address4 Data.twoConnectedAddresses
+                Network.addAddress Plugin.empty Id.address4 Data.twoConnectedAddresses
                     |> equalCoords Data.one2TwoAddresses
         , Test.test "addAddress 4 again" <|
             \_ ->
-                Network.addAddress Id.address4 Data.one2TwoAddresses
+                Network.addAddress Plugin.empty Id.address4 Data.one2TwoAddresses
                     |> equal Data.one2TwoAddresses
         , Test.test "addAddress 5" <|
             \_ ->
-                Network.addAddress Id.address5 Data.one2TwoAddresses
+                Network.addAddress Plugin.empty Id.address5 Data.one2TwoAddresses
                     |> equalCoords Data.one2ThreeAddresses
         , Test.test "addAddress 5 again" <|
             \_ ->
-                Network.addAddress Id.address5 Data.one2ThreeAddresses
+                Network.addAddress Plugin.empty Id.address5 Data.one2ThreeAddresses
                     |> equal Data.one2ThreeAddresses
         , Test.test "addTx 2" <|
             \_ ->
@@ -122,6 +123,6 @@ suite =
             \_ ->
                 Network.addTx (Api.Data.TxTxUtxo Api.tx4) Data.one2TwoTxs2ThreeAddresses
                     |> Tuple.second
-                    |> Network.addAddressWithPosition (NextTo ( Outgoing, Id.tx4 )) Id.address8
+                    |> Network.addAddressWithPosition Plugin.empty (NextTo ( Outgoing, Id.tx4 )) Id.address8
                     |> equalCoords Data.one2TwoTxs2ThreeAddressesWithOverlapping
         ]
