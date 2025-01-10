@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, hovercard, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, hovercard, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -332,3 +332,8 @@ onClickWithStop : msg -> Attribute msg
 onClickWithStop msg =
     Json.Decode.succeed ( msg, True )
         |> stopPropagationOn "click"
+
+
+pointer : Attribute msg
+pointer =
+    css [ Css.cursor Css.pointer ]

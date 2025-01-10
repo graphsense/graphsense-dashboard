@@ -862,13 +862,18 @@ update plugins uc msg model =
             )
 
         PathfinderMsg m ->
-            let
-                ( pathfinder, eff ) =
-                    Pathfinder.update plugins uc m model.pathfinder
-            in
-            ( { model | pathfinder = pathfinder }
-            , List.map PathfinderEffect eff
-            )
+            case m of
+                Pathfinder.PluginMsg ms ->
+                    updatePlugins plugins uc ms model
+
+                _ ->
+                    let
+                        ( pathfinder, eff ) =
+                            Pathfinder.update plugins uc m model.pathfinder
+                    in
+                    ( { model | pathfinder = pathfinder }
+                    , List.map PathfinderEffect eff
+                    )
 
         GraphMsg m ->
             case m of
