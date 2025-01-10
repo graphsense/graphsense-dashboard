@@ -3,6 +3,7 @@ module Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..), isSameToolti
 import Api.Data exposing (Actor, TagSummary)
 import Hovercard
 import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
 
 
@@ -18,7 +19,7 @@ type TooltipType
     | AccountTx Tx.AccountTx
     | Address Address
     | TagLabel String TagSummary
-    | TagConcept String TagSummary
+    | TagConcept Id String TagSummary
     | ActorDetails Actor
     | Text String
 
@@ -38,8 +39,8 @@ isSameTooltip t1 t2 =
         ( TagLabel id1 _, TagLabel id2 _ ) ->
             id1 == id2
 
-        ( TagConcept id1 _, TagConcept id2 _ ) ->
-            id1 == id2
+        ( TagConcept a1 id1 _, TagConcept a2 id2 _ ) ->
+            id1 == id2 && a1 == a2
 
         ( ActorDetails a1, ActorDetails a2 ) ->
             a1.id == a2.id

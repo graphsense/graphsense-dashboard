@@ -7,22 +7,23 @@ import Css.Pathfinder as Css
 import Dict exposing (Dict)
 import Html.Styled exposing (Html, div, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href, target, title)
-import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
+import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder exposing (Msg(..), OverlayWindows(..))
 import RecordSetter as Rs
 import Set
+import Theme.Html.Buttons as Buttons
 import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.TagsComponents as TagComponents
 import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
-import Util.View exposing (hovercard, truncateLongIdentifierWithLengths)
+import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
@@ -43,8 +44,8 @@ view vc ts tt =
                 TagLabel lblid x ->
                     ( tagLabel vc lblid x, [ onMouseEnter (UserMovesMouseOverTagLabel lblid), onMouseLeave (UserMovesMouseOutTagLabel lblid) ] )
 
-                TagConcept conceptId x ->
-                    ( tagConcept vc conceptId x, [ onMouseEnter (UserMovesMouseOverTagConcept conceptId), onMouseLeave (UserMovesMouseOutTagConcept conceptId) ] )
+                TagConcept aid conceptId x ->
+                    ( tagConcept vc aid conceptId x, [ onMouseEnter (UserMovesMouseOverTagConcept conceptId), onMouseLeave (UserMovesMouseOutTagConcept conceptId) ] )
 
                 ActorDetails ac ->
                     ( showActor vc ac, [ onMouseEnter (UserMovesMouseOverActorLabel ac.id), onMouseLeave (UserMovesMouseOutActorLabel ac.id) ] )
@@ -87,11 +88,16 @@ val vc str =
     }
 
 
+baseRowStyle : List Css.Style
+baseRowStyle =
+    [ Css.width (Css.pct 100), Css.fontSize (Css.px 14) ]
+
+
 row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html Msg
 row =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
 
 
@@ -111,7 +117,7 @@ showActor vc a =
         }
     , GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
         (GraphComponents.tooltipRowInstances
             |> Rs.s_tooltipRowValue
@@ -122,7 +128,7 @@ showActor vc a =
         }
     , GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
         (GraphComponents.tooltipRowInstances
             |> Rs.s_tooltipRowValue
@@ -161,8 +167,8 @@ showActor vc a =
     ]
 
 
-tagConcept : View.Config -> String -> TagSummary -> List (Html Msg)
-tagConcept vc concept tag =
+tagConcept : View.Config -> Id -> String -> TagSummary -> List (Html Msg)
+tagConcept vc aid concept tag =
     let
         relevantLabels =
             Dict.toList tag.labelSummary |> List.filter (Tuple.second >> (.concepts >> List.member concept)) |> List.map Tuple.second
@@ -180,7 +186,7 @@ tagConcept vc concept tag =
     in
     [ GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
         (GraphComponents.tooltipRowInstances
             |> Rs.s_tooltipRowValue
@@ -218,7 +224,7 @@ tagConcept vc concept tag =
         }
     , GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
         (GraphComponents.tooltipRowInstances
             |> Rs.s_tooltipRowValue
@@ -233,6 +239,32 @@ tagConcept vc concept tag =
             Set.size sources
                 |> String.fromInt
                 |> val vc
+        }
+    , GraphComponents.tooltipRowWithInstances
+        (GraphComponents.tooltipRowAttributes
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
+        )
+        (GraphComponents.tooltipRowInstances
+            |> Rs.s_tooltipRowValue
+                (let
+                    btn =
+                        Buttons.buttonTypeTextStateRegularStyleTextWithAttributes
+                            (Buttons.buttonTypeTextStateRegularStyleTextAttributes
+                                |> Rs.s_button [ [ Css.cursor Css.pointer ] |> css, onClick (UserOpensDialogWindow (TagsList aid)) ]
+                            )
+                            { typeTextStateRegularStyleText =
+                                { buttonText = Locale.string vc.locale "Learn more"
+                                , iconInstance = none
+                                , iconVisible = False
+                                }
+                            }
+                 in
+                 btn
+                    |> Just
+                )
+        )
+        { tooltipRowLabel = { title = "" }
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
         }
 
     -- , row
@@ -256,7 +288,7 @@ tagLabel vc lbl tag =
                 }
             , GraphComponents.tooltipRowWithInstances
                 (GraphComponents.tooltipRowAttributes
-                    |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+                    |> Rs.s_tooltipRow [ css baseRowStyle ]
                 )
                 (GraphComponents.tooltipRowInstances
                     |> Rs.s_tooltipRowValue

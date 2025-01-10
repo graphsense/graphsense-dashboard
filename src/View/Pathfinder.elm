@@ -756,6 +756,18 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
         showOtherTag =
             nrTagsAddress > 0 && (ts |> Maybe.map (hasOnlyExchangeTags >> not) |> Maybe.withDefault True)
 
+        learnMorebtn =
+            Btns.buttonTypeTextStateRegularStyleTextWithAttributes
+                (Btns.buttonTypeTextStateRegularStyleTextAttributes
+                    |> Rs.s_button [ [ Css.cursor Css.pointer ] |> css, onClick (UserOpensDialogWindow (TagsList id)) ]
+                )
+                { typeTextStateRegularStyleText =
+                    { buttonText = Locale.string vc.locale "Learn more"
+                    , iconInstance = none
+                    , iconVisible = False
+                    }
+                }
+
         labelOfTags =
             if vc.showLabelsInTaggingOverview then
                 let
@@ -763,7 +775,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         Html.div
                             [ onMouseEnter (UserMovesMouseOverTagLabel tid)
                             , onMouseLeave (UserMovesMouseOutTagLabel tid)
-                            , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
+                            , HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
                             , HA.id tid
                             , css [ Css.cursor Css.pointer ]
                             , onClick (UserOpensDialogWindow (TagsList id))
@@ -838,7 +850,8 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         Html.div
                             [ onMouseEnter (UserMovesMouseOverTagConcept k)
                             , onMouseLeave (UserMovesMouseOutTagConcept k)
-                            , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
+
+                            -- , HA.css TagComponents.categoryTags_details.styles
                             , HA.id (k ++ "_tags_concept_tag")
                             , css [ Css.cursor Css.pointer ]
                             , onClick (UserOpensDialogWindow (TagsList id))
@@ -856,7 +869,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                             , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
                             ]
                         ]
-                        (concepts |> List.map conceptItem)
+                        ((concepts |> List.map conceptItem) ++ [ learnMorebtn ])
                     )
 
         -- clusterHighlightAttr =
@@ -876,77 +889,6 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
         --         []
         assetId =
             assetFromBase viewState.data.currency
-
-        sidePanelDataEth =
-            { actorIconInstance =
-                actorImg
-                    |> Maybe.map
-                        (\imgSrc ->
-                            let
-                                iconDetails =
-                                    HIcons.iconsAssign_details
-                            in
-                            img
-                                [ src imgSrc
-                                , HA.alt <| Maybe.withDefault "" <| actorText
-                                , HA.width <| round iconDetails.width
-                                , HA.height <| round iconDetails.height
-                                , HA.css iconDetails.styles
-                                ]
-                                []
-                                |> List.singleton
-                                |> div
-                                    [ HA.css iconDetails.styles
-                                    , HA.css
-                                        [ iconDetails.width
-                                            |> Css.px
-                                            |> Css.width
-                                        , iconDetails.height
-                                            |> Css.px
-                                            |> Css.height
-                                        ]
-                                    ]
-                        )
-                    |> Maybe.withDefault (Icons.iconsAssignSvg [] {})
-            , tabsVisible = False
-            , actorAndTagVisible = showExchangeTag || showOtherTag
-            , listInstance =
-                let
-                    titleInstance =
-                        { titleInstance = inOutIndicator vc "Transactions" (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs) viewState.data.noIncomingTxs viewState.data.noOutgoingTxs
-                        }
-
-                    style =
-                        [ css [ Css.width (Css.pct 100) ] ]
-
-                    headerEvent =
-                        [ Svg.onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
-                        , css [ Css.cursor Css.pointer ]
-                        ]
-                in
-                if viewState.transactionsTableOpen then
-                    SidePanelComponents.sidePanelTxListOpenWithAttributes
-                        (SidePanelComponents.sidePanelTxListOpenAttributes
-                            |> Rs.s_sidePanelTxListOpen style
-                            |> Rs.s_sidePanelTxListHeaderOpen headerEvent
-                        )
-                        { sidePanelTxListHeaderOpen = titleInstance
-                        , sidePanelTxListOpen =
-                            { listInstance =
-                                transactionTableView vc id txOnGraphFn viewState.txs
-                            }
-                        }
-
-                else
-                    SidePanelComponents.sidePanelTxListClosedWithAttributes
-                        (SidePanelComponents.sidePanelTxListClosedAttributes
-                            |> Rs.s_sidePanelTxListClosed (style ++ headerEvent)
-                        )
-                        { sidePanelTxListClosed = titleInstance
-                        }
-            , actorVisible = showExchangeTag
-            , tagsVisible = showOtherTag
-            }
 
         sidePanelData =
             { actorIconInstance =
@@ -1062,7 +1004,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         in
                         Html.a
                             [ HA.href link
-                            , css SidePanelComponents.sidePanelAddressLabelOfActor_details.styles
+                            , css SidePanelComponents.sidePanelAddressLabel_details.styles
                             , onMouseEnter (UserMovesMouseOverActorLabel aid)
                             , onMouseLeave (UserMovesMouseOutActorLabel aid)
                             , HA.id (aid ++ "_actor")
@@ -1165,17 +1107,24 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                 |> Rs.s_iconsCloseBlack closeAttrs
             )
             (SidePanelComponents.sidePanelEthAddressInstances
-                |> Rs.s_labelOfTags
+                |> Rs.s_categoryTags
                     labelOfTags
-                |> Rs.s_labelOfActor
+                |> Rs.s_label
                     labelOfActor
                 |> Rs.s_tokensDropDownClosed (Just tokensDropdown)
+                |> Rs.s_iconsBinanceL
+                    (Just sidePanelData.actorIconInstance)
             )
+            { pluginList =
+                address
+                    |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
+                    |> Maybe.withDefault []
+            }
             { identifierWithCopyIcon = sidePanelAddressCopyIcon
             , leftTab = { variant = none }
             , rightTab = { variant = none }
             , sidePanelAddressHeader = sidePanelAddressHeader
-            , sidePanelEthAddress = sidePanelDataEth
+            , sidePanelEthAddress = sidePanelData
             , sidePanelEthAddressDetails = sidePanelAddressDetails
             , sidePanelRowWithDropdown = { valueCellInstance = none }
             , tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = valueSumString }
@@ -1190,6 +1139,8 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
             , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
             , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
             , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+            , learnMoreButton = { variant = none }
+            , categoryTags = { tagLabel = "" }
             }
 
     else
@@ -1204,10 +1155,12 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                 |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             )
             (SidePanelComponents.sidePanelAddressInstances
-                |> Rs.s_labelOfTags
+                |> Rs.s_categoryTags
                     labelOfTags
-                |> Rs.s_labelOfActor
+                |> Rs.s_label
                     labelOfActor
+                |> Rs.s_iconsBinanceL
+                    (Just sidePanelData.actorIconInstance)
             )
             { pluginList =
                 address
@@ -1230,6 +1183,8 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
             , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
             , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
             , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+            , learnMoreButton = { variant = none }
+            , categoryTags = { tagLabel = "" }
             }
 
 

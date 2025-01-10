@@ -666,7 +666,7 @@ updateByMsg plugins uc msg model =
                                 Just (HasTagSummary ts) ->
                                     let
                                         tt =
-                                            Tooltip.TagConcept x ts |> Tooltip.init hc
+                                            Tooltip.TagConcept id x ts |> Tooltip.init hc
                                     in
                                     ( model.tooltip
                                         |> Maybe.map (Tooltip.isSameTooltip tt >> not)

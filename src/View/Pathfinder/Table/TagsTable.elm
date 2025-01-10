@@ -5,7 +5,7 @@ import Config.View as View exposing (getConceptName)
 import Css
 import Css.Table
 import Html.Styled exposing (a, span, text)
-import Html.Styled.Attributes exposing (css, href, target)
+import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onMouseOut, onMouseOver)
 import Model exposing (Msg(..))
 import Msg.Pathfinder
@@ -125,10 +125,23 @@ cell _ c =
 
                 linkBodyIcon =
                     cc.link |> Maybe.map (\x -> getLink x linkIcon)
+
+                subText =
+                    cc.subLabel |> Maybe.withDefault ""
+
+                sub =
+                    span
+                        [ [ Css.property "color" Colors.blue400 |> Css.important ] |> css
+                        , title subText
+                        ]
+                        [ text subText ]
             in
             TagsComponents.tagRowCellWithInstances
-                (attrs |> Rs.s_category [ [ Css.property "color" Colors.blue400 |> Css.important ] |> css ])
-                (TagsComponents.tagRowCellInstances |> Rs.s_label linkBody)
+                attrs
+                (TagsComponents.tagRowCellInstances
+                    |> Rs.s_label linkBody
+                    |> Rs.s_category (Just sub)
+                )
                 (defaultData cc Nothing linkBodyIcon)
 
         InfoCell cc titletext cellid ->
@@ -342,10 +355,10 @@ lastModColumn vc =
         , viewData =
             \data ->
                 let
-                    ( date, t ) =
+                    ( date, _ ) =
                         data.lastmod |> Maybe.map (\d -> ( Locale.timestampDateUniform vc.locale d, Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d )) |> Maybe.withDefault ( "-", "-" )
                 in
-                cell vc (DefaultCell { label = date, subLabel = Just t })
+                cell vc (DefaultCell { label = date, subLabel = Nothing })
         , sorter = Table.increasingOrDecreasingBy (\data -> data.lastmod |> Maybe.withDefault 0)
         }
 
