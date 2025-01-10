@@ -31,6 +31,16 @@ tagId t =
     String.join "|" [ t.address, t.label, t.currency, t.tagpackUri |> Maybe.withDefault "-" ]
 
 
+
+-- tags without label are not valid in our backend
+-- we remove labels if the user plan does not contain those tags.
+
+
+isProprietaryTag : Api.Data.AddressTag -> Bool
+isProprietaryTag t =
+    String.isEmpty t.label && not t.tagpackIsPublic
+
+
 type alias CellConfig =
     { label : String, subLabel : Maybe String }
 
@@ -247,7 +257,12 @@ labelColumn vc =
                 in
                 cell vc
                     (LabelCell
-                        { label = data.label
+                        { label =
+                            if isProprietaryTag data then
+                                Locale.string vc.locale "proprietary tag"
+
+                            else
+                                data.label
                         , subLabel =
                             Just
                                 (concepts_w_default
