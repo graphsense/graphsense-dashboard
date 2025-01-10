@@ -193,29 +193,46 @@ tagConcept vc aid concept tag =
                 (let
                     jl =
                         List.length labels
+
+                    max_labels =
+                        7
                  in
                  labels
                     |> List.indexedMap
                         (\i z ->
-                            div
-                                [ title z
-                                , Css.mGap
-                                    |> Css.paddingRight
-                                    |> List.singleton
-                                    |> css
-                                ]
-                                [ text
-                                    (z
-                                        ++ (if i /= (jl - 1) then
-                                                ", "
+                            if i <= max_labels then
+                                div
+                                    [ Css.mGap
+                                        |> Css.paddingRight
+                                        |> List.singleton
+                                        |> css
+                                    ]
+                                    [ text
+                                        (z
+                                            ++ (if i /= (jl - 1) then
+                                                    ", "
 
-                                            else
-                                                ""
-                                           )
-                                    )
-                                ]
+                                                else
+                                                    ""
+                                               )
+                                        )
+                                    ]
+
+                            else if i == (max_labels + 1) then
+                                div
+                                    [ title (String.join ", " labels)
+                                    , Css.mGap
+                                        |> Css.paddingRight
+                                        |> List.singleton
+                                        |> css
+                                    ]
+                                    [ text "..."
+                                    ]
+
+                            else
+                                none
                         )
-                    |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
+                    |> div [ title (String.join ", " labels), [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
                     |> Just
                 )
         )

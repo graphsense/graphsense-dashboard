@@ -44,8 +44,8 @@ type TagIcon
 
 
 type Cell
-    = DefaultCell CellConfig
-    | LinkCell LinkCellConfig
+    = LastModCell CellConfig
+    | SourceCell LinkCellConfig
     | IconCell TagIcon
     | LabelCell CellConfig TagIcon
     | InfoCell CellConfig String String
@@ -59,9 +59,14 @@ linkCellStyle =
 cell : View.Config -> Cell -> Table.HtmlDetails Msg
 cell _ c =
     let
+        cellBase =
+            [ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ]
+
+        cellWWidth =
+            [ Css.marginRight (Css.px 15), Css.maxWidth (Css.px 300) ] ++ cellBase
+
         attrs =
             TagsComponents.tagRowCellAttributes
-                |> Rs.s_tagRowCell ([ Css.minWidth (Css.px 200), Css.maxWidth (Css.px 300), Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ] |> css |> List.singleton)
                 |> Rs.s_iconText ([ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height) ] |> css |> List.singleton)
                 |> Rs.s_category ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ] |> css |> List.singleton)
 
@@ -79,9 +84,11 @@ cell _ c =
             }
     in
     (case c of
-        DefaultCell cc ->
+        LastModCell cc ->
             TagsComponents.tagRowCellWithAttributes
-                attrs
+                (attrs
+                    |> Rs.s_tagRowCell (cellBase |> css |> List.singleton)
+                )
                 (defaultData cc Nothing Nothing)
 
         IconCell ti ->
@@ -105,10 +112,10 @@ cell _ c =
 
         LabelCell cc _ ->
             TagsComponents.tagRowCellWithAttributes
-                attrs
+                (attrs |> Rs.s_tagRowCell (cellWWidth |> css |> List.singleton))
                 (defaultData cc Nothing Nothing)
 
-        LinkCell cc ->
+        SourceCell cc ->
             let
                 getLink url body =
                     a [ href url, target "blank", linkCellStyle |> css ] (body |> List.singleton)
@@ -137,7 +144,7 @@ cell _ c =
                         [ text subText ]
             in
             TagsComponents.tagRowCellWithInstances
-                attrs
+                (attrs |> Rs.s_tagRowCell (cellWWidth |> css |> List.singleton))
                 (TagsComponents.tagRowCellInstances
                     |> Rs.s_label linkBody
                     |> Rs.s_category (Just sub)
@@ -167,7 +174,7 @@ cell _ c =
                         ]
             in
             TagsComponents.tagRowCellWithInstances
-                attrs
+                (attrs |> Rs.s_tagRowCell (cellBase |> css |> List.singleton))
                 TagsComponents.tagRowCellInstances
                 (defaultData cc Nothing (Just icon))
     )
@@ -217,6 +224,13 @@ labelColumn vc =
                     concepts =
                         mconcept ++ (data.concepts |> Maybe.withDefault [])
 
+                    concepts_w_default =
+                        if List.length concepts == 0 then
+                            [ "unknown" ]
+
+                        else
+                            concepts
+
                     conceptss =
                         Set.fromList concepts
 
@@ -232,7 +246,7 @@ labelColumn vc =
                         { label = data.label
                         , subLabel =
                             Just
-                                (concepts
+                                (concepts_w_default
                                     |> List.map
                                         (\x ->
                                             getConceptName vc (Just x)
@@ -343,7 +357,7 @@ sourceColumn vc =
                             _ ->
                                 Nothing
                 in
-                cell vc (LinkCell { label = truncatedSource, link = link, subLabel = Just (Util.View.truncate 30 data.tagpackCreator) })
+                cell vc (SourceCell { label = truncatedSource, link = link, subLabel = Just (Util.View.truncate 30 data.tagpackCreator) })
         , sorter = Table.unsortable
         }
 
@@ -358,7 +372,7 @@ lastModColumn vc =
                     ( date, _ ) =
                         data.lastmod |> Maybe.map (\d -> ( Locale.timestampDateUniform vc.locale d, Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d )) |> Maybe.withDefault ( "-", "-" )
                 in
-                cell vc (DefaultCell { label = date, subLabel = Nothing })
+                cell vc (LastModCell { label = date, subLabel = Nothing })
         , sorter = Table.increasingOrDecreasingBy (\data -> data.lastmod |> Maybe.withDefault 0)
         }
 

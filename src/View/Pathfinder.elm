@@ -1105,6 +1105,8 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         |> css
                     ]
                 |> Rs.s_iconsCloseBlack closeAttrs
+                |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
+                |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
             )
             (SidePanelComponents.sidePanelEthAddressInstances
                 |> Rs.s_categoryTags
@@ -1112,8 +1114,9 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                 |> Rs.s_label
                     labelOfActor
                 |> Rs.s_tokensDropDownClosed (Just tokensDropdown)
-                |> Rs.s_iconsBinanceL
-                    (Just sidePanelData.actorIconInstance)
+                |> Rs.s_learnMore (Just none)
+             -- |> Rs.s_iconsBinanceL
+             --     (Just sidePanelData.actorIconInstance)
             )
             { pluginList =
                 address
@@ -1139,7 +1142,8 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
             , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
             , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
             , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
-            , learnMoreButton = { variant = none }
+
+            -- , learnMoreButton = { variant = none }
             , categoryTags = { tagLabel = "" }
             }
 
@@ -1153,14 +1157,16 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                 |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
                 |> Rs.s_iconsCloseBlack closeAttrs
                 |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
+                |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
             )
             (SidePanelComponents.sidePanelAddressInstances
                 |> Rs.s_categoryTags
                     labelOfTags
                 |> Rs.s_label
                     labelOfActor
-                |> Rs.s_iconsBinanceL
-                    (Just sidePanelData.actorIconInstance)
+                |> Rs.s_learnMore (Just none)
+             -- |> Rs.s_iconsBinanceL
+             --     (Just sidePanelData.actorIconInstance)
             )
             { pluginList =
                 address
@@ -1183,7 +1189,8 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
             , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
             , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
             , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
-            , learnMoreButton = { variant = none }
+
+            -- , learnMoreButton = { variant = none }
             , categoryTags = { tagLabel = "" }
             }
 
