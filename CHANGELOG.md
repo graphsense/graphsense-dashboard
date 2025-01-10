@@ -3,6 +3,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## [24.01.1] - 2025-01-10
+
+### fixed
+- incoorperated upstream fixes
+
+## [24.01.0] - 2025-01-10
+
+### Changed
+- changed tagging appearance in Pathfind 2.0 now showing categories instead of labels
+- include new tagpack 25.01.0 schema changes (tag_type)
+
+## Added
+- new tags list in Pathfinder 2.0 look and feel
+
 ## [24.11.0] - 2024-11-20
 
 ### Added
