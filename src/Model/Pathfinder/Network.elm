@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (Network, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -19,6 +19,12 @@ type alias Network =
     , animatedAddresses : Set Id
     , animatedTxs : Set Id
     }
+
+
+type FindPosition
+    = Auto
+    | NextTo ( Direction, Id )
+    | Fixed Float Float
 
 
 getBoundingBox : Network -> Coords.BBox

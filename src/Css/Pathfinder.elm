@@ -9,6 +9,7 @@ module Css.Pathfinder exposing
     , mGap
     , mlGap
     , no
+    , plainLinkStyle
     , sGap
     , searchBoxMinWidth
     , tagConfidenceTextHighStyle
@@ -191,6 +192,11 @@ annotationInputStyle vc _ =
     ]
 
 
+plainLinkStyle : View.Config -> List Style
+plainLinkStyle _ =
+    [ TColors.black0 |> property "color" ]
+
+
 linkButtonStyle : View.Config -> Bool -> List Style
 linkButtonStyle vc enabled =
     let
@@ -222,7 +228,7 @@ linkButtonStyle vc enabled =
 
 tagLinkButtonStyle : View.Config -> List Style
 tagLinkButtonStyle _ =
-    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.black0 |> property "color" ]
+    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.blue400 |> property "color" ]
 
 
 topLeftPanelStyle : View.Config -> List Style

@@ -157,6 +157,12 @@ shallPushHistory msg _ =
         UserMovesMouseOutTagLabel _ ->
             False
 
+        UserMovesMouseOverTagConcept _ ->
+            False
+
+        UserMovesMouseOutTagConcept _ ->
+            False
+
         UserMovesMouseOverActorLabel _ ->
             False
 
@@ -224,4 +230,19 @@ shallPushHistory msg _ =
             False
 
         BrowserWaitedAfterReleasingMouseButton ->
+            False
+
+        UserOpensDialogWindow _ ->
+            False
+
+        UserGotDataForTagsListDialog _ _ ->
+            False
+
+        CloseTooltip _ ->
+            False
+
+        ShowTextTooltip _ ->
+            False
+
+        CloseTextTooltip _ ->
             False

@@ -92,9 +92,9 @@ ioColumn : View.Config -> ColumnConfig Api.Data.TxValue msg -> IoColumnConfig ->
 ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
     let
         exchangeIcon =
-            Icons.iconsExchangeSmallWithAttributes
-                (Icons.iconsExchangeSmallAttributes
-                    |> Rs.s_iconsExchangeSmall
+            Icons.iconsExchangeSWithAttributes
+                (Icons.iconsExchangeSAttributes
+                    |> Rs.s_iconsExchangeS
                         [ Locale.string vc.locale "is an exchange"
                             |> title
                         ]
@@ -102,9 +102,9 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                 {}
 
         tagIcon =
-            Icons.iconsTagSmallWithAttributes
-                (Icons.iconsTagSmallAttributes
-                    |> Rs.s_iconsTagSmall
+            Icons.iconsTagSWithAttributes
+                (Icons.iconsTagSAttributes
+                    |> Rs.s_iconsTagS
                         [ Locale.string vc.locale "has tags"
                             |> title
                         ]

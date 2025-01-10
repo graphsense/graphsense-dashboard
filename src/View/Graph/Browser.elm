@@ -241,7 +241,7 @@ browser plugins states vc gc model =
 
             Browser.UserTags table ->
                 table
-                    |> table_ vc cm (UserAddressTagsTable.config vc gc)
+                    |> table_ vc cm (UserAddressTagsTable.config vc)
                     |> List.singleton
 
             Browser.Plugin ->
@@ -533,7 +533,7 @@ browseValue vc value =
                                         ]
                                         [ text
                                             (if String.isEmpty tag.label && not tag.tagpackIsPublic then
-                                                Util.Graph.getCategory gc tag.category
+                                                View.getConceptName vc tag.category
                                                     |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
 
                                              else
@@ -1650,7 +1650,7 @@ browseAddressTable vc gc neighborLayerHasAddress address table =
             tt (TxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
-            table_ vc Nothing (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
+            table_ vc Nothing (AddressTagsTable.config vc Nothing Nothing (\_ _ -> False)) t
 
         AddressIncomingNeighborsTable t ->
             tt (AddressNeighborsTable.config vc False coinCode addressId neighborLayerHasAddress) t
@@ -1719,7 +1719,7 @@ browseEntityTable vc gc entityHasAddress neighborLayerHasEntity entity table =
             tt (TxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
-            table_ vc Nothing (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
+            table_ vc Nothing (AddressTagsTable.config vc bestAddressTag entityId entityHasAddress) t
 
         EntityIncomingNeighborsTable t ->
             tt (EntityNeighborsTable.config vc False coinCode entityId neighborLayerHasEntity) t

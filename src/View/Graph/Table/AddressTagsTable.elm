@@ -24,8 +24,8 @@ import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
 
 
-config : View.Config -> Graph.Config -> Maybe Api.Data.AddressTag -> Maybe Id.EntityId -> (Id.EntityId -> A.Address -> Bool) -> Table.Config Api.Data.AddressTag Msg
-config vc gc bestAddressTag entityId entityHasAddress =
+config : View.Config -> Maybe Api.Data.AddressTag -> Maybe Id.EntityId -> (Id.EntityId -> A.Address -> Bool) -> Table.Config Api.Data.AddressTag Msg
+config vc bestAddressTag entityId entityHasAddress =
     Table.customConfig
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
@@ -111,14 +111,14 @@ config vc gc bestAddressTag entityId entityHasAddress =
                 vc
                 "Category"
                 (.category
-                    >> Util.Graph.getCategory gc
+                    >> View.getConceptName vc
                     >> Maybe.withDefault ""
                 )
             , T.stringColumn styles
                 vc
                 "Abuse"
                 (.abuse
-                    >> Util.Graph.getAbuse gc
+                    >> View.getAbuseName vc
                     >> Maybe.withDefault ""
                 )
             , T.stringColumn styles

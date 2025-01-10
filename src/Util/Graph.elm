@@ -1,10 +1,9 @@
-module Util.Graph exposing (decodeCoords, filterTxValue, getAbuse, getCategory, mousedown, rotate, scale, translate)
+module Util.Graph exposing (decodeCoords, filterTxValue, mousedown, rotate, scale, translate)
 
 import Api.Data
 import Config.Graph as Graph
 import Dict exposing (Dict)
 import Json.Decode
-import List.Extra
 import Model.Graph.Coords exposing (Coords)
 import Svg.Styled as Svg
 import Svg.Styled.Events as Svg
@@ -44,18 +43,6 @@ mousedown msg =
                     }
                 )
         )
-
-
-getCategory : Graph.Config -> Maybe String -> Maybe String
-getCategory gc =
-    Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.entityConcepts)
-        >> Maybe.map .label
-
-
-getAbuse : Graph.Config -> Maybe String -> Maybe String
-getAbuse gc =
-    Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.abuseConcepts)
-        >> Maybe.map .label
 
 
 filterTxValue : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> Bool

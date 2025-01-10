@@ -36,7 +36,7 @@ import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Network as Network
+import Model.Pathfinder.Network as Network exposing (FindPosition(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -46,6 +46,7 @@ import Msg.Pathfinder
     exposing
         ( DisplaySettingsMsg(..)
         , Msg(..)
+        , OverlayWindows(..)
         , WorkflowNextTxByTimeMsg(..)
         )
 import Msg.Search as Search
@@ -65,7 +66,7 @@ import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.AddressDetails as AddressDetails
-import Update.Pathfinder.Network as Network exposing (FindPosition(..), ingestAddresses, ingestTxs)
+import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestTxs)
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
@@ -77,6 +78,48 @@ import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import View.Locale as Locale
+
+
+delay : Float -> msg -> Cmd msg
+delay time msg =
+    -- create a task that sleeps for `time`
+    Process.sleep time
+        |> -- once the sleep is over, ignore its output (using `always`)
+           -- and then we create a new task that simply returns a success, and the msg
+           Task.map (always <| msg)
+        |> -- finally, we ask Elm to perform the Task, which
+           -- takes the result of the above task and
+           -- returns it to our update function
+           Task.perform identity
+
+
+tooltipBeginClosing : Msg -> ( Model, List Effect ) -> ( Model, List Effect )
+tooltipBeginClosing closingMsg ( model, eff ) =
+    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }, ((delay 2000.0 <| closingMsg) |> CmdEffect) :: eff )
+
+
+tooltipAbortClosing : ( Model, List Effect ) -> ( Model, List Effect )
+tooltipAbortClosing ( model, eff ) =
+    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing False) }, eff )
+
+
+tooltipCloseIfNotAborted : ( Model, List Effect ) -> ( Model, List Effect )
+tooltipCloseIfNotAborted ( model, eff ) =
+    ( { model
+        | tooltip =
+            case model.tooltip of
+                Just { closing } ->
+                    if closing then
+                        Nothing
+
+                    else
+                        model.tooltip
+
+                _ ->
+                    model.tooltip
+      }
+    , eff
+    )
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -109,6 +152,20 @@ resultLineToRoute search =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
+        UserOpensDialogWindow windowType ->
+            case windowType of
+                TagsList id ->
+                    ( model
+                    , UserGotDataForTagsListDialog id
+                        |> Api.GetAddressTagsEffect { currency = Id.network id, address = Id.id id, pagesize = 5000, nextpage = Nothing, includeBestClusterTag = True }
+                        |> ApiEffect
+                        |> List.singleton
+                    )
+
+        UserGotDataForTagsListDialog _ _ ->
+            -- handled in src/Update.elm
+            n model
+
         RuntimePostponedUpdateByRoute route ->
             updateByRoute plugins uc route model
 
@@ -597,32 +654,114 @@ updateByMsg plugins uc msg model =
             unhover model
                 |> n
 
+        UserMovesMouseOverTagConcept x ->
+            case model.details of
+                Just (AddressDetails id _) ->
+                    let
+                        ( hc, cmd ) =
+                            (x ++ "_tags_concept_tag") |> Hovercard.init
+
+                        ( hasToChange, newTooltip ) =
+                            case Dict.get id model.tagSummaries of
+                                Just (HasTagSummary ts) ->
+                                    let
+                                        tt =
+                                            Tooltip.TagConcept id x ts |> Tooltip.init hc
+                                    in
+                                    ( model.tooltip
+                                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                                        |> Maybe.withDefault True
+                                    , Just tt
+                                    )
+
+                                _ ->
+                                    ( True, Nothing )
+                    in
+                    if hasToChange then
+                        ( { model
+                            | tooltip = newTooltip
+                          }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+
+                    else
+                        n model |> tooltipAbortClosing
+
+                _ ->
+                    n model
+
+        ShowTextTooltip config ->
+            let
+                ( hc, cmd ) =
+                    config.anchorId |> Hovercard.init
+
+                tt =
+                    Tooltip.Text config.text |> Tooltip.init hc
+
+                hasToChange =
+                    model.tooltip
+                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                        |> Maybe.withDefault True
+            in
+            if hasToChange then
+                ( { model
+                    | tooltip = Just tt
+                  }
+                , Cmd.map HovercardMsg cmd
+                    |> CmdEffect
+                    |> List.singleton
+                )
+
+            else
+                n model |> tooltipAbortClosing
+
+        CloseTextTooltip _ ->
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
+
+                _ ->
+                    n model
+
         UserMovesMouseOverTagLabel x ->
             case model.details of
                 Just (AddressDetails id _) ->
                     let
                         ( hc, cmd ) =
                             x |> Hovercard.init
-                    in
-                    ( { model
-                        | tooltip =
+
+                        ( hasToChange, newTooltip ) =
                             case Dict.get id model.tagSummaries of
                                 Just (HasTagSummary ts) ->
-                                    Just (Tooltip.TagLabel x ts |> Tooltip.init hc)
+                                    let
+                                        tt =
+                                            Tooltip.TagLabel x ts |> Tooltip.init hc
+                                    in
+                                    ( model.tooltip
+                                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                                        |> Maybe.withDefault True
+                                    , Just tt
+                                    )
 
                                 _ ->
-                                    Nothing
-                      }
-                    , Cmd.map HovercardMsg cmd
-                        |> CmdEffect
-                        |> List.singleton
-                    )
+                                    ( True, Nothing )
+                    in
+                    if hasToChange then
+                        ( { model
+                            | tooltip = newTooltip
+                          }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+
+                    else
+                        n model |> tooltipAbortClosing
 
                 _ ->
                     n model
-
-        UserMovesMouseOutTagLabel _ ->
-            n { model | tooltip = Nothing }
 
         UserMovesMouseOverActorLabel x ->
             case Dict.get x model.actors of
@@ -630,20 +769,56 @@ updateByMsg plugins uc msg model =
                     let
                         ( hc, cmd ) =
                             (x ++ "_actor") |> Hovercard.init
+
+                        tt =
+                            Tooltip.ActorDetails actor |> Tooltip.init hc
+
+                        ( hasToChange, newTooltip ) =
+                            ( model.tooltip
+                                |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                                |> Maybe.withDefault True
+                            , Just tt
+                            )
                     in
-                    ( { model
-                        | tooltip = Just (Tooltip.ActorDetails actor |> Tooltip.init hc)
-                      }
-                    , Cmd.map HovercardMsg cmd
-                        |> CmdEffect
-                        |> List.singleton
-                    )
+                    if hasToChange then
+                        ( { model | tooltip = newTooltip }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+
+                    else
+                        n model |> tooltipAbortClosing
 
                 _ ->
                     n model
 
         UserMovesMouseOutActorLabel _ ->
-            n { model | tooltip = Nothing }
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
+
+                _ ->
+                    n model
+
+        UserMovesMouseOutTagLabel _ ->
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
+
+                _ ->
+                    n model
+
+        UserMovesMouseOutTagConcept _ ->
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
+
+                _ ->
+                    n model
+
+        CloseTooltip _ ->
+            n model |> tooltipCloseIfNotAborted
 
         HovercardMsg hcMsg ->
             model.tooltip
@@ -1430,7 +1605,7 @@ updateByRoute_ plugins uc route model =
                         action =
                             case a of
                                 Route.AddressHop _ adr ->
-                                    loadAddressWithPosition (Fixed x_ y_) plugins ( net, adr )
+                                    loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
 
                                 Route.TxHop h ->
                                     loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
@@ -1482,19 +1657,19 @@ updateByRoute_ plugins uc route model =
 
 
 loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
-loadAddress =
-    loadAddressWithPosition Auto
+loadAddress plugins =
+    loadAddressWithPosition plugins Auto
 
 
-loadAddressWithPosition : FindPosition -> Plugins -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition position _ id model =
+loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
+loadAddressWithPosition plugins position id model =
     if Dict.member id model.network.addresses then
         n model
 
     else
         let
             nw =
-                Network.addAddressWithPosition position id model.network
+                Network.addAddressWithPosition plugins position id model.network
         in
         ( { model | network = nw } |> updateTagDataOnAddress id
         , [ BrowserGotAddressData id
@@ -1874,7 +2049,7 @@ addTx plugins _ addressId direction tx model =
                     position =
                         NextTo ( direction, newTx.id )
                 in
-                loadAddressWithPosition position plugins (Id.init (Id.network addressId) a) newmodel
+                loadAddressWithPosition plugins position (Id.init (Id.network addressId) a) newmodel
             )
         |> Maybe.withDefault (n newmodel)
 
@@ -2067,8 +2242,8 @@ deserializeByVersion version =
         Json.Decode.fail ("unknown version " ++ version)
 
 
-fromDeserialized : Deserialized -> Model -> ( Model, List Effect )
-fromDeserialized deserialized model =
+fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized plugins deserialized model =
     let
         groupByNetwork =
             List.map .id
@@ -2106,7 +2281,7 @@ fromDeserialized deserialized model =
                     )
     in
     ( { model
-        | network = ingestAddresses Network.init deserialized.addresses
+        | network = ingestAddresses plugins Network.init deserialized.addresses
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
         , name = deserialized.name

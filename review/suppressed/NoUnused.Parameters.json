@@ -3,7 +3,7 @@
   "automatically created by": "elm-review suppress",
   "learn more": "elm-review suppress --help",
   "suppressions": [
-    { "count": 27, "filePath": "src/View/Graph/Browser.elm" },
+    { "count": 29, "filePath": "src/View/Graph/Browser.elm" },
     { "count": 5, "filePath": "src/Update/Graph.elm" },
     { "count": 4, "filePath": "src/View/Graph/Entity.elm" },
     { "count": 4, "filePath": "src/View/Graph/Link.elm" },

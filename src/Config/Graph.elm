@@ -1,9 +1,5 @@
 module Config.Graph exposing (AddressLabelType(..), Config, TxLabelType(..), addressHeight, addressLabelToString, addressWidth, addressesCountHeight, arrowHeight, arrowWidth, entityMinHeight, entityOneAddressHeight, entityPaddingTop, entityToAddressesPaddingLeft, entityToAddressesPaddingTop, entityTotalWidth, entityWidth, expandHandleWidth, init, labelHeight, layerMargin, linkLabelHeight, maxExpandableAddresses, maxExpandableNeighbors, minGapBetweenLayers, padding, stringToAddressLabel, txMaxWidth)
 
-import Api.Data
-import Color exposing (Color)
-import Dict exposing (Dict)
-
 
 entityWidth : Float
 entityWidth =
@@ -171,8 +167,6 @@ type alias Config =
     { addressLabelType : AddressLabelType
     , txLabelType : TxLabelType
     , maxLettersPerLabelRow : Int
-    , entityConcepts : List Api.Data.Concept
-    , abuseConcepts : List Api.Data.Concept
     , highlighter : Bool
     , showEntityShadowLinks : Bool
     , showAddressShadowLinks : Bool
@@ -185,8 +179,6 @@ init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks s
     { addressLabelType = addressLabelType |> Maybe.withDefault Tag
     , txLabelType = txLabelType |> Maybe.withDefault Value
     , maxLettersPerLabelRow = 18
-    , entityConcepts = []
-    , abuseConcepts = []
     , highlighter = False
     , showEntityShadowLinks = showEntityShadowLinks |> Maybe.withDefault True
     , showAddressShadowLinks = showAddressShadowLinks |> Maybe.withDefault False

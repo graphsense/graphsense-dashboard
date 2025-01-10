@@ -435,3 +435,13 @@ change: retour
 transaction tracing not possible: Transaktions-Verfolgung nicht möglich
 Reset: Zurücksetzen
 Apply filter: Filtern
+Mention: Erwähnung
+Tags list: Schlagwortliste
+mentionTagDescriptionId: Ein Erwähnungs-Tag besagt, dass diese Adresse z. B. auf einer Website erwähnt wurde. Das kann von Bedeutung sein, aber es hängt vom Kontext ab.
+actorTagDescriptionId: Ein Akteurs-Tag ist eine Aussage über die Partei, die die Adresse kontrolliert.
+eventTagDescriptionId: Ein Ereignis-Tag ist eine Aussage über ein Ereignis, das in Bezug auf diese Adresse stattgefunden hat, z. B. ob die Adresse Teil eines Hacks war.
+"Note: This tag was inherited from the cluster level.": "Notiz: Dieser Tag wurde vom Cluster vererbt."
+"Learn more": "Mehr info"
+"Low confidence": "Geringe Zuversicht"
+"Medium confidence": "Mittlere Zuversicht"
+"High confidence": "Hohe Zuversicht"

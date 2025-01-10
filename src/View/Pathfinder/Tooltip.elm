@@ -1,62 +1,83 @@
 module View.Pathfinder.Tooltip exposing (view)
 
 import Api.Data exposing (Actor, TagSummary)
-import Config.View as View
+import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
-import Html.Styled exposing (Html, div, span, text, toUnstyled)
-import Html.Styled.Attributes exposing (css, title)
+import Html.Styled exposing (Html, div, text, toUnstyled)
+import Html.Styled.Attributes exposing (css, href, target, title)
+import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
+import Msg.Pathfinder exposing (Msg(..), OverlayWindows(..))
 import RecordSetter as Rs
+import Set
+import Theme.Html.Buttons as Buttons
 import Theme.Html.GraphComponents as GraphComponents
+import Theme.Html.TagsComponents as TagComponents
 import Tuple exposing (pair)
 import Util.Css as Css
+import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
-import Util.View exposing (hovercard, truncateLongIdentifierWithLengths)
+import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : View.Config -> Dict Id HavingTags -> Tooltip -> Html msg
+view : View.Config -> Dict Id HavingTags -> Tooltip -> Html Msg
 view vc ts tt =
-    (case tt.type_ of
-        UtxoTx t ->
-            genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }
+    let
+        ( content, containerAttributes ) =
+            case tt.type_ of
+                UtxoTx t ->
+                    ( genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }, [] )
 
-        AccountTx t ->
-            genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }
+                AccountTx t ->
+                    ( genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }, [] )
 
-        Address a ->
-            address vc (Dict.get a.id ts) a
+                Address a ->
+                    ( address vc (Dict.get a.id ts) a, [] )
 
-        TagLabel lblid x ->
-            tagLabel vc lblid x
+                TagLabel lblid x ->
+                    ( tagLabel vc lblid x, [ onMouseEnter (UserMovesMouseOverTagLabel lblid), onMouseLeave (UserMovesMouseOutTagLabel lblid) ] )
 
-        ActorDetails ac ->
-            showActor vc ac
-    )
+                TagConcept aid conceptId x ->
+                    ( tagConcept vc aid conceptId x, [ onMouseEnter (UserMovesMouseOverTagConcept conceptId), onMouseLeave (UserMovesMouseOutTagConcept conceptId) ] )
+
+                ActorDetails ac ->
+                    ( showActor vc ac, [ onMouseEnter (UserMovesMouseOverActorLabel ac.id), onMouseLeave (UserMovesMouseOutActorLabel ac.id) ] )
+
+                Text t ->
+                    ( [ div [ [ Css.width (Css.px GraphComponents.tooltipProperty1Down_details.width) ] |> css ] [ text t ] ], [] )
+    in
+    content
         |> div
-            [ css GraphComponents.tooltipProperty1Down_details.styles
-            ]
+            (css (GraphComponents.tooltipProperty1Down_details.styles ++ [ Css.minWidth (Css.px 200) ])
+                :: containerAttributes
+            )
         |> toUnstyled
         |> List.singleton
-        |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)
+        |> hovercard vc tt.hovercard (Css.zIndexMainValue + 10000)
 
 
-getConfidenceIndicator : View.Config -> Float -> Html msg
+getConfidenceIndicator : View.Config -> Float -> Html Msg
 getConfidenceIndicator vc x =
-    if x >= 0.8 then
-        span [ Css.tagConfidenceTextHighStyle vc |> css ] [ Locale.text vc.locale "High" ]
+    let
+        r =
+            getConfidenceRangeFromFloat x
+    in
+    case r of
+        High ->
+            TagComponents.confidenceLevelConfidenceLevelHigh { confidenceLevelHigh = { text = Locale.string vc.locale "High" } }
 
-    else if x >= 0.4 then
-        span [ Css.tagConfidenceTextMediumStyle vc |> css ] [ Locale.text vc.locale "Medium" ]
+        Medium ->
+            TagComponents.confidenceLevelConfidenceLevelMedium { confidenceLevelMedium = { text = Locale.string vc.locale "Medium" } }
 
-    else
-        span [ Css.tagConfidenceTextLowStyle vc |> css ] [ Locale.text vc.locale "Low" ]
+        Low ->
+            TagComponents.confidenceLevelConfidenceLevelLow { confidenceLevelLow = { text = Locale.string vc.locale "Low" } }
 
 
 val : View.Config -> String -> { firstRow : String, secondRow : String, secondRowVisible : Bool }
@@ -67,43 +88,76 @@ val vc str =
     }
 
 
-row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html msg
+baseRowStyle : List Css.Style
+baseRowStyle =
+    [ Css.width (Css.pct 100), Css.fontSize (Css.px 14) ]
+
+
+row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html Msg
 row =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
 
 
-showActor : View.Config -> Actor -> List (Html msg)
+showActor : View.Config -> Actor -> List (Html Msg)
 showActor vc a =
+    let
+        mainUri =
+            if not (String.startsWith "http://" a.uri) || not (String.startsWith "https://" a.uri) then
+                "https://" ++ a.uri
+
+            else
+                a.uri
+    in
     [ row
         { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
         , tooltipRowValue = a.label |> val vc
         }
-    , row
-        { tooltipRowLabel = { title = Locale.string vc.locale "Url" }
-        , tooltipRowValue = a.uri |> val vc
-        }
     , GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
         (GraphComponents.tooltipRowInstances
             |> Rs.s_tooltipRowValue
-                (a.jurisdictions
-                    |> List.map
-                        (\z ->
-                            span
+                (Just (Html.Styled.a [ Css.plainLinkStyle vc |> css, href mainUri, target "blank" ] [ text a.uri ]))
+        )
+        { tooltipRowLabel = { title = Locale.string vc.locale "Url" }
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+        }
+    , GraphComponents.tooltipRowWithInstances
+        (GraphComponents.tooltipRowAttributes
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
+        )
+        (GraphComponents.tooltipRowInstances
+            |> Rs.s_tooltipRowValue
+                (let
+                    jl =
+                        List.length a.jurisdictions
+                 in
+                 a.jurisdictions
+                    |> List.indexedMap
+                        (\i z ->
+                            div
                                 [ title (Locale.string vc.locale z.label)
                                 , Css.mGap
                                     |> Css.paddingRight
                                     |> List.singleton
                                     |> css
                                 ]
-                                [ text (Locale.string vc.locale z.label ++ ", ") ]
+                                [ text
+                                    (Locale.string vc.locale z.label
+                                        ++ (if i /= (jl - 1) then
+                                                ", "
+
+                                            else
+                                                ""
+                                           )
+                                    )
+                                ]
                         )
-                    |> div []
+                    |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
                     |> Just
                 )
         )
@@ -113,7 +167,131 @@ showActor vc a =
     ]
 
 
-tagLabel : View.Config -> String -> TagSummary -> List (Html msg)
+tagConcept : View.Config -> Id -> String -> TagSummary -> List (Html Msg)
+tagConcept vc aid concept tag =
+    let
+        relevantLabels =
+            Dict.toList tag.labelSummary |> List.filter (Tuple.second >> (.concepts >> List.member concept)) |> List.map Tuple.second
+
+        labels =
+            relevantLabels |> List.map .label
+
+        maxConfidence =
+            relevantLabels |> List.map .confidence |> List.maximum |> Maybe.withDefault 0
+
+        -- tagCount =
+        --     relevantLabels |> List.map .count |> List.sum
+        sources =
+            relevantLabels |> List.map .sources |> List.foldr (++) [] |> Set.fromList
+    in
+    [ GraphComponents.tooltipRowWithInstances
+        (GraphComponents.tooltipRowAttributes
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
+        )
+        (GraphComponents.tooltipRowInstances
+            |> Rs.s_tooltipRowValue
+                (let
+                    jl =
+                        List.length labels
+
+                    max_labels =
+                        7
+                 in
+                 labels
+                    |> List.indexedMap
+                        (\i z ->
+                            if i <= max_labels then
+                                div
+                                    [ Css.mGap
+                                        |> Css.paddingRight
+                                        |> List.singleton
+                                        |> css
+                                    ]
+                                    [ text
+                                        (z
+                                            ++ (if i /= (jl - 1) then
+                                                    ", "
+
+                                                else
+                                                    ""
+                                               )
+                                        )
+                                    ]
+
+                            else if i == (max_labels + 1) then
+                                div
+                                    [ title (String.join ", " labels)
+                                    , Css.mGap
+                                        |> Css.paddingRight
+                                        |> List.singleton
+                                        |> css
+                                    ]
+                                    [ text "..."
+                                    ]
+
+                            else
+                                none
+                        )
+                    |> div [ title (String.join ", " labels), [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
+                    |> Just
+                )
+        )
+        { tooltipRowLabel = { title = Locale.string vc.locale "Labels" }
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+        }
+    , GraphComponents.tooltipRowWithInstances
+        (GraphComponents.tooltipRowAttributes
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
+        )
+        (GraphComponents.tooltipRowInstances
+            |> Rs.s_tooltipRowValue
+                (getConfidenceIndicator vc maxConfidence |> Just)
+        )
+        { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+        }
+    , row
+        { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
+        , tooltipRowValue =
+            Set.size sources
+                |> String.fromInt
+                |> val vc
+        }
+    , GraphComponents.tooltipRowWithInstances
+        (GraphComponents.tooltipRowAttributes
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
+        )
+        (GraphComponents.tooltipRowInstances
+            |> Rs.s_tooltipRowValue
+                (let
+                    btn =
+                        Buttons.buttonTypeTextStateRegularStyleTextWithAttributes
+                            (Buttons.buttonTypeTextStateRegularStyleTextAttributes
+                                |> Rs.s_button [ [ Css.cursor Css.pointer ] |> css, onClick (UserOpensDialogWindow (TagsList aid)) ]
+                            )
+                            { typeTextStateRegularStyleText =
+                                { buttonText = Locale.string vc.locale "Learn more"
+                                , iconInstance = none
+                                , iconVisible = False
+                                }
+                            }
+                 in
+                 btn
+                    |> Just
+                )
+        )
+        { tooltipRowLabel = { title = "" }
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+        }
+
+    -- , row
+    --     { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
+    --     , tooltipRowValue = tagCount |> String.fromInt |> val vc
+    --     }
+    ]
+
+
+tagLabel : View.Config -> String -> TagSummary -> List (Html Msg)
 tagLabel vc lbl tag =
     let
         mlbldata =
@@ -127,7 +305,7 @@ tagLabel vc lbl tag =
                 }
             , GraphComponents.tooltipRowWithInstances
                 (GraphComponents.tooltipRowAttributes
-                    |> Rs.s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+                    |> Rs.s_tooltipRow [ css baseRowStyle ]
                 )
                 (GraphComponents.tooltipRowInstances
                     |> Rs.s_tooltipRowValue
@@ -145,7 +323,8 @@ tagLabel vc lbl tag =
                             { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
                             , tooltipRowValue =
                                 lbldata.concepts
-                                    |> String.join ","
+                                    |> List.map (\x -> getConceptName vc (Just x) |> Maybe.withDefault x)
+                                    |> String.join ", "
                                     |> Locale.string vc.locale
                                     |> Util.View.truncate 20
                                     |> val vc
@@ -184,7 +363,7 @@ tagLabel vc lbl tag =
             []
 
 
-address : View.Config -> Maybe HavingTags -> Addr.Address -> List (Html msg)
+address : View.Config -> Maybe HavingTags -> Addr.Address -> List (Html Msg)
 address vc tags adr =
     let
         net =
@@ -243,7 +422,7 @@ address vc tags adr =
            )
 
 
-genericTx : View.Config -> { txId : String, timestamp : Int } -> List (Html msg)
+genericTx : View.Config -> { txId : String, timestamp : Int } -> List (Html Msg)
 genericTx vc tx =
     [ row
         { tooltipRowLabel = { title = Locale.string vc.locale "Tx hash" }

@@ -1,6 +1,7 @@
 module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 
 import Api
+import Api.Data
 import Browser
 import Browser.Dom
 import Config.Update exposing (Config)
@@ -17,6 +18,7 @@ import Hovercard
 import Http exposing (Error(..))
 import Init.Graph
 import Init.Pathfinder
+import Init.Pathfinder.Table.TagsTable as TagsTable
 import Init.Search as Search
 import Json.Decode
 import Json.Encode exposing (Value)
@@ -68,6 +70,24 @@ import View.Locale as Locale
 import Yaml.Decode
 
 
+setConcepts : List Api.Data.Concept -> Model t -> Model t
+setConcepts concepts model =
+    { model
+        | config =
+            model.config
+                |> s_allConcepts concepts
+    }
+
+
+setAbuseConcepts : List Api.Data.Concept -> Model t -> Model t
+setAbuseConcepts concepts model =
+    { model
+        | config =
+            model.config
+                |> s_abuseConcepts concepts
+    }
+
+
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
     case Log.truncate "msg" msg of
@@ -107,17 +127,11 @@ update plugins uc msg model =
                 }
 
         BrowserGotEntityTaxonomy concepts ->
-            { model
-                | graph =
-                    Graph.setEntityConcepts concepts model.graph
-            }
+            setConcepts concepts model
                 |> n
 
         BrowserGotAbuseTaxonomy concepts ->
-            { model
-                | graph =
-                    Graph.setAbuseConcepts concepts model.graph
-            }
+            setAbuseConcepts concepts model
                 |> n
 
         BrowserGotSupportedTokens currency configs ->
@@ -216,6 +230,25 @@ update plugins uc msg model =
             case model.dialog of
                 Just (Dialog.Error _) ->
                     n { model | dialog = Nothing }
+
+                Just (Dialog.TagsList _) ->
+                    let
+                        pfm =
+                            model.pathfinder
+                    in
+                    n { model | dialog = Nothing, pathfinder = { pfm | tooltip = Nothing } }
+
+                _ ->
+                    n model
+
+        TagsListDialogTableUpdateMsg tableState ->
+            case model.dialog of
+                Just (Dialog.TagsList config) ->
+                    let
+                        newConfig =
+                            { config | tagsTable = config.tagsTable |> s_state tableState }
+                    in
+                    n { model | dialog = Just (Dialog.TagsList newConfig) }
 
                 _ ->
                     n model
@@ -526,9 +559,6 @@ update plugins uc msg model =
             in
             ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
 
-        SettingsMsg (UserChangedSettingsTab tab) ->
-            n { model | selectedSettingsTab = tab }
-
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
@@ -809,6 +839,28 @@ update plugins uc msg model =
               ]
             )
 
+        PathfinderMsg (Pathfinder.UserGotDataForTagsListDialog id tags) ->
+            let
+                ( pathfinder, eff ) =
+                    Pathfinder.update plugins uc (Pathfinder.UserGotDataForTagsListDialog id tags) model.pathfinder
+
+                closemsg =
+                    UserClosesDialog
+            in
+            ( { model
+                | pathfinder = pathfinder
+                , dialog =
+                    Just
+                        (Dialog.TagsList
+                            { tagsTable = TagsTable.init tags
+                            , id = id
+                            , closeMsg = closemsg
+                            }
+                        )
+              }
+            , List.map PathfinderEffect eff
+            )
+
         PathfinderMsg m ->
             let
                 ( pathfinder, eff ) =
@@ -1042,7 +1094,7 @@ update plugins uc msg model =
                 Graph.PortDeserializedGS ( filename, data ) ->
                     pluginNewGraph plugins ( model, [] )
                         |> (\( mdl, eff ) ->
-                                deserialize filename data mdl
+                                deserialize plugins filename data mdl
                                     |> mapSecond ((++) eff)
                            )
 
@@ -1101,13 +1153,13 @@ update plugins uc msg model =
                     )
 
         UserClickedConfirm ms ->
-            update plugins uc ms { model | dialog = Nothing }
+            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         UserClickedOption ms ->
-            update plugins uc ms { model | dialog = Nothing }
+            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         UserClickedOutsideDialog ms ->
-            update plugins uc ms { model | dialog = Nothing }
+            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         PluginMsg msgValue ->
             updatePlugins plugins uc msgValue model
@@ -1264,7 +1316,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                             |> updateByPluginOutMsg plugins uc outMsg
 
                     PluginInterface.Deserialize filename data ->
-                        deserialize filename data model
+                        deserialize plugins filename data model
                             |> mapSecond ((++) eff)
 
                     PluginInterface.SendToPort value ->
@@ -1559,8 +1611,8 @@ clearSearch plugins model =
         |> n
 
 
-deserialize : String -> Value -> Model key -> ( Model key, List Effect )
-deserialize filename data model =
+deserialize : Plugins -> String -> Value -> Model key -> ( Model key, List Effect )
+deserialize plugins filename data model =
     Graph.deserialize data
         |> Result.map
             (\deser ->
@@ -1582,7 +1634,7 @@ deserialize filename data model =
                         (\deser ->
                             let
                                 ( pathfinder, pathfinderEffects ) =
-                                    Pathfinder.fromDeserialized deser model.pathfinder
+                                    Pathfinder.fromDeserialized plugins deser model.pathfinder
                             in
                             ( { model
                                 | pathfinder = pathfinder

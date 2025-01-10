@@ -43,6 +43,8 @@ main =
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
             , locale = Locale.init default |> first
             , size = Nothing
+            , abuseConcepts = []
+            , allConcepts = []
             }
 
         updPlug =

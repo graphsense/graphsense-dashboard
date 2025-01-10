@@ -1,4 +1,4 @@
-module Update.Graph exposing (At(..), More(..), SearchResult, addAddress, addAddressLinks, addAddressNeighborsWithEntity, addAddressesAtEntity, addEntity, addEntityEgonet, addEntityLinks, addEntityNeighbors, addUserTag, cleanHistory, decodeYamlTag, deleteUserTag, deselect, deselectHighlighter, deselectLayers, deserialize, deserializeByVersion, draggingToClick, extendTransformWithBoundingBox, forcePushHistory, fromDeserialized, getToolElement, handleAddressNeighbor, handleEntityNeighbors, handleEntitySearchResult, handleNotFound, hideContextmenu, importTagPack, insertAddressShadowLinks, insertEntityShadowLinks, layerDelta, loadAddress, loadAddressPath, loadEntity, loadEntityPath, loadNextAddress, loadNextEntity, makeHistoryEntry, makeLegend, makeTagPack, normalizeDeserializedEntityTag, prepareSearchResult, pushHistory, refreshBrowserAddress, refreshBrowserEntity, refreshBrowserEntityIf, repositionHovercardCmd, repositionHovercards, selectAddress, selectAddressLink, selectAddressLinkIfLoaded, selectEntity, selectEntityLink, selectEntityLinkIfLoaded, setAbuseConcepts, setEntityConcepts, storeUserTag, syncBrowser, syncLinks, syncSelection, tagId, tagInputToUserTag, toolElementResultToTool, toolVisible, undoRedo, update, updateAddresses, updateByMsg, updateByPluginOutMsg, updateByRoute, updateByRoute_, updateEntitiesIf, updateLegend, updateSearch, updateTransformByBoundingBox)
+module Update.Graph exposing (At(..), More(..), SearchResult, addAddress, addAddressLinks, addAddressNeighborsWithEntity, addAddressesAtEntity, addEntity, addEntityEgonet, addEntityLinks, addEntityNeighbors, addUserTag, cleanHistory, decodeYamlTag, deleteUserTag, deselect, deselectHighlighter, deselectLayers, deserialize, deserializeByVersion, draggingToClick, extendTransformWithBoundingBox, forcePushHistory, fromDeserialized, getToolElement, handleAddressNeighbor, handleEntityNeighbors, handleEntitySearchResult, handleNotFound, hideContextmenu, importTagPack, insertAddressShadowLinks, insertEntityShadowLinks, layerDelta, loadAddress, loadAddressPath, loadEntity, loadEntityPath, loadNextAddress, loadNextEntity, makeHistoryEntry, makeLegend, makeTagPack, normalizeDeserializedEntityTag, prepareSearchResult, pushHistory, refreshBrowserAddress, refreshBrowserEntity, refreshBrowserEntityIf, repositionHovercardCmd, repositionHovercards, selectAddress, selectAddressLink, selectAddressLinkIfLoaded, selectEntity, selectEntityLink, selectEntityLinkIfLoaded, storeUserTag, syncBrowser, syncLinks, syncSelection, tagId, tagInputToUserTag, toolElementResultToTool, toolVisible, undoRedo, update, updateAddresses, updateByMsg, updateByPluginOutMsg, updateByRoute, updateByRoute_, updateEntitiesIf, updateLegend, updateSearch, updateTransformByBoundingBox)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -165,6 +165,7 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
                     , currency = address.currency
                     , nextpage = Nothing
                     , pagesize = 10
+                    , includeBestClusterTag = False
                     }
                 |> ApiEffect
 
@@ -1412,6 +1413,7 @@ updateByMsg plugins uc msg model =
                     , address = address.address
                     , pagesize = 10
                     , nextpage = Nothing
+                    , includeBestClusterTag = False
                     }
                 |> ApiEffect
                 |> List.singleton
@@ -1490,6 +1492,7 @@ updateByMsg plugins uc msg model =
                                                                     , address = Id.addressId addressId
                                                                     , pagesize = 10
                                                                     , nextpage = Nothing
+                                                                    , includeBestClusterTag = False
                                                                     }
                                                                 |> ApiEffect
                                                           ]
@@ -1685,7 +1688,7 @@ updateByMsg plugins uc msg model =
         UserClickedSearch id ->
             let
                 ( search, cmd ) =
-                    Search.init model.config.entityConcepts id
+                    Search.init uc.allConcepts id
             in
             ( { model
                 | search = search |> Just
@@ -1700,7 +1703,7 @@ updateByMsg plugins uc msg model =
         UserSelectsCriterion criterion ->
             updateSearch
                 (Search.selectCriterion
-                    { categories = model.config.entityConcepts
+                    { categories = uc.allConcepts
                     }
                     criterion
                 )
@@ -1989,6 +1992,7 @@ updateByMsg plugins uc msg model =
                                         , address = address.address
                                         , pagesize = 10
                                         , nextpage = Nothing
+                                        , includeBestClusterTag = False
                                         }
                                     |> ApiEffect
                             )
@@ -2178,7 +2182,7 @@ updateByMsg plugins uc msg model =
 
         UserClicksDownloadCSVInTable ->
             ( model
-            , Browser.tableAsCSV uc.locale model.config model.browser
+            , Browser.tableAsCSV uc.locale uc model.browser
                 |> Maybe.map (DownloadCSVEffect >> List.singleton)
                 |> Maybe.withDefault []
             )
@@ -2827,6 +2831,7 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
                         , address = neighbor.address.address
                         , pagesize = 10
                         , nextpage = Nothing
+                        , includeBestClusterTag = False
                         }
                     |> ApiEffect
             )
@@ -3298,7 +3303,7 @@ makeLegend uc model =
         |> Set.toList
         |> List.filterMap
             (\cat ->
-                List.Extra.find (.id >> (==) cat) model.config.entityConcepts
+                List.Extra.find (.id >> (==) cat) uc.allConcepts
                     |> Maybe.map
                         (\category ->
                             { color = uc.categoryToColor category.id
@@ -3508,24 +3513,6 @@ fromDeserialized deserialized model =
             }
 
 
-setEntityConcepts : List Api.Data.Concept -> Model -> Model
-setEntityConcepts concepts model =
-    { model
-        | config =
-            model.config
-                |> s_entityConcepts concepts
-    }
-
-
-setAbuseConcepts : List Api.Data.Concept -> Model -> Model
-setAbuseConcepts concepts model =
-    { model
-        | config =
-            model.config
-                |> s_abuseConcepts concepts
-    }
-
-
 addAddressesAtEntity : Plugins -> Update.Config -> EntityId -> List Api.Data.Address -> Model -> ( Model, List Effect )
 addAddressesAtEntity plugins uc entityId addresses model =
     let
@@ -3556,6 +3543,7 @@ addAddressesAtEntity plugins uc entityId addresses model =
                         , address = address.address
                         , pagesize = 10
                         , nextpage = Nothing
+                        , includeBestClusterTag = False
                         }
                     |> ApiEffect
             )

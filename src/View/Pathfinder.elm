@@ -37,15 +37,15 @@ import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, 
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Tx as Tx
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TxDetailsMsg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
-import Plugin.View exposing (Plugins)
+import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
 import Route
-import Route.Graph exposing (AddressTable(..))
+import Route.Graph
 import String.Format
 import Svg.Styled exposing (Svg, defs, linearGradient, stop, svg)
 import Svg.Styled.Attributes exposing (css, height, id, offset, preserveAspectRatio, stopColor, transform, viewBox, width)
@@ -57,6 +57,7 @@ import Theme.Html.GraphComponents as HGraphComponents
 import Theme.Html.Icons as HIcons
 import Theme.Html.SettingsComponents as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Theme.Html.TagsComponents as TagComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
@@ -72,6 +73,7 @@ import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
+import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.Network as Network
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
@@ -90,20 +92,6 @@ type alias BtnConfig =
 
 
 
--- inlineClusterIcon : Bool -> Color -> Html Msg
--- inlineClusterIcon highlight clr =
---     let
---         getHighlight c =
---             if highlight then
---                 [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
---             else
---                 []
---     in
---     HIcons.iconsUntaggedWithAttributes
---         (HIcons.iconsUntaggedAttributes
---             |> Rs.s_ellipse25 (getHighlight clr)
---         )
---         {}
 -- Helpers
 
 
@@ -131,13 +119,13 @@ view plugins states vc model =
 
 
 graph : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> List (Html Msg)
-graph plugins states vc gc model =
+graph plugins pluginStates vc gc model =
     [ vc.size
-        |> Maybe.map (graphSvg plugins states vc gc model)
+        |> Maybe.map (graphSvg plugins pluginStates vc gc model)
         |> Maybe.withDefault none
     , topLeftPanel vc
-    , topCenterPanel plugins states vc gc model
-    , topRightPanel plugins states vc gc model
+    , topCenterPanel plugins pluginStates vc gc model
+    , topRightPanel plugins pluginStates vc gc model
     ]
         ++ (model.tooltip
                 |> Maybe.map (Tooltip.view vc model.tagSummaries)
@@ -150,36 +138,14 @@ graph plugins states vc gc model =
                 |> Maybe.withDefault []
            )
         ++ (model.contextMenu
-                |> Maybe.map (contextMenuView vc model)
+                |> Maybe.map (contextMenuView plugins pluginStates vc model)
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
 
 
-contextMenuView : View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
-contextMenuView vc _ ( coords, menu ) =
-    let
-        contextMenuItemView icon text msg =
-            HGraphComponents.rightClickItemStateNeutralWithAttributes
-                (HGraphComponents.rightClickItemStateNeutralAttributes
-                    |> Rs.s_stateNeutral
-                        [ [ HGraphComponents.rightClickItemStateHover_details.styles
-                                |> Css.hover
-                          , Css.cursor Css.pointer
-                          ]
-                            |> css
-                        , onClick msg
-                        ]
-                    |> Rs.s_placeholder
-                        [ [ HGraphComponents.rightClickItemStateHoverPlaceholder_details.styles
-                                |> Css.hover
-                          ]
-                            |> css
-                        , onClick msg
-                        ]
-                )
-                { stateNeutral = { iconInstance = icon, text = Locale.string vc.locale text } }
-    in
+contextMenuView : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
+contextMenuView plugins pluginStates vc model ( coords, menu ) =
     div
         [ [ Css.top (Css.px coords.y)
           , Css.left (Css.px (coords.x - (HGraphComponents.rightClickItemStateNeutral_details.renderedWidth / 2)))
@@ -194,17 +160,59 @@ contextMenuView vc _ ( coords, menu ) =
             HGraphComponents.rightClickMenuListInstances
             { rightClickMenuList =
                 case menu of
-                    ContextMenu.AddressContextMenu aid ->
-                        [ contextMenuItemView (HIcons.iconsAnnotateSmall {}) "Annotate address" (UserOpensAddressAnnotationDialog aid)
-                        , contextMenuItemView (HIcons.iconsCopySmall {}) "Copy address ID" (UserClickedContextMenuIdToClipboard menu)
-                        , contextMenuItemView (HIcons.iconsDeleteSmall {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
-                        , contextMenuItemView (HIcons.iconsGoToSmall {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
+                    ContextMenu.AddressContextMenu id ->
+                        [ { msg = UserOpensAddressAnnotationDialog id
+                          , icon = HIcons.iconsAnnotateS {}
+                          , text = "Annotate address"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuIdToClipboard menu
+                          , icon = HIcons.iconsCopyS {}
+                          , text = "Copy address ID"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuDeleteIcon menu
+                          , icon = HIcons.iconsDeleteS {}
+                          , text = "Remove from Graph"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuOpenInNewTab menu
+                          , icon = HIcons.iconsGoToS {}
+                          , text = "Open in new tab"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
                         ]
+                            ++ (Dict.get id model.network.addresses
+                                    |> Maybe.map
+                                        (Plugin.addressContextMenuNew plugins pluginStates vc
+                                            >> List.map (ContextMenuItem.view vc)
+                                        )
+                                    |> Maybe.withDefault []
+                               )
 
                     ContextMenu.TransactionContextMenu _ ->
-                        [ contextMenuItemView (HIcons.iconsCopySmall {}) "Copy transaction ID" (UserClickedContextMenuIdToClipboard menu)
-                        , contextMenuItemView (HIcons.iconsDeleteSmall {}) "Remove from Graph" (UserClickedContextMenuDeleteIcon menu)
-                        , contextMenuItemView (HIcons.iconsGoToSmall {}) "Open in new tab" (UserClickedContextMenuOpenInNewTab menu)
+                        [ { msg = UserClickedContextMenuIdToClipboard menu
+                          , icon = HIcons.iconsCopyS {}
+                          , text = "Copy transaction ID"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuDeleteIcon menu
+                          , icon = HIcons.iconsDeleteS {}
+                          , text = "Remove from Graph"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuOpenInNewTab menu
+                          , icon = HIcons.iconsGoToS {}
+                          , text = "Open in new tab"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
                         ]
             }
             {}
@@ -212,7 +220,7 @@ contextMenuView vc _ ( coords, menu ) =
 
 
 topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-topCenterPanel plugins ms vc gc model =
+topCenterPanel plugins _ vc gc model =
     div
         [ css Css.topPanelStyle
         ]
@@ -224,7 +232,7 @@ topCenterPanel plugins ms vc gc model =
                 , Css.property "pointer-events" "all"
                 ]
             ]
-            [ searchBoxView plugins ms vc gc model
+            [ searchBoxView plugins vc gc model
             , Toolbar.view vc
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
@@ -377,9 +385,9 @@ settingsHovercardView vc _ hc =
 
 
 topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-topRightPanel _ _ vc gc model =
+topRightPanel plugins pluginStates vc gc model =
     div [ Css.topRightPanelStyle vc |> css ]
-        [ detailsView vc gc model
+        [ detailsView plugins pluginStates vc gc model
         ]
 
 
@@ -389,8 +397,8 @@ graphActionsView vc _ _ =
         []
 
 
-searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-searchBoxView plugins _ vc _ model =
+searchBoxView : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
+searchBoxView plugins vc _ model =
     Sc.searchBarFieldStateTypingWithInstances
         Sc.searchBarFieldStateTypingAttributes
         (Sc.searchBarFieldStateTypingInstances
@@ -440,15 +448,15 @@ searchBoxView plugins _ vc _ model =
         {}
 
 
-detailsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-detailsView vc gc model =
+detailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
+detailsView plugin pluginStates vc gc model =
     case model.details of
         Just details ->
             case details of
                 Pathfinder.AddressDetails id state ->
                     RemoteData.unwrap
                         (Util.View.loadingSpinner vc Css.View.loadingSpinner)
-                        (addressDetailsContentView vc gc model id)
+                        (addressDetailsContentView plugin pluginStates vc gc model id)
                         state
 
                 Pathfinder.TxDetails id state ->
@@ -478,11 +486,12 @@ txDetailsContentView vc _ model id viewState =
                             |> css
                         ]
                     |> Rs.s_sidePanelTxDetails [ css fullWidth ]
-                    |> Rs.s_iconsCloseSmall closeAttrs
+                    |> Rs.s_iconsCloseBlack closeAttrs
                 )
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc
+                    , chevronInstance = none
                     }
                 , leftTab = { variant = none }
                 , rightTab = { variant = none }
@@ -584,11 +593,12 @@ txDetailsContentView vc _ model id viewState =
                         [ sidePanelCss
                             |> css
                         ]
-                    |> Rs.s_iconsCloseSmall closeAttrs
+                    |> Rs.s_iconsCloseBlack closeAttrs
                 )
                 { identifierWithCopyIcon =
                     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc
+                    , chevronInstance = none
                     }
                 , leftTab = { variant = none }
                 , rightTab = { variant = none }
@@ -698,38 +708,12 @@ closeAttrs =
     ]
 
 
-addressDetailsContentView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
-addressDetailsContentView vc gc model id viewState =
+addressDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
+addressDetailsContentView plugins pluginStates vc gc model id viewState =
     let
         address =
             model.network.addresses
                 |> Dict.get id
-
-        ts =
-            case Dict.get id model.tagSummaries of
-                Just (Pathfinder.HasTagSummary t) ->
-                    Just t
-
-                _ ->
-                    Nothing
-
-        nrTagsAddress =
-            ts |> Maybe.map .tagCount |> Maybe.withDefault 0
-
-        tagLabels =
-            ts
-                |> Maybe.map
-                    (\x ->
-                        if hasOnlyExchangeTags x then
-                            []
-
-                        else
-                            (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse) x
-                    )
-                |> Maybe.withDefault []
-
-        lenTagLabels =
-            List.length tagLabels
 
         actor_id =
             ts |> Maybe.andThen .bestActor
@@ -757,52 +741,136 @@ addressDetailsContentView vc gc model id viewState =
         showExchangeTag =
             actorText /= Nothing
 
-        showOtherTag =
-            List.isEmpty tagLabels |> not
+        -- Tags Data
+        ts =
+            case Dict.get id model.tagSummaries of
+                Just (Pathfinder.HasTagSummary t) ->
+                    Just t
 
-        showTag i ( tid, t ) =
-            let
-                link =
-                    Route.Graph.addressRoute { currency = Id.network id, address = Id.id id, layer = Nothing, table = Just AddressTagsTable }
-                        |> Route.Graph
-                        |> Route.toUrl
-            in
-            Html.a
-                [ onMouseEnter (UserMovesMouseOverTagLabel tid)
-                , onMouseLeave (UserMovesMouseOutTagLabel tid)
-                , HA.css SidePanelComponents.sidePanelAddressLabelOfTags_details.styles
-                , HA.id tid
-                , HA.href link
-                ]
-                (Html.text t.label
-                    :: (if i < (lenTagLabels - 1) then
-                            [ Html.text "," ]
+                _ ->
+                    Nothing
+
+        nrTagsAddress =
+            ts |> Maybe.map .tagCount |> Maybe.withDefault 0
+
+        showOtherTag =
+            nrTagsAddress > 0 && (ts |> Maybe.map (hasOnlyExchangeTags >> not) |> Maybe.withDefault True)
+
+        learnMorebtn =
+            Btns.buttonTypeTextStateRegularStyleTextWithAttributes
+                (Btns.buttonTypeTextStateRegularStyleTextAttributes
+                    |> Rs.s_button [ [ Css.cursor Css.pointer ] |> css, onClick (UserOpensDialogWindow (TagsList id)) ]
+                )
+                { typeTextStateRegularStyleText =
+                    { buttonText = Locale.string vc.locale "Learn more"
+                    , iconInstance = none
+                    , iconVisible = False
+                    }
+                }
+
+        labelOfTags =
+            if vc.showLabelsInTaggingOverview then
+                let
+                    showTag i ( tid, t ) =
+                        Html.div
+                            [ onMouseEnter (UserMovesMouseOverTagLabel tid)
+                            , onMouseLeave (UserMovesMouseOutTagLabel tid)
+                            , HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
+                            , HA.id tid
+                            , css [ Css.cursor Css.pointer ]
+                            , onClick (UserOpensDialogWindow (TagsList id))
+                            ]
+                            (Html.text t.label
+                                :: (if i < (lenTagLabels - 1) then
+                                        [ Html.text "," ]
+
+                                    else
+                                        []
+                                   )
+                            )
+
+                    nMaxTags =
+                        3
+
+                    tagLabels =
+                        ts
+                            |> Maybe.map
+                                (\x ->
+                                    if hasOnlyExchangeTags x then
+                                        []
+
+                                    else
+                                        (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse) x
+                                )
+                            |> Maybe.withDefault []
+
+                    lenTagLabels =
+                        List.length tagLabels
+
+                    nTagsToShow =
+                        if gc.displayAllTagsInDetails then
+                            lenTagLabels
 
                         else
-                            []
-                       )
-                )
+                            nMaxTags
 
-        nMaxTags =
-            3
+                    tagsControl =
+                        if lenTagLabels > nMaxTags then
+                            if gc.displayAllTagsInDetails then
+                                Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ]
+                                    [ Html.text (Locale.string vc.locale "less...") ]
 
-        nTagsToShow =
-            if gc.displayAllTagsInDetails then
-                lenTagLabels
+                            else
+                                Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ]
+                                    [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
+
+                        else
+                            none
+                in
+                Just
+                    (div
+                        [ css
+                            [ Css.displayFlex
+                            , Css.flexDirection Css.row
+                            , Css.flexWrap Css.wrap
+                            , Css.property "gap" "1ex"
+                            , Css.alignItems Css.center
+                            , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
+                            ]
+                        ]
+                        ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
+                    )
 
             else
-                nMaxTags
+                let
+                    concepts =
+                        ts |> Maybe.map (\x -> x.conceptTagCloud |> Dict.toList |> List.sortBy (\( _, v ) -> v.weighted)) |> Maybe.withDefault [] |> List.reverse
 
-        tagsControl =
-            if lenTagLabels > nMaxTags then
-                if gc.displayAllTagsInDetails then
-                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text (Locale.string vc.locale "less...") ]
+                    conceptItem ( k, _ ) =
+                        Html.div
+                            [ onMouseEnter (UserMovesMouseOverTagConcept k)
+                            , onMouseLeave (UserMovesMouseOutTagConcept k)
 
-                else
-                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
-
-            else
-                none
+                            -- , HA.css TagComponents.categoryTags_details.styles
+                            , HA.id (k ++ "_tags_concept_tag")
+                            , css [ Css.cursor Css.pointer ]
+                            , onClick (UserOpensDialogWindow (TagsList id))
+                            ]
+                            [ TagComponents.categoryTags { categoryTags = { tagLabel = View.getConceptName vc (Just k) |> Maybe.withDefault k } } ]
+                in
+                Just
+                    (div
+                        [ css
+                            [ Css.displayFlex
+                            , Css.flexDirection Css.row
+                            , Css.flexWrap Css.wrap
+                            , Css.property "gap" "1ex"
+                            , Css.alignItems Css.center
+                            , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
+                            ]
+                        ]
+                        ((concepts |> List.map conceptItem) ++ [ learnMorebtn ])
+                    )
 
         -- clusterHighlightAttr =
         --     if vc.highlightClusterFriends then
@@ -918,22 +986,8 @@ addressDetailsContentView vc gc model id viewState =
         sidePanelAddressCopyIcon =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
+            , chevronInstance = none
             }
-
-        labelOfTags =
-            Just
-                (div
-                    [ css
-                        [ Css.displayFlex
-                        , Css.flexDirection Css.row
-                        , Css.flexWrap Css.wrap
-                        , Css.property "gap" "1ex"
-                        , Css.alignItems Css.center
-                        , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
-                        ]
-                    ]
-                    ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
-                )
 
         labelOfActor =
             actor_id
@@ -950,7 +1004,7 @@ addressDetailsContentView vc gc model id viewState =
                         in
                         Html.a
                             [ HA.href link
-                            , css SidePanelComponents.sidePanelAddressLabelOfActor_details.styles
+                            , css SidePanelComponents.sidePanelAddressLabel_details.styles
                             , onMouseEnter (UserMovesMouseOverActorLabel aid)
                             , onMouseLeave (UserMovesMouseOutActorLabel aid)
                             , HA.id (aid ++ "_actor")
@@ -1050,15 +1104,25 @@ addressDetailsContentView vc gc model id viewState =
                     [ sidePanelCss
                         |> css
                     ]
-                |> Rs.s_iconsCloseSmall closeAttrs
+                |> Rs.s_iconsCloseBlack closeAttrs
+                |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
+                |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
             )
             (SidePanelComponents.sidePanelEthAddressInstances
-                |> Rs.s_labelOfTags
+                |> Rs.s_categoryTags
                     labelOfTags
-                |> Rs.s_labelOfActor
+                |> Rs.s_label
                     labelOfActor
                 |> Rs.s_tokensDropDownClosed (Just tokensDropdown)
+                |> Rs.s_learnMore (Just none)
+             -- |> Rs.s_iconsBinanceL
+             --     (Just sidePanelData.actorIconInstance)
             )
+            { pluginList =
+                address
+                    |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
+                    |> Maybe.withDefault []
+            }
             { identifierWithCopyIcon = sidePanelAddressCopyIcon
             , leftTab = { variant = none }
             , rightTab = { variant = none }
@@ -1078,6 +1142,9 @@ addressDetailsContentView vc gc model id viewState =
             , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
             , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
             , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+
+            -- , learnMoreButton = { variant = none }
+            , categoryTags = { tagLabel = "" }
             }
 
     else
@@ -1088,14 +1155,24 @@ addressDetailsContentView vc gc model id viewState =
                         |> css
                     ]
                 |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
-                |> Rs.s_iconsCloseSmall closeAttrs
+                |> Rs.s_iconsCloseBlack closeAttrs
+                |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
+                |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
             )
             (SidePanelComponents.sidePanelAddressInstances
-                |> Rs.s_labelOfTags
+                |> Rs.s_categoryTags
                     labelOfTags
-                |> Rs.s_labelOfActor
+                |> Rs.s_label
                     labelOfActor
+                |> Rs.s_learnMore (Just none)
+             -- |> Rs.s_iconsBinanceL
+             --     (Just sidePanelData.actorIconInstance)
             )
+            { pluginList =
+                address
+                    |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
+                    |> Maybe.withDefault []
+            }
             { sidePanelAddress = sidePanelData
             , leftTab = { variant = none }
             , rightTab = { variant = none }
@@ -1112,6 +1189,9 @@ addressDetailsContentView vc gc model id viewState =
             , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
             , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
             , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+
+            -- , learnMoreButton = { variant = none }
+            , categoryTags = { tagLabel = "" }
             }
 
 

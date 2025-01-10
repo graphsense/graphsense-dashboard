@@ -124,7 +124,7 @@ const makeTheme = (plugin) => {
   })
   */
   try {
-    execSync(`./node_modules/.bin/elm-codegen run --debug --output theme --flags-from=${pluginThemeFile}`)
+    execSync(`make PLUGIN_NAME=${plugin} plugin-theme`)
   } catch(e) {
     console.log(e.message)
   }

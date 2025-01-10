@@ -22,7 +22,7 @@ docker run --rm \
     -v "${dir}/../openapi:/build:Z"  \
     -v "${temp2}:/spec.yaml:Z" \
     -v "${dir}/../templates:/templates:Z" \
-    openapitools/openapi-generator-cli:latest generate \
+    openapitools/openapi-generator-cli:v7.10.0 generate \
     -i /spec.yaml \
     -g elm \
     -o /build \

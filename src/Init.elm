@@ -58,6 +58,9 @@ init plugins uc flags url key =
             , snapToGrid = settings.snapToGrid |> Maybe.withDefault False
             , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
             , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
+            , showLabelsInTaggingOverview = False
+            , allConcepts = []
+            , abuseConcepts = []
             }
       , page = Home
       , search = Search.init (Search.initSearchAll Nothing)
@@ -79,7 +82,6 @@ init plugins uc flags url key =
       , dirty = False
       , notifications = Notification.init
       , selectBoxes = selectBoxes
-      , selectedSettingsTab = GeneralTab
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy

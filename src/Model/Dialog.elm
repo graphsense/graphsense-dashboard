@@ -1,7 +1,10 @@
-module Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, defaultMsg)
+module Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, TagListConfig, defaultMsg)
 
+import Api.Data
 import Html.Styled exposing (Html)
 import Http
+import Model.Graph.Table exposing (Table)
+import Model.Pathfinder.Id exposing (Id)
 
 
 type Model msg
@@ -9,6 +12,7 @@ type Model msg
     | Options (OptionsConfig msg)
     | Error (ErrorConfig msg)
     | Info (InfoConfig msg)
+    | TagsList (TagListConfig msg)
     | Custom (CustomConfig msg)
 
 
@@ -49,6 +53,13 @@ type alias CustomConfig msg =
     }
 
 
+type alias TagListConfig msg =
+    { id : Id
+    , tagsTable : Table Api.Data.AddressTag
+    , closeMsg : msg
+    }
+
+
 type ErrorType
     = AddressNotFound (List String)
     | Http String Http.Error
@@ -79,3 +90,6 @@ defaultMsg model =
 
         Custom c ->
             c.defaultMsg
+
+        TagsList c ->
+            c.closeMsg

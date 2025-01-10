@@ -3,17 +3,17 @@ module Generate exposing (main)
 {-| -}
 
 import Api.Raw exposing (..)
-import Basics.Extra exposing (flip)
 import Dict
 import Elm
 import Gen.CodeGen.Generate as Generate
-import Generate.Colors as Colors
+import Generate.Colors as Colors exposing (ColorMapRaw)
 import Generate.Common as Common
 import Generate.Html
 import Generate.Svg
 import Generate.Util.RGBA as RGBA
 import Http
 import Json.Decode
+import Json.Encode as Encode
 import String.Case exposing (toCamelCaseUpper)
 import String.Extra
 import String.Format
@@ -21,16 +21,19 @@ import Tuple exposing (mapFirst, pair)
 import Types exposing (ColorMap)
 
 
-onlyFrames : List String
-onlyFrames =
-    []
-        |> List.map String.toLower
-
-
 type alias Flags =
     { api_key : String
     , file_id : String
     , plugin_name : Maybe String
+    }
+
+
+type alias FigmaContent =
+    ( Maybe String, List FrameNode )
+
+
+type alias Whitelist =
+    { frames : List String
     }
 
 
@@ -61,17 +64,6 @@ get { api_key, file_id } { url, expect } =
 main : Program Json.Decode.Value () Msg
 main =
     let
-        decodeFileId str =
-            case String.split ":" str of
-                name :: file_id :: [] ->
-                    Json.Decode.succeed ( Just name, file_id )
-
-                file_id :: [] ->
-                    Json.Decode.succeed ( Nothing, file_id )
-
-                _ ->
-                    Json.Decode.fail ("invalid tuple: " ++ str)
-
         decodeFlags =
             Json.Decode.map3
                 (\plugin_name file_id api_key ->
@@ -83,6 +75,11 @@ main =
                 (Json.Decode.field "plugin_name" Json.Decode.string |> Json.Decode.maybe)
                 (Json.Decode.field "figma_file" Json.Decode.string)
                 (Json.Decode.field "api_key" Json.Decode.string)
+
+        decodeFlagsWithColorMaps =
+            Json.Decode.map2 pair
+                (Json.Decode.field "colormaps" Colors.decodeColormaps)
+                (Json.Decode.field "theme" decodeFigmaNodesFileWithModuleName)
     in
     Platform.worker
         { init =
@@ -98,22 +95,36 @@ main =
                             }
                         )
 
-                    Err _ ->
-                        case Json.Decode.decodeValue decodeFigmaNodesFileWithModuleName input of
-                            Ok ( plugin_name, nodes ) ->
+                    Err err1 ->
+                        case Json.Decode.decodeValue decodeFlagsWithColorMaps input of
+                            Ok ( colormaps, ( plugin_name, nodes ) ) ->
                                 ( ()
-                                , frameNodesToFiles plugin_name nodes
+                                , frameNodesToFiles { frames = [] } colormaps plugin_name nodes
                                     |> Generate.files
                                 )
 
-                            Err err ->
-                                ( ()
-                                , Generate.error
-                                    [ { title = "Error decoding flags"
-                                      , description = Json.Decode.errorToString err
-                                      }
-                                    ]
-                                )
+                            Err err2 ->
+                                case Json.Decode.decodeValue decodeWithWhitelist input of
+                                    Ok ( whitelist, ( plugin_name, nodes ) ) ->
+                                        ( ()
+                                        , frameNodesToFiles whitelist { light = [], dark = [] } plugin_name nodes
+                                            |> Generate.files
+                                        )
+
+                                    Err err3 ->
+                                        ( ()
+                                        , Generate.error
+                                            [ { title = "Error decoding flags"
+                                              , description = Json.Decode.errorToString err1
+                                              }
+                                            , { title = "Error decoding flags"
+                                              , description = Json.Decode.errorToString err2
+                                              }
+                                            , { title = "Error decoding flags"
+                                              , description = Json.Decode.errorToString err3
+                                              }
+                                            ]
+                                        )
         , update =
             \msg _ ->
                 case msg of
@@ -173,11 +184,21 @@ decodeFigmaNodesFile =
         |> Json.Decode.field "nodes"
 
 
-decodeFigmaNodesFileWithModuleName : Json.Decode.Decoder ( Maybe String, List FrameNode )
+decodeFigmaNodesFileWithModuleName : Json.Decode.Decoder FigmaContent
 decodeFigmaNodesFileWithModuleName =
     Json.Decode.map2 pair
         (Json.Decode.field "plugin_name" Json.Decode.string |> Json.Decode.maybe)
         (Json.Decode.field "figma" decodeFigmaNodesFile)
+
+
+decodeWithWhitelist : Json.Decode.Decoder ( Whitelist, FigmaContent )
+decodeWithWhitelist =
+    Json.Decode.map2 pair
+        (Json.Decode.map Whitelist
+            (Json.Decode.field "frames" (Json.Decode.list Json.Decode.string))
+            |> Json.Decode.field "whitelist"
+        )
+        (Json.Decode.field "theme" decodeFigmaNodesFileWithModuleName)
 
 
 canvasNodeToRequests : Flags -> CanvasNode -> Cmd Msg
@@ -200,8 +221,8 @@ themeFolder =
     "Theme"
 
 
-frameNodesToFiles : Maybe String -> List FrameNode -> List Generate.File
-frameNodesToFiles plugin_name frames =
+frameNodesToFiles : Whitelist -> { light : ColorMapRaw, dark : ColorMapRaw } -> Maybe String -> List FrameNode -> List Generate.File
+frameNodesToFiles whitelist { light, dark } plugin_name frames =
     let
         colorsFrameLight =
             colorsFrame ++ " Light"
@@ -212,10 +233,12 @@ frameNodesToFiles plugin_name frames =
         colorMapLight =
             frames
                 |> findColorMap colorsFrameLight
+                |> (++) light
 
         colorMapDark =
             frames
                 |> findColorMap colorsFrameDark
+                |> (++) dark
 
         colorMapLightDict =
             List.map (mapFirst (RGBA.toStylesString Dict.empty)) colorMapLight
@@ -229,12 +252,21 @@ frameNodesToFiles plugin_name frames =
                 , Colors.colorMapToStylesheet colorMapDark
                     :: Colors.colorMapToDeclarations colorMapDark
                     |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrameDark ]
+                , { path = "colormaps.json"
+                  , warnings = []
+                  , contents =
+                        Encode.object
+                            [ ( "light", Colors.colorMapToJson colorMapLight )
+                            , ( "dark", Colors.colorMapToJson colorMapDark )
+                            ]
+                            |> Encode.encode 0
+                  }
                 ]
 
             else
                 []
     in
-    (List.map (frameToFiles plugin_name colorMapLightDict) frames
+    (List.map (frameToFiles whitelist plugin_name colorMapLightDict) frames
         |> List.concat
     )
         ++ colorGen
@@ -267,9 +299,12 @@ isFrame arg1 =
             Nothing
 
 
-frameToFiles : Maybe String -> ColorMap -> FrameNode -> List Generate.File
-frameToFiles plugin_name colorMap n =
+frameToFiles : Whitelist -> Maybe String -> ColorMap -> FrameNode -> List Generate.File
+frameToFiles whitelist plugin_name colorMap n =
     let
+        _ =
+            Debug.log "whitelist" whitelist
+
         name sub =
             n.frameTraits.isLayerTrait.name
                 |> toCamelCaseUpper
@@ -286,8 +321,8 @@ frameToFiles plugin_name colorMap n =
             String.toLower n.frameTraits.isLayerTrait.name
 
         matchOnlyFrames =
-            List.isEmpty onlyFrames
-                || List.any (flip String.startsWith nameLowered) onlyFrames
+            List.isEmpty whitelist.frames
+                || List.any ((==) nameLowered) (List.map String.toLower whitelist.frames)
     in
     if matchOnlyFrames && not (String.startsWith (String.toLower colorsFrame) nameLowered) then
         [ frameNodeToDeclarations

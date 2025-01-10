@@ -22,6 +22,12 @@ type alias Plugins =
     {{^last}}, {{/last}}{{/plugins}}
     }
 
+empty : Plugins
+empty =
+    { {{#plugins}}{{name}} = Nothing
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
 n m =
   (m, [], Cmd.none)
 

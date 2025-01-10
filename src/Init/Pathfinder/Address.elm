@@ -4,11 +4,12 @@ import Animation
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address, Txs(..))
 import Model.Pathfinder.Id exposing (Id)
+import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 
 
-init : Id -> Coords -> Address
-init id { x, y } =
+init : Plugins -> Id -> Coords -> Address
+init plugins id { x, y } =
     { x = x
     , y = Animation.static y
     , clock = 0
@@ -24,4 +25,5 @@ init id { x, y } =
     , actor = Nothing
     , hasTags = False
     , isStartingPoint = False
+    , plugins = Plugin.initAddress plugins
     }

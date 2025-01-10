@@ -309,28 +309,31 @@ resultList _ vc sc { autocomplete, searchType } =
 resultLineToHtml : Config -> String -> SearchConfigWithMoreCss -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
 resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
     let
-        ( icon, label ) =
+        ( icon, label, highlight_suffix ) =
             case resultLine of
                 Address _ a ->
                     ( FontAwesome.at
                     , Util.View.truncate 50 a
+                    , True
                     )
 
                 Tx _ a ->
                     ( FontAwesome.exchangeAlt
                     , Util.View.truncate 64 a
+                    , True
                     )
 
                 Block _ a ->
                     ( FontAwesome.cube
                     , String.fromInt a
+                    , True
                     )
 
                 Label a ->
-                    ( FontAwesome.tag, a )
+                    ( FontAwesome.tag, a, False )
 
                 Actor ( _, lbl ) ->
-                    ( FontAwesome.user, lbl )
+                    ( FontAwesome.user, lbl, False )
     in
     span
         ((Css.resultLine vc
@@ -353,7 +356,7 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
                 [ Css.resultLineIcon vc |> css
                 , css sc.resultLineIcon
                 ]
-        , if String.contains query label then
+        , if String.contains query label && highlight_suffix then
             span
                 []
                 [ text query

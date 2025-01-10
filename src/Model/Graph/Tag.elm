@@ -39,7 +39,7 @@ userTagToApiTag : { currency : String, entity : Int, address : String } -> Bool 
 userTagToApiTag { currency, address, entity } isClusterDefiner tag =
     { abuse = tag.abuse
     , address = address
-    , entity = entity
+    , entity = Just entity
     , category = tag.category
     , confidence = Nothing
     , confidenceLevel = Nothing
@@ -55,4 +55,5 @@ userTagToApiTag { currency, address, entity } isClusterDefiner tag =
     , actor = Nothing
     , concepts = Nothing
     , inheritedFrom = Nothing
+    , tagType = "actor"
     }

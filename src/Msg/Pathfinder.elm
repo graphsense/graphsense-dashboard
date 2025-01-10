@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), TxDetailsMsg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
+module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -9,13 +9,14 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Network exposing (FindPosition)
+import Model.Pathfinder.Tooltip exposing (TooltipType)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
 import Table
 import Time exposing (Posix)
-import Update.Pathfinder.Network exposing (FindPosition)
 
 
 type Msg
@@ -69,6 +70,9 @@ type Msg
     | UserMovesMouseOutAddress Id
     | UserMovesMouseOverTagLabel String
     | UserMovesMouseOutTagLabel String
+    | CloseTooltip TooltipType
+    | UserMovesMouseOverTagConcept String
+    | UserMovesMouseOutTagConcept String
     | UserMovesMouseOverActorLabel String
     | UserMovesMouseOutActorLabel String
     | UserInputsAnnotation Id String
@@ -92,6 +96,18 @@ type Msg
     | UserClosesContextMenu
     | RuntimePostponedUpdateByRoute Route
     | BrowserWaitedAfterReleasingMouseButton
+    | UserOpensDialogWindow OverlayWindows
+    | UserGotDataForTagsListDialog Id Api.Data.AddressTags
+    | ShowTextTooltip TextTooltipConfig
+    | CloseTextTooltip TextTooltipConfig
+
+
+type alias TextTooltipConfig =
+    { anchorId : String, text : String }
+
+
+type OverlayWindows
+    = TagsList Id
 
 
 type DisplaySettingsMsg

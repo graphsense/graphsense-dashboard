@@ -323,18 +323,18 @@ toNodeIcon : Address -> Maybe Api.Data.Entity -> Svg msg
 toNodeIcon address cluster =
     case ( address.exchange, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract ) of
         ( Just _, _ ) ->
-            Icons.iconsExchange {}
+            Icons.iconsExchangeL {}
 
         ( Nothing, Just True ) ->
-            Icons.iconsSmartContract {}
+            Icons.iconsSmartContractL {}
 
         ( Nothing, _ ) ->
             case getAddressType address cluster of
                 KnownService ->
-                    Icons.iconsInstitution {}
+                    Icons.iconsInstitutionL {}
 
                 LikelyUnknownService ->
-                    Icons.iconsUnknownService {}
+                    Icons.iconsUnknownServiceL {}
 
                 Unknown ->
                     Icons.iconsUntagged {}

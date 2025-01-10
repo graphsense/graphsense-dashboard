@@ -27,6 +27,7 @@ import Theme.Html.ErrorMessagesAlerts
 import Theme.Html.Icons as Icons
 import Util.View exposing (addDot, none, onClickWithStop)
 import View.Locale as Locale
+import View.Pathfinder.TagDetailsList as TagsDetailList
 
 
 view : Config -> Model Msg -> Html Msg
@@ -49,6 +50,9 @@ view vc model =
 
             Custom conf ->
                 custom conf
+
+            TagsList conf ->
+                TagsDetailList.view vc conf.closeMsg conf.id conf.tagsTable
         ]
 
 
@@ -255,7 +259,7 @@ error vc err =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm err.onOk) ]
     in
     errorMessageComponentTypeErrorWithInstances
-        (errorMessageComponentTypeErrorAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
+        (errorMessageComponentTypeErrorAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
         (errorMessageComponentTypeErrorInstances |> Rs.s_messageText (Just (div [] details)))
         { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = "" }, typeError = { bodyText = "", headlineText = "" } }
 
@@ -270,7 +274,7 @@ info vc inf =
             Icons.iconsAlert {}
     in
     errorMessageComponentTypeAlertWithAttributes
-        (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSmall buttonAttrOk)
+        (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
         { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, typeAlert = { bodyText = "", headlineText = "" } }
 
 

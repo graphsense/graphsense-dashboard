@@ -21,6 +21,7 @@ import Api.Data exposing (Values)
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
+import Plugin.Model as Plugin
 import RecordSetter exposing (s_incomingTxs, s_outgoingTxs)
 import RemoteData exposing (RemoteData(..), WebData)
 import Set exposing (Set)
@@ -44,6 +45,7 @@ type alias Address =
     , hasTags : Bool
     , actor : Maybe String
     , isStartingPoint : Bool
+    , plugins : Plugin.AddressState
     }
 
 
