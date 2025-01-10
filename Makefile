@@ -2,7 +2,6 @@
 
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
-ELM_CODEGEN=./node_modules/.bin/elm-codegen run --debug 
 FIGMA_WHITELIST_FRAMES?=[]
 
 install:
@@ -67,23 +66,19 @@ lint-ci:
 
 theme-refresh: 
 	mkdir -p theme
-	$(ELM_CODEGEN) --flags='{"figma_file": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output theme
+	./tools/codegen.sh --refresh
 	make theme
 
 theme: 
-	{ echo '{"whitelist": {"frames": $(FIGMA_WHITELIST_FRAMES)}, "theme":'; cat ./theme/figma.json; echo '}'; } > ./theme/.gen.json
-	$(ELM_CODEGEN) --output theme --flags-from=./theme/.gen.json
-	rm ./theme/.gen.json
+	./tools/codegen.sh -w $(FIGMA_WHITELIST_FRAMES)
 	make setem
 
 plugin-theme-refresh:
-	$(ELM_CODEGEN) --flags='{"plugin_name": "$(PLUGIN_NAME)", "figma_file": "$(FIGMA_FILE_ID)", "api_key": "$(FIGMA_API_TOKEN)"}' --output plugins/$(PLUGIN_NAME)/theme
+	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh 
 	make plugin-theme
 
 plugin-theme:
-	echo "{\"colormaps\": `cat ./theme/colormaps.json`, \"theme\": `cat ./plugins/$(PLUGIN_NAME)/theme/figma.json`}" > ./theme/.gen.json
-	$(ELM_CODEGEN) --output theme --flags-from=./theme/.gen.json
-	rm ./theme/.gen.json
+	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID)
 
 gen:
 	rm -rf generated/*
