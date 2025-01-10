@@ -417,3 +417,7 @@ mentionTagDescriptionId: Un tag mention indica che questo indirizzo è stato cit
 actorTagDescriptionId: L'etichetta dell'attore è una dichiarazione sul soggetto che controlla l'indirizzo.
 eventTagDescriptionId: Un tag evento è una dichiarazione su un evento che si è verificato in relazione a questo indirizzo, ad esempio se l'indirizzo ha fatto parte di un hack.
 "Note: This tag was inherited from the cluster level.": "Nota: Questo tag è stato ereditato dal livello cluster."
+"Learn more": "Di più"
+"Low confidence": "Bassa fiducia"
+"Medium confidence": "Fiducia media"
+"High confidence": "Alta fiducia"

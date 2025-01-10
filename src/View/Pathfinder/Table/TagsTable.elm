@@ -23,6 +23,7 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
+import View.Pathfinder.PagedTable exposing (alignColumnsRight)
 
 
 tagId : Api.Data.AddressTag -> String
@@ -48,7 +49,7 @@ type Cell
     | SourceCell LinkCellConfig
     | IconCell TagIcon
     | LabelCell CellConfig TagIcon
-    | InfoCell CellConfig String String
+    | TypeCell CellConfig String String
 
 
 linkCellStyle : List Css.Style
@@ -62,8 +63,11 @@ cell _ c =
         cellBase =
             [ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ]
 
+        cellWMinWidth =
+            cellBase ++ [ Css.minWidth (Css.px 150) ]
+
         cellWWidth =
-            [ Css.marginRight (Css.px 15), Css.maxWidth (Css.px 300) ] ++ cellBase
+            [ Css.marginRight (Css.px 15), Css.maxWidth (Css.px 300) ] ++ cellWMinWidth
 
         attrs =
             TagsComponents.tagRowCellAttributes
@@ -87,7 +91,7 @@ cell _ c =
         LastModCell cc ->
             TagsComponents.tagRowCellWithAttributes
                 (attrs
-                    |> Rs.s_tagRowCell (cellBase |> css |> List.singleton)
+                    |> Rs.s_tagRowCell (cellBase ++ [ Css.alignItems Css.end |> Css.important ] |> css |> List.singleton)
                 )
                 (defaultData cc Nothing Nothing)
 
@@ -151,7 +155,7 @@ cell _ c =
                 )
                 (defaultData cc Nothing linkBodyIcon)
 
-        InfoCell cc titletext cellid ->
+        TypeCell cc titletext cellid ->
             let
                 ttConfig =
                     { anchorId = cellid, text = titletext }
@@ -174,7 +178,7 @@ cell _ c =
                         ]
             in
             TagsComponents.tagRowCellWithInstances
-                (attrs |> Rs.s_tagRowCell (cellBase |> css |> List.singleton))
+                (attrs |> Rs.s_tagRowCell (cellWMinWidth |> css |> List.singleton))
                 TagsComponents.tagRowCellInstances
                 (defaultData cc Nothing (Just icon))
     )
@@ -312,7 +316,7 @@ typeColumn vc =
                             titleText
                 in
                 cell vc
-                    (InfoCell
+                    (TypeCell
                         { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase)
                         , subLabel = Just (Locale.string vc.locale conf)
                         }
@@ -365,7 +369,7 @@ sourceColumn vc =
 lastModColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
 lastModColumn vc =
     Table.veryCustomColumn
-        { name = Locale.string vc.locale "Last Modified"
+        { name = "Last Modified"
         , viewData =
             \data ->
                 let
@@ -426,5 +430,5 @@ config vc =
             , lastModColumn vc
             ]
         , customizations =
-            customizations styles vc
+            customizations styles vc |> alignColumnsRight styles vc (Set.singleton "Last Modified")
         }
