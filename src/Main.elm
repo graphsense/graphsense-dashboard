@@ -69,6 +69,8 @@ main =
                     { uc
                         | locale = model.config.locale
                         , size = model.config.size
+                        , abuseConcepts = model.config.abuseConcepts
+                        , allConcepts = model.config.allConcepts
                     }
                     msg
                     model
