@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [24.01.3] - 2025-01-20
+
+### fixed
+- to short address digest for unique search
+
+## [24.01.2] - 2025-01-14
+
+### fixed
+- fixed missing categories in pathsearch (Pathfinder 1)
+
 ## [24.01.1] - 2025-01-10
 
 ### fixed

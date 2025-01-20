@@ -253,7 +253,7 @@ maybeTriggerSearch : Model -> List Effect
 maybeTriggerSearch model =
     let
         limit =
-            10
+            15
 
         query =
             Autocomplete.query model.autocomplete

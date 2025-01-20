@@ -14,6 +14,7 @@ import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
+import List.Extra
 import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
 import Switch
 import Theme.Html.GraphComponents
@@ -70,11 +71,15 @@ truncate len str =
 
 truncateLongIdentifier : String -> String
 truncateLongIdentifier =
-    truncateLongIdentifierWithLengths 8 8
+    truncateLongIdentifierWithLengths 8 4
 
 
 truncateLongIdentifierWithLengths : Int -> Int -> String -> String
 truncateLongIdentifierWithLengths start end str =
+    let
+        zeroInfoPrefixes =
+            [ "bc1", "ltc1", "0x" ]
+    in
     if String.length str > 18 then
         let
             -- sigPart =
@@ -86,11 +91,12 @@ truncateLongIdentifierWithLengths start end str =
                 str
 
             startwOffset =
-                if String.startsWith "0x" str then
-                    start + 2
-
-                else
-                    start
+                start
+                    + (zeroInfoPrefixes
+                        |> List.Extra.find (\prefix -> String.startsWith prefix str)
+                        |> Maybe.map String.length
+                        |> Maybe.withDefault 0
+                      )
         in
         String.left startwOffset sigPart ++ "…" ++ String.right end sigPart
 
