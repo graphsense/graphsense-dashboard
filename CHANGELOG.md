@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [24.01.4] - 2025-01-20
+
+### fixed
+- fixed some color issues in the dark theme
+
 ## [24.01.3] - 2025-01-20
 
 ### fixed
