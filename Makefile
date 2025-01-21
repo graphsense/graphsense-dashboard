@@ -70,7 +70,7 @@ theme-refresh:
 	make theme
 
 theme: 
-	./tools/codegen.sh -w $(FIGMA_WHITELIST_FRAMES)
+	./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
 	make setem
 
 plugin-theme-refresh:
