@@ -289,5 +289,5 @@ custom { html } =
 
 
 plugin : Plugins -> Plugin.Model.ModelState -> Config -> PluginConfig Msg -> Html Msg
-plugin plugins pluginStates vc { dialog } =
-    Plugin.dialog plugins pluginStates vc dialog
+plugin plugins pluginStates vc _ =
+    Plugin.dialog plugins pluginStates vc

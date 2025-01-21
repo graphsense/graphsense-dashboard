@@ -7,6 +7,7 @@ import {{package}}.Msg
 import Config.View as View
 import Config.Graph as Graph
 import Html.Styled as Html exposing (Html)
+import Maybe.Extra
 import Model
 import Model.Address as A
 import Model.Entity as E
@@ -26,7 +27,7 @@ import Util.View
 
 
 type alias Plugins =
-    { {{#plugins}}{{name}} : Maybe (PluginInterface.View.View {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Model.Dialog {{package}}.Msg.Msg)
+    { {{#plugins}}{{name}} : Maybe (PluginInterface.View.View {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Msg.Msg)
     {{^last}}, {{/last}}{{/plugins}}
     }
 
@@ -392,23 +393,23 @@ login plugins states vc =
         |> List.map (Html.map Model.PluginMsg)
 
 
-dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Plugin.Model.Dialog -> Html Model.Msg
-dialog plugins states vc dial =
-    {{^plugins}}Util.View.none{{/plugins}}{{#plugins.length}}(case dial of{{#plugins}}
-        Plugin.Model.Dialog{{package}} d ->
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\fun ->
-                                fun vc d
-                            )
-                            plugin.dialog
-                            states.{{name}}
-                            |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Html Model.Msg
+dialog plugins states vc =
+    {{^plugins}}Util.View.none{{/plugins}}{{#plugins.length}}Nothing
+{{#plugins}}   
+    |> Maybe.Extra.orElseLazy (\_ -> plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.map2
+                    (\fun ->
+                        fun vc
                     )
-{{/plugins}}
+                    plugin.dialog
+                    states.{{name}}
+                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+            )
     )
-        |> Maybe.withDefault Util.View.none
-        |> Html.map Model.PluginMsg
+{{/plugins}}
+    |> Maybe.withDefault Util.View.none
+    |> Html.map Model.PluginMsg
 {{/plugins.length}}

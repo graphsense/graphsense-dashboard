@@ -5,7 +5,6 @@ import Html.Styled exposing (Html)
 import Http
 import Model.Graph.Table exposing (Table)
 import Model.Pathfinder.Id exposing (Id)
-import Plugin.Model as Plugin
 
 
 type Model msg
@@ -63,8 +62,7 @@ type alias TagListConfig msg =
 
 
 type alias PluginConfig msg =
-    { dialog : Plugin.Dialog
-    , defaultMsg : msg
+    { defaultMsg : msg
     }
 
 

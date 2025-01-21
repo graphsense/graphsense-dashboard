@@ -9,14 +9,14 @@ type alias PID =
     String
 
 
-type alias Plugin flags modelState addressState entityState msg addressMsg entityMsg dialogType =
-    { view : PluginInterface.View.View modelState addressState entityState dialogType msg
+type alias Plugin flags modelState addressState entityState msg addressMsg entityMsg =
+    { view : PluginInterface.View.View modelState addressState entityState msg
     , update : PluginInterface.Update.Update flags modelState addressState entityState msg addressMsg entityMsg
     , effects : PluginInterface.Effects.Effects msg
     }
 
 
-empty : Plugin flags modelState addressState entityState msg addressMsg entityMsg dialogType
+empty : Plugin flags modelState addressState entityState msg addressMsg entityMsg
 empty =
     { view = PluginInterface.View.init
     , update = PluginInterface.Update.init

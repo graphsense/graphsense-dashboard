@@ -110,7 +110,6 @@ mapMsg map model =
                 |> TagsList
 
         Plugin conf ->
-            { dialog = conf.dialog
-            , defaultMsg = map conf.defaultMsg
+            { defaultMsg = map conf.defaultMsg
             }
                 |> Plugin
