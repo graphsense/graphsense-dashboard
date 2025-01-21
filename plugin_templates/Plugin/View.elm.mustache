@@ -394,7 +394,7 @@ login plugins states vc =
 
 dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Plugin.Model.Dialog -> Html Model.Msg
 dialog plugins states vc dial =
-    {{^plugins}}none{{/plugins}}{{#plugins.length}}(case dial of{{#plugins}}
+    {{^plugins}}Util.View.none{{/plugins}}{{#plugins.length}}(case dial of{{#plugins}}
         Plugin.Model.Dialog{{package}} d ->
             plugins.{{name}}
                 |> Maybe.andThen
