@@ -71,13 +71,13 @@ getConfidenceIndicator vc x =
     in
     case r of
         High ->
-            TagComponents.confidenceLevelConfidenceLevelHigh { confidenceLevelHigh = { text = Locale.string vc.locale "High" } }
+            TagComponents.confidenceLevelConfidenceLevelHighSizeSmall { confidenceLevelHighSizeSmall = { text = Locale.string vc.locale "High" } }
 
         Medium ->
-            TagComponents.confidenceLevelConfidenceLevelMedium { confidenceLevelMedium = { text = Locale.string vc.locale "Medium" } }
+            TagComponents.confidenceLevelConfidenceLevelMediumSizeSmall { confidenceLevelMediumSizeSmall = { text = Locale.string vc.locale "Medium" } }
 
         Low ->
-            TagComponents.confidenceLevelConfidenceLevelLow { confidenceLevelLow = { text = Locale.string vc.locale "Low" } }
+            TagComponents.confidenceLevelConfidenceLevelLowSizeSmall { confidenceLevelLowSizeSmall = { text = Locale.string vc.locale "Low" } }
 
 
 val : View.Config -> String -> { firstRow : String, secondRow : String, secondRowVisible : Bool }

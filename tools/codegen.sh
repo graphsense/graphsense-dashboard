@@ -2,6 +2,7 @@
 
 ELM_CODEGEN="./node_modules/.bin/elm-codegen run --debug"
 REFRESH=0
+FIGMA_WHITELIST_FRAMES=[]
 
 source .env
 
@@ -33,6 +34,8 @@ case $i in
     ;;
 esac
 done
+
+echo $FIGMA_WHITELIST_FRAMES
 
 if [ -z "$FIGMA_FILE_ID" ]; then
     echo "-f <figma file id> required"
