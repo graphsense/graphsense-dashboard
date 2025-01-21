@@ -45,6 +45,10 @@ type alias CellConfig =
     { label : String, subLabel : Maybe String }
 
 
+type alias ConfidenceCellConfig =
+    { label : String, confidence : ConfidenceRange, titletext : String, cellid : String }
+
+
 type alias LinkCellConfig =
     { link : Maybe String, label : String, subLabel : Maybe String }
 
@@ -59,7 +63,7 @@ type Cell
     | SourceCell LinkCellConfig
     | IconCell TagIcon
     | LabelCell CellConfig TagIcon
-    | TypeCell CellConfig String String
+    | TypeCell ConfidenceCellConfig
 
 
 linkCellStyle : List Css.Style
@@ -68,7 +72,7 @@ linkCellStyle =
 
 
 cell : View.Config -> Cell -> Table.HtmlDetails Msg
-cell _ c =
+cell vc c =
     let
         cellBase =
             [ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ]
@@ -165,16 +169,27 @@ cell _ c =
                 )
                 (defaultData cc Nothing linkBodyIcon)
 
-        TypeCell cc titletext cellid ->
+        TypeCell cc ->
             let
                 ttConfig =
-                    { anchorId = cellid, text = titletext }
+                    { anchorId = cc.cellid, text = cc.titletext }
+
+                sub =
+                    case cc.confidence of
+                        High ->
+                            TagsComponents.confidenceLevelConfidenceLevelHighSizeSmall { confidenceLevelHighSizeSmall = { text = Locale.string vc.locale "High confidence" } }
+
+                        Medium ->
+                            TagsComponents.confidenceLevelConfidenceLevelMediumSizeSmall { confidenceLevelMediumSizeSmall = { text = Locale.string vc.locale "Medium confidence" } }
+
+                        Low ->
+                            TagsComponents.confidenceLevelConfidenceLevelLowSizeSmall { confidenceLevelLowSizeSmall = { text = Locale.string vc.locale "Low confidence" } }
 
                 icon =
                     span
                         [ onMouseOver (Msg.Pathfinder.ShowTextTooltip ttConfig |> PathfinderMsg)
                         , onMouseOut (Msg.Pathfinder.CloseTextTooltip ttConfig |> PathfinderMsg)
-                        , Html.Styled.Attributes.id cellid
+                        , Html.Styled.Attributes.id cc.cellid
                         ]
                         [ Icons.iconsInfoSnoPaddingWithAttributes
                             (Icons.iconsInfoSnoPaddingAttributes
@@ -189,8 +204,10 @@ cell _ c =
             in
             TagsComponents.tagRowCellWithInstances
                 (attrs |> Rs.s_tagRowCell (cellWMinWidth |> css |> List.singleton))
-                TagsComponents.tagRowCellInstances
-                (defaultData cc Nothing (Just icon))
+                (TagsComponents.tagRowCellInstances
+                    |> Rs.s_category (Just sub)
+                )
+                (defaultData { label = cc.label, subLabel = Just "" } Nothing (Just icon))
     )
         |> List.singleton
         |> Table.HtmlDetails
@@ -293,17 +310,6 @@ typeColumn vc =
                     r =
                         getConfidenceRangeFromFloat conf_l
 
-                    conf =
-                        case r of
-                            High ->
-                                "High confidence"
-
-                            Medium ->
-                                "Medium confidence"
-
-                            Low ->
-                                "Low confidence"
-
                     inheritedFromCluster =
                         data.inheritedFrom == Just Api.Data.AddressTagInheritedFromCluster
 
@@ -333,10 +339,10 @@ typeColumn vc =
                 cell vc
                     (TypeCell
                         { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase)
-                        , subLabel = Just (Locale.string vc.locale conf)
+                        , confidence = r
+                        , titletext = titleTextWithClusterAddition
+                        , cellid = tagId data ++ "_tag_row"
                         }
-                        titleTextWithClusterAddition
-                        (tagId data ++ "_tag_row")
                     )
         , sorter = Table.increasingOrDecreasingBy (\data -> data.confidenceLevel |> Maybe.withDefault 0)
         }
