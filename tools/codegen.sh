@@ -35,19 +35,17 @@ case $i in
 esac
 done
 
-echo $FIGMA_WHITELIST_FRAMES
-
-if [ -z "$FIGMA_FILE_ID" ]; then
-    echo "-f <figma file id> required"
-    exit 1
-fi
-
-if [ -z "$FIGMA_API_TOKEN" ]; then
-    echo "-a <figma api token> required"
-    exit 1
-fi
-
 if [ $REFRESH -eq 1 ]; then
+    if [ -z "$FIGMA_FILE_ID" ]; then
+        echo "-f <figma file id> required"
+        exit 1
+    fi
+
+    if [ -z "$FIGMA_API_TOKEN" ]; then
+        echo "-a <figma api token> required"
+        exit 1
+    fi
+
     echo "Refreshing figma file from $FIGMA_FILE_ID ..."
     if [ -z "$PLUGIN_NAME" ]; then
         output=`$ELM_CODEGEN --flags="{\"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output theme 2>&1`
