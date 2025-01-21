@@ -28,5 +28,4 @@ elm.json
 !codegen/elm.json
 .idea
 .vscode/
-theme/.gen.json
 test_addresses.txt

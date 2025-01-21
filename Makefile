@@ -31,7 +31,7 @@ clean:
 
 
 setem:
-	npx setem --output generated
+	npx setem --output generated/utils
 	cd codegen && mkdir -p codegen/generated && npx setem --output generated
 
 serve:
@@ -65,7 +65,6 @@ lint-ci:
 	npx elm-review --ignore-files src/Util/View.elm,src/View/Box.elm,src/View/Locale.elm,src/Update/Search.elm,src/Route/Graph.elm,src/Route.elm,src/View/Graph/Table.elm,src/Css/Button.elm,config/Config.elm
 
 theme-refresh: 
-	mkdir -p theme
 	./tools/codegen.sh --refresh
 	make theme
 
@@ -77,8 +76,9 @@ plugin-theme-refresh:
 	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh 
 	make plugin-theme
 
-plugin-theme:
+plugin-theme: 
 	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID)
+	make setem
 
 gen:
 	rm -rf generated/*

@@ -48,8 +48,10 @@ if [ $REFRESH -eq 1 ]; then
 
     echo "Refreshing figma file from $FIGMA_FILE_ID ..."
     if [ -z "$PLUGIN_NAME" ]; then
+	    mkdir -p theme
         output=`$ELM_CODEGEN --flags="{\"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output theme 2>&1`
     else
+	    mkdir -p plugins/$PLUGIN_NAME/theme
 	    output=`$ELM_CODEGEN --flags="{\"plugin_name\": \"$PLUGIN_NAME\", \"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output plugins/$PLUGIN_NAME/theme 2>&1`
     fi
     if [ $? -eq 0 ]; then
