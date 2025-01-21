@@ -9,7 +9,9 @@ import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick, stopPropagationOn)
 import Json.Decode
 import Model exposing (Msg(..))
-import Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig)
+import Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig, PluginConfig)
+import Plugin.Model
+import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Html.Buttons as Buttons
 import Theme.Html.ErrorMessagesAlerts
@@ -30,8 +32,8 @@ import View.Locale as Locale
 import View.Pathfinder.TagDetailsList as TagsDetailList
 
 
-view : Config -> Model Msg -> Html Msg
-view vc model =
+view : Plugins -> Plugin.Model.ModelState -> Config -> Model Msg -> Html Msg
+view plugins pluginStates vc model =
     div
         [ stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         ]
@@ -53,6 +55,9 @@ view vc model =
 
             TagsList conf ->
                 TagsDetailList.view vc conf.closeMsg conf.id conf.tagsTable
+
+            Plugin conf ->
+                plugin plugins pluginStates vc conf
         ]
 
 
@@ -281,3 +286,8 @@ info vc inf =
 custom : CustomConfig Msg -> Html Msg
 custom { html } =
     html
+
+
+plugin : Plugins -> Plugin.Model.ModelState -> Config -> PluginConfig Msg -> Html Msg
+plugin plugins pluginStates vc { dialog } =
+    Plugin.dialog plugins pluginStates vc dialog

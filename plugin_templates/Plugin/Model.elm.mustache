@@ -33,6 +33,11 @@ type PluginType
     {{^last}}| {{/last}}{{/plugins}}
 
 
+type Dialog
+    = {{^plugins}}Dialog{{/plugins}}{{#plugins}}Dialog{{package}} {{package}}.Model.Dialog
+    {{^last}}| {{/last}}{{/plugins}}
+
+
 pluginTypeToNamespace : PluginType -> String
 pluginTypeToNamespace type_ =
     {{#plugins.length}}case type_ of{{/plugins.length}}{{^plugins}}""{{/plugins}}

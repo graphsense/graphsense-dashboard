@@ -6,7 +6,6 @@ import {{package}}.Msg
 {{/plugins}}
 import Config.View as View
 import Config.Graph as Graph
-import View.Pathfinder.ContextMenuItem as ContextMenuItem exposing (ContextMenuItem)
 import Html.Styled as Html exposing (Html)
 import Model
 import Model.Address as A
@@ -14,7 +13,6 @@ import Model.Entity as E
 import Model.Graph.Address exposing (Address)
 import Model.Node as Node
 import Model.Pathfinder.Address as Pathfinder
-import Util.View
 import Msg.Graph as Graph
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
@@ -23,10 +21,12 @@ import Plugin.Msg
 import PluginInterface.View
 import Svg.Styled as Svg exposing (Svg)
 import Tuple exposing (..)
+import View.Pathfinder.ContextMenuItem as ContextMenuItem exposing (ContextMenuItem)
+import Util.View
 
 
 type alias Plugins =
-    { {{#plugins}}{{name}} : Maybe (PluginInterface.View.View {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Msg.Msg)
+    { {{#plugins}}{{name}} : Maybe (PluginInterface.View.View {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Model.Dialog {{package}}.Msg.Msg)
     {{^last}}, {{/last}}{{/plugins}}
     }
 
@@ -390,3 +390,25 @@ login plugins states vc =
         |> List.filterMap identity
         |> List.concat
         |> List.map (Html.map Model.PluginMsg)
+
+
+dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Plugin.Model.Dialog -> Html Model.Msg
+dialog plugins states vc dial =
+    {{^plugins}}none{{/plugins}}{{#plugins.length}}(case dial of{{#plugins}}
+        Plugin.Model.Dialog{{package}} d ->
+            plugins.{{name}}
+                |> Maybe.andThen
+                    (\plugin ->
+                        Maybe.map2
+                            (\fun ->
+                                fun vc d
+                            )
+                            plugin.dialog
+                            states.{{name}}
+                            |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+                    )
+{{/plugins}}
+    )
+        |> Maybe.withDefault Util.View.none
+        |> Html.map Model.PluginMsg
+{{/plugins.length}}

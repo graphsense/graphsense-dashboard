@@ -278,7 +278,7 @@ overlay plugins vc model =
         _ ->
             case model.dialog of
                 Just dialog ->
-                    Dialog.view vc dialog
+                    Dialog.view plugins model.plugins vc dialog
                         |> ov (Dialog.defaultMsg dialog)
 
                 Nothing ->

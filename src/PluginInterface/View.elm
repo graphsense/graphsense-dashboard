@@ -12,7 +12,7 @@ import Svg.Styled exposing (Svg)
 import View.Pathfinder.ContextMenuItem exposing (ContextMenuItem)
 
 
-type alias View modelState addressState entityState msg =
+type alias View modelState addressState entityState dialogType msg =
     { -- address flags
       addressFlags : Maybe (View.Config -> addressState -> ( Float, List (Svg msg) ))
 
@@ -67,10 +67,13 @@ type alias View modelState addressState entityState msg =
 
     -- additional stuff for the new Pathfinder's address side panel header
     , addressSidePanelHeader : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Html msg)
+
+    -- show a dialog of the specific dialogType
+    , dialog : Maybe (View.Config -> dialogType -> modelState -> Html msg)
     }
 
 
-init : View modelState addressState entityState msg
+init : View modelState addressState entityState dialogType msg
 init =
     { addressFlags = Nothing
     , entityFlags = Nothing
@@ -90,4 +93,5 @@ init =
     , profile = Nothing
     , login = Nothing
     , addressSidePanelHeader = Nothing
+    , dialog = Nothing
     }
