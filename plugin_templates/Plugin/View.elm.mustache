@@ -393,14 +393,14 @@ login plugins states vc =
         |> List.map (Html.map Model.PluginMsg)
 
 
-dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Html Model.Msg
+dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Maybe (Html Model.Msg)
 dialog plugins states vc =
-    {{^plugins}}Util.View.none{{/plugins}}{{#plugins.length}}Nothing
+    Nothing
 {{#plugins}}   
     |> Maybe.Extra.orElseLazy (\_ -> plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
-                Maybe.map2
+                Maybe.Extra.andThen2
                     (\fun ->
                         fun vc
                     )
@@ -410,6 +410,4 @@ dialog plugins states vc =
             )
     )
 {{/plugins}}
-    |> Maybe.withDefault Util.View.none
-    |> Html.map Model.PluginMsg
-{{/plugins.length}}
+    |> Maybe.map (Html.map Model.PluginMsg)

@@ -69,7 +69,7 @@ type alias View modelState addressState entityState msg =
     , addressSidePanelHeader : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Html msg)
 
     -- show a dialog
-    , dialog : Maybe (View.Config -> modelState -> Html msg)
+    , dialog : Maybe (View.Config -> modelState -> Maybe (Html msg))
     }
 
 

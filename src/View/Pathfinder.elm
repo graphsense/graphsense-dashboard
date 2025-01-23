@@ -1096,6 +1096,11 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
 
             else
                 tokensDropDownClosed
+
+        pluginList =
+            address
+                |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
+                |> Maybe.withDefault []
     in
     if Data.isAccountLike (Id.network id) then
         SidePanelComponents.sidePanelEthAddressWithInstances
@@ -1106,6 +1111,13 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                     ]
                 |> Rs.s_iconsCloseBlack closeAttrs
                 |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
+                |> Rs.s_pluginList
+                    (if List.isEmpty pluginList then
+                        [ css [ Css.display Css.none ] ]
+
+                     else
+                        []
+                    )
             )
             (SidePanelComponents.sidePanelEthAddressInstances
                 |> Rs.s_categoryTags
@@ -1117,10 +1129,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
              -- |> Rs.s_iconsBinanceL
              --     (Just sidePanelData.actorIconInstance)
             )
-            { pluginList =
-                address
-                    |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
-                    |> Maybe.withDefault []
+            { pluginList = pluginList
             }
             { identifierWithCopyIcon = sidePanelAddressCopyIcon
             , leftTab = { variant = none }
@@ -1156,6 +1165,13 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                 |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
                 |> Rs.s_iconsCloseBlack closeAttrs
                 |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
+                |> Rs.s_pluginList
+                    (if List.isEmpty pluginList then
+                        [ css [ Css.display Css.none ] ]
+
+                     else
+                        []
+                    )
             )
             (SidePanelComponents.sidePanelAddressInstances
                 |> Rs.s_categoryTags
@@ -1166,10 +1182,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
              -- |> Rs.s_iconsBinanceL
              --     (Just sidePanelData.actorIconInstance)
             )
-            { pluginList =
-                address
-                    |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
-                    |> Maybe.withDefault []
+            { pluginList = pluginList
             }
             { sidePanelAddress = sidePanelData
             , leftTab = { variant = none }
