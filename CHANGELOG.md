@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [24.01.5] - 2025-01-24
+
+### added
+- tag confidence indicator in tags list are now also colored.
+
+### fixed
+- tags list table in pathfinder overflowing on small screens.
 
 ## [24.01.4] - 2025-01-20
 

@@ -39,7 +39,7 @@ view vc closeMsg id tags =
     in
     div
         [ css
-            (TagsComponents.dialogTagsListComponent_details.styles ++ [ Css.width (Css.pct 100), Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 800) * 0.5)) ])
+            (TagsComponents.dialogTagsListComponent_details.styles ++ [ Css.width (Css.pct 100) ])
         ]
         [ header
         , View.Graph.Table.table

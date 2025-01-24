@@ -35,7 +35,7 @@ view :
     -> Document Msg
 view plugins vc model =
     { title =
-        Locale.string vc.locale "Iknaio Dashboard"
+        Locale.string vc.locale "Iknaio Analytics Platform"
             :: Plugin.title plugins model.plugins vc
             |> List.reverse
             |> String.join " | "
