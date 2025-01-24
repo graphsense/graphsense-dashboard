@@ -411,3 +411,23 @@ dialog plugins states vc =
     )
 {{/plugins}}
     |> Maybe.map (Html.map Model.PluginMsg)
+
+
+
+pathfinderUpperLeftPanel : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Pathfinder.Msg)
+pathfinderUpperLeftPanel plugins states vc =
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.map2
+                    (\fun ->
+                        fun vc
+                    )
+                    plugin.pathfinderUpperLeftPanel
+                    states.{{name}}
+                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.map (Html.map Pathfinder.PluginMsg)

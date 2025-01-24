@@ -70,6 +70,9 @@ type alias View modelState addressState entityState msg =
 
     -- show a dialog
     , dialog : Maybe (View.Config -> modelState -> Maybe (Html msg))
+
+    -- Upper left panel in pathfinder (right besides the logo)
+    , pathfinderUpperLeftPanel : Maybe (View.Config -> modelState -> Html msg)
     }
 
 
@@ -94,4 +97,5 @@ init =
     , login = Nothing
     , addressSidePanelHeader = Nothing
     , dialog = Nothing
+    , pathfinderUpperLeftPanel = Nothing
     }

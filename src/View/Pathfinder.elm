@@ -123,7 +123,7 @@ graph plugins pluginStates vc gc model =
     [ vc.size
         |> Maybe.map (graphSvg plugins pluginStates vc gc model)
         |> Maybe.withDefault none
-    , topLeftPanel vc
+    , topLeftPanel plugins pluginStates vc
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc gc model
     ]
@@ -259,10 +259,10 @@ topCenterPanel plugins _ vc gc model =
         ]
 
 
-topLeftPanel : View.Config -> Html Msg
-topLeftPanel vc =
+topLeftPanel : Plugins -> ModelState -> View.Config -> Html Msg
+topLeftPanel plugins pluginStates vc =
     div [ Css.topLeftPanelStyle vc |> css ]
-        []
+        (Plugin.pathfinderUpperLeftPanel plugins pluginStates vc)
 
 
 toolbarHovercardView : View.Config -> Pathfinder.Model -> ToolbarHovercardModel -> Html Msg
