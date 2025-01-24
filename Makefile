@@ -6,7 +6,7 @@ FIGMA_WHITELIST_FRAMES?=[]
 
 install:
 	pip install pre-commit
-	pre-commit install
+	pre-commit install --hook-type pre-commit --hook-type pre-push
 	npm install
 
 openapi:
