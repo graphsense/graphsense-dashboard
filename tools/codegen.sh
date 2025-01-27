@@ -55,7 +55,7 @@ if [ $REFRESH -eq 1 ]; then
 	    output=`$ELM_CODEGEN --flags="{\"plugin_name\": \"$PLUGIN_NAME\", \"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output plugins/$PLUGIN_NAME/theme 2>&1`
     fi
     if [ $? -eq 0 ]; then
-        if [[ ! $output =~ "generated!" ]]; then
+        if [[ ! $output =~ "generated" ]]; then
             echo "$output"
             exit 1
         fi
@@ -73,7 +73,7 @@ else
     fi
     output=`$ELM_CODEGEN --output theme --flags-from=$tmp 2>&1`
     # surprisingly elm-codegen yield exit code 0 if error
-    if [ $? -eq 0 ]; then
+    if [[ ! $output =~ "generated" ]]; then
         echo "$output"
         echo "Input file: $tmp"
         exit 1
