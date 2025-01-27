@@ -222,7 +222,7 @@ init minQueryLength initChoices =
     -- ...
 
 -}
-update : Msg -> Autocomplete a -> ( Autocomplete a, Bool, Cmd (Msg) )
+update : Msg -> Autocomplete a -> ( Autocomplete a, Bool, Cmd Msg )
 update msg (Autocomplete state) =
     case msg of
         OnInput q ->

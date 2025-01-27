@@ -1,6 +1,7 @@
 module Autocomplete.Styled exposing
     ( Events, EventMapper
     , events
+    , autocomplete
     )
 
 {-| Autocomplete.Styled exposes [HTML.Styled](https://package.elm-lang.org/packages/rtfeldman/elm-css/latest/Css) events to be attached for input and every autocomplete choice.
@@ -17,7 +18,9 @@ module Autocomplete.Styled exposing
 
 -}
 
-import Html.Styled exposing (Attribute)
+import Css
+import Html.Styled exposing (Attribute, Html, div, text)
+import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events as Events
 import Internal exposing (KeyDown(..), Msg(..))
 import Json.Decode as JD
@@ -100,3 +103,35 @@ onKeyDownDecoder mapper =
                     _ ->
                         JD.fail "Ignore other keys"
             )
+
+
+autocomplete : List (Attribute msg) -> { input : Html msg, result : Html msg, loadingSpinner : Html msg, visible : Bool } -> Html msg
+autocomplete attr { input, result, loadingSpinner, visible } =
+    div
+        (css [ Css.position Css.relative ]
+            :: attr
+        )
+        [ input
+        , if not visible then
+            text ""
+
+          else
+            div
+                [ css
+                    [ Css.width <| Css.pct 100
+                    , Css.position Css.absolute
+                    , Css.zIndex <| Css.int 1
+                    ]
+                ]
+                [ div
+                    [ css
+                        [ Css.position Css.absolute
+                        , Css.right <| Css.px 5
+                        , Css.top <| Css.px 5
+                        ]
+                    ]
+                    [ loadingSpinner
+                    ]
+                , result
+                ]
+        ]
