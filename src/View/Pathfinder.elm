@@ -148,19 +148,35 @@ contextMenuView : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Co
 contextMenuView plugins pluginStates vc model ( coords, menu ) =
     div
         [ [ Css.top (Css.px coords.y)
-          , Css.left (Css.px (coords.x - (HGraphComponents.rightClickItemStateNeutral_details.renderedWidth / 2)))
+          , Css.left (Css.px (coords.x - (HGraphComponents.rightClickItemStateNeutralTypeWithIcon_details.renderedWidth / 2)))
           , Css.position Css.absolute
           , Css.zIndex (Css.int 100)
           ]
             |> css
         , onClick UserClosesContextMenu
         ]
-        [ HGraphComponents.rightClickMenuListWithInstances
-            HGraphComponents.rightClickMenuListAttributes
-            HGraphComponents.rightClickMenuListInstances
-            { rightClickMenuList =
-                case menu of
-                    ContextMenu.AddressContextMenu id ->
+        [ case menu of
+            ContextMenu.AddressContextMenu id ->
+                let
+                    pluginsList =
+                        Dict.get id model.network.addresses
+                            |> Maybe.map
+                                (Plugin.addressContextMenuNew plugins pluginStates vc
+                                    >> List.map (ContextMenuItem.view vc)
+                                )
+                            |> Maybe.withDefault []
+                in
+                HGraphComponents.rightClickMenuWithAttributes
+                    (HGraphComponents.rightClickMenuAttributes
+                        |> Rs.s_lineFrame
+                            (if List.isEmpty pluginsList then
+                                []
+
+                             else
+                                [ css [ Css.display Css.none ] ]
+                            )
+                    )
+                    { shortcutList =
                         [ { msg = UserOpensAddressAnnotationDialog id
                           , icon = HIcons.iconsAnnotateS {}
                           , text = "Annotate address"
@@ -186,15 +202,17 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         ]
-                            ++ (Dict.get id model.network.addresses
-                                    |> Maybe.map
-                                        (Plugin.addressContextMenuNew plugins pluginStates vc
-                                            >> List.map (ContextMenuItem.view vc)
-                                        )
-                                    |> Maybe.withDefault []
-                               )
+                    , pluginsList = pluginsList
+                    }
+                    {}
 
-                    ContextMenu.TransactionContextMenu _ ->
+            ContextMenu.TransactionContextMenu _ ->
+                HGraphComponents.rightClickMenuWithAttributes
+                    (HGraphComponents.rightClickMenuAttributes
+                        |> Rs.s_lineFrame
+                            [ css [ Css.display Css.none ] ]
+                    )
+                    { shortcutList =
                         [ { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
                           , text = "Copy transaction ID"
@@ -214,8 +232,9 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         ]
-            }
-            {}
+                    , pluginsList = []
+                    }
+                    {}
         ]
 
 

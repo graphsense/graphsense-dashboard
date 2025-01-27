@@ -23,10 +23,10 @@ type alias ContextMenuItemInternal msg =
 
 view : View.Config -> ContextMenuItem msg -> Html msg
 view vc (ContextMenuItem { icon, text, msg }) =
-    HGraphComponents.rightClickItemStateNeutralWithAttributes
-        (HGraphComponents.rightClickItemStateNeutralAttributes
-            |> Rs.s_stateNeutral
-                [ [ HGraphComponents.rightClickItemStateHover_details.styles
+    HGraphComponents.rightClickItemStateNeutralTypeWithIconWithAttributes
+        (HGraphComponents.rightClickItemStateNeutralTypeWithIconAttributes
+            |> Rs.s_stateNeutralTypeWithIcon
+                [ [ HGraphComponents.rightClickItemStateHoverTypeWithIcon_details.styles
                         |> Css.hover
                   , Css.cursor Css.pointer
                   ]
@@ -34,14 +34,14 @@ view vc (ContextMenuItem { icon, text, msg }) =
                 , onClick msg
                 ]
             |> Rs.s_placeholder
-                [ [ HGraphComponents.rightClickItemStateHoverPlaceholder_details.styles
+                [ [ HGraphComponents.rightClickItemStateHoverTypeWithIconPlaceholder_details.styles
                         |> Css.hover
                   ]
                     |> css
                 , onClick msg
                 ]
         )
-        { stateNeutral = { iconInstance = icon, text = Locale.string vc.locale text } }
+        { stateNeutralTypeWithIcon = { iconInstance = icon, text = Locale.string vc.locale text } }
 
 
 map : (a -> b) -> ContextMenuItem a -> ContextMenuItem b
