@@ -1,8 +1,9 @@
-module Model.Address exposing (Address, Addresslink, decoder, encoder, equals, fromId)
+module Model.Address exposing (Address, Addresslink, decoder, encoder, equals, fromId, fromPathfinderId)
 
 import Json.Decode
 import Json.Encode
 import Model.Graph.Id as Id exposing (AddressId)
+import Model.Pathfinder.Id as Pathfinder
 
 
 type alias Address =
@@ -22,6 +23,13 @@ fromId : AddressId -> Address
 fromId id =
     { currency = Id.currency id
     , address = Id.addressId id
+    }
+
+
+fromPathfinderId : Pathfinder.Id -> Address
+fromPathfinderId id =
+    { currency = Pathfinder.network id
+    , address = Pathfinder.id id
     }
 
 
