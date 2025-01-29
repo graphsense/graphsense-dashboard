@@ -54,6 +54,39 @@ update plugins uc msg state =
                 |> Maybe.withDefault ( state, [], Cmd.none ){{/plugins}} 
 
 
+updateByCoreMsg : Plugins -> Update.Config -> PluginInterface.Msg.InMsg -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+updateByCoreMsg plugins uc msg state =
+    let
+        updateFns = {{#plugins}} (\currentState cEffects cmds ->
+                                plugins.{{name}}
+                                        |> Maybe.map
+                                            (\plugin ->
+                                                Maybe.map2
+                                                    (\upd st ->
+                                                        upd uc msg st
+                                                            |> T3.mapFirst (\s -> { currentState | {{name}} = Just s })
+                                                            |> T3.mapSecond ((List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg)))
+                                                            |> T3.mapSecond ((++) cEffects)
+                                                            |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
+                                                            |> T3.mapThird (\ncmds -> Cmd.batch [cmds, ncmds])
+                                                    )
+                                                    plugin.updateByCoreMsg
+                                                    currentState.{{name}}
+                                            )
+                                        |> Maybe.Extra.join
+                                        |> Maybe.withDefault ( currentState, cEffects, cmds )
+                        )::                
+                        {{/plugins}} []
+
+        step f acc =
+                let
+                    (s, eff, cmds) = acc
+                in
+                    f s eff cmds
+    in
+        List.foldl step (state, [], Cmd.none) updateFns
+        
+
 updateAddress : Plugins -> Plugin.Msg.AddressMsg -> Address.Address -> Address.Address
 updateAddress plugins msg address =
     {{^plugins}}address{{/plugins}}{{#plugins.length}}case msg of{{#plugins}} 

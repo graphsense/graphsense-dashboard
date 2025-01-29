@@ -2,7 +2,7 @@ module PluginInterface.Update exposing (Return, Update, andThen, init)
 
 import Config.Update as Update
 import Model.Graph.Id as Id
-import PluginInterface.Msg exposing (OutMsg)
+import PluginInterface.Msg exposing (InMsg, OutMsg)
 import Set exposing (Set)
 
 
@@ -13,6 +13,9 @@ type alias Return modelState msg addressMsg entityMsg =
 type alias Update flags modelState addressState entityState msg addressMsg entityMsg =
     { -- update plugin's state
       update : Maybe (Update.Config -> msg -> modelState -> Return modelState msg addressMsg entityMsg)
+
+    -- update by core msg
+    , updateByCoreMsg : Maybe (Update.Config -> InMsg -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- update an address's plugin state
     , updateAddress : Maybe (addressMsg -> addressState -> addressState)
@@ -61,6 +64,7 @@ type alias Update flags modelState addressState entityState msg addressMsg entit
 init : Update flags modelState addressState entityState msg addressMsg entityMsg
 init =
     { update = Nothing
+    , updateByCoreMsg = Nothing
     , updateAddress = Nothing
     , updateEntity = Nothing
     , updateByUrl = Nothing

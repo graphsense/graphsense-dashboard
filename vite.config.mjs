@@ -18,7 +18,7 @@ const base64Loader = {
 };
 
 export default defineConfig({
-  plugins: [elmPlugin({debug: false}), base64Loader],
+  plugins: [elmPlugin({debug: true}), base64Loader],
   server: { 
     host: '0.0.0.0',
     port: 3000,

@@ -172,16 +172,16 @@ tabs tbs =
     let
         viewTab t =
             if t.selected then
-                Sc.singleTabStateSelectedWithAttributes
-                    Sc.singleTabStateSelectedAttributes
-                    { stateSelected = { tabLabel = t.title } }
+                Sc.singleTabStateSelectedSizeLargeWithAttributes
+                    Sc.singleTabStateSelectedSizeLargeAttributes
+                    { stateSelectedSizeLarge = { tabLabel = t.title } }
 
             else
-                Sc.singleTabStateNeutralWithAttributes
-                    (Sc.singleTabStateNeutralAttributes
-                        |> Rs.s_stateNeutral [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
+                Sc.singleTabStateNeutralSizeLargeWithAttributes
+                    (Sc.singleTabStateNeutralSizeLargeAttributes
+                        |> Rs.s_stateNeutralSizeLarge [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
                     )
-                    { stateNeutral = { tabLabel = t.title } }
+                    { stateNeutralSizeLarge = { tabLabel = t.title } }
     in
     div
         [ Html.Styled.Attributes.css

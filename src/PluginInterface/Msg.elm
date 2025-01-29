@@ -1,4 +1,4 @@
-module PluginInterface.Msg exposing (OutMsg(..), mapOutMsg)
+module PluginInterface.Msg exposing (InMsg(..), OutMsg(..), mapOutMsg)
 
 import Api.Data
 import Browser.Dom
@@ -51,6 +51,16 @@ type OutMsg msg addressMsg entityMsg
     | CloseDialog
       -- load address into graph
     | LoadAddressIntoGraph Address
+
+
+
+{- Plugins can communicate with core via these messages -}
+
+
+type InMsg
+    = -- User clicked to e.g. the graph or anything outside things with a handler attached (roughly corresponds to UserClickedLayout)
+      ClickedOnNeutralGround
+    | CoreGotStatsUpdate Api.Data.Stats
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB

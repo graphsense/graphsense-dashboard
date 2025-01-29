@@ -116,6 +116,10 @@ update plugins uc msg model =
             updateByUrl plugins uc url model
 
         BrowserGotStatistics stats ->
+            let
+                ( newPluginsState, outMsg, cmd ) =
+                    Plugin.updateByCoreMsg plugins uc (PluginInterface.CoreGotStatsUpdate stats) model.plugins
+            in
             n
                 { model
                     | stats = RD.Success stats
@@ -124,8 +128,12 @@ update plugins uc msg model =
                         model.search
                             |> s_searchType
                                 (Search.initSearchAll (Just stats))
+                    , plugins = newPluginsState
                 }
+                |> Tuple.mapSecond ((::) (PluginEffect cmd))
+                |> updateByPluginOutMsg plugins uc outMsg
 
+        -- Plugin handling
         BrowserGotEntityTaxonomy concepts ->
             setConcepts concepts model
                 |> n
@@ -403,13 +411,20 @@ update plugins uc msg model =
                 |> n
 
         UserClickedLayout ->
+            let
+                ( new, outMsg, cmd ) =
+                    Plugin.updateByCoreMsg plugins uc PluginInterface.ClickedOnNeutralGround model.plugins
+            in
             clearSearch plugins
                 { model
                     | user =
                         model.user
                             |> s_hovercard Nothing
                     , selectBoxes = TSelectBoxes.closeAll model.selectBoxes
+                    , plugins = new
                 }
+                |> Tuple.mapSecond ((::) (PluginEffect cmd))
+                |> updateByPluginOutMsg plugins uc outMsg
 
         UserClickedNavBack ->
             ( model, NavBackEffect |> List.singleton )
