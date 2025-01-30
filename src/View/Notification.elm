@@ -99,14 +99,20 @@ view vc model =
 
         Just (Notification.Success title) ->
             let
-                buttonAttrOk =
-                    [ css (Css.btnBase vc), onClickWithStop UserClosesNotification ]
+                hideClose =
+                    [ css [ Css.display Css.none ] ]
 
                 icon =
-                    Icons.iconsAlertDone {}
+                    Icons.iconsAlertDoneWithAttributes
+                        (Icons.iconsAlertDoneAttributes
+                            |> Rs.s_subtract [ attribute "fill-rule" "evenodd" ]
+                        )
+                        {}
             in
             errorMessageComponentTypeSuccessWithAttributes
-                (errorMessageComponentTypeSuccessAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
+                (errorMessageComponentTypeSuccessAttributes
+                    |> Rs.s_headerFrame hideClose
+                )
                 { header =
                     { iconInstance = icon
                     , title = Locale.string vc.locale title
