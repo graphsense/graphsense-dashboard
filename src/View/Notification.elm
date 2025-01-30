@@ -15,6 +15,8 @@ import Theme.Html.ErrorMessagesAlerts
         , errorMessageComponentTypeAlertWithAttributes
         , errorMessageComponentTypeErrorAttributes
         , errorMessageComponentTypeErrorWithAttributes
+        , errorMessageComponentTypeSuccessAttributes
+        , errorMessageComponentTypeSuccessWithAttributes
         )
 import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
@@ -91,6 +93,25 @@ view vc model =
                     }
                 , messageText = { messageText = Locale.interpolated vc.locale message variables }
                 , typeAlert = { bodyText = "", headlineText = "" }
+                }
+                |> List.singleton
+                |> overlay (Notification.getMoved model)
+
+        Just (Notification.Success title) ->
+            let
+                buttonAttrOk =
+                    [ css (Css.btnBase vc), onClickWithStop UserClosesNotification ]
+
+                icon =
+                    Icons.iconsAlertDone {}
+            in
+            errorMessageComponentTypeSuccessWithAttributes
+                (errorMessageComponentTypeSuccessAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
+                { header =
+                    { iconInstance = icon
+                    , title = Locale.string vc.locale title
+                    }
+                , typeSuccess = { bodyText = "", headlineText = "" }
                 }
                 |> List.singleton
                 |> overlay (Notification.getMoved model)

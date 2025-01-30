@@ -22,6 +22,7 @@ empty =
 type Notification
     = Error NotificationData
     | Info NotificationData
+    | Success String
 
 
 type Model
@@ -91,6 +92,9 @@ toId n =
 
         Info { title, message, variables } ->
             String.join "|" ("info" :: title :: message :: variables)
+
+        Success title ->
+            String.join "|" [ "success", title ]
 
 
 getMoved : Model -> Bool

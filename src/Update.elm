@@ -1368,6 +1368,17 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                           }
                         , eff
                         )
+
+                    PluginInterface.ShowNotification nt ->
+                        let
+                            ( notifications, notificationEffects ) =
+                                Notification.add nt model.notifications
+                        in
+                        ( { model
+                            | notifications = notifications
+                          }
+                        , List.map NotificationEffect notificationEffects
+                        )
             )
             ( mo, effects )
 

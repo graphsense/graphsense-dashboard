@@ -8,6 +8,7 @@ import Model.Address exposing (Address)
 import Model.Dialog
 import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
+import Model.Notification exposing (Notification)
 import Update.Dialog
 
 
@@ -51,6 +52,8 @@ type OutMsg msg addressMsg entityMsg
     | CloseDialog
       -- load address into graph
     | LoadAddressIntoGraph Address
+      -- show notification
+    | ShowNotification Notification
 
 
 
@@ -125,3 +128,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         LoadAddressIntoGraph a ->
             LoadAddressIntoGraph a
+
+        ShowNotification a ->
+            ShowNotification a
