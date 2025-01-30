@@ -31,10 +31,12 @@ type Model
 
 type Effect
     = MoveNotification
+    | RemoveNotification
 
 
 type Msg
     = MoveDelayPassed
+    | RemoveDelayPassed
 
 
 type alias InternalModel =
@@ -68,6 +70,17 @@ add n (NotificationModel m) =
     let
         id =
             n |> toId
+
+        effects =
+            MoveNotification
+                :: (case n of
+                        Success _ ->
+                            [ RemoveNotification
+                            ]
+
+                        _ ->
+                            []
+                   )
     in
     (if Set.member id m.messageIds then
         m
@@ -76,7 +89,7 @@ add n (NotificationModel m) =
         { m | messages = n :: m.messages, messageIds = Set.insert id m.messageIds }
     )
         |> NotificationModel
-        |> flip pair [ MoveNotification ]
+        |> flip pair effects
 
 
 addMany : Model -> List Notification -> ( Model, List Effect )
@@ -108,11 +121,20 @@ setMoved (NotificationModel m) =
         |> NotificationModel
 
 
+unsetMoved : Model -> Model
+unsetMoved (NotificationModel m) =
+    { m | moved = False }
+        |> NotificationModel
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         MoveDelayPassed ->
             setMoved model
+
+        RemoveDelayPassed ->
+            unsetMoved model
 
 
 perform : Effect -> Cmd Msg
@@ -121,3 +143,7 @@ perform effect =
         MoveNotification ->
             Process.sleep 0
                 |> Task.perform (\_ -> MoveDelayPassed)
+
+        RemoveNotification ->
+            Process.sleep 3000
+                |> Task.perform (\_ -> RemoveDelayPassed)
