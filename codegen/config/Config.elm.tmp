@@ -1,0 +1,6 @@
+module Config exposing (..)
+
+
+showId : Bool
+showId =
+    False

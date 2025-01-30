@@ -7,7 +7,7 @@ import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (cx, cy, rx, ry)
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
-import Generate.Util exposing (callStyles, getElementAttributes, withVisibility)
+import Generate.Util exposing (addIdAttribute, callStyles, getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details)
 

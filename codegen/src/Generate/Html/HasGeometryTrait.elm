@@ -9,10 +9,24 @@ import Generate.Util.Paint as Paint
 import Types exposing (ColorMap)
 
 
-toStyles : ColorMap -> HasGeometryTrait -> List Elm.Expression
-toStyles colorMap node =
+toStyles : ColorMap -> HasGeometryTrait -> Maybe StrokeWeights -> List Elm.Expression
+toStyles colorMap node strokeWeights =
     toBorder colorMap node.strokes
-        |> m (Css.px >> Css.borderWidth) node.strokeWeight
+        |> mm (borderWidth strokeWeights) node.strokeWeight
+
+
+borderWidth : Maybe StrokeWeights -> Float -> List Elm.Expression
+borderWidth strokeWeights strokeWeight =
+    strokeWeights
+        |> Maybe.map
+            (\{ top, bottom, left, right } ->
+                [ Css.px top |> Css.borderTopWidth
+                , Css.px bottom |> Css.borderBottomWidth
+                , Css.px left |> Css.borderLeftWidth
+                , Css.px right |> Css.borderRightWidth
+                ]
+            )
+        |> Maybe.withDefault (Css.px strokeWeight |> Css.borderWidth |> List.singleton)
 
 
 toBorder : ColorMap -> Maybe (List Paint) -> List Elm.Expression

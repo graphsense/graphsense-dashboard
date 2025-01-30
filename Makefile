@@ -3,6 +3,7 @@
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
 FIGMA_WHITELIST_FRAMES?=[]
+CODEGEN_CONFIG=codegen/config/Config.elm
 
 install:
 	pip install pre-commit
@@ -64,11 +65,14 @@ lint-fix:
 lint-ci:
 	npx elm-review --ignore-files src/Util/View.elm,src/View/Box.elm,src/View/Locale.elm,src/Update/Search.elm,src/Route/Graph.elm,src/Route.elm,src/View/Graph/Table.elm,src/Css/Button.elm,config/Config.elm
 
+$(CODEGEN_CONFIG):
+	[ ! -e $(CODEGEN_CONFIG) ] && cp $(CODEGEN_CONFIG).tmp $(CODEGEN_CONFIG)
+
 theme-refresh: 
 	./tools/codegen.sh --refresh
 	make theme
 
-theme: 
+theme: $(CODEGEN_CONFIG)
 	./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
 	make setem
 
@@ -76,7 +80,7 @@ plugin-theme-refresh:
 	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh 
 	make plugin-theme
 
-plugin-theme: 
+plugin-theme: $(CODEGEN_CONFIG)
 	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID)
 	make setem
 

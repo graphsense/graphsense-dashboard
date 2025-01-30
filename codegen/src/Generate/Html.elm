@@ -4,6 +4,7 @@ module Generate.Html exposing (..)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (uncurry)
+import Config exposing (showId)
 import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
@@ -24,7 +25,7 @@ import Generate.Svg.EllipseNode
 import Generate.Svg.LineNode
 import Generate.Svg.RectangleNode
 import Generate.Svg.VectorNode
-import Generate.Util exposing (callStyles, detailsToDeclaration, getElementAttributes, sanitize, withVisibility)
+import Generate.Util exposing (addIdAttribute, callStyles, detailsToDeclaration, getElementAttributes, sanitize, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details)
@@ -233,6 +234,7 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                                 , parentName = parentName
                                 , componentName = details.name
                                 , instanceName = ""
+                                , showId = showId
                                 }
                         in
                         withFrameTraitsNodeToExpression config details.name details.name node
@@ -263,6 +265,7 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                                 , parentName = parentName
                                 , componentName = details.name
                                 , instanceName = ""
+                                , showId = showId
                                 }
                         in
                         withFrameTraitsNodeToExpression config details.name details.name node
@@ -463,7 +466,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
             Generate.Common.FrameTraits.getName node
 
         hasOnlySvgChildren =
-            List.all isSvgChild node.frameTraits.children
+            not (List.isEmpty node.frameTraits.children) && List.all isSvgChild node.frameTraits.children
 
         frame =
             if hasOnlySvgChildren then
@@ -473,7 +476,6 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
             else
                 Gen.Html.Styled.call_.div
                     (getElementAttributes config name
-                        --|> Elm.Op.cons (Attributes.id name)
                         |> Elm.Op.append
                             (Generate.Common.DefaultShapeTraits.positionRelatively config node.frameTraits
                                 ++ cssDimensionsIfAbsolute node.frameTraits

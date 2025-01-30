@@ -5,7 +5,9 @@ import Basics.Extra exposing (flip)
 import Dict exposing (Dict)
 import Elm exposing (Expression)
 import Elm.Annotation as Annotation
+import Elm.Op
 import Gen.Css as Css
+import Gen.Html.Styled.Attributes as Attributes
 import Gen.Svg.Styled
 import Maybe.Extra
 import RecordSetter exposing (s_annotation)
@@ -125,8 +127,9 @@ intOrAutoType =
 
 
 getElementAttributes : Config -> String -> Elm.Expression
-getElementAttributes { attributes } name =
-    Elm.get (sanitize name) attributes
+getElementAttributes config name =
+    Elm.get (sanitize name) config.attributes
+        |> addIdAttribute config name
 
 
 uniqueElementName : String -> String -> String
@@ -269,3 +272,12 @@ sanitize s =
 
     else
         c
+
+
+addIdAttribute : Config -> String -> Elm.Expression -> Elm.Expression
+addIdAttribute { showId } id =
+    if showId then
+        Elm.Op.cons (Attributes.attribute "data-id" id)
+
+    else
+        identity

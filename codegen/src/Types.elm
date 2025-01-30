@@ -15,6 +15,7 @@ type alias Config =
     , parentName : String
     , componentName : String
     , instanceName : String
+    , showId : Bool
     }
 
 
