@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, hovercard, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, fullWidthCss, hovercard, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -337,3 +337,8 @@ onClickWithStop msg =
 pointer : Attribute msg
 pointer =
     css [ Css.cursor Css.pointer ]
+
+
+fullWidthCss : Style
+fullWidthCss =
+    Css.pct 100 |> Css.width |> Css.important
