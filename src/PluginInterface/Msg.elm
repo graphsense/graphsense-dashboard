@@ -1,4 +1,4 @@
-module PluginInterface.Msg exposing (InMsg(..), OutMsg(..), mapOutMsg)
+module PluginInterface.Msg exposing (InMsg(..), InMsgPathfinder(..), OutMsg(..), OutMsgPathfinder(..), mapOutMsg)
 
 import Api.Data
 import Browser.Dom
@@ -14,6 +14,11 @@ import Update.Dialog
 
 
 {- Plugins can communicate with core via these messages -}
+
+
+type OutMsgPathfinder msg
+    = -- retrieve a serialized state of the pathfinder grapn
+      GetPathfinderGraphJson (Json.Encode.Value -> msg)
 
 
 type OutMsg msg addressMsg entityMsg
@@ -54,16 +59,24 @@ type OutMsg msg addressMsg entityMsg
     | LoadAddressIntoGraph Address
       -- show notification
     | ShowNotification Notification
+      -- pathfinder Specific msgs
+    | OutMsgsPathfinder (OutMsgPathfinder msg)
 
 
 
 {- Plugins can communicate with core via these messages -}
 
 
+type InMsgPathfinder
+    = -- retrieve a serialized state of the pathfinder graph
+      PathfinderGraphChanged
+
+
 type InMsg
     = -- User clicked to e.g. the graph or anything outside things with a handler attached (roughly corresponds to UserClickedLayout)
       ClickedOnNeutralGround
     | CoreGotStatsUpdate Api.Data.Stats
+    | InMsgsPathfinder InMsgPathfinder
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -101,6 +114,9 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         GetSerialized msg ->
             (msg >> mapMsg) |> GetSerialized
+
+        OutMsgsPathfinder (GetPathfinderGraphJson msg) ->
+            ((msg >> mapMsg) |> GetPathfinderGraphJson) |> OutMsgsPathfinder
 
         Deserialize filename json ->
             Deserialize filename json

@@ -64,6 +64,7 @@ import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import Util exposing (n)
+import Util.Pathfinder.History as PathfinderHistory
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
 import View.Locale as Locale
@@ -885,10 +886,21 @@ update plugins uc msg model =
                     let
                         ( pathfinder, eff ) =
                             Pathfinder.update plugins uc m model.pathfinder
+
+                        nm =
+                            { model | pathfinder = pathfinder }
+
+                        ( newPluginsState, outMsg, cmd ) =
+                            if PathfinderHistory.shallPushHistory m pathfinder then
+                                Plugin.updateByCoreMsg plugins uc (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder) model.plugins
+
+                            else
+                                ( model.plugins, [], Cmd.none )
                     in
-                    ( { model | pathfinder = pathfinder }
-                    , List.map PathfinderEffect eff
+                    ( { nm | plugins = newPluginsState }
+                    , List.map PathfinderEffect eff ++ [ PluginEffect cmd ]
                     )
+                        |> updateByPluginOutMsg plugins uc outMsg
 
         GraphMsg m ->
             case m of
@@ -1324,6 +1336,21 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         let
                             serialized =
                                 Graph.encode model.graph
+
+                            ( new, outMsg, cmd ) =
+                                Plugin.update plugins uc (toMsg serialized) model.plugins
+                        in
+                        ( { model
+                            | plugins = new
+                          }
+                        , PluginEffect cmd :: eff
+                        )
+                            |> updateByPluginOutMsg plugins uc outMsg
+
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.GetPathfinderGraphJson toMsg) ->
+                        let
+                            serialized =
+                                Pathfinder.encode model.pathfinder
 
                             ( new, outMsg, cmd ) =
                                 Plugin.update plugins uc (toMsg serialized) model.plugins

@@ -3198,6 +3198,9 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.GetSerialized _ ->
                         ( mo, [] )
 
+                    PluginInterface.OutMsgsPathfinder _ ->
+                        ( mo, [] )
+
                     PluginInterface.Deserialize _ _ ->
                         ( mo, [] )
 
