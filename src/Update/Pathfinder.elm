@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fromDeserialized, unselect, update, updateByRoute)
+module Update.Pathfinder exposing (deserialize, fromDeserialized, unselect, update, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -51,7 +51,9 @@ import Msg.Pathfinder
         )
 import Msg.Search as Search
 import Number.Bounded exposing (value)
-import Plugin.Update exposing (Plugins)
+import Plugin.Msg as Plugin
+import Plugin.Update as Plugin exposing (Plugins)
+import PluginInterface.Msg as PluginInterface
 import Ports
 import Process
 import RecordSetter exposing (..)
@@ -1654,6 +1656,77 @@ updateByRoute_ plugins uc route model =
 
         _ ->
             n model
+
+
+updateByPluginOutMsg : Plugins -> List Plugin.OutMsg -> Model -> ( Model, List Effect )
+updateByPluginOutMsg plugins outMsgs model =
+    outMsgs
+        |> List.foldl
+            (\msg ( mo, eff ) ->
+                case Log.log "outMsg" msg of
+                    PluginInterface.ShowBrowser ->
+                        n model
+
+                    PluginInterface.UpdateAddresses { currency, address } pmsg ->
+                        let
+                            pId =
+                                ( currency, address )
+                        in
+                        ( { mo
+                            | network = Network.updateAddress pId (Plugin.updateAddress plugins pmsg) mo.network
+                          }
+                        , eff
+                        )
+
+                    PluginInterface.UpdateAddressEntities _ _ ->
+                        n mo
+
+                    PluginInterface.UpdateEntities _ _ ->
+                        n mo
+
+                    PluginInterface.UpdateEntitiesByRootAddress _ _ ->
+                        n mo
+
+                    PluginInterface.LoadAddressIntoGraph _ ->
+                        n mo
+
+                    PluginInterface.GetEntitiesForAddresses _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.GetEntities _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.PushUrl _ ->
+                        ( mo, [] )
+
+                    PluginInterface.GetSerialized _ ->
+                        ( mo, [] )
+
+                    PluginInterface.Deserialize _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.GetAddressDomElement _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.SendToPort _ ->
+                        ( mo, [] )
+
+                    PluginInterface.ApiRequest _ ->
+                        ( mo, [] )
+
+                    PluginInterface.ShowDialog _ ->
+                        ( mo, [] )
+
+                    PluginInterface.CloseDialog ->
+                        ( mo, [] )
+
+                    PluginInterface.ShowNotification _ ->
+                        ( mo, [] )
+
+                    PluginInterface.OutMsgsPathfinder _ ->
+                        ( mo, [] )
+            )
+            ( model, [] )
 
 
 loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )

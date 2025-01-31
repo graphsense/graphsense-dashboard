@@ -1247,11 +1247,17 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
             let
                 ( graph, graphEffect ) =
                     Graph.updateByPluginOutMsg plugins outMsgs model.graph
+
+                ( pathfinder, pathfinderEffect ) =
+                    Pathfinder.updateByPluginOutMsg plugins outMsgs model.pathfinder
             in
             ( { model
                 | graph = graph
+                , pathfinder = pathfinder
               }
-            , eff ++ List.map GraphEffect graphEffect
+            , eff
+                ++ List.map GraphEffect graphEffect
+                ++ List.map PathfinderEffect pathfinderEffect
             )
     in
     outMsgs

@@ -87,7 +87,7 @@ updateByCoreMsg plugins uc msg state =
         List.foldl step (state, [], Cmd.none) updateFns
         
 
-updateAddress : Plugins -> Plugin.Msg.AddressMsg -> Address.Address -> Address.Address
+updateAddress : Plugins -> Plugin.Msg.AddressMsg -> { a | plugins : Plugin.Model.AddressState } -> { a | plugins : Plugin.Model.AddressState }
 updateAddress plugins msg address =
     {{^plugins}}address{{/plugins}}{{#plugins.length}}case msg of{{#plugins}} 
         Plugin.Msg.{{package}}AddressMsg m ->
@@ -112,7 +112,7 @@ updateAddress plugins msg address =
                 |> Maybe.withDefault address{{/plugins}}{{/plugins.length}}
 
 
-updateEntity : Plugins -> Plugin.Msg.EntityMsg -> Entity.Entity -> Entity.Entity
+updateEntity : Plugins -> Plugin.Msg.EntityMsg -> { a | plugins : Plugin.Model.EntityState } -> { a | plugins : Plugin.Model.EntityState }
 updateEntity plugins msg entity =
     {{^plugins}}entity{{/plugins}}{{#plugins.length}}case msg of{{#plugins}} 
         Plugin.Msg.{{package}}EntityMsg m ->
