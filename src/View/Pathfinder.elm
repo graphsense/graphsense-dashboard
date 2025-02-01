@@ -1023,7 +1023,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         in
                         Html.a
                             [ HA.href link
-                            , css SidePanelComponents.sidePanelAddressLabel_details.styles
+                            , css SidePanelComponents.sidePanelAddressLabelOfActor_details.styles
                             , onMouseEnter (UserMovesMouseOverActorLabel aid)
                             , onMouseLeave (UserMovesMouseOutActorLabel aid)
                             , HA.id (aid ++ "_actor")
@@ -1120,6 +1120,11 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
             address
                 |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
                 |> Maybe.withDefault []
+
+        pluginTagsList =
+            address
+                |> Maybe.map (Plugin.addressSidePanelHeaderTags plugins pluginStates vc)
+                |> Maybe.withDefault []
     in
     if Data.isAccountLike (Id.network id) then
         SidePanelComponents.sidePanelEthAddressWithInstances
@@ -1137,11 +1142,18 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                      else
                         []
                     )
+                |> Rs.s_pluginTagsList
+                    (if List.isEmpty pluginTagsList then
+                        [ css [ Css.display Css.none ] ]
+
+                     else
+                        []
+                    )
             )
             (SidePanelComponents.sidePanelEthAddressInstances
                 |> Rs.s_categoryTags
                     labelOfTags
-                |> Rs.s_label
+                |> Rs.s_labelOfActor
                     labelOfActor
                 |> Rs.s_tokensDropDownClosed (Just tokensDropdown)
                 |> Rs.s_learnMore (Just none)
@@ -1149,6 +1161,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
              --     (Just sidePanelData.actorIconInstance)
             )
             { pluginList = pluginList
+            , pluginTagsList = pluginTagsList
             }
             { identifierWithCopyIcon = sidePanelAddressCopyIcon
             , leftTab = { variant = none }
@@ -1195,13 +1208,14 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
             (SidePanelComponents.sidePanelAddressInstances
                 |> Rs.s_categoryTags
                     labelOfTags
-                |> Rs.s_label
+                |> Rs.s_labelOfActor
                     labelOfActor
                 |> Rs.s_learnMore (Just none)
              -- |> Rs.s_iconsBinanceL
              --     (Just sidePanelData.actorIconInstance)
             )
             { pluginList = pluginList
+            , pluginTagsList = pluginTagsList
             }
             { sidePanelAddress = sidePanelData
             , leftTab = { variant = none }
