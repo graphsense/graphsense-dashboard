@@ -54,8 +54,8 @@ update plugins uc msg state =
                 |> Maybe.withDefault ( state, [], Cmd.none ){{/plugins}} 
 
 
-updateByCoreMsg : Plugins -> Update.Config -> PluginInterface.Msg.InMsg -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-updateByCoreMsg plugins uc msg state =
+updateByCoreMsg : Plugins -> Update.Config -> Plugin.Model.ModelState -> PluginInterface.Msg.InMsg -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+updateByCoreMsg plugins uc state msg =
     let
         updateFns = {{#plugins}} (\currentState cEffects cmds ->
                                 plugins.{{name}}
@@ -135,43 +135,6 @@ updateEntity plugins msg entity =
                             entity.plugins.{{name}}
                     )
                 |> Maybe.withDefault entity{{/plugins}}{{/plugins.length}}
-
-
-addressesAdded : Plugins -> Plugin.Model.ModelState -> Set Id.AddressId -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-addressesAdded plugins state ids =
-    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
-{{#plugins}}
-        {{name}} =
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\fun model ->
-                                fun ids model
-                                    |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
-                                    |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
-                            )
-                            plugin.addressesAdded
-                            state.{{name}}
-                    )
-                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
-{{/plugins}} 
-    in
-    ( { state
-        | {{#plugins}}{{name}} = Maybe.map T3.first {{name}}
-        {{^last}}, {{/last}}{{/plugins}}
-      }
-    , [ {{#plugins}}Maybe.map T3.second {{name}} 
-        |> Maybe.withDefault [] 
-        {{^last}}, {{/last}}{{/plugins}}
-      ]
-        |> List.concat
-    , [ {{#plugins}}Maybe.map T3.third {{name}} |> Maybe.withDefault Cmd.none
-        {{^last}}, {{/last}}{{/plugins}}
-      ]
-        |> Cmd.batch
-    )
-{{/plugins.length}}
 
 
 entitiesAdded : Plugins -> Plugin.Model.ModelState -> Set Id.EntityId -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )

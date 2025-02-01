@@ -29,9 +29,6 @@ type alias Update flags modelState addressState entityState msg addressMsg entit
     -- update by change of URL below /graph
     , updateGraphByUrl : Maybe (String -> modelState -> Return modelState msg addressMsg entityMsg)
 
-    -- when addresses are added to the graph
-    , addressesAdded : Maybe (Set Id.AddressId -> modelState -> Return modelState msg addressMsg entityMsg)
-
     -- when entities are added to the graph
     , entitiesAdded : Maybe (Set Id.EntityId -> modelState -> Return modelState msg addressMsg entityMsg)
 
@@ -69,7 +66,6 @@ init =
     , updateEntity = Nothing
     , updateByUrl = Nothing
     , updateGraphByUrl = Nothing
-    , addressesAdded = Nothing
     , entitiesAdded = Nothing
     , updateApiKeyHash = Nothing
     , updateApiKey = Nothing

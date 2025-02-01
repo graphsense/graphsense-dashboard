@@ -16,11 +16,6 @@ import Update.Dialog
 {- Plugins can communicate with core via these messages -}
 
 
-type OutMsgPathfinder msg
-    = -- retrieve a serialized state of the pathfinder grapn
-      GetPathfinderGraphJson (Json.Encode.Value -> msg)
-
-
 type OutMsg msg addressMsg entityMsg
     = -- popup the graph's browser
       ShowBrowser
@@ -63,20 +58,26 @@ type OutMsg msg addressMsg entityMsg
     | OutMsgsPathfinder (OutMsgPathfinder msg)
 
 
+type OutMsgPathfinder msg
+    = -- retrieve a serialized state of the pathfinder grapn
+      GetPathfinderGraphJson (Json.Encode.Value -> msg)
 
-{- Plugins can communicate with core via these messages -}
 
 
-type InMsgPathfinder
-    = -- retrieve a serialized state of the pathfinder graph
-      PathfinderGraphChanged
+{- Core can communicate with plugins via these messages -}
 
 
 type InMsg
     = -- User clicked to e.g. the graph or anything outside things with a handler attached (roughly corresponds to UserClickedLayout)
       ClickedOnNeutralGround
     | CoreGotStatsUpdate Api.Data.Stats
+    | AddressesAdded (List Address)
     | InMsgsPathfinder InMsgPathfinder
+
+
+type InMsgPathfinder
+    = -- retrieve a serialized state of the pathfinder graph
+      PathfinderGraphChanged
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB

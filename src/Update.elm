@@ -26,6 +26,7 @@ import List.Extra
 import Log
 import Maybe.Extra
 import Model exposing (..)
+import Model.Address as Address
 import Model.Currency
 import Model.Dialog as Dialog
 import Model.Graph.Coords exposing (BBox)
@@ -51,6 +52,7 @@ import Result.Extra
 import Route
 import Route.Graph
 import Route.Pathfinder
+import Set
 import Sha256
 import Task
 import Time
@@ -119,7 +121,8 @@ update plugins uc msg model =
         BrowserGotStatistics stats ->
             let
                 ( newPluginsState, outMsg, cmd ) =
-                    Plugin.updateByCoreMsg plugins uc (PluginInterface.CoreGotStatsUpdate stats) model.plugins
+                    PluginInterface.CoreGotStatsUpdate stats
+                        |> Plugin.updateByCoreMsg plugins uc model.plugins
             in
             n
                 { model
@@ -414,7 +417,8 @@ update plugins uc msg model =
         UserClickedLayout ->
             let
                 ( new, outMsg, cmd ) =
-                    Plugin.updateByCoreMsg plugins uc PluginInterface.ClickedOnNeutralGround model.plugins
+                    PluginInterface.ClickedOnNeutralGround
+                        |> Plugin.updateByCoreMsg plugins uc model.plugins
             in
             clearSearch plugins
                 { model
@@ -879,6 +883,27 @@ update plugins uc msg model =
 
         PathfinderMsg m ->
             case m of
+                Pathfinder.BrowserGotAddressData id data ->
+                    let
+                        ( new, outMsg, cmd ) =
+                            id
+                                |> Address.fromPathfinderId
+                                |> List.singleton
+                                |> PluginInterface.AddressesAdded
+                                |> Plugin.updateByCoreMsg plugins uc model.plugins
+
+                        ( pathfinder, pathfinderEffects ) =
+                            Pathfinder.update plugins uc m model.pathfinder
+                    in
+                    ( { model
+                        | plugins = new
+                        , pathfinder = pathfinder
+                      }
+                    , PluginEffect cmd
+                        :: List.map PathfinderEffect pathfinderEffects
+                    )
+                        |> updateByPluginOutMsg plugins uc outMsg
+
                 Pathfinder.PluginMsg ms ->
                     updatePlugins plugins uc ms model
 
@@ -892,7 +917,8 @@ update plugins uc msg model =
 
                         ( newPluginsState, outMsg, cmd ) =
                             if PathfinderHistory.shallPushHistory m pathfinder then
-                                Plugin.updateByCoreMsg plugins uc (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder) model.plugins
+                                (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
+                                    |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                             else
                                 ( model.plugins, [], Cmd.none )
@@ -910,7 +936,11 @@ update plugins uc msg model =
                 Graph.InternalGraphAddedAddresses ids ->
                     let
                         ( new, outMsg, cmd ) =
-                            Plugin.addressesAdded plugins model.plugins ids
+                            ids
+                                |> Set.toList
+                                |> List.map Address.fromId
+                                |> PluginInterface.AddressesAdded
+                                |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
