@@ -78,6 +78,7 @@ type InMsg
 type InMsgPathfinder
     = -- retrieve a serialized state of the pathfinder graph
       PathfinderGraphChanged
+    | PathfinderGraphClosed
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB

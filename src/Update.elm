@@ -732,6 +732,19 @@ update plugins uc msg model =
             else
                 n model
 
+        PathfinderMsg Pathfinder.UserClickedRestartYes ->
+            let
+                ( m, cmd ) =
+                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model) (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
+
+                ( newPluginsState, outMsg, cmdp ) =
+                    (PluginInterface.PathfinderGraphClosed |> PluginInterface.InMsgsPathfinder)
+                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+            in
+            ( { model | pathfinder = m, plugins = newPluginsState }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
+                |> updateByPluginOutMsg plugins uc outMsg
+                |> Tuple.mapSecond ((++) [ PluginEffect cmdp ])
+
         PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleValueDisplay) ->
             update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
 
@@ -811,13 +824,6 @@ update plugins uc msg model =
                     togglShowTimestampOnTxEdge nm
             in
             ( m, eff ++ neff )
-
-        PathfinderMsg Pathfinder.UserClickedRestartYes ->
-            let
-                ( m, cmd ) =
-                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model) (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
-            in
-            ( { model | pathfinder = m }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
 
         PathfinderMsg Pathfinder.UserReleasedEscape ->
             let
