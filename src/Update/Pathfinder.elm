@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fromDeserialized, unselect, update, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (deserialize, doesPathfinderGraphChange, fromDeserialized, unselect, update, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -2393,3 +2393,13 @@ autoLoadAddresses plugins tx model =
     [ src, dst ]
         |> List.filterMap identity
         |> List.foldl aggAddressAdd (n model)
+
+
+doesPathfinderGraphChange : Msg -> Model -> Bool
+doesPathfinderGraphChange msg m =
+    case msg of
+        UserClickedSaveGraph _ ->
+            True
+
+        _ ->
+            History.shallPushHistory msg m

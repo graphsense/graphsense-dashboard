@@ -66,7 +66,6 @@ import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import Util exposing (n)
-import Util.Pathfinder.History as PathfinderHistory
 import Util.ThemedSelectBox as TSelectBox
 import Util.ThemedSelectBoxes as TSelectBoxes
 import View.Locale as Locale
@@ -738,7 +737,7 @@ update plugins uc msg model =
                     model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model) (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
 
                 ( newPluginsState, outMsg, cmdp ) =
-                    (PluginInterface.PathfinderGraphClosed |> PluginInterface.InMsgsPathfinder)
+                    PluginInterface.CloseCase
                         |> Plugin.updateByCoreMsg plugins uc model.plugins
             in
             ( { model | pathfinder = m, plugins = newPluginsState }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
@@ -922,7 +921,7 @@ update plugins uc msg model =
                             { model | pathfinder = pathfinder }
 
                         ( newPluginsState, outMsg, cmd ) =
-                            if PathfinderHistory.shallPushHistory m pathfinder then
+                            if Pathfinder.doesPathfinderGraphChange m pathfinder then
                                 (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
                                     |> Plugin.updateByCoreMsg plugins uc model.plugins
 

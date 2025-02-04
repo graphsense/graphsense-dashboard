@@ -73,12 +73,12 @@ type InMsg
     | CoreGotStatsUpdate Api.Data.Stats
     | AddressesAdded (List Address)
     | InMsgsPathfinder InMsgPathfinder
+    | CloseCase
 
 
 type InMsgPathfinder
     = -- retrieve a serialized state of the pathfinder graph
       PathfinderGraphChanged
-    | PathfinderGraphClosed
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB

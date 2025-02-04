@@ -909,6 +909,14 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
         assetId =
             assetFromBase viewState.data.currency
 
+        pluginTagsList =
+            address
+                |> Maybe.map (Plugin.addressSidePanelHeaderTags plugins pluginStates vc)
+                |> Maybe.withDefault []
+
+        pluginTagsVisible =
+            List.length pluginTagsList > 0
+
         sidePanelData =
             { actorIconInstance =
                 actorImg
@@ -941,7 +949,8 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         )
                     |> Maybe.withDefault (Icons.iconsAssignSvg [] {})
             , tabsVisible = False
-            , actorAndTagVisible = showExchangeTag || showOtherTag
+            , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible
+            , pluginSTagVisible = pluginTagsVisible
             , listInstance =
                 let
                     titleInstance =
@@ -1119,11 +1128,6 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
         pluginList =
             address
                 |> Maybe.map (Plugin.addressSidePanelHeader plugins pluginStates vc)
-                |> Maybe.withDefault []
-
-        pluginTagsList =
-            address
-                |> Maybe.map (Plugin.addressSidePanelHeaderTags plugins pluginStates vc)
                 |> Maybe.withDefault []
     in
     if Data.isAccountLike (Id.network id) then
