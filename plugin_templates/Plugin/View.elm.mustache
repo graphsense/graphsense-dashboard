@@ -148,7 +148,7 @@ addressSidePanelHeaderTags plugins states vc address =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
-                Maybe.map3
+                Maybe.Extra.andThen3
                     (\fun ->
                         fun vc address
                     )
@@ -162,6 +162,25 @@ addressSidePanelHeaderTags plugins states vc address =
         |> List.filterMap identity
         |> List.map (Html.map Pathfinder.PluginMsg)
 
+
+pathfinderAddressLabels : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List ({ icon : Svg Pathfinder.Msg, label : String })
+pathfinderAddressLabels plugins states vc address =
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.map3
+                    (\fun ->
+                        fun vc address
+                    )
+                    plugin.pathfinderAddressLabels
+                    states.{{name}}
+                    address.plugins.{{name}}
+                    |> Maybe.map (List.map (\x -> {label = x.label, icon =  Svg.map (Plugin.Msg.{{package}}Msg >> Pathfinder.PluginMsg) x.icon}))
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.concat
 
 addressProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.AddressState -> View.Config -> Graph.Config -> List (Html Graph.Msg)
 addressProperties plugins states addressStates vc gc =

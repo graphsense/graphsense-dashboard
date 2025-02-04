@@ -3,9 +3,9 @@ module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 import Animation as A
 import Api.Data
 import Color
-import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
+import Html.Styled as Html
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
@@ -19,12 +19,14 @@ import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
+import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
 import Svg.Styled as Svg exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
+import Theme.Html.GraphComponents as HGraphComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
@@ -34,8 +36,8 @@ import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Maybe Annotations.AnnotationItem -> Svg Msg
-view _ vc _ colors address getCluster annotation =
+view : Plugins -> ModelState -> View.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Maybe Annotations.AnnotationItem -> Svg Msg
+view plugins pluginState vc colors address getCluster annotation =
     let
         data =
             RemoteData.toMaybe address.data
@@ -111,6 +113,12 @@ view _ vc _ colors address getCluster annotation =
                             Nothing
                     )
 
+        pluginLines =
+            Plugin.View.pathfinderAddressLabels plugins pluginState vc address
+
+        lh =
+            GraphComponents.pluginTagWithIcon_details.height
+
         offset =
             2
                 + (if nodeLabel == Nothing then
@@ -120,13 +128,49 @@ view _ vc _ colors address getCluster annotation =
                     0
                   )
 
+        pluginLabelLine content offsetp =
+            Svg.foreignObject
+                [ A.animate address.clock address.opacity
+                    |> String.fromFloat
+                    |> opacity
+                , translate
+                    0
+                    (GraphComponents.addressNode_details.height
+                        + offsetp
+                    )
+                    |> transform
+                , GraphComponents.addressNode_details.width
+                    |> String.fromFloat
+                    |> Svg.width
+                , lh
+                    |> String.fromFloat
+                    |> Svg.height
+                ]
+                [ Html.div
+                    [ css
+                        [ Css.pct 100 |> Css.width
+                        , Css.textAlign Css.center
+                        , Css.position Css.fixed
+                        ]
+                    ]
+                    [ HGraphComponents.pluginTagWithIcon
+                        { pluginTagWithIcon = { iconInstance = content.icon, textPlaceholder = content.label } }
+                    ]
+                ]
+
+        pluginthinig =
+            List.indexedMap (\i txt -> pluginLabelLine txt (offset + ((i |> toFloat) * lh))) pluginLines
+
+        attrOffset =
+            offset + ((List.length pluginLines |> toFloat) * lh)
+
         ( annAttr, label ) =
             annotation
                 |> Maybe.map
                     (annotationToAttrAndLabel
                         address
                         GraphComponents.addressNode_details
-                        offset
+                        attrOffset
                     )
                 |> Maybe.withDefault ( [], [] )
     in
@@ -235,8 +279,12 @@ view _ vc _ colors address getCluster annotation =
                             Icons.iconsNodeMarkerPurposeStartingPoint {}
                 }
             }
-            :: label
+            :: (label ++ pluginthinig)
         )
+
+
+
+-- pluginLabelLines :
 
 
 expandHandleLoadingSpinner : View.Config -> Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, renderedWidth : Float, renderedHeight : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)

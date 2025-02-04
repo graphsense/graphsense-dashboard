@@ -1393,7 +1393,7 @@ secondaryButton vc btn =
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> BBox -> Svg Msg
-graphSvg plugins _ vc gc model bbox =
+graphSvg plugins pluginsState vc gc model bbox =
     let
         dim =
             { width = bbox.width, height = bbox.height }
@@ -1523,7 +1523,7 @@ graphSvg plugins _ vc gc model bbox =
             , gradient "account" { outgoing = True, reverse = True }
             , gradient "account" { outgoing = False, reverse = True }
             ]
-        , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
+        , Svg.lazy7 Network.addresses plugins pluginsState vc model.colors model.clusters model.annotations model.network.addresses
         , Svg.lazy5 Network.txs plugins vc gc model.annotations model.network.txs
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         , drawDragSelector vc model
