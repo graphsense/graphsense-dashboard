@@ -744,104 +744,47 @@ update plugins uc msg model =
                 |> updateByPluginOutMsg plugins uc outMsg
                 |> Tuple.mapSecond ((++) [ PluginEffect cmdp ])
 
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleValueDisplay) ->
-            update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleValueDetail) ->
-            let
-                option =
-                    case model.config.locale.valueDetail of
-                        Locale.Exact ->
-                            "magnitude"
-
-                        _ ->
-                            "exact"
-            in
-            update plugins uc (Graph.UserChangesValueDetail option |> GraphMsg) model
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleDatesInUserLocale) ->
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg dsm) ->
             let
                 ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleDatesInUserLocale) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    toggleShowDatesInUserLocale nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleSnapToGrid) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleSnapToGrid) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    toggleSnapToGrid nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTimeZoneOffset) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTimeZoneOffset) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    toggleShowTimeZoneOffset nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleHighlightClusterFriends) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleHighlightClusterFriends) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    toggleHighlightClusterFriends nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTxTimestamp) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTxTimestamp) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    togglShowTimestampOnTxEdge nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg Pathfinder.UserReleasedEscape ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc Pathfinder.UserReleasedEscape model.pathfinder
+                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg dsm) model.pathfinder
 
                 ( nm, neff ) =
                     ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
             in
-            ( nm |> s_dialog Nothing |> s_notifications (nm.notifications |> Notification.pop), neff )
+            case dsm of
+                Pathfinder.UserClickedToggleDatesInUserLocale ->
+                    toggleShowDatesInUserLocale nm |> Tuple.mapSecond ((++) neff)
 
-        PathfinderMsg (Pathfinder.UserClickedExportGraphAsImage name) ->
-            ( model
-            , (name ++ ".png")
-                |> Ports.exportGraphImage
-                |> Pathfinder.CmdEffect
-                |> PathfinderEffect
-                |> List.singleton
-            )
+                Pathfinder.UserClickedToggleSnapToGrid ->
+                    toggleSnapToGrid nm |> Tuple.mapSecond ((++) neff)
+
+                Pathfinder.UserClickedToggleShowTimeZoneOffset ->
+                    toggleShowTimeZoneOffset nm |> Tuple.mapSecond ((++) neff)
+
+                Pathfinder.UserClickedToggleHighlightClusterFriends ->
+                    toggleHighlightClusterFriends nm |> Tuple.mapSecond ((++) neff)
+
+                Pathfinder.UserClickedToggleShowTxTimestamp ->
+                    togglShowTimestampOnTxEdge nm |> Tuple.mapSecond ((++) neff)
+
+                Pathfinder.UserClickedToggleDisplaySettings ->
+                    ( nm, neff )
+
+                Pathfinder.UserClickedToggleValueDetail ->
+                    let
+                        option =
+                            case model.config.locale.valueDetail of
+                                Locale.Exact ->
+                                    "magnitude"
+
+                                _ ->
+                                    "exact"
+                    in
+                    update plugins uc (Graph.UserChangesValueDetail option |> GraphMsg) model
+
+                Pathfinder.UserClickedToggleValueDisplay ->
+                    update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
 
         PathfinderMsg (Pathfinder.UserClickedSaveGraph time) ->
             ( model
@@ -887,51 +830,98 @@ update plugins uc msg model =
             )
 
         PathfinderMsg m ->
-            case m of
-                Pathfinder.BrowserGotAddressData id data ->
-                    let
-                        ( new, outMsg, cmd ) =
-                            id
-                                |> Address.fromPathfinderId
+            let
+                pathfinderOld =
+                    model.pathfinder
+
+                ( newModel, newEffects ) =
+                    case m of
+                        Pathfinder.UserClickedExportGraphAsImage name ->
+                            ( model
+                            , (name ++ ".png")
+                                |> Ports.exportGraphImage
+                                |> Pathfinder.CmdEffect
+                                |> PathfinderEffect
                                 |> List.singleton
-                                |> PluginInterface.AddressesAdded
-                                |> Plugin.updateByCoreMsg plugins uc model.plugins
+                            )
 
-                        ( pathfinder, pathfinderEffects ) =
-                            Pathfinder.update plugins uc m model.pathfinder
-                    in
-                    ( { model
-                        | plugins = new
-                        , pathfinder = pathfinder
-                      }
-                    , PluginEffect cmd
-                        :: List.map PathfinderEffect pathfinderEffects
-                    )
-                        |> updateByPluginOutMsg plugins uc outMsg
+                        Pathfinder.UserReleasedEscape ->
+                            let
+                                ( pf, pfeff ) =
+                                    Pathfinder.update plugins uc Pathfinder.UserReleasedEscape model.pathfinder
 
-                Pathfinder.PluginMsg ms ->
-                    updatePlugins plugins uc ms model
+                                ( nm, neff ) =
+                                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
+                            in
+                            ( nm |> s_dialog Nothing |> s_notifications (nm.notifications |> Notification.pop), neff )
 
-                _ ->
-                    let
-                        ( pathfinder, eff ) =
-                            Pathfinder.update plugins uc m model.pathfinder
+                        Pathfinder.BrowserGotBulkAddresses addresses ->
+                            let
+                                ( new, outMsg, cmd ) =
+                                    addresses
+                                        |> List.map (\x -> { address = x.address, currency = x.currency })
+                                        |> PluginInterface.AddressesAdded
+                                        |> Plugin.updateByCoreMsg plugins uc model.plugins
 
-                        nm =
-                            { model | pathfinder = pathfinder }
+                                ( pathfinder, pathfinderEffects ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+                            in
+                            ( { model
+                                | plugins = new
+                                , pathfinder = pathfinder
+                              }
+                            , PluginEffect cmd
+                                :: List.map PathfinderEffect pathfinderEffects
+                            )
+                                |> updateByPluginOutMsg plugins uc outMsg
 
-                        ( newPluginsState, outMsg, cmd ) =
-                            if Pathfinder.doesPathfinderGraphChange m pathfinder then
-                                (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
-                                    |> Plugin.updateByCoreMsg plugins uc model.plugins
+                        Pathfinder.BrowserGotAddressData id data ->
+                            let
+                                ( new, outMsg, cmd ) =
+                                    id
+                                        |> Address.fromPathfinderId
+                                        |> List.singleton
+                                        |> PluginInterface.AddressesAdded
+                                        |> Plugin.updateByCoreMsg plugins uc model.plugins
 
-                            else
-                                ( model.plugins, [], Cmd.none )
-                    in
-                    ( { nm | plugins = newPluginsState }
-                    , List.map PathfinderEffect eff ++ [ PluginEffect cmd ]
-                    )
-                        |> updateByPluginOutMsg plugins uc outMsg
+                                ( pathfinder, pathfinderEffects ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+                            in
+                            ( { model
+                                | plugins = new
+                                , pathfinder = pathfinder
+                              }
+                            , PluginEffect cmd
+                                :: List.map PathfinderEffect pathfinderEffects
+                            )
+                                |> updateByPluginOutMsg plugins uc outMsg
+
+                        Pathfinder.PluginMsg ms ->
+                            updatePlugins plugins uc ms model
+
+                        _ ->
+                            let
+                                ( pathfinder, eff ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+
+                                nm =
+                                    { model | pathfinder = pathfinder }
+                            in
+                            ( nm
+                            , List.map PathfinderEffect eff
+                            )
+            in
+            if newModel.pathfinder == pathfinderOld then
+                ( newModel, newEffects )
+
+            else
+                let
+                    ( newPluginsState, outMsg, cmd ) =
+                        (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
+                            |> Plugin.updateByCoreMsg plugins uc model.plugins
+                in
+                ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
+                    |> updateByPluginOutMsg plugins uc outMsg
 
         GraphMsg m ->
             case m of
