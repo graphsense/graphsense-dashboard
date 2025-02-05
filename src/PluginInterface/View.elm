@@ -105,7 +105,5 @@ init =
     , addressSidePanelHeaderTags = Nothing
     , dialog = Nothing
     , pathfinderUpperLeftPanel = Nothing
-
-    -- , pathfinderAddressLabels = Nothing
     , replaceAddressNodeTagIcon = Nothing
     }
