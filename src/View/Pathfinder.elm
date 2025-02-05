@@ -1032,7 +1032,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         in
                         Html.a
                             [ HA.href link
-                            , css SidePanelComponents.sidePanelAddressLabelOfActor_details.styles
+                            , css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
                             , onMouseEnter (UserMovesMouseOverActorLabel aid)
                             , onMouseLeave (UserMovesMouseOutActorLabel aid)
                             , HA.id (aid ++ "_actor")
@@ -1139,6 +1139,13 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                     ]
                 |> Rs.s_iconsCloseBlack closeAttrs
                 |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
+                |> Rs.s_tagsLayout
+                    (if sidePanelData.actorVisible || sidePanelData.tagsVisible then
+                        []
+
+                     else
+                        [ css [ Css.display Css.none ] ]
+                    )
                 |> Rs.s_pluginList
                     (if List.isEmpty pluginList then
                         [ css [ Css.display Css.none ] ]
@@ -1201,6 +1208,13 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                 |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
                 |> Rs.s_iconsCloseBlack closeAttrs
                 |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
+                |> Rs.s_tagsLayout
+                    (if sidePanelData.actorVisible || sidePanelData.tagsVisible then
+                        []
+
+                     else
+                        [ css [ Css.display Css.none ] ]
+                    )
                 |> Rs.s_pluginList
                     (if List.isEmpty pluginList then
                         [ css [ Css.display Css.none ] ]

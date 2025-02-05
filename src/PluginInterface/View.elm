@@ -77,8 +77,8 @@ type alias View modelState addressState entityState msg =
     -- Upper left panel in pathfinder (right besides the logo)
     , pathfinderUpperLeftPanel : Maybe (View.Config -> modelState -> Html msg)
 
-    -- allows to add tag lines to the address node in the pathfinder graph
-    , pathfinderAddressLabels : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> List { icon : Svg msg, label : String })
+    -- allows to replace the tag icon on the address node with something more specific
+    , replaceAddressNodeTagIcon : Maybe (View.Config -> { hasTags : Bool } -> modelState -> addressState -> Maybe (Svg msg))
     }
 
 
@@ -105,5 +105,7 @@ init =
     , addressSidePanelHeaderTags = Nothing
     , dialog = Nothing
     , pathfinderUpperLeftPanel = Nothing
-    , pathfinderAddressLabels = Nothing
+
+    -- , pathfinderAddressLabels = Nothing
+    , replaceAddressNodeTagIcon = Nothing
     }
