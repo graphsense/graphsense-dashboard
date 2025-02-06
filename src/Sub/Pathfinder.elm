@@ -111,9 +111,6 @@ subscriptions model =
 
       else
         Browser.Events.onAnimationFrameDelta AnimationFrameDeltaForMove
-    , model.tooltip
-        |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map HovercardMsg)
-        |> Maybe.withDefault Sub.none
     , model.toolbarHovercard
         |> Maybe.map (Tuple.second >> Hovercard.subscriptions >> Sub.map ToolbarHovercardMsg)
         |> Maybe.withDefault Sub.none

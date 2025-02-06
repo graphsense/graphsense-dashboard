@@ -151,31 +151,28 @@ shallPushHistory msg _ =
         UserMovesMouseOutAddress _ ->
             False
 
-        UserMovesMouseOverTagLabel _ ->
+        UserMovesMouseOverTagLabel _ _ ->
             False
 
-        UserMovesMouseOutTagLabel _ ->
+        UserMovesMouseOutTagLabel _ _ ->
             False
 
-        UserMovesMouseOverTagConcept _ ->
+        UserMovesMouseOverTagConcept _ _ ->
             False
 
-        UserMovesMouseOutTagConcept _ ->
+        UserMovesMouseOutTagConcept _ _ ->
             False
 
-        UserMovesMouseOverActorLabel _ ->
+        UserMovesMouseOverActorLabel _ _ ->
             False
 
-        UserMovesMouseOutActorLabel _ ->
+        UserMovesMouseOutActorLabel _ _ ->
             False
 
         UserInputsAnnotation _ _ ->
             False
 
         UserSelectsAnnotationColor _ _ ->
-            False
-
-        HovercardMsg _ ->
             False
 
         ToolbarHovercardMsg _ ->
@@ -236,9 +233,6 @@ shallPushHistory msg _ =
             False
 
         UserGotDataForTagsListDialog _ _ ->
-            False
-
-        CloseTooltip _ ->
             False
 
         ShowTextTooltip _ ->

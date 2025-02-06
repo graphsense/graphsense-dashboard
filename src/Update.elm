@@ -19,6 +19,7 @@ import Http exposing (Error(..))
 import Init.Graph
 import Init.Pathfinder
 import Init.Pathfinder.Table.TagsTable as TagsTable
+import Init.Pathfinder.Tooltip as Tooltip
 import Init.Search as Search
 import Json.Decode
 import Json.Encode exposing (Value)
@@ -35,6 +36,7 @@ import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Notification as Notification
 import Model.Pathfinder.Error exposing (Error(..))
+import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
 import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
@@ -46,6 +48,7 @@ import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
 import PluginInterface.Update as PluginInterface
 import Ports
+import Process
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Result.Extra
@@ -90,11 +93,134 @@ setAbuseConcepts concepts model =
     }
 
 
+delay : Float -> msg -> Cmd msg
+delay time msg =
+    -- create a task that sleeps for `time`
+    Process.sleep time
+        |> -- once the sleep is over, ignore its output (using `always`)
+           -- and then we create a new task that simply returns a success, and the msg
+           Task.map (always <| msg)
+        |> -- finally, we ask Elm to perform the Task, which
+           -- takes the result of the above task and
+           -- returns it to our update function
+           Task.perform identity
+
+
+tooltipBeginClosing : Msg -> Bool -> ( Model key, List Effect ) -> ( Model key, List Effect )
+tooltipBeginClosing closingMsg withDelay ( model, eff ) =
+    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }
+    , ((delay
+            (if withDelay then
+                2000.0
+
+             else
+                0
+            )
+        <|
+            closingMsg
+       )
+        |> CmdEffect
+      )
+        :: eff
+    )
+
+
+tooltipAbortClosing : ( Model key, List Effect ) -> ( Model key, List Effect )
+tooltipAbortClosing ( model, eff ) =
+    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing False) }, eff )
+
+
+tooltipCloseIfNotAborted : ( Model key, List Effect ) -> ( Model key, List Effect )
+tooltipCloseIfNotAborted ( model, eff ) =
+    ( { model
+        | tooltip =
+            case model.tooltip of
+                Just { closing } ->
+                    if closing then
+                        Nothing
+
+                    else
+                        model.tooltip
+
+                _ ->
+                    model.tooltip
+      }
+    , eff
+    )
+
+
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
     case Log.truncate "msg" msg of
         NoOp ->
             n model
+
+        HovercardMsg hcMsg ->
+            model.tooltip
+                |> Maybe.map
+                    (\tooltip ->
+                        let
+                            ( hc, cmd ) =
+                                Hovercard.update hcMsg tooltip.hovercard
+                        in
+                        ( { model
+                            | tooltip = Just { tooltip | hovercard = hc }
+                          }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
+
+        OpenTooltip tooltipDomId tttype ->
+            let
+                ( hc, cmd ) =
+                    tooltipDomId |> Hovercard.init
+
+                tt =
+                    tttype |> Tooltip.init hc
+
+                ( hasToChange, newTooltip ) =
+                    ( model.tooltip
+                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                        |> Maybe.withDefault True
+                    , Just tt
+                    )
+            in
+            if hasToChange then
+                ( { model | tooltip = newTooltip }
+                , Cmd.map HovercardMsg cmd
+                    |> CmdEffect
+                    |> List.singleton
+                )
+
+            else
+                n model |> tooltipAbortClosing
+
+        ClosingTooltip tooltipDomId withDelay ->
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip tooltipDomId tt.type_) withDelay
+
+                _ ->
+                    n model
+
+        RepositionTooltip ->
+            ( model
+            , Maybe.map
+                (.hovercard
+                    >> Hovercard.getElement
+                    >> Cmd.map HovercardMsg
+                    >> CmdEffect
+                    >> List.singleton
+                )
+                model.tooltip
+                |> Maybe.withDefault []
+            )
+
+        CloseTooltip _ _ ->
+            n model |> tooltipCloseIfNotAborted
 
         UserRequestsUrl request ->
             case request of
@@ -243,11 +369,7 @@ update plugins uc msg model =
                     n { model | dialog = Nothing }
 
                 Just (Dialog.TagsList _) ->
-                    let
-                        pfm =
-                            model.pathfinder
-                    in
-                    n { model | dialog = Nothing, pathfinder = { pfm | tooltip = Nothing } }
+                    n { model | dialog = Nothing, tooltip = Nothing }
 
                 _ ->
                     n model

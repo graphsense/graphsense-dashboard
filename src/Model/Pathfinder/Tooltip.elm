@@ -1,4 +1,4 @@
-module Model.Pathfinder.Tooltip exposing (Tooltip, TooltipMessages, TooltipType(..), isSameTooltip)
+module Model.Pathfinder.Tooltip exposing (Tooltip, TooltipMessages, TooltipType(..), isSameTooltip, mapMsgTooltipType)
 
 import Api.Data exposing (Actor, TagSummary)
 import Hovercard
@@ -29,6 +29,36 @@ type TooltipType msg
     | TagConcept Id String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
     | Text String
+
+
+mapMsgTooltipMsg : TooltipMessages msgA -> (msgA -> msgB) -> TooltipMessages msgB
+mapMsgTooltipMsg m f =
+    { openTooltip = f m.openTooltip, closeTooltip = f m.closeTooltip, openDetails = m.openDetails |> Maybe.map f }
+
+
+mapMsgTooltipType : TooltipType msgA -> (msgA -> msgB) -> TooltipType msgB
+mapMsgTooltipType toMap f =
+    case toMap of
+        TagLabel a b msgs ->
+            TagLabel a b (mapMsgTooltipMsg msgs f)
+
+        TagConcept a b c msgs ->
+            TagConcept a b c (mapMsgTooltipMsg msgs f)
+
+        ActorDetails a msgs ->
+            ActorDetails a (mapMsgTooltipMsg msgs f)
+
+        Address a b ->
+            Address a b
+
+        AccountTx a ->
+            AccountTx a
+
+        UtxoTx a ->
+            UtxoTx a
+
+        Text a ->
+            Text a
 
 
 isSameTooltip : Tooltip msg -> Tooltip msg -> Bool

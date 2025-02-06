@@ -79,7 +79,6 @@ import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Toolbar as Toolbar
-import View.Pathfinder.Tooltip as Tooltip
 import View.Search
 
 
@@ -127,11 +126,6 @@ graph plugins pluginStates vc gc model =
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc gc model
     ]
-        ++ (model.tooltip
-                |> Maybe.map (Tooltip.view vc)
-                |> Maybe.map List.singleton
-                |> Maybe.withDefault []
-           )
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)
                 |> Maybe.map List.singleton
@@ -792,8 +786,8 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                 let
                     showTag i ( tid, t ) =
                         Html.div
-                            [ onMouseEnter (UserMovesMouseOverTagLabel tid)
-                            , onMouseLeave (UserMovesMouseOutTagLabel tid)
+                            [ onMouseEnter (UserMovesMouseOverTagLabel tid tid)
+                            , onMouseLeave (UserMovesMouseOutTagLabel tid tid)
                             , HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
                             , HA.id tid
                             , css [ Css.cursor Css.pointer ]
@@ -866,12 +860,14 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         ts |> Maybe.map (\x -> x.conceptTagCloud |> Dict.toList |> List.sortBy (\( _, v ) -> v.weighted)) |> Maybe.withDefault [] |> List.reverse
 
                     conceptItem ( k, _ ) =
+                        let
+                            domId =
+                                k ++ "_tags_concept_tag"
+                        in
                         Html.div
-                            [ onMouseEnter (UserMovesMouseOverTagConcept k)
-                            , onMouseLeave (UserMovesMouseOutTagConcept k)
-
-                            -- , HA.css TagComponents.categoryTags_details.styles
-                            , HA.id (k ++ "_tags_concept_tag")
+                            [ onMouseEnter (UserMovesMouseOverTagConcept domId k)
+                            , onMouseLeave (UserMovesMouseOutTagConcept domId k)
+                            , HA.id domId
                             , css [ Css.cursor Css.pointer ]
                             , onClick (UserOpensDialogWindow (TagsList id))
                             ]
@@ -1029,13 +1025,16 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
 
                             text =
                                 actorText |> Maybe.withDefault ""
+
+                            domId =
+                                aid ++ "_actor"
                         in
                         Html.a
                             [ HA.href link
                             , css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
-                            , onMouseEnter (UserMovesMouseOverActorLabel aid)
-                            , onMouseLeave (UserMovesMouseOutActorLabel aid)
-                            , HA.id (aid ++ "_actor")
+                            , onMouseEnter (UserMovesMouseOverActorLabel domId aid)
+                            , onMouseLeave (UserMovesMouseOutActorLabel domId aid)
+                            , HA.id domId
                             ]
                             [ Html.text text
                             ]

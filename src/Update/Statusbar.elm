@@ -157,6 +157,15 @@ messageFromEffect model effect =
         Model.PostponeUpdateByUrlEffect _ ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.OpenTooltipEffect _ _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.CloseTooltipEffect _ _) ->
+            Nothing
+
+        Model.PathfinderEffect Pathfinder.RepositionTooltipEffect ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =

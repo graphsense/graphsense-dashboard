@@ -41,7 +41,6 @@ init us _ =
       , pointerTool = Drag
       , modPressed = False
       , isDirty = False
-      , tooltip = Nothing
       , toolbarHovercard = Nothing
       , contextMenu = Nothing
       , name = "graph"

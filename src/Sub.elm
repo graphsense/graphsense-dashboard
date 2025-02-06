@@ -40,6 +40,9 @@ subscriptions model =
     , model.user.hovercard
         |> Maybe.map (Hovercard.subscriptions >> Sub.map UserHovercardMsg)
         |> Maybe.withDefault Sub.none
+    , model.tooltip
+        |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map HovercardMsg)
+        |> Maybe.withDefault Sub.none
     , Plugin.subscriptions Ports.pluginsIn model.plugins
         |> Sub.map PluginMsg
     ]

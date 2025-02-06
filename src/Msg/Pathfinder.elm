@@ -10,7 +10,6 @@ import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
-import Model.Pathfinder.Tooltip exposing (TooltipType)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
@@ -68,16 +67,14 @@ type Msg
     | UserMovesMouseOutUtxoTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
-    | UserMovesMouseOverTagLabel String
-    | UserMovesMouseOutTagLabel String
-    | CloseTooltip (TooltipType Msg)
-    | UserMovesMouseOverTagConcept String
-    | UserMovesMouseOutTagConcept String
-    | UserMovesMouseOverActorLabel String
-    | UserMovesMouseOutActorLabel String
+    | UserMovesMouseOverTagLabel String String
+    | UserMovesMouseOutTagLabel String String
+    | UserMovesMouseOverTagConcept String String
+    | UserMovesMouseOutTagConcept String String
+    | UserMovesMouseOverActorLabel String String
+    | UserMovesMouseOutActorLabel String String
     | UserInputsAnnotation Id String
     | UserSelectsAnnotationColor Id (Maybe Color)
-    | HovercardMsg Hovercard.Msg
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsImage String
     | UserClickedToggleClusterDetailsOpen

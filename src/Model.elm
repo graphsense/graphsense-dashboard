@@ -18,6 +18,7 @@ import Model.Dialog
 import Model.Graph
 import Model.Notification
 import Model.Pathfinder
+import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType)
 import Model.Search
 import Model.Statusbar
 import Msg.Graph
@@ -63,6 +64,7 @@ type alias Model navigationKey =
     , notifications : Model.Notification.Model
     , selectBoxes : SelectBoxes.Model
     , dirty : Bool
+    , tooltip : Maybe (Tooltip Msg)
     }
 
 
@@ -117,6 +119,11 @@ type Msg
     | UserClickedNavHome
     | NotificationMsg Model.Notification.Msg
     | RuntimePostponedUpdateByUrl Url
+    | OpenTooltip String (TooltipType Msg)
+    | ClosingTooltip (Maybe String) Bool
+    | RepositionTooltip
+    | HovercardMsg Hovercard.Msg
+    | CloseTooltip (Maybe String) (TooltipType Msg)
 
 
 type SettingsMsg
@@ -194,6 +201,4 @@ userSettingsFromMainModel model =
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
     , highlightClusterFriends = Just model.config.highlightClusterFriends
     , snapToGrid = Just model.config.snapToGrid
-
-    -- , showLabelsInTaggingOverview = Just model.config.showLabelsInTaggingOverview
     }

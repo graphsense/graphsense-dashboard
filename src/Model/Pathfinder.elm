@@ -14,10 +14,8 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
-import Model.Pathfinder.Tooltip exposing (Tooltip)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
-import Msg.Pathfinder exposing (Msg)
 import RemoteData exposing (WebData)
 import Theme.Svg.GraphComponents as GraphComponents
 import Time exposing (Posix)
@@ -48,7 +46,6 @@ type alias Model =
     , pointerTool : PointerTool
     , modPressed : Bool
     , isDirty : Bool
-    , tooltip : Maybe (Tooltip Msg)
     , toolbarHovercard : Maybe ToolbarHovercardModel
     , contextMenu : Maybe ContextMenu
     , name : String

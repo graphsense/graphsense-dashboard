@@ -21,7 +21,7 @@ import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
-import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
@@ -58,7 +58,7 @@ view vc tt =
             )
         |> toUnstyled
         |> List.singleton
-        |> hovercard vc tt.hovercard (Css.zIndexMainValue + 10000)
+        |> hovercardFullViewPort vc tt.hovercard (Css.zIndexMainValue + 10000)
 
 
 getConfidenceIndicator : View.Config -> Float -> Html msg

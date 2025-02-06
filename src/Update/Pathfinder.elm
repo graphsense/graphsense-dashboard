@@ -18,7 +18,6 @@ import Init.Graph.Transform as Transform
 import Init.Pathfinder.AddressDetails as AddressDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
-import Init.Pathfinder.Tooltip as Tooltip
 import Init.Pathfinder.TxDetails as TxDetails
 import Json.Decode
 import List.Extra
@@ -80,48 +79,6 @@ import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import View.Locale as Locale
-
-
-delay : Float -> msg -> Cmd msg
-delay time msg =
-    -- create a task that sleeps for `time`
-    Process.sleep time
-        |> -- once the sleep is over, ignore its output (using `always`)
-           -- and then we create a new task that simply returns a success, and the msg
-           Task.map (always <| msg)
-        |> -- finally, we ask Elm to perform the Task, which
-           -- takes the result of the above task and
-           -- returns it to our update function
-           Task.perform identity
-
-
-tooltipBeginClosing : Msg -> ( Model, List Effect ) -> ( Model, List Effect )
-tooltipBeginClosing closingMsg ( model, eff ) =
-    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }, ((delay 2000.0 <| closingMsg) |> CmdEffect) :: eff )
-
-
-tooltipAbortClosing : ( Model, List Effect ) -> ( Model, List Effect )
-tooltipAbortClosing ( model, eff ) =
-    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing False) }, eff )
-
-
-tooltipCloseIfNotAborted : ( Model, List Effect ) -> ( Model, List Effect )
-tooltipCloseIfNotAborted ( model, eff ) =
-    ( { model
-        | tooltip =
-            case model.tooltip of
-                Just { closing } ->
-                    if closing then
-                        Nothing
-
-                    else
-                        model.tooltip
-
-                _ ->
-                    model.tooltip
-      }
-    , eff
-    )
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -199,7 +156,7 @@ updateByMsg plugins uc msg model =
             n { model | modPressed = False }
 
         UserReleasedEscape ->
-            n (model |> unselect |> s_details Nothing)
+            n model |> unselect |> Tuple.mapFirst (s_details Nothing)
 
         UserReleasedDeleteKey ->
             deleteSelection model
@@ -379,10 +336,8 @@ updateByMsg plugins uc msg model =
 
                 m1 =
                     model
-                        |> s_tooltip Nothing
                         |> s_toolbarHovercard Nothing
                         |> s_contextMenu Nothing
-                        |> unselect
             in
             if click then
                 ( m1
@@ -390,9 +345,10 @@ updateByMsg plugins uc msg model =
                     |> NavPushRouteEffect
                     |> List.singleton
                 )
+                    |> unselect
 
             else
-                n m1
+                n m1 |> unselect
 
         UserClickedFitGraph ->
             fitGraph uc model
@@ -543,7 +499,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserPushesLeftMouseButtonOnGraph coords ->
-            { model
+            ( { model
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
@@ -551,12 +507,12 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             NoDragging
-                , tooltip = Nothing
-            }
-                |> n
+              }
+            , CloseTooltipEffect Nothing False |> List.singleton
+            )
 
         UserPushesLeftMouseButtonOnAddress id coords ->
-            { model
+            ( { model
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
@@ -564,9 +520,9 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             model.dragging
-                , tooltip = Nothing
-            }
-                |> n
+              }
+            , CloseTooltipEffect Nothing False |> List.singleton
+            )
 
         UserMovesMouseOverUtxoTx id ->
             if model.hovered == HoveredTx id then
@@ -574,32 +530,33 @@ updateByMsg plugins uc msg model =
 
             else
                 let
-                    ( hc, cmd ) =
+                    domId =
                         Id.toString id
-                            |> Hovercard.init
+
+                    maybeTT =
+                        model.network.txs
+                            |> Dict.get id
+                            |> Maybe.map
+                                (\tx ->
+                                    case tx.type_ of
+                                        Tx.Utxo t ->
+                                            Tooltip.UtxoTx t
+
+                                        Tx.Account t ->
+                                            Tooltip.AccountTx t
+                                )
 
                     hovered =
                         ( { model
-                            | tooltip =
-                                model.network.txs
-                                    |> Dict.get id
-                                    |> Maybe.map
-                                        (\tx ->
-                                            case tx.type_ of
-                                                Tx.Utxo t ->
-                                                    Tooltip.UtxoTx t
-                                                        |> Tooltip.init hc
-
-                                                Tx.Account t ->
-                                                    Tooltip.AccountTx t
-                                                        |> Tooltip.init hc
-                                        )
-                            , network = Network.updateTx id (s_hovered True) model.network
+                            | network = Network.updateTx id (s_hovered True) model.network
                             , hovered = HoveredTx id
                           }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
+                        , case maybeTT of
+                            Just tt ->
+                                OpenTooltipEffect domId tt |> List.singleton
+
+                            _ ->
+                                []
                         )
                 in
                 case model.details of
@@ -619,34 +576,34 @@ updateByMsg plugins uc msg model =
 
             else
                 let
-                    ( hc, cmd ) =
+                    domId =
                         Id.toString id
-                            |> Hovercard.init
+
+                    maybeTT =
+                        model.network.addresses
+                            |> Dict.get id
+                            |> Maybe.map
+                                (\addr ->
+                                    Tooltip.Address addr
+                                        (case Dict.get id model.tagSummaries of
+                                            Just (HasTagSummary s) ->
+                                                Just s
+
+                                            _ ->
+                                                Nothing
+                                        )
+                                )
 
                     showHover =
                         ( { model
-                            | tooltip =
-                                model.network.addresses
-                                    |> Dict.get id
-                                    |> Maybe.map
-                                        (\addr ->
-                                            Tooltip.Address addr
-                                                (case Dict.get id model.tagSummaries of
-                                                    Just (HasTagSummary s) ->
-                                                        Just s
-
-                                                    _ ->
-                                                        Nothing
-                                                )
-                                                |> Tooltip.init hc
-                                        )
-
-                            -- , network = Network.updateTx id (s_hovered True) model.network
-                            , hovered = HoveredAddress id
+                            | hovered = HoveredAddress id
                           }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
+                        , case maybeTT of
+                            Just tt ->
+                                OpenTooltipEffect domId tt |> List.singleton
+
+                            _ ->
+                                []
                         )
                 in
                 case model.details of
@@ -660,218 +617,102 @@ updateByMsg plugins uc msg model =
                     _ ->
                         showHover
 
-        UserMovesMouseOutAddress _ ->
-            unhover model
-                |> n
+        UserMovesMouseOutAddress id ->
+            ( unhover model, CloseTooltipEffect (Just (Id.toString id)) False |> List.singleton )
 
-        UserMovesMouseOverTagConcept x ->
+        UserMovesMouseOverTagConcept domId x ->
             case model.details of
                 Just (AddressDetails id _) ->
-                    let
-                        ( hc, cmd ) =
-                            (x ++ "_tags_concept_tag") |> Hovercard.init
+                    case Dict.get id model.tagSummaries of
+                        Just (HasTagSummary ts) ->
+                            let
+                                tt =
+                                    Tooltip.TagConcept id
+                                        x
+                                        ts
+                                        { openTooltip = UserMovesMouseOverTagConcept domId x
+                                        , closeTooltip = UserMovesMouseOverTagConcept domId x
+                                        , openDetails = Just (UserOpensDialogWindow (TagsList id))
+                                        }
+                            in
+                            ( model
+                            , OpenTooltipEffect domId tt |> List.singleton
+                            )
 
-                        ( hasToChange, newTooltip ) =
-                            case Dict.get id model.tagSummaries of
-                                Just (HasTagSummary ts) ->
-                                    let
-                                        tt =
-                                            Tooltip.TagConcept id
-                                                x
-                                                ts
-                                                { openTooltip = UserMovesMouseOverTagConcept x
-                                                , closeTooltip = UserMovesMouseOverTagConcept x
-                                                , openDetails = Just (UserOpensDialogWindow (TagsList id))
-                                                }
-                                                |> Tooltip.init hc
-                                    in
-                                    ( model.tooltip
-                                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                                        |> Maybe.withDefault True
-                                    , Just tt
-                                    )
-
-                                _ ->
-                                    ( True, Nothing )
-                    in
-                    if hasToChange then
-                        ( { model
-                            | tooltip = newTooltip
-                          }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
-
-                    else
-                        n model |> tooltipAbortClosing
+                        _ ->
+                            n model
 
                 _ ->
                     n model
 
         ShowTextTooltip config ->
-            let
-                ( hc, cmd ) =
-                    config.anchorId |> Hovercard.init
+            ( model, OpenTooltipEffect config.anchorId (Tooltip.Text config.text) |> List.singleton )
 
-                tt =
-                    Tooltip.Text config.text |> Tooltip.init hc
+        CloseTextTooltip config ->
+            ( model, CloseTooltipEffect (Just config.anchorId) True |> List.singleton )
 
-                hasToChange =
-                    model.tooltip
-                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                        |> Maybe.withDefault True
-            in
-            if hasToChange then
-                ( { model
-                    | tooltip = Just tt
-                  }
-                , Cmd.map HovercardMsg cmd
-                    |> CmdEffect
-                    |> List.singleton
-                )
-
-            else
-                n model |> tooltipAbortClosing
-
-        CloseTextTooltip _ ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
-
-                _ ->
-                    n model
-
-        UserMovesMouseOverTagLabel x ->
+        UserMovesMouseOverTagLabel domId x ->
             case model.details of
                 Just (AddressDetails id _) ->
-                    let
-                        ( hc, cmd ) =
-                            x |> Hovercard.init
+                    case Dict.get id model.tagSummaries of
+                        Just (HasTagSummary ts) ->
+                            let
+                                tt =
+                                    Tooltip.TagLabel x
+                                        ts
+                                        { openTooltip = UserMovesMouseOverTagLabel domId x
+                                        , closeTooltip = UserMovesMouseOutTagLabel domId x
+                                        , openDetails = Nothing
+                                        }
+                            in
+                            ( model
+                            , OpenTooltipEffect domId tt |> List.singleton
+                            )
 
-                        ( hasToChange, newTooltip ) =
-                            case Dict.get id model.tagSummaries of
-                                Just (HasTagSummary ts) ->
-                                    let
-                                        tt =
-                                            Tooltip.TagLabel x
-                                                ts
-                                                { openTooltip = UserMovesMouseOverTagLabel x
-                                                , closeTooltip = UserMovesMouseOutTagLabel x
-                                                , openDetails = Nothing
-                                                }
-                                                |> Tooltip.init hc
-                                    in
-                                    ( model.tooltip
-                                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                                        |> Maybe.withDefault True
-                                    , Just tt
-                                    )
-
-                                _ ->
-                                    ( True, Nothing )
-                    in
-                    if hasToChange then
-                        ( { model
-                            | tooltip = newTooltip
-                          }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
-
-                    else
-                        n model |> tooltipAbortClosing
+                        _ ->
+                            n model
 
                 _ ->
                     n model
 
-        UserMovesMouseOverActorLabel x ->
+        UserMovesMouseOverActorLabel domId x ->
             case Dict.get x model.actors of
                 Just actor ->
                     let
-                        ( hc, cmd ) =
-                            (x ++ "_actor") |> Hovercard.init
-
                         tt =
                             Tooltip.ActorDetails actor
-                                { openTooltip = UserMovesMouseOverActorLabel x
-                                , closeTooltip = UserMovesMouseOutActorLabel x
+                                { openTooltip = UserMovesMouseOverActorLabel domId x
+                                , closeTooltip = UserMovesMouseOutActorLabel domId x
                                 , openDetails = Nothing
                                 }
-                                |> Tooltip.init hc
-
-                        ( hasToChange, newTooltip ) =
-                            ( model.tooltip
-                                |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                                |> Maybe.withDefault True
-                            , Just tt
-                            )
                     in
-                    if hasToChange then
-                        ( { model | tooltip = newTooltip }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
-
-                    else
-                        n model |> tooltipAbortClosing
-
-                _ ->
-                    n model
-
-        UserMovesMouseOutActorLabel _ ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
-
-                _ ->
-                    n model
-
-        UserMovesMouseOutTagLabel _ ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
-
-                _ ->
-                    n model
-
-        UserMovesMouseOutTagConcept _ ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
-
-                _ ->
-                    n model
-
-        CloseTooltip _ ->
-            n model |> tooltipCloseIfNotAborted
-
-        HovercardMsg hcMsg ->
-            model.tooltip
-                |> Maybe.map
-                    (\tooltip ->
-                        let
-                            ( hc, cmd ) =
-                                Hovercard.update hcMsg tooltip.hovercard
-                        in
-                        ( { model
-                            | tooltip = Just { tooltip | hovercard = hc }
-                          }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
+                    ( model
+                    , OpenTooltipEffect domId tt
+                        |> List.singleton
                     )
-                |> Maybe.withDefault (n model)
 
-        UserMovesMouseOutUtxoTx _ ->
-            unhover model
-                |> n
+                _ ->
+                    n model
+
+        UserMovesMouseOutActorLabel domId _ ->
+            ( model, CloseTooltipEffect (Just domId) True |> List.singleton )
+
+        UserMovesMouseOutTagLabel domId _ ->
+            ( model, CloseTooltipEffect (Just domId) True |> List.singleton )
+
+        UserMovesMouseOutTagConcept domId _ ->
+            ( model, CloseTooltipEffect (Just domId) True |> List.singleton )
+
+        UserMovesMouseOutUtxoTx id ->
+            ( unhover model
+            , CloseTooltipEffect
+                (Just (Id.toString id))
+                False
+                |> List.singleton
+            )
 
         UserPushesLeftMouseButtonOnUtxoTx id coords ->
-            { model
+            ( { model
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
@@ -879,14 +720,14 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             model.dragging
-                , tooltip = Nothing
-            }
-                |> n
+              }
+            , CloseTooltipEffect Nothing False |> List.singleton
+            )
 
         UserMovesMouseOnGraph coords ->
             case model.dragging of
                 NoDragging ->
-                    n (model |> s_tooltip Nothing)
+                    ( model, CloseTooltipEffect Nothing False |> List.singleton )
 
                 Dragging transform start _ ->
                     (case model.pointerTool of
@@ -952,15 +793,7 @@ updateByMsg plugins uc msg model =
                     Network.animateAddresses delta model.network
                         |> Network.animateTxs delta
               }
-            , Maybe.map
-                (.hovercard
-                    >> Hovercard.getElement
-                    >> Cmd.map HovercardMsg
-                    >> CmdEffect
-                    >> List.singleton
-                )
-                model.tooltip
-                |> Maybe.withDefault []
+            , [ RepositionTooltipEffect ]
             )
 
         UserClickedAddressExpandHandle id direction ->
@@ -1445,7 +1278,7 @@ deleteSelection model =
         _ ->
             n model
     )
-        |> Tuple.mapFirst unselect
+        |> unselect
 
 
 updateTagDataOnAddress : Id -> Model -> Model
@@ -1555,8 +1388,7 @@ updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Eff
 updateByRoute_ plugins uc route model =
     case route |> Log.log "route" of
         Route.Root ->
-            unselect model
-                |> n
+            unselect (n model)
 
         Route.Network network (Route.Address a) ->
             let
@@ -1819,9 +1651,10 @@ selectTx id model =
                         _ ->
                             Nothing
 
-                m1 =
-                    unselect model
-                        |> s_details (TxDetails.init tx |> TxDetails id |> Just)
+                ( m1, eff ) =
+                    unselect (n model)
+                        |> Tuple.mapFirst
+                            (s_details (TxDetails.init tx |> TxDetails id |> Just))
             in
             selectedTx
                 |> Maybe.map (\a -> Network.updateTx a (s_selected False) m1.network)
@@ -1830,6 +1663,7 @@ selectTx id model =
                 |> flip s_network m1
                 |> s_selection (SelectedTx id)
                 |> bulkfetchTagsForTx tx
+                |> Tuple.mapSecond ((++) eff)
 
         Nothing ->
             s_selection (WillSelectTx id) model
@@ -1865,27 +1699,29 @@ selectAddress uc id model =
                         |> Maybe.map second
                         |> Maybe.withDefault []
 
-                m1 =
-                    unselect model
-                        |> s_details
-                            (RemoteData.map first details
-                                |> AddressDetails id
-                                |> Just
+                ( m1, eff2 ) =
+                    unselect ( model, eff )
+                        |> Tuple.mapFirst
+                            (s_details
+                                (RemoteData.map first details
+                                    |> AddressDetails id
+                                    |> Just
+                                )
                             )
             in
             Network.updateAddress id (s_selected True) m1.network
                 |> flip s_network m1
                 |> s_selection (SelectedAddress id)
                 |> openAddressTransactionsTable
-                |> mapSecond ((++) eff)
+                |> mapSecond ((++) eff2)
 
         Nothing ->
             s_selection (WillSelectAddress id) model
                 |> n
 
 
-unselect : Model -> Model
-unselect model =
+unselect : ( Model, List Effect ) -> ( Model, List Effect )
+unselect ( model, eff ) =
     let
         unselectAddress a nw =
             Network.updateAddress a (s_selected False) nw
@@ -1923,11 +1759,12 @@ unselect model =
                 NoSelection ->
                     model.network
     in
-    network
+    ( network
         |> flip s_network model
         |> s_details Nothing
-        |> s_tooltip Nothing
         |> s_selection NoSelection
+    , eff ++ [ CloseTooltipEffect Nothing False ]
+    )
 
 
 unhover : Model -> Model
@@ -1947,7 +1784,6 @@ unhover model =
     in
     network
         |> flip s_network model
-        |> s_tooltip Nothing
         |> s_hovered NoHover
 
 
@@ -1971,7 +1807,7 @@ forcePushHistory model =
 
 makeHistoryEntry : Model -> Entry.Model
 makeHistoryEntry model =
-    { network = (unselect model |> unhover).network
+    { network = (unselect (n model) |> Tuple.first |> unhover).network
     , annotations = model.annotations
     }
 
@@ -2229,7 +2065,6 @@ removeTx id model =
 
                 _ ->
                     model.details
-        , tooltip = Nothing
         , selection =
             case model.selection of
                 SelectedAddress addressId ->
@@ -2242,7 +2077,7 @@ removeTx id model =
                 _ ->
                     model.selection
       }
-    , []
+    , [ CloseTooltipEffect Nothing False ]
     )
 
 

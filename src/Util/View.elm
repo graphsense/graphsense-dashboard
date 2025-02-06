@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, fullWidthCss, hovercard, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, fullWidthCss, hovercard, hovercardFullViewPort, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -109,6 +109,23 @@ setAlpha alpha =
     BColor.toRgba
         >> (\c -> { c | alpha = alpha })
         >> BColor.fromRgba
+
+
+hovercardFullViewPort : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
+hovercardFullViewPort vc element zIndex =
+    Hovercard.view
+        { tickLength = 16
+        , zIndex = zIndex
+        , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
+        , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
+        , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
+        , viewport = Nothing
+        }
+        element
+        (Css.hovercard vc
+            |> List.map (\( k, v ) -> Html.Attributes.style k v)
+        )
+        >> Html.Styled.fromUnstyled
 
 
 hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg

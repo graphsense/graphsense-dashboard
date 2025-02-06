@@ -24,6 +24,7 @@ import View.Header as Header
 import View.Locale as Locale
 import View.Main as Main
 import View.Notification as Notification
+import View.Pathfinder.Tooltip as Tooltip
 import View.Statusbar as Statusbar
 import View.User as User
 
@@ -91,6 +92,11 @@ body plugins vc model =
             ++ hovercards plugins vc model
             ++ overlay plugins vc model
             ++ [ Notification.view vc model.notifications ]
+            ++ (model.tooltip
+                    |> Maybe.map (Tooltip.view vc)
+                    |> Maybe.map List.singleton
+                    |> Maybe.withDefault []
+               )
         )
 
 
