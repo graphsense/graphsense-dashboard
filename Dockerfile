@@ -43,7 +43,9 @@ RUN mkdir -p /usr/share/nginx/html /run/nginx && \
 RUN npm install 
 
 COPY ./docker/docker-entrypoint.sh /
-RUN chmod +x /docker-entrypoint.sh 
+RUN chmod +x /docker-entrypoint.sh
+
+COPY ./tools $WORKDIR/tools
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]

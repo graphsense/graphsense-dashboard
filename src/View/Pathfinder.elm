@@ -1138,6 +1138,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                         |> css
                     ]
                 |> Rs.s_iconsCloseBlack closeAttrs
+                |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
                 |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
                 |> Rs.s_tagsLayout
                     (if sidePanelData.actorVisible || sidePanelData.tagsVisible then
@@ -1207,6 +1208,7 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                     ]
                 |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
                 |> Rs.s_iconsCloseBlack closeAttrs
+                |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
                 |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
                 |> Rs.s_tagsLayout
                     (if sidePanelData.actorVisible || sidePanelData.tagsVisible then

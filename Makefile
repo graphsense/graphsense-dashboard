@@ -7,7 +7,7 @@ CODEGEN_CONFIG=codegen/config/Config.elm
 
 install:
 	pip install pre-commit
-	pre-commit install
+	pre-commit install --hook-type pre-commit --hook-type pre-push
 	npm install
 
 openapi:
