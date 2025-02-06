@@ -51,9 +51,9 @@ type OutMsg msg addressMsg entityMsg
       -- close dialog
     | CloseDialog
       -- open a tooltip
-    | OpenTooltip String
+    | OpenTooltip { context : String, domId : String }
       -- close a tooltip
-    | CloseTooltip String Bool
+    | CloseTooltip { context : String, domId : String } Bool
       -- load address into graph
     | LoadAddressIntoGraph Address
       -- show notification

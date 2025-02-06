@@ -452,8 +452,8 @@ dialog plugins states vc =
     |> Maybe.map (Html.map Model.PluginMsg)
 
 
-tooltip : Plugins -> Plugin.Model.ModelState -> View.Config -> Maybe (Html Model.Msg)
-tooltip plugins states vc =
+tooltip : Plugins -> { context : String, domId : String } -> Plugin.Model.ModelState -> View.Config -> Maybe (Html Model.Msg)
+tooltip plugins ctx states vc =
     Nothing
 {{#plugins}}   
     |> Maybe.Extra.orElseLazy (\_ -> plugins.{{name}}
@@ -461,7 +461,7 @@ tooltip plugins states vc =
             (\plugin ->
                 Maybe.Extra.andThen2
                     (\fun ->
-                        fun vc
+                        fun vc ctx
                     )
                     plugin.tooltip
                     states.{{name}}

@@ -1561,10 +1561,10 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         )
 
                     PluginInterface.OpenTooltip s ->
-                        update plugins uc (OpenTooltip s (Tooltip.Plugin s)) mo |> Tuple.mapSecond ((++) effects)
+                        update plugins uc (OpenTooltip s.domId (Tooltip.Plugin s)) mo |> Tuple.mapSecond ((++) effects)
 
                     PluginInterface.CloseTooltip s withDelay ->
-                        update plugins uc (ClosingTooltip (Just s) withDelay) mo
+                        update plugins uc (ClosingTooltip (Just s.domId) withDelay) mo
                             |> Tuple.mapSecond ((++) effects)
             )
             ( mo, effects )

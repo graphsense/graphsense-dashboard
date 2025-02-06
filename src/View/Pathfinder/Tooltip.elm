@@ -55,7 +55,7 @@ view plugins pluginStates vc tt =
                     ( [ div [ [ Css.width (Css.px GraphComponents.tooltipProperty1Down_details.width) ] |> css ] [ text t ] ], [] )
 
                 Plugin s ->
-                    ( Plugin.tooltip plugins pluginStates vc |> Maybe.map List.singleton |> Maybe.withDefault [], [] )
+                    ( Plugin.tooltip plugins s pluginStates vc |> Maybe.map List.singleton |> Maybe.withDefault [], [] )
     in
     content
         |> div

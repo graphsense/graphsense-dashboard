@@ -29,7 +29,7 @@ type TooltipType msg
     | TagConcept Id String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
     | Text String
-    | Plugin String
+    | Plugin { context : String, domId : String }
 
 
 mapMsgTooltipMsg : TooltipMessages msgA -> (msgA -> msgB) -> TooltipMessages msgB

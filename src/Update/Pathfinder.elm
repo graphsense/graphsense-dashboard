@@ -1585,10 +1585,10 @@ updateByPluginOutMsg plugins outMsgs model =
                         ( mo, [] )
 
                     PluginInterface.OpenTooltip s ->
-                        ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s) ] )
+                        ( mo, [ OpenTooltipEffect s.domId (Tooltip.Plugin s) ] )
 
                     PluginInterface.CloseTooltip s withDelay ->
-                        ( mo, [ CloseTooltipEffect (Just s) withDelay ] )
+                        ( mo, [ CloseTooltipEffect (Just s.domId) withDelay ] )
             )
             ( model, [] )
 
