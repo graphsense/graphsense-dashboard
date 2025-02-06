@@ -4,12 +4,11 @@ import Api.Data exposing (Actor, TagSummary)
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder as Css
-import Dict exposing (Dict)
+import Dict
 import Html.Styled exposing (Html, div, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Model.Currency exposing (assetFromBase)
-import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
@@ -27,8 +26,8 @@ import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : View.Config -> Dict Id HavingTags -> Tooltip -> Html Msg
-view vc ts tt =
+view : View.Config -> Tooltip -> Html Msg
+view vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
@@ -38,8 +37,8 @@ view vc ts tt =
                 AccountTx t ->
                     ( genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }, [] )
 
-                Address a ->
-                    ( address vc (Dict.get a.id ts) a, [] )
+                Address a ts ->
+                    ( address vc ts a, [] )
 
                 TagLabel lblid x ->
                     ( tagLabel vc lblid x, [ onMouseEnter (UserMovesMouseOverTagLabel lblid), onMouseLeave (UserMovesMouseOutTagLabel lblid) ] )
@@ -363,7 +362,7 @@ tagLabel vc lbl tag =
             []
 
 
-address : View.Config -> Maybe HavingTags -> Addr.Address -> List (Html Msg)
+address : View.Config -> Maybe TagSummary -> Addr.Address -> List (Html Msg)
 address vc tags adr =
     let
         net =
@@ -407,7 +406,7 @@ address vc tags adr =
         }
     ]
         ++ (case tags of
-                Just (HasTagSummary ts) ->
+                Just ts ->
                     [ row
                         { tooltipRowLabel = { title = Locale.string vc.locale "Tags" }
                         , tooltipRowValue =

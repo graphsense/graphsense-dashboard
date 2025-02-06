@@ -6,7 +6,6 @@ import Css
 import Dict exposing (Dict)
 import Html.Styled
 import Model.Pathfinder.Id exposing (Id)
-import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.Styled as Svg exposing (Svg, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
@@ -78,8 +77,8 @@ getAnnotation item (Annotation m) =
     Dict.get item m.annotations
 
 
-annotationToAttrAndLabel : Node a -> { b | height : Float, width : Float } -> Float -> AnnotationItem -> ( List (Svg.Attribute Msg), List (Svg Msg) )
-annotationToAttrAndLabel node details offset ann =
+annotationToAttrAndLabel : Node a -> { b | height : Float, width : Float } -> Float -> (Id -> msg) -> AnnotationItem -> ( List (Svg.Attribute msg), List (Svg msg) )
+annotationToAttrAndLabel node details offset msg ann =
     let
         colorAttributes prop =
             case ann.color of
@@ -136,7 +135,7 @@ annotationToAttrAndLabel node details offset ann =
                 , A.animate node.clock node.opacity
                     |> String.fromFloat
                     |> opacity
-                , UserOpensAddressAnnotationDialog node.id |> onClickWithStop
+                , msg node.id |> onClickWithStop
                 , css [ Css.cursor Css.pointer ]
                 ]
 

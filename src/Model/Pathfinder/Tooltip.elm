@@ -17,7 +17,7 @@ type alias Tooltip =
 type TooltipType
     = UtxoTx Tx.UtxoTx
     | AccountTx Tx.AccountTx
-    | Address Address
+    | Address Address (Maybe TagSummary)
     | TagLabel String TagSummary
     | TagConcept Id String TagSummary
     | ActorDetails Actor
@@ -33,7 +33,7 @@ isSameTooltip t1 t2 =
         ( AccountTx tx1, AccountTx tx2 ) ->
             tx1 == tx2
 
-        ( Address a1, Address a2 ) ->
+        ( Address a1 _, Address a2 _ ) ->
             a1.id == a2.id
 
         ( TagLabel id1 _, TagLabel id2 _ ) ->

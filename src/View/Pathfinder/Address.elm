@@ -150,6 +150,7 @@ view plugins pluginState vc colors address getCluster annotation =
                         address
                         GraphComponents.addressNode_details
                         offset
+                        UserOpensAddressAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
     in

@@ -61,6 +61,7 @@ view _ vc _ tx accTx annotation =
                         tx
                         GraphComponents.txNodeEth_details
                         offset
+                        UserOpensAddressAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
     in

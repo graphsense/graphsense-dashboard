@@ -630,7 +630,15 @@ updateByMsg plugins uc msg model =
                                     |> Dict.get id
                                     |> Maybe.map
                                         (\addr ->
-                                            Tooltip.Address addr |> Tooltip.init hc
+                                            Tooltip.Address addr
+                                                (case Dict.get id model.tagSummaries of
+                                                    Just (HasTagSummary s) ->
+                                                        Just s
+
+                                                    _ ->
+                                                        Nothing
+                                                )
+                                                |> Tooltip.init hc
                                         )
 
                             -- , network = Network.updateTx id (s_hovered True) model.network

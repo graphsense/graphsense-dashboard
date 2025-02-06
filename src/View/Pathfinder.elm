@@ -128,7 +128,7 @@ graph plugins pluginStates vc gc model =
     , topRightPanel plugins pluginStates vc gc model
     ]
         ++ (model.tooltip
-                |> Maybe.map (Tooltip.view vc model.tagSummaries)
+                |> Maybe.map (Tooltip.view vc)
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
