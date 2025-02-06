@@ -676,7 +676,14 @@ updateByMsg plugins uc msg model =
                                 Just (HasTagSummary ts) ->
                                     let
                                         tt =
-                                            Tooltip.TagConcept id x ts |> Tooltip.init hc
+                                            Tooltip.TagConcept id
+                                                x
+                                                ts
+                                                { openTooltip = UserMovesMouseOverTagConcept x
+                                                , closeTooltip = UserMovesMouseOverTagConcept x
+                                                , openDetails = Just (UserOpensDialogWindow (TagsList id))
+                                                }
+                                                |> Tooltip.init hc
                                     in
                                     ( model.tooltip
                                         |> Maybe.map (Tooltip.isSameTooltip tt >> not)
@@ -747,7 +754,13 @@ updateByMsg plugins uc msg model =
                                 Just (HasTagSummary ts) ->
                                     let
                                         tt =
-                                            Tooltip.TagLabel x ts |> Tooltip.init hc
+                                            Tooltip.TagLabel x
+                                                ts
+                                                { openTooltip = UserMovesMouseOverTagLabel x
+                                                , closeTooltip = UserMovesMouseOutTagLabel x
+                                                , openDetails = Nothing
+                                                }
+                                                |> Tooltip.init hc
                                     in
                                     ( model.tooltip
                                         |> Maybe.map (Tooltip.isSameTooltip tt >> not)
@@ -781,7 +794,12 @@ updateByMsg plugins uc msg model =
                             (x ++ "_actor") |> Hovercard.init
 
                         tt =
-                            Tooltip.ActorDetails actor |> Tooltip.init hc
+                            Tooltip.ActorDetails actor
+                                { openTooltip = UserMovesMouseOverActorLabel x
+                                , closeTooltip = UserMovesMouseOutActorLabel x
+                                , openDetails = Nothing
+                                }
+                                |> Tooltip.init hc
 
                         ( hasToChange, newTooltip ) =
                             ( model.tooltip

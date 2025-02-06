@@ -10,9 +10,8 @@ import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder.Address as Addr
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
-import Msg.Pathfinder exposing (Msg(..), OverlayWindows(..))
 import RecordSetter as Rs
 import Set
 import Theme.Html.Buttons as Buttons
@@ -26,7 +25,7 @@ import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : View.Config -> Tooltip -> Html Msg
+view : View.Config -> Tooltip msg -> Html msg
 view vc tt =
     let
         ( content, containerAttributes ) =
@@ -40,14 +39,14 @@ view vc tt =
                 Address a ts ->
                     ( address vc ts a, [] )
 
-                TagLabel lblid x ->
-                    ( tagLabel vc lblid x, [ onMouseEnter (UserMovesMouseOverTagLabel lblid), onMouseLeave (UserMovesMouseOutTagLabel lblid) ] )
+                TagLabel lblid x msgs ->
+                    ( tagLabel vc lblid x, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
-                TagConcept aid conceptId x ->
-                    ( tagConcept vc aid conceptId x, [ onMouseEnter (UserMovesMouseOverTagConcept conceptId), onMouseLeave (UserMovesMouseOutTagConcept conceptId) ] )
+                TagConcept aid conceptId x msgs ->
+                    ( tagConcept vc msgs.openDetails conceptId x, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
-                ActorDetails ac ->
-                    ( showActor vc ac, [ onMouseEnter (UserMovesMouseOverActorLabel ac.id), onMouseLeave (UserMovesMouseOutActorLabel ac.id) ] )
+                ActorDetails ac msgs ->
+                    ( showActor vc ac, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
                 Text t ->
                     ( [ div [ [ Css.width (Css.px GraphComponents.tooltipProperty1Down_details.width) ] |> css ] [ text t ] ], [] )
@@ -62,7 +61,7 @@ view vc tt =
         |> hovercard vc tt.hovercard (Css.zIndexMainValue + 10000)
 
 
-getConfidenceIndicator : View.Config -> Float -> Html Msg
+getConfidenceIndicator : View.Config -> Float -> Html msg
 getConfidenceIndicator vc x =
     let
         r =
@@ -92,7 +91,7 @@ baseRowStyle =
     [ Css.width (Css.pct 100), Css.fontSize (Css.px 14) ]
 
 
-row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html Msg
+row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html msg
 row =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
@@ -100,7 +99,7 @@ row =
         )
 
 
-showActor : View.Config -> Actor -> List (Html Msg)
+showActor : View.Config -> Actor -> List (Html msg)
 showActor vc a =
     let
         mainUri =
@@ -166,8 +165,8 @@ showActor vc a =
     ]
 
 
-tagConcept : View.Config -> Id -> String -> TagSummary -> List (Html Msg)
-tagConcept vc aid concept tag =
+tagConcept : View.Config -> Maybe msg -> String -> TagSummary -> List (Html msg)
+tagConcept vc openDetailsMsg concept tag =
     let
         relevantLabels =
             Dict.toList tag.labelSummary |> List.filter (Tuple.second >> (.concepts >> List.member concept)) |> List.map Tuple.second
@@ -266,7 +265,14 @@ tagConcept vc aid concept tag =
                     btn =
                         Buttons.buttonTypeTextStateRegularStyleTextWithAttributes
                             (Buttons.buttonTypeTextStateRegularStyleTextAttributes
-                                |> Rs.s_button [ [ Css.cursor Css.pointer ] |> css, onClick (UserOpensDialogWindow (TagsList aid)) ]
+                                |> Rs.s_button
+                                    (case openDetailsMsg of
+                                        Just m ->
+                                            [ [ Css.cursor Css.pointer ] |> css, onClick m ]
+
+                                        _ ->
+                                            [ [ Css.display Css.none ] |> css ]
+                                    )
                             )
                             { typeTextStateRegularStyleText =
                                 { buttonText = Locale.string vc.locale "Learn more"
@@ -290,7 +296,7 @@ tagConcept vc aid concept tag =
     ]
 
 
-tagLabel : View.Config -> String -> TagSummary -> List (Html Msg)
+tagLabel : View.Config -> String -> TagSummary -> List (Html msg)
 tagLabel vc lbl tag =
     let
         mlbldata =
@@ -362,7 +368,7 @@ tagLabel vc lbl tag =
             []
 
 
-address : View.Config -> Maybe TagSummary -> Addr.Address -> List (Html Msg)
+address : View.Config -> Maybe TagSummary -> Addr.Address -> List (Html msg)
 address vc tags adr =
     let
         net =
@@ -421,7 +427,7 @@ address vc tags adr =
            )
 
 
-genericTx : View.Config -> { txId : String, timestamp : Int } -> List (Html Msg)
+genericTx : View.Config -> { txId : String, timestamp : Int } -> List (Html msg)
 genericTx vc tx =
     [ row
         { tooltipRowLabel = { title = Locale.string vc.locale "Tx hash" }

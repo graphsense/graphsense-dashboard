@@ -70,7 +70,7 @@ type Msg
     | UserMovesMouseOutAddress Id
     | UserMovesMouseOverTagLabel String
     | UserMovesMouseOutTagLabel String
-    | CloseTooltip TooltipType
+    | CloseTooltip (TooltipType Msg)
     | UserMovesMouseOverTagConcept String
     | UserMovesMouseOutTagConcept String
     | UserMovesMouseOverActorLabel String
