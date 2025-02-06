@@ -75,7 +75,7 @@ type alias View modelState addressState entityState msg =
     , dialog : Maybe (View.Config -> modelState -> Maybe (Html msg))
 
     -- show a tooltip
-    , tooltip : Maybe (View.Config -> { context : String, domId : String } -> modelState -> Maybe (Html msg))
+    , tooltip : Maybe (View.Config -> { context : String, domId : String } -> modelState -> Maybe (List (Html msg)))
 
     -- Upper left panel in pathfinder (right besides the logo)
     , pathfinderUpperLeftPanel : Maybe (View.Config -> modelState -> Html msg)

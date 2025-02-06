@@ -452,7 +452,7 @@ dialog plugins states vc =
     |> Maybe.map (Html.map Model.PluginMsg)
 
 
-tooltip : Plugins -> { context : String, domId : String } -> Plugin.Model.ModelState -> View.Config -> Maybe (Html Model.Msg)
+tooltip : Plugins -> { context : String, domId : String } -> Plugin.Model.ModelState -> View.Config -> Maybe (List (Html Model.Msg))
 tooltip plugins ctx states vc =
     Nothing
 {{#plugins}}   
@@ -465,11 +465,11 @@ tooltip plugins ctx states vc =
                     )
                     plugin.tooltip
                     states.{{name}}
-                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
             )
     )
 {{/plugins}}
-    |> Maybe.map (Html.map Model.PluginMsg)
+    |> Maybe.map (List.map (Html.map Model.PluginMsg))
 
 
 pathfinderUpperLeftPanel : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Pathfinder.Msg)
