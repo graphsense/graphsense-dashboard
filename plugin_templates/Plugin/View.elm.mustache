@@ -452,6 +452,25 @@ dialog plugins states vc =
     |> Maybe.map (Html.map Model.PluginMsg)
 
 
+tooltip : Plugins -> Plugin.Model.ModelState -> View.Config -> Maybe (Html Model.Msg)
+tooltip plugins states vc =
+    Nothing
+{{#plugins}}   
+    |> Maybe.Extra.orElseLazy (\_ -> plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.Extra.andThen2
+                    (\fun ->
+                        fun vc
+                    )
+                    plugin.tooltip
+                    states.{{name}}
+                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+            )
+    )
+{{/plugins}}
+    |> Maybe.map (Html.map Model.PluginMsg)
+
 
 pathfinderUpperLeftPanel : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Pathfinder.Msg)
 pathfinderUpperLeftPanel plugins states vc =

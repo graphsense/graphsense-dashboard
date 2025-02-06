@@ -50,6 +50,10 @@ type OutMsg msg addressMsg entityMsg
     | ShowDialog (Model.Dialog.Model msg)
       -- close dialog
     | CloseDialog
+      -- open a tooltip
+    | OpenTooltip String
+      -- close a tooltip
+    | CloseTooltip String Bool
       -- load address into graph
     | LoadAddressIntoGraph Address
       -- show notification
@@ -143,6 +147,12 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         CloseDialog ->
             CloseDialog
+
+        OpenTooltip x ->
+            OpenTooltip x
+
+        CloseTooltip x delayed ->
+            CloseTooltip x delayed
 
         LoadAddressIntoGraph a ->
             LoadAddressIntoGraph a

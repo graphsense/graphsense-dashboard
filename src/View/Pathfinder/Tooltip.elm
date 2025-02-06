@@ -8,10 +8,13 @@ import Dict
 import Html.Styled exposing (Html, div, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
+import Model exposing (Msg)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
+import Plugin.Model
+import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import Set
 import Theme.Html.Buttons as Buttons
@@ -25,8 +28,8 @@ import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifierWi
 import View.Locale as Locale
 
 
-view : View.Config -> Tooltip msg -> Html msg
-view vc tt =
+view : Plugins -> Plugin.Model.ModelState -> View.Config -> Tooltip Msg -> Html Msg
+view plugins pluginStates vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
@@ -50,6 +53,9 @@ view vc tt =
 
                 Text t ->
                     ( [ div [ [ Css.width (Css.px GraphComponents.tooltipProperty1Down_details.width) ] |> css ] [ text t ] ], [] )
+
+                Plugin s ->
+                    ( Plugin.tooltip plugins pluginStates vc |> Maybe.map List.singleton |> Maybe.withDefault [], [] )
     in
     content
         |> div

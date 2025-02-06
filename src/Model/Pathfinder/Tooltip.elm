@@ -29,6 +29,7 @@ type TooltipType msg
     | TagConcept Id String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
     | Text String
+    | Plugin String
 
 
 mapMsgTooltipMsg : TooltipMessages msgA -> (msgA -> msgB) -> TooltipMessages msgB
@@ -60,6 +61,9 @@ mapMsgTooltipType toMap f =
         Text a ->
             Text a
 
+        Plugin pid ->
+            Plugin pid
+
 
 isSameTooltip : Tooltip msg -> Tooltip msg -> Bool
 isSameTooltip t1 t2 =
@@ -84,6 +88,9 @@ isSameTooltip t1 t2 =
 
         ( Text tt1, Text tt2 ) ->
             t1 == t2
+
+        ( Plugin p1, Plugin p2 ) ->
+            p1 == p2
 
         _ ->
             False

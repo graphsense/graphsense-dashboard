@@ -1559,6 +1559,13 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                           }
                         , List.map NotificationEffect notificationEffects
                         )
+
+                    PluginInterface.OpenTooltip s ->
+                        update plugins uc (OpenTooltip s (Tooltip.Plugin s)) mo |> Tuple.mapSecond ((++) effects)
+
+                    PluginInterface.CloseTooltip s withDelay ->
+                        update plugins uc (ClosingTooltip (Just s) withDelay) mo
+                            |> Tuple.mapSecond ((++) effects)
             )
             ( mo, effects )
 

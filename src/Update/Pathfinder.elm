@@ -1583,6 +1583,12 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.OutMsgsPathfinder _ ->
                         ( mo, [] )
+
+                    PluginInterface.OpenTooltip s ->
+                        ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s) ] )
+
+                    PluginInterface.CloseTooltip s withDelay ->
+                        ( mo, [ CloseTooltipEffect (Just s) withDelay ] )
             )
             ( model, [] )
 
