@@ -1,4 +1,4 @@
-module View.Pathfinder.Tooltip exposing (tooltipRow, view)
+module View.Pathfinder.Tooltip exposing (linkRow, tooltipRow, view)
 
 import Api.Data exposing (Actor, TagSummary)
 import Config.View as View exposing (getConceptName)
@@ -103,6 +103,37 @@ tooltipRow =
         (GraphComponents.tooltipRowAttributes
             |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
+
+
+linkRow : View.Config -> String -> msg -> Html msg
+linkRow vc txt msg =
+    GraphComponents.tooltipRowWithInstances
+        (GraphComponents.tooltipRowAttributes
+            |> Rs.s_tooltipRow [ css baseRowStyle ]
+        )
+        (GraphComponents.tooltipRowInstances
+            |> Rs.s_tooltipRowValue
+                (let
+                    btn =
+                        Buttons.buttonTypeTextStateRegularStyleTextWithAttributes
+                            (Buttons.buttonTypeTextStateRegularStyleTextAttributes
+                                |> Rs.s_button
+                                    [ [ Css.cursor Css.pointer ] |> css, onClick msg ]
+                            )
+                            { typeTextStateRegularStyleText =
+                                { buttonText = Locale.string vc.locale txt
+                                , iconInstance = none
+                                , iconVisible = False
+                                }
+                            }
+                 in
+                 btn
+                    |> Just
+                )
+        )
+        { tooltipRowLabel = { title = "" }
+        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+        }
 
 
 showActor : View.Config -> Actor -> List (Html msg)
@@ -261,44 +292,7 @@ tagConcept vc openDetailsMsg concept tag =
                 |> String.fromInt
                 |> val vc
         }
-    , GraphComponents.tooltipRowWithInstances
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css baseRowStyle ]
-        )
-        (GraphComponents.tooltipRowInstances
-            |> Rs.s_tooltipRowValue
-                (let
-                    btn =
-                        Buttons.buttonTypeTextStateRegularStyleTextWithAttributes
-                            (Buttons.buttonTypeTextStateRegularStyleTextAttributes
-                                |> Rs.s_button
-                                    (case openDetailsMsg of
-                                        Just m ->
-                                            [ [ Css.cursor Css.pointer ] |> css, onClick m ]
-
-                                        _ ->
-                                            [ [ Css.display Css.none ] |> css ]
-                                    )
-                            )
-                            { typeTextStateRegularStyleText =
-                                { buttonText = Locale.string vc.locale "Learn more"
-                                , iconInstance = none
-                                , iconVisible = False
-                                }
-                            }
-                 in
-                 btn
-                    |> Just
-                )
-        )
-        { tooltipRowLabel = { title = "" }
-        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
-        }
-
-    -- , tooltipRow
-    --     { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
-    --     , tooltipRowValue = tagCount |> String.fromInt |> val vc
-    --     }
+    , openDetailsMsg |> Maybe.map (linkRow vc "Learn more") |> Maybe.withDefault none
     ]
 
 
