@@ -18,7 +18,6 @@ import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
@@ -34,8 +33,8 @@ import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : Plugins -> ModelState -> View.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Maybe Annotations.AnnotationItem -> Svg Msg
-view plugins pluginState vc colors address getCluster annotation =
+view : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Maybe Annotations.AnnotationItem -> Svg Msg
+view plugins vc colors address getCluster annotation =
     let
         data =
             RemoteData.toMaybe address.data
@@ -112,7 +111,7 @@ view plugins pluginState vc colors address getCluster annotation =
                     )
 
         replacementTagIcons =
-            Plugin.View.replaceAddressNodeTagIcon plugins pluginState address.plugins vc { hasTags = address.hasTags }
+            Plugin.View.replaceAddressNodeTagIcon plugins address.plugins vc { hasTags = address.hasTags }
 
         replacementIconCombined =
             if List.length replacementTagIcons > 0 then

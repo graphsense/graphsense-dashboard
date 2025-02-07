@@ -1,4 +1,4 @@
-module Model.Pathfinder.Tooltip exposing (Tooltip, TooltipMessages, TooltipType(..), isSameTooltip, mapMsgTooltipType)
+module Model.Pathfinder.Tooltip exposing (Tooltip, TooltipMessages, TooltipType(..), isSameTooltip, mapMsgTooltipMsg, mapMsgTooltipType)
 
 import Api.Data exposing (Actor, TagSummary)
 import Hovercard
@@ -29,7 +29,7 @@ type TooltipType msg
     | TagConcept Id String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
     | Text String
-    | Plugin { context : String, domId : String }
+    | Plugin { context : String, domId : String } (TooltipMessages msg)
 
 
 mapMsgTooltipMsg : TooltipMessages msgA -> (msgA -> msgB) -> TooltipMessages msgB
@@ -61,8 +61,8 @@ mapMsgTooltipType toMap f =
         Text a ->
             Text a
 
-        Plugin pid ->
-            Plugin pid
+        Plugin pid msgs ->
+            Plugin pid (mapMsgTooltipMsg msgs f)
 
 
 isSameTooltip : Tooltip msg -> Tooltip msg -> Bool
@@ -89,8 +89,8 @@ isSameTooltip t1 t2 =
         ( Text tt1, Text tt2 ) ->
             t1 == t2
 
-        ( Plugin p1, Plugin p2 ) ->
-            p1 == p2
+        ( Plugin p1 _, Plugin p2 _ ) ->
+            p1.domId == p2.domId
 
         _ ->
             False

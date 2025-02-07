@@ -81,7 +81,7 @@ type alias View modelState addressState entityState msg =
     , pathfinderUpperLeftPanel : Maybe (View.Config -> modelState -> Html msg)
 
     -- allows to replace the tag icon on the address node with something more specific
-    , replaceAddressNodeTagIcon : Maybe (View.Config -> { hasTags : Bool } -> modelState -> addressState -> Maybe (Svg msg))
+    , replaceAddressNodeTagIcon : Maybe (View.Config -> { hasTags : Bool } -> addressState -> Maybe (Svg msg))
     }
 
 

@@ -631,7 +631,7 @@ updateByMsg plugins uc msg model =
                                         ctx.context
                                         ts
                                         { openTooltip = UserMovesMouseOverTagConcept ctx
-                                        , closeTooltip = UserMovesMouseOverTagConcept ctx
+                                        , closeTooltip = UserMovesMouseOutTagConcept ctx
                                         , openDetails = Just (UserOpensDialogWindow (TagsList id))
                                         }
                             in
@@ -1584,8 +1584,8 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.OutMsgsPathfinder _ ->
                         ( mo, [] )
 
-                    PluginInterface.OpenTooltip s ->
-                        ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s) ] )
+                    PluginInterface.OpenTooltip s msgs ->
+                        ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg)) ] )
 
                     PluginInterface.CloseTooltip s withDelay ->
                         ( mo, [ CloseTooltipEffect (Just s) withDelay ] )

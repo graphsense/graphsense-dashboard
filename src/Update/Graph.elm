@@ -3222,7 +3222,7 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.ShowNotification _ ->
                         ( mo, [] )
 
-                    PluginInterface.OpenTooltip _ ->
+                    PluginInterface.OpenTooltip _ _ ->
                         ( mo, [] )
 
                     PluginInterface.CloseTooltip _ _ ->

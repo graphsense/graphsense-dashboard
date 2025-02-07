@@ -54,8 +54,8 @@ view plugins pluginStates vc tt =
                 Text t ->
                     ( [ div [ [ Css.width (Css.px GraphComponents.tooltipProperty1Down_details.width) ] |> css ] [ text t ] ], [] )
 
-                Plugin s ->
-                    ( Plugin.tooltip plugins s pluginStates vc |> Maybe.withDefault [], [] )
+                Plugin s msgs ->
+                    ( Plugin.tooltip plugins s pluginStates vc |> Maybe.withDefault [], [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
     in
     content
         |> div

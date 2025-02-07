@@ -221,15 +221,18 @@ update plugins uc msg model =
 
         CloseTooltip ctx _ ->
             let
+                ( nm, eff ) =
+                    model |> n |> tooltipCloseIfNotAborted
+
                 ( newPluginsState, outMsg, cmdp ) =
-                    PluginInterface.ClosedTooltip ctx
-                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+                    if model.tooltip /= nm.tooltip then
+                        PluginInterface.ClosedTooltip ctx
+                            |> Plugin.updateByCoreMsg plugins uc nm.plugins
+
+                    else
+                        ( model.plugins, [], Cmd.none )
             in
-            (model
-                |> s_plugins newPluginsState
-                |> n
-                |> tooltipCloseIfNotAborted
-            )
+            (( nm, eff ) |> Tuple.mapFirst (s_plugins newPluginsState))
                 |> updateByPluginOutMsg plugins uc outMsg
                 |> Tuple.mapSecond ((++) [ PluginEffect cmdp ])
 
@@ -1571,8 +1574,8 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         , List.map NotificationEffect notificationEffects
                         )
 
-                    PluginInterface.OpenTooltip s ->
-                        update plugins uc (OpenTooltip s (Tooltip.Plugin s)) mo |> Tuple.mapSecond ((++) effects)
+                    PluginInterface.OpenTooltip s msgs ->
+                        update plugins uc (OpenTooltip s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg))) mo |> Tuple.mapSecond ((++) effects)
 
                     PluginInterface.CloseTooltip s withDelay ->
                         update plugins uc (ClosingTooltip (Just s) withDelay) mo
