@@ -26,7 +26,6 @@
     { "count": 1, "filePath": "src/View/Graph/Node.elm" },
     { "count": 1, "filePath": "src/View/Graph/Search.elm" },
     { "count": 1, "filePath": "src/View/Graph/Table/TxsAccountTable.elm" },
-    { "count": 1, "filePath": "src/View/Graph/Table/TxUtxoTable.elm" },
-    { "count": 1, "filePath": "src/View/User.elm" }
+    { "count": 1, "filePath": "src/View/Graph/Table/TxUtxoTable.elm" }
   ]
 }

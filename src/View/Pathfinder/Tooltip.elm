@@ -1,4 +1,4 @@
-module View.Pathfinder.Tooltip exposing (view)
+module View.Pathfinder.Tooltip exposing (tooltipRow, view)
 
 import Api.Data exposing (Actor, TagSummary)
 import Config.View as View exposing (getConceptName)
@@ -97,8 +97,8 @@ baseRowStyle =
     [ Css.width (Css.pct 100), Css.fontSize (Css.px 14) ]
 
 
-row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html msg
-row =
+tooltipRow : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html msg
+tooltipRow =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
             |> Rs.s_tooltipRow [ css baseRowStyle ]
@@ -115,7 +115,7 @@ showActor vc a =
             else
                 a.uri
     in
-    [ row
+    [ tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
         , tooltipRowValue = a.label |> val vc
         }
@@ -254,7 +254,7 @@ tagConcept vc openDetailsMsg concept tag =
         { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }
         , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
         }
-    , row
+    , tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
         , tooltipRowValue =
             Set.size sources
@@ -295,7 +295,7 @@ tagConcept vc openDetailsMsg concept tag =
         , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
         }
 
-    -- , row
+    -- , tooltipRow
     --     { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
     --     , tooltipRowValue = tagCount |> String.fromInt |> val vc
     --     }
@@ -310,7 +310,7 @@ tagLabel vc lbl tag =
     in
     case mlbldata of
         Just lbldata ->
-            [ row
+            [ tooltipRow
                 { tooltipRowLabel = { title = Locale.string vc.locale "Tag label" }
                 , tooltipRowValue = lbldata.label |> val vc
                 }
@@ -330,7 +330,7 @@ tagLabel vc lbl tag =
                         []
 
                     else
-                        row
+                        tooltipRow
                             { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
                             , tooltipRowValue =
                                 lbldata.concepts
@@ -342,18 +342,18 @@ tagLabel vc lbl tag =
                             }
                             |> List.singleton
                    )
-                ++ [ row
+                ++ [ tooltipRow
                         { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
                         , tooltipRowValue =
                             List.length lbldata.sources
                                 |> String.fromInt
                                 |> val vc
                         }
-                   , row
+                   , tooltipRow
                         { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
                         , tooltipRowValue = lbldata.count |> String.fromInt |> val vc
                         }
-                   , row
+                   , tooltipRow
                         { tooltipRowLabel = { title = Locale.string vc.locale "Last modified" }
                         , tooltipRowValue =
                             let
@@ -380,7 +380,7 @@ address vc tags adr =
         net =
             Id.network adr.id
     in
-    [ row
+    [ tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
         , tooltipRowValue =
             Addr.getBalance adr
@@ -392,7 +392,7 @@ address vc tags adr =
                 |> Maybe.withDefault ""
                 |> val vc
         }
-    , row
+    , tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
         , tooltipRowValue =
             Addr.getTotalReceived adr
@@ -404,7 +404,7 @@ address vc tags adr =
                 |> Maybe.withDefault ""
                 |> val vc
         }
-    , row
+    , tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
         , tooltipRowValue =
             Addr.getTotalSpent adr
@@ -419,7 +419,7 @@ address vc tags adr =
     ]
         ++ (case tags of
                 Just ts ->
-                    [ row
+                    [ tooltipRow
                         { tooltipRowLabel = { title = Locale.string vc.locale "Tags" }
                         , tooltipRowValue =
                             ts
@@ -435,14 +435,14 @@ address vc tags adr =
 
 genericTx : View.Config -> { txId : String, timestamp : Int } -> List (Html msg)
 genericTx vc tx =
-    [ row
+    [ tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Tx hash" }
         , tooltipRowValue =
             tx.txId
                 |> truncateLongIdentifierWithLengths 8 4
                 |> val vc
         }
-    , row
+    , tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Timestamp" }
         , tooltipRowValue =
             let

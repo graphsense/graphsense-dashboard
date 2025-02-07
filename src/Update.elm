@@ -1044,7 +1044,7 @@ update plugins uc msg model =
                             , List.map PathfinderEffect eff
                             )
             in
-            if newModel.pathfinder.network == pathfinderOld.network then
+            if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
                 ( newModel, newEffects )
 
             else
