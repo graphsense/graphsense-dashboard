@@ -219,8 +219,19 @@ update plugins uc msg model =
                 |> Maybe.withDefault []
             )
 
-        CloseTooltip _ _ ->
-            n model |> tooltipCloseIfNotAborted
+        CloseTooltip ctx _ ->
+            let
+                ( newPluginsState, outMsg, cmdp ) =
+                    PluginInterface.ClosedTooltip ctx
+                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+            in
+            (model
+                |> s_plugins newPluginsState
+                |> n
+                |> tooltipCloseIfNotAborted
+            )
+                |> updateByPluginOutMsg plugins uc outMsg
+                |> Tuple.mapSecond ((++) [ PluginEffect cmdp ])
 
         UserRequestsUrl request ->
             case request of
@@ -859,7 +870,7 @@ update plugins uc msg model =
                     model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model) (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
 
                 ( newPluginsState, outMsg, cmdp ) =
-                    PluginInterface.CloseCase
+                    PluginInterface.Reset
                         |> Plugin.updateByCoreMsg plugins uc model.plugins
             in
             ( { model | pathfinder = m, plugins = newPluginsState }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )

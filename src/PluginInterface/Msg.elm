@@ -77,7 +77,8 @@ type InMsg
     | CoreGotStatsUpdate Api.Data.Stats
     | AddressesAdded (List Address)
     | InMsgsPathfinder InMsgPathfinder
-    | CloseCase
+    | ClosedTooltip (Maybe { context : String, domId : String })
+    | Reset
 
 
 type InMsgPathfinder
