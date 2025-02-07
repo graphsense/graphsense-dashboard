@@ -172,7 +172,7 @@ cell vc c =
         TypeCell cc ->
             let
                 ttConfig =
-                    { anchorId = cc.cellid, text = cc.titletext }
+                    { domId = cc.cellid, text = cc.titletext }
 
                 sub =
                     case cc.confidence of
@@ -189,7 +189,7 @@ cell vc c =
                     span
                         [ onMouseOver (Msg.Pathfinder.ShowTextTooltip ttConfig |> PathfinderMsg)
                         , onMouseOut (Msg.Pathfinder.CloseTextTooltip ttConfig |> PathfinderMsg)
-                        , Html.Styled.Attributes.id cc.cellid
+                        , Html.Styled.Attributes.id ttConfig.domId
                         ]
                         [ Icons.iconsInfoSnoPaddingWithAttributes
                             (Icons.iconsInfoSnoPaddingAttributes

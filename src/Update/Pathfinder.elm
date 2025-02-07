@@ -553,7 +553,7 @@ updateByMsg plugins uc msg model =
                           }
                         , case maybeTT of
                             Just tt ->
-                                OpenTooltipEffect domId tt |> List.singleton
+                                OpenTooltipEffect { context = domId, domId = domId } tt |> List.singleton
 
                             _ ->
                                 []
@@ -600,7 +600,7 @@ updateByMsg plugins uc msg model =
                           }
                         , case maybeTT of
                             Just tt ->
-                                OpenTooltipEffect domId tt |> List.singleton
+                                OpenTooltipEffect { context = domId, domId = domId } tt |> List.singleton
 
                             _ ->
                                 []
@@ -618,9 +618,9 @@ updateByMsg plugins uc msg model =
                         showHover
 
         UserMovesMouseOutAddress id ->
-            ( unhover model, CloseTooltipEffect (Just (Id.toString id)) False |> List.singleton )
+            ( unhover model, CloseTooltipEffect (Just { context = Id.toString id, domId = Id.toString id }) False |> List.singleton )
 
-        UserMovesMouseOverTagConcept domId x ->
+        UserMovesMouseOverTagConcept ctx ->
             case model.details of
                 Just (AddressDetails id _) ->
                     case Dict.get id model.tagSummaries of
@@ -628,15 +628,15 @@ updateByMsg plugins uc msg model =
                             let
                                 tt =
                                     Tooltip.TagConcept id
-                                        x
+                                        ctx.context
                                         ts
-                                        { openTooltip = UserMovesMouseOverTagConcept domId x
-                                        , closeTooltip = UserMovesMouseOverTagConcept domId x
+                                        { openTooltip = UserMovesMouseOverTagConcept ctx
+                                        , closeTooltip = UserMovesMouseOverTagConcept ctx
                                         , openDetails = Just (UserOpensDialogWindow (TagsList id))
                                         }
                             in
                             ( model
-                            , OpenTooltipEffect domId tt |> List.singleton
+                            , OpenTooltipEffect ctx tt |> List.singleton
                             )
 
                         _ ->
@@ -646,27 +646,27 @@ updateByMsg plugins uc msg model =
                     n model
 
         ShowTextTooltip config ->
-            ( model, OpenTooltipEffect config.anchorId (Tooltip.Text config.text) |> List.singleton )
+            ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } (Tooltip.Text config.text) |> List.singleton )
 
         CloseTextTooltip config ->
-            ( model, CloseTooltipEffect (Just config.anchorId) True |> List.singleton )
+            ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
 
-        UserMovesMouseOverTagLabel domId x ->
+        UserMovesMouseOverTagLabel ctx ->
             case model.details of
                 Just (AddressDetails id _) ->
                     case Dict.get id model.tagSummaries of
                         Just (HasTagSummary ts) ->
                             let
                                 tt =
-                                    Tooltip.TagLabel x
+                                    Tooltip.TagLabel ctx.context
                                         ts
-                                        { openTooltip = UserMovesMouseOverTagLabel domId x
-                                        , closeTooltip = UserMovesMouseOutTagLabel domId x
+                                        { openTooltip = UserMovesMouseOverTagLabel ctx
+                                        , closeTooltip = UserMovesMouseOutTagLabel ctx
                                         , openDetails = Nothing
                                         }
                             in
                             ( model
-                            , OpenTooltipEffect domId tt |> List.singleton
+                            , OpenTooltipEffect ctx tt |> List.singleton
                             )
 
                         _ ->
@@ -675,38 +675,38 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        UserMovesMouseOverActorLabel domId x ->
-            case Dict.get x model.actors of
+        UserMovesMouseOverActorLabel ctx ->
+            case Dict.get ctx.context model.actors of
                 Just actor ->
                     let
                         tt =
                             Tooltip.ActorDetails actor
-                                { openTooltip = UserMovesMouseOverActorLabel domId x
-                                , closeTooltip = UserMovesMouseOutActorLabel domId x
+                                { openTooltip = UserMovesMouseOverActorLabel ctx
+                                , closeTooltip = UserMovesMouseOutActorLabel ctx
                                 , openDetails = Nothing
                                 }
                     in
                     ( model
-                    , OpenTooltipEffect domId tt
+                    , OpenTooltipEffect ctx tt
                         |> List.singleton
                     )
 
                 _ ->
                     n model
 
-        UserMovesMouseOutActorLabel domId _ ->
-            ( model, CloseTooltipEffect (Just domId) True |> List.singleton )
+        UserMovesMouseOutActorLabel ctx ->
+            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
-        UserMovesMouseOutTagLabel domId _ ->
-            ( model, CloseTooltipEffect (Just domId) True |> List.singleton )
+        UserMovesMouseOutTagLabel ctx ->
+            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
-        UserMovesMouseOutTagConcept domId _ ->
-            ( model, CloseTooltipEffect (Just domId) True |> List.singleton )
+        UserMovesMouseOutTagConcept ctx ->
+            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
         UserMovesMouseOutUtxoTx id ->
             ( unhover model
             , CloseTooltipEffect
-                (Just (Id.toString id))
+                (Just { context = Id.toString id, domId = Id.toString id })
                 False
                 |> List.singleton
             )
@@ -1585,10 +1585,10 @@ updateByPluginOutMsg plugins outMsgs model =
                         ( mo, [] )
 
                     PluginInterface.OpenTooltip s ->
-                        ( mo, [ OpenTooltipEffect s.domId (Tooltip.Plugin s) ] )
+                        ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s) ] )
 
                     PluginInterface.CloseTooltip s withDelay ->
-                        ( mo, [ CloseTooltipEffect (Just s.domId) withDelay ] )
+                        ( mo, [ CloseTooltipEffect (Just s) withDelay ] )
             )
             ( model, [] )
 

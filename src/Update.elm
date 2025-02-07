@@ -173,10 +173,10 @@ update plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        OpenTooltip tooltipDomId tttype ->
+        OpenTooltip ctx tttype ->
             let
                 ( hc, cmd ) =
-                    tooltipDomId |> Hovercard.init
+                    ctx.domId |> Hovercard.init
 
                 tt =
                     tttype |> Tooltip.init hc
@@ -198,10 +198,10 @@ update plugins uc msg model =
             else
                 n model |> tooltipAbortClosing
 
-        ClosingTooltip tooltipDomId withDelay ->
+        ClosingTooltip ctx withDelay ->
             case model.tooltip of
                 Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tooltipDomId tt.type_) withDelay
+                    n model |> tooltipBeginClosing (CloseTooltip ctx tt.type_) withDelay
 
                 _ ->
                     n model
@@ -1561,10 +1561,10 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         )
 
                     PluginInterface.OpenTooltip s ->
-                        update plugins uc (OpenTooltip s.domId (Tooltip.Plugin s)) mo |> Tuple.mapSecond ((++) effects)
+                        update plugins uc (OpenTooltip s (Tooltip.Plugin s)) mo |> Tuple.mapSecond ((++) effects)
 
                     PluginInterface.CloseTooltip s withDelay ->
-                        update plugins uc (ClosingTooltip (Just s.domId) withDelay) mo
+                        update plugins uc (ClosingTooltip (Just s) withDelay) mo
                             |> Tuple.mapSecond ((++) effects)
             )
             ( mo, effects )

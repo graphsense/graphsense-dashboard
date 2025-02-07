@@ -18,9 +18,9 @@ type Effect
     | CmdEffect (Cmd Msg)
     | SearchEffect Search.Effect
     | ErrorEffect Error
-    | OpenTooltipEffect String (TooltipType Msg)
+    | OpenTooltipEffect { context : String, domId : String } (TooltipType Msg)
     | RepositionTooltipEffect
-    | CloseTooltipEffect (Maybe String) Bool
+    | CloseTooltipEffect (Maybe { context : String, domId : String }) Bool
     | PostponeUpdateByRouteEffect Route
 
 

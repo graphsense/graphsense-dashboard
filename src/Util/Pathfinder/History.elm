@@ -151,22 +151,22 @@ shallPushHistory msg _ =
         UserMovesMouseOutAddress _ ->
             False
 
-        UserMovesMouseOverTagLabel _ _ ->
+        UserMovesMouseOverTagLabel _ ->
             False
 
-        UserMovesMouseOutTagLabel _ _ ->
+        UserMovesMouseOutTagLabel _ ->
             False
 
-        UserMovesMouseOverTagConcept _ _ ->
+        UserMovesMouseOverTagConcept _ ->
             False
 
-        UserMovesMouseOutTagConcept _ _ ->
+        UserMovesMouseOutTagConcept _ ->
             False
 
-        UserMovesMouseOverActorLabel _ _ ->
+        UserMovesMouseOverActorLabel _ ->
             False
 
-        UserMovesMouseOutActorLabel _ _ ->
+        UserMovesMouseOutActorLabel _ ->
             False
 
         UserInputsAnnotation _ _ ->

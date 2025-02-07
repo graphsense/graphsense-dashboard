@@ -67,12 +67,12 @@ type Msg
     | UserMovesMouseOutUtxoTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
-    | UserMovesMouseOverTagLabel String String
-    | UserMovesMouseOutTagLabel String String
-    | UserMovesMouseOverTagConcept String String
-    | UserMovesMouseOutTagConcept String String
-    | UserMovesMouseOverActorLabel String String
-    | UserMovesMouseOutActorLabel String String
+    | UserMovesMouseOverTagLabel { context : String, domId : String }
+    | UserMovesMouseOutTagLabel { context : String, domId : String }
+    | UserMovesMouseOverTagConcept { context : String, domId : String }
+    | UserMovesMouseOutTagConcept { context : String, domId : String }
+    | UserMovesMouseOverActorLabel { context : String, domId : String }
+    | UserMovesMouseOutActorLabel { context : String, domId : String }
     | UserInputsAnnotation Id String
     | UserSelectsAnnotationColor Id (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg
@@ -100,7 +100,7 @@ type Msg
 
 
 type alias TextTooltipConfig =
-    { anchorId : String, text : String }
+    { domId : String, text : String }
 
 
 type OverlayWindows

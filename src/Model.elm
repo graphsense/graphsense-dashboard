@@ -119,11 +119,11 @@ type Msg
     | UserClickedNavHome
     | NotificationMsg Model.Notification.Msg
     | RuntimePostponedUpdateByUrl Url
-    | OpenTooltip String (TooltipType Msg)
-    | ClosingTooltip (Maybe String) Bool
+    | OpenTooltip { context : String, domId : String } (TooltipType Msg)
+    | ClosingTooltip (Maybe { context : String, domId : String }) Bool
     | RepositionTooltip
     | HovercardMsg Hovercard.Msg
-    | CloseTooltip (Maybe String) (TooltipType Msg)
+    | CloseTooltip (Maybe { context : String, domId : String }) (TooltipType Msg)
 
 
 type SettingsMsg

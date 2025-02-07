@@ -785,11 +785,15 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
             if vc.showLabelsInTaggingOverview then
                 let
                     showTag i ( tid, t ) =
+                        let
+                            ctx =
+                                { context = tid, domId = tid }
+                        in
                         Html.div
-                            [ onMouseEnter (UserMovesMouseOverTagLabel tid tid)
-                            , onMouseLeave (UserMovesMouseOutTagLabel tid tid)
+                            [ onMouseEnter (UserMovesMouseOverTagLabel ctx)
+                            , onMouseLeave (UserMovesMouseOutTagLabel ctx)
                             , HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
-                            , HA.id tid
+                            , HA.id ctx.domId
                             , css [ Css.cursor Css.pointer ]
                             , onClick (UserOpensDialogWindow (TagsList id))
                             ]
@@ -861,13 +865,13 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
 
                     conceptItem ( k, _ ) =
                         let
-                            domId =
-                                k ++ "_tags_concept_tag"
+                            ctx =
+                                { context = k, domId = k ++ "_tags_concept_tag" }
                         in
                         Html.div
-                            [ onMouseEnter (UserMovesMouseOverTagConcept domId k)
-                            , onMouseLeave (UserMovesMouseOutTagConcept domId k)
-                            , HA.id domId
+                            [ onMouseEnter (UserMovesMouseOverTagConcept ctx)
+                            , onMouseLeave (UserMovesMouseOutTagConcept ctx)
+                            , HA.id ctx.domId
                             , css [ Css.cursor Css.pointer ]
                             , onClick (UserOpensDialogWindow (TagsList id))
                             ]
@@ -1026,15 +1030,15 @@ addressDetailsContentView plugins pluginStates vc gc model id viewState =
                             text =
                                 actorText |> Maybe.withDefault ""
 
-                            domId =
-                                aid ++ "_actor"
+                            ctx =
+                                { context = aid, domId = aid ++ "_actor" }
                         in
                         Html.a
                             [ HA.href link
                             , css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
-                            , onMouseEnter (UserMovesMouseOverActorLabel domId aid)
-                            , onMouseLeave (UserMovesMouseOutActorLabel domId aid)
-                            , HA.id domId
+                            , onMouseEnter (UserMovesMouseOverActorLabel ctx)
+                            , onMouseLeave (UserMovesMouseOutActorLabel ctx)
+                            , HA.id ctx.domId
                             ]
                             [ Html.text text
                             ]
