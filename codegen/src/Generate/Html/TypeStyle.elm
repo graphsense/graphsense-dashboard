@@ -20,6 +20,20 @@ toStyles colorMap node =
         |> m (Css.px >> Css.letterSpacing) node.letterSpacing
         |> m (Css.px >> Css.lineHeight) node.lineHeightPx
         |> mm textAutoResize node.textAutoResize
+        |> m textDecoration node.textDecoration
+
+
+textDecoration : TypeStyleTextDecoration -> Elm.Expression
+textDecoration arg1 =
+    case arg1 of
+        TypeStyleTextDecorationNONE ->
+            Css.property "text-decoration" "none"
+
+        TypeStyleTextDecorationSTRIKETHROUGH ->
+            Css.property "text-decoration" "strike-through"
+
+        TypeStyleTextDecorationUNDERLINE ->
+            Css.property "text-decoration" "underline"
 
 
 textAlign : TypeStyleTextAlignHorizontal -> Elm.Expression
