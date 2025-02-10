@@ -125,7 +125,17 @@ update msg model =
                                     ++ labelResultLines result
 
                             SearchAddressAndTx conf ->
-                                List.concatMap (currencyToResultWithoutBlock query result) conf.currencies
+                                case conf.currencies_filter of
+                                    Just currency_filter ->
+                                        List.concatMap (currencyToResultWithoutBlock query result) currency_filter
+
+                                    _ ->
+                                        let
+                                            currency_filter =
+                                                result.currencies
+                                                    |> List.map .currency
+                                        in
+                                        List.concatMap (currencyToResultWithoutBlock query result) currency_filter
 
                             SearchTagsOnly ->
                                 labelResultLines result

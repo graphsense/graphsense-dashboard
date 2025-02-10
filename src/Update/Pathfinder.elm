@@ -15,6 +15,7 @@ import Hovercard
 import Iknaio.ColorScheme exposing (annotationGreen, annotationRed)
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
+import Init.Pathfinder as Pathfinder
 import Init.Pathfinder.AddressDetails as AddressDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
@@ -1023,9 +1024,6 @@ updateByMsg plugins uc msg model =
 
         UserClickedToggleDisplayAllTagsInDetails ->
             n (model |> s_config (model.config |> s_displayAllTagsInDetails (not model.config.displayAllTagsInDetails)))
-
-        Tick time ->
-            n { model | currentTime = time }
 
         WorkflowNextUtxoTx context wm ->
             WorkflowNextUtxoTx.update context wm model
@@ -2219,8 +2217,11 @@ fromDeserialized plugins deserialized model =
                                 }
                             |> ApiEffect
                     )
+
+        ( newAndEmptyPathfinder, _ ) =
+            Pathfinder.init { snapToGrid = Nothing }
     in
-    ( { model
+    ( { newAndEmptyPathfinder
         | network = ingestAddresses plugins Network.init deserialized.addresses
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init

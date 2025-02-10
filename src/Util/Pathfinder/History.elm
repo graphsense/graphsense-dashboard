@@ -112,9 +112,6 @@ shallPushHistory msg _ =
         ChangedDisplaySettingsMsg _ ->
             False
 
-        Tick _ ->
-            False
-
         UserClickedTx _ ->
             False
 

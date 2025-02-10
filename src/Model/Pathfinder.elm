@@ -18,7 +18,6 @@ import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
 import Theme.Svg.GraphComponents as GraphComponents
-import Time exposing (Posix)
 import Util.Annotations exposing (AnnotationModel)
 
 
@@ -42,7 +41,6 @@ type alias Model =
     , history : History.Model Entry.Model
     , details : Maybe Details
     , config : Config
-    , currentTime : Posix
     , pointerTool : PointerTool
     , modPressed : Bool
     , isDirty : Bool

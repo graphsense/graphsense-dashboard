@@ -870,7 +870,7 @@ update plugins uc msg model =
         PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let
                 ( m, cmd ) =
-                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model) (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
+                    Init.Pathfinder.init (Model.userSettingsFromMainModel model)
 
                 ( newPluginsState, outMsg, cmdp ) =
                     PluginInterface.Reset

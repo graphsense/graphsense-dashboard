@@ -37,7 +37,7 @@ init plugins uc flags url key =
             Plugin.init plugins flags.pluginFlags
 
         ( pathfinderState, pathfinderCmd ) =
-            Pathfinder.init settings Nothing
+            Pathfinder.init settings
 
         selectBoxes =
             TSelectBoxes.init
