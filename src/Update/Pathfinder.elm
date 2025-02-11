@@ -214,7 +214,9 @@ updateByMsg plugins uc msg model =
                     Id.initClusterId data.currency data.entity
 
                 isSecondAddressFromSameCluster =
-                    Network.isClusterFriendAlreadyOnGraph clusterId model.network
+                    Network.isClusterFriendAlreadyOnGraph clusterId
+                        model.network
+                        && not (Network.hasLoadedAddress id model.network)
 
                 ncolors =
                     if isSecondAddressFromSameCluster then
@@ -2180,8 +2182,8 @@ deserializeByVersion version =
         Json.Decode.fail ("unknown version " ++ version)
 
 
-fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )
-fromDeserialized plugins deserialized model =
+fromDeserialized : Plugins -> Update.Config -> Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized plugins uc deserialized model =
     let
         groupByNetwork =
             List.map .id
@@ -2219,7 +2221,7 @@ fromDeserialized plugins deserialized model =
                     )
 
         ( newAndEmptyPathfinder, _ ) =
-            Pathfinder.init { snapToGrid = Nothing }
+            Pathfinder.init { snapToGrid = Just uc.snapToGrid }
     in
     ( { newAndEmptyPathfinder
         | network = ingestAddresses plugins Network.init deserialized.addresses

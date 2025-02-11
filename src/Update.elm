@@ -1287,7 +1287,7 @@ update plugins uc msg model =
                 Graph.PortDeserializedGS ( filename, data ) ->
                     pluginNewGraph plugins ( model, [] )
                         |> (\( mdl, eff ) ->
-                                deserialize plugins filename data mdl
+                                deserialize plugins uc filename data mdl
                                     |> mapSecond ((++) eff)
                            )
 
@@ -1530,7 +1530,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                             |> updateByPluginOutMsg plugins uc outMsg
 
                     PluginInterface.Deserialize filename data ->
-                        deserialize plugins filename data model
+                        deserialize plugins uc filename data model
                             |> mapSecond ((++) eff)
 
                     PluginInterface.SendToPort value ->
@@ -1843,8 +1843,8 @@ clearSearch plugins model =
         |> n
 
 
-deserialize : Plugins -> String -> Value -> Model key -> ( Model key, List Effect )
-deserialize plugins filename data model =
+deserialize : Plugins -> Config -> String -> Value -> Model key -> ( Model key, List Effect )
+deserialize plugins uc filename data model =
     Graph.deserialize data
         |> Result.map
             (\deser ->
@@ -1866,7 +1866,7 @@ deserialize plugins filename data model =
                         (\deser ->
                             let
                                 ( pathfinder, pathfinderEffects ) =
-                                    Pathfinder.fromDeserialized plugins deser model.pathfinder
+                                    Pathfinder.fromDeserialized plugins uc deser model.pathfinder
                             in
                             ( { model
                                 | pathfinder = pathfinder

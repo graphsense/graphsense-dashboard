@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, hasLoadedAddress, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -63,6 +63,16 @@ getBoundingBox net =
 hasAddress : Id -> Network -> Bool
 hasAddress id network =
     Dict.member id network.addresses
+
+
+hasLoadedAddress : Id -> Network -> Bool
+hasLoadedAddress id network =
+    case Dict.get id network.addresses of
+        Just a ->
+            RemoteData.isSuccess a.data
+
+        _ ->
+            False
 
 
 getClustersOnGraph : Network -> Set Id
