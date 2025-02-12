@@ -79,20 +79,6 @@ addHttpError : Notify.Model -> Maybe String -> Http.Error -> ( Notify.Model, Lis
 addHttpError m _ error =
     let
         nn =
-            case error of
-                Http.NetworkError ->
-                    Notify.Error { title = "Network Issue", message = "There is no network connection...", variables = [] }
-
-                Http.BadBody _ ->
-                    Notify.Error { title = "Data Error", message = "There was a problem while loading data.", variables = [] }
-
-                Http.BadUrl _ ->
-                    Notify.Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
-
-                Http.BadStatus _ ->
-                    Notify.Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
-
-                Http.Timeout ->
-                    Notify.Error { title = "Request Timeout", message = "There was a problem while loading data.", variables = [] }
+            Notify.fromHttpError error
     in
     Notify.add nn m

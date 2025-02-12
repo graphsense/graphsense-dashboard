@@ -1,6 +1,7 @@
-module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, getMoved, peek, perform, pop, setMoved, update)
+module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, fromHttpError, getMoved, peek, perform, pop, setMoved, update)
 
 import Basics.Extra exposing (flip)
+import Http
 import Process
 import Set exposing (Set)
 import Task
@@ -147,3 +148,22 @@ perform effect =
         RemoveNotification ->
             Process.sleep 3000
                 |> Task.perform (\_ -> RemoveDelayPassed)
+
+
+fromHttpError : Http.Error -> Notification
+fromHttpError error =
+    case error of
+        Http.NetworkError ->
+            Error { title = "Network Issue", message = "There is no network connection...", variables = [] }
+
+        Http.BadBody _ ->
+            Error { title = "Data Error", message = "There was a problem while loading data.", variables = [] }
+
+        Http.BadUrl _ ->
+            Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
+
+        Http.BadStatus _ ->
+            Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
+
+        Http.Timeout ->
+            Error { title = "Request Timeout", message = "There was a problem while loading data.", variables = [] }
