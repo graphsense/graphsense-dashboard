@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ELM_CODEGEN="./node_modules/.bin/elm-codegen run --debug"
+ELM_CODEGEN="node --max-old-space-size=8192 ./node_modules/.bin/elm-codegen run --debug"
 REFRESH=0
 FIGMA_WHITELIST_FRAMES=[]
 
