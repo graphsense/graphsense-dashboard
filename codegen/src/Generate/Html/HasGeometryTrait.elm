@@ -10,9 +10,22 @@ import Types exposing (ColorMap)
 
 
 toStyles : ColorMap -> HasGeometryTrait -> Maybe StrokeWeights -> List Elm.Expression
-toStyles colorMap node strokeWeights =
-    toBorder colorMap node.strokes
-        |> mm (borderWidth strokeWeights) node.strokeWeight
+toStyles =
+    toBorder
+
+
+toBorder : ColorMap -> HasGeometryTrait -> Maybe StrokeWeights -> List Elm.Expression
+toBorder colorMap node strokeWeights =
+    node.strokes
+        |> Maybe.andThen (Paint.toStylesString colorMap)
+        |> Maybe.map
+            (\color ->
+                [ Css.borderStyle Css.solid
+                , Css.property "border-color" color
+                ]
+                    |> mm (borderWidth strokeWeights) node.strokeWeight
+            )
+        |> Maybe.withDefault []
 
 
 borderWidth : Maybe StrokeWeights -> Float -> List Elm.Expression
@@ -27,16 +40,3 @@ borderWidth strokeWeights strokeWeight =
                 ]
             )
         |> Maybe.withDefault (Css.px strokeWeight |> Css.borderWidth |> List.singleton)
-
-
-toBorder : ColorMap -> Maybe (List Paint) -> List Elm.Expression
-toBorder colorMap paints =
-    paints
-        |> Maybe.andThen (Paint.toStylesString colorMap)
-        |> Maybe.map
-            (\color ->
-                [ Css.borderStyle Css.solid
-                , Css.property "border-color" color
-                ]
-            )
-        |> Maybe.withDefault []
