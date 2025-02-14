@@ -1,4 +1,4 @@
-module View.Pathfinder.Tooltip exposing (linkRow, tooltipRow, view)
+module View.Pathfinder.Tooltip exposing (linkRow, tooltipRow, tooltipRowCustomValue, view)
 
 import Api.Data exposing (Actor, TagSummary)
 import Config.View as View exposing (getConceptName)
@@ -105,42 +105,41 @@ tooltipRow =
         )
 
 
-linkRow : View.Config -> String -> msg -> Html msg
-linkRow vc txt msg =
+tooltipRowCustomValue : String -> Html msg -> Html msg
+tooltipRowCustomValue title rowValue =
     GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
             |> Rs.s_tooltipRow [ css baseRowStyle ]
         )
-        (GraphComponents.tooltipRowInstances
-            |> Rs.s_tooltipRowValue
-                (let
-                    btn =
-                        Buttons.buttonTypeTextStateRegularStyleTextWithAttributes
-                            (Buttons.buttonTypeTextStateRegularStyleTextAttributes
-                                |> Rs.s_button
-                                    [ [ Css.cursor Css.pointer ] |> css, onClick msg ]
-                            )
-                            { typeTextStateRegularStyleText =
-                                { buttonText = Locale.string vc.locale txt
-                                , iconInstance = none
-                                , iconVisible = False
-                                }
-                            }
-                 in
-                 btn
-                    |> Just
-                )
-        )
-        { tooltipRowLabel = { title = "" }
-        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+        (GraphComponents.tooltipRowInstances |> Rs.s_tooltipRowValue (Just rowValue))
+        { tooltipRowLabel = { title = title }
+        , tooltipRowValue =
+            { firstRow = "", secondRow = "", secondRowVisible = False }
         }
+
+
+linkRow : View.Config -> String -> msg -> Html msg
+linkRow vc txt msg =
+    tooltipRowCustomValue ""
+        (Buttons.buttonTypeTextStateRegularStyleTextWithAttributes
+            (Buttons.buttonTypeTextStateRegularStyleTextAttributes
+                |> Rs.s_button
+                    [ [ Css.cursor Css.pointer ] |> css, onClick msg ]
+            )
+            { typeTextStateRegularStyleText =
+                { buttonText = Locale.string vc.locale txt
+                , iconInstance = none
+                , iconVisible = False
+                }
+            }
+        )
 
 
 showActor : View.Config -> Actor -> List (Html msg)
 showActor vc a =
     let
         mainUri =
-            if not (String.startsWith "http://" a.uri) || not (String.startsWith "https://" a.uri) then
+            if not (String.startsWith "http://" a.uri) && not (String.startsWith "https://" a.uri) then
                 "https://" ++ a.uri
 
             else
@@ -150,55 +149,36 @@ showActor vc a =
         { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
         , tooltipRowValue = a.label |> val vc
         }
-    , GraphComponents.tooltipRowWithInstances
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css baseRowStyle ]
-        )
-        (GraphComponents.tooltipRowInstances
-            |> Rs.s_tooltipRowValue
-                (Just (Html.Styled.a [ Css.plainLinkStyle vc |> css, href mainUri, target "blank" ] [ text a.uri ]))
-        )
-        { tooltipRowLabel = { title = Locale.string vc.locale "Url" }
-        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
-        }
-    , GraphComponents.tooltipRowWithInstances
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css baseRowStyle ]
-        )
-        (GraphComponents.tooltipRowInstances
-            |> Rs.s_tooltipRowValue
-                (let
-                    jl =
-                        List.length a.jurisdictions
-                 in
-                 a.jurisdictions
-                    |> List.indexedMap
-                        (\i z ->
-                            div
-                                [ title (Locale.string vc.locale z.label)
-                                , Css.mGap
-                                    |> Css.paddingRight
-                                    |> List.singleton
-                                    |> css
-                                ]
-                                [ text
-                                    (Locale.string vc.locale z.label
-                                        ++ (if i /= (jl - 1) then
-                                                ", "
+    , tooltipRowCustomValue (Locale.string vc.locale "Url") (Html.Styled.a [ Css.plainLinkStyle vc |> css, href mainUri, target "blank" ] [ text a.uri ])
+    , tooltipRowCustomValue
+        (Locale.string vc.locale "Jurisdictions")
+        (let
+            jl =
+                List.length a.jurisdictions
+         in
+         a.jurisdictions
+            |> List.indexedMap
+                (\i z ->
+                    div
+                        [ title (Locale.string vc.locale z.label)
+                        , Css.mGap
+                            |> Css.paddingRight
+                            |> List.singleton
+                            |> css
+                        ]
+                        [ text
+                            (Locale.string vc.locale z.label
+                                ++ (if i /= (jl - 1) then
+                                        ", "
 
-                                            else
-                                                ""
-                                           )
-                                    )
-                                ]
-                        )
-                    |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
-                    |> Just
+                                    else
+                                        ""
+                                   )
+                            )
+                        ]
                 )
+            |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
         )
-        { tooltipRowLabel = { title = Locale.string vc.locale "Jurisdictions" }
-        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
-        }
     ]
 
 
@@ -219,72 +199,56 @@ tagConcept vc openDetailsMsg concept tag =
         sources =
             relevantLabels |> List.map .sources |> List.foldr (++) [] |> Set.fromList
     in
-    [ GraphComponents.tooltipRowWithInstances
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css baseRowStyle ]
+    [ tooltipRowCustomValue
+        (Locale.string
+            vc.locale
+            "Labels"
         )
-        (GraphComponents.tooltipRowInstances
-            |> Rs.s_tooltipRowValue
-                (let
-                    jl =
-                        List.length labels
+        (let
+            jl =
+                List.length labels
 
-                    max_labels =
-                        7
-                 in
-                 labels
-                    |> List.indexedMap
-                        (\i z ->
-                            if i <= max_labels then
-                                div
-                                    [ Css.mGap
-                                        |> Css.paddingRight
-                                        |> List.singleton
-                                        |> css
-                                    ]
-                                    [ text
-                                        (z
-                                            ++ (if i /= (jl - 1) then
-                                                    ", "
+            max_labels =
+                7
+         in
+         labels
+            |> List.indexedMap
+                (\i z ->
+                    if i <= max_labels then
+                        div
+                            [ Css.mGap
+                                |> Css.paddingRight
+                                |> List.singleton
+                                |> css
+                            ]
+                            [ text
+                                (z
+                                    ++ (if i /= (jl - 1) then
+                                            ", "
 
-                                                else
-                                                    ""
-                                               )
-                                        )
-                                    ]
+                                        else
+                                            ""
+                                       )
+                                )
+                            ]
 
-                            else if i == (max_labels + 1) then
-                                div
-                                    [ title (String.join ", " labels)
-                                    , Css.mGap
-                                        |> Css.paddingRight
-                                        |> List.singleton
-                                        |> css
-                                    ]
-                                    [ text "..."
-                                    ]
+                    else if i == (max_labels + 1) then
+                        div
+                            [ title (String.join ", " labels)
+                            , Css.mGap
+                                |> Css.paddingRight
+                                |> List.singleton
+                                |> css
+                            ]
+                            [ text "..."
+                            ]
 
-                            else
-                                none
-                        )
-                    |> div [ title (String.join ", " labels), [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
-                    |> Just
+                    else
+                        none
                 )
+            |> div [ title (String.join ", " labels), [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
         )
-        { tooltipRowLabel = { title = Locale.string vc.locale "Labels" }
-        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
-        }
-    , GraphComponents.tooltipRowWithInstances
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css baseRowStyle ]
-        )
-        (GraphComponents.tooltipRowInstances
-            |> Rs.s_tooltipRowValue
-                (getConfidenceIndicator vc maxConfidence |> Just)
-        )
-        { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }
-        , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
-        }
+    , tooltipRowCustomValue (Locale.string vc.locale "Confidence") (getConfidenceIndicator vc maxConfidence)
     , tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
         , tooltipRowValue =
@@ -308,17 +272,7 @@ tagLabel vc lbl tag =
                 { tooltipRowLabel = { title = Locale.string vc.locale "Tag label" }
                 , tooltipRowValue = lbldata.label |> val vc
                 }
-            , GraphComponents.tooltipRowWithInstances
-                (GraphComponents.tooltipRowAttributes
-                    |> Rs.s_tooltipRow [ css baseRowStyle ]
-                )
-                (GraphComponents.tooltipRowInstances
-                    |> Rs.s_tooltipRowValue
-                        (getConfidenceIndicator vc lbldata.confidence |> Just)
-                )
-                { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }
-                , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
-                }
+            , tooltipRowCustomValue (Locale.string vc.locale "Confidence") (getConfidenceIndicator vc lbldata.confidence)
             ]
                 ++ (if List.isEmpty lbldata.concepts then
                         []

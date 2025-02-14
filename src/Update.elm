@@ -1617,6 +1617,7 @@ updateByUrl plugins uc url model =
                             ( { model
                                 | page = Home
                                 , url = url
+                                , tooltip = Nothing
                               }
                             , []
                             )
@@ -1625,6 +1626,7 @@ updateByUrl plugins uc url model =
                             ( { model
                                 | page = Stats
                                 , url = url
+                                , tooltip = Nothing
                               }
                             , case oldRoute of
                                 Route.Stats ->
@@ -1638,6 +1640,7 @@ updateByUrl plugins uc url model =
                             ( { model
                                 | page = Model.Settings
                                 , url = url
+                                , tooltip = Nothing
                               }
                             , []
                             )
@@ -1653,6 +1656,7 @@ updateByUrl plugins uc url model =
                                         | plugins = new
                                         , page = Graph
                                         , url = url
+                                        , tooltip = Nothing
                                       }
                                     , [ PluginEffect cmd ]
                                     )
@@ -1667,6 +1671,7 @@ updateByUrl plugins uc url model =
                                         | page = Graph
                                         , graph = graph
                                         , url = url
+                                        , tooltip = Nothing
                                       }
                                     , graphEffect
                                         |> List.map GraphEffect
@@ -1681,6 +1686,7 @@ updateByUrl plugins uc url model =
                                 | page = Pathfinder
                                 , pathfinder = pfn
                                 , url = url
+                                , tooltip = Nothing
                               }
                             , graphEffect
                                 |> List.map PathfinderEffect
@@ -1695,6 +1701,7 @@ updateByUrl plugins uc url model =
                                 | plugins = new
                                 , page = Plugin pluginType
                                 , url = url
+                                , tooltip = Nothing
                               }
                             , [ PluginEffect cmd ]
                             )
