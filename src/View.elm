@@ -50,9 +50,9 @@ view plugins vc model =
           )
             |> toUnstyled
         , node "style" [] [ text """
-           body {
-               overflow: hidden;
-           }""" ] |> toUnstyled
+           body { overflow: hidden; }
+           input { border: 0; }
+           """ ] |> toUnstyled
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
         , body plugins vc model |> toUnstyled
         ]
