@@ -5,6 +5,7 @@ import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
+import Dict
 import Html.Styled exposing (span)
 import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
@@ -13,7 +14,6 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx exposing (ioToId)
 import Msg.Pathfinder exposing (IoDirection, Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
-import Set
 import Table
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
@@ -22,7 +22,7 @@ import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (alignColumnsRight)
+import View.Pathfinder.PagedTable exposing (alignColumnHeader)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
 
 
@@ -37,7 +37,7 @@ config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> IoColumnConfig 
 config styles vc ioDirection isCheckedFn ioColumnConfig =
     let
         rightAlignedColumns =
-            Set.singleton "Value"
+            Dict.fromList [ ( "Value", View.Pathfinder.PagedTable.RightAligned ) ]
 
         styles_ =
             styles
@@ -84,7 +84,7 @@ config styles vc ioDirection isCheckedFn ioColumnConfig =
                 "Value"
                 .value
             ]
-        , customizations = customizations styles_ vc |> alignColumnsRight styles_ vc rightAlignedColumns
+        , customizations = customizations styles_ vc |> alignColumnHeader styles_ vc rightAlignedColumns
         }
 
 

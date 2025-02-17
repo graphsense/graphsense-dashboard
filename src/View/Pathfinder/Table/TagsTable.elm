@@ -4,6 +4,7 @@ import Api.Data
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Table
+import Dict
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onMouseOut, onMouseOver)
@@ -23,7 +24,7 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (fixFillRule, none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (alignColumnsRight)
+import View.Pathfinder.PagedTable exposing (alignColumnHeader)
 
 
 tagId : Api.Data.AddressTag -> String
@@ -75,7 +76,9 @@ cell : View.Config -> Cell -> Table.HtmlDetails Msg
 cell vc c =
     let
         cellBase =
-            [ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ]
+            [ Css.height Css.auto |> Css.important
+            , Css.minHeight (Css.px TagsComponents.tagRowCell_details.height)
+            ]
 
         cellWMinWidth =
             cellBase ++ [ Css.minWidth (Css.px 150) ]
@@ -85,8 +88,20 @@ cell vc c =
 
         attrs =
             TagsComponents.tagRowCellAttributes
-                |> Rs.s_iconText ([ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height) ] |> css |> List.singleton)
-                |> Rs.s_category ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ] |> css |> List.singleton)
+                |> Rs.s_iconText
+                    ([ Css.height Css.auto |> Css.important
+                     , Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height)
+                     ]
+                        |> css
+                        |> List.singleton
+                    )
+                |> Rs.s_category
+                    ([ Css.whiteSpace Css.normal |> Css.important
+                     , Css.overflowWrap Css.breakWord
+                     ]
+                        |> css
+                        |> List.singleton
+                    )
 
         -- to allow wrapping and growing of line
         defaultData cc tagIcon actionIcon =
@@ -447,5 +462,6 @@ config vc =
             , lastModColumn vc
             ]
         , customizations =
-            customizations styles vc |> alignColumnsRight styles vc (Set.singleton "Last Modified")
+            customizations styles vc
+                |> alignColumnHeader styles vc (Dict.fromList [ ( "Last Modified", View.Pathfinder.PagedTable.RightAligned ) ])
         }

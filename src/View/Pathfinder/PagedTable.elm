@@ -1,15 +1,15 @@
-module View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations, pagedTableView)
+module View.Pathfinder.PagedTable exposing (ColumnAlign(..), alignColumnHeader, customizations, pagedTableView)
 
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (emptyTableMsg, fullWidth)
 import Css.Table exposing (Styles, loadingSpinner, styles)
+import Dict exposing (Dict)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
 import RecordSetter as Rs
-import Set exposing (Set)
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
@@ -31,17 +31,30 @@ tableHint _ vc msg =
         ]
 
 
-alignColumnsRight : Styles -> View.Config -> Set String -> Table.Customizations data msg -> Table.Customizations data msg
-alignColumnsRight styles_ vc columns tc =
+type ColumnAlign
+    = LeftAligned
+    | CenterAligned
+    | RightAligned
+
+
+alignColumnHeader : Styles -> View.Config -> Dict String ColumnAlign -> Table.Customizations data msg -> Table.Customizations data msg
+alignColumnHeader styles_ vc columns tc =
     let
         addAttr ( name, x, attr ) =
             ( name
             , x
-            , if Set.member name columns then
-                ([ Css.textAlign Css.right ] |> css) :: attr
+            , case Dict.get name columns of
+                Just LeftAligned ->
+                    ([ Css.textAlign Css.left ] |> css) :: attr
 
-              else
-                attr
+                Just CenterAligned ->
+                    ([ Css.textAlign Css.center ] |> css) :: attr
+
+                Just RightAligned ->
+                    ([ Css.textAlign Css.right ] |> css) :: attr
+
+                _ ->
+                    attr
             )
     in
     tc |> Rs.s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles_ vc)

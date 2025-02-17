@@ -5,16 +5,16 @@ import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
+import Dict
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
-import Set
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
-import View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations)
+import View.Pathfinder.PagedTable as PT exposing (alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
 
 
@@ -51,7 +51,7 @@ config styles vc addressId isCheckedFn =
             Id.network addressId
 
         rightAlignedColumns =
-            Set.singleton "Value"
+            Dict.fromList [ ( "Value", PT.RightAligned ) ]
 
         styles_ =
             styles
@@ -89,7 +89,7 @@ config styles vc addressId isCheckedFn =
             ]
         , customizations =
             customizations vc
-                |> alignColumnsRight styles_ vc rightAlignedColumns
+                |> alignColumnHeader styles_ vc rightAlignedColumns
         }
 
 
