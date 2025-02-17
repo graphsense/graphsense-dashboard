@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, fullWidthCss, hovercard, hovercardFullViewPort, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -359,3 +359,10 @@ pointer =
 fullWidthCss : Style
 fullWidthCss =
     Css.pct 100 |> Css.width |> Css.important
+
+
+fixFillRule : Attribute msg
+fixFillRule =
+    [ Css.property "fill-rule" "evenodd"
+    ]
+        |> css

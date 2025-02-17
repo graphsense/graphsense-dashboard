@@ -20,7 +20,7 @@ import Theme.Html.TagsComponents as TagsComponents
 import Url
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (exchangeCategory)
-import Util.View exposing (none)
+import Util.View exposing (fixFillRule, none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
 import View.Pathfinder.PagedTable exposing (alignColumnsRight)
@@ -193,11 +193,7 @@ cell vc c =
                         ]
                         [ Icons.iconsInfoSnoPaddingWithAttributes
                             (Icons.iconsInfoSnoPaddingAttributes
-                                |> Rs.s_shape
-                                    [ Css.property "fill-rule" "evenodd"
-                                        |> List.singleton
-                                        |> css
-                                    ]
+                                |> Rs.s_shape [ fixFillRule ]
                             )
                             {}
                         ]

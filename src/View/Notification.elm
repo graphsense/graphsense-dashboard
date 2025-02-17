@@ -20,7 +20,7 @@ import Theme.Html.ErrorMessagesAlerts
         )
 import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
-import Util.View exposing (none, onClickWithStop)
+import Util.View exposing (fixFillRule, none, onClickWithStop)
 import View.Locale as Locale
 
 
@@ -105,7 +105,7 @@ view vc model =
                 icon =
                     Icons.iconsAlertDoneWithAttributes
                         (Icons.iconsAlertDoneAttributes
-                            |> Rs.s_subtract [ attribute "fill-rule" "evenodd" ]
+                            |> Rs.s_subtract [ fixFillRule ]
                         )
                         {}
             in

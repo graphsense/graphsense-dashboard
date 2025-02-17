@@ -18,7 +18,7 @@ import Theme.Colors
 import Theme.ColorsDark
 import Theme.Html.Navbar as Nb
 import Util.Css
-import Util.View exposing (hovercard)
+import Util.View exposing (fixFillRule, hovercard)
 import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
@@ -110,9 +110,7 @@ sidebarMenuItemWithNewParam img label titleStr selected link new =
     let
         ifNewAddEvenOdd =
             if new then
-                [ Css.property "fill-rule" "evenodd"
-                ]
-                    |> css
+                fixFillRule
                     |> List.singleton
                     |> Rs.s_subtract
 
