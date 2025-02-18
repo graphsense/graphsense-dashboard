@@ -1,4 +1,4 @@
-module View.Controls exposing (lightModeToggle, tabs, toggle, toggleSmall, toggleWithIcons, toggleWithText)
+module View.Controls exposing (lightModeToggle, tabs, tabsSmall, tabsSmallItems, toggle, toggleSmall, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -188,3 +188,31 @@ tabs tbs =
             Sp.settingsPageSettingsTabsSettingsTabs_details.styles
         ]
         (tbs |> List.map viewTab)
+
+
+tabsSmallItems : List { title : String, selected : Bool, msg : msg } -> List (Html msg)
+tabsSmallItems tbs =
+    let
+        viewTab t =
+            if t.selected then
+                Sc.singleTabStateSelectedSizeSmallWithAttributes
+                    Sc.singleTabStateSelectedSizeSmallAttributes
+                    { stateSelectedSizeSmall = { tabLabel = t.title } }
+
+            else
+                Sc.singleTabStateNeutralSizeSmallWithAttributes
+                    (Sc.singleTabStateNeutralSizeSmallAttributes
+                        |> Rs.s_stateNeutralSizeSmall [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
+                    )
+                    { stateNeutralSizeSmall = { tabLabel = t.title } }
+    in
+    tbs |> List.map viewTab
+
+
+tabsSmall : List { title : String, selected : Bool, msg : msg } -> Html msg
+tabsSmall tbs =
+    div
+        [ Html.Styled.Attributes.css
+            Sp.settingsPageSettingsTabsSettingsTabs_details.styles
+        ]
+        (tabsSmallItems tbs)
