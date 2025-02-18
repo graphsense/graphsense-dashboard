@@ -45,7 +45,7 @@ view plugins pluginStates vc tt =
                 TagLabel lblid x msgs ->
                     ( tagLabel vc lblid x, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
-                TagConcept aid conceptId x msgs ->
+                TagConcept _ conceptId x msgs ->
                     ( tagConcept vc msgs.openDetails conceptId x, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
                 ActorDetails ac msgs ->
@@ -84,10 +84,10 @@ getConfidenceIndicator vc x =
             TagComponents.confidenceLevelConfidenceLevelLowSizeSmall { confidenceLevelLowSizeSmall = { text = Locale.string vc.locale "Low" } }
 
 
-val : View.Config -> String -> { firstRow : String, secondRow : String, secondRowVisible : Bool }
+val : View.Config -> String -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
 val vc str =
-    { firstRow = Locale.string vc.locale str
-    , secondRow = ""
+    { firstRowText = Locale.string vc.locale str
+    , secondRowText = ""
     , secondRowVisible = False
     }
 
@@ -97,7 +97,7 @@ baseRowStyle =
     [ Css.width (Css.pct 100), Css.fontSize (Css.px 14) ]
 
 
-tooltipRow : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html msg
+tooltipRow : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRowText : String, secondRowVisible : Bool, secondRowText : String } } -> Html msg
 tooltipRow =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
@@ -114,7 +114,7 @@ tooltipRowCustomValue title rowValue =
         (GraphComponents.tooltipRowInstances |> Rs.s_tooltipRowValue (Just rowValue))
         { tooltipRowLabel = { title = title }
         , tooltipRowValue =
-            { firstRow = "", secondRow = "", secondRowVisible = False }
+            { firstRowText = "", secondRowText = "", secondRowVisible = False }
         }
 
 
@@ -311,8 +311,8 @@ tagLabel vc lbl tag =
                                 time =
                                     Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset lbldata.lastmod
                             in
-                            { firstRow = date
-                            , secondRow = time
+                            { firstRowText = date
+                            , secondRowText = time
                             , secondRowVisible = True
                             }
                         }
@@ -400,8 +400,8 @@ genericTx vc tx =
                 time =
                     Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.timestamp
             in
-            { firstRow = date
-            , secondRow = time
+            { firstRowText = date
+            , secondRowText = time
             , secondRowVisible = True
             }
         }

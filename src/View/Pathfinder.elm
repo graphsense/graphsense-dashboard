@@ -67,7 +67,7 @@ import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-import Util.View exposing (copyIconPathfinder, hovercard, none, onClickWithStop, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, hovercard, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
 import View.Controls as Vc
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
@@ -689,14 +689,6 @@ valuesToCell vc asset value =
     { firstRowText = Locale.currency vc.locale [ ( asset, value ) ]
     , secondRowText = ""
     , secondRowVisible = False
-    }
-
-
-timeToCell : View.Config -> Int -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
-timeToCell vc d =
-    { firstRowText = Locale.timestampDateUniform vc.locale d
-    , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
-    , secondRowVisible = True
     }
 
 
