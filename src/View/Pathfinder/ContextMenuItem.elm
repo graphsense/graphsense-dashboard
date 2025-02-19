@@ -1,10 +1,11 @@
-module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, map, view)
+module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, map, view)
 
 import Config.View as View
 import Css
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
+import Maybe.Extra
 import RecordSetter as Rs
 import Theme.Html.GraphComponents as HGraphComponents
 import View.Locale as Locale
@@ -16,13 +17,14 @@ type ContextMenuItem msg
 
 type alias ContextMenuItemInternal msg =
     { icon : Html msg
-    , text : String
+    , text1 : String
+    , text2 : Maybe String
     , msg : msg
     }
 
 
 view : View.Config -> ContextMenuItem msg -> Html msg
-view vc (ContextMenuItem { icon, text, msg }) =
+view vc (ContextMenuItem { icon, text1, text2, msg }) =
     HGraphComponents.rightClickItemStateNeutralTypeWithIconWithAttributes
         (HGraphComponents.rightClickItemStateNeutralTypeWithIconAttributes
             |> Rs.s_stateNeutralTypeWithIcon
@@ -33,22 +35,31 @@ view vc (ContextMenuItem { icon, text, msg }) =
                     |> css
                 , onClick msg
                 ]
-            |> Rs.s_placeholder
-                [ [ HGraphComponents.rightClickItemStateHoverTypeWithIconPlaceholder_details.styles
+            |> Rs.s_placeholder1
+                [ [ HGraphComponents.rightClickItemStateHoverTypeWithIconPlaceholder1_details.styles
                         |> Css.hover
                   ]
                     |> css
                 , onClick msg
                 ]
+            |> Rs.s_placeholder2
+                [ [ HGraphComponents.rightClickItemStateHoverTypeWithIconPlaceholder2_details.styles
+                        |> Css.hover
+                  ]
+                    |> css
+                , onClick msg
+                ]
+            |> Rs.s_iconsDividerNoPadding [ [ Css.position Css.relative ] |> css ]
         )
-        { stateNeutralTypeWithIcon = { iconInstance = icon, text = Locale.string vc.locale text } }
+        { stateNeutralTypeWithIcon = { iconInstance = icon, text1 = Locale.string vc.locale text1, text2 = text2 |> Maybe.withDefault "", text2Visible = Maybe.Extra.isJust text2 } }
 
 
 map : (a -> b) -> ContextMenuItem a -> ContextMenuItem b
-map mp (ContextMenuItem { icon, text, msg }) =
+map mp (ContextMenuItem { icon, text1, text2, msg }) =
     ContextMenuItem
         { icon = Html.map mp icon
-        , text = text
+        , text1 = text1
+        , text2 = text2
         , msg = mp msg
         }
 
@@ -59,5 +70,16 @@ init :
     , msg : msg
     }
     -> ContextMenuItem msg
-init =
+init { icon, text, msg } =
+    ContextMenuItem { icon = icon, text1 = text, text2 = Nothing, msg = msg }
+
+
+init2 :
+    { icon : Html msg
+    , text1 : String
+    , text2 : Maybe String
+    , msg : msg
+    }
+    -> ContextMenuItem msg
+init2 =
     ContextMenuItem
