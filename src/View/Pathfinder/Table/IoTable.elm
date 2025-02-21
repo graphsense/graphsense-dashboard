@@ -70,6 +70,7 @@ config styles vc ioDirection isCheckedFn ioColumnConfig =
                         >> Maybe.withDefault False
                 , onClick =
                     ioToId network >> Maybe.map UserClickedAddressCheckboxInTable >> Maybe.withDefault NoOp
+                , readonly = \_ -> False
                 }
             , ioColumn vc
                 { label = "Address"

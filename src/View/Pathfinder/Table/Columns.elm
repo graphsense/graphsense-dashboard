@@ -87,20 +87,25 @@ stringColumn _ { label, accessor } =
 type alias CheckboxColumnConfig data msg =
     { isChecked : data -> Bool
     , onClick : data -> msg
+    , readonly : data -> Bool
     }
 
 
 checkboxColumn : View.Config -> CheckboxColumnConfig data msg -> Table.Column data msg
-checkboxColumn _ { isChecked, onClick } =
+checkboxColumn _ { isChecked, onClick, readonly } =
     Table.veryCustomColumn
         { name = ""
         , viewData =
             \data ->
                 let
                     attrs =
-                        [ onClick data |> Html.Styled.Events.onClick
-                        , [ Css.cursor Css.pointer ] |> css
-                        ]
+                        if readonly data then
+                            [ [ Css.cursor Css.notAllowed ] |> css ]
+
+                        else
+                            [ onClick data |> Html.Styled.Events.onClick
+                            , [ Css.cursor Css.pointer ] |> css
+                            ]
                 in
                 Table.HtmlDetails
                     [ [ PCSS.mGap |> Css.padding

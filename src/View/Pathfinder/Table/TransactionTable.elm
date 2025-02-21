@@ -71,6 +71,7 @@ config styles vc addressId isCheckedFn =
             [ PT.checkboxColumn vc
                 { isChecked = toGerneric addressId >> getId >> isCheckedFn
                 , onClick = UserClickedTxCheckboxInTable
+                , readonly = \_ -> False
                 }
             , PT.timestampDateMultiRowColumn vc
                 "Timestamp"
