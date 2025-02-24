@@ -13,7 +13,6 @@
     { "count": 3, "filePath": "src/View/Graph/Table/TxUtxoTable.elm" },
     { "count": 2, "filePath": "src/Model/Graph/Table/AddressNeighborsTable.elm" },
     { "count": 2, "filePath": "src/Update/Graph/Browser.elm" },
-    { "count": 2, "filePath": "src/View/Button.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/AddresslinkTxsUtxoTable.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/AddressNeighborsTable.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/AddressTxsUtxoTable.elm" },
