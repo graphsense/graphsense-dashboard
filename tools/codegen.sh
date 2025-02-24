@@ -60,6 +60,7 @@ if [ $REFRESH -eq 1 ]; then
             exit 1
         fi
     fi
+    echo "$output" | grep "files generated in"
 else
     echo "Running codegen ..."
     tmp=`mktemp`.json
@@ -78,6 +79,7 @@ else
         echo "Input file: $tmp"
         exit 1
     fi
+    echo "$output" | grep "files generated in"
     rm $tmp
 fi
 
