@@ -1,13 +1,18 @@
-module View.Pathfinder.Details exposing (closeAttrs, valuesToCell)
+module View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 
 import Api.Data
 import Config.View as View
 import Css
+import Css.Pathfinder exposing (fullWidth)
+import Html.Styled exposing (Html)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model.Currency as Currency
 import Msg.Pathfinder exposing (Msg(..))
+import RecordSetter as Rs
 import Svg.Styled
+import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.View exposing (pointer)
 import View.Locale as Locale
 
 
@@ -29,3 +34,44 @@ closeAttrs =
         ]
     , onClick UserClosedDetailsView
     ]
+
+
+type alias DataTabConfig msg =
+    { title : Html msg
+    , content : Maybe (Html msg)
+    , onClick : msg
+    }
+
+
+dataTab : DataTabConfig Msg -> Html Msg
+dataTab config =
+    let
+        attr =
+            [ css fullWidth
+            , pointer
+            , onClick config.onClick
+            ]
+    in
+    config.content
+        |> Maybe.map
+            (\content ->
+                SidePanelComponents.sidePanelDataTabOpenWithAttributes
+                    (SidePanelComponents.sidePanelDataTabOpenAttributes
+                        |> Rs.s_sidePanelDataTabOpen attr
+                    )
+                    { sidePanelDataTabOpen =
+                        { contentInstance = content
+                        , titleInstance = config.title
+                        }
+                    }
+            )
+        |> Maybe.withDefault
+            (SidePanelComponents.sidePanelDataTabClosedWithAttributes
+                (SidePanelComponents.sidePanelDataTabClosedAttributes
+                    |> Rs.s_sidePanelDataTabClosed attr
+                )
+                { sidePanelDataTabClosed =
+                    { titleInstance = config.title
+                    }
+                }
+            )

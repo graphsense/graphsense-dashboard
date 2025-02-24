@@ -21,12 +21,11 @@ import Model.Tx as Tx
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
 import Svg.Styled.Attributes exposing (css)
-import Svg.Styled.Events as Svg
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.View exposing (copyIconPathfinder, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Locale as Locale
-import View.Pathfinder.Details exposing (closeAttrs, valuesToCell)
+import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 
 
@@ -39,10 +38,6 @@ view vc _ model id viewState =
     in
     case viewState.tx.type_ of
         Tx.Utxo tx ->
-            let
-                style =
-                    [ css [ Css.width (Css.pct 100) ] ]
-            in
             SidePanelComponents.sidePanelTransactionWithAttributes
                 (SidePanelComponents.sidePanelTransactionAttributes
                     |> Rs.s_sidePanelTransaction
@@ -66,83 +61,67 @@ view vc _ model id viewState =
                 , sidePanelTransaction =
                     { tabsVisible = False
                     , inputListInstance =
-                        let
-                            headerTitle =
-                                { sidePanelListHeaderTitleInputs =
-                                    { title = Locale.string vc.locale "Sending addresses"
-                                    , totalNumber = Locale.int vc.locale tx.raw.noInputs
+                        dataTab
+                            { title =
+                                SidePanelComponents.sidePanelListHeaderTitleInputs
+                                    { sidePanelListHeaderTitleInputs =
+                                        { title = Locale.string vc.locale "Sending addresses"
+                                        , totalNumber = Locale.int vc.locale tx.raw.noInputs
+                                        }
                                     }
-                                }
+                            , content =
+                                let
+                                    ioTableConfig =
+                                        { network = tx.raw.currency
+                                        , hasTags = getLbl
+                                        , isChange = always False
+                                        }
+                                in
+                                if viewState.inputsTableOpen then
+                                    ioTableView vc Inputs model.network viewState.inputsTable ioTableConfig
+                                        |> Just
 
-                            headerEvent =
-                                [ Svg.onClick (TxDetailsMsg (UserClickedToggleIoTable Inputs))
-                                , css [ Css.cursor Css.pointer ]
-                                ]
-
-                            ioTableConfig =
-                                { network = tx.raw.currency
-                                , hasTags = getLbl
-                                , isChange = always False
-                                }
-                        in
-                        if viewState.inputsTableOpen then
-                            SidePanelComponents.sidePanelInputListOpenWithAttributes
-                                (SidePanelComponents.sidePanelInputListOpenAttributes
-                                    |> Rs.s_sidePanelInputListOpen style
-                                    |> Rs.s_sidePanelInputListHeaderOpen headerEvent
-                                )
-                                { sidePanelInputListOpen =
-                                    { listInstance = ioTableView vc Inputs model.network viewState.inputsTable ioTableConfig
-                                    }
-                                , sidePanelInputListHeaderOpen =
-                                    { titleInstance = SidePanelComponents.sidePanelListHeaderTitleInputs headerTitle }
-                                }
-
-                        else
-                            SidePanelComponents.sidePanelInputListHeaderClosedWithAttributes
-                                (SidePanelComponents.sidePanelInputListHeaderClosedAttributes
-                                    |> Rs.s_sidePanelInputListHeaderClosed (headerEvent ++ style)
-                                )
-                                headerTitle
+                                else
+                                    Nothing
+                            , onClick =
+                                UserClickedToggleIoTable Inputs
+                                    |> TxDetailsMsg
+                            }
                     , outputListInstance =
-                        let
-                            headerTitle =
-                                { title = Locale.string vc.locale "Receiving addresses"
-                                , totalNumber = Locale.int vc.locale tx.raw.noOutputs
-                                }
-
-                            headerEvent =
-                                [ Svg.onClick (TxDetailsMsg (UserClickedToggleIoTable Outputs))
-                                , css [ Css.cursor Css.pointer ]
-                                ]
-
-                            ioTableConfig =
-                                { network = tx.raw.currency
-                                , hasTags = getLbl
-                                , isChange =
-                                    .address
-                                        >> List.head
-                                        >> Maybe.andThen
-                                            (\id_ ->
-                                                Maybe.withDefault [] tx.raw.inputs
-                                                    |> List.Extra.find (.address >> List.head >> Maybe.map ((==) id_) >> Maybe.withDefault False)
-                                            )
-                                        >> (/=) Nothing
-                                }
-                        in
-                        if viewState.outputsTableOpen then
-                            SidePanelComponents.sidePanelOutputListOpenWithAttributes
-                                (SidePanelComponents.sidePanelOutputListOpenAttributes |> Rs.s_sidePanelOutputListOpen style |> Rs.s_sidePanelOutputListHeaderOpen headerEvent)
-                                { sidePanelOutputListOpen =
-                                    { listInstance = ioTableView vc Outputs model.network viewState.outputsTable ioTableConfig
+                        dataTab
+                            { title =
+                                SidePanelComponents.sidePanelListHeaderTitleOutputs
+                                    { sidePanelListHeaderTitleOutputs =
+                                        { title = Locale.string vc.locale "Receiving addresses"
+                                        , totalNumber = Locale.int vc.locale tx.raw.noOutputs
+                                        }
                                     }
-                                , sidePanelListHeaderTitleOutputs = headerTitle
-                                }
+                            , content =
+                                let
+                                    ioTableConfig =
+                                        { network = tx.raw.currency
+                                        , hasTags = getLbl
+                                        , isChange =
+                                            .address
+                                                >> List.head
+                                                >> Maybe.andThen
+                                                    (\id_ ->
+                                                        Maybe.withDefault [] tx.raw.inputs
+                                                            |> List.Extra.find (.address >> List.head >> Maybe.map ((==) id_) >> Maybe.withDefault False)
+                                                    )
+                                                >> (/=) Nothing
+                                        }
+                                in
+                                if viewState.outputsTableOpen then
+                                    ioTableView vc Outputs model.network viewState.outputsTable ioTableConfig
+                                        |> Just
 
-                        else
-                            SidePanelComponents.sidePanelOutputListHeaderClosedWithAttributes
-                                (SidePanelComponents.sidePanelOutputListHeaderClosedAttributes |> Rs.s_sidePanelOutputListHeaderClosed (headerEvent ++ style))
-                                { sidePanelListHeaderTitleOutputs = headerTitle }
+                                else
+                                    Nothing
+                            , onClick =
+                                UserClickedToggleIoTable Outputs
+                                    |> TxDetailsMsg
+                            }
                     }
                 , sidePanelTxHeader =
                     { headerText =

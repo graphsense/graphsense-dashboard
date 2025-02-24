@@ -43,7 +43,7 @@ import Util.View exposing (copyIconPathfinder, none, onClickWithStop, timeToCell
 import View.Button exposing (primaryButton, secondaryButton)
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
-import View.Pathfinder.Details exposing (closeAttrs, valuesToCell)
+import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 
@@ -71,9 +71,6 @@ view plugins pluginStates vc gc model id viewState =
         actorText =
             actor
                 |> Maybe.map .label
-
-        txOnGraphFn =
-            \txId -> Dict.member txId model.network.txs
 
         clstrId =
             Id.initClusterId viewState.data.currency viewState.data.entity
@@ -278,43 +275,13 @@ view plugins pluginStates vc gc model id viewState =
             , tabsVisible = False
             , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible
             , pluginSTagVisible = pluginTagsVisible
-            , listInstance =
-                let
-                    titleInstance =
-                        { titleInstance = inOutIndicator vc "Transactions" (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs) viewState.data.noIncomingTxs viewState.data.noOutgoingTxs
-                        }
-
-                    style =
-                        [ css [ Css.width (Css.pct 100) ] ]
-
-                    headerEvent =
-                        [ Svg.onClick (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
-                        , css [ Css.cursor Css.pointer ]
-                        ]
-                in
-                if viewState.transactionsTableOpen then
-                    SidePanelComponents.sidePanelTxListOpenWithAttributes
-                        (SidePanelComponents.sidePanelTxListOpenAttributes
-                            |> Rs.s_sidePanelTxListOpen style
-                            |> Rs.s_sidePanelTxListHeaderOpen headerEvent
-                        )
-                        { sidePanelTxListHeaderOpen = titleInstance
-                        , sidePanelTxListOpen =
-                            { listInstance =
-                                transactionTableView vc id txOnGraphFn viewState.txs
-                            }
-                        }
-
-                else
-                    SidePanelComponents.sidePanelTxListClosedWithAttributes
-                        (SidePanelComponents.sidePanelTxListClosedAttributes
-                            |> Rs.s_sidePanelTxListClosed (style ++ headerEvent)
-                        )
-                        { sidePanelTxListClosed = titleInstance
-                        }
             , actorVisible = showExchangeTag
             , tagsVisible = showOtherTag
             }
+
+        relatedDataTabsList =
+            [ transactionsDataTab vc model id viewState
+            ]
 
         sidePanelAddressHeader =
             { iconInstance =
@@ -504,6 +471,9 @@ view plugins pluginStates vc gc model id viewState =
             )
             { pluginList = pluginList
             , pluginTagsList = pluginTagsList
+            , relatedDataTabsList =
+                [ transactionsDataTab vc model id viewState
+                ]
             }
             { identifierWithCopyIcon = sidePanelAddressCopyIcon
             , leftTab = { variant = none }
@@ -566,6 +536,7 @@ view plugins pluginStates vc gc model id viewState =
             )
             { pluginList = pluginList
             , pluginTagsList = pluginTagsList
+            , relatedDataTabsList = relatedDataTabsList
             }
             { sidePanelAddress = sidePanelData
             , leftTab = { variant = none }
@@ -783,13 +754,34 @@ transactionTableView vc addressId txOnGraphFn model =
         |> div [ css [ Css.width (Css.pct 100) ] ]
 
 
-inOutIndicator : View.Config -> String -> Int -> Int -> Int -> Html Msg
-inOutIndicator vc title mnr inNr outNr =
-    SidePanelComponents.sidePanelListHeaderTitleTransactions
-        { sidePanelListHeaderTitleTransactions =
-            { totalNumber = Locale.int vc.locale mnr
-            , incomingNumber = Locale.int vc.locale inNr
-            , outgoingNumber = Locale.int vc.locale outNr
-            , title = Locale.string vc.locale title
-            }
+transactionsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
+transactionsDataTab vc model id viewState =
+    let
+        txOnGraphFn =
+            \txId -> Dict.member txId model.network.txs
+    in
+    dataTab
+        { title =
+            SidePanelComponents.sidePanelListHeaderTitleTransactions
+                { sidePanelListHeaderTitleTransactions =
+                    { totalNumber =
+                        (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs)
+                            |> Locale.int vc.locale
+                    , incomingNumber =
+                        viewState.data.noIncomingTxs
+                            |> Locale.int vc.locale
+                    , outgoingNumber =
+                        viewState.data.noOutgoingTxs
+                            |> Locale.int vc.locale
+                    , title = Locale.string vc.locale "Transactions"
+                    }
+                }
+        , content =
+            if viewState.transactionsTableOpen then
+                transactionTableView vc id txOnGraphFn viewState.txs
+                    |> Just
+
+            else
+                Nothing
+        , onClick = AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable
         }
