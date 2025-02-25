@@ -24,6 +24,8 @@ init network locale addressId data =
       , neighborsIncoming = NeighborsTable.init data.inDegree
       , addressId = addressId
       , data = data
+      , relatedAddresses = {}
+      , relatedAddressesTableOpen = False
       }
     , eff
     )

@@ -80,9 +80,15 @@ utxo plugins pluginStates vc gc model id viewState address =
         pluginTagsList =
             Plugin.addressSidePanelHeaderTags plugins pluginStates vc address
 
+        cluster =
+            Dict.get clstrId model.clusters
+
         relatedDataTabsList =
-            [ transactionsDataTab vc model id viewState
-            ]
+            transactionsDataTab vc model id viewState
+                :: (cluster
+                        |> Maybe.map (relatedAddressesDataTab vc model id viewState >> List.singleton)
+                        |> Maybe.withDefault []
+                   )
 
         clstrId =
             Id.initClusterId viewState.data.currency viewState.data.entity
@@ -100,7 +106,7 @@ utxo plugins pluginStates vc gc model id viewState address =
         sidePanelAddressDetails =
             { clusterInfoVisible = Dict.member clstrId model.clusters
             , clusterInfoInstance =
-                Dict.get clstrId model.clusters
+                cluster
                     |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors)
                     |> Maybe.withDefault none
             }
@@ -162,6 +168,21 @@ utxo plugins pluginStates vc gc model id viewState address =
 
         -- , learnMoreButton = { variant = none }
         , categoryTags = { tagLabel = "" }
+        }
+
+
+relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Api.Data.Entity -> Html Msg
+relatedAddressesDataTab vc _ _ _ cluster =
+    dataTab
+        { title =
+            SidePanelComponents.sidePanelListHeaderTitleWithNumber
+                { sidePanelListHeaderTitleWithNumber =
+                    { label = Locale.string vc.locale "Related addresses"
+                    , number = Locale.int vc.locale cluster.noAddresses
+                    }
+                }
+        , content = Nothing
+        , onClick = AddressDetailsMsg AddressDetails.UserClickedToggleRelatedAddressesTable
         }
 
 

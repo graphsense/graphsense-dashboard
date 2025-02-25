@@ -27,3 +27,4 @@ type Msg
     | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
     | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
     | TableMsg Table.State
+    | UserClickedToggleRelatedAddressesTable

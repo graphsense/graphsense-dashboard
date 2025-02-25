@@ -280,6 +280,9 @@ update uc pathfinderModel msg id model =
         TableMsg _ ->
             n model
 
+        UserClickedToggleRelatedAddressesTable ->
+            n { model | relatedAddressesTableOpen = not model.relatedAddressesTableOpen }
+
 
 type SetOrNoSet x
     = Set x
