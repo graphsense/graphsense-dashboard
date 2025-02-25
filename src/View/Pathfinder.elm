@@ -116,6 +116,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                              else
                                 [ css [ Css.display Css.none ] ]
                             )
+                        |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
                     )
                     { shortcutList =
                         [ { msg = UserOpensAddressAnnotationDialog id
@@ -152,6 +153,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     (HGraphComponents.rightClickMenuAttributes
                         |> Rs.s_lineFrame
                             [ css [ Css.display Css.none ] ]
+                        |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
                     )
                     { shortcutList =
                         [ { msg = UserClickedContextMenuIdToClipboard menu
