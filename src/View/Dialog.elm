@@ -280,7 +280,7 @@ info vc inf =
     in
     errorMessageComponentTypeAlertWithAttributes
         (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
-        { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, typeAlert = { bodyText = "", headlineText = "" } }
+        { header = { iconInstance = icon, title = Locale.interpolated vc.locale (inf.title |> Maybe.withDefault "Information") inf.variables }, messageText = { messageText = Locale.interpolated vc.locale inf.info inf.variables }, typeAlert = { bodyText = "", headlineText = "" } }
 
 
 custom : CustomConfig Msg -> Html Msg

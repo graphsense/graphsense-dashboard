@@ -1,4 +1,4 @@
-module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), Page(..), RequestLimit(..), SettingsMsg(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), SettingsMsg(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -65,6 +65,16 @@ type alias Model navigationKey =
     , selectBoxes : SelectBoxes.Model
     , dirty : Bool
     , tooltip : Maybe (Tooltip Msg)
+    , navbarSubMenu : Maybe NavbarSubMenu
+    }
+
+
+type NavbarSubMenuType
+    = NavbarMore
+
+
+type alias NavbarSubMenu =
+    { type_ : NavbarSubMenuType
     }
 
 
@@ -124,6 +134,8 @@ type Msg
     | RepositionTooltip
     | HovercardMsg Hovercard.Msg
     | CloseTooltip (Maybe { context : String, domId : String }) (TooltipType Msg)
+    | UserToggledNavbarSubMenu NavbarSubMenuType
+    | UserClosesNavbarSubMenu
 
 
 type SettingsMsg

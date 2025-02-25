@@ -155,6 +155,21 @@ update plugins uc msg model =
         NoOp ->
             n model
 
+        UserClosesNavbarSubMenu ->
+            n { model | navbarSubMenu = Nothing }
+
+        UserToggledNavbarSubMenu t ->
+            n
+                { model
+                    | navbarSubMenu =
+                        case model.navbarSubMenu of
+                            Just _ ->
+                                Nothing
+
+                            Nothing ->
+                                Just { type_ = t }
+                }
+
         HovercardMsg hcMsg ->
             model.tooltip
                 |> Maybe.map
@@ -239,14 +254,14 @@ update plugins uc msg model =
         UserRequestsUrl request ->
             case request of
                 Browser.Internal url ->
-                    ( model
+                    ( model |> s_navbarSubMenu Nothing
                     , Url.toString url
                         |> NavPushUrlEffect
                         |> List.singleton
                     )
 
                 Browser.External url ->
-                    ( model
+                    ( model |> s_navbarSubMenu Nothing
                     , NavLoadEffect url
                         |> List.singleton
                     )
@@ -383,7 +398,7 @@ update plugins uc msg model =
                     n { model | dialog = Nothing }
 
                 Just (Dialog.TagsList _) ->
-                    n { model | dialog = Nothing, tooltip = Nothing }
+                    n { model | dialog = Nothing, tooltip = Nothing, navbarSubMenu = Nothing }
 
                 _ ->
                     n model
@@ -562,6 +577,7 @@ update plugins uc msg model =
                             |> s_hovercard Nothing
                     , selectBoxes = TSelectBoxes.closeAll model.selectBoxes
                     , plugins = new
+                    , navbarSubMenu = Nothing
                 }
                 |> Tuple.mapSecond ((::) (PluginEffect cmd))
                 |> updateByPluginOutMsg plugins uc outMsg
@@ -1618,6 +1634,7 @@ updateByUrl plugins uc url model =
                                 | page = Home
                                 , url = url
                                 , tooltip = Nothing
+                                , navbarSubMenu = Nothing
                               }
                             , []
                             )
@@ -1627,6 +1644,7 @@ updateByUrl plugins uc url model =
                                 | page = Stats
                                 , url = url
                                 , tooltip = Nothing
+                                , navbarSubMenu = Nothing
                               }
                             , case oldRoute of
                                 Route.Stats ->
@@ -1641,6 +1659,7 @@ updateByUrl plugins uc url model =
                                 | page = Model.Settings
                                 , url = url
                                 , tooltip = Nothing
+                                , navbarSubMenu = Nothing
                               }
                             , []
                             )
@@ -1657,6 +1676,7 @@ updateByUrl plugins uc url model =
                                         , page = Graph
                                         , url = url
                                         , tooltip = Nothing
+                                        , navbarSubMenu = Nothing
                                       }
                                     , [ PluginEffect cmd ]
                                     )
@@ -1672,6 +1692,7 @@ updateByUrl plugins uc url model =
                                         , graph = graph
                                         , url = url
                                         , tooltip = Nothing
+                                        , navbarSubMenu = Nothing
                                       }
                                     , graphEffect
                                         |> List.map GraphEffect
@@ -1687,6 +1708,7 @@ updateByUrl plugins uc url model =
                                 , pathfinder = pfn
                                 , url = url
                                 , tooltip = Nothing
+                                , navbarSubMenu = Nothing
                               }
                             , graphEffect
                                 |> List.map PathfinderEffect
@@ -1702,6 +1724,7 @@ updateByUrl plugins uc url model =
                                 , page = Plugin pluginType
                                 , url = url
                                 , tooltip = Nothing
+                                , navbarSubMenu = Nothing
                               }
                             , [ PluginEffect cmd ]
                             )

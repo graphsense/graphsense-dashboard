@@ -1,4 +1,4 @@
-module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, map, view)
+module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, view)
 
 import Config.View as View
 import Css
@@ -16,26 +16,39 @@ type ContextMenuItem msg
     = ContextMenuItem (ContextMenuItemInternal msg)
 
 
+type ContextMenuItemActions msg
+    = ClickLink String
+    | ClickMsg msg
+
+
 type alias ContextMenuItemInternal msg =
     { icon : Html msg
     , text1 : String
     , text2 : Maybe String
-    , msg : msg
+    , action : ContextMenuItemActions msg
     }
 
 
 view : View.Config -> ContextMenuItem msg -> Html msg
-view vc (ContextMenuItem { icon, text1, text2, msg }) =
+view vc (ContextMenuItem { icon, text1, text2, action }) =
     let
         unsetFontStyle =
             [ Css.fontWeight Css.unset, Css.color Css.unset ]
                 |> List.map Css.important
                 |> css
+
+        ( msg, wrapper ) =
+            case action of
+                ClickLink link ->
+                    ( [], List.singleton >> Html.a [ Html.Styled.Attributes.href link, [ Css.textDecoration Css.none, Css.visited [ Css.color Css.inherit ] ] |> css ] )
+
+                ClickMsg m ->
+                    ( [ onClick m ], identity )
     in
     HGraphComponents.rightClickItemStateNeutralTypeWithIconWithAttributes
         (HGraphComponents.rightClickItemStateNeutralTypeWithIconAttributes
             |> Rs.s_stateNeutralTypeWithIcon
-                [ [ HGraphComponents.rightClickItemStateHoverTypeWithIcon_details.styles
+                (([ HGraphComponents.rightClickItemStateHoverTypeWithIcon_details.styles
                         ++ HGraphComponents.rightClickItemStateHoverTypeWithIconPlaceholder1_details.styles
                         ++ fullWidth
                         |> Css.hover
@@ -43,16 +56,13 @@ view vc (ContextMenuItem { icon, text1, text2, msg }) =
                   ]
                     ++ fullWidth
                     |> css
-                , onClick msg
-                ]
+                 )
+                    :: msg
+                )
             |> Rs.s_placeholder1
-                [ unsetFontStyle
-                , onClick msg
-                ]
+                (unsetFontStyle :: msg)
             |> Rs.s_placeholder2
-                [ unsetFontStyle
-                , onClick msg
-                ]
+                (unsetFontStyle :: msg)
             |> Rs.s_iconsDividerNoPadding [ [ Css.position Css.relative ] |> css ]
         )
         { stateNeutralTypeWithIcon =
@@ -62,15 +72,22 @@ view vc (ContextMenuItem { icon, text1, text2, msg }) =
             , text2Visible = Maybe.Extra.isJust text2
             }
         }
+        |> wrapper
 
 
 map : (a -> b) -> ContextMenuItem a -> ContextMenuItem b
-map mp (ContextMenuItem { icon, text1, text2, msg }) =
+map mp (ContextMenuItem { icon, text1, text2, action }) =
     ContextMenuItem
         { icon = Html.map mp icon
         , text1 = text1
         , text2 = text2
-        , msg = mp msg
+        , action =
+            case action of
+                ClickMsg msg ->
+                    ClickMsg (mp msg)
+
+                ClickLink l ->
+                    ClickLink l
         }
 
 
@@ -81,7 +98,7 @@ init :
     }
     -> ContextMenuItem msg
 init { icon, text, msg } =
-    ContextMenuItem { icon = icon, text1 = text, text2 = Nothing, msg = msg }
+    init2 { icon = icon, text1 = text, text2 = Nothing, msg = msg }
 
 
 init2 :
@@ -91,5 +108,16 @@ init2 :
     , msg : msg
     }
     -> ContextMenuItem msg
-init2 =
-    ContextMenuItem
+init2 { icon, text1, text2, msg } =
+    ContextMenuItem { icon = icon, text1 = text1, text2 = text2, action = ClickMsg msg }
+
+
+initLink2 :
+    { icon : Html msg
+    , text1 : String
+    , text2 : Maybe String
+    , link : String
+    }
+    -> ContextMenuItem msg
+initLink2 { icon, text1, text2, link } =
+    ContextMenuItem { icon = icon, text1 = text1, text2 = text2, action = ClickLink link }

@@ -83,6 +83,7 @@ init plugins uc flags url key =
       , notifications = Notification.init
       , selectBoxes = selectBoxes
       , tooltip = Nothing
+      , navbarSubMenu = Nothing
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy
