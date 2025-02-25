@@ -40,7 +40,14 @@ view vc (ContextMenuItem { icon, text1, text2, action }) =
         ( msg, wrapper ) =
             case action of
                 ClickLink link ->
-                    ( [], List.singleton >> Html.a [ Html.Styled.Attributes.href link, [ Css.textDecoration Css.none, Css.visited [ Css.color Css.inherit ] ] |> css ] )
+                    ( []
+                    , List.singleton
+                        >> Html.a
+                            [ Html.Styled.Attributes.href link
+                            , Html.Styled.Attributes.target "_blank"
+                            , [ Css.textDecoration Css.none, Css.visited [ Css.color Css.inherit ] ] |> css
+                            ]
+                    )
 
                 ClickMsg m ->
                     ( [ onClick m ], identity )
