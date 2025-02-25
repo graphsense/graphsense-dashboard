@@ -1,4 +1,4 @@
-module View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
+module View.Pathfinder.Details exposing (DataTabConfig, closeAttrs, dataTab, valuesToCell)
 
 import Api.Data
 import Config.View as View

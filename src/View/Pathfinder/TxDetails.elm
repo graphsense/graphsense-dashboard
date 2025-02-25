@@ -31,162 +31,167 @@ import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 
 view : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
 view vc _ model id viewState =
-    let
-        getLbl id_ =
-            Dict.get id_ model.tagSummaries
-                |> Maybe.withDefault Pathfinder.NoTags
-    in
     case viewState.tx.type_ of
         Tx.Utxo tx ->
-            SidePanelComponents.sidePanelTransactionWithAttributes
-                (SidePanelComponents.sidePanelTransactionAttributes
-                    |> Rs.s_sidePanelTransaction
-                        [ sidePanelCss
-                            |> css
-                        ]
-                    |> Rs.s_sidePanelTxDetails [ css fullWidth ]
-                    |> Rs.s_iconsCloseBlack closeAttrs
-                )
-                { identifierWithCopyIcon =
-                    { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
-                    , copyIconInstance = Id.id id |> copyIconPathfinder vc
-                    , chevronInstance = none
-                    }
-                , leftTab = { variant = none }
-                , rightTab = { variant = none }
-                , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
-                , valueOfTimestamp = timeToCell vc tx.raw.timestamp
-                , titleOfTxValue = { infoLabel = Locale.string vc.locale "Value" }
-                , valueOfTxValue = valuesToCell vc (assetFromBase tx.raw.currency) tx.raw.totalOutput
-                , sidePanelTransaction =
-                    { tabsVisible = False
-                    , inputListInstance =
-                        dataTab
-                            { title =
-                                SidePanelComponents.sidePanelListHeaderTitleInputs
-                                    { sidePanelListHeaderTitleInputs =
-                                        { title = Locale.string vc.locale "Sending addresses"
-                                        , totalNumber = Locale.int vc.locale tx.raw.noInputs
-                                        }
-                                    }
-                            , content =
-                                let
-                                    ioTableConfig =
-                                        { network = tx.raw.currency
-                                        , hasTags = getLbl
-                                        , isChange = always False
-                                        }
-                                in
-                                if viewState.inputsTableOpen then
-                                    ioTableView vc Inputs model.network viewState.inputsTable ioTableConfig
-                                        |> Just
-
-                                else
-                                    Nothing
-                            , onClick =
-                                UserClickedToggleIoTable Inputs
-                                    |> TxDetailsMsg
-                            }
-                    , outputListInstance =
-                        dataTab
-                            { title =
-                                SidePanelComponents.sidePanelListHeaderTitleOutputs
-                                    { sidePanelListHeaderTitleOutputs =
-                                        { title = Locale.string vc.locale "Receiving addresses"
-                                        , totalNumber = Locale.int vc.locale tx.raw.noOutputs
-                                        }
-                                    }
-                            , content =
-                                let
-                                    ioTableConfig =
-                                        { network = tx.raw.currency
-                                        , hasTags = getLbl
-                                        , isChange =
-                                            .address
-                                                >> List.head
-                                                >> Maybe.andThen
-                                                    (\id_ ->
-                                                        Maybe.withDefault [] tx.raw.inputs
-                                                            |> List.Extra.find (.address >> List.head >> Maybe.map ((==) id_) >> Maybe.withDefault False)
-                                                    )
-                                                >> (/=) Nothing
-                                        }
-                                in
-                                if viewState.outputsTableOpen then
-                                    ioTableView vc Outputs model.network viewState.outputsTable ioTableConfig
-                                        |> Just
-
-                                else
-                                    Nothing
-                            , onClick =
-                                UserClickedToggleIoTable Outputs
-                                    |> TxDetailsMsg
-                            }
-                    }
-                , sidePanelTxHeader =
-                    { headerText =
-                        (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
-                    }
-                }
+            utxo vc model id viewState tx
 
         Tx.Account tx ->
-            SidePanelComponents.sidePanelEthTransactionWithAttributes
-                (SidePanelComponents.sidePanelEthTransactionAttributes
-                    |> Rs.s_sidePanelEthTransaction
-                        [ sidePanelCss
-                            |> css
-                        ]
-                    |> Rs.s_iconsCloseBlack closeAttrs
-                )
-                { identifierWithCopyIcon =
-                    { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
-                    , copyIconInstance = Id.id id |> copyIconPathfinder vc
-                    , chevronInstance = none
-                    }
-                , leftTab = { variant = none }
-                , rightTab = { variant = none }
-                , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
-                , valueOfTimestamp = timeToCell vc tx.raw.timestamp
-                , titleOfEstimatedValue = { infoLabel = Locale.string vc.locale "Value" }
-                , valueOfEstimatedValue = valuesToCell vc (asset tx.raw.network tx.raw.currency) tx.value
-                , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
-                , valueOfSender =
-                    { firstRowText = Id.id tx.from |> truncateLongIdentifierWithLengths 8 4
-                    , copyIconInstance = Id.id tx.from |> copyIconPathfinder vc
-                    }
-                , titleOfReceiver = { infoLabel = Locale.string vc.locale "Receiver" }
-                , valueOfReceiver =
-                    { firstRowText = Id.id tx.to |> truncateLongIdentifierWithLengths 8 4
-                    , copyIconInstance = Id.id tx.to |> copyIconPathfinder vc
-                    }
-                , sidePanelEthTransaction =
-                    { tabsVisible = False
-                    }
-                , sidePanelEthTxDetails =
-                    { contractCreationVisible = tx.raw.contractCreation |> Maybe.withDefault False
-                    }
-                , sidePanelTxHeader =
-                    { headerText =
-                        tx.raw.identifier
-                            |> Tx.parseTxIdentifier
-                            |> Maybe.map Tx.txTypeToLabel
-                            |> Maybe.withDefault "Transaction"
-                            |> Locale.string vc.locale
-                            |> (++) ((String.toUpper <| Id.network id) ++ " ")
-                    }
-                , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
-                , valueOfContractCreation =
-                    { firstRowText =
-                        Locale.string vc.locale <|
-                            if tx.raw.contractCreation |> Maybe.withDefault False then
-                                "yes"
+            account vc id tx
 
-                            else
-                                "no"
-                    , secondRowText = ""
-                    , secondRowVisible = False
+
+account : View.Config -> Id -> Tx.AccountTx -> Html Msg
+account vc id tx =
+    SidePanelComponents.sidePanelEthTransactionWithAttributes
+        (SidePanelComponents.sidePanelEthTransactionAttributes
+            |> Rs.s_sidePanelEthTransaction
+                [ sidePanelCss
+                    |> css
+                ]
+            |> Rs.s_iconsCloseBlack closeAttrs
+        )
+        { identifierWithCopyIcon =
+            { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
+            , copyIconInstance = Id.id id |> copyIconPathfinder vc
+            , chevronInstance = none
+            }
+        , leftTab = { variant = none }
+        , rightTab = { variant = none }
+        , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
+        , valueOfTimestamp = timeToCell vc tx.raw.timestamp
+        , titleOfEstimatedValue = { infoLabel = Locale.string vc.locale "Value" }
+        , valueOfEstimatedValue = valuesToCell vc (asset tx.raw.network tx.raw.currency) tx.value
+        , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
+        , valueOfSender =
+            { firstRowText = Id.id tx.from |> truncateLongIdentifierWithLengths 8 4
+            , copyIconInstance = Id.id tx.from |> copyIconPathfinder vc
+            }
+        , titleOfReceiver = { infoLabel = Locale.string vc.locale "Receiver" }
+        , valueOfReceiver =
+            { firstRowText = Id.id tx.to |> truncateLongIdentifierWithLengths 8 4
+            , copyIconInstance = Id.id tx.to |> copyIconPathfinder vc
+            }
+        , sidePanelEthTransaction =
+            { tabsVisible = False
+            }
+        , sidePanelEthTxDetails =
+            { contractCreationVisible = tx.raw.contractCreation |> Maybe.withDefault False
+            }
+        , sidePanelTxHeader =
+            { headerText =
+                tx.raw.identifier
+                    |> Tx.parseTxIdentifier
+                    |> Maybe.map Tx.txTypeToLabel
+                    |> Maybe.withDefault "Transaction"
+                    |> Locale.string vc.locale
+                    |> (++) ((String.toUpper <| Id.network id) ++ " ")
+            }
+        , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
+        , valueOfContractCreation =
+            { firstRowText =
+                Locale.string vc.locale <|
+                    if tx.raw.contractCreation |> Maybe.withDefault False then
+                        "yes"
+
+                    else
+                        "no"
+            , secondRowText = ""
+            , secondRowVisible = False
+            }
+        }
+
+
+utxo : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Tx.UtxoTx -> Html Msg
+utxo vc model id viewState tx =
+    SidePanelComponents.sidePanelTransactionWithAttributes
+        (SidePanelComponents.sidePanelTransactionAttributes
+            |> Rs.s_sidePanelTransaction
+                [ sidePanelCss
+                    |> css
+                ]
+            |> Rs.s_sidePanelTxDetails [ css fullWidth ]
+            |> Rs.s_iconsCloseBlack closeAttrs
+        )
+        { identifierWithCopyIcon =
+            { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
+            , copyIconInstance = Id.id id |> copyIconPathfinder vc
+            , chevronInstance = none
+            }
+        , leftTab = { variant = none }
+        , rightTab = { variant = none }
+        , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
+        , valueOfTimestamp = timeToCell vc tx.raw.timestamp
+        , titleOfTxValue = { infoLabel = Locale.string vc.locale "Value" }
+        , valueOfTxValue = valuesToCell vc (assetFromBase tx.raw.currency) tx.raw.totalOutput
+        , sidePanelTransaction =
+            { tabsVisible = False
+            , inputListInstance =
+                dataTab
+                    { title =
+                        SidePanelComponents.sidePanelListHeaderTitleInputs
+                            { sidePanelListHeaderTitleInputs =
+                                { title = Locale.string vc.locale "Sending addresses"
+                                , totalNumber = Locale.int vc.locale tx.raw.noInputs
+                                }
+                            }
+                    , content =
+                        let
+                            ioTableConfig =
+                                { network = tx.raw.currency
+                                , hasTags = getLbl model
+                                , isChange = always False
+                                }
+                        in
+                        if viewState.inputsTableOpen then
+                            ioTableView vc Inputs model.network viewState.inputsTable ioTableConfig
+                                |> Just
+
+                        else
+                            Nothing
+                    , onClick =
+                        UserClickedToggleIoTable Inputs
+                            |> TxDetailsMsg
                     }
-                }
+            , outputListInstance =
+                dataTab
+                    { title =
+                        SidePanelComponents.sidePanelListHeaderTitleOutputs
+                            { sidePanelListHeaderTitleOutputs =
+                                { title = Locale.string vc.locale "Receiving addresses"
+                                , totalNumber = Locale.int vc.locale tx.raw.noOutputs
+                                }
+                            }
+                    , content =
+                        let
+                            ioTableConfig =
+                                { network = tx.raw.currency
+                                , hasTags = getLbl model
+                                , isChange =
+                                    .address
+                                        >> List.head
+                                        >> Maybe.andThen
+                                            (\id_ ->
+                                                Maybe.withDefault [] tx.raw.inputs
+                                                    |> List.Extra.find (.address >> List.head >> Maybe.map ((==) id_) >> Maybe.withDefault False)
+                                            )
+                                        >> (/=) Nothing
+                                }
+                        in
+                        if viewState.outputsTableOpen then
+                            ioTableView vc Outputs model.network viewState.outputsTable ioTableConfig
+                                |> Just
+
+                        else
+                            Nothing
+                    , onClick =
+                        UserClickedToggleIoTable Outputs
+                            |> TxDetailsMsg
+                    }
+            }
+        , sidePanelTxHeader =
+            { headerText =
+                (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
+            }
+        }
 
 
 ioTableView : View.Config -> IoDirection -> Network -> Model.Graph.Table.Table Api.Data.TxValue -> IoColumnConfig -> Html Msg
@@ -212,3 +217,9 @@ ioTableView vc dir network table ioColumnConfig =
         noTools
         (IoTable.config styles vc dir isCheckedFn ioColumnConfig)
         table
+
+
+getLbl : Pathfinder.Model -> Id -> Pathfinder.HavingTags
+getLbl model id_ =
+    Dict.get id_ model.tagSummaries
+        |> Maybe.withDefault Pathfinder.NoTags
