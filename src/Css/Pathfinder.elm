@@ -307,5 +307,4 @@ sidePanelCss =
     [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
     , Css.overflowY Css.auto
     , Css.overflowX Css.hidden
-    , Css.paddingTop (Css.px 10)
     ]
