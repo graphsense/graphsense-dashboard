@@ -295,15 +295,9 @@ expandHandleLoadingSpinner vc address direction details =
         Nothing
 
 
-toNodeIconHtml : Maybe Address -> Maybe Api.Data.Entity -> Svg msg
+toNodeIconHtml : Address -> Maybe Api.Data.Entity -> Svg msg
 toNodeIconHtml address cluster =
-    (case address of
-        Just addr ->
-            toNodeIcon addr cluster
-
-        Nothing ->
-            Icons.iconsUntagged {}
-    )
+    toNodeIcon address cluster
         |> List.singleton
         |> Svg.svg
             [ Svg.width "24"
