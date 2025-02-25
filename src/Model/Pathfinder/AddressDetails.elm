@@ -3,6 +3,7 @@ module Model.Pathfinder.AddressDetails exposing (Model)
 import Api.Data
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.PagedTable exposing (PagedTable)
+import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 
 
@@ -15,4 +16,6 @@ type alias Model =
     , neighborsOutgoing : PagedTable Api.Data.NeighborAddress
     , addressId : Id
     , data : Api.Data.Address
+    , relatedAddresses : RelatedAddressesTable.Model
+    , relatedAddressesTableOpen : Bool
     }

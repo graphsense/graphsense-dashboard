@@ -82,6 +82,7 @@ utxo plugins pluginStates vc gc model id viewState address =
 
         relatedDataTabsList =
             [ transactionsDataTab vc model id viewState
+            , relatedAddressesDataTab vc model id viewState
             ]
 
         clstrId =
@@ -162,6 +163,17 @@ utxo plugins pluginStates vc gc model id viewState address =
 
         -- , learnMoreButton = { variant = none }
         , categoryTags = { tagLabel = "" }
+        }
+
+
+relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
+relatedAddressesDataTab vc arg2 arg3 arg4 =
+    dataTab
+        { title =
+            SidePanelComponents.sidePanelListHeaderTitleRelated
+                { sidePanelListHeaderTitleRelated = { label = Locale.string vc.locale "Related addresses" } }
+        , content = Nothing
+        , onClick = AddressDetailsMsg AddressDetails.UserClickedToggleRelatedAddressesTable
         }
 
 
