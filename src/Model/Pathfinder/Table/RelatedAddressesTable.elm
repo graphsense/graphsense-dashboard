@@ -20,5 +20,3 @@ titleAddress =
 titleValue : String
 titleValue =
     "Value"
-
-
