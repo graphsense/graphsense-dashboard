@@ -105,11 +105,15 @@ body plugins vc model =
 
 navbarSubMenuView : Config -> Model key -> NavbarSubMenu -> Html Msg
 navbarSubMenuView vc model { type_ } =
+    let
+        fixedWidth =
+            180
+    in
     div
         [ [ Css.left (Css.px (Nb.navbarMenuNew_details.renderedWidth - 5))
           , Css.top (Css.px 0)
           , Css.position Css.absolute
-          , Css.zIndex (Css.int 10000)
+          , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1))
           ]
             |> css
         , onClickWithStop UserClosesNavbarSubMenu
@@ -120,6 +124,9 @@ navbarSubMenuView vc model { type_ } =
                     (GraphComponents.rightClickMenuAttributes
                         |> Rs.s_lineFrame
                             [ css [ Css.display Css.none ] ]
+                        |> Rs.s_rightClickMenu [ [ Css.width (Css.px fixedWidth) ] |> css ]
+                        |> Rs.s_shortcutList [ [ Css.width (Css.px fixedWidth) ] |> css ]
+                        |> Rs.s_pluginsList [ [ Css.width (Css.px fixedWidth) ] |> css ]
                     )
                     { shortcutList =
                         [ { link = model.graph.route |> Route.graphRoute |> Route.toUrl

@@ -45,7 +45,7 @@ view vc (ContextMenuItem { icon, text1, text2, action }) =
                         >> Html.a
                             [ Html.Styled.Attributes.href link
                             , Html.Styled.Attributes.target "_blank"
-                            , [ Css.textDecoration Css.none, Css.visited [ Css.color Css.inherit ] ] |> css
+                            , [ Css.textDecoration Css.none, Css.color Css.inherit, Css.visited [ Css.color Css.inherit, Css.textDecoration Css.none ] ] ++ fullWidth |> css
                             ]
                     )
 
@@ -75,7 +75,7 @@ view vc (ContextMenuItem { icon, text1, text2, action }) =
         { stateNeutralTypeWithIcon =
             { iconInstance = icon
             , text1 = Locale.string vc.locale text1
-            , text2 = text2 |> Maybe.withDefault ""
+            , text2 = Locale.string vc.locale (text2 |> Maybe.withDefault "")
             , text2Visible = Maybe.Extra.isJust text2
             }
         }

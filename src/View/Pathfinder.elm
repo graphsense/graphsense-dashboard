@@ -110,12 +110,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                 HGraphComponents.rightClickMenuWithAttributes
                     (HGraphComponents.rightClickMenuAttributes
                         |> Rs.s_lineFrame
-                            (if List.isEmpty pluginsList then
-                                []
-
-                             else
-                                [ css [ Css.display Css.none ] ]
-                            )
+                            [ css [ Css.display Css.none ] ]
                         |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
                     )
                     { shortcutList =
