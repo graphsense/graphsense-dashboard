@@ -63,7 +63,7 @@ init plugins uc flags url key =
             , abuseConcepts = []
             }
       , page = Home
-      , search = Search.init (Search.initSearchAll Nothing)
+      , search = Search.init (Search.initSearchAddressAndTxs Nothing)
       , graph = Graph.init settings flags.now
       , pathfinder = pathfinderState
       , user =

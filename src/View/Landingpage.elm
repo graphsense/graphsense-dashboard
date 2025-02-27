@@ -57,8 +57,9 @@ view plugins vc model =
                 ]
         , [ ( "1Archive1n2C579dMsAu3iC6tWzuQJz8dN", "address" )
           , ( "8c510d39be9458721bdde62f64b096812de23c0ebd37a4aff82b8abb6307beb6", "transaction" )
-          , ( "internet archive", "label" )
-          , ( "123", "block" )
+
+          --   , ( "internet archive", "label" )
+          --   , ( "123", "block" )
           ]
             |> List.map
                 (\( str, name ) ->

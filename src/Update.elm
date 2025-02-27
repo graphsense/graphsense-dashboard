@@ -285,7 +285,7 @@ update plugins uc msg model =
                     , search =
                         model.search
                             |> s_searchType
-                                (Search.initSearchAll (Just stats))
+                                (Search.initSearchAddressAndTxs Nothing)
                     , plugins = newPluginsState
                 }
                 |> Tuple.mapSecond ((::) (PluginEffect cmd))
@@ -831,29 +831,42 @@ update plugins uc msg model =
 
                 Search.UserPicksCurrency currency ->
                     let
-                        ( graph, graphEffects ) =
-                            Graph.loadAddressPath plugins
-                                { currency = currency
-                                , addresses =
-                                    Search.query model.search
-                                        |> Search.getMulti
-                                }
-                                model.graph
-
                         ( search, searchEffects ) =
                             Search.update m model.search
                     in
-                    clearSearch plugins { model | graph = graph, search = search, dialog = Nothing }
-                        |> mapSecond ((++) (List.map GraphEffect graphEffects))
-                        |> mapSecond ((++) (List.map SearchEffect searchEffects))
-                        |> mapSecond
-                            ((++)
-                                [ Route.Graph.Root
-                                    |> Route.graphRoute
-                                    |> Route.toUrl
-                                    |> NavPushUrlEffect
-                                ]
-                            )
+                    if model.page == Home then
+                        clearSearch plugins { model | search = search, dialog = Nothing }
+                            |> Tuple.mapSecond
+                                ((++)
+                                    [ Route.Pathfinder.addressRoute { network = currency, address = Search.query model.search }
+                                        |> Route.pathfinderRoute
+                                        |> Route.toUrl
+                                        |> NavPushUrlEffect
+                                    ]
+                                )
+
+                    else
+                        let
+                            ( graph, graphEffects ) =
+                                Graph.loadAddressPath plugins
+                                    { currency = currency
+                                    , addresses =
+                                        Search.query model.search
+                                            |> Search.getMulti
+                                    }
+                                    model.graph
+                        in
+                        clearSearch plugins { model | graph = graph, search = search, dialog = Nothing }
+                            |> mapSecond ((++) (List.map GraphEffect graphEffects))
+                            |> mapSecond ((++) (List.map SearchEffect searchEffects))
+                            |> mapSecond
+                                ((++)
+                                    [ Route.Graph.Root
+                                        |> Route.graphRoute
+                                        |> Route.toUrl
+                                        |> NavPushUrlEffect
+                                    ]
+                                )
 
                 _ ->
                     let
@@ -1635,6 +1648,10 @@ updateByUrl plugins uc url model =
                                 , url = url
                                 , tooltip = Nothing
                                 , navbarSubMenu = Nothing
+                                , search =
+                                    model.search
+                                        |> s_searchType
+                                            (Search.initSearchAddressAndTxs Nothing)
                               }
                             , []
                             )
@@ -1693,6 +1710,10 @@ updateByUrl plugins uc url model =
                                         , url = url
                                         , tooltip = Nothing
                                         , navbarSubMenu = Nothing
+                                        , search =
+                                            model.search
+                                                |> s_searchType
+                                                    (Search.initSearchAll (model.stats |> RD.toMaybe))
                                       }
                                     , graphEffect
                                         |> List.map GraphEffect
