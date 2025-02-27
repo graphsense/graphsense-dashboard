@@ -12,7 +12,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.Styled
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.View exposing (pointer)
+import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 
 
@@ -60,7 +60,13 @@ dataTab config =
                         |> Rs.s_sidePanelDataTabOpen attr
                     )
                     { sidePanelDataTabOpen =
-                        { contentInstance = content
+                        { contentInstance =
+                            Html.Styled.div
+                                [ onClickWithStop NoOp
+                                , css fullWidth
+                                ]
+                                [ content
+                                ]
                         , titleInstance = config.title
                         }
                     }
