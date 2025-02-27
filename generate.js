@@ -6,6 +6,23 @@ var yaml = require('yaml')
 var codegen = require('elm-codegen')
 const { execSync } = require("child_process");
 
+function parseNamespace(filePath) {
+  // Read the content of the file
+  const content = fs.readFileSync(filePath, 'utf-8');
+  
+  // Define a regular expression to capture the value after 'namespace ='
+  const regex = /namespace\s*=\s*"([^"]+)"/;
+  
+  // Search for the pattern in the file content
+  const match = content.match(regex);
+  
+  if (match) {
+    return match[1];  // Return the captured value (namespace)
+  } else {
+    return null;  // Return null if no match is found
+  }
+}
+
 const isDir = fileName => {
   try {
     return fs.lstatSync(fileName).isDirectory() || fs.lstatSync(fileName).isSymbolicLink();
@@ -46,11 +63,16 @@ plugins.sort((a, b) => {
   return aEndsWithPreview ? 1 : -1;
 });
 
+
 plugins = plugins.map(plugin => {
     console.log(plugin)
+    const packageName = plugin.charAt(0).toUpperCase() + plugin.slice(1)
+    const namespace = parseNamespace(path.join(pluginsFolder, plugin, 'src', packageName, 'Model.elm'))
+    console.log('namespace', namespace)
     return { 
       name : plugin,
-      package : plugin.charAt(0).toUpperCase() + plugin.slice(1)
+      namespace : namespace, 
+      package : packageName
     }
   })
 
