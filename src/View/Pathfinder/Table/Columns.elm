@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, valueColumn, valueColumnWithOptions, wrapCell, twoValuesCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesCell, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
@@ -12,9 +12,9 @@ import RecordSetter as Rs
 import Table
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Tuple exposing (pair)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
-import Tuple exposing (pair)
 
 
 timestampDateMultiRowColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
@@ -223,27 +223,27 @@ type alias TwoValuesCellConfig data =
     , labelValue2 : String
     }
 
+
 twoValuesCell : View.Config -> String -> TwoValuesCellConfig data -> Table.Column data msg
 twoValuesCell vc name conf =
     let
         toValue =
             pair conf.coinCode
-            >> List.singleton
-            >> Locale.currencyWithoutCode vc.locale
-
+                >> List.singleton
+                >> Locale.currencyWithoutCode vc.locale
     in
     Table.veryCustomColumn
         { name = name
-        , viewData = 
-            \data -> 
+        , viewData =
+            \data ->
                 Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
-                [ SidePanelComponents.sidePanelAddListTwoValuesCell
-                    { sidePanelAddListTwoValuesCell =
-                        { value1 = conf.getValue1 data |> toValue 
-                        , value2 = conf.getValue2 data |> toValue
-                        , labelValue2 = conf.labelValue2 ++ ":"
+                    [ SidePanelComponents.sidePanelAddListTwoValuesCell
+                        { sidePanelAddListTwoValuesCell =
+                            { value1 = conf.getValue1 data |> toValue
+                            , value2 = conf.getValue2 data |> toValue
+                            , labelValue2 = conf.labelValue2 ++ ":"
+                            }
                         }
-                    }
-                ]
+                    ]
         , sorter = Table.unsortable
         }

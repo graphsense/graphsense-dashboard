@@ -11,6 +11,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
+import RemoteData exposing (WebData)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
@@ -18,7 +19,6 @@ import Svg.Styled.Lazy as Svg
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Tx as Tx
-import RemoteData exposing (WebData)
 
 
 addresses : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Dict Id (WebData Api.Data.Entity) -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
