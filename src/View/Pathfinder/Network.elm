@@ -18,9 +18,10 @@ import Svg.Styled.Lazy as Svg
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Tx as Tx
+import RemoteData exposing (WebData)
 
 
-addresses : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Dict Id Api.Data.Entity -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Dict Id (WebData Api.Data.Entity) -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
 addresses plugins vc colors clusters annotations =
     Dict.foldl
         (\id address svg ->

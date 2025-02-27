@@ -1,20 +1,35 @@
 module Init.Pathfinder.AddressDetails exposing (init)
 
 import Api.Data
+import Dict exposing (Dict)
 import Effect.Pathfinder exposing (Effect)
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
+import Init.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Locale as Locale
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Id exposing (Id)
+import Init.Pathfinder.Id as Id
 import Model.Pathfinder.Network exposing (Network)
+import RemoteData exposing (WebData)
+import Tuple exposing (first, second)
 
 
-init : Network -> Locale.Model -> Id -> Api.Data.Address -> ( AddressDetails.Model, List Effect )
-init network locale addressId data =
+init : Network -> Dict Id (WebData Api.Data.Entity) -> Locale.Model -> Id -> Api.Data.Address -> ( AddressDetails.Model, List Effect )
+init network clusters locale addressId data =
     let
         ( txs, eff ) =
             TransactionTable.init network locale addressId data
+
+        clusterId =
+            Id.initClusterId data.currency data.entity
+        related =
+            Dict.get clusterId clusters
+                |> Maybe.withDefault RemoteData.NotAsked
+                |> RemoteData.map
+                    (\e ->
+                        RelatedAddressesTable.init addressId e
+                    )
     in
     ( { neighborsTableOpen = False
       , transactionsTableOpen = False
@@ -24,8 +39,13 @@ init network locale addressId data =
       , neighborsIncoming = NeighborsTable.init data.inDegree
       , addressId = addressId
       , data = data
-      , relatedAddresses = {}
+      , relatedAddresses =
+            RemoteData.map first related
       , relatedAddressesTableOpen = False
       }
     , eff
+        ++ (related
+                |> RemoteData.map second
+                |> RemoteData.withDefault []
+           )
     )

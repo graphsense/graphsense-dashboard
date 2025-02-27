@@ -30,6 +30,7 @@ import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
+import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Deserialize exposing (Deserialized)
@@ -196,7 +197,7 @@ updateByMsg plugins uc msg model =
                                     _ ->
                                         Dict.get id net.addresses
                                             |> Maybe.map
-                                                (\address -> AddressDetails.init net uc.locale address.id data)
+                                                (\address -> AddressDetails.init net clusters uc.locale address.id data)
                                             |> Maybe.map (mapFirst Success)
                                             |> Maybe.map (mapFirst (AddressDetails id))
                                             |> Maybe.map (mapFirst Just)
@@ -225,23 +226,43 @@ updateByMsg plugins uc msg model =
                     else
                         model.colors
 
-                effwithCluster =
-                    eff
-                        ++ (if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
-                                []
+                ( clusters, effCluster ) =
+                    if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
+                        ( model.clusters, [] )
 
-                            else
-                                [ BrowserGotClusterData clusterId |> Api.GetEntityEffectWithDetails { currency = Id.network id, entity = data.entity, includeActors = False, includeBestTag = False } |> ApiEffect ]
-                           )
+                    else
+                        ( Dict.insert clusterId RemoteData.Loading model.clusters
+                        , [ BrowserGotClusterData id
+                                |> Api.GetEntityEffectWithDetails
+                                    { currency = Id.network id
+                                    , entity = data.entity
+                                    , includeActors = False
+                                    , includeBestTag = False
+                                    }
+                                |> ApiEffect
+                          ]
+                        )
             in
             model
                 |> s_network net
                 |> s_details details
                 |> s_colors ncolors
-                |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ effwithCluster)
+                |> s_clusters clusters
+                |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
 
-        BrowserGotClusterData id data ->
-            n { model | clusters = Dict.insert id data model.clusters }
+        BrowserGotClusterData addressId data ->
+            let
+                clusterId =
+                    Id.initClusterId data.currency data.entity
+            in
+            n
+                { model
+                    | clusters = Dict.insert clusterId (Success data) model.clusters
+                }
+                |> and
+                    (AddressDetails.browserGotClusterData addressId data
+                        |> updateAddressDetails addressId
+                    )
 
         BrowserGotTxForAddress addressId direction data ->
             addTx plugins uc addressId direction data model
@@ -1179,6 +1200,20 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        BrowserGotEntityAddressesForRelatedAddressesTable addressId addresses ->
+            let
+                network =
+                    Id.network addressId
+            in
+            addresses.addresses
+                |> List.map (.address >> Id.init network)
+                |> List.map (fetchTagSummaryForId model.tagSummaries)
+                |> pair model
+                |> and
+                    (AddressDetails.browserGotEntityAddressesForRelatedAddressesTable addresses
+                        |> updateAddressDetails addressId
+                    )
+
 
 fitGraph : Update.Config -> Model -> Model
 fitGraph uc model =
@@ -1683,7 +1718,7 @@ selectAddress uc id model =
             let
                 newDetails =
                     address.data
-                        |> RemoteData.map (AddressDetails.init model.network uc.locale address.id)
+                        |> RemoteData.map (AddressDetails.init model.network model.clusters uc.locale address.id)
 
                 details =
                     case model.details of
@@ -1860,36 +1895,39 @@ bulkfetchTagsForTx tx model =
                         |> Maybe.withDefault []
                         |> List.map (Id.init raw.currency)
                         |> List.filter (flip Dict.member model.tagSummaries >> not)
-
-                addr =
-                    addresses raw.inputs
-                        ++ addresses raw.outputs
-                        |> Set.fromList
-                        |> Set.toList
             in
-            ( { model
-                | tagSummaries =
-                    addr
-                        |> List.foldl
-                            (\a -> Dict.insert a LoadingTags)
-                            model.tagSummaries
-              }
-            , List.Extra.greedyGroupsOf 100 addr
-                |> List.map
-                    (\adr ->
-                        BrowserGotAddressesTags adr
-                            |> Api.BulkGetAddressTagsEffect
-                                { currency = raw.currency
-                                , addresses = List.map Id.id adr
-                                , pagesize = Just 1
-                                , includeBestClusterTag = True
-                                }
-                            |> ApiEffect
-                    )
-            )
+            addresses raw.inputs
+                ++ addresses raw.outputs
+                |> Set.fromList
+                |> Set.toList
+                |> bulkfetchTagsForAddresses raw.currency model
 
         _ ->
             n model
+
+
+bulkfetchTagsForAddresses : String -> Model -> List Id -> ( Model, List Effect )
+bulkfetchTagsForAddresses network model addr =
+    ( { model
+        | tagSummaries =
+            addr
+                |> List.foldl
+                    (\a -> Dict.insert a LoadingTags)
+                    model.tagSummaries
+      }
+    , List.Extra.greedyGroupsOf 100 addr
+        |> List.map
+            (\adr ->
+                BrowserGotAddressesTags adr
+                    |> Api.BulkGetAddressTagsEffect
+                        { currency = network
+                        , addresses = List.map Id.id adr
+                        , pagesize = Just 1
+                        , includeBestClusterTag = True
+                        }
+                    |> ApiEffect
+            )
+    )
 
 
 fetchTagSummaryForId : Dict Id HavingTags -> Id -> Effect
@@ -2263,3 +2301,28 @@ autoLoadAddresses plugins tx model =
     [ src, dst ]
         |> List.filterMap identity
         |> List.foldl aggAddressAdd (n model)
+
+
+updateAddressDetails : Id -> (AddressDetails.Model -> ( AddressDetails.Model, List Effect )) -> Model -> ( Model, List Effect )
+updateAddressDetails id upd model =
+    case model.details of
+        Just (AddressDetails id_ (Success ad)) ->
+            if id == id_ then
+                let
+                    ( addressViewDetails, eff ) =
+                        upd ad
+                in
+                ( { model
+                    | details =
+                        Success addressViewDetails
+                            |> AddressDetails id
+                            |> Just
+                  }
+                , eff
+                )
+
+            else
+                n model
+
+        _ ->
+            n model

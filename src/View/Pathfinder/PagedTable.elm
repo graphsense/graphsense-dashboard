@@ -18,10 +18,6 @@ import View.Graph.Table exposing (simpleThead)
 import View.Locale as Locale
 
 
-type alias PagingMsg data msg =
-    PagedTable data -> msg
-
-
 tableHint : Styles -> View.Config -> String -> Html msg
 tableHint _ vc msg =
     div
@@ -77,7 +73,7 @@ customizations vc =
 --         ]
 
 
-pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> PagingMsg data msg -> PagingMsg data msg -> PagingMsg data msg -> Html msg
+pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> msg -> msg -> msg -> Html msg
 pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
     let
         tbl =
@@ -91,21 +87,21 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
 
         nextActiveAttributes =
             if nextPageAvailable then
-                [ onClick (nextMsg tblPaged), [ Css.cursor Css.pointer ] |> css ]
+                [ onClick nextMsg, [ Css.cursor Css.pointer ] |> css ]
 
             else
                 []
 
         prevActiveAttributes =
             if tblPaged.currentPage > 1 then
-                [ onClick (prevMsg tblPaged), [ Css.cursor Css.pointer ] |> css ]
+                [ onClick prevMsg, [ Css.cursor Css.pointer ] |> css ]
 
             else
                 []
 
         firstActiveAttributes =
             if tblPaged.currentPage > 1 then
-                [ onClick (firstMsg tblPaged), [ Css.cursor Css.pointer ] |> css ]
+                [ onClick firstMsg, [ Css.cursor Css.pointer ] |> css ]
 
             else
                 []

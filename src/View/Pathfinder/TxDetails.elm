@@ -12,7 +12,7 @@ import Html.Styled exposing (Html)
 import List.Extra
 import Model.Currency exposing (asset, assetFromBase)
 import Model.Graph.Table
-import Model.Pathfinder as Pathfinder
+import Model.Pathfinder as Pathfinder exposing (getHavingTags)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tx as Tx
@@ -137,7 +137,7 @@ utxo vc model id viewState tx =
                         let
                             ioTableConfig =
                                 { network = tx.raw.currency
-                                , hasTags = getLbl model
+                                , hasTags = getHavingTags model
                                 , isChange = always False
                                 }
                         in
@@ -164,7 +164,7 @@ utxo vc model id viewState tx =
                         let
                             ioTableConfig =
                                 { network = tx.raw.currency
-                                , hasTags = getLbl model
+                                , hasTags = getHavingTags model
                                 , isChange =
                                     .address
                                         >> List.head
@@ -217,9 +217,3 @@ ioTableView vc dir network table ioColumnConfig =
         noTools
         (IoTable.config styles vc dir isCheckedFn ioColumnConfig)
         table
-
-
-getLbl : Pathfinder.Model -> Id -> Pathfinder.HavingTags
-getLbl model id_ =
-    Dict.get id_ model.tagSummaries
-        |> Maybe.withDefault Pathfinder.NoTags

@@ -20,7 +20,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
-import RemoteData
+import RemoteData exposing (WebData)
 import Svg.Styled as Svg exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
@@ -33,7 +33,7 @@ import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Maybe Annotations.AnnotationItem -> Svg Msg
+view : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe (WebData Api.Data.Entity)) -> Maybe Annotations.AnnotationItem -> Svg Msg
 view plugins vc colors address getCluster annotation =
     let
         data =
@@ -52,7 +52,9 @@ view plugins vc colors address getCluster annotation =
             clusterColor |> Maybe.map (Color.toRgba >> halfAlpha)
 
         cluster =
-            clusterid |> Maybe.andThen getCluster
+            clusterid
+                |> Maybe.andThen getCluster
+                |> Maybe.andThen RemoteData.toMaybe
 
         directionToField direction =
             case direction of

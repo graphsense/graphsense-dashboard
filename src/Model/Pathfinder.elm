@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getAddressDetailStats, getLoadedAddress, unit)
+module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getAddressDetailStats, getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Config.Pathfinder exposing (Config)
@@ -18,6 +18,7 @@ import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
 import Theme.Svg.GraphComponents as GraphComponents
+import Tuple
 import Util.Annotations exposing (AnnotationModel)
 
 
@@ -30,7 +31,7 @@ type alias Model =
     { network : Network
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
-    , clusters : Dict Id Entity
+    , clusters : Dict Id (WebData Entity)
     , colors : ScopedColorAssignment
     , annotations : AnnotationModel
     , dragging : Dragging Id
@@ -47,6 +48,7 @@ type alias Model =
     , toolbarHovercard : Maybe ToolbarHovercardModel
     , contextMenu : Maybe ContextMenu
     , name : String
+    , selectAfterLoad : Maybe Id
     }
 
 
@@ -114,3 +116,23 @@ getAddressDetailStats id model madvs =
             maddress |> Maybe.andThen Address.getOutDegree
     in
     { nrTxs = nrTxs, nrIncomeingNeighbors = indegree, nrOutgoingNeighbors = outdegree }
+
+
+getHavingTags : Model -> Id -> HavingTags
+getHavingTags model id_ =
+    Dict.get id_ model.tagSummaries
+        |> Maybe.withDefault NoTags
+
+
+getSortedLabelSummariesByRelevance : Api.Data.TagSummary -> List ( String, Api.Data.LabelSummary )
+getSortedLabelSummariesByRelevance =
+    .labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse
+
+
+getSortedConceptsByWeight : Api.Data.TagSummary -> List String
+getSortedConceptsByWeight =
+    .conceptTagCloud
+        >> Dict.toList
+        >> List.sortBy (Tuple.second >> .weighted)
+        >> List.map Tuple.first
+        >> List.reverse

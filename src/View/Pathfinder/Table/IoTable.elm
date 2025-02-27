@@ -5,6 +5,7 @@ import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
+import Css.View
 import Dict
 import Html.Styled exposing (span)
 import Html.Styled.Attributes exposing (css, title)
@@ -123,7 +124,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                     , Css.position Css.absolute
                     ]
                 ]
-                [ loadingSpinner vc (\_ -> [])
+                [ loadingSpinner vc Css.View.loadingSpinner
                 ]
 
         hasTags_ =

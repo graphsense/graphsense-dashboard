@@ -296,7 +296,7 @@ labelColumn vc =
                                 (concepts_w_default
                                     |> List.map
                                         (\x ->
-                                            getConceptName vc (Just x)
+                                            getConceptName vc x
                                                 |> Maybe.withDefault x
                                         )
                                     |> String.join ", "

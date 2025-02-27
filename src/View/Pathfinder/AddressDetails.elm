@@ -1,12 +1,14 @@
 module View.Pathfinder.AddressDetails exposing (view)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Css.DateTimePicker as DateTimePicker
 import Css.Pathfinder as Css exposing (fullWidth, sidePanelCss)
 import Css.Table
+import Css.View
 import Dict exposing (Dict)
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div, img)
@@ -16,17 +18,19 @@ import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
 import Model.Locale as Locale
-import Model.Pathfinder as Pathfinder
+import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder exposing (Msg(..), OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
+import RemoteData exposing (WebData)
 import Route
 import Route.Graph
 import Svg.Styled exposing (Svg)
@@ -41,12 +45,13 @@ import Util.Css as Css
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-import Util.View exposing (copyIconPathfinder, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button exposing (primaryButton, secondaryButton)
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.PagedTable as PagedTable
+import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 
 
@@ -95,7 +100,8 @@ utxo plugins pluginStates vc gc model id viewState address =
 
         sidePanelAddressHeader =
             { iconInstance =
-                Dict.get clstrId model.clusters
+                cluster
+                    |> Maybe.andThen RemoteData.toMaybe
                     |> Address.toNodeIconHtml address
             , headerText =
                 (String.toUpper <| Id.network id)
@@ -107,8 +113,9 @@ utxo plugins pluginStates vc gc model id viewState address =
             { clusterInfoVisible = Dict.member clstrId model.clusters
             , clusterInfoInstance =
                 cluster
-                    |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors)
-                    |> Maybe.withDefault none
+                    |> Maybe.withDefault RemoteData.NotAsked
+                    |> RemoteData.unpack (\_ -> loadingSpinner vc Css.View.loadingSpinner)
+                        (clusterInfoView vc model.config.isClusterDetailsOpen model.colors)
             }
 
         assetId =
@@ -171,17 +178,64 @@ utxo plugins pluginStates vc gc model id viewState address =
         }
 
 
-relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Api.Data.Entity -> Html Msg
-relatedAddressesDataTab vc _ _ _ cluster =
+relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Entity -> Html Msg
+relatedAddressesDataTab vc model _ viewState cluster =
+    let
+        label =
+            Locale.string vc.locale "Related addresses"
+    in
     dataTab
         { title =
-            SidePanelComponents.sidePanelListHeaderTitleWithNumber
-                { sidePanelListHeaderTitleWithNumber =
-                    { label = Locale.string vc.locale "Related addresses"
-                    , number = Locale.int vc.locale cluster.noAddresses
-                    }
-                }
-        , content = Nothing
+            cluster
+                |> RemoteData.unpack
+                    (\_ ->
+                        SidePanelComponents.sidePanelListHeaderTitle
+                            { sidePanelListHeaderTitle =
+                                { label = label
+                                }
+                            }
+                    )
+                    (\c ->
+                        SidePanelComponents.sidePanelListHeaderTitleWithNumber
+                            { sidePanelListHeaderTitleWithNumber =
+                                { label = label
+                                , number = Locale.int vc.locale c.noAddresses
+                                }
+                            }
+                    )
+        , content =
+            if not viewState.relatedAddressesTableOpen then
+                Nothing
+
+            else
+                case viewState.relatedAddresses of
+                    RemoteData.Failure _ ->
+                        Html.text "error" |> Just
+
+                    RemoteData.Loading ->
+                        loadingSpinner vc Css.View.loadingSpinner
+                            |> Just
+
+                    RemoteData.NotAsked ->
+                        loadingSpinner vc Css.View.loadingSpinner
+                            |> Just
+
+                    RemoteData.Success ra ->
+                        let
+                            ratc =
+                                { isChecked = flip Network.hasAddress model.network
+                                , hasTags = getHavingTags model
+                                , coinCode = assetFromBase viewState.data.currency
+                                }
+                        in
+                        PagedTable.pagedTableView vc
+                            []
+                            (RelatedAddressesTable.config Css.Table.styles vc ratc)
+                            ra.table
+                            (AddressDetailsMsg AddressDetails.UserClickedPreviousPageRelatedAddressesTable)
+                            (AddressDetailsMsg AddressDetails.UserClickedNextPageRelatedAddressesTable)
+                            (AddressDetailsMsg AddressDetails.UserClickedFirstPageRelatedAddressesTable)
+                            |> Just
         , onClick = AddressDetailsMsg AddressDetails.UserClickedToggleRelatedAddressesTable
         }
 
@@ -314,13 +368,13 @@ transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Mod
 transactionTableView vc addressId txOnGraphFn model =
     let
         prevMsg =
-            \_ -> AddressDetailsMsg AddressDetails.UserClickedPreviousPageTransactionTable
+            AddressDetailsMsg AddressDetails.UserClickedPreviousPageTransactionTable
 
         nextMsg =
-            \_ -> AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
+            AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
 
         firstMsg =
-            \_ -> AddressDetailsMsg AddressDetails.UserClickedFirstPageTransactionTable
+            AddressDetailsMsg AddressDetails.UserClickedFirstPageTransactionTable
 
         styles =
             Css.Table.styles
@@ -642,7 +696,7 @@ viewLabelOfTags vc gc model id =
                                 []
 
                             else
-                                (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse) x
+                                getSortedLabelSummariesByRelevance x
                         )
                     |> Maybe.withDefault []
 
@@ -684,9 +738,11 @@ viewLabelOfTags vc gc model id =
     else
         let
             concepts =
-                ts |> Maybe.map (\x -> x.conceptTagCloud |> Dict.toList |> List.sortBy (\( _, v ) -> v.weighted)) |> Maybe.withDefault [] |> List.reverse
+                ts
+                    |> Maybe.map getSortedConceptsByWeight
+                    |> Maybe.withDefault []
 
-            conceptItem ( k, _ ) =
+            conceptItem k =
                 let
                     ctx =
                         { context = k, domId = k ++ "_tags_concept_tag" }
@@ -698,7 +754,13 @@ viewLabelOfTags vc gc model id =
                     , css [ Css.cursor Css.pointer ]
                     , onClick (UserOpensDialogWindow (TagsList id))
                     ]
-                    [ TagComponents.categoryTags { categoryTags = { tagLabel = View.getConceptName vc (Just k) |> Maybe.withDefault k } } ]
+                    [ TagComponents.categoryTags
+                        { categoryTags =
+                            { tagLabel =
+                                View.getConceptName vc k |> Maybe.withDefault k
+                            }
+                        }
+                    ]
 
             learnMorebtn =
                 Btns.buttonTypeTextStateRegularStyleTextWithAttributes

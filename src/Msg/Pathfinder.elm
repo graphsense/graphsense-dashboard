@@ -96,6 +96,7 @@ type Msg
     | UserGotDataForTagsListDialog Id Api.Data.AddressTags
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
+    | BrowserGotEntityAddressesForRelatedAddressesTable Id Api.Data.EntityAddresses
 
 
 type alias TextTooltipConfig =

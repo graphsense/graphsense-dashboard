@@ -282,7 +282,7 @@ tagLabel vc lbl tag =
                             { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
                             , tooltipRowValue =
                                 lbldata.concepts
-                                    |> List.map (\x -> getConceptName vc (Just x) |> Maybe.withDefault x)
+                                    |> List.map (\x -> getConceptName vc x |> Maybe.withDefault x)
                                     |> String.join ", "
                                     |> Locale.string vc.locale
                                     |> Util.View.truncate 20

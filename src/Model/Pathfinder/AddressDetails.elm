@@ -5,6 +5,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.PagedTable exposing (PagedTable)
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
+import RemoteData exposing (WebData)
 
 
 type alias Model =
@@ -16,6 +17,6 @@ type alias Model =
     , neighborsOutgoing : PagedTable Api.Data.NeighborAddress
     , addressId : Id
     , data : Api.Data.Address
-    , relatedAddresses : RelatedAddressesTable.Model
+    , relatedAddresses : WebData RelatedAddressesTable.Model
     , relatedAddressesTableOpen : Bool
     }

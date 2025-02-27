@@ -1,11 +1,13 @@
-module Update.Pathfinder.AddressDetails exposing (showTransactionsTable, update)
+module Update.Pathfinder.AddressDetails exposing (browserGotClusterData, browserGotEntityAddressesForRelatedAddressesTable, showTransactionsTable, update)
 
+import Api.Data
 import Basics.Extra exposing (flip)
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
+import Init.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder as Pathfinder
@@ -14,10 +16,12 @@ import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.PagedTable as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
+import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
+import RemoteData
 import Tuple exposing (mapFirst)
 import Update.DateRangePicker as DateRangePicker
 import Update.Graph.Table
@@ -280,8 +284,32 @@ update uc pathfinderModel msg id model =
         TableMsg _ ->
             n model
 
+        RelatedAddressesTableMsg _ ->
+            n model
+
         UserClickedToggleRelatedAddressesTable ->
             n { model | relatedAddressesTableOpen = not model.relatedAddressesTableOpen }
+
+        UserClickedPreviousPageRelatedAddressesTable ->
+            Debug.todo "branch 'UserClickedPreviousPageRelatedAddressesTable' not implemented"
+
+        UserClickedNextPageRelatedAddressesTable ->
+            Debug.todo "branch 'UserClickedNextPageRelatedAddressesTable' not implemented"
+
+        UserClickedFirstPageRelatedAddressesTable ->
+            Debug.todo "branch 'UserClickedFirstPageRelatedAddressesTable' not implemented"
+
+
+browserGotEntityAddressesForRelatedAddressesTable : Api.Data.EntityAddresses -> Model -> ( Model, List Effect )
+browserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } model =
+    model.relatedAddresses
+        |> RemoteData.map
+            (\ra ->
+                PT.appendData ra.table RelatedAddressesTable.filter nextPage addresses
+                    |> flip s_table ra
+            )
+        |> flip s_relatedAddresses model
+        |> n
 
 
 type SetOrNoSet x
@@ -361,3 +389,16 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
 showTransactionsTable : Model -> Bool -> ( Model, List Effect )
 showTransactionsTable model show =
     ( { model | transactionsTableOpen = show }, [] )
+
+
+browserGotClusterData : Id -> Api.Data.Entity -> Model -> ( Model, List Effect )
+browserGotClusterData addressId entity model =
+    let
+        ( relatedAddresses, eff ) =
+            RelatedAddressesTable.init addressId entity
+    in
+    ( { model
+        | relatedAddresses = RemoteData.Success relatedAddresses
+      }
+    , eff
+    )

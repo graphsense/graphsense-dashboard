@@ -237,3 +237,6 @@ shallPushHistory msg _ =
 
         CloseTextTooltip _ ->
             False
+
+        BrowserGotEntityAddressesForRelatedAddressesTable _ _ ->
+            False
