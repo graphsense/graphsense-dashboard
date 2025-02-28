@@ -40,12 +40,12 @@ import Svg.Styled.Events as Svg
 import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Theme.Html.TagsComponents as TagComponents
 import Theme.Svg.Icons as Icons
 import Util.Css as Css
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
+import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button exposing (primaryButton, secondaryButton)
@@ -255,7 +255,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                     [ css SidePanelComponents.sidePanelRelatedAddressesContentSidePanelAddListFilterRow_details.styles ]
                             , PagedTable.pagedTableView vc
                                 []
-                                (RelatedAddressesTable.config Css.Table.styles vc ratc)
+                                (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
                                 (getCurrentTable ra)
                                 AddressDetails.UserClickedPreviousPageRelatedAddressesTable
                                 AddressDetails.UserClickedNextPageRelatedAddressesTable
@@ -773,26 +773,6 @@ viewLabelOfTags vc gc model id =
                     |> Maybe.map getSortedConceptsByWeight
                     |> Maybe.withDefault []
 
-            conceptItem k =
-                let
-                    ctx =
-                        { context = k, domId = k ++ "_tags_concept_tag" }
-                in
-                Html.div
-                    [ onMouseEnter (Pathfinder.UserMovesMouseOverTagConcept ctx)
-                    , onMouseLeave (Pathfinder.UserMovesMouseOutTagConcept ctx)
-                    , HA.id ctx.domId
-                    , css [ Css.cursor Css.pointer ]
-                    , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
-                    ]
-                    [ TagComponents.categoryTags
-                        { categoryTags =
-                            { tagLabel =
-                                View.getConceptName vc k |> Maybe.withDefault k
-                            }
-                        }
-                    ]
-
             learnMorebtn =
                 Btns.buttonTypeTextStateRegularStyleTextWithAttributes
                     (Btns.buttonTypeTextStateRegularStyleTextAttributes
@@ -818,7 +798,15 @@ viewLabelOfTags vc gc model id =
                 , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
                 ]
             ]
-            ((concepts |> List.map conceptItem) ++ [ learnMorebtn ])
+            ((concepts
+                |> List.map
+                    (Tag.conceptItem vc id
+                        >> Html.map AddressDetails.TooltipMsg
+                        >> Html.map (Pathfinder.AddressDetailsMsg id)
+                    )
+             )
+                ++ [ learnMorebtn ]
+            )
 
 
 getTagSummary : { a | tagSummaries : Dict Id Pathfinder.HavingTags } -> Id -> Maybe Api.Data.TagSummary
@@ -900,9 +888,6 @@ makeSidePanelData model id pluginTagsVisible =
     , tagsVisible = showOtherTag
     }
 
-
-
---viewLabelOfTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> Html Msg
 
 
 setTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) } -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) }

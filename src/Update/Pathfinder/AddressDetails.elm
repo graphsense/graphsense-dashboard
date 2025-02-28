@@ -313,6 +313,9 @@ update uc msg model =
             RelatedAddressesTable.appendTaggedAddresses nextpage addresses
                 |> updateRelatedAddressesTable model
 
+        TooltipMsg _ ->
+            n model
+
 
 updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )
 updateRelatedAddressesTable model upd =

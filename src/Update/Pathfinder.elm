@@ -81,7 +81,9 @@ import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
+import Util.Tag as Tag
 import View.Locale as Locale
+import Tuple3
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -373,6 +375,9 @@ updateByMsg plugins uc msg model =
 
                 AddressDetails.UserClickedTx id ->
                     userClickedTx id model
+
+                AddressDetails.TooltipMsg tm ->
+                    handleTooltipMsg tm model
 
                 _ ->
                     model
@@ -692,31 +697,6 @@ updateByMsg plugins uc msg model =
         UserMovesMouseOutAddress id ->
             ( unhover model, CloseTooltipEffect (Just { context = Id.toString id, domId = Id.toString id }) False |> List.singleton )
 
-        UserMovesMouseOverTagConcept ctx ->
-            case model.details of
-                Just (AddressDetails id _) ->
-                    case Dict.get id model.tagSummaries of
-                        Just (HasTagSummary ts) ->
-                            let
-                                tt =
-                                    Tooltip.TagConcept id
-                                        ctx.context
-                                        ts
-                                        { openTooltip = UserMovesMouseOverTagConcept ctx
-                                        , closeTooltip = UserMovesMouseOutTagConcept ctx
-                                        , openDetails = Just (UserOpensDialogWindow (TagsList id))
-                                        }
-                            in
-                            ( model
-                            , OpenTooltipEffect ctx tt |> List.singleton
-                            )
-
-                        _ ->
-                            n model
-
-                _ ->
-                    n model
-
         ShowTextTooltip config ->
             ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } (Tooltip.Text config.text) |> List.singleton )
 
@@ -770,9 +750,6 @@ updateByMsg plugins uc msg model =
             ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
         UserMovesMouseOutTagLabel ctx ->
-            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
-
-        UserMovesMouseOutTagConcept ctx ->
             ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
         UserMovesMouseOutUtxoTx id ->
@@ -1210,6 +1187,55 @@ updateByMsg plugins uc msg model =
                 |> CmdEffect
                 |> List.singleton
             )
+
+
+handleTooltipMsg : Tag.Msg -> Model -> ( Model, List Effect )
+handleTooltipMsg msg model =
+    case msg of
+        Tag.UserMovesMouseOutTagConcept ctx ->
+            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
+
+        Tag.UserMovesMouseOverTagConcept ctx ->
+            let
+                decoder =
+                    Json.Decode.map3 Tuple3.join
+                        (Json.Decode.index 0 Json.Decode.string)
+                        (Json.Decode.index 1 Json.Decode.string)
+                        (Json.Decode.index 2 Json.Decode.string)
+            in
+            Json.Decode.decodeString decoder ctx.context
+                |> Result.map
+                    (\( concept, currency, address ) ->
+                        let
+                            id =
+                                Id.init currency address
+                        in
+                        case Dict.get id model.tagSummaries |> Debug.log "ts" of
+                            Just (HasTagSummary ts) ->
+                                let
+                                    tt =
+                                        Tooltip.TagConcept id
+                                            concept
+                                            ts
+                                            { openTooltip =
+                                                Tag.UserMovesMouseOverTagConcept ctx
+                                                    |> AddressDetails.TooltipMsg
+                                                    |> AddressDetailsMsg id
+                                            , closeTooltip =
+                                                Tag.UserMovesMouseOutTagConcept ctx
+                                                    |> AddressDetails.TooltipMsg
+                                                    |> AddressDetailsMsg id
+                                            , openDetails = Just (UserOpensDialogWindow (TagsList id))
+                                            }
+                                in
+                                ( model
+                                , OpenTooltipEffect ctx tt |> List.singleton
+                                )
+
+                            _ ->
+                                n model
+                    )
+                |> Result.withDefault (n model)
 
 
 userClickedAddressCheckboxInTable : Plugins -> Id -> Model -> ( Model, List Effect )

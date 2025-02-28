@@ -16,6 +16,7 @@ import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
 import Table
 import Time
+import Util.Tag exposing (TooltipContext)
 
 
 type Msg
@@ -65,12 +66,10 @@ type Msg
     | UserMovesMouseOutUtxoTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
-    | UserMovesMouseOverTagLabel { context : String, domId : String }
-    | UserMovesMouseOutTagLabel { context : String, domId : String }
-    | UserMovesMouseOverTagConcept { context : String, domId : String }
-    | UserMovesMouseOutTagConcept { context : String, domId : String }
-    | UserMovesMouseOverActorLabel { context : String, domId : String }
-    | UserMovesMouseOutActorLabel { context : String, domId : String }
+    | UserMovesMouseOverTagLabel TooltipContext
+    | UserMovesMouseOutTagLabel TooltipContext
+    | UserMovesMouseOverActorLabel TooltipContext
+    | UserMovesMouseOutActorLabel TooltipContext
     | UserInputsAnnotation Id String
     | UserSelectsAnnotationColor Id (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg

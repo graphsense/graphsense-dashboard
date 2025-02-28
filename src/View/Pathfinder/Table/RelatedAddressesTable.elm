@@ -7,17 +7,18 @@ import Css
 import Css.Table exposing (Styles)
 import Css.View
 import Dict
+import Html.Styled as Html
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..), getSortedConceptsByWeight)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (totalReceivedColumn)
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, totalReceivedColumn)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import RecordSetter as Rs
 import Table
 import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Theme.Html.TagsComponents as TagsComponents
+import Util.Tag as Tag
 import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifier)
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
@@ -32,8 +33,8 @@ type alias RelatedAddressesTableConfig =
     }
 
 
-config : Styles -> View.Config -> RelatedAddressesTableConfig -> Table.Config Api.Data.Address AddressDetails.Msg
-config styles vc ratc =
+config : Styles -> View.Config -> RelatedAddressesTableConfig -> Model -> Table.Config Api.Data.Address AddressDetails.Msg
+config styles vc ratc _ =
     let
         rightAlignedColumns =
             Dict.fromList [ ( totalReceivedColumn, View.Pathfinder.PagedTable.RightAligned ) ]
@@ -97,12 +98,10 @@ config styles vc ratc =
                         HasTagSummary ts ->
                             getSortedConceptsByWeight ts
                                 |> List.head
-                                |> Maybe.andThen (View.getConceptName vc)
                                 |> Maybe.map
-                                    (\label ->
-                                        TagsComponents.categoryTags
-                                            { categoryTags = { tagLabel = label } }
-                                            |> List.singleton
+                                    (Tag.conceptItem vc (toId data)
+                                        >> Html.map AddressDetails.TooltipMsg
+                                        >> List.singleton
                                     )
                                 |> Maybe.withDefault []
 

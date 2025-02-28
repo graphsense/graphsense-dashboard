@@ -7,6 +7,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType)
 import Table
 import Time exposing (Posix)
+import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
@@ -42,3 +43,4 @@ type Msg
     | UserClickedTx Id
     | NoOp
     | BrowserGotAddressesForTags (Maybe String) (List Api.Data.Address)
+    | TooltipMsg Tag.Msg
