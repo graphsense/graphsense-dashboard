@@ -1,4 +1,4 @@
-module Update.Pathfinder.Table.RelatedAddressesTable exposing (goToFirstPage, init, loadNextPage, previousPage, selectBoxMsg)
+module Update.Pathfinder.Table.RelatedAddressesTable exposing (appendClusterAddresses, appendTaggedAddresses, goToFirstPage, init, loadNextPage, previousPage, selectBoxMsg)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -7,11 +7,12 @@ import Effect.Pathfinder exposing (Effect(..))
 import Init.Graph.Table
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.PagedTable as PagedTable
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), Model, getCurrentTable, setCurrentTable)
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), Model, filter, getCurrentTable, setCurrentTable)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Tuple exposing (mapFirst)
+import Update.Pathfinder.PagedTable as PagedTable
 import Util exposing (n)
 import Util.ThemedSelectBox as ThemedSelectBox exposing (OutMsg(..))
 
@@ -66,7 +67,7 @@ loadData model nextpage =
         params =
             { currency = model.entity.currency
             , entity = model.entity.entity
-            , pagesize = itemsPerPage
+            , pagesize = itemsPerPage + 1
             , nextpage = nextpage
             }
     in
@@ -117,3 +118,26 @@ selectBoxMsg sm model =
 
             NoSelection ->
                 newModel
+
+
+appendClusterAddresses : Maybe String -> List Api.Data.Address -> Model -> ( Model, List Effect )
+appendClusterAddresses nextpage addresses ra =
+    addresses
+        |> filterCurrentAddress ra
+        |> PagedTable.appendData ra.clusterAddresses filter nextpage
+        |> flip Rs.s_clusterAddresses ra
+        |> n
+
+
+appendTaggedAddresses : Maybe String -> List Api.Data.Address -> Model -> ( Model, List Effect )
+appendTaggedAddresses nextpage addresses ra =
+    addresses
+        |> filterCurrentAddress ra
+        |> PagedTable.appendData ra.taggedAddresses filter nextpage
+        |> flip Rs.s_taggedAddresses ra
+        |> n
+
+
+filterCurrentAddress : Model -> List Api.Data.Address -> List Api.Data.Address
+filterCurrentAddress ra =
+    List.filter (.address >> (/=) (Id.id ra.addressId))

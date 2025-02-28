@@ -83,4 +83,4 @@ hasNextPage pt =
 
 isNextPageLoaded : PagedTable d -> Bool
 isNextPageLoaded pt =
-    List.length (getPageByNr pt (pt.currentPage + 1)) > 0
+    List.length (getPageByNr pt (pt.currentPage + 1)) >= pt.itemsPerPage

@@ -276,12 +276,8 @@ update uc msg model =
                 |> updateRelatedAddressesTable model
 
         BrowserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } ->
-            updateRelatedAddressesTable model
-                (\ra ->
-                    PT.appendData ra.clusterAddresses RelatedAddressesTable.filter nextPage addresses
-                        |> flip s_clusterAddresses ra
-                        |> n
-                )
+            RelatedAddressesTable.appendClusterAddresses nextPage addresses
+                |> updateRelatedAddressesTable model
 
         UserClickedTx _ ->
             n model
@@ -297,7 +293,7 @@ update uc msg model =
 
         SelectBoxMsg sm ->
             RelatedAddressesTable.selectBoxMsg sm
-            |> updateRelatedAddressesTable model
+                |> updateRelatedAddressesTable model
 
         BrowserGotEntityAddressTagsForRelatedAddressesTable currency tags ->
             ( model
@@ -315,12 +311,8 @@ update uc msg model =
             )
 
         BrowserGotAddressesForTags nextpage addresses ->
-            updateRelatedAddressesTable model
-                (\ra ->
-                    PT.appendData ra.taggedAddresses RelatedAddressesTable.filter nextpage addresses
-                        |> flip s_taggedAddresses ra
-                        |> n
-                )
+            RelatedAddressesTable.appendTaggedAddresses nextpage addresses
+                |> updateRelatedAddressesTable model
 
 
 updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )
