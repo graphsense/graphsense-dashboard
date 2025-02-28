@@ -7,11 +7,12 @@ import Effect.Pathfinder exposing (Effect(..))
 import Init.Graph.Table
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.PagedTable as PagedTable
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model)
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), Model)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Tuple exposing (mapFirst)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 itemsPerPage : Int
@@ -31,6 +32,12 @@ init addressId entity =
                 }
             , addressId = addressId
             , entity = { currency = entity.currency, entity = entity.entity }
+            , selectBox =
+                ThemedSelectBox.init
+                    [ TaggedAddresses
+                    , AllAddresses
+                    ]
+            , selected = TaggedAddresses
             }
     in
     ( model

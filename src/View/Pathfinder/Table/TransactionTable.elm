@@ -9,7 +9,7 @@ import Dict
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Pathfinder.Id as Id exposing (Id)
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents

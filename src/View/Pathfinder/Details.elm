@@ -12,7 +12,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.Styled
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.View exposing (onClickWithStop, pointer)
+import Util.View exposing (pointer)
 import View.Locale as Locale
 
 
@@ -43,12 +43,11 @@ type alias DataTabConfig msg =
     }
 
 
-dataTab : DataTabConfig Msg -> Html Msg
+dataTab : DataTabConfig msg -> Html msg
 dataTab config =
     let
         attr =
-            [ css fullWidth
-            , pointer
+            [ pointer
             , onClick config.onClick
             ]
     in
@@ -57,13 +56,13 @@ dataTab config =
             (\content ->
                 SidePanelComponents.sidePanelDataTabOpenWithAttributes
                     (SidePanelComponents.sidePanelDataTabOpenAttributes
-                        |> Rs.s_sidePanelDataTabOpen attr
+                        |> Rs.s_titleRow attr
+                        |> Rs.s_sidePanelDataTabOpen [ css fullWidth ]
                     )
                     { sidePanelDataTabOpen =
                         { contentInstance =
                             Html.Styled.div
-                                [ onClickWithStop NoOp
-                                , css fullWidth
+                                [ css fullWidth
                                 ]
                                 [ content
                                 ]
@@ -74,7 +73,7 @@ dataTab config =
         |> Maybe.withDefault
             (SidePanelComponents.sidePanelDataTabClosedWithAttributes
                 (SidePanelComponents.sidePanelDataTabClosedAttributes
-                    |> Rs.s_sidePanelDataTabClosed attr
+                    |> Rs.s_sidePanelDataTabClosed (css fullWidth :: attr)
                 )
                 { sidePanelDataTabClosed =
                     { titleInstance = config.title

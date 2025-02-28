@@ -3,8 +3,11 @@ module Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import Api.Data
 import DurationDatePicker
 import Model.Direction exposing (Direction)
+import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType)
 import Table
 import Time exposing (Posix)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type Msg
@@ -32,3 +35,8 @@ type Msg
     | UserClickedPreviousPageRelatedAddressesTable
     | UserClickedNextPageRelatedAddressesTable
     | UserClickedFirstPageRelatedAddressesTable
+    | UserClickedAddressCheckboxInTable Id
+    | SelectBoxMsg (ThemedSelectBox.Msg ListType)
+    | UserClickedTxCheckboxInTable Api.Data.AddressTx
+    | UserClickedTx Id
+    | NoOp

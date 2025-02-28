@@ -16,7 +16,7 @@ import Model.Pathfinder.PagedTable as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
 import RemoteData
@@ -26,6 +26,7 @@ import Update.Graph.Table
 import Update.Pathfinder.PagedTable as PT
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (n)
+import Util.ThemedSelectBox as ThemedSelectBox exposing (OutMsg(..))
 
 
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -43,7 +44,7 @@ update uc msg model =
                     \( tbl, dir ) ->
                         if List.isEmpty tbl.table.data then
                             Just
-                                ((GotNeighborsForAddressDetails dir >> AddressDetailsMsg model.addressId)
+                                ((GotNeighborsForAddressDetails dir >> Pathfinder.AddressDetailsMsg model.addressId)
                                     |> Api.GetAddressNeighborsEffect
                                         { currency = Id.network model.addressId
                                         , address = Id.id model.addressId
@@ -77,7 +78,7 @@ update uc msg model =
 
                 ( eff, loading ) =
                     if tbl.table.nextpage /= Nothing then
-                        ( (GotNeighborsForAddressDetails dir >> AddressDetailsMsg model.addressId)
+                        ( (GotNeighborsForAddressDetails dir >> Pathfinder.AddressDetailsMsg model.addressId)
                             |> Api.GetAddressNeighborsEffect
                                 { currency = Id.network model.addressId
                                 , address = Id.id model.addressId
@@ -132,7 +133,7 @@ update uc msg model =
             model.txs.table
                 |> PT.nextPage
                     (\nextpage ->
-                        (GotNextPageTxsForAddressDetails >> AddressDetailsMsg model.addressId)
+                        (GotNextPageTxsForAddressDetails >> Pathfinder.AddressDetailsMsg model.addressId)
                             |> Api.GetAddressTxsEffect
                                 { currency = Id.network model.addressId
                                 , address = Id.id model.addressId
@@ -281,6 +282,35 @@ update uc msg model =
                         |> n
                 )
 
+        UserClickedTx _ ->
+            n model
+
+        UserClickedTxCheckboxInTable _ ->
+            n model
+
+        UserClickedAddressCheckboxInTable _ ->
+            n model
+
+        NoOp ->
+            n model
+
+        SelectBoxMsg sm ->
+            updateRelatedAddressesTable model
+                (\ra ->
+                    let
+                        ( newModel, outMsg ) =
+                            ThemedSelectBox.update sm ra.selectBox
+                                |> mapFirst (flip s_selectBox ra)
+                    in
+                    n <|
+                        case outMsg of
+                            Selected x ->
+                                { newModel | selected = x }
+
+                            NoSelection ->
+                                newModel
+                )
+
 
 updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )
 updateRelatedAddressesTable model upd =
@@ -327,7 +357,7 @@ updateDatePickerRangeBlockRange _ model txMinBlock txMaxBlock =
         effects =
             case ( txmin, txmax ) of
                 ( Just min, Just max ) ->
-                    (GotTxsForAddressDetails ( Just min, Just max ) >> AddressDetailsMsg model.addressId)
+                    (GotTxsForAddressDetails ( Just min, Just max ) >> Pathfinder.AddressDetailsMsg model.addressId)
                         |> Api.GetAddressTxsEffect
                             { currency = Id.network id
                             , address = Id.id id
@@ -342,7 +372,7 @@ updateDatePickerRangeBlockRange _ model txMinBlock txMaxBlock =
                         |> List.singleton
 
                 ( Nothing, Nothing ) ->
-                    (GotTxsForAddressDetails ( Nothing, Nothing ) >> AddressDetailsMsg model.addressId)
+                    (GotTxsForAddressDetails ( Nothing, Nothing ) >> Pathfinder.AddressDetailsMsg model.addressId)
                         |> Api.GetAddressTxsEffect
                             { currency = Id.network id
                             , address = Id.id id

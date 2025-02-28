@@ -11,7 +11,7 @@ import Init.Pathfinder.Id as Id
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..), getSortedConceptsByWeight)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, totalReceivedColumn)
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (totalReceivedColumn)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import RecordSetter as Rs
@@ -33,8 +33,8 @@ type alias RelatedAddressesTableConfig =
     }
 
 
-config : Styles -> View.Config -> RelatedAddressesTableConfig -> Model -> Table.Config Api.Data.Address Msg
-config styles vc ratc model =
+config : Styles -> View.Config -> RelatedAddressesTableConfig -> Table.Config Api.Data.Address AddressDetails.Msg
+config styles vc ratc =
     let
         rightAlignedColumns =
             Dict.fromList [ ( totalReceivedColumn, View.Pathfinder.PagedTable.RightAligned ) ]
@@ -61,11 +61,11 @@ config styles vc ratc model =
     in
     Table.customConfig
         { toId = .address
-        , toMsg = AddressDetails.RelatedAddressesTableMsg >> AddressDetailsMsg model.addressId
+        , toMsg = AddressDetails.RelatedAddressesTableMsg
         , columns =
             [ checkboxColumn vc
                 { isChecked = toId >> ratc.isChecked
-                , onClick = toId >> UserClickedAddressCheckboxInTable
+                , onClick = toId >> AddressDetails.UserClickedAddressCheckboxInTable
                 , readonly = \_ -> False
                 }
             , htmlColumnWithSorter Table.unsortable

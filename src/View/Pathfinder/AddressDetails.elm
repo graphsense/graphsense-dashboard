@@ -24,8 +24,9 @@ import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..))
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Msg.Pathfinder exposing (Msg(..), OverlayWindows(..))
+import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -45,6 +46,7 @@ import Util.Css as Css
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
+import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button exposing (primaryButton, secondaryButton)
 import View.Locale as Locale
@@ -55,7 +57,7 @@ import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 
 
-view : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
+view : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
 view plugins pluginStates vc gc model id viewState =
     model.network.addresses
         |> Dict.get id
@@ -70,7 +72,7 @@ view plugins pluginStates vc gc model id viewState =
         |> Maybe.withDefault none
 
 
-utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Msg
+utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
 utxo plugins pluginStates vc gc model id viewState address =
     let
         pluginTagsVisible =
@@ -91,9 +93,13 @@ utxo plugins pluginStates vc gc model id viewState address =
         relatedDataTabsList =
             transactionsDataTab vc model id viewState
                 :: (cluster
-                        |> Maybe.map (relatedAddressesDataTab vc model id viewState >> List.singleton)
+                        |> Maybe.map
+                            (relatedAddressesDataTab vc model id viewState
+                                >> List.singleton
+                            )
                         |> Maybe.withDefault []
                    )
+                |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.addressId))
 
         clstrId =
             Id.initClusterId viewState.data.currency viewState.data.entity
@@ -178,7 +184,7 @@ utxo plugins pluginStates vc gc model id viewState address =
         }
 
 
-relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Entity -> Html Msg
+relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Entity -> Html AddressDetails.Msg
 relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
@@ -227,20 +233,40 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 , hasTags = getHavingTags model
                                 , coinCode = assetFromBase viewState.data.currency
                                 }
+
+                            conf =
+                                { optionToLabel =
+                                    \a ->
+                                        case a of
+                                            TaggedAddresses ->
+                                                Locale.string vc.locale "Tagged cluster addresses"
+
+                                            AllAddresses ->
+                                                Locale.string vc.locale "All cluster addresses"
+                                }
                         in
-                        PagedTable.pagedTableView vc
-                            []
-                            (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
-                            ra.table
-                            (AddressDetailsMsg viewState.addressId AddressDetails.UserClickedPreviousPageRelatedAddressesTable)
-                            (AddressDetailsMsg viewState.addressId AddressDetails.UserClickedNextPageRelatedAddressesTable)
-                            (AddressDetailsMsg viewState.addressId AddressDetails.UserClickedFirstPageRelatedAddressesTable)
+                        div
+                            [ css SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                            ]
+                            [ ThemedSelectBox.view conf ra.selectBox ra.selected
+                                |> Html.map AddressDetails.SelectBoxMsg
+                                |> List.singleton
+                                |> div
+                                    [ css SidePanelComponents.sidePanelRelatedAddressesContentSidePanelAddListFilterRow_details.styles ]
+                            , PagedTable.pagedTableView vc
+                                []
+                                (RelatedAddressesTable.config Css.Table.styles vc ratc)
+                                ra.table
+                                AddressDetails.UserClickedPreviousPageRelatedAddressesTable
+                                AddressDetails.UserClickedNextPageRelatedAddressesTable
+                                AddressDetails.UserClickedFirstPageRelatedAddressesTable
+                            ]
                             |> Just
-        , onClick = AddressDetailsMsg viewState.addressId AddressDetails.UserClickedToggleRelatedAddressesTable
+        , onClick = AddressDetails.UserClickedToggleRelatedAddressesTable
         }
 
 
-clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html Msg
+clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html Pathfinder.Msg
 clusterInfoView vc open colors clstr =
     if clstr.noAddresses <= 1 then
         none
@@ -264,7 +290,7 @@ clusterInfoView vc open colors clstr =
                 [ Css.cursor Css.pointer
                     :: fullWidth
                     |> css
-                , onClick UserClickedToggleClusterDetailsOpen
+                , onClick Pathfinder.UserClickedToggleClusterDetailsOpen
                 ]
 
             label =
@@ -364,17 +390,17 @@ dateRangePickerSelectionView vc model =
         }
 
 
-transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html Msg
+transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html AddressDetails.Msg
 transactionTableView vc addressId txOnGraphFn model =
     let
         prevMsg =
-            AddressDetailsMsg addressId AddressDetails.UserClickedPreviousPageTransactionTable
+            AddressDetails.UserClickedPreviousPageTransactionTable
 
         nextMsg =
-            AddressDetailsMsg addressId AddressDetails.UserClickedNextPageTransactionTable
+            AddressDetails.UserClickedNextPageTransactionTable
 
         firstMsg =
-            AddressDetailsMsg addressId AddressDetails.UserClickedFirstPageTransactionTable
+            AddressDetails.UserClickedFirstPageTransactionTable
 
         styles =
             Css.Table.styles
@@ -395,7 +421,6 @@ transactionTableView vc addressId txOnGraphFn model =
                 , div [ css [ Css.fontSize (Css.px 12) ] ]
                     [ DatePicker.view drp.settings drp.dateRangePicker
                         |> Html.fromUnstyled
-                        |> Html.map (AddressDetailsMsg addressId)
                     ]
                 , div
                     [ SidePanelComponents.sidePanelListFilterRow_details.styles
@@ -408,13 +433,13 @@ transactionTableView vc addressId txOnGraphFn model =
                     [ secondaryButton vc
                         { icon = Nothing
                         , text = "Reset"
-                        , onClick = AddressDetailsMsg addressId <| AddressDetails.ResetDateRangePicker
+                        , onClick = AddressDetails.ResetDateRangePicker
                         , disabled = False
                         }
                     , primaryButton vc
                         { icon = Nothing
                         , text = "Apply filter"
-                        , onClick = AddressDetailsMsg addressId <| AddressDetails.CloseDateRangePicker
+                        , onClick = AddressDetails.CloseDateRangePicker
                         , disabled = False
                         }
                     ]
@@ -423,20 +448,18 @@ transactionTableView vc addressId txOnGraphFn model =
             else
                 [ Just drp
                     |> dateRangePickerSelectionView vc
-                    |> Html.map (AddressDetailsMsg addressId)
                 , table
                 ]
 
         Nothing ->
             [ dateRangePickerSelectionView vc Nothing
-                |> Html.map (AddressDetailsMsg addressId)
             , table
             ]
     )
         |> div [ css [ Css.width (Css.pct 100) ] ]
 
 
-transactionsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Msg
+transactionsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html AddressDetails.Msg
 transactionsDataTab vc model id viewState =
     let
         txOnGraphFn =
@@ -465,11 +488,11 @@ transactionsDataTab vc model id viewState =
 
             else
                 Nothing
-        , onClick = AddressDetailsMsg viewState.addressId AddressDetails.UserClickedToggleTransactionTable
+        , onClick = AddressDetails.UserClickedToggleTransactionTable
         }
 
 
-account : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Msg
+account : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
 account plugins pluginStates vc gc model id viewState address =
     let
         fiatCurr =
@@ -508,7 +531,7 @@ account plugins pluginStates vc gc model id viewState address =
             if ntokens > 0 then
                 [ Svg.onClick
                     (AddressDetails.UserClickedToggleTokenBalancesSelect
-                        |> AddressDetailsMsg viewState.addressId
+                        |> Pathfinder.AddressDetailsMsg viewState.addressId
                     )
                 , [ Css.cursor Css.pointer ] |> css
                 ]
@@ -632,6 +655,7 @@ account plugins pluginStates vc gc model id viewState address =
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList =
             [ transactionsDataTab vc model id viewState
+                |> Html.map (Pathfinder.AddressDetailsMsg viewState.addressId)
             ]
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
@@ -662,7 +686,7 @@ account plugins pluginStates vc gc model id viewState address =
         }
 
 
-viewLabelOfTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> Html Msg
+viewLabelOfTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> Html Pathfinder.Msg
 viewLabelOfTags vc gc model id =
     let
         ts =
@@ -676,12 +700,12 @@ viewLabelOfTags vc gc model id =
                         { context = tid, domId = tid }
                 in
                 Html.div
-                    [ onMouseEnter (UserMovesMouseOverTagLabel ctx)
-                    , onMouseLeave (UserMovesMouseOutTagLabel ctx)
+                    [ onMouseEnter (Pathfinder.UserMovesMouseOverTagLabel ctx)
+                    , onMouseLeave (Pathfinder.UserMovesMouseOutTagLabel ctx)
                     , HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
                     , HA.id ctx.domId
                     , css [ Css.cursor Css.pointer ]
-                    , onClick (UserOpensDialogWindow (TagsList id))
+                    , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
                     ]
                     (Html.text t.label
                         :: (if i < (lenTagLabels - 1) then
@@ -720,11 +744,11 @@ viewLabelOfTags vc gc model id =
             tagsControl =
                 if lenTagLabels > nMaxTags then
                     if gc.displayAllTagsInDetails then
-                        Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ]
+                        Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick Pathfinder.UserClickedToggleDisplayAllTagsInDetails ]
                             [ Html.text (Locale.string vc.locale "less...") ]
 
                     else
-                        Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick UserClickedToggleDisplayAllTagsInDetails ]
+                        Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick Pathfinder.UserClickedToggleDisplayAllTagsInDetails ]
                             [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
 
                 else
@@ -755,11 +779,11 @@ viewLabelOfTags vc gc model id =
                         { context = k, domId = k ++ "_tags_concept_tag" }
                 in
                 Html.div
-                    [ onMouseEnter (UserMovesMouseOverTagConcept ctx)
-                    , onMouseLeave (UserMovesMouseOutTagConcept ctx)
+                    [ onMouseEnter (Pathfinder.UserMovesMouseOverTagConcept ctx)
+                    , onMouseLeave (Pathfinder.UserMovesMouseOutTagConcept ctx)
                     , HA.id ctx.domId
                     , css [ Css.cursor Css.pointer ]
-                    , onClick (UserOpensDialogWindow (TagsList id))
+                    , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
                     ]
                     [ TagComponents.categoryTags
                         { categoryTags =
@@ -774,7 +798,7 @@ viewLabelOfTags vc gc model id =
                     (Btns.buttonTypeTextStateRegularStyleTextAttributes
                         |> Rs.s_button
                             [ [ Css.cursor Css.pointer ] |> css
-                            , onClick (UserOpensDialogWindow (TagsList id))
+                            , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
                             ]
                     )
                     { typeTextStateRegularStyleText =
@@ -881,7 +905,7 @@ makeSidePanelData model id pluginTagsVisible =
 --viewLabelOfTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> Html Msg
 
 
-setTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> { a | categoryTags : Maybe (Html Msg), labelOfActor : Maybe (Html Msg) } -> { a | categoryTags : Maybe (Html Msg), labelOfActor : Maybe (Html Msg) }
+setTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) } -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) }
 setTags vc gc model id =
     let
         ts =
@@ -920,8 +944,8 @@ setTags vc gc model id =
                         Html.a
                             [ HA.href link
                             , css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
-                            , onMouseEnter (UserMovesMouseOverActorLabel ctx)
-                            , onMouseLeave (UserMovesMouseOutActorLabel ctx)
+                            , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
+                            , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
                             , HA.id ctx.domId
                             ]
                             [ Html.text text

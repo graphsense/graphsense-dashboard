@@ -115,9 +115,6 @@ shallPushHistory msg _ =
         UserClickedTx _ ->
             False
 
-        UserClickedTxCheckboxInTable _ ->
-            True
-
         UserClickedAddressCheckboxInTable _ ->
             True
 
