@@ -21,6 +21,11 @@ m fun =
     Maybe.map (fun >> List.singleton) >> Maybe.withDefault [] >> (++)
 
 
+m2 : (a -> b -> Elm.Expression) -> Maybe a -> Maybe b -> List Elm.Expression -> List Elm.Expression
+m2 fun a_ =
+    Maybe.map2 fun a_ >> Maybe.map List.singleton >> Maybe.withDefault [] >> (++)
+
+
 a : (a -> Maybe Elm.Expression) -> Maybe a -> List Elm.Expression -> List Elm.Expression
 a fun =
     Maybe.andThen fun >> Maybe.map List.singleton >> Maybe.withDefault [] >> (++)

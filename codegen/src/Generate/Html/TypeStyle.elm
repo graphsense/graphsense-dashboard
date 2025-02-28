@@ -18,9 +18,23 @@ toStyles colorMap node =
         |> m (Css.px >> Css.fontSize) node.fontSize
         |> a (Paint.toStylesString colorMap >> Maybe.map (Css.property "color")) node.fills
         |> m (Css.px >> Css.letterSpacing) node.letterSpacing
-        |> m (Css.px >> Css.lineHeight) node.lineHeightPx
+        |> m2 lineHeight node.lineHeightUnit node.lineHeightPx
         |> mm textAutoResize node.textAutoResize
         |> m textDecoration node.textDecoration
+
+
+lineHeight : TypeStyleLineHeightUnit -> Float -> Elm.Expression
+lineHeight arg1 arg2 =
+    case arg1 of
+        TypeStyleLineHeightUnitINTRINSIC ->
+            Css.lineHeight Css.normal
+
+        TypeStyleLineHeightUnitPIXELS ->
+            Css.px arg2 |> Css.lineHeight
+
+        TypeStyleLineHeightUnitFONTSIZE ->
+            -- no idea what FONTSIZE means!
+            Css.px arg2 |> Css.lineHeight
 
 
 textDecoration : TypeStyleTextDecoration -> Elm.Expression
