@@ -133,6 +133,7 @@ navbarSubMenuView vc model { type_ } =
                           , icon = Icons.iconsPathfinder {}
                           , text1 = "Pathfinder 1.0"
                           , text2 = Nothing
+                          , blank = False
                           }
                             |> ContextMenuItem.initLink2
                             |> ContextMenuItem.view vc
@@ -142,6 +143,7 @@ navbarSubMenuView vc model { type_ } =
                           , icon = Icons.iconsVideoS {}
                           , text1 = "Watch tutorials"
                           , text2 = Nothing
+                          , blank = True
                           }
                             |> ContextMenuItem.initLink2
                             |> ContextMenuItem.view vc
@@ -149,6 +151,7 @@ navbarSubMenuView vc model { type_ } =
                           , icon = Icons.iconsGoToS {}
                           , text1 = "All our services"
                           , text2 = Nothing
+                          , blank = True
                           }
                             |> ContextMenuItem.initLink2
                             |> ContextMenuItem.view vc

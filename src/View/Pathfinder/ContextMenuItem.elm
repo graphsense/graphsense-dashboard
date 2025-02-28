@@ -17,7 +17,7 @@ type ContextMenuItem msg
 
 
 type ContextMenuItemActions msg
-    = ClickLink String
+    = ClickLink Bool String
     | ClickMsg msg
 
 
@@ -39,14 +39,21 @@ view vc (ContextMenuItem { icon, text1, text2, action }) =
 
         ( msg, wrapper ) =
             case action of
-                ClickLink link ->
+                ClickLink blank link ->
                     ( []
                     , List.singleton
                         >> Html.a
-                            [ Html.Styled.Attributes.href link
-                            , Html.Styled.Attributes.target "_blank"
-                            , [ Css.textDecoration Css.none, Css.color Css.inherit, Css.visited [ Css.color Css.inherit, Css.textDecoration Css.none ] ] ++ fullWidth |> css
-                            ]
+                            ([ Html.Styled.Attributes.href link
+                             , [ Css.textDecoration Css.none, Css.color Css.inherit, Css.visited [ Css.color Css.inherit, Css.textDecoration Css.none ] ] ++ fullWidth |> css
+                             ]
+                                ++ (if blank then
+                                        [ Html.Styled.Attributes.target "_blank"
+                                        ]
+
+                                    else
+                                        []
+                                   )
+                            )
                     )
 
                 ClickMsg m ->
@@ -93,8 +100,8 @@ map mp (ContextMenuItem { icon, text1, text2, action }) =
                 ClickMsg msg ->
                     ClickMsg (mp msg)
 
-                ClickLink l ->
-                    ClickLink l
+                ClickLink blank l ->
+                    ClickLink blank l
         }
 
 
@@ -124,7 +131,8 @@ initLink2 :
     , text1 : String
     , text2 : Maybe String
     , link : String
+    , blank : Bool
     }
     -> ContextMenuItem msg
-initLink2 { icon, text1, text2, link } =
-    ContextMenuItem { icon = icon, text1 = text1, text2 = text2, action = ClickLink link }
+initLink2 { icon, text1, text2, blank, link } =
+    ContextMenuItem { icon = icon, text1 = text1, text2 = text2, action = ClickLink blank link }
