@@ -889,7 +889,6 @@ makeSidePanelData model id pluginTagsVisible =
     }
 
 
-
 setTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) } -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) }
 setTags vc gc model id =
     let

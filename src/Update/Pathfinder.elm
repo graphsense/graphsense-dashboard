@@ -66,6 +66,7 @@ import Set exposing (..)
 import Task
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
+import Tuple3
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
@@ -83,7 +84,6 @@ import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
 import View.Locale as Locale
-import Tuple3
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -1210,7 +1210,7 @@ handleTooltipMsg msg model =
                             id =
                                 Id.init currency address
                         in
-                        case Dict.get id model.tagSummaries |> Debug.log "ts" of
+                        case Dict.get id model.tagSummaries of
                             Just (HasTagSummary ts) ->
                                 let
                                     tt =
