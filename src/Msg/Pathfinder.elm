@@ -55,7 +55,6 @@ type Msg
     | BrowserGotTx FindPosition Bool Api.Data.Tx
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
-    | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedAddressCheckboxInTable Id
     | WorkflowNextUtxoTx WorkflowNextTxContext WorkflowNextUtxoTxMsg
     | WorkflowNextTxByTime WorkflowNextTxContext WorkflowNextTxByTimeMsg

@@ -336,6 +336,27 @@ updateByMsg plugins uc msg model =
                                 |> updateAddressDetails addressId
                             )
 
+                AddressDetails.UserClickedTxCheckboxInTable tx ->
+                    let
+                        addOrRemoveTx txId =
+                            if Dict.member txId model.network.txs then
+                                Network.deleteTx txId model.network
+                                    |> flip s_network model
+                                    |> n
+
+                            else
+                                loadTx True plugins txId model
+                    in
+                    case tx of
+                        Api.Data.AddressTxTxAccount _ ->
+                            addOrRemoveTx (Tx.getTxIdForAddressTx tx)
+
+                        Api.Data.AddressTxAddressTxUtxo _ ->
+                            addOrRemoveTx (Tx.getTxIdForAddressTx tx)
+
+                AddressDetails.UserClickedTx id ->
+                    userClickedTx id model
+
                 _ ->
                     model
                         |> updateAddressDetails addressId
@@ -873,40 +894,7 @@ updateByMsg plugins uc msg model =
                 loadAddress plugins id model
 
         UserClickedTx id ->
-            if model.modPressed then
-                let
-                    ( modelS, _ ) =
-                        multiSelect model [ MSelectedTx id ] True
-                in
-                n { modelS | details = Nothing }
-
-            else
-                ( model
-                , Route.txRoute
-                    { network = Id.network id
-                    , txHash = Id.id id
-                    }
-                    |> NavPushRouteEffect
-                    |> List.singleton
-                )
-
-        UserClickedTxCheckboxInTable tx ->
-            let
-                addOrRemoveTx txId =
-                    if Dict.member txId model.network.txs then
-                        Network.deleteTx txId model.network
-                            |> flip s_network model
-                            |> n
-
-                    else
-                        loadTx True plugins txId model
-            in
-            case tx of
-                Api.Data.AddressTxTxAccount _ ->
-                    addOrRemoveTx (Tx.getTxIdForAddressTx tx)
-
-                Api.Data.AddressTxAddressTxUtxo _ ->
-                    addOrRemoveTx (Tx.getTxIdForAddressTx tx)
+            userClickedTx id model
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
@@ -1209,6 +1197,26 @@ updateByMsg plugins uc msg model =
                 |> CmdEffect
                 |> List.singleton
             )
+
+
+userClickedTx : Id -> Model -> ( Model, List Effect )
+userClickedTx id model =
+    if model.modPressed then
+        let
+            ( modelS, _ ) =
+                multiSelect model [ MSelectedTx id ] True
+        in
+        n { modelS | details = Nothing }
+
+    else
+        ( model
+        , Route.txRoute
+            { network = Id.network id
+            , txHash = Id.id id
+            }
+            |> NavPushRouteEffect
+            |> List.singleton
+        )
 
 
 fitGraph : Update.Config -> Model -> Model

@@ -70,7 +70,6 @@ import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import Util exposing (n)
 import Util.ThemedSelectBox as TSelectBox
-import Util.ThemedSelectBoxes as TSelectBoxes
 import View.Locale as Locale
 import Yaml.Decode
 
@@ -575,7 +574,6 @@ update plugins uc msg model =
                     | user =
                         model.user
                             |> s_hovercard Nothing
-                    , selectBoxes = TSelectBoxes.closeAll model.selectBoxes
                     , plugins = new
                     , navbarSubMenu = Nothing
                 }
@@ -1040,7 +1038,7 @@ update plugins uc msg model =
                             )
                                 |> updateByPluginOutMsg plugins uc outMsg
 
-                        Pathfinder.BrowserGotAddressData id data ->
+                        Pathfinder.BrowserGotAddressData id _ ->
                             let
                                 ( new, outMsg, cmd ) =
                                     id
@@ -1389,20 +1387,20 @@ update plugins uc msg model =
         UserClosesNotification ->
             n { model | notifications = Notification.pop model.notifications }
 
-        SelectBoxMsg sb subMsg ->
+        LocaleSelectBoxMsg subMsg ->
             let
-                ( selectBoxes, outMsg ) =
-                    model.selectBoxes
-                        |> TSelectBoxes.update sb subMsg
+                ( selectBox, outMsg ) =
+                    model.localeSelectBox
+                        |> TSelectBox.update subMsg
 
                 newModel =
-                    { model | selectBoxes = selectBoxes }
+                    { model | localeSelectBox = selectBox }
             in
-            case ( sb, outMsg ) of
-                ( TSelectBoxes.SupportedLanguages, Just (TSelectBox.Selected x) ) ->
+            case outMsg of
+                TSelectBox.Selected x ->
                     switchLocale x newModel
 
-                _ ->
+                TSelectBox.NoSelection ->
                     n newModel
 
         NotificationMsg ms ->

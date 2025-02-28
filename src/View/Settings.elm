@@ -5,7 +5,9 @@ import Css
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
+import List.Extra
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel)
+import Model.Locale as Locale
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
@@ -13,8 +15,8 @@ import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
 import Time
+import Tuple exposing (first, second)
 import Util.ThemedSelectBox as TSelectBox
-import Util.ThemedSelectBoxes as TSelectBoxes
 import Util.View
 import View.Controls as Vc
 import View.Locale as Locale
@@ -93,16 +95,18 @@ generalSettings plugins vc m =
                 , msg = Model.UserClickedLightmode
                 }
 
-        sbId =
-            TSelectBoxes.SupportedLanguages
-
-        sb =
-            TSelectBoxes.get sbId m.selectBoxes
-                |> Maybe.withDefault TSelectBox.empty
-                |> TSelectBox.mapLabel (Locale.string vc.locale)
+        conf =
+            { optionToLabel =
+                \a ->
+                    Locale.locales
+                        |> List.Extra.find (first >> (==) a)
+                        |> Maybe.map (second >> Locale.string vc.locale)
+                        |> Maybe.withDefault ""
+            }
 
         languageSb =
-            TSelectBox.view sb vc.locale.locale |> Html.Styled.map (Model.SelectBoxMsg sbId)
+            TSelectBox.view conf m.localeSelectBox vc.locale.locale
+                |> Html.Styled.map Model.LocaleSelectBoxMsg
 
         ( expr, ( rqlPrim, rqlSec ) ) =
             authContent vc m.user
