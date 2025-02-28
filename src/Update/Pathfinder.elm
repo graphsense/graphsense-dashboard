@@ -50,6 +50,7 @@ import Msg.Pathfinder
         , OverlayWindows(..)
         , WorkflowNextTxByTimeMsg(..)
         )
+import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
 import Plugin.Msg as Plugin
@@ -319,17 +320,26 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        AddressDetailsMsg subm ->
-            case model.details of
-                Just (AddressDetails id (Success ad)) ->
+        AddressDetailsMsg addressId subm ->
+            case subm of
+                AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable addresses ->
                     let
-                        ( addressViewDetails, eff ) =
-                            AddressDetails.update uc model subm id ad
+                        network =
+                            Id.network addressId
                     in
-                    ( { model | details = Just (AddressDetails id (Success addressViewDetails)) }, eff )
+                    addresses.addresses
+                        |> List.map (.address >> Id.init network)
+                        |> List.map (fetchTagSummaryForId model.tagSummaries)
+                        |> pair model
+                        |> and
+                            (AddressDetails.update uc subm
+                                |> updateAddressDetails addressId
+                            )
 
                 _ ->
-                    n model
+                    model
+                        |> updateAddressDetails addressId
+                            (AddressDetails.update uc subm)
 
         UserClickedRestart ->
             -- Handled upstream
@@ -1199,20 +1209,6 @@ updateByMsg plugins uc msg model =
                 |> CmdEffect
                 |> List.singleton
             )
-
-        BrowserGotEntityAddressesForRelatedAddressesTable addressId addresses ->
-            let
-                network =
-                    Id.network addressId
-            in
-            addresses.addresses
-                |> List.map (.address >> Id.init network)
-                |> List.map (fetchTagSummaryForId model.tagSummaries)
-                |> pair model
-                |> and
-                    (AddressDetails.browserGotEntityAddressesForRelatedAddressesTable addresses
-                        |> updateAddressDetails addressId
-                    )
 
 
 fitGraph : Update.Config -> Model -> Model

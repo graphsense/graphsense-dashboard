@@ -86,7 +86,7 @@ initWithoutFilter addressId data =
       , txMinBlock = Nothing
       , txMaxBlock = Nothing
       }
-    , (GotTxsForAddressDetails addressId ( Nothing, Nothing ) >> AddressDetailsMsg)
+    , (GotTxsForAddressDetails ( Nothing, Nothing ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsEffect
             { currency = Id.network addressId
             , address = Id.id addressId
@@ -112,7 +112,7 @@ loadTxs id mn mx =
 loadFromDateBlock : Id -> Posix -> Effect
 loadFromDateBlock id mx =
     BrowserGotFromDateBlock mx
-        >> AddressDetailsMsg
+        >> AddressDetailsMsg id
         |> Api.GetBlockByDateEffect
             { currency = Id.network id
             , datetime = mx
@@ -123,7 +123,7 @@ loadFromDateBlock id mx =
 loadToDateBlock : Id -> Posix -> Effect
 loadToDateBlock id mn =
     BrowserGotToDateBlock mn
-        >> AddressDetailsMsg
+        >> AddressDetailsMsg id
         |> Api.GetBlockByDateEffect
             { currency = Id.network id
             , datetime = mn

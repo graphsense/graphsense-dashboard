@@ -230,13 +230,13 @@ relatedAddressesDataTab vc model _ viewState cluster =
                         in
                         PagedTable.pagedTableView vc
                             []
-                            (RelatedAddressesTable.config Css.Table.styles vc ratc)
+                            (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
                             ra.table
-                            (AddressDetailsMsg AddressDetails.UserClickedPreviousPageRelatedAddressesTable)
-                            (AddressDetailsMsg AddressDetails.UserClickedNextPageRelatedAddressesTable)
-                            (AddressDetailsMsg AddressDetails.UserClickedFirstPageRelatedAddressesTable)
+                            (AddressDetailsMsg viewState.addressId AddressDetails.UserClickedPreviousPageRelatedAddressesTable)
+                            (AddressDetailsMsg viewState.addressId AddressDetails.UserClickedNextPageRelatedAddressesTable)
+                            (AddressDetailsMsg viewState.addressId AddressDetails.UserClickedFirstPageRelatedAddressesTable)
                             |> Just
-        , onClick = AddressDetailsMsg AddressDetails.UserClickedToggleRelatedAddressesTable
+        , onClick = AddressDetailsMsg viewState.addressId AddressDetails.UserClickedToggleRelatedAddressesTable
         }
 
 
@@ -311,7 +311,7 @@ clusterInfoView vc open colors clstr =
                 }
 
 
-dateRangePickerSelectionView : View.Config -> Maybe (DateRangePicker.Model AddressDetails.Msg) -> Html Msg
+dateRangePickerSelectionView : View.Config -> Maybe (DateRangePicker.Model AddressDetails.Msg) -> Html AddressDetails.Msg
 dateRangePickerSelectionView vc model =
     let
         startP =
@@ -331,7 +331,7 @@ dateRangePickerSelectionView vc model =
                 |> Maybe.withDefault ""
 
         open =
-            [ onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker)
+            [ onClick AddressDetails.OpenDateRangePicker
             , css [ Css.cursor Css.pointer ]
             ]
     in
@@ -339,7 +339,7 @@ dateRangePickerSelectionView vc model =
         (SidePanelComponents.sidePanelListFilterRowAttributes
             |> Rs.s_sidePanelListFilterRow [ css fullWidth ]
             |> Rs.s_iconsCloseBlack
-                [ onClickWithStop (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker)
+                [ onClickWithStop AddressDetails.ResetDateRangePicker
                 , css [ Css.cursor Css.pointer ]
                 ]
             |> Rs.s_framedIcon open
@@ -368,13 +368,13 @@ transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Mod
 transactionTableView vc addressId txOnGraphFn model =
     let
         prevMsg =
-            AddressDetailsMsg AddressDetails.UserClickedPreviousPageTransactionTable
+            AddressDetailsMsg addressId AddressDetails.UserClickedPreviousPageTransactionTable
 
         nextMsg =
-            AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
+            AddressDetailsMsg addressId AddressDetails.UserClickedNextPageTransactionTable
 
         firstMsg =
-            AddressDetailsMsg AddressDetails.UserClickedFirstPageTransactionTable
+            AddressDetailsMsg addressId AddressDetails.UserClickedFirstPageTransactionTable
 
         styles =
             Css.Table.styles
@@ -395,7 +395,7 @@ transactionTableView vc addressId txOnGraphFn model =
                 , div [ css [ Css.fontSize (Css.px 12) ] ]
                     [ DatePicker.view drp.settings drp.dateRangePicker
                         |> Html.fromUnstyled
-                        |> Html.map AddressDetailsMsg
+                        |> Html.map (AddressDetailsMsg addressId)
                     ]
                 , div
                     [ SidePanelComponents.sidePanelListFilterRow_details.styles
@@ -408,13 +408,13 @@ transactionTableView vc addressId txOnGraphFn model =
                     [ secondaryButton vc
                         { icon = Nothing
                         , text = "Reset"
-                        , onClick = AddressDetailsMsg <| AddressDetails.ResetDateRangePicker
+                        , onClick = AddressDetailsMsg addressId <| AddressDetails.ResetDateRangePicker
                         , disabled = False
                         }
                     , primaryButton vc
                         { icon = Nothing
                         , text = "Apply filter"
-                        , onClick = AddressDetailsMsg <| AddressDetails.CloseDateRangePicker
+                        , onClick = AddressDetailsMsg addressId <| AddressDetails.CloseDateRangePicker
                         , disabled = False
                         }
                     ]
@@ -423,11 +423,13 @@ transactionTableView vc addressId txOnGraphFn model =
             else
                 [ Just drp
                     |> dateRangePickerSelectionView vc
+                    |> Html.map (AddressDetailsMsg addressId)
                 , table
                 ]
 
         Nothing ->
             [ dateRangePickerSelectionView vc Nothing
+                |> Html.map (AddressDetailsMsg addressId)
             , table
             ]
     )
@@ -463,7 +465,7 @@ transactionsDataTab vc model id viewState =
 
             else
                 Nothing
-        , onClick = AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable
+        , onClick = AddressDetailsMsg viewState.addressId AddressDetails.UserClickedToggleTransactionTable
         }
 
 
@@ -504,7 +506,12 @@ account plugins pluginStates vc gc model id viewState address =
 
         attrClickSelect =
             if ntokens > 0 then
-                [ Svg.onClick (AddressDetails.UserClickedToggleTokenBalancesSelect |> AddressDetailsMsg), [ Css.cursor Css.pointer ] |> css ]
+                [ Svg.onClick
+                    (AddressDetails.UserClickedToggleTokenBalancesSelect
+                        |> AddressDetailsMsg viewState.addressId
+                    )
+                , [ Css.cursor Css.pointer ] |> css
+                ]
 
             else
                 [ [ Css.cursor Css.notAllowed ] |> css ]

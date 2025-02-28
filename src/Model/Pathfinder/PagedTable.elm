@@ -1,7 +1,8 @@
-module Model.Pathfinder.PagedTable exposing (PagedTable, decPage, getPage, goToFirstPage, hasNextPage, incPage, isNextPageLoaded, setLoading)
+module Model.Pathfinder.PagedTable exposing (PagedTable, decPage, getPage, goToFirstPage, hasNextPage, incPage, isNextPageLoaded, nextPage, setLoading)
 
 import Model.Graph.Table exposing (Table)
 import RecordSetter exposing (s_loading)
+import Util exposing (n)
 
 
 type alias PagedTable d =
@@ -12,9 +13,26 @@ type alias PagedTable d =
     }
 
 
+nextPage : (Maybe String -> List eff) -> PagedTable d -> ( PagedTable d, List eff )
+nextPage load pt =
+    if (pt.table.nextpage /= Nothing) && not (isNextPageLoaded pt) then
+        ( pt
+            |> incPage
+            |> setLoading True
+        , load pt.table.nextpage
+        )
+
+    else
+        pt
+            |> incPage
+            |> n
+
+
 incPage : PagedTable d -> PagedTable d
 incPage pt =
-    { pt | currentPage = pt.currentPage + 1 }
+    { pt
+        | currentPage = pt.currentPage + 1
+    }
 
 
 decPage : PagedTable d -> PagedTable d

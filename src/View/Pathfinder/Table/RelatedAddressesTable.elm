@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.RelatedAddressesTable exposing (config)
+module View.Pathfinder.Table.RelatedAddressesTable exposing (RelatedAddressesTableConfig, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -10,9 +10,9 @@ import Dict
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..), getSortedConceptsByWeight)
-import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (totalReceivedColumn)
-import Msg.Pathfinder exposing (Msg(..), TxDetailsMsg(..))
+import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, totalReceivedColumn)
+import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import RecordSetter as Rs
 import Table
@@ -33,8 +33,8 @@ type alias RelatedAddressesTableConfig =
     }
 
 
-config : Styles -> View.Config -> RelatedAddressesTableConfig -> Table.Config Api.Data.Address Msg
-config styles vc ratc =
+config : Styles -> View.Config -> RelatedAddressesTableConfig -> Model -> Table.Config Api.Data.Address Msg
+config styles vc ratc model =
     let
         rightAlignedColumns =
             Dict.fromList [ ( totalReceivedColumn, View.Pathfinder.PagedTable.RightAligned ) ]
@@ -61,7 +61,7 @@ config styles vc ratc =
     in
     Table.customConfig
         { toId = .address
-        , toMsg = AddressDetails.RelatedAddressesTableMsg >> AddressDetailsMsg
+        , toMsg = AddressDetails.RelatedAddressesTableMsg >> AddressDetailsMsg model.addressId
         , columns =
             [ checkboxColumn vc
                 { isChecked = toId >> ratc.isChecked

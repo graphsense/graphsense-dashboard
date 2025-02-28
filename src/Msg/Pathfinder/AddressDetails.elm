@@ -3,7 +3,6 @@ module Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import Api.Data
 import DurationDatePicker
 import Model.Direction exposing (Direction)
-import Model.Pathfinder.Id exposing (Id)
 import Table
 import Time exposing (Posix)
 
@@ -17,9 +16,9 @@ type Msg
     | UserClickedFirstPageTransactionTable
     | UserClickedNextPageNeighborsTable Direction
     | UserClickedPreviousPageNeighborsTable Direction
-    | GotTxsForAddressDetails Id ( Maybe Int, Maybe Int ) Api.Data.AddressTxs
-    | GotNextPageTxsForAddressDetails Id Api.Data.AddressTxs
-    | GotNeighborsForAddressDetails Id Direction Api.Data.NeighborAddresses
+    | GotTxsForAddressDetails ( Maybe Int, Maybe Int ) Api.Data.AddressTxs
+    | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
+    | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
     | UpdateDateRangePicker DurationDatePicker.Msg
     | OpenDateRangePicker
     | CloseDateRangePicker
@@ -28,6 +27,7 @@ type Msg
     | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
     | TableMsg Table.State
     | RelatedAddressesTableMsg Table.State
+    | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
     | UserClickedToggleRelatedAddressesTable
     | UserClickedPreviousPageRelatedAddressesTable
     | UserClickedNextPageRelatedAddressesTable

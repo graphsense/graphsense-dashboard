@@ -8,7 +8,6 @@
     { "count": 4, "filePath": "src/View/Graph/Browser.elm" },
     { "count": 4, "filePath": "src/View/Graph/Link.elm" },
     { "count": 3, "filePath": "src/Update/Graph.elm" },
-    { "count": 3, "filePath": "src/View/Graph/Table/AddressTagsTable.elm" },
     { "count": 3, "filePath": "src/View/Graph/Table/EntityAddressesTable.elm" },
     { "count": 3, "filePath": "src/View/Graph/Table/TxUtxoTable.elm" },
     { "count": 2, "filePath": "src/Model/Graph/Table/AddressNeighborsTable.elm" },
@@ -21,7 +20,6 @@
     { "count": 2, "filePath": "src/View/Graph/Table/LinksTable.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/TxsAccountTable.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/TxsUtxoTable.elm" },
-    { "count": 2, "filePath": "src/View/Graph/Table/UserAddressTagsTable.elm" },
     { "count": 1, "filePath": "src/Css/Graph.elm" },
     { "count": 1, "filePath": "src/Init/Graph/Tag.elm" },
     { "count": 1, "filePath": "src/Model/Graph.elm" },
@@ -38,6 +36,7 @@
     { "count": 1, "filePath": "src/Model/Graph/Table/UserAddressTagsTable.elm" },
     { "count": 1, "filePath": "src/Model/Graph/Tag.elm" },
     { "count": 1, "filePath": "src/Update/Graph/History.elm" },
+    { "count": 1, "filePath": "src/View/Graph/Table/AddressTagsTable.elm" },
     { "count": 1, "filePath": "src/View/Header.elm" }
   ]
 }

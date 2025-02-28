@@ -1,12 +1,16 @@
 module Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, filter, totalReceivedColumn)
 
 import Api.Data
+import Model.Entity exposing (Entity)
 import Model.Graph.Table as Table
+import Model.Pathfinder.Id as Pathfinder
 import Model.Pathfinder.PagedTable exposing (PagedTable)
 
 
 type alias Model =
     { table : PagedTable Api.Data.Address
+    , entity : Entity
+    , addressId : Pathfinder.Id
     }
 
 

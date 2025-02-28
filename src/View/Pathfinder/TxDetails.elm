@@ -7,7 +7,6 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
-import Dict
 import Html.Styled exposing (Html)
 import List.Extra
 import Model.Currency exposing (asset, assetFromBase)

@@ -5,7 +5,6 @@ import Dict exposing (Dict)
 import Effect.Pathfinder exposing (Effect)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
-import Init.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Locale as Locale
 import Model.Pathfinder.AddressDetails as AddressDetails
@@ -13,6 +12,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import RemoteData exposing (WebData)
 import Tuple exposing (first, second)
+import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 
 
 init : Network -> Dict Id (WebData Api.Data.Entity) -> Locale.Model -> Id -> Api.Data.Address -> ( AddressDetails.Model, List Effect )

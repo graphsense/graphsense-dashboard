@@ -37,7 +37,7 @@ type Msg
     | UserReleasedEscape
     | UserPressedNormalKey String
     | UserReleasedNormalKey String
-    | AddressDetailsMsg AddressDetails.Msg
+    | AddressDetailsMsg Id AddressDetails.Msg
     | TxDetailsMsg TxDetailsMsg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
@@ -96,7 +96,6 @@ type Msg
     | UserGotDataForTagsListDialog Id Api.Data.AddressTags
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
-    | BrowserGotEntityAddressesForRelatedAddressesTable Id Api.Data.EntityAddresses
 
 
 type alias TextTooltipConfig =

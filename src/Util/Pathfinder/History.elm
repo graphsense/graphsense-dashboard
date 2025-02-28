@@ -67,7 +67,7 @@ shallPushHistory msg _ =
         UserReleasedNormalKey _ ->
             False
 
-        AddressDetailsMsg _ ->
+        AddressDetailsMsg _ _ ->
             False
 
         TxDetailsMsg _ ->
@@ -236,7 +236,4 @@ shallPushHistory msg _ =
             False
 
         CloseTextTooltip _ ->
-            False
-
-        BrowserGotEntityAddressesForRelatedAddressesTable _ _ ->
             False
