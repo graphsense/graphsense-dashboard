@@ -27,7 +27,6 @@ import Update.Graph.Table
 import Update.Pathfinder.PagedTable as PT
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (n)
-import Util.ThemedSelectBox as ThemedSelectBox exposing (OutMsg(..))
 
 
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )

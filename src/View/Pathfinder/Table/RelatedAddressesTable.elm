@@ -12,7 +12,6 @@ import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..), getSortedConceptsByWeight)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (totalReceivedColumn)
-import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import RecordSetter as Rs
 import Table

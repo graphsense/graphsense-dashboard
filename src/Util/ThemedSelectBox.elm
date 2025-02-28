@@ -1,5 +1,6 @@
 module Util.ThemedSelectBox exposing
-    ( Model
+    ( Config
+    , Model
     , Msg(..)
     , OutMsg(..)
     , close
