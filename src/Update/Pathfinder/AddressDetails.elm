@@ -20,6 +20,7 @@ import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
 import RemoteData
+import Set
 import Tuple exposing (mapFirst)
 import Update.DateRangePicker as DateRangePicker
 import Update.Graph.Table
@@ -263,22 +264,22 @@ update uc msg model =
             n { model | relatedAddressesTableOpen = not model.relatedAddressesTableOpen }
 
         UserClickedPreviousPageRelatedAddressesTable ->
-            updateRelatedAddressesTable model
-                (\ra -> PT.decPage ra.table |> flip s_table ra |> n)
+            RelatedAddressesTable.previousPage
+                |> updateRelatedAddressesTable model
 
         UserClickedNextPageRelatedAddressesTable ->
             RelatedAddressesTable.loadNextPage
                 |> updateRelatedAddressesTable model
 
         UserClickedFirstPageRelatedAddressesTable ->
-            updateRelatedAddressesTable model
-                (\ra -> PT.goToFirstPage ra.table |> flip s_table ra |> n)
+            RelatedAddressesTable.goToFirstPage
+                |> updateRelatedAddressesTable model
 
         BrowserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } ->
             updateRelatedAddressesTable model
                 (\ra ->
-                    PT.appendData ra.table RelatedAddressesTable.filter nextPage addresses
-                        |> flip s_table ra
+                    PT.appendData ra.clusterAddresses RelatedAddressesTable.filter nextPage addresses
+                        |> flip s_clusterAddresses ra
                         |> n
                 )
 
@@ -295,20 +296,30 @@ update uc msg model =
             n model
 
         SelectBoxMsg sm ->
+            RelatedAddressesTable.selectBoxMsg sm
+            |> updateRelatedAddressesTable model
+
+        BrowserGotEntityAddressTagsForRelatedAddressesTable currency tags ->
+            ( model
+            , BrowserGotAddressesForTags tags.nextPage
+                >> Pathfinder.AddressDetailsMsg model.addressId
+                |> Api.BulkGetAddressEffect
+                    { currency = currency
+                    , addresses =
+                        List.map .address tags.addressTags
+                            |> Set.fromList
+                            |> Set.toList
+                    }
+                |> ApiEffect
+                |> List.singleton
+            )
+
+        BrowserGotAddressesForTags nextpage addresses ->
             updateRelatedAddressesTable model
                 (\ra ->
-                    let
-                        ( newModel, outMsg ) =
-                            ThemedSelectBox.update sm ra.selectBox
-                                |> mapFirst (flip s_selectBox ra)
-                    in
-                    n <|
-                        case outMsg of
-                            Selected x ->
-                                { newModel | selected = x }
-
-                            NoSelection ->
-                                newModel
+                    PT.appendData ra.taggedAddresses RelatedAddressesTable.filter nextpage addresses
+                        |> flip s_taggedAddresses ra
+                        |> n
                 )
 
 

@@ -336,6 +336,23 @@ updateByMsg plugins uc msg model =
                                 |> updateAddressDetails addressId
                             )
 
+                AddressDetails.BrowserGotAddressesForTags _ addresses ->
+                    let
+                        network =
+                            Id.network addressId
+                    in
+                    addresses
+                        |> List.map (.address >> Id.init network)
+                        |> List.map (fetchTagSummaryForId model.tagSummaries)
+                        |> pair model
+                        |> and
+                            (AddressDetails.update uc subm
+                                |> updateAddressDetails addressId
+                            )
+
+                AddressDetails.UserClickedAddressCheckboxInTable id ->
+                    userClickedAddressCheckboxInTable plugins id model
+
                 AddressDetails.UserClickedTxCheckboxInTable tx ->
                     let
                         addOrRemoveTx txId =
@@ -887,11 +904,7 @@ updateByMsg plugins uc msg model =
                 )
 
         UserClickedAddressCheckboxInTable id ->
-            if Dict.member id model.network.addresses then
-                removeAddress id model
-
-            else
-                loadAddress plugins id model
+            userClickedAddressCheckboxInTable plugins id model
 
         UserClickedTx id ->
             userClickedTx id model
@@ -1197,6 +1210,15 @@ updateByMsg plugins uc msg model =
                 |> CmdEffect
                 |> List.singleton
             )
+
+
+userClickedAddressCheckboxInTable : Plugins -> Id -> Model -> ( Model, List Effect )
+userClickedAddressCheckboxInTable plugins id model =
+    if Dict.member id model.network.addresses then
+        removeAddress id model
+
+    else
+        loadAddress plugins id model
 
 
 userClickedTx : Id -> Model -> ( Model, List Effect )

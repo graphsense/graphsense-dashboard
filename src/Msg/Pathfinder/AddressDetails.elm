@@ -31,6 +31,7 @@ type Msg
     | TableMsg Table.State
     | RelatedAddressesTableMsg Table.State
     | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
+    | BrowserGotEntityAddressTagsForRelatedAddressesTable String Api.Data.AddressTags
     | UserClickedToggleRelatedAddressesTable
     | UserClickedPreviousPageRelatedAddressesTable
     | UserClickedNextPageRelatedAddressesTable
@@ -40,3 +41,4 @@ type Msg
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedTx Id
     | NoOp
+    | BrowserGotAddressesForTags (Maybe String) (List Api.Data.Address)

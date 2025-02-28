@@ -24,7 +24,7 @@ import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..))
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), getCurrentTable)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
@@ -241,7 +241,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                             TaggedAddresses ->
                                                 Locale.string vc.locale "Tagged cluster addresses"
 
-                                            AllAddresses ->
+                                            ClusterAddresses ->
                                                 Locale.string vc.locale "All cluster addresses"
                                 }
                         in
@@ -256,7 +256,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                             , PagedTable.pagedTableView vc
                                 []
                                 (RelatedAddressesTable.config Css.Table.styles vc ratc)
-                                ra.table
+                                (getCurrentTable ra)
                                 AddressDetails.UserClickedPreviousPageRelatedAddressesTable
                                 AddressDetails.UserClickedNextPageRelatedAddressesTable
                                 AddressDetails.UserClickedFirstPageRelatedAddressesTable

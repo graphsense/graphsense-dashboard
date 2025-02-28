@@ -1,18 +1,19 @@
-module Update.Pathfinder.Table.RelatedAddressesTable exposing (init, loadNextPage)
+module Update.Pathfinder.Table.RelatedAddressesTable exposing (goToFirstPage, init, loadNextPage, previousPage, selectBoxMsg)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.Graph.Table
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.PagedTable as PagedTable
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), Model)
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), Model, getCurrentTable, setCurrentTable)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Tuple exposing (mapFirst)
-import Util.ThemedSelectBox as ThemedSelectBox
+import Util exposing (n)
+import Util.ThemedSelectBox as ThemedSelectBox exposing (OutMsg(..))
 
 
 itemsPerPage : Int
@@ -24,9 +25,15 @@ init : Id -> Api.Data.Entity -> ( Model, List Effect )
 init addressId entity =
     let
         model =
-            { table =
+            { clusterAddresses =
                 { table = Init.Graph.Table.initUnsorted
                 , nrItems = Just entity.noAddresses
+                , currentPage = 1
+                , itemsPerPage = itemsPerPage
+                }
+            , taggedAddresses =
+                { table = Init.Graph.Table.initUnsorted
+                , nrItems = Just entity.noAddressTags
                 , currentPage = 1
                 , itemsPerPage = itemsPerPage
                 }
@@ -35,32 +42,78 @@ init addressId entity =
             , selectBox =
                 ThemedSelectBox.init
                     [ TaggedAddresses
-                    , AllAddresses
+                    , ClusterAddresses
                     ]
             , selected = TaggedAddresses
             }
     in
     ( model
     , loadData model Nothing
+        ++ loadData { model | selected = ClusterAddresses } Nothing
     )
 
 
 loadNextPage : Model -> ( Model, List Effect )
 loadNextPage model =
-    model.table
+    getCurrentTable model
         |> PagedTable.nextPage (loadData model)
-        |> mapFirst (flip Rs.s_table model)
+        |> mapFirst (setCurrentTable model)
 
 
 loadData : Model -> Maybe String -> List Effect
 loadData model nextpage =
-    BrowserGotEntityAddressesForRelatedAddressesTable
-        >> AddressDetailsMsg model.addressId
-        |> Api.GetEntityAddressesEffect
+    let
+        params =
             { currency = model.entity.currency
             , entity = model.entity.entity
             , pagesize = itemsPerPage
             , nextpage = nextpage
             }
+    in
+    (case model.selected of
+        ClusterAddresses ->
+            BrowserGotEntityAddressesForRelatedAddressesTable
+                >> AddressDetailsMsg model.addressId
+                |> Api.GetEntityAddressesEffect params
+
+        TaggedAddresses ->
+            BrowserGotEntityAddressTagsForRelatedAddressesTable (Id.network model.addressId)
+                >> AddressDetailsMsg model.addressId
+                |> Api.GetEntityAddressTagsEffect params
+    )
         |> ApiEffect
         |> List.singleton
+
+
+previousPage : Model -> ( Model, List Effect )
+previousPage ra =
+    getCurrentTable ra
+        |> PagedTable.decPage
+        |> setCurrentTable ra
+        |> n
+
+
+goToFirstPage : Model -> ( Model, List Effect )
+goToFirstPage ra =
+    getCurrentTable ra
+        |> PagedTable.goToFirstPage
+        |> setCurrentTable ra
+        |> n
+
+
+selectBoxMsg : ThemedSelectBox.Msg ListType -> Model -> ( Model, List Effect )
+selectBoxMsg sm model =
+    let
+        ( newModel, outMsg ) =
+            ThemedSelectBox.update sm model.selectBox
+                |> mapFirst (flip Rs.s_selectBox model)
+    in
+    n <|
+        case outMsg of
+            Selected x ->
+                { newModel
+                    | selected = x
+                }
+
+            NoSelection ->
+                newModel
