@@ -246,7 +246,9 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 }
                         in
                         div
-                            [ css SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                            [ css <|
+                                SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                                    ++ fullWidth
                             ]
                             [ ThemedSelectBox.view conf ra.selectBox ra.selected
                                 |> Html.map AddressDetails.SelectBoxMsg
@@ -254,7 +256,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 |> div
                                     [ css SidePanelComponents.sidePanelRelatedAddressesContentSidePanelAddListFilterRow_details.styles ]
                             , PagedTable.pagedTableView vc
-                                []
+                                [ css fullWidth ]
                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
                                 (getCurrentTable ra)
                                 AddressDetails.UserClickedPreviousPageRelatedAddressesTable

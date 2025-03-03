@@ -4,6 +4,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
+import Css.Pathfinder exposing (fullWidth)
 import Css.Table exposing (Styles)
 import Css.View
 import Dict
@@ -55,6 +56,8 @@ config styles vc ratc _ =
                                 ++ [ Css.display Css.tableCell ]
                             )
                     )
+                |> Rs.s_table
+                    (styles.table >> flip (++) fullWidth)
 
         toId { currency, address } =
             Id.init currency address

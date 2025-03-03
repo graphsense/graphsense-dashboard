@@ -119,73 +119,70 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
             }
     in
     div
-        []
-        [ div
-            attributes
-            [ Table.view config tbl.state filteredData
-            , if tbl.loading then
-                Util.View.loadingSpinner vc loadingSpinner
+        attributes
+        [ Table.view config tbl.state filteredData
+        , if tbl.loading then
+            Util.View.loadingSpinner vc loadingSpinner
 
-              else if List.isEmpty tbl.data then
-                tableHint styles vc "No records found"
+          else if List.isEmpty tbl.data then
+            tableHint styles vc "No records found"
 
-              else if List.isEmpty filteredData then
-                tableHint styles vc "No rows match your filter criteria"
+          else if List.isEmpty filteredData then
+            tableHint styles vc "No rows match your filter criteria"
 
-              else
-                Util.View.none
-            , if tblPaged.currentPage == 1 && nextPageAvailable then
-                SidePanelComponents.paginationListPartStartWithInstances
-                    (SidePanelComponents.paginationListPartStartAttributes
-                        |> Rs.s_listPartStart paggingBlockAttributes
-                        |> Rs.s_iconsChevronRightThin nextActiveAttributes
-                        |> Rs.s_next nextActiveAttributes
-                    )
-                    (SidePanelComponents.paginationListPartStartInstances
-                     -- |> s_iconsChevronRightEnd (Just Util.View.none)
-                    )
-                    { listPartStart = listPart }
+          else
+            Util.View.none
+        , if tblPaged.currentPage == 1 && nextPageAvailable then
+            SidePanelComponents.paginationListPartStartWithInstances
+                (SidePanelComponents.paginationListPartStartAttributes
+                    |> Rs.s_listPartStart paggingBlockAttributes
+                    |> Rs.s_iconsChevronRightThin nextActiveAttributes
+                    |> Rs.s_next nextActiveAttributes
+                )
+                (SidePanelComponents.paginationListPartStartInstances
+                 -- |> s_iconsChevronRightEnd (Just Util.View.none)
+                )
+                { listPartStart = listPart }
 
-              else if tblPaged.currentPage == 1 && not nextPageAvailable then
-                SidePanelComponents.paginationListPartOnePageWithInstances
-                    (SidePanelComponents.paginationListPartOnePageAttributes
-                        |> Rs.s_listPartOnePage paggingBlockAttributes
-                        |> Rs.s_iconsChevronRightThin nextActiveAttributes
-                        |> Rs.s_next nextActiveAttributes
-                    )
-                    (SidePanelComponents.paginationListPartOnePageInstances
-                     -- |> s_iconsChevronRightEnd (Just Util.View.none)
-                    )
-                    { listPartOnePage = listPart }
+          else if tblPaged.currentPage == 1 && not nextPageAvailable then
+            SidePanelComponents.paginationListPartOnePageWithInstances
+                (SidePanelComponents.paginationListPartOnePageAttributes
+                    |> Rs.s_listPartOnePage paggingBlockAttributes
+                    |> Rs.s_iconsChevronRightThin nextActiveAttributes
+                    |> Rs.s_next nextActiveAttributes
+                )
+                (SidePanelComponents.paginationListPartOnePageInstances
+                 -- |> s_iconsChevronRightEnd (Just Util.View.none)
+                )
+                { listPartOnePage = listPart }
 
-              else if nextPageAvailable then
-                SidePanelComponents.paginationListPartMiddleWithInstances
-                    (SidePanelComponents.paginationListPartMiddleAttributes
-                        |> Rs.s_listPartMiddle paggingBlockAttributes
-                        |> Rs.s_iconsChevronRightThin nextActiveAttributes
-                        |> Rs.s_iconsChevronLeftThin prevActiveAttributes
-                        |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
-                        |> Rs.s_next nextActiveAttributes
-                        |> Rs.s_previous prevActiveAttributes
-                    )
-                    (SidePanelComponents.paginationListPartMiddleInstances
-                     -- |> s_iconsChevronRightEnd (Just Util.View.none)
-                    )
-                    { listPartMiddle = listPart }
+          else if nextPageAvailable then
+            SidePanelComponents.paginationListPartMiddleWithInstances
+                (SidePanelComponents.paginationListPartMiddleAttributes
+                    |> Rs.s_listPartMiddle paggingBlockAttributes
+                    |> Rs.s_iconsChevronRightThin nextActiveAttributes
+                    |> Rs.s_iconsChevronLeftThin prevActiveAttributes
+                    |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
+                    |> Rs.s_next nextActiveAttributes
+                    |> Rs.s_previous prevActiveAttributes
+                )
+                (SidePanelComponents.paginationListPartMiddleInstances
+                 -- |> s_iconsChevronRightEnd (Just Util.View.none)
+                )
+                { listPartMiddle = listPart }
 
-              else
-                SidePanelComponents.paginationListPartEndWithInstances
-                    (SidePanelComponents.paginationListPartEndAttributes
-                        |> Rs.s_listPartEnd paggingBlockAttributes
-                        |> Rs.s_nextCell nextActiveAttributes
-                        |> Rs.s_next nextActiveAttributes
-                        |> Rs.s_iconsChevronLeftThin prevActiveAttributes
-                        |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
-                        |> Rs.s_previous prevActiveAttributes
-                    )
-                    (SidePanelComponents.paginationListPartEndInstances
-                     -- |> s_iconsChevronRightEnd (Just Util.View.none)
-                    )
-                    { listPartEnd = listPart }
-            ]
+          else
+            SidePanelComponents.paginationListPartEndWithInstances
+                (SidePanelComponents.paginationListPartEndAttributes
+                    |> Rs.s_listPartEnd paggingBlockAttributes
+                    |> Rs.s_nextCell nextActiveAttributes
+                    |> Rs.s_next nextActiveAttributes
+                    |> Rs.s_iconsChevronLeftThin prevActiveAttributes
+                    |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
+                    |> Rs.s_previous prevActiveAttributes
+                )
+                (SidePanelComponents.paginationListPartEndInstances
+                 -- |> s_iconsChevronRightEnd (Just Util.View.none)
+                )
+                { listPartEnd = listPart }
         ]
