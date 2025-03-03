@@ -295,19 +295,24 @@ update uc msg model =
                 |> updateRelatedAddressesTable model
 
         BrowserGotEntityAddressTagsForRelatedAddressesTable currency tags ->
-            ( model
-            , BrowserGotAddressesForTags tags.nextPage
-                >> Pathfinder.AddressDetailsMsg model.addressId
-                |> Api.BulkGetAddressEffect
-                    { currency = currency
-                    , addresses =
-                        List.map .address tags.addressTags
-                            |> Set.fromList
-                            |> Set.toList
-                    }
-                |> ApiEffect
-                |> List.singleton
-            )
+            if not <| List.isEmpty tags.addressTags then
+                ( model
+                , BrowserGotAddressesForTags tags.nextPage
+                    >> Pathfinder.AddressDetailsMsg model.addressId
+                    |> Api.BulkGetAddressEffect
+                        { currency = currency
+                        , addresses =
+                            List.map .address tags.addressTags
+                                |> Set.fromList
+                                |> Set.toList
+                        }
+                    |> ApiEffect
+                    |> List.singleton
+                )
+
+            else
+                RelatedAddressesTable.appendTaggedAddresses Nothing []
+                    |> updateRelatedAddressesTable model
 
         BrowserGotAddressesForTags nextpage addresses ->
             RelatedAddressesTable.appendTaggedAddresses nextpage addresses
