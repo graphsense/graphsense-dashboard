@@ -774,21 +774,6 @@ viewLabelOfTags vc gc model id =
                 ts
                     |> Maybe.map getSortedConceptsByWeight
                     |> Maybe.withDefault []
-
-            learnMorebtn =
-                Btns.buttonTypeTextStateRegularStyleTextWithAttributes
-                    (Btns.buttonTypeTextStateRegularStyleTextAttributes
-                        |> Rs.s_button
-                            [ [ Css.cursor Css.pointer ] |> css
-                            , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
-                            ]
-                    )
-                    { typeTextStateRegularStyleText =
-                        { buttonText = Locale.string vc.locale "Learn more"
-                        , iconInstance = none
-                        , iconVisible = False
-                        }
-                    }
         in
         div
             [ css
@@ -807,8 +792,25 @@ viewLabelOfTags vc gc model id =
                         >> Html.map (Pathfinder.AddressDetailsMsg id)
                     )
              )
-                ++ [ learnMorebtn ]
+                ++ [ learnMoreButton vc id ]
             )
+
+
+learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg
+learnMoreButton vc id =
+    Btns.buttonTypeTextStateRegularStyleTextWithAttributes
+        (Btns.buttonTypeTextStateRegularStyleTextAttributes
+            |> Rs.s_button
+                [ [ Css.cursor Css.pointer ] |> css
+                , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
+                ]
+        )
+        { typeTextStateRegularStyleText =
+            { buttonText = Locale.string vc.locale "Learn more"
+            , iconInstance = none
+            , iconVisible = False
+            }
+        }
 
 
 getTagSummary : { a | tagSummaries : Dict Id Pathfinder.HavingTags } -> Id -> Maybe Api.Data.TagSummary
@@ -927,14 +929,24 @@ setTags vc gc model id =
                             ctx =
                                 { context = aid, domId = aid ++ "_actor" }
                         in
-                        Html.a
-                            [ HA.href link
-                            , css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
-                            , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
-                            , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
-                            , HA.id ctx.domId
+                        Html.div
+                            [ HA.css
+                                SidePanelComponents.sidePanelAddressTags_details.styles
                             ]
-                            [ Html.text text
+                            [ Html.a
+                                [ HA.href link
+                                , css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
+                                , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
+                                , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
+                                , HA.id ctx.domId
+                                ]
+                                [ Html.text text
+                                ]
+                            , if Maybe.map hasOnlyExchangeTags ts == Just True then
+                                learnMoreButton vc id
+
+                              else
+                                none
                             ]
                     )
     in
