@@ -153,7 +153,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                                 NoTags ->
                                     none
 
-                                HasTagSummary ts ->
+                                HasTagSummary _ ts ->
                                     if hasOnlyExchangeTags ts then
                                         exchangeIcon
 
@@ -161,7 +161,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                                         tagIcon
                         , position2Instance =
                             case hasTags_ data of
-                                HasTagSummary ts ->
+                                HasTagSummary _ ts ->
                                     if isExchangeNode ts && not (hasOnlyExchangeTags ts) then
                                         exchangeIcon
 

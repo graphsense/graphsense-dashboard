@@ -816,7 +816,7 @@ learnMoreButton vc id =
 getTagSummary : { a | tagSummaries : Dict Id Pathfinder.HavingTags } -> Id -> Maybe Api.Data.TagSummary
 getTagSummary model id =
     case Dict.get id model.tagSummaries of
-        Just (Pathfinder.HasTagSummary t) ->
+        Just (Pathfinder.HasTagSummary _ t) ->
             Just t
 
         _ ->

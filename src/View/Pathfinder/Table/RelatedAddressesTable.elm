@@ -98,7 +98,7 @@ config styles vc ratc _ =
                         HasTags _ ->
                             []
 
-                        HasTagSummary ts ->
+                        HasTagSummary _ ts ->
                             getSortedConceptsByWeight ts
                                 |> List.head
                                 |> Maybe.map

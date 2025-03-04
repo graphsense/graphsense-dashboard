@@ -88,7 +88,7 @@ shallPushHistory msg _ =
         BrowserGotAddressesTags _ _ ->
             False
 
-        BrowserGotTagSummary _ _ ->
+        BrowserGotTagSummary _ _ _ ->
             False
 
         UserClickedAddressExpandHandle _ _ ->

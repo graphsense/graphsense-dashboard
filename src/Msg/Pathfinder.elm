@@ -45,7 +45,7 @@ type Msg
     | BrowserGotAddressData Id Api.Data.Address
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
-    | BrowserGotTagSummary Id Api.Data.TagSummary
+    | BrowserGotTagSummary Bool Id Api.Data.TagSummary
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id
     | PluginMsg Plugin.Msg

@@ -251,7 +251,7 @@ updateByMsg plugins uc msg model =
                 |> s_details details
                 |> s_colors ncolors
                 |> s_clusters clusters
-                |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
+                |> pairTo (fetchTagSummaryForId True model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
 
         BrowserGotClusterData addressId data ->
             let
@@ -331,7 +331,7 @@ updateByMsg plugins uc msg model =
                     in
                     addresses.addresses
                         |> List.map (.address >> Id.init network)
-                        |> List.map (fetchTagSummaryForId model.tagSummaries)
+                        |> List.map (fetchTagSummaryForId False model.tagSummaries)
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -345,7 +345,7 @@ updateByMsg plugins uc msg model =
                     in
                     addresses
                         |> List.map (.address >> Id.init network)
-                        |> List.map (fetchTagSummaryForId model.tagSummaries)
+                        |> List.map (fetchTagSummaryForId False model.tagSummaries)
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -663,7 +663,7 @@ updateByMsg plugins uc msg model =
                                 (\addr ->
                                     Tooltip.Address addr
                                         (case Dict.get id model.tagSummaries of
-                                            Just (HasTagSummary s) ->
+                                            Just (HasTagSummary _ s) ->
                                                 Just s
 
                                             _ ->
@@ -707,7 +707,7 @@ updateByMsg plugins uc msg model =
             case model.details of
                 Just (AddressDetails id _) ->
                     case Dict.get id model.tagSummaries of
-                        Just (HasTagSummary ts) ->
+                        Just (HasTagSummary _ ts) ->
                             let
                                 tt =
                                     Tooltip.TagLabel ctx.context
@@ -1042,11 +1042,11 @@ updateByMsg plugins uc msg model =
         WorkflowNextTxByTime context wm ->
             WorkflowNextTxByTime.update context wm model
 
-        BrowserGotTagSummary id data ->
+        BrowserGotTagSummary includesBestClusterTag id data ->
             let
                 d =
                     if data.tagCount > 0 then
-                        HasTagSummary data
+                        HasTagSummary includesBestClusterTag data
 
                     else
                         NoTags
@@ -1068,7 +1068,7 @@ updateByMsg plugins uc msg model =
                         (Maybe.map
                             (\curr ->
                                 case ( curr, tag ) of
-                                    ( HasTagSummary _, _ ) ->
+                                    ( HasTagSummary _ _, _ ) ->
                                         curr
 
                                     ( HasTags withExchangeTag, Just { category } ) ->
@@ -1211,7 +1211,7 @@ handleTooltipMsg msg model =
                                 Id.init currency address
                         in
                         case Dict.get id model.tagSummaries of
-                            Just (HasTagSummary ts) ->
+                            Just (HasTagSummary _ ts) ->
                                 let
                                     tt =
                                         Tooltip.TagConcept id
@@ -1376,7 +1376,7 @@ updateTagDataOnAddress addressId m =
 
         net td =
             case td of
-                HasTagSummary tagdata ->
+                HasTagSummary _ tagdata ->
                     let
                         actorlabel =
                             case tagdata.bestActor of
@@ -1982,16 +1982,24 @@ bulkfetchTagsForAddresses network model addr =
     )
 
 
-fetchTagSummaryForId : Dict Id HavingTags -> Id -> Effect
-fetchTagSummaryForId existing id =
+fetchTagSummaryForId : Bool -> Dict Id HavingTags -> Id -> Effect
+fetchTagSummaryForId includeBestClusterTag existing id =
+    let
+        fetch =
+            BrowserGotTagSummary includeBestClusterTag id
+                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id, includeBestClusterTag = includeBestClusterTag }
+                |> ApiEffect
+    in
     case Dict.get id existing of
-        Just (HasTagSummary _) ->
-            CmdEffect Cmd.none
+        Just (HasTagSummary inc _) ->
+            if inc == includeBestClusterTag then
+                CmdEffect Cmd.none
+
+            else
+                fetch
 
         _ ->
-            BrowserGotTagSummary id
-                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id, includeBestClusterTag = True }
-                |> ApiEffect
+            fetch
 
 
 fetchActorsForAddress : Api.Data.Address -> Dict String Api.Data.Actor -> List Effect
