@@ -188,6 +188,11 @@ relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
             Locale.string vc.locale "Related addresses"
+
+        noRelatedAddresses =
+            cluster
+                |> RemoteData.map (.noAddresses >> flip (-) 1)
+                |> RemoteData.withDefault 0
     in
     dataTab
         { title =
@@ -200,16 +205,16 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 }
                             }
                     )
-                    (\c ->
+                    (\_ ->
                         SidePanelComponents.sidePanelListHeaderTitleWithNumber
                             { sidePanelListHeaderTitleWithNumber =
                                 { label = label
-                                , number = Locale.int vc.locale c.noAddresses
+                                , number = Locale.int vc.locale noRelatedAddresses
                                 }
                             }
                     )
         , content =
-            if not viewState.relatedAddressesTableOpen then
+            if not viewState.relatedAddressesTableOpen || noRelatedAddresses == 0 then
                 Nothing
 
             else
