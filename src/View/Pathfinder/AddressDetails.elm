@@ -32,8 +32,6 @@ import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData exposing (WebData)
-import Route
-import Route.Graph
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
@@ -163,6 +161,7 @@ utxo plugins pluginStates vc gc model id viewState address =
         , relatedDataTabsList = relatedDataTabsList
         }
         { sidePanelAddress = sidePanelData
+        , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
         , identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
@@ -661,6 +660,7 @@ account plugins pluginStates vc gc model id viewState address =
             ]
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
+        , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
         , sidePanelAddressHeader = sidePanelAddressHeader
@@ -924,11 +924,6 @@ setTags vc gc model id =
                 |> Maybe.map
                     (\aid ->
                         let
-                            link =
-                                Route.Graph.actorRoute aid Nothing
-                                    |> Route.Graph
-                                    |> Route.toUrl
-
                             text =
                                 actorText |> Maybe.withDefault ""
 
@@ -939,9 +934,8 @@ setTags vc gc model id =
                             [ HA.css
                                 SidePanelComponents.sidePanelAddressTags_details.styles
                             ]
-                            [ Html.a
-                                [ HA.href link
-                                , css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
+                            [ Html.div
+                                [ css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
                                 , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
                                 , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
                                 , HA.id ctx.domId

@@ -115,8 +115,8 @@ config styles vc ratc _ =
                         HasTagSummaryWithoutCluster ts ->
                             withTagSummary ts
 
-                        HasTagSummaries { withCluster } ->
-                            withTagSummary withCluster
+                        HasTagSummaries { withoutCluster } ->
+                            withTagSummary withoutCluster
 
                         LoadingTags ->
                             [ loadingSpinner vc Css.View.loadingSpinner

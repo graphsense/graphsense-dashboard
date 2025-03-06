@@ -1060,12 +1060,12 @@ updateByMsg plugins uc msg model =
         WorkflowNextTxByTime context wm ->
             WorkflowNextTxByTime.update context wm model
 
-        BrowserGotTagSummaries includesBestClusterTag ids data ->
+        BrowserGotTagSummaries includesBestClusterTag data ->
             let
                 combine ( id, ts ) r =
                     addTagSummaryToModel r includesBestClusterTag id ts
             in
-            List.foldl combine (n model) (List.Extra.zip ids data)
+            List.foldl combine (n model) data
 
         BrowserGotTagSummary includesBestClusterTag id data ->
             addTagSummaryToModel (n model) includesBestClusterTag id data
@@ -2046,7 +2046,7 @@ fetchTagSummaryForIds includeBestClusterTag existing ids =
             CmdEffect Cmd.none
 
         x :: rest ->
-            BrowserGotTagSummaries includeBestClusterTag ids
+            BrowserGotTagSummaries includeBestClusterTag
                 |> Api.BulkGetAddressTagSummaryEffect { currency = Id.network x, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
                 |> ApiEffect
 

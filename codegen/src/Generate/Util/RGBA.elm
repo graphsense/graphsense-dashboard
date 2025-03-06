@@ -4,6 +4,7 @@ import Api.Raw exposing (RGBA)
 import Dict as Dict
 import Elm
 import Gen.Css as Css
+import Round as R
 import String.Format as Format
 import Types exposing (ColorMap)
 
@@ -21,7 +22,7 @@ toStyles colorMap ({ r, g, b, a } as c) =
                 (f r)
                 (f g)
                 (f b)
-                a
+                (R.roundNum 2 a)
             )
 
 
@@ -41,7 +42,7 @@ toStylesString colorMap { r, g, b, a } =
                 |> Format.namedValue "r" (f r)
                 |> Format.namedValue "g" (f g)
                 |> Format.namedValue "b" (f b)
-                |> Format.namedValue "a" (String.fromFloat a)
+                |> Format.namedValue "a" (String.fromFloat (R.roundNum 2 a))
     in
     Dict.get str colorMap
         |> Maybe.map toVarString

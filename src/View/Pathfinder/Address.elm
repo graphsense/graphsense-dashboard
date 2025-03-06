@@ -101,8 +101,8 @@ view plugins vc colors address getCluster annotation =
             fd.y + fd.height / 2
 
         nodeLabel =
-            address.exchange
-                |> Maybe.Extra.or address.actor
+            address.actor
+                |> Maybe.Extra.or address.exchange
                 |> Maybe.Extra.or
                     (case getAddressType address cluster of
                         LikelyUnknownService ->
@@ -211,7 +211,7 @@ view plugins vc colors address getCluster annotation =
                 , tagIconVisible = address.hasTags || List.length replacementTagIcons > 0
                 , tagIconInstance =
                     (replacementIconCombined |> Maybe.map (g []))
-                        |> Maybe.withDefault (Icons.iconsTagL {})
+                        |> Maybe.withDefault (Icons.iconsTagLtypeDirect {})
                 }
             , iconsNodeOpenLeft =
                 { variant =

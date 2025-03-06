@@ -26,6 +26,7 @@
             "jorgengranseth/elm-string-format": "1.0.1",
             "mdgriffith/elm-codegen": "4.2.1",
             "mgold/elm-nonempty-list": "4.2.0",
+            "myrho/elm-round": "1.0.5",
             "rtfeldman/elm-iso8601-date-strings": "1.1.4",
             "the-sett/elm-string-case": "1.0.2"
         },

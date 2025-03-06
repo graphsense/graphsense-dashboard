@@ -20,6 +20,7 @@ import Json.Encode
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
+import Model.Pathfinder.Id exposing (Id)
 
 
 type Effect msg
@@ -264,7 +265,7 @@ type Effect msg
         , addresses : List String
         , includeBestClusterTag : Bool
         }
-        (List Api.Data.TagSummary -> msg)
+        (List ( Id, Api.Data.TagSummary ) -> msg)
 
 
 getEntityEgonet :
@@ -825,7 +826,15 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressTagSummaryEffect { currency, addresses, includeBestClusterTag } toMsg ->
-            listWithMaybes Api.Data.tagSummaryDecoder
+            Json.Decode.list
+                (Json.Decode.field "_request_address" Json.Decode.string
+                    |> Json.Decode.andThen
+                        (\requestAddress ->
+                            Json.Decode.map
+                                (\ts -> ( ( currency, requestAddress ), ts ))
+                                Api.Data.tagSummaryDecoder
+                        )
+                )
                 |> Api.Request.MyBulk.bulkJson
                     currency
                     Api.Request.MyBulk.OperationGetAddressTagSummary
