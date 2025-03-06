@@ -91,14 +91,8 @@ config styles vc ratc _ =
                 (Locale.string vc.locale "Category")
                 (\{ address } -> address)
                 (\data ->
-                    case toId data |> ratc.hasTags of
-                        NoTags ->
-                            []
-
-                        HasTags _ ->
-                            []
-
-                        HasTagSummary _ ts ->
+                    let
+                        withTagSummary ts =
                             getSortedConceptsByWeight ts
                                 |> List.head
                                 |> Maybe.map
@@ -107,6 +101,22 @@ config styles vc ratc _ =
                                         >> List.singleton
                                     )
                                 |> Maybe.withDefault []
+                    in
+                    case toId data |> ratc.hasTags of
+                        NoTags ->
+                            []
+
+                        HasTags _ ->
+                            []
+
+                        HasTagSummaryWithCluster ts ->
+                            withTagSummary ts
+
+                        HasTagSummaryWithoutCluster ts ->
+                            withTagSummary ts
+
+                        HasTagSummaries { withCluster } ->
+                            withTagSummary withCluster
 
                         LoadingTags ->
                             [ loadingSpinner vc Css.View.loadingSpinner

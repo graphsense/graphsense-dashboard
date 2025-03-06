@@ -23,6 +23,7 @@ type Operation
     | OperationGetTx
     | OperationGetTxIo
     | OperationGetExchangeRates
+    | OperationGetAddressTagSummary
 
 
 operationVariants : List Operation
@@ -44,6 +45,7 @@ operationVariants =
     , OperationGetTx
     , OperationGetTxIo
     , OperationGetExchangeRates
+    , OperationGetAddressTagSummary
     ]
 
 
@@ -100,6 +102,9 @@ stringFromOperation model =
 
         OperationGetExchangeRates ->
             "get_exchange_rates"
+
+        OperationGetAddressTagSummary ->
+            "get_tag_summary_by_address"
 
 
 bulkJson : String -> Operation -> Json.Encode.Value -> Json.Decode.Decoder a -> Api.Request a

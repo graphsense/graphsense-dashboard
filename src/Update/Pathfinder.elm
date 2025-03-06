@@ -331,7 +331,8 @@ updateByMsg plugins uc msg model =
                     in
                     addresses.addresses
                         |> List.map (.address >> Id.init network)
-                        |> List.map (fetchTagSummaryForId False model.tagSummaries)
+                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.singleton
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -345,7 +346,8 @@ updateByMsg plugins uc msg model =
                     in
                     addresses
                         |> List.map (.address >> Id.init network)
-                        |> List.map (fetchTagSummaryForId False model.tagSummaries)
+                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.singleton
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -663,8 +665,14 @@ updateByMsg plugins uc msg model =
                                 (\addr ->
                                     Tooltip.Address addr
                                         (case Dict.get id model.tagSummaries of
-                                            Just (HasTagSummary _ s) ->
-                                                Just s
+                                            Just (HasTagSummaries { withCluster }) ->
+                                                Just withCluster
+
+                                            Just (HasTagSummaryWithoutCluster ts) ->
+                                                Just ts
+
+                                            Just (HasTagSummaryWithCluster ts) ->
+                                                Just ts
 
                                             _ ->
                                                 Nothing
@@ -704,22 +712,32 @@ updateByMsg plugins uc msg model =
             ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
 
         UserMovesMouseOverTagLabel ctx ->
+            let
+                tsToTooltip ts =
+                    let
+                        tt =
+                            Tooltip.TagLabel ctx.context
+                                ts
+                                { openTooltip = UserMovesMouseOverTagLabel ctx
+                                , closeTooltip = UserMovesMouseOutTagLabel ctx
+                                , openDetails = Nothing
+                                }
+                    in
+                    ( model
+                    , OpenTooltipEffect ctx tt |> List.singleton
+                    )
+            in
             case model.details of
                 Just (AddressDetails id _) ->
                     case Dict.get id model.tagSummaries of
-                        Just (HasTagSummary _ ts) ->
-                            let
-                                tt =
-                                    Tooltip.TagLabel ctx.context
-                                        ts
-                                        { openTooltip = UserMovesMouseOverTagLabel ctx
-                                        , closeTooltip = UserMovesMouseOutTagLabel ctx
-                                        , openDetails = Nothing
-                                        }
-                            in
-                            ( model
-                            , OpenTooltipEffect ctx tt |> List.singleton
-                            )
+                        Just (HasTagSummaries { withCluster }) ->
+                            tsToTooltip withCluster
+
+                        Just (HasTagSummaryWithoutCluster ts) ->
+                            tsToTooltip ts
+
+                        Just (HasTagSummaryWithCluster ts) ->
+                            tsToTooltip ts
 
                         _ ->
                             n model
@@ -1042,21 +1060,15 @@ updateByMsg plugins uc msg model =
         WorkflowNextTxByTime context wm ->
             WorkflowNextTxByTime.update context wm model
 
-        BrowserGotTagSummary includesBestClusterTag id data ->
+        BrowserGotTagSummaries includesBestClusterTag ids data ->
             let
-                d =
-                    if data.tagCount > 0 then
-                        HasTagSummary includesBestClusterTag data
-
-                    else
-                        NoTags
+                combine ( id, ts ) r =
+                    addTagSummaryToModel r includesBestClusterTag id ts
             in
-            ( { model
-                | tagSummaries = Dict.insert id d model.tagSummaries
-              }
-                |> updateTagDataOnAddress id
-            , data.bestActor |> Maybe.map (List.singleton >> flip fetchActors model.actors) |> Maybe.withDefault []
-            )
+            List.foldl combine (n model) (List.Extra.zip ids data)
+
+        BrowserGotTagSummary includesBestClusterTag id data ->
+            addTagSummaryToModel (n model) includesBestClusterTag id data
 
         BrowserGotAddressesTags _ data ->
             let
@@ -1068,7 +1080,13 @@ updateByMsg plugins uc msg model =
                         (Maybe.map
                             (\curr ->
                                 case ( curr, tag ) of
-                                    ( HasTagSummary _ _, _ ) ->
+                                    ( HasTagSummaries _, _ ) ->
+                                        curr
+
+                                    ( HasTagSummaryWithCluster _, _ ) ->
+                                        curr
+
+                                    ( HasTagSummaryWithoutCluster _, _ ) ->
                                         curr
 
                                     ( HasTags withExchangeTag, Just { category } ) ->
@@ -1209,27 +1227,36 @@ handleTooltipMsg msg model =
                         let
                             id =
                                 Id.init currency address
+
+                            tsToTooltip ts =
+                                Tooltip.TagConcept id
+                                    concept
+                                    ts
+                                    { openTooltip =
+                                        Tag.UserMovesMouseOverTagConcept ctx
+                                            |> AddressDetails.TooltipMsg
+                                            |> AddressDetailsMsg id
+                                    , closeTooltip =
+                                        Tag.UserMovesMouseOutTagConcept ctx
+                                            |> AddressDetails.TooltipMsg
+                                            |> AddressDetailsMsg id
+                                    , openDetails = Just (UserOpensDialogWindow (TagsList id))
+                                    }
                         in
                         case Dict.get id model.tagSummaries of
-                            Just (HasTagSummary _ ts) ->
-                                let
-                                    tt =
-                                        Tooltip.TagConcept id
-                                            concept
-                                            ts
-                                            { openTooltip =
-                                                Tag.UserMovesMouseOverTagConcept ctx
-                                                    |> AddressDetails.TooltipMsg
-                                                    |> AddressDetailsMsg id
-                                            , closeTooltip =
-                                                Tag.UserMovesMouseOutTagConcept ctx
-                                                    |> AddressDetails.TooltipMsg
-                                                    |> AddressDetailsMsg id
-                                            , openDetails = Just (UserOpensDialogWindow (TagsList id))
-                                            }
-                                in
+                            Just (HasTagSummaries { withCluster }) ->
                                 ( model
-                                , OpenTooltipEffect ctx tt |> List.singleton
+                                , OpenTooltipEffect ctx (tsToTooltip withCluster) |> List.singleton
+                                )
+
+                            Just (HasTagSummaryWithCluster ts) ->
+                                ( model
+                                , OpenTooltipEffect ctx (tsToTooltip ts) |> List.singleton
+                                )
+
+                            Just (HasTagSummaryWithoutCluster ts) ->
+                                ( model
+                                , OpenTooltipEffect ctx (tsToTooltip ts) |> List.singleton
                                 )
 
                             _ ->
@@ -1374,28 +1401,37 @@ updateTagDataOnAddress addressId m =
         tag =
             Dict.get addressId m.tagSummaries
 
+        updateTagsummaryData tagdata =
+            let
+                actorlabel =
+                    case tagdata.bestActor of
+                        Just _ ->
+                            tagdata.bestLabel
+
+                        _ ->
+                            Nothing
+            in
+            (if TagSummary.isExchangeNode tagdata then
+                Network.updateAddress addressId
+                    (s_exchange tagdata.bestLabel)
+                    m.network
+
+             else
+                m.network
+            )
+                |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
+                |> Network.updateAddress addressId (s_actor actorlabel)
+
         net td =
             case td of
-                HasTagSummary _ tagdata ->
-                    let
-                        actorlabel =
-                            case tagdata.bestActor of
-                                Just _ ->
-                                    tagdata.bestLabel
+                HasTagSummaries { withCluster } ->
+                    updateTagsummaryData withCluster
 
-                                _ ->
-                                    Nothing
-                    in
-                    (if TagSummary.isExchangeNode tagdata then
-                        Network.updateAddress addressId
-                            (s_exchange tagdata.bestLabel)
-                            m.network
+                HasTagSummaryWithCluster ts ->
+                    updateTagsummaryData ts
 
-                     else
-                        m.network
-                    )
-                        |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
-                        |> Network.updateAddress addressId (s_actor actorlabel)
+                HasTagSummaryWithoutCluster ts ->
+                    updateTagsummaryData ts
 
                 HasExchangeTagOnly ->
                     Network.updateAddress addressId (s_hasTags False) m.network
@@ -1964,7 +2000,8 @@ bulkfetchTagsForAddresses network model addr =
         | tagSummaries =
             addr
                 |> List.foldl
-                    (\a -> Dict.insert a LoadingTags)
+                    -- (\a -> Dict.insert a LoadingTags)
+                    (\id -> upsertTagSummary id LoadingTags)
                     model.tagSummaries
       }
     , List.Extra.greedyGroupsOf 100 addr
@@ -1982,6 +2019,38 @@ bulkfetchTagsForAddresses network model addr =
     )
 
 
+isTagSummaryLoaded : Bool -> Dict Id HavingTags -> Id -> Bool
+isTagSummaryLoaded includeBestClusterTag existing id =
+    case Dict.get id existing of
+        Just (HasTagSummaries _) ->
+            True
+
+        Just (HasTagSummaryWithCluster _) ->
+            includeBestClusterTag
+
+        Just (HasTagSummaryWithoutCluster _) ->
+            includeBestClusterTag == False
+
+        _ ->
+            False
+
+
+fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> List Id -> Effect
+fetchTagSummaryForIds includeBestClusterTag existing ids =
+    let
+        idsToLoad =
+            ids |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
+    in
+    case idsToLoad of
+        [] ->
+            CmdEffect Cmd.none
+
+        x :: rest ->
+            BrowserGotTagSummaries includeBestClusterTag ids
+                |> Api.BulkGetAddressTagSummaryEffect { currency = Id.network x, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
+                |> ApiEffect
+
+
 fetchTagSummaryForId : Bool -> Dict Id HavingTags -> Id -> Effect
 fetchTagSummaryForId includeBestClusterTag existing id =
     let
@@ -1990,16 +2059,33 @@ fetchTagSummaryForId includeBestClusterTag existing id =
                 |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id, includeBestClusterTag = includeBestClusterTag }
                 |> ApiEffect
     in
-    case Dict.get id existing of
-        Just (HasTagSummary inc _) ->
-            if inc == includeBestClusterTag then
-                CmdEffect Cmd.none
+    if isTagSummaryLoaded includeBestClusterTag existing id then
+        CmdEffect Cmd.none
+
+    else
+        fetch
+
+
+addTagSummaryToModel : ( Model, List Effect ) -> Bool -> Id -> Api.Data.TagSummary -> ( Model, List Effect )
+addTagSummaryToModel ( m, e ) includesBestClusterTag id data =
+    let
+        d =
+            if data.tagCount > 0 then
+                if includesBestClusterTag then
+                    HasTagSummaryWithCluster data
+
+                else
+                    HasTagSummaryWithoutCluster data
 
             else
-                fetch
-
-        _ ->
-            fetch
+                NoTags
+    in
+    ( { m
+        | tagSummaries = upsertTagSummary id d m.tagSummaries
+      }
+        |> updateTagDataOnAddress id
+    , e ++ (data.bestActor |> Maybe.map (List.singleton >> flip fetchActors m.actors) |> Maybe.withDefault [])
+    )
 
 
 fetchActorsForAddress : Api.Data.Address -> Dict String Api.Data.Actor -> List Effect
@@ -2386,3 +2472,44 @@ updateAddressDetails id upd model =
 
         _ ->
             n model
+
+
+upsertTagSummary : Id -> HavingTags -> Dict Id HavingTags -> Dict Id HavingTags
+upsertTagSummary id newTagSummary dict =
+    if Dict.member id dict then
+        Dict.update id
+            (Maybe.map
+                (\curr ->
+                    case ( curr, newTagSummary ) of
+                        ( HasTagSummaries _, _ ) ->
+                            curr
+
+                        ( HasTagSummaryWithCluster wc, HasTagSummaryWithoutCluster woc ) ->
+                            HasTagSummaries { withCluster = wc, withoutCluster = woc }
+
+                        ( HasTagSummaryWithCluster _, HasTagSummaryWithCluster new ) ->
+                            HasTagSummaryWithCluster new
+
+                        ( HasTagSummaryWithoutCluster woc, HasTagSummaryWithCluster wc ) ->
+                            HasTagSummaries { withCluster = wc, withoutCluster = woc }
+
+                        ( HasTagSummaryWithoutCluster _, HasTagSummaryWithoutCluster new ) ->
+                            HasTagSummaryWithoutCluster new
+
+                        ( HasTags withExchangeTag, new ) ->
+                            new
+
+                        ( LoadingTags, new ) ->
+                            new
+
+                        ( NoTags, new ) ->
+                            new
+
+                        ( _, _ ) ->
+                            curr
+                )
+            )
+            dict
+
+    else
+        Dict.insert id newTagSummary dict

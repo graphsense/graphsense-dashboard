@@ -438,6 +438,14 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.BulkGetAddressTagSummaryEffect e _ ->
+            ( "{1}: loading {0} tag summaries"
+            , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
         Api.BulkGetAddressEffect e _ ->
             ( "{1}: loading {0} addresses"
             , [ List.length e.addresses |> String.fromInt

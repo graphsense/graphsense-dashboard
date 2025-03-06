@@ -140,6 +140,14 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                     SidePanelComponents.sidePanelIoListIdentifierCellAttributes
                     { sidePanelIoListIdentifierCell =
                         { position1Instance =
+                            let
+                                withTagSummary ts =
+                                    if hasOnlyExchangeTags ts then
+                                        exchangeIcon
+
+                                    else
+                                        tagIcon
+                            in
                             case hasTags_ data of
                                 LoadingTags ->
                                     loadingIcon
@@ -153,20 +161,32 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                                 NoTags ->
                                     none
 
-                                HasTagSummary _ ts ->
-                                    if hasOnlyExchangeTags ts then
-                                        exchangeIcon
+                                HasTagSummaryWithCluster ts ->
+                                    withTagSummary ts
 
-                                    else
-                                        tagIcon
+                                HasTagSummaryWithoutCluster ts ->
+                                    withTagSummary ts
+
+                                HasTagSummaries { withCluster } ->
+                                    withTagSummary withCluster
                         , position2Instance =
-                            case hasTags_ data of
-                                HasTagSummary _ ts ->
+                            let
+                                withTagSummary ts =
                                     if isExchangeNode ts && not (hasOnlyExchangeTags ts) then
                                         exchangeIcon
 
                                     else
                                         none
+                            in
+                            case hasTags_ data of
+                                HasTagSummaryWithCluster ts ->
+                                    withTagSummary ts
+
+                                HasTagSummaryWithoutCluster ts ->
+                                    withTagSummary ts
+
+                                HasTagSummaries { withCluster } ->
+                                    withTagSummary withCluster
 
                                 HasTags True ->
                                     exchangeIcon

@@ -228,3 +228,6 @@ shallPushHistory msg _ =
 
         CloseTextTooltip _ ->
             False
+
+        BrowserGotTagSummaries _ _ _ ->
+            False

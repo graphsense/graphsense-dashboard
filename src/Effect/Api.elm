@@ -259,6 +259,12 @@ type Effect msg
         , txs : List String
         }
         (List Api.Data.Tx -> msg)
+    | BulkGetAddressTagSummaryEffect
+        { currency : String
+        , addresses : List String
+        , includeBestClusterTag : Bool
+        }
+        (List Api.Data.TagSummary -> msg)
 
 
 getEntityEgonet :
@@ -330,6 +336,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetAddressTagSummaryEffect eff
+
+        BulkGetAddressTagSummaryEffect eff m ->
+            m
+                >> mapMsg
+                |> BulkGetAddressTagSummaryEffect eff
 
         SearchEffect eff m ->
             m
@@ -809,6 +820,18 @@ perform apiKey wrapMsg effect =
                     (Json.Encode.object
                         [ ( "tx_hash", Json.Encode.list Json.Encode.string e.txs )
                         , ( "include_io", Json.Encode.bool True )
+                        ]
+                    )
+                |> send apiKey wrapMsg effect toMsg
+
+        BulkGetAddressTagSummaryEffect { currency, addresses, includeBestClusterTag } toMsg ->
+            listWithMaybes Api.Data.tagSummaryDecoder
+                |> Api.Request.MyBulk.bulkJson
+                    currency
+                    Api.Request.MyBulk.OperationGetAddressTagSummary
+                    (Json.Encode.object
+                        [ ( "address", Json.Encode.list Json.Encode.string addresses )
+                        , ( "include_best_cluster_tag", Json.Encode.bool includeBestClusterTag )
                         ]
                     )
                 |> send apiKey wrapMsg effect toMsg
