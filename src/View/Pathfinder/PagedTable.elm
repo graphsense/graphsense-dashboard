@@ -73,8 +73,8 @@ customizations vc =
 --         ]
 
 
-pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> msg -> msg -> msg -> Html msg
-pagedTableView vc attributes config tblPaged prevMsg nextMsg firstMsg =
+pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> (PagedTable.Msg -> msg) -> Html msg
+pagedTableView vc attributes config tblPaged msgTag =
     let
         tbl =
             tblPaged.table

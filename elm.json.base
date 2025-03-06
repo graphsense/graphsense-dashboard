@@ -9,7 +9,8 @@
         "themes",
         "config",
         "lib/elm-autocomplete/src",
-        "lib/elm-css-sortable-table/src"
+        "lib/elm-css-sortable-table/src",
+        "lib/pagedtable/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {
