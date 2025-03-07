@@ -16,6 +16,11 @@
     <style type="text/css">
         /* Inherit font for for form elements; https://stackoverflow.com/questions/26140050/why-is-font-family-not-inherited-in-button-tags-automatically#:~:text=Form%20elements%20don't%20inherit,to%20set%20these%20properties%20manually.&text=If%20you%20inspect%20your%20demo,from%20the%20browser%20style%20sheet. */
        input, select, textarea, button{font-family:inherit;}
+       * {
+          -webkit-user-select: none; /* Safari */
+          -ms-user-select: none; /* IE 10 and IE 11 */
+          user-select: none; /* Standard syntax */
+       }
     </style>
   </head>
   <body>
