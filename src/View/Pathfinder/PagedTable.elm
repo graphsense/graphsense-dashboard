@@ -8,7 +8,7 @@ import Dict exposing (Dict)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
-import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
+import PagedTable
 import RecordSetter as Rs
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -73,35 +73,35 @@ customizations vc =
 --         ]
 
 
-pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> (PagedTable.Msg -> msg) -> Html msg
+pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable.Model data -> (PagedTable.Msg -> msg) -> Html msg
 pagedTableView vc attributes config tblPaged msgTag =
     let
         tbl =
-            tblPaged.table
+            PagedTable.getTable tblPaged
 
         filteredData =
-            PT.getPage tblPaged
+            PagedTable.getPage tblPaged
 
         nextPageAvailable =
-            PT.hasNextPage tblPaged
+            PagedTable.hasNextPage tblPaged
 
         nextActiveAttributes =
             if nextPageAvailable then
-                [ onClick nextMsg, [ Css.cursor Css.pointer ] |> css ]
+                [ onClick (PagedTable.NextPage |> msgTag), [ Css.cursor Css.pointer ] |> css ]
 
             else
                 []
 
         prevActiveAttributes =
-            if tblPaged.currentPage > 1 then
-                [ onClick prevMsg, [ Css.cursor Css.pointer ] |> css ]
+            if PagedTable.hasPrevPage tblPaged then
+                [ onClick (PagedTable.PrevPage |> msgTag), [ Css.cursor Css.pointer ] |> css ]
 
             else
                 []
 
         firstActiveAttributes =
-            if tblPaged.currentPage > 1 then
-                [ onClick firstMsg, [ Css.cursor Css.pointer ] |> css ]
+            if PagedTable.hasPrevPage tblPaged then
+                [ onClick (PagedTable.FirstPage |> msgTag), [ Css.cursor Css.pointer ] |> css ]
 
             else
                 []
@@ -113,7 +113,7 @@ pagedTableView vc attributes config tblPaged msgTag =
             { nextLabel = Locale.string vc.locale "Next"
             , previousLabel = Locale.string vc.locale "Previous"
             , pageNumberLabel =
-                tblPaged.currentPage
+                PagedTable.getCurrentPage tblPaged
                     |> String.fromInt
                     |> (++) (Locale.string vc.locale "Page" ++ " ")
             }
@@ -150,7 +150,7 @@ pagedTableView vc attributes config tblPaged msgTag =
                 else
                     []
                )
-            ++ [ if tblPaged.currentPage == 1 && nextPageAvailable then
+            ++ [ if PagedTable.getCurrentPage tblPaged == 1 && nextPageAvailable then
                     SidePanelComponents.paginationListPartStartWithInstances
                         (SidePanelComponents.paginationListPartStartAttributes
                             |> Rs.s_listPartStart paggingBlockAttributes
@@ -162,7 +162,7 @@ pagedTableView vc attributes config tblPaged msgTag =
                         )
                         { listPartStart = listPart }
 
-                 else if tblPaged.currentPage == 1 && not nextPageAvailable then
+                 else if PagedTable.getCurrentPage tblPaged == 1 && not nextPageAvailable then
                     SidePanelComponents.paginationListPartOnePageWithInstances
                         (SidePanelComponents.paginationListPartOnePageAttributes
                             |> Rs.s_listPartOnePage paggingBlockAttributes

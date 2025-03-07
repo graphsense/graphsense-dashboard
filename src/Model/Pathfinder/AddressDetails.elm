@@ -2,9 +2,9 @@ module Model.Pathfinder.AddressDetails exposing (Model)
 
 import Api.Data
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.PagedTable exposing (PagedTable)
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
+import PagedTable
 import RemoteData exposing (WebData)
 
 
@@ -13,8 +13,8 @@ type alias Model =
     , transactionsTableOpen : Bool
     , tokenBalancesOpen : Bool
     , txs : TransactionTable.Model
-    , neighborsIncoming : PagedTable Api.Data.NeighborAddress
-    , neighborsOutgoing : PagedTable Api.Data.NeighborAddress
+    , neighborsIncoming : PagedTable.Model Api.Data.NeighborAddress
+    , neighborsOutgoing : PagedTable.Model Api.Data.NeighborAddress
     , addressId : Id
     , data : Api.Data.Address
     , relatedAddresses : WebData RelatedAddressesTable.Model

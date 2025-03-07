@@ -263,9 +263,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 [ css fullWidth ]
                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
                                 (getCurrentTable ra)
-                                AddressDetails.UserClickedPreviousPageRelatedAddressesTable
-                                AddressDetails.UserClickedNextPageRelatedAddressesTable
-                                AddressDetails.UserClickedFirstPageRelatedAddressesTable
+                                AddressDetails.RelatedAddressesTablePagedTableMsg
                             ]
                             |> Just
         , onClick = AddressDetails.UserClickedToggleRelatedAddressesTable
@@ -399,15 +397,6 @@ dateRangePickerSelectionView vc model =
 transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html AddressDetails.Msg
 transactionTableView vc addressId txOnGraphFn model =
     let
-        prevMsg =
-            AddressDetails.UserClickedPreviousPageTransactionTable
-
-        nextMsg =
-            AddressDetails.UserClickedNextPageTransactionTable
-
-        firstMsg =
-            AddressDetails.UserClickedFirstPageTransactionTable
-
         styles =
             Css.Table.styles
 
@@ -416,9 +405,7 @@ transactionTableView vc addressId txOnGraphFn model =
                 []
                 (TransactionTable.config styles vc addressId txOnGraphFn)
                 model.table
-                prevMsg
-                nextMsg
-                firstMsg
+                AddressDetails.TransactionsTablePagedTableMsg
     in
     (case model.dateRangePicker of
         Just drp ->

@@ -1,4 +1,4 @@
-module PagedTable exposing (Config, Model, Msg, appendData, getPage, getTable, hasNextPage, hasPrevPage, init, removeItem, setItemsPerPage, setNrItems, update)
+module PagedTable exposing (Config, Model, Msg(..), appendData, getCurrentPage, getItemsPerPage, getPage, getTable, hasNextPage, hasPrevPage, init, loadFirstPage, removeItem, setData, setItemsPerPage, setNrItems, update, updateTable)
 
 import Init.Graph.Table as Table
 import Model.Graph.Table as Table exposing (Table)
@@ -15,7 +15,7 @@ type alias Fetch eff =
 
 
 type alias Config eff =
-    { fetch : Fetch eff
+    { fetch : Maybe (Fetch eff)
     }
 
 
@@ -24,6 +24,7 @@ type alias ModelInternal d =
     , nrItems : Maybe Int
     , currentPage : Int
     , itemsPerPage : Int
+    , loaded : Bool
     }
 
 
@@ -33,13 +34,14 @@ type Msg
     | FirstPage
 
 
-init : Model d
-init =
+init : Table d -> Model d
+init table =
     Model
-        { table = Table.initUnsorted
+        { table = table
         , nrItems = Nothing
         , currentPage = 1
         , itemsPerPage = 10
+        , loaded = False
         }
 
 
@@ -61,21 +63,16 @@ n m =
 
 
 update : Config eff -> Msg -> Model d -> ( Model d, Maybe eff )
-update { fetch } msg (Model pt) =
+update config msg (Model pt) =
     case msg of
         NextPage ->
-            if (pt.table.nextpage /= Nothing) && not (isNextPageLoaded pt) then
-                ( pt
+            if hasNextPage (Model pt) then
+                pt
                     |> incPage
-                    |> setLoading True
-                    |> Model
-                , fetch pt.itemsPerPage pt.table.nextpage
-                    |> Just
-                )
+                    |> loadMore config
 
             else
                 pt
-                    |> incPage
                     |> Model
                     |> n
 
@@ -141,38 +138,34 @@ hasPrevPage (Model pt) =
 
 hasNextPage : Model d -> Bool
 hasNextPage (Model pt) =
-    isNextPageLoaded pt || (pt.table.nextpage /= Nothing)
+    isNextPageFullyLoaded pt || (pt.table.nextpage /= Nothing)
 
 
-isNextPageLoaded : ModelInternal d -> Bool
-isNextPageLoaded pt =
-    let
-        nextPageLength =
-            List.length (getPageByNr pt (pt.currentPage + 1))
-
-        totalNumberOfPages =
-            pt.nrItems
-                |> Maybe.map
-                    (\nrItems -> ceiling (toFloat nrItems / toFloat pt.itemsPerPage))
-                |> Maybe.withDefault 0
-    in
-    nextPageLength
-        >= pt.itemsPerPage
-        || (totalNumberOfPages
-                - 1
-                == pt.currentPage
-                && nextPageLength
-                > 0
-           )
+pageItemsNeeded : ModelInternal d -> Int -> Int
+pageItemsNeeded pt pageNr =
+    pt.itemsPerPage - List.length (getPageByNr pt pageNr)
 
 
 appendData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Maybe eff )
-appendData config filter nextPage data (Model pt) =
+appendData config filt nextPage data (Model pt) =
     { pt
         | table =
-            Table.appendData filter data pt.table
+            Table.appendData filt data pt.table
                 |> s_nextpage nextPage
                 |> s_loading False
+        , loaded = True
+    }
+        |> loadMore config
+
+
+setData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Maybe eff )
+setData config filt nextPage data (Model pt) =
+    { pt
+        | table =
+            Table.setData filt data pt.table
+                |> s_nextpage nextPage
+                |> s_loading False
+        , loaded = True
     }
         |> loadMore config
 
@@ -180,28 +173,59 @@ appendData config filter nextPage data (Model pt) =
 loadMore : Config eff -> ModelInternal d -> ( Model d, Maybe eff )
 loadMore config pt =
     let
-        filterRatio =
-            toFloat (List.length pt.table.filtered)
-                / toFloat (List.length pt.table.data)
-
         pagesize =
-            filterRatio
-                * toFloat pt.itemsPerPage
-                |> ceiling
+            pt.currentPage
+                |> pageItemsNeeded pt
 
         fetch =
-            if isNextPageLoaded pt then
+            if pagesize == 0 then
+                Nothing
+
+            else if pt.table.nextpage == Nothing && pt.loaded then
                 Nothing
 
             else
-                config.fetch pagesize pt.table.nextpage
-                    |> Just
+                config.fetch
+                    |> Maybe.map (\fn -> fn pagesize pt.table.nextpage)
     in
     ( pt
         |> setLoading (fetch /= Nothing)
         |> Model
     , fetch
     )
+
+
+isNextPageFullyLoaded : ModelInternal d -> Bool
+isNextPageFullyLoaded pt =
+    isPageFullyLoaded pt <| pt.currentPage + 1
+
+
+isPageFullyLoaded : ModelInternal d -> Int -> Bool
+isPageFullyLoaded pt nr =
+    pageItemsNeeded pt nr < pt.itemsPerPage
+
+
+
+{-
+   let
+       pageLength =
+           List.length (getPageByNr pt pageNr)
+
+       totalNumberOfPages =
+           pt.nrItems
+               |> Maybe.map
+                   (\nrItems -> ceiling (toFloat nrItems / toFloat pt.itemsPerPage))
+               |> Maybe.withDefault 0
+   in
+   nextPageLength
+       >= pt.itemsPerPage
+       || (totalNumberOfPages
+               - 1
+               == pt.currentPage
+               && nextPageLength
+               > 0
+          )
+-}
 
 
 getTable : Model d -> Table d
@@ -215,3 +239,28 @@ removeItem config predicate (Model pt) =
         | table = Table.filterTable (predicate >> not) pt.table
     }
         |> loadMore config
+
+
+updateTable : Config eff -> (Table d -> Table d) -> Model d -> ( Model d, Maybe eff )
+updateTable config upd (Model pt) =
+    { pt | table = upd pt.table }
+        |> loadMore config
+
+
+getCurrentPage : Model d -> Int
+getCurrentPage (Model pt) =
+    pt.currentPage
+
+
+getItemsPerPage : Model d -> Int
+getItemsPerPage (Model pt) =
+    pt.itemsPerPage
+
+
+loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
+loadFirstPage config (Model pt) =
+    ( Model pt
+    , config.fetch
+        |> Maybe.map
+            (\fn -> fn pt.itemsPerPage Nothing)
+    )

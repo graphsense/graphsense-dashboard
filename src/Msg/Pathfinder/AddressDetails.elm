@@ -5,6 +5,7 @@ import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType)
+import PagedTable
 import Table
 import Time exposing (Posix)
 import Util.Tag as Tag
@@ -15,11 +16,8 @@ type Msg
     = UserClickedToggleNeighborsTable
     | UserClickedToggleTokenBalancesSelect
     | UserClickedToggleTransactionTable
-    | UserClickedNextPageTransactionTable
-    | UserClickedPreviousPageTransactionTable
-    | UserClickedFirstPageTransactionTable
-    | UserClickedNextPageNeighborsTable Direction
-    | UserClickedPreviousPageNeighborsTable Direction
+    | TransactionsTablePagedTableMsg PagedTable.Msg
+    | NeighborsTablePagedTableMsg Direction PagedTable.Msg
     | GotTxsForAddressDetails ( Maybe Int, Maybe Int ) Api.Data.AddressTxs
     | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
@@ -34,9 +32,7 @@ type Msg
     | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
     | BrowserGotEntityAddressTagsForRelatedAddressesTable String Api.Data.AddressTags
     | UserClickedToggleRelatedAddressesTable
-    | UserClickedPreviousPageRelatedAddressesTable
-    | UserClickedNextPageRelatedAddressesTable
-    | UserClickedFirstPageRelatedAddressesTable
+    | RelatedAddressesTablePagedTableMsg PagedTable.Msg
     | UserClickedAddressCheckboxInTable Id
     | SelectBoxMsg (ThemedSelectBox.Msg ListType)
     | UserClickedTxCheckboxInTable Api.Data.AddressTx

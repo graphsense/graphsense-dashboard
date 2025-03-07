@@ -1,20 +1,31 @@
-module Update.Pathfinder.Table.RelatedAddressesTable exposing (appendClusterAddresses, appendTaggedAddresses, goToFirstPage, init, loadNextPage, previousPage, selectBoxMsg)
+module Update.Pathfinder.Table.RelatedAddressesTable exposing (appendClusterAddresses, appendTaggedAddresses, init, selectBoxMsg, tableConfig, updateTable)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.Graph.Table
+import Maybe.Extra
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.PagedTable as PagedTable
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), Model, filter, getCurrentTable, setCurrentTable)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
+import PagedTable
 import RecordSetter as Rs
-import Tuple exposing (mapFirst)
-import Update.Pathfinder.PagedTable as PagedTable
+import Tuple exposing (mapFirst, mapSecond)
 import Util exposing (n)
 import Util.ThemedSelectBox as ThemedSelectBox exposing (OutMsg(..))
+
+
+tableConfig : Model -> PagedTable.Config Effect
+tableConfig =
+    tableConfigWithListType Nothing
+
+
+tableConfigWithListType : Maybe ListType -> Model -> PagedTable.Config Effect
+tableConfigWithListType lt rm =
+    { fetch = Just (loadData rm lt)
+    }
 
 
 itemsPerPage : Int
@@ -27,17 +38,13 @@ init addressId entity =
     let
         model =
             { clusterAddresses =
-                { table = Init.Graph.Table.initUnsorted
-                , nrItems = Just entity.noAddresses
-                , currentPage = 1
-                , itemsPerPage = itemsPerPage
-                }
+                PagedTable.init Init.Graph.Table.initUnsorted
+                    |> PagedTable.setNrItems entity.noAddresses
+                    |> PagedTable.setItemsPerPage itemsPerPage
             , taggedAddresses =
-                { table = Init.Graph.Table.initUnsorted
-                , nrItems = Just entity.noAddressTags
-                , currentPage = 1
-                , itemsPerPage = itemsPerPage
-                }
+                PagedTable.init Init.Graph.Table.initUnsorted
+                    |> PagedTable.setNrItems entity.noAddressTags
+                    |> PagedTable.setItemsPerPage itemsPerPage
             , addressId = addressId
             , entity = { currency = entity.currency, entity = entity.entity }
             , selectBox =
@@ -49,29 +56,27 @@ init addressId entity =
             }
     in
     ( model
-    , loadData model Nothing
-        ++ loadData { model | selected = ClusterAddresses } Nothing
+    , [ loadData model (Just TaggedAddresses) itemsPerPage Nothing
+      , loadData model (Just ClusterAddresses) itemsPerPage Nothing
+      ]
     )
 
 
-loadNextPage : Model -> ( Model, List Effect )
-loadNextPage model =
-    getCurrentTable model
-        |> PagedTable.nextPage (loadData model)
-        |> mapFirst (setCurrentTable model)
-
-
-loadData : Model -> Maybe String -> List Effect
-loadData model nextpage =
+loadData : Model -> Maybe ListType -> Int -> Maybe String -> Effect
+loadData model lt pagesize nextpage =
     let
         params =
             { currency = model.entity.currency
             , entity = model.entity.entity
-            , pagesize = itemsPerPage + 1
+            , pagesize = pagesize
             , nextpage = nextpage
             }
+
+        selected =
+            lt
+                |> Maybe.withDefault model.selected
     in
-    (case model.selected of
+    (case selected of
         ClusterAddresses ->
             BrowserGotEntityAddressesForRelatedAddressesTable
                 >> AddressDetailsMsg model.addressId
@@ -83,23 +88,6 @@ loadData model nextpage =
                 |> Api.GetEntityAddressTagsEffect params
     )
         |> ApiEffect
-        |> List.singleton
-
-
-previousPage : Model -> ( Model, List Effect )
-previousPage ra =
-    getCurrentTable ra
-        |> PagedTable.decPage
-        |> setCurrentTable ra
-        |> n
-
-
-goToFirstPage : Model -> ( Model, List Effect )
-goToFirstPage ra =
-    getCurrentTable ra
-        |> PagedTable.goToFirstPage
-        |> setCurrentTable ra
-        |> n
 
 
 selectBoxMsg : ThemedSelectBox.Msg ListType -> Model -> ( Model, List Effect )
@@ -122,22 +110,31 @@ selectBoxMsg sm model =
 
 appendClusterAddresses : Maybe String -> List Api.Data.Address -> Model -> ( Model, List Effect )
 appendClusterAddresses nextpage addresses ra =
-    addresses
-        |> filterCurrentAddress ra
-        |> PagedTable.appendData ra.clusterAddresses filter nextpage
-        |> flip Rs.s_clusterAddresses ra
-        |> n
+    PagedTable.appendData
+        (tableConfigWithListType (Just ClusterAddresses) ra)
+        (filter ra)
+        nextpage
+        addresses
+        ra.clusterAddresses
+        |> mapFirst (flip Rs.s_clusterAddresses ra)
+        |> mapSecond Maybe.Extra.toList
 
 
 appendTaggedAddresses : Maybe String -> List Api.Data.Address -> Model -> ( Model, List Effect )
 appendTaggedAddresses nextpage addresses ra =
-    addresses
-        |> filterCurrentAddress ra
-        |> PagedTable.appendData ra.taggedAddresses filter nextpage
-        |> flip Rs.s_taggedAddresses ra
-        |> n
+    PagedTable.appendData
+        (tableConfigWithListType (Just TaggedAddresses) ra)
+        (filter ra)
+        nextpage
+        addresses
+        ra.taggedAddresses
+        |> mapFirst (flip Rs.s_taggedAddresses ra)
+        |> mapSecond Maybe.Extra.toList
 
 
-filterCurrentAddress : Model -> List Api.Data.Address -> List Api.Data.Address
-filterCurrentAddress ra =
-    List.filter (.address >> (/=) (Id.id ra.addressId))
+updateTable : (PagedTable.Model Api.Data.Address -> ( PagedTable.Model Api.Data.Address, Maybe Effect )) -> Model -> ( Model, List Effect )
+updateTable updTable model =
+    getCurrentTable model
+        |> updTable
+        |> mapFirst (setCurrentTable model)
+        |> mapSecond Maybe.Extra.toList

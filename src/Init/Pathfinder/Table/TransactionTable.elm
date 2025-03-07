@@ -17,6 +17,7 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
+import PagedTable
 import Util.Data exposing (timestampToPosix)
 
 
@@ -32,12 +33,10 @@ init network locale addressId data =
             data.noIncomingTxs + data.noOutgoingTxs
 
         table isDesc =
-            { table =
-                Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
-            , nrItems = Just <| nrItems
-            , currentPage = 1
-            , itemsPerPage = itemsPerPage
-            }
+            Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
+                |> PagedTable.init
+                |> PagedTable.setNrItems nrItems
+                |> PagedTable.setItemsPerPage itemsPerPage
     in
     Network.getRecentTxForAddress network Incoming addressId
         |> Maybe.map
@@ -73,12 +72,10 @@ initWithoutFilter addressId data =
             data.noIncomingTxs + data.noOutgoingTxs
 
         table isDesc =
-            { table =
-                Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
-            , nrItems = Just <| nrItems
-            , currentPage = 1
-            , itemsPerPage = itemsPerPage
-            }
+            Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
+                |> PagedTable.init
+                |> PagedTable.setNrItems nrItems
+                |> PagedTable.setItemsPerPage itemsPerPage
     in
     ( { table = table True
       , order = Nothing
