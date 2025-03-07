@@ -2596,5 +2596,3 @@ decodeChainLazy f =
     decodeChain << Json.Decode.map f
 
 valuesDecodervaluesDecoder = valuesDecoder
-
-valuesDecodervaluesDecoder = valuesDecoder
