@@ -161,10 +161,16 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                                 NoTags ->
                                     none
 
+                                NoTagsWithoutCluster ->
+                                    none
+
                                 HasTagSummaryWithCluster ts ->
                                     withTagSummary ts
 
                                 HasTagSummaryWithoutCluster ts ->
+                                    none
+
+                                HasTagSummaryOnlyWithCluster ts ->
                                     withTagSummary ts
 
                                 HasTagSummaries { withCluster } ->
@@ -183,7 +189,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                                     withTagSummary ts
 
                                 HasTagSummaryWithoutCluster ts ->
-                                    withTagSummary ts
+                                    none
 
                                 HasTagSummaries { withCluster } ->
                                     withTagSummary withCluster

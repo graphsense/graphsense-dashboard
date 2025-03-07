@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -369,6 +369,20 @@ onClickWithStop msg =
 pointer : Attribute msg
 pointer =
     css [ Css.cursor Css.pointer ]
+
+
+noTextSelection : Attribute msg
+noTextSelection =
+    css
+        [ Css.property "user-select"
+            "none"
+        , Css.property
+            "-ms-user-select"
+            "none"
+        , Css.property
+            "-webkit-user-select"
+            "none"
+        ]
 
 
 fullWidthCss : Style

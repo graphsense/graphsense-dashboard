@@ -668,9 +668,6 @@ updateByMsg plugins uc msg model =
                                             Just (HasTagSummaries { withCluster }) ->
                                                 Just withCluster
 
-                                            Just (HasTagSummaryWithoutCluster ts) ->
-                                                Just ts
-
                                             Just (HasTagSummaryWithCluster ts) ->
                                                 Just ts
 
@@ -733,7 +730,7 @@ updateByMsg plugins uc msg model =
                         Just (HasTagSummaries { withCluster }) ->
                             tsToTooltip withCluster
 
-                        Just (HasTagSummaryWithoutCluster ts) ->
+                        Just (HasTagSummaryOnlyWithCluster ts) ->
                             tsToTooltip ts
 
                         Just (HasTagSummaryWithCluster ts) ->
@@ -1089,6 +1086,12 @@ updateByMsg plugins uc msg model =
                                     ( HasTagSummaryWithoutCluster _, _ ) ->
                                         curr
 
+                                    ( HasTagSummaryOnlyWithCluster _, _ ) ->
+                                        curr
+
+                                    ( NoTagsWithoutCluster, _ ) ->
+                                        curr
+
                                     ( HasTags withExchangeTag, Just { category } ) ->
                                         withExchangeTag
                                             || isExchange category
@@ -1254,7 +1257,7 @@ handleTooltipMsg msg model =
                                 , OpenTooltipEffect ctx (tsToTooltip ts) |> List.singleton
                                 )
 
-                            Just (HasTagSummaryWithoutCluster ts) ->
+                            Just (HasTagSummaryOnlyWithCluster ts) ->
                                 ( model
                                 , OpenTooltipEffect ctx (tsToTooltip ts) |> List.singleton
                                 )
@@ -1430,7 +1433,7 @@ updateTagDataOnAddress addressId m =
                 HasTagSummaryWithCluster ts ->
                     updateTagsummaryData ts
 
-                HasTagSummaryWithoutCluster ts ->
+                HasTagSummaryOnlyWithCluster ts ->
                     updateTagsummaryData ts
 
                 HasExchangeTagOnly ->
@@ -2025,10 +2028,16 @@ isTagSummaryLoaded includeBestClusterTag existing id =
         Just (HasTagSummaries _) ->
             True
 
+        Just (HasTagSummaryOnlyWithCluster _) ->
+            True
+
         Just (HasTagSummaryWithCluster _) ->
             includeBestClusterTag
 
         Just (HasTagSummaryWithoutCluster _) ->
+            includeBestClusterTag == False
+
+        Just NoTagsWithoutCluster ->
             includeBestClusterTag == False
 
         _ ->
@@ -2070,12 +2079,14 @@ addTagSummaryToModel : ( Model, List Effect ) -> Bool -> Id -> Api.Data.TagSumma
 addTagSummaryToModel ( m, e ) includesBestClusterTag id data =
     let
         d =
-            if data.tagCount > 0 then
-                if includesBestClusterTag then
-                    HasTagSummaryWithCluster data
+            if data.tagCount > 0 && includesBestClusterTag then
+                HasTagSummaryWithCluster data
 
-                else
-                    HasTagSummaryWithoutCluster data
+            else if data.tagCount > 0 && not includesBestClusterTag then
+                HasTagSummaryWithoutCluster data
+
+            else if data.tagCount == 0 && not includesBestClusterTag then
+                NoTagsWithoutCluster
 
             else
                 NoTags
@@ -2495,6 +2506,15 @@ upsertTagSummary id newTagSummary dict =
 
                         ( HasTagSummaryWithoutCluster _, HasTagSummaryWithoutCluster new ) ->
                             HasTagSummaryWithoutCluster new
+
+                        ( HasTagSummaryWithCluster x, NoTagsWithoutCluster ) ->
+                            HasTagSummaryOnlyWithCluster x
+
+                        ( NoTagsWithoutCluster, HasTagSummaryWithCluster wc ) ->
+                            HasTagSummaryOnlyWithCluster wc
+
+                        ( NoTagsWithoutCluster, NoTags ) ->
+                            NoTags
 
                         ( HasTags withExchangeTag, new ) ->
                             new

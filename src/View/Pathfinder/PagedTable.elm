@@ -107,7 +107,7 @@ pagedTableView vc attributes config tblPaged msgTag =
                 []
 
         paggingBlockAttributes =
-            [ [ Css.width (Css.pct 100) ] |> css ]
+            [ [ Css.width (Css.pct 100) ] |> css, Util.View.noTextSelection ]
 
         listPart =
             { nextLabel = Locale.string vc.locale "Next"

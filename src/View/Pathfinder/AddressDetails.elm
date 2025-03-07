@@ -814,7 +814,7 @@ getTagSummary model id =
         Just (Pathfinder.HasTagSummaryWithCluster ts) ->
             Just ts
 
-        Just (Pathfinder.HasTagSummaryWithoutCluster ts) ->
+        Just (Pathfinder.HasTagSummaryOnlyWithCluster ts) ->
             Just ts
 
         _ ->
