@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/bash
 set -e
 
 for plugin in `find ./plugins -mindepth 1 -maxdepth 1 -type d`; do 
