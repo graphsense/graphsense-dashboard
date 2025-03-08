@@ -16,7 +16,7 @@ openapi:
 			#--global-property=debugOperations \
 
 dev: $(API_ELM) $(wildcard src/**)
-	make generated
+	make gen
 	npx elm-test-rs --watch tests/Graph/View/TestLabel.elm
 
 #$(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
@@ -31,7 +31,7 @@ clean:
 	rm -rf elm.json
 
 
-setem:
+setem: elm.json
 	npx setem --output generated/utils
 	cd codegen && mkdir -p codegen/generated && npx setem --output generated
 
@@ -73,6 +73,7 @@ theme-refresh:
 	make theme
 
 theme: $(CODEGEN_CONFIG)
+	make setem
 	./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
 	make setem
 
@@ -84,12 +85,17 @@ plugin-theme: $(CODEGEN_CONFIG)
 	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID)
 	make setem
 
+elm.json: elm.json.base
+	cp elm.json.base elm.json
+
 gen:
 	rm -rf generated/*
-	cp elm.json.base elm.json
 	make setem # for codegen/generated
 	-node generate.js
 	-make theme
 	
+gen-without-theme:
+	rm -rf generated/*
+	-node generate.js
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme

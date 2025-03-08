@@ -7,7 +7,8 @@ for plugin in `find ./plugins -mindepth 1 -maxdepth 1 -type d`; do
     cd -
 done
 
-npm run build && cp -r ./dist/* /usr/share/nginx/html/ 
+# theme has been built at image build time
+npm run build-without-theme && cp -r ./dist/* /usr/share/nginx/html/ 
 
 # remove node_modules to save image space
 find ./plugins -name node_modules -exec rm -rf {} \; || true

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ELM_CODEGEN="node --max-old-space-size=8192 ./node_modules/.bin/elm-codegen run --debug"
+ELM_CODEGEN="npx --node-options='--max-old-space-size=8192' elm-codegen run --debug"
 REFRESH=0
 FIGMA_WHITELIST_FRAMES=[]
 
@@ -72,7 +72,9 @@ else
     else
         echo "{\"colormaps\": `cat ./theme/colormaps.json`, \"theme\": `cat ./plugins/$PLUGIN_NAME/theme/figma.json`}" > $tmp
     fi
-    output=`$ELM_CODEGEN --output theme --flags-from=$tmp 2>&1`
+    cmd="$ELM_CODEGEN --output theme --flags-from=$tmp"
+    echo $cmd
+    output=`$cmd 2>&1`
     # surprisingly elm-codegen yield exit code 0 if error
     if [[ ! $output =~ "generated" ]]; then
         echo "$output"

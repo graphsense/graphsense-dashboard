@@ -1,4 +1,4 @@
-FROM alpine:3.19
+FROM debian:bookworm-slim
 LABEL org.opencontainers.image.title="graphsense-dashboard"
 LABEL org.opencontainers.image.maintainer="contact@ikna.io"
 LABEL org.opencontainers.image.url="https://www.ikna.io/"
@@ -14,8 +14,9 @@ ENV REST_URL=http://localhost:9000
 ENV WORKDIR=/app
 
 RUN mkdir $WORKDIR && \
-    apk --no-cache --update add bash nginx nodejs npm && \
-    apk --no-cache --update --virtual build-dependendencies add python3 make g++
+    apt update && \
+    apt install -y bash nginx nodejs npm python3 make g++ && \
+    rm -rf /var/lib/apt/lists/*
 
 
 WORKDIR $WORKDIR
@@ -46,6 +47,8 @@ COPY ./docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 COPY ./tools $WORKDIR/tools
+
+RUN touch .env && make setem && ./tools/codegen.sh -w=[] && make setem
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]
