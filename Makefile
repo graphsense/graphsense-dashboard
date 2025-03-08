@@ -95,7 +95,6 @@ gen:
 	-make theme
 	
 gen-without-theme:
-	rm -rf generated/*
 	-node generate.js
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme
