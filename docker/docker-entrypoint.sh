@@ -11,7 +11,7 @@ done
 npm run build-without-theme && cp -r ./dist/* /usr/share/nginx/html/ 
 
 # remove node_modules to save image space
-find ./plugins -name node_modules -exec rm -rf {} \; || true
+find ./plugins -maxdepth 2 -name node_modules -exec rm -rf {} \; || true
 
 chown -R $DOCKER_UID /usr/share/nginx/html/*
 
