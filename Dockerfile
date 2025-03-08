@@ -48,7 +48,7 @@ RUN chmod +x /docker-entrypoint.sh
 
 COPY ./tools $WORKDIR/tools
 
-RUN touch .env && make setem && ./tools/codegen.sh -w=[] && make setem
+RUN touch .env && make theme
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]
