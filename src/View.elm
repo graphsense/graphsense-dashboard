@@ -117,6 +117,7 @@ navbarSubMenuView vc model { type_ } =
           ]
             |> css
         , onClickWithStop UserClosesNavbarSubMenu
+        , Util.View.noTextSelection
         ]
         ((case type_ of
             NavbarMore ->
