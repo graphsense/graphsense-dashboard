@@ -1,4 +1,4 @@
-module PagedTable exposing (Config, Model, Msg(..), appendData, getCurrentPage, getItemsPerPage, getPage, getTable, hasNextPage, hasPrevPage, init, loadFirstPage, removeItem, setData, setItemsPerPage, setNrItems, update, updateTable)
+module PagedTable exposing (Config, Model, Msg(..), appendData, getCurrentPage, getItemsPerPage, getPage, getTable, goToFirstPage, hasNextPage, hasPrevPage, init, loadFirstPage, removeItem, setData, setItemsPerPage, setNrItems, update, updateTable)
 
 import Init.Graph.Table as Table
 import Model.Graph.Table as Table exposing (Table)
