@@ -531,6 +531,7 @@ graphSvg plugins vc gc model bbox =
          , Util.Graph.decodeCoords Coords.Coords
             |> Json.Decode.map (\_ -> ( NoOp, True ))
             |> preventDefaultOn "contextmenu"
+         , Util.View.noTextSelection
          ]
             ++ (if model.dragging /= NoDragging then
                     Svg.preventDefaultOn "mousemove"
