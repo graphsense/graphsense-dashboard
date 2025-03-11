@@ -12,7 +12,6 @@ import Api.Request.Tags
 import Api.Request.Tokens
 import Api.Request.Txs
 import Api.Time exposing (Posix)
-import Dict exposing (Dict)
 import Http
 import IntDict exposing (IntDict)
 import Json.Decode
@@ -21,6 +20,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Pathfinder.Id exposing (Id)
+import Util.Http exposing (Headers)
 
 
 type Effect msg
@@ -524,7 +524,7 @@ map mapMsg effect =
                 |> BulkGetTxEffect eff
 
 
-perform : String -> (Result ( Http.Error, Effect msg ) ( Dict String String, msg ) -> msg) -> Effect msg -> Cmd msg
+perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
     case effect of
         GetAddressTagSummaryEffect { currency, address, includeBestClusterTag } toMsg ->
@@ -855,7 +855,7 @@ withAuthorization apiKey request =
         Api.withHeader "Authorization" apiKey request
 
 
-send : String -> (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg
+send : String -> (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg
 send apiKey wrapMsg effect toMsg =
     withAuthorization apiKey
         >> Api.sendAndAlsoReceiveHeaders wrapMsg effect toMsg

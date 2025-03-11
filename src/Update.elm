@@ -34,7 +34,7 @@ import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
-import Model.Notification as Notification
+import Model.Notification as Notification exposing (Notification)
 import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
@@ -69,6 +69,7 @@ import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import Util exposing (n)
+import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale
 import Yaml.Decode
@@ -319,7 +320,7 @@ update plugins uc msg model =
                         |> Maybe.andThen
                             (\token ->
                                 case result of
-                                    Err ( Http.BadStatus 404, _ ) ->
+                                    Err ( Http.BadStatus 404, _, _ ) ->
                                         Statusbar.getMessage token model.statusbar
                                             |> Maybe.andThen
                                                 (\( key, v ) ->
@@ -351,8 +352,15 @@ update plugins uc msg model =
 
                 ( notifications, notificationEffects ) =
                     case ( isErrorDialogShown, result ) of
-                        ( False, Err ( httpErr, _ ) ) ->
-                            Notification.addHttpError model.notifications Nothing httpErr
+                        ( False, Err ( httpErr, _, _ ) ) ->
+                            case httpErr of
+                                Http.BadStatus 429 ->
+                                    Notification.add
+                                        (apiRateExceededError model.config.locale model.user.auth)
+                                        model.notifications
+
+                                _ ->
+                                    Notification.addHttpError model.notifications Nothing httpErr
 
                         _ ->
                             n model.notifications
@@ -364,10 +372,10 @@ update plugins uc msg model =
                             Statusbar.update
                                 t
                                 (case result of
-                                    Err ( Http.BadStatus 401, _ ) ->
+                                    Err ( Http.BadStatus 401, _, _ ) ->
                                         Nothing
 
-                                    Err ( err, _ ) ->
+                                    Err ( err, _, _ ) ->
                                         Just err
 
                                     Ok _ ->
@@ -377,7 +385,7 @@ update plugins uc msg model =
 
                         Nothing ->
                             case result of
-                                Err ( Http.BadStatus 429, _ ) ->
+                                Err ( Http.BadStatus 429, _, _ ) ->
                                     Just (Http.BadStatus 429)
                                         |> Statusbar.add model.statusbar "search" []
 
@@ -1407,6 +1415,44 @@ update plugins uc msg model =
             n { model | notifications = Notification.update ms model.notifications }
 
 
+apiRateExceededError : Locale.Model -> Auth -> Notification
+apiRateExceededError locale auth =
+    let
+        limited =
+            case auth of
+                Authorized { requestLimit } ->
+                    case requestLimit of
+                        Limited l ->
+                            Just l
+
+                        Unlimited ->
+                            Nothing
+
+                _ ->
+                    Nothing
+    in
+    Notification.Error
+        { title = "Request limit exceeded"
+        , message =
+            limited
+                |> Maybe.map
+                    (\_ ->
+                        "The request limit of your API key of {0} per {1} has been exceeded."
+                    )
+                |> Maybe.withDefault "The request limit of your API key has been exceeded."
+        , variables =
+            limited
+                |> Maybe.map
+                    (\{ limit, interval } ->
+                        [ String.fromInt limit
+                        , requestLimitIntervalToString interval
+                            |> Locale.string locale
+                        ]
+                    )
+                |> Maybe.withDefault []
+        }
+
+
 switchLocale : String -> Model key -> ( Model key, List Effect )
 switchLocale loc model =
     let
@@ -1614,157 +1660,149 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
 updateByUrl : Plugins -> Config -> Url -> Model key -> ( Model key, List Effect )
 updateByUrl plugins uc url model =
     let
-        modelReady =
-            not (Locale.isEmpty model.config.locale)
-                && RD.isSuccess model.stats
+        routeConfig =
+            model.stats
+                |> RD.map (.currencies >> List.map .name)
+                |> RD.withDefault []
+                |> (\c ->
+                        { graph = { currencies = c }
+                        , pathfinder = { networks = c }
+                        }
+                   )
     in
-    if not modelReady then
-        ( model
-        , [ PostponeUpdateByUrlEffect url
-          ]
-        )
-
-    else
-        let
-            routeConfig =
-                model.stats
-                    |> RD.map (.currencies >> List.map .name)
-                    |> RD.withDefault []
-                    |> (\c ->
-                            { graph = { currencies = c }
-                            , pathfinder = { networks = c }
-                            }
-                       )
-        in
-        Route.parse routeConfig url
-            |> Maybe.map2
-                (\oldRoute route ->
-                    case route of
-                        Route.Home ->
-                            ( { model
-                                | page = Home
-                                , url = url
-                                , tooltip = Nothing
-                                , navbarSubMenu = Nothing
-                                , search =
-                                    model.search
-                                        |> s_searchType
-                                            (Search.initSearchAddressAndTxs Nothing)
-                              }
-                            , []
-                            )
-
-                        Route.Stats ->
-                            ( { model
-                                | page = Stats
-                                , url = url
-                                , tooltip = Nothing
-                                , navbarSubMenu = Nothing
-                              }
-                            , case oldRoute of
-                                Route.Stats ->
-                                    []
-
-                                _ ->
-                                    [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
-                            )
-
-                        Route.Settings ->
-                            ( { model
-                                | page = Model.Settings
-                                , url = url
-                                , tooltip = Nothing
-                                , navbarSubMenu = Nothing
-                              }
-                            , []
-                            )
-
-                        Route.Graph graphRoute ->
-                            case graphRoute |> Log.log "graphRoute" of
-                                Route.Graph.Plugin ( pid, value ) ->
-                                    let
-                                        ( new, outMsg, cmd ) =
-                                            Plugin.updateGraphByUrl pid plugins value model.plugins
-                                    in
-                                    ( { model
-                                        | plugins = new
-                                        , page = Graph
-                                        , url = url
-                                        , tooltip = Nothing
-                                        , navbarSubMenu = Nothing
-                                      }
-                                    , [ PluginEffect cmd ]
-                                    )
-                                        |> updateByPluginOutMsg plugins uc outMsg
-
-                                _ ->
-                                    let
-                                        ( graph, graphEffect ) =
-                                            Graph.updateByRoute plugins graphRoute model.graph
-                                    in
-                                    ( { model
-                                        | page = Graph
-                                        , graph = graph
-                                        , url = url
-                                        , tooltip = Nothing
-                                        , navbarSubMenu = Nothing
-                                        , search =
-                                            model.search
-                                                |> s_searchType
-                                                    (Search.initSearchAll (model.stats |> RD.toMaybe))
-                                      }
-                                    , graphEffect
-                                        |> List.map GraphEffect
-                                    )
-
-                        Route.Pathfinder pfRoute ->
-                            let
-                                ( pfn, graphEffect ) =
-                                    Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
-                            in
-                            ( { model
-                                | page = Pathfinder
-                                , pathfinder = pfn
-                                , url = url
-                                , tooltip = Nothing
-                                , navbarSubMenu = Nothing
-                              }
-                            , graphEffect
-                                |> List.map PathfinderEffect
-                            )
-
-                        Route.Plugin ( pluginType, urlValue ) ->
-                            let
-                                ( new, outMsg, cmd ) =
-                                    Plugin.updateByUrl pluginType plugins uc urlValue model.plugins
-                            in
-                            ( { model
-                                | plugins = new
-                                , page = Plugin pluginType
-                                , url = url
-                                , tooltip = Nothing
-                                , navbarSubMenu = Nothing
-                              }
-                            , [ PluginEffect cmd ]
-                            )
-                                |> updateByPluginOutMsg plugins uc outMsg
-                )
-                (Route.parse routeConfig model.url
-                    -- in case url is invalid, assume root url
-                    |> Maybe.Extra.orElse (Just Route.Stats)
-                )
-            |> Maybe.map
-                (mapSecond
-                    ((++)
-                        (if uc.size == Nothing then
-                            [ GetContentsElementEffect ]
-
-                         else
-                            []
+    Route.parse routeConfig url
+        |> Maybe.map2
+            (\oldRoute route ->
+                case route of
+                    Route.Home ->
+                        ( { model
+                            | page = Home
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                            , search =
+                                model.search
+                                    |> s_searchType
+                                        (Search.initSearchAddressAndTxs Nothing)
+                          }
+                        , []
                         )
+
+                    Route.Stats ->
+                        ( { model
+                            | page = Stats
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                          }
+                        , case oldRoute of
+                            Route.Stats ->
+                                []
+
+                            _ ->
+                                [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
+                        )
+
+                    Route.Settings ->
+                        ( { model
+                            | page = Model.Settings
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                          }
+                        , []
+                        )
+
+                    Route.Graph graphRoute ->
+                        case graphRoute |> Log.log "graphRoute" of
+                            Route.Graph.Plugin ( pid, value ) ->
+                                let
+                                    ( new, outMsg, cmd ) =
+                                        Plugin.updateGraphByUrl pid plugins value model.plugins
+                                in
+                                ( { model
+                                    | plugins = new
+                                    , page = Graph
+                                    , url = url
+                                    , tooltip = Nothing
+                                    , navbarSubMenu = Nothing
+                                  }
+                                , [ PluginEffect cmd ]
+                                )
+                                    |> updateByPluginOutMsg plugins uc outMsg
+
+                            _ ->
+                                let
+                                    ( graph, graphEffect ) =
+                                        Graph.updateByRoute plugins graphRoute model.graph
+                                in
+                                ( { model
+                                    | page = Graph
+                                    , graph = graph
+                                    , url = url
+                                    , tooltip = Nothing
+                                    , navbarSubMenu = Nothing
+                                    , search =
+                                        model.search
+                                            |> s_searchType
+                                                (Search.initSearchAll (model.stats |> RD.toMaybe))
+                                  }
+                                , graphEffect
+                                    |> List.map GraphEffect
+                                )
+
+                    Route.Pathfinder pfRoute ->
+                        let
+                            ( pfn, graphEffect ) =
+                                Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
+                        in
+                        ( { model
+                            | page = Pathfinder
+                            , pathfinder = pfn
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                          }
+                        , graphEffect
+                            |> List.map PathfinderEffect
+                        )
+
+                    Route.Plugin ( pluginType, urlValue ) ->
+                        let
+                            ( new, outMsg, cmd ) =
+                                Plugin.updateByUrl pluginType plugins uc urlValue model.plugins
+                        in
+                        ( { model
+                            | plugins = new
+                            , page = Plugin pluginType
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                          }
+                        , [ PluginEffect cmd ]
+                        )
+                            |> updateByPluginOutMsg plugins uc outMsg
+            )
+            (Route.parse routeConfig model.url
+                -- in case url is invalid, assume root url
+                |> Maybe.Extra.orElse (Just Route.Stats)
+            )
+        |> Maybe.map
+            (mapSecond
+                ((++)
+                    (if uc.size == Nothing then
+                        [ GetContentsElementEffect ]
+
+                     else
+                        []
                     )
                 )
-            |> Maybe.withDefault (n model)
+            )
+        |> Maybe.withDefault
+            ( model
+            , [ PostponeUpdateByUrlEffect url
+              ]
+            )
 
 
 updateRequestLimit : Dict String String -> UserModel -> UserModel
@@ -1773,17 +1811,39 @@ updateRequestLimit headers model =
         get key =
             Dict.get key headers
                 |> Maybe.andThen String.toInt
+
+        limitInterval =
+            if Dict.member "x-ratelimit-limit-minute" headers then
+                Just Minute
+
+            else if Dict.member "x-ratelimit-limit-hour" headers then
+                Just Hour
+
+            else if Dict.member "x-ratelimit-limit-day" headers then
+                Just Day
+
+            else if Dict.member "x-ratelimit-limit-month" headers then
+                Just Month
+
+            else
+                Nothing
     in
     { model
         | auth =
             { requestLimit =
-                Maybe.map3
-                    (\limit remaining reset ->
-                        Limited { limit = limit, remaining = remaining, reset = reset }
+                Maybe.map4
+                    (\limit remaining reset interval ->
+                        Limited
+                            { limit = limit
+                            , remaining = remaining
+                            , reset = reset
+                            , interval = interval
+                            }
                     )
                     (get "ratelimit-limit")
                     (get "ratelimit-remaining")
                     (get "ratelimit-reset")
+                    limitInterval
                     |> Maybe.withDefault Unlimited
             , expiration = Nothing
             , loggingOut = False
@@ -1792,7 +1852,7 @@ updateRequestLimit headers model =
     }
 
 
-handleResponse : Plugins -> Config -> Result ( Http.Error, Effect.Api.Effect Msg ) ( Dict String String, Msg ) -> Model key -> ( Model key, List Effect )
+handleResponse : Plugins -> Config -> Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ) -> Model key -> ( Model key, List Effect )
 handleResponse plugins uc result model =
     case result of
         Ok ( headers, message ) ->
@@ -1805,7 +1865,7 @@ handleResponse plugins uc result model =
                             |> s_hovercard Nothing
                 }
 
-        Err ( BadStatus 401, eff ) ->
+        Err ( BadStatus 401, headers, eff ) ->
             ( { model
                 | user =
                     model.user
@@ -1817,6 +1877,7 @@ handleResponse plugins uc result model =
                                 _ ->
                                     Unauthorized False [ eff ]
                             )
+                        |> updateRequestLimit headers
               }
             , "userTool"
                 |> Task.succeed
@@ -1825,7 +1886,7 @@ handleResponse plugins uc result model =
                 |> List.singleton
             )
 
-        Err ( BadBody err, _ ) ->
+        Err ( BadBody err, headers, _ ) ->
             let
                 ( notifications, notificationEffects ) =
                     Notification.addHttpError model.notifications Nothing (Http.BadBody err)
@@ -1840,15 +1901,21 @@ handleResponse plugins uc result model =
                             |> Just
                             |> Statusbar.add model.statusbar "error" []
                 , notifications = notifications
+                , user = updateRequestLimit headers model.user
               }
             , PortsConsoleEffect err
                 :: List.map NotificationEffect notificationEffects
             )
 
-        Err ( BadStatus 404, _ ) ->
+        Err ( BadStatus 404, headers, _ ) ->
             { model
                 | graph = Graph.handleNotFound model.graph
+                , user = updateRequestLimit headers model.user
             }
+                |> n
+
+        Err ( BadStatus _, headers, _ ) ->
+            { model | user = updateRequestLimit headers model.user }
                 |> n
 
         Err _ ->
