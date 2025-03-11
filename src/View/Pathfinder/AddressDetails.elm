@@ -35,7 +35,6 @@ import RemoteData exposing (WebData)
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
-import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.Icons as Icons
@@ -46,7 +45,7 @@ import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
-import View.Button exposing (btnDefaultConfig, primaryButton, secondaryButton)
+import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
@@ -423,13 +422,13 @@ transactionTableView vc addressId txOnGraphFn model =
                         ++ fullWidth
                         |> css
                     ]
-                    [ secondaryButton vc
-                        (btnDefaultConfig
+                    [ Button.secondaryButton vc
+                        (Button.btnDefaultConfig
                             |> Rs.s_text "Reset"
                             |> Rs.s_onClick (Just AddressDetails.ResetDateRangePicker)
                         )
-                    , primaryButton vc
-                        (btnDefaultConfig
+                    , Button.primaryButton vc
+                        (Button.btnDefaultConfig
                             |> Rs.s_text "Apply filter"
                             |> Rs.s_onClick (Just AddressDetails.CloseDateRangePicker)
                         )
@@ -788,19 +787,10 @@ viewLabelOfTags vc gc model id =
 
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg
 learnMoreButton vc id =
-    Btns.buttonTypeTextStateRegularStyleTextWithAttributes
-        (Btns.buttonTypeTextStateRegularStyleTextAttributes
-            |> Rs.s_button
-                [ [ Css.cursor Css.pointer ] |> css
-                , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
-                ]
-        )
-        { typeTextStateRegularStyleText =
-            { buttonText = Locale.string vc.locale "Learn more"
-            , iconInstance = none
-            , iconVisible = False
-            }
-        }
+    Button.btnDefaultConfig
+        |> Rs.s_text "Learn more"
+        |> Rs.s_onClick (Just (Pathfinder.UserOpensDialogWindow (TagsList id)))
+        |> Button.linkButtonBlue vc
 
 
 getTagSummary : { a | tagSummaries : Dict Id Pathfinder.HavingTags } -> Id -> Maybe Api.Data.TagSummary

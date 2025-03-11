@@ -131,7 +131,7 @@ navbarSubMenuView vc model { type_ } =
                     )
                     { shortcutList =
                         [ { link = model.graph.route |> Route.graphRoute |> Route.toUrl
-                          , icon = Icons.iconsPathfinder {}
+                          , icon = Icons.iconsPathfinderStateDefault {}
                           , text1 = "Pathfinder 1.0"
                           , text2 = Nothing
                           , blank = False

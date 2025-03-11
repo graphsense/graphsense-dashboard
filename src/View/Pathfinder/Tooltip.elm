@@ -7,7 +7,7 @@ import Css.Pathfinder as Css
 import Dict
 import Html.Styled exposing (Html, div, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href, target, title)
-import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
+import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Model exposing (Msg)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder.Address as Addr
@@ -17,7 +17,6 @@ import Plugin.Model
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import Set
-import Theme.Html.Buttons as Buttons
 import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.TagsComponents as TagComponents
 import Tuple exposing (pair)
@@ -25,6 +24,7 @@ import Util.Css as Css
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifierWithLengths)
+import View.Button as Button
 import View.Locale as Locale
 
 
@@ -121,17 +121,10 @@ tooltipRowCustomValue title rowValue =
 linkRow : View.Config -> String -> msg -> Html msg
 linkRow vc txt msg =
     tooltipRowCustomValue ""
-        (Buttons.buttonTypeTextStateRegularStyleTextWithAttributes
-            (Buttons.buttonTypeTextStateRegularStyleTextAttributes
-                |> Rs.s_button
-                    [ [ Css.cursor Css.pointer ] |> css, onClick msg ]
-            )
-            { typeTextStateRegularStyleText =
-                { buttonText = Locale.string vc.locale txt
-                , iconInstance = none
-                , iconVisible = False
-                }
-            }
+        (Button.btnDefaultConfig
+            |> Rs.s_text txt
+            |> Rs.s_onClick (Just msg)
+            |> Button.linkButtonBlue vc
         )
 
 

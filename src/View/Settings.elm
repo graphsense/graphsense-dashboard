@@ -11,35 +11,19 @@ import Model.Locale as Locale
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
 import Time
 import Tuple exposing (first, second)
 import Util.ThemedSelectBox as TSelectBox
 import Util.View
+import View.Button as Button
 import View.Controls as Vc
 import View.Locale as Locale
 
 
 view : Plugins -> Config -> Model x -> Html Model.Msg
 view plugins vc m =
-    -- let
-    -- tbs =
-    --     Vc.tabs
-    --         ([ ( "General", GeneralTab )
-    --          , ( "Pathfinder", PathfinderTab )
-    --          , ( "Overview Network", GraphTab )
-    --          ]
-    --             |> List.map
-    --                 (\( t, msg ) ->
-    --                     { title = Locale.string vc.locale t
-    --                     , selected = m.selectedSettingsTab == msg
-    --                     , msg = Model.UserChangedSettingsTab msg |> Model.SettingsMsg
-    --                     }
-    --                 )
-    --         )
-    -- in
     Sp.settingsPageWithInstances
         (Sp.settingsPageAttributes
             |> Rs.s_backButton [ css [ Css.cursor Css.pointer ], onClick UserClickedNavBack ]
@@ -58,7 +42,7 @@ view plugins vc m =
         (Sp.settingsPageInstances
             |> Rs.s_settingsTabs (Just Util.View.none)
         )
-        { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBack {} }
+        { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBackStateDefaultBlack {} }
         , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
         , settingsPage =
             { instance = generalSettings plugins vc m }
@@ -114,9 +98,10 @@ generalSettings plugins vc m =
         generalSettingsProperties =
             { button =
                 { variant =
-                    Btns.buttonTypeTextStateRegularStyleTextWithAttributes
-                        (Btns.buttonTypeTextStateRegularStyleTextAttributes |> Rs.s_button [ [ Css.cursor Css.pointer ] |> css, onClick UserClickedLogout ])
-                        { typeTextStateRegularStyleText = { buttonText = Locale.string vc.locale "Logout", iconInstance = Util.View.none, iconVisible = False } }
+                    Button.btnDefaultConfig
+                        |> Rs.s_text "Logout"
+                        |> Rs.s_onClick (Just UserClickedLogout)
+                        |> Button.linkButtonBlue vc
                 }
             , dropDownExtraTextClosed = { primaryText = "a", secondaryText = "b" }
             , languageDropDown = { text = "" }

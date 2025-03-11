@@ -1,4 +1,4 @@
-module View.Button exposing (BtnConfig, actorLink, btnDefaultConfig, primaryButton, secondaryButton, textButton, tool)
+module View.Button exposing (BtnConfig, actorLink, btnDefaultConfig, linkButtonBlue, linkButtonUnderlinedGray, primaryButton, secondaryButton, tool)
 
 import Config.View as View
 import Css
@@ -7,6 +7,7 @@ import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
+import Maybe.Extra
 import RecordSetter as Rs
 import Route exposing (toUrl)
 import Route.Graph as Route
@@ -166,8 +167,8 @@ secondaryButton vc btn =
                 }
 
 
-textButton : View.Config -> BtnConfig msg -> Html msg
-textButton vc btn =
+linkButtonUnderlinedGray : View.Config -> BtnConfig msg -> Html msg
+linkButtonUnderlinedGray vc btn =
     let
         clickAttr =
             if btn.onClickWithStop then
@@ -187,29 +188,47 @@ textButton vc btn =
                         |> Maybe.withDefault []
                    )
     in
-    case btn.icon of
-        Just icon ->
-            Btns.buttonTypeTextIconStateRegularStyleTextWithAttributes
-                (Btns.buttonTypeTextIconStateRegularStyleTextAttributes
-                    |> Rs.s_typeTextIconStateRegularStyleText
-                        style
-                )
-                { typeTextIconStateRegularStyleText =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = icon
-                    , iconVisible = True
-                    }
-                }
+    Btns.buttonTypeTextIconStateRegularStyleTextGreWithAttributes
+        (Btns.buttonTypeTextIconStateRegularStyleTextGreAttributes
+            |> Rs.s_typeTextIconStateRegularStyleTextGre style
+        )
+        { typeTextIconStateRegularStyleTextGre =
+            { buttonText = Locale.string vc.locale btn.text
+            , iconInstance = btn.icon |> Maybe.withDefault none
+            , iconVisible = Maybe.Extra.isJust btn.icon
+            }
+        }
 
-        Nothing ->
-            Btns.buttonTypeTextIconStateRegularStyleTextWithAttributes
-                (Btns.buttonTypeTextIconStateRegularStyleTextAttributes
-                    |> Rs.s_typeTextIconStateRegularStyleText
-                        style
-                )
-                { typeTextIconStateRegularStyleText =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = none
-                    , iconVisible = False
-                    }
-                }
+
+linkButtonBlue : View.Config -> BtnConfig msg -> Html msg
+linkButtonBlue vc btn =
+    let
+        clickAttr =
+            if btn.onClickWithStop then
+                onClickWithStop
+
+            else
+                onClick
+
+        style =
+            ([ Css.cursor Css.pointer
+             , Css.paddingTop <| Css.px 2
+             ]
+                |> css
+            )
+                :: (btn.onClick
+                        |> Maybe.map (clickAttr >> List.singleton)
+                        |> Maybe.withDefault []
+                   )
+    in
+    Btns.buttonTypeTextStateRegularStyleTextBlueWithAttributes
+        (Btns.buttonTypeTextStateRegularStyleTextBlueAttributes
+            |> Rs.s_typeTextStateRegularStyleTextBlue
+                style
+        )
+        { typeTextStateRegularStyleTextBlue =
+            { buttonText = Locale.string vc.locale btn.text
+            , iconInstance = btn.icon |> Maybe.withDefault none
+            , iconVisible = Maybe.Extra.isJust btn.icon
+            }
+        }
