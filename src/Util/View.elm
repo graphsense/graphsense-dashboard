@@ -280,6 +280,7 @@ copyIconWithAttrPathfinder hideHint attr vc value =
                         , css
                             [ Css.display Css.none
                             , Css.zIndex <| Css.int 50
+                            , Css.property "position" "fixed" |> Css.important
                             ]
                         ]
                     |> s_label
