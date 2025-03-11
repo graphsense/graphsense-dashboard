@@ -451,4 +451,8 @@ tagged cluster addresses: Cluster-Adressen mit Schlagwort
 all cluster addresses: Alle Cluster-Adressen
 type: Typ
 cluster information: Cluster Info
+"{0} per {1}": "{0} pro {1}"
+"Request limit exceeded": "Abfrage-Limit erreicht"
+"The request limit of your API key of {0} per {1} has been exceeded.": "Begrenzung der API Abfragen von {0} pro {1} erreicht."
+"The request limit of your API key has been exceeded.": "Begrenzung der API Abfragen erreicht."
 

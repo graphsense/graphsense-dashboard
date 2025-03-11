@@ -17,7 +17,7 @@ module Api exposing
     , withTracker
     )
 
-import Dict exposing (Dict)
+import Dict
 import Http
 import Json.Decode
 import Json.Encode
@@ -25,10 +25,11 @@ import ProgramTest
 import SimulatedEffect.Http
 import Task
 import Url.Builder
+import Util.Http exposing (Headers)
 
 
-type Request a =
-    Request
+type Request a
+    = Request
         { method : String
         , headers : List ( String, Maybe String )
         , basePath : String
@@ -51,7 +52,7 @@ noExternalTransactions =
     "no external transactions"
 
 
-request : String -> String -> List ( String, String ) -> List (String, Maybe String) -> List (String, Maybe String) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
+request : String -> String -> List ( String, String ) -> List ( String, Maybe String ) -> List ( String, Maybe String ) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
 request method path pathParams queryParams headerParams body decoder =
     Request
         { method = method
@@ -97,7 +98,7 @@ sendWithCustomError mapError toMsg (Request req) =
         }
 
 
-sendAndAlsoReceiveHeaders : (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> eff -> (a -> msg) -> Request a -> Cmd msg
+sendAndAlsoReceiveHeaders : (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> eff -> (a -> msg) -> Request a -> Cmd msg
 sendAndAlsoReceiveHeaders wrapMsg eff toMsg (Request req) =
     Http.riskyRequest
         { method = req.method
@@ -110,27 +111,26 @@ sendAndAlsoReceiveHeaders wrapMsg eff toMsg (Request req) =
         }
 
 
-expectJsonWithHeaders : (a -> msg) -> eff -> (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> Json.Decode.Decoder a -> Http.Expect msg
+expectJsonWithHeaders : (a -> msg) -> eff -> (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> Json.Decode.Decoder a -> Http.Expect msg
 expectJsonWithHeaders toMsg eff wrapMsg decoder =
     Http.expectStringResponse wrapMsg <|
         \response ->
             case response of
                 Http.BadUrl_ url ->
-                    Err ( Http.BadUrl url, eff )
+                    Err ( Http.BadUrl url, Dict.empty, eff )
 
                 Http.Timeout_ ->
-                    Err ( Http.Timeout, eff )
+                    Err ( Http.Timeout, Dict.empty, eff )
 
                 Http.NetworkError_ ->
-                    Err ( Http.NetworkError, eff )
+                    Err ( Http.NetworkError, Dict.empty, eff )
 
                 Http.BadStatus_ metadata body ->
                     if metadata.statusCode == 404 && String.contains "no external transactions" body then
-                        Err ( Http.BadBody "no external transactions", eff )
+                        Err ( Http.BadBody "no external transactions", metadata.headers, eff )
 
                     else
-                        Err ( Http.BadStatus metadata.statusCode, eff )
-
+                        Err ( Http.BadStatus metadata.statusCode, metadata.headers, eff )
 
                 Http.GoodStatus_ metadata body ->
                     case Json.Decode.decodeString decoder body of
@@ -138,7 +138,7 @@ expectJsonWithHeaders toMsg eff wrapMsg decoder =
                             Ok ( metadata.headers, toMsg value )
 
                         Err err ->
-                            Err ( Http.BadBody (Json.Decode.errorToString err), eff )
+                            Err ( Http.BadBody (Json.Decode.errorToString err), metadata.headers, eff )
 
 
 task : Request a -> Task.Task Http.Error a
@@ -202,9 +202,9 @@ withHeaders headers_ (Request req) =
 -- HELPER
 
 
-headers : List (String, Maybe String) -> List Http.Header
+headers : List ( String, Maybe String ) -> List Http.Header
 headers =
-    List.filterMap (\(key, value) -> Maybe.map (Http.header key) value)
+    List.filterMap (\( key, value ) -> Maybe.map (Http.header key) value)
 
 
 effectHeaders : List ( String, Maybe String ) -> List SimulatedEffect.Http.Header
@@ -216,16 +216,16 @@ interpolatePath : String -> List ( String, String ) -> List String
 interpolatePath rawPath pathParams =
     let
         interpolate =
-            (\(name, value) path -> String.replace ("{" ++ name ++ "}") value path)
+            \( name, value ) path -> String.replace ("{" ++ name ++ "}") value path
     in
     List.foldl interpolate rawPath pathParams
         |> String.split "/"
         |> List.drop 1
 
 
-queries : List (String, Maybe String) -> List Url.Builder.QueryParameter
+queries : List ( String, Maybe String ) -> List Url.Builder.QueryParameter
 queries =
-    List.filterMap (\(key, value) -> Maybe.map (Url.Builder.string key) value)
+    List.filterMap (\( key, value ) -> Maybe.map (Url.Builder.string key) value)
 
 
 expectJson : (Http.Error -> e) -> (Result e a -> msg) -> Json.Decode.Decoder a -> Http.Expect msg

@@ -1,4 +1,4 @@
-module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), SettingsMsg(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), Thing(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -31,6 +31,7 @@ import RemoteData exposing (WebData)
 import Table
 import Time
 import Url exposing (Url)
+import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as SelectBox
 
 
@@ -91,7 +92,7 @@ type Msg
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
     | BrowserGotStatistics Api.Data.Stats
-    | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Effect.Api.Effect Msg ) ( Dict String String, Msg ))
+    | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ))
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
@@ -144,7 +145,30 @@ type SettingsMsg
 
 type RequestLimit
     = Unlimited
-    | Limited { remaining : Int, limit : Int, reset : Int }
+    | Limited { remaining : Int, limit : Int, reset : Int, interval : RequestLimitInterval }
+
+
+type RequestLimitInterval
+    = Minute
+    | Hour
+    | Day
+    | Month
+
+
+requestLimitIntervalToString : RequestLimitInterval -> String
+requestLimitIntervalToString i =
+    case i of
+        Minute ->
+            "minute"
+
+        Hour ->
+            "hour"
+
+        Day ->
+            "day"
+
+        Month ->
+            "month"
 
 
 showResetCounterAtRemaining : Int

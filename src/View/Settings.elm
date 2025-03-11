@@ -6,7 +6,7 @@ import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import List.Extra
-import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel)
+import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel, requestLimitIntervalToString)
 import Model.Locale as Locale
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
@@ -209,19 +209,30 @@ requestLimit vc rl =
         Unlimited ->
             ( Locale.string vc.locale "unlimited", Nothing )
 
-        Limited { remaining, limit, reset } ->
-            ( String.fromInt remaining
+        Limited { remaining, limit, reset, interval } ->
+            ( String.fromInt <|
+                if reset == 0 then
+                    limit
+
+                else
+                    remaining
             , Just
-                (String.fromInt limit
+                (Locale.interpolated vc.locale
+                    "{0} per {1}"
+                    [ String.fromInt limit
+                    , requestLimitIntervalToString interval
+                        |> Locale.string vc.locale
+                    ]
                     ++ " "
                     ++ (if reset == 0 || remaining > Model.showResetCounterAtRemaining then
-                            Locale.string vc.locale "None"
+                            ""
 
                         else
                             reset
                                 |> String.fromInt
                                 |> List.singleton
                                 |> Locale.interpolated vc.locale "reset in {0}s"
+                                |> (\s -> "(" ++ s ++ ")")
                        )
                 )
             )
