@@ -46,7 +46,7 @@ import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
-import View.Button exposing (primaryButton, secondaryButton)
+import View.Button exposing (btnDefaultConfig, primaryButton, secondaryButton)
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
@@ -424,17 +424,15 @@ transactionTableView vc addressId txOnGraphFn model =
                         |> css
                     ]
                     [ secondaryButton vc
-                        { icon = Nothing
-                        , text = "Reset"
-                        , onClick = AddressDetails.ResetDateRangePicker
-                        , disabled = False
-                        }
+                        (btnDefaultConfig
+                            |> Rs.s_text "Reset"
+                            |> Rs.s_onClick (Just AddressDetails.ResetDateRangePicker)
+                        )
                     , primaryButton vc
-                        { icon = Nothing
-                        , text = "Apply filter"
-                        , onClick = AddressDetails.CloseDateRangePicker
-                        , disabled = False
-                        }
+                        (btnDefaultConfig
+                            |> Rs.s_text "Apply filter"
+                            |> Rs.s_onClick (Just AddressDetails.CloseDateRangePicker)
+                        )
                     ]
                 ]
 

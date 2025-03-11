@@ -19,6 +19,7 @@ import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangl
 import Switch
 import Theme.Html.GraphComponents
 import Time exposing (Posix)
+import Util.Css
 import View.Locale as Locale
 
 
@@ -279,8 +280,8 @@ copyIconWithAttrPathfinder hideHint attr vc value =
                         [ Html.Styled.Attributes.attribute "data-hint" ""
                         , css
                             [ Css.display Css.none
-                            , Css.zIndex <| Css.int 50
-                            , Css.property "position" "fixed" |> Css.important
+                            , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
+                            , Css.position Css.fixed |> Css.important
                             ]
                         ]
                     |> s_label

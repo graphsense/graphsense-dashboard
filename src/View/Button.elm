@@ -1,4 +1,4 @@
-module View.Button exposing (BtnConfig, actorLink, primaryButton, secondaryButton, tool)
+module View.Button exposing (BtnConfig, actorLink, btnDefaultConfig, primaryButton, secondaryButton, textButton, tool)
 
 import Config.View as View
 import Css
@@ -11,16 +11,22 @@ import RecordSetter as Rs
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Theme.Html.Buttons as Btns
-import Util.View exposing (none)
+import Util.View exposing (none, onClickWithStop)
 import View.Locale as Locale
 
 
 type alias BtnConfig msg =
     { icon : Maybe (Html msg)
     , text : String
-    , onClick : msg
+    , onClick : Maybe msg
     , disabled : Bool
+    , onClickWithStop : Bool
     }
+
+
+btnDefaultConfig : BtnConfig msg
+btnDefaultConfig =
+    { icon = Nothing, text = "", onClick = Nothing, disabled = False, onClickWithStop = False }
 
 
 tool :
@@ -65,13 +71,23 @@ actorLink vc id label =
 primaryButton : View.Config -> BtnConfig msg -> Html msg
 primaryButton vc btn =
     let
+        clickAttr =
+            if btn.onClickWithStop then
+                onClickWithStop
+
+            else
+                onClick
+
         style =
-            [ onClick btn.onClick
-            , [ Css.cursor Css.pointer
-              , Css.paddingTop <| Css.px 2
-              ]
+            ([ Css.cursor Css.pointer
+             , Css.paddingTop <| Css.px 2
+             ]
                 |> css
-            ]
+            )
+                :: (btn.onClick
+                        |> Maybe.map (clickAttr >> List.singleton)
+                        |> Maybe.withDefault []
+                   )
     in
     case btn.icon of
         Just icon ->
@@ -104,13 +120,23 @@ primaryButton vc btn =
 secondaryButton : View.Config -> BtnConfig msg -> Html msg
 secondaryButton vc btn =
     let
+        clickAttr =
+            if btn.onClickWithStop then
+                onClickWithStop
+
+            else
+                onClick
+
         style =
-            [ onClick btn.onClick
-            , [ Css.cursor Css.pointer
-              , Css.paddingTop <| Css.px 2
-              ]
+            ([ Css.cursor Css.pointer
+             , Css.paddingTop <| Css.px 2
+             ]
                 |> css
-            ]
+            )
+                :: (btn.onClick
+                        |> Maybe.map (clickAttr >> List.singleton)
+                        |> Maybe.withDefault []
+                   )
     in
     case btn.icon of
         Just icon ->
@@ -133,6 +159,55 @@ secondaryButton vc btn =
                         style
                 )
                 { typeTextStateRegularStyleOutlined =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = none
+                    , iconVisible = False
+                    }
+                }
+
+
+textButton : View.Config -> BtnConfig msg -> Html msg
+textButton vc btn =
+    let
+        clickAttr =
+            if btn.onClickWithStop then
+                onClickWithStop
+
+            else
+                onClick
+
+        style =
+            ([ Css.cursor Css.pointer
+             , Css.paddingTop <| Css.px 2
+             ]
+                |> css
+            )
+                :: (btn.onClick
+                        |> Maybe.map (clickAttr >> List.singleton)
+                        |> Maybe.withDefault []
+                   )
+    in
+    case btn.icon of
+        Just icon ->
+            Btns.buttonTypeTextIconStateRegularStyleTextWithAttributes
+                (Btns.buttonTypeTextIconStateRegularStyleTextAttributes
+                    |> Rs.s_typeTextIconStateRegularStyleText
+                        style
+                )
+                { typeTextIconStateRegularStyleText =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = icon
+                    , iconVisible = True
+                    }
+                }
+
+        Nothing ->
+            Btns.buttonTypeTextIconStateRegularStyleTextWithAttributes
+                (Btns.buttonTypeTextIconStateRegularStyleTextAttributes
+                    |> Rs.s_typeTextIconStateRegularStyleText
+                        style
+                )
+                { typeTextIconStateRegularStyleText =
                     { buttonText = Locale.string vc.locale btn.text
                     , iconInstance = none
                     , iconVisible = False
