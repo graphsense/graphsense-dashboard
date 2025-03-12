@@ -11,6 +11,7 @@ import Html.Styled.Events exposing (onClick)
 import PagedTable
 import RecordSetter as Rs
 import Table
+import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
 import Util.View
@@ -154,32 +155,44 @@ pagedTableView vc attributes config tblPaged msgTag =
                     SidePanelComponents.paginationListPartStartWithInstances
                         (SidePanelComponents.paginationListPartStartAttributes
                             |> Rs.s_listPartStart paggingBlockAttributes
-                            |> Rs.s_iconsChevronRightThin nextActiveAttributes
                             |> Rs.s_next nextActiveAttributes
                         )
                         (SidePanelComponents.paginationListPartStartInstances
                          -- |> s_iconsChevronRightEnd (Just Util.View.none)
                         )
-                        { listPartStart = listPart }
+                        { listPartStart = listPart
+                        , iconsChevronLeftThin =
+                            { variant = Icons.iconsChevronLeftThinStateDisabled {} }
+                        , iconsChevronRightThin =
+                            { variant =
+                                Icons.iconsChevronRightThinStateDefaultWithAttributes
+                                    (Icons.iconsChevronRightThinStateDefaultAttributes
+                                        |> Rs.s_stateDefault nextActiveAttributes
+                                    )
+                                    {}
+                            }
+                        }
 
                  else if PagedTable.getCurrentPage tblPaged == 1 && not nextPageAvailable then
                     SidePanelComponents.paginationListPartOnePageWithInstances
                         (SidePanelComponents.paginationListPartOnePageAttributes
                             |> Rs.s_listPartOnePage paggingBlockAttributes
-                            |> Rs.s_iconsChevronRightThin nextActiveAttributes
                             |> Rs.s_next nextActiveAttributes
                         )
                         (SidePanelComponents.paginationListPartOnePageInstances
                          -- |> s_iconsChevronRightEnd (Just Util.View.none)
                         )
-                        { listPartOnePage = listPart }
+                        { listPartOnePage = listPart
+                        , iconsChevronLeftThin =
+                            { variant = Icons.iconsChevronLeftThinStateDisabled {} }
+                        , iconsChevronRightThin =
+                            { variant = Icons.iconsChevronRightThinStateDisabled {} }
+                        }
 
                  else if nextPageAvailable then
                     SidePanelComponents.paginationListPartMiddleWithInstances
                         (SidePanelComponents.paginationListPartMiddleAttributes
                             |> Rs.s_listPartMiddle paggingBlockAttributes
-                            |> Rs.s_iconsChevronRightThin nextActiveAttributes
-                            |> Rs.s_iconsChevronLeftThin prevActiveAttributes
                             |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
                             |> Rs.s_next nextActiveAttributes
                             |> Rs.s_previous prevActiveAttributes
@@ -187,21 +200,46 @@ pagedTableView vc attributes config tblPaged msgTag =
                         (SidePanelComponents.paginationListPartMiddleInstances
                          -- |> s_iconsChevronRightEnd (Just Util.View.none)
                         )
-                        { listPartMiddle = listPart }
+                        { listPartMiddle = listPart
+                        , iconsChevronLeftThin =
+                            { variant =
+                                Icons.iconsChevronLeftThinStateDefaultWithAttributes
+                                    (Icons.iconsChevronLeftThinStateDefaultAttributes
+                                        |> Rs.s_stateDefault prevActiveAttributes
+                                    )
+                                    {}
+                            }
+                        , iconsChevronRightThin =
+                            { variant =
+                                Icons.iconsChevronRightThinStateDefaultWithAttributes
+                                    (Icons.iconsChevronRightThinStateDefaultAttributes
+                                        |> Rs.s_stateDefault nextActiveAttributes
+                                    )
+                                    {}
+                            }
+                        }
 
                  else
                     SidePanelComponents.paginationListPartEndWithInstances
                         (SidePanelComponents.paginationListPartEndAttributes
                             |> Rs.s_listPartEnd paggingBlockAttributes
-                            |> Rs.s_nextCell nextActiveAttributes
-                            |> Rs.s_next nextActiveAttributes
-                            |> Rs.s_iconsChevronLeftThin prevActiveAttributes
                             |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
                             |> Rs.s_previous prevActiveAttributes
                         )
                         (SidePanelComponents.paginationListPartEndInstances
                          -- |> s_iconsChevronRightEnd (Just Util.View.none)
                         )
-                        { listPartEnd = listPart }
+                        { listPartEnd = listPart
+                        , iconsChevronLeftThin =
+                            { variant =
+                                Icons.iconsChevronLeftThinStateDefaultWithAttributes
+                                    (Icons.iconsChevronLeftThinStateDefaultAttributes
+                                        |> Rs.s_stateDefault prevActiveAttributes
+                                    )
+                                    {}
+                            }
+                        , iconsChevronRightThin =
+                            { variant = Icons.iconsChevronRightThinStateDisabled {} }
+                        }
                ]
         )

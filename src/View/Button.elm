@@ -188,11 +188,11 @@ linkButtonUnderlinedGray vc btn =
                         |> Maybe.withDefault []
                    )
     in
-    Btns.buttonTypeTextIconStateRegularStyleTextGreWithAttributes
-        (Btns.buttonTypeTextIconStateRegularStyleTextGreAttributes
-            |> Rs.s_typeTextIconStateRegularStyleTextGre style
+    Btns.buttonTypeTextIconStateRegularStyleTextGreyWithAttributes
+        (Btns.buttonTypeTextIconStateRegularStyleTextGreyAttributes
+            |> Rs.s_typeTextIconStateRegularStyleTextGrey style
         )
-        { typeTextIconStateRegularStyleTextGre =
+        { typeTextIconStateRegularStyleTextGrey =
             { buttonText = Locale.string vc.locale btn.text
             , iconInstance = btn.icon |> Maybe.withDefault none
             , iconVisible = Maybe.Extra.isJust btn.icon
