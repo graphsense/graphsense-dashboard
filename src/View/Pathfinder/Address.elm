@@ -11,6 +11,7 @@ import Init.Pathfinder.Id as Id
 import Json.Decode
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
+import Model.Entity exposing (isPossibleService)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, Txs(..), expandAllowed, getTxs, txsGetSet)
@@ -315,20 +316,7 @@ type AddressServiceType
 
 getAddressType : Address -> Maybe Api.Data.Entity -> AddressServiceType
 getAddressType address cluster =
-    let
-        clstrSize =
-            cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
-
-        clusterIndegree =
-            cluster |> Maybe.map .inDegree |> Maybe.withDefault 0
-
-        maxClusterSizeUser =
-            100
-
-        maxInDegreeUser =
-            7500
-    in
-    if clstrSize > maxClusterSizeUser || clusterIndegree > maxInDegreeUser then
+    if Maybe.map isPossibleService cluster |> Maybe.withDefault False then
         if address.actor == Nothing then
             LikelyUnknownService
 

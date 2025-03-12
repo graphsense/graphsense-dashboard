@@ -1,5 +1,6 @@
-module Model.Entity exposing (Entity, Entitylink, decoder, encoder, fromId)
+module Model.Entity exposing (Entity, Entitylink, decoder, encoder, fromId, isPossibleService)
 
+import Api.Data
 import Json.Decode
 import Json.Encode
 import Model.Graph.Id as Id exposing (EntityId)
@@ -38,3 +39,15 @@ encoder entity =
         [ ( "currency", Json.Encode.string entity.currency )
         , ( "entity", Json.Encode.int entity.entity )
         ]
+
+
+isPossibleService : Api.Data.Entity -> Bool
+isPossibleService cluster =
+    let
+        maxClusterSizeUser =
+            100
+
+        maxInDegreeUser =
+            7500
+    in
+    cluster.noAddresses > maxClusterSizeUser || cluster.inDegree > maxInDegreeUser
