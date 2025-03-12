@@ -1,4 +1,4 @@
-module PagedTable exposing (Config, Model, Msg(..), appendData, getCurrentPage, getItemsPerPage, getPage, getTable, goToFirstPage, hasNextPage, hasPrevPage, init, loadFirstPage, removeItem, setData, setItemsPerPage, setNrItems, update, updateTable)
+module PagedTable exposing (Config, Model, Msg(..), appendData, getCurrentPage, getItemsPerPage, getNrItems, getPage, getTable, goToFirstPage, hasNextPage, hasPrevPage, init, loadFirstPage, removeItem, setData, setItemsPerPage, setNrItems, update, updateTable)
 
 import Init.Graph.Table as Table
 import Model.Graph.Table as Table exposing (Table)
@@ -49,6 +49,11 @@ setNrItems : Int -> Model d -> Model d
 setNrItems nrItems (Model pt) =
     { pt | nrItems = Just nrItems }
         |> Model
+
+
+getNrItems : Model d -> Maybe Int
+getNrItems (Model m) =
+    m.nrItems
 
 
 setItemsPerPage : Int -> Model d -> Model d

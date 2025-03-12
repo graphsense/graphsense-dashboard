@@ -1,4 +1,4 @@
-module Css.Dialog exposing (body, btnBase, button, buttons, dialog, headRow, headRowClose, headRowText, heading, optionsButtonsContainer, part, singleButton)
+module Css.Dialog exposing (body, btnBase, button, buttons, dialog, headRow, headRowClose, headRowText, heading, optionsButtonsContainer, part, singleButton, textWrap)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -22,6 +22,11 @@ button vc =
 btnBase : Config -> List Style
 btnBase _ =
     [ Css.cursor Css.pointer ]
+
+
+textWrap : Config -> List Style
+textWrap _ =
+    [ Css.whiteSpace Css.normal ]
 
 
 optionsButtonsContainer : List Style
