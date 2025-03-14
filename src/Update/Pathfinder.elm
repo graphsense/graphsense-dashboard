@@ -1662,6 +1662,17 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.UpdateAddressesByEntityPathfinder e pmsg ->
+                        let
+                            pId =
+                                Id.initClusterIdFromRecord e
+                        in
+                        ( { mo
+                            | network = Network.updateAddressesByClusterId pId (Plugin.updateAddress plugins pmsg) mo.network
+                          }
+                        , eff
+                        )
+
                     PluginInterface.UpdateAddressEntities _ _ ->
                         n mo
 

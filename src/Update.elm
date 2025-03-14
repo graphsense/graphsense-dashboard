@@ -18,6 +18,7 @@ import Hovercard
 import Http exposing (Error(..))
 import Init.Graph
 import Init.Pathfinder
+import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.TagsTable as TagsTable
 import Init.Pathfinder.Tooltip as Tooltip
 import Init.Search as Search
@@ -1030,8 +1031,13 @@ update plugins uc msg model =
                             let
                                 ( new, outMsg, cmd ) =
                                     addresses
-                                        |> List.map (\x -> { address = x.address, currency = x.currency })
-                                        |> PluginInterface.AddressesAdded
+                                        |> List.filterMap
+                                            (\a ->
+                                                Dict.get (a |> Id.initClusterIdFromRecord) model.pathfinder.clusters
+                                                    |> Maybe.andThen (RD.toMaybe >> Maybe.map (Tuple.pair a))
+                                            )
+                                        |> List.map (\( x, e ) -> ( { address = x.address, currency = x.currency }, e ))
+                                        |> PluginInterface.AddressesAddedPathfinder
                                         |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                                 ( pathfinder, pathfinderEffects ) =
@@ -1046,13 +1052,38 @@ update plugins uc msg model =
                             )
                                 |> updateByPluginOutMsg plugins uc outMsg
 
-                        Pathfinder.BrowserGotAddressData id _ ->
+                        Pathfinder.BrowserGotAddressData id address ->
                             let
                                 ( new, outMsg, cmd ) =
-                                    id
-                                        |> Address.fromPathfinderId
+                                    address
                                         |> List.singleton
-                                        |> PluginInterface.AddressesAdded
+                                        |> List.filterMap
+                                            (\a ->
+                                                Dict.get (a |> Id.initClusterIdFromRecord) model.pathfinder.clusters
+                                                    |> Maybe.andThen (RD.toMaybe >> Maybe.map (Tuple.pair a))
+                                            )
+                                        |> List.map (\( x, e ) -> ( { address = x.address, currency = x.currency }, e ))
+                                        |> PluginInterface.AddressesAddedPathfinder
+                                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+
+                                ( pathfinder, pathfinderEffects ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+                            in
+                            ( { model
+                                | plugins = new
+                                , pathfinder = pathfinder
+                              }
+                            , PluginEffect cmd
+                                :: List.map PathfinderEffect pathfinderEffects
+                            )
+                                |> updateByPluginOutMsg plugins uc outMsg
+
+                        Pathfinder.BrowserGotClusterData id data ->
+                            let
+                                ( new, outMsg, cmd ) =
+                                    ( id |> Address.fromPathfinderId, data )
+                                        |> List.singleton
+                                        |> PluginInterface.AddressesAddedPathfinder
                                         |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                                 ( pathfinder, pathfinderEffects ) =
@@ -1502,6 +1533,9 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         updateGraphByPluginOutMsg model eff
 
                     PluginInterface.UpdateAddresses _ _ ->
+                        updateGraphByPluginOutMsg model eff
+
+                    PluginInterface.UpdateAddressesByEntityPathfinder _ _ ->
                         updateGraphByPluginOutMsg model eff
 
                     PluginInterface.UpdateAddressEntities _ _ ->

@@ -114,7 +114,7 @@ view plugins vc colors address getCluster annotation =
                     )
 
         replacementTagIcons =
-            Plugin.View.replaceAddressNodeTagIcon plugins address.plugins vc { hasTags = address.hasTags }
+            Plugin.View.replaceAddressNodeTagIcon plugins address.plugins vc { hasTags = address.hasTags } address
 
         replacementIconCombined =
             if List.length replacementTagIcons > 0 then

@@ -59,7 +59,7 @@ view plugins pluginStates vc tt =
     in
     content
         |> div
-            (css (GraphComponents.tooltipProperty1Down_details.styles ++ [ Css.minWidth (Css.px 200) ])
+            (css (GraphComponents.tooltipProperty1Down_details.styles ++ [ Css.minWidth (Css.px 230) ])
                 :: containerAttributes
             )
         |> toUnstyled

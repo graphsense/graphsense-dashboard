@@ -3129,6 +3129,9 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.UpdateAddressesByEntityPathfinder _ _ ->
+                        n model
+
                     PluginInterface.UpdateAddressEntities id pmsg ->
                         let
                             entityIds =

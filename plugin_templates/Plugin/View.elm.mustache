@@ -162,14 +162,14 @@ addressSidePanelHeaderTags plugins states vc address =
         |> List.filterMap identity
         |> List.map (Html.map Pathfinder.PluginMsg)
 
-replaceAddressNodeTagIcon: Plugins ->  Plugin.Model.AddressState -> View.Config -> {hasTags: Bool} -> List (Svg Pathfinder.Msg)
-replaceAddressNodeTagIcon plugins addressStates vc data =
+replaceAddressNodeTagIcon: Plugins ->  Plugin.Model.AddressState -> View.Config -> {hasTags: Bool} -> Pathfinder.Address -> List (Svg Pathfinder.Msg)
+replaceAddressNodeTagIcon plugins addressStates vc data address =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
                 Maybe.Extra.andThen2
                     (\fun ->
-                        fun vc data
+                        fun vc data address
                     )
                     plugin.replaceAddressNodeTagIcon
                     addressStates.{{name}}

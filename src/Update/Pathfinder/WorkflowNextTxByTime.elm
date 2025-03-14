@@ -66,7 +66,7 @@ update ctx msg model =
                             t.identifier
 
                 noResults =
-                    List.length data.addressTxs == 0
+                    List.isEmpty data.addressTxs
 
                 net =
                     if noResults then

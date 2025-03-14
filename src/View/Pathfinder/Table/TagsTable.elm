@@ -267,7 +267,7 @@ labelColumn vc =
                         mconcept ++ (data.concepts |> Maybe.withDefault [])
 
                     concepts_w_default =
-                        if List.length concepts == 0 then
+                        if List.isEmpty concepts then
                             [ "unknown" ]
 
                         else

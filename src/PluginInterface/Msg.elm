@@ -9,6 +9,7 @@ import Model.Dialog
 import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Notification exposing (Notification)
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (TooltipMessages, mapMsgTooltipMsg)
 import Update.Dialog
 
@@ -22,6 +23,7 @@ type OutMsg msg addressMsg entityMsg
       ShowBrowser
       -- send addressMsg to all address nodes in the graph which match the one in `Address`
     | UpdateAddresses Address addressMsg
+    | UpdateAddressesByEntityPathfinder Api.Data.Entity addressMsg
       -- send entityMsg to the entity of all address nodes in the graph which match the one in `Address`
       -- core calls the `update.updateAddress` hook
     | UpdateAddressEntities Address entityMsg
@@ -77,6 +79,7 @@ type InMsg
       ClickedOnNeutralGround
     | CoreGotStatsUpdate Api.Data.Stats
     | AddressesAdded (List Address)
+    | AddressesAddedPathfinder (List ( Address, Api.Data.Entity ))
     | InMsgsPathfinder InMsgPathfinder
     | ClosedTooltip (Maybe { context : String, domId : String })
     | Reset
@@ -96,6 +99,10 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         UpdateAddresses a addressMsg ->
             mapAddressMsg addressMsg
                 |> UpdateAddresses a
+
+        UpdateAddressesByEntityPathfinder a addressMsg ->
+            mapAddressMsg addressMsg
+                |> UpdateAddressesByEntityPathfinder a
 
         UpdateEntities e entityMsg ->
             mapEntityMsg entityMsg
