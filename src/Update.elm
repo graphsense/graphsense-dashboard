@@ -423,14 +423,17 @@ update plugins uc msg model =
 
         UserClickedExampleSearch str ->
             let
-                search =
+                ( search, eff ) =
                     Search.setQuery str model.search
                         |> s_visible True
+                        |> Search.triggerSearch str
             in
             update plugins uc (Search.UserFocusSearch |> SearchMsg) model
                 |> mapFirst (s_search search)
                 |> mapSecond
-                    ((++) (Search.maybeTriggerSearch search |> List.map SearchEffect))
+                    ((++)
+                        (eff |> List.map SearchEffect)
+                    )
 
         UserClickedLogout ->
             let

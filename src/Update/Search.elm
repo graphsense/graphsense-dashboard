@@ -1,11 +1,13 @@
-module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, update)
+module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, triggerSearch, update)
 
 import Api.Data
 import Autocomplete
+import Basics.Extra exposing (flip)
 import Effect.Search exposing (Effect(..))
 import Init.Search exposing (init)
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
+import RecordSetter as Rs
 import Tuple exposing (pair)
 import Util exposing (n)
 
@@ -249,12 +251,14 @@ update msg model =
                 |> pair m3
 
 
+limit : Int
+limit =
+    10
+
+
 maybeTriggerSearch : Model -> List Effect
 maybeTriggerSearch model =
     let
-        limit =
-            10
-
         query =
             Autocomplete.query model.autocomplete
 
@@ -280,6 +284,21 @@ maybeTriggerSearch model =
 
     else
         []
+
+
+triggerSearch : String -> Model -> ( Model, List Effect )
+triggerSearch query model =
+    ( model.autocomplete
+        |> Autocomplete.setStatus Autocomplete.Fetching
+        |> flip Rs.s_autocomplete model
+    , SearchEffect
+        { query = query
+        , currency = Nothing
+        , limit = Just limit
+        , toMsg = BrowserGotSearchResult query
+        }
+        |> List.singleton
+    )
 
 
 clear : Model -> Model
