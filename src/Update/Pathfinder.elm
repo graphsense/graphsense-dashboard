@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fromDeserialized, unselect, update, updateByRoute)
+module Update.Pathfinder exposing (deserialize, fromDeserialized, removeAddress, unselect, update, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -216,10 +216,11 @@ updateByMsg plugins uc msg model =
         UserReleasedNormalKey _ ->
             n model
 
-        BrowserGotAddressData id data ->
+        BrowserGotAddressData id position data ->
             let
                 net =
-                    Network.updateAddress id (s_data (Success data)) model.network
+                    Network.addAddressWithPosition position id model.network
+                        |> Network.updateAddress id (s_data (Success data))
 
                 ( details, eff ) =
                     case model.details of
@@ -274,9 +275,11 @@ updateByMsg plugins uc msg model =
             in
             model
                 |> s_network net
+                |> updateTagDataOnAddress id
                 |> s_details details
                 |> s_colors ncolors
                 |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ effwithCluster)
+                |> and (checkSelection uc)
 
         BrowserGotClusterData id data ->
             n { model | clusters = Dict.insert id data model.clusters }
@@ -1251,7 +1254,7 @@ updateByMsg plugins uc msg model =
             addresses
                 |> List.foldl
                     (\address mod ->
-                        and (updateByMsg plugins uc (BrowserGotAddressData (Id.init address.currency address.address) address)) mod
+                        and (updateByMsg plugins uc (BrowserGotAddressData (Id.init address.currency address.address) Auto address)) mod
                     )
                     (n model)
 
@@ -1662,17 +1665,13 @@ loadAddress plugins =
 
 
 loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition plugins position id model =
+loadAddressWithPosition _ position id model =
     if Dict.member id model.network.addresses then
         n model
 
     else
-        let
-            nw =
-                Network.addAddressWithPosition plugins position id model.network
-        in
-        ( { model | network = nw } |> updateTagDataOnAddress id
-        , [ BrowserGotAddressData id
+        ( model
+        , [ BrowserGotAddressData id position
                 |> Api.GetAddressEffect
                     { currency = Id.network id
                     , address = Id.id id
