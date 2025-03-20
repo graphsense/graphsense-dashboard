@@ -3,7 +3,6 @@ var fse = require('fs-extra')
 var mustache = require('mustache')
 var path = require('path')
 var yaml = require('yaml')
-var codegen = require('elm-codegen')
 const { execSync } = require("child_process");
 
 function parseNamespace(filePath) {
@@ -38,7 +37,6 @@ const templatesFolder = './plugin_templates'
 const genFolder = './generated'
 const genPluginsFolder = path.join(genFolder, pluginsFolder)
 const langFolder = './lang'
-const themeFolder = './theme'
 const publicFolder = './public'
 const genPublicFolder = path.join(genFolder, publicFolder)
 const genLangFolder = path.join(genFolder, publicFolder, langFolder)
@@ -133,35 +131,15 @@ const copyPublic = (plugin) => {
   console.log('Copied public folder', pluginPublicFolder)
 }
 
-const makeTheme = (plugin) => {
-  const pluginThemeFile = path.join(pluginsFolder, plugin, themeFolder, 'figma.json')
-  console.log("Making theme from " + pluginThemeFile)
-  if (!fs.existsSync(pluginThemeFile)) return
-    /*
-  codegen.run("Generate.elm", {
-    debug: true,
-    output: "theme",
-    flags: JSON.parse(fs.readFileSync(pluginThemeFile, 'utf8')),
-    cwd: "./codegen",
-  })
-  */
-  try {
-    execSync(`make PLUGIN_NAME=${plugin} plugin-theme`)
-  } catch(e) {
-    console.log(e.message)
-  }
-}
-
 transform('./')
 
 for(const plugin in plugins) {
   appendLang(plugins[plugin].name)
   copyPublic(plugins[plugin].name)
-  makeTheme(plugins[plugin].name)
 }
 
 
-const elmJson = JSON.parse(fs.readFileSync('./elm.json.base'))
+const elmJson = JSON.parse(fs.readFileSync('./elm.json'))
 
 plugins.forEach(plugin => {
   const p = path.join(pluginsFolder, plugin.name, 'src')
@@ -174,18 +152,3 @@ fs.writeFileSync('./elm.json', JSON.stringify(elmJson, null, 4))
 
 console.log("\nUpdated src directories in elm.json")
 
-plugins.forEach(plugin => {
-  const deps = fs.readFileSync(path.join(pluginsFolder, plugin.name, 'dependencies.txt'), 'utf8')
-  deps.split("\n").forEach(dep => {
-    if(!dep) return
-    let cmd = 'yes | elm install ' + dep
-    console.log(cmd)
-    try {
-      console.log(execSync(cmd).toString('utf-8'))
-    } catch(e) {
-      console.error('ERROR:')
-      console.error(e.message)
-      process.exit(1)
-    }
-  })
-})

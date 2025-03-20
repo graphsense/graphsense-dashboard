@@ -4,45 +4,59 @@ API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
 FIGMA_WHITELIST_FRAMES?=[]
 CODEGEN_CONFIG=codegen/config/Config.elm
+CODEGEN_RECORDSETTER=codegen/generated/RecordSetter.elm
+CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
+FIGMA_JSON=./theme/figma.json
+GENERATED_THEME=./generated/theme
+GENERATED_THEME_THEME=./generated/theme/Theme
+GENERATED_THEME_COLORMAPS=$(GENERATED_THEME)/colormaps.json
+PLUGINS=$(shell find plugins -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+CAPITALIZED_PLUGINS = $(foreach dir,$(PLUGINS),$(shell echo $(dir) | sed 's/./\U&/'))
+THEME_GENERATED_MARKER=.generated
+PLUGIN_INSTALLED_MARKER=.installed
 
-install:
+
+serve: prepare
+	make gen
+	npm run dev
+
+build: prepare
+	make gen
+	npm run build
+
+install: 
 	pip install pre-commit
 	pre-commit install --hook-type pre-commit --hook-type pre-push
-	npm install
 
 openapi:
 	tools/generate-openapi.sh $(OPENAPI_LOCATION) $(REST_URL)
 			#--global-property=debugModels \
 			#--global-property=debugOperations \
 
-dev: $(API_ELM) $(wildcard src/**)
-	make gen
-	npx elm-test-rs --watch tests/Graph/View/TestLabel.elm
-
-#$(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
-	#make openapi
-
 clean:
 	rm -rf ./elm-stuff/
 	rm -rf ./dist/
-	rm -rf ./theme/Theme/
 	rm -rf ./generated/
 	rm -rf ./codegen/generated/
 	rm -rf elm.json
 
-
-setem: elm.json
+setem: 
 	npx setem --output generated/utils
-	cd codegen && mkdir -p codegen/generated && npx setem --output generated
 
-serve:
-	npm run dev
+setem-codegen: $(CODEGEN_RECORDSETTER)
+
+$(CODEGEN_RECORDSETTER):
+	cd codegen && mkdir -p codegen/generated && npx setem --output generated
 
 test:
 	npx elm-test-rs
 
-build:
-	npm run build
+prepare: 
+	npm install
+	make elm.json
+	make plugins-install
+	make $(GENERATED_THEME_COLORMAPS)
+	make plugin-themes
 
 build-docker:
 	docker build . -t graphsense-dashboard
@@ -68,12 +82,17 @@ lint-ci:
 $(CODEGEN_CONFIG):
 	[ ! -e $(CODEGEN_CONFIG) ] && cp $(CODEGEN_CONFIG).tmp $(CODEGEN_CONFIG)
 
+theme: $(GENERATED_THEME_COLORMAPS)
+
 theme-refresh: 
-	./tools/codegen.sh --refresh
+	rm $(FIGMA_JSON)
 	make theme
 
-theme: $(CODEGEN_CONFIG)
-	make setem
+$(FIGMA_JSON): $(CODEGEN_CONFIG) $(CODEGEN_SRC)
+	./tools/codegen.sh --refresh
+
+$(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC)
+	make setem setem-codegen
 	./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
 	make setem
 
@@ -81,21 +100,34 @@ plugin-theme-refresh:
 	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh 
 	make plugin-theme
 
-plugin-theme: $(CODEGEN_CONFIG)
-	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID)
+plugin-theme: 
+	make $(GENERATED_THEME_THEME)/$(PLUGIN_NAME)/$(THEME_GENERATED_MARKER)
 	make setem
+
+$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(CODEGEN_RECORDSETTER)
+	./tools/codegen.sh --plugin=$(shell echo $* | tr '[:upper:]' '[:lower:]') --file-id=$(FIGMA_FILE_ID)
+	touch $@
+
+plugin-themes: $(CAPITALIZED_PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER))
+	make setem
+
+generated/plugins/%/$(PLUGIN_INSTALLED_MARKER): 
+	while read dep; do yes | npx elm install $${dep}; done < plugins/$*/dependencies.txt
+	cd plugins/$*; npm install 
+	mkdir -p generated/plugins/$*
+	touch $@
+
+plugins-install: $(PLUGINS:%=generated/plugins/%/.installed)
 
 elm.json: elm.json.base
 	cp elm.json.base elm.json
+	mkdir -p generated/theme generated/utils generated/plugins
 
-gen:
-	rm -rf generated/*
-	make setem # for codegen/generated
-	-node generate.js
-	-make theme
-	
-gen-without-theme:
-	-node generate.js
+gen: 
+	node generate.js
 	make setem
 
-.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme
+
+
+
+.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh

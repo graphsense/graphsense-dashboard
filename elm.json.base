@@ -4,7 +4,7 @@
         "src",
         "generated/utils",
         "generated/plugins",
-        "theme",
+        "generated/theme",
         "openapi/src",
         "themes",
         "config",

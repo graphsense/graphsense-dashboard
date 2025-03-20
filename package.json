@@ -8,8 +8,7 @@
     "postinstall": "elm-tooling install",
     "dev": "make gen && vite",
     "prebuild": "elm-tooling install",
-    "build": "make gen && NODE_ENV=${NODE_ENV:=production} vite build",
-    "build-without-theme": "make gen-without-theme && NODE_ENV=${NODE_ENV:=production} vite build",
+    "build": "NODE_ENV=${NODE_ENV:=production} vite build",
     "serve": "vite preview",
     "test": "elm-test-rs"
   },

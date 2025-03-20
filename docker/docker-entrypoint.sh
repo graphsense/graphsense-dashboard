@@ -1,16 +1,10 @@
 #!/bin/bash
 set -e
 
-for plugin in `find ./plugins -mindepth 1 -maxdepth 1 -type d`; do 
-    cd ./$plugin 
-    npm install
-    cd -
-done
+make build
+cp -r ./dist/* /usr/share/nginx/html/ 
 
-# theme has been built at image build time
-npm run build-without-theme && cp -r ./dist/* /usr/share/nginx/html/ 
-
-# remove node_modules to save image space
+# remove node_modules to save space
 find ./plugins -maxdepth 2 -name node_modules -exec rm -rf {} \; || true
 
 chown -R $DOCKER_UID /usr/share/nginx/html/*

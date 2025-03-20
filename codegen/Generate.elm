@@ -244,8 +244,12 @@ frameNodesToFiles whitelist { light, dark } plugin_name frames =
             List.map (mapFirst (RGBA.toStylesString Dict.empty)) colorMapLight
                 |> Dict.fromList
 
-        colorGen =
-            if plugin_name == Nothing then
+        extraFile =
+            plugin_name
+            |> Maybe.map
+                (\_ -> []
+                )
+            |> Maybe.withDefault
                 [ Colors.colorMapToStylesheet colorMapLight
                     :: Colors.colorMapToDeclarations colorMapLight
                     |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrame ]
@@ -262,14 +266,11 @@ frameNodesToFiles whitelist { light, dark } plugin_name frames =
                             |> Encode.encode 0
                   }
                 ]
-
-            else
-                []
     in
     (List.map (frameToFiles whitelist plugin_name colorMapLightDict) frames
         |> List.concat
     )
-        ++ colorGen
+        ++ extraFile
 
 
 findColorMap : String -> List FrameNode -> List ( RGBA, String )
@@ -315,7 +316,7 @@ frameToFiles whitelist plugin_name colorMap n =
                         |> Maybe.map (::)
                         |> Maybe.withDefault identity
                    )
-                |> (::) "Theme"
+                |> (::) themeFolder
 
         nameLowered =
             String.toLower n.frameTraits.isLayerTrait.name

@@ -60,7 +60,7 @@ if [ $REFRESH -eq 1 ]; then
             exit 1
         fi
     fi
-    echo "$output" | grep "files generated in"
+    echo "$output" | grep "generated"
 else
     echo "Running codegen ..."
     tmp=`mktemp`.json
@@ -70,13 +70,13 @@ else
           echo '}'; \
         } > $tmp
     else
-        echo "{\"colormaps\": `cat ./theme/colormaps.json`, \"theme\": `cat ./plugins/$PLUGIN_NAME/theme/figma.json`}" > $tmp
+        echo "{\"colormaps\": `cat ./generated/theme/colormaps.json`, \"theme\": `cat ./plugins/$PLUGIN_NAME/theme/figma.json`}" > $tmp
     fi
-    cmd="$ELM_CODEGEN --output theme --flags-from=$tmp"
+    cmd="$ELM_CODEGEN --output ./generated/theme --flags-from=$tmp"
     echo $cmd
     output=`$cmd 2>&1`
     # surprisingly elm-codegen yield exit code 0 if error
-    if [[ ! $output =~ "generated" ]]; then
+    if [[ ! $output =~ "files generated in" ]]; then
         echo "$output"
         echo "Input file: $tmp"
         exit 1
