@@ -70,7 +70,13 @@ else
           echo '}'; \
         } > $tmp
     else
-        echo "{\"colormaps\": `cat ./generated/theme/colormaps.json`, \"theme\": `cat ./plugins/$PLUGIN_NAME/theme/figma.json`}" > $tmp
+        PLUGIN_FIGMA="./plugins/$PLUGIN_NAME/theme/figma.json"
+        if [ -e "$PLUGIN_FIGMA" ]; then
+            echo "{\"colormaps\": `cat ./generated/theme/colormaps.json`, \"theme\": `cat $PLUGIN_FIGMA`}" > $tmp
+        else
+            echo "No $PLUGIN_FIGMA found. Skipping."
+            exit 0
+        fi
     fi
     cmd="$ELM_CODEGEN --output ./generated/theme --flags-from=$tmp"
     echo $cmd

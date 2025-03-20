@@ -105,7 +105,8 @@ plugin-theme:
 	make setem
 
 $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(CODEGEN_RECORDSETTER)
-	./tools/codegen.sh --plugin=$(shell echo $* | tr '[:upper:]' '[:lower:]') --file-id=$(FIGMA_FILE_ID)
+	./tools/codegen.sh --plugin=$(shell echo $* | tr '[:upper:]' '[:lower:]') --file-id=$(FIGMA_FILE_ID) 
+	mkdir -p $(GENERATED_THEME_THEME)/$*
 	touch $@
 
 plugin-themes: $(CAPITALIZED_PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER))
