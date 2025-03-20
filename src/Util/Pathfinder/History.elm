@@ -79,7 +79,7 @@ shallPushHistory msg _ =
         AnimationFrameDeltaForMove _ ->
             False
 
-        BrowserGotAddressData _ _ ->
+        BrowserGotAddressData _ _ _ ->
             False
 
         BrowserGotClusterData _ _ ->
