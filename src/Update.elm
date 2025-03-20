@@ -634,14 +634,17 @@ update plugins uc msg model =
 
         UserClickedExampleSearch str ->
             let
-                search =
+                ( search, eff ) =
                     Search.setQuery str model.search
                         |> s_visible True
+                        |> Search.triggerSearch str
             in
             update plugins uc (Search.UserFocusSearch |> SearchMsg) model
                 |> mapFirst (s_search search)
                 |> mapSecond
-                    ((++) (Search.maybeTriggerSearch search |> List.map SearchEffect))
+                    ((++)
+                        (eff |> List.map SearchEffect)
+                    )
 
         UserClickedLogout ->
             let
@@ -838,42 +841,70 @@ update plugins uc msg model =
 
                 Search.UserPicksCurrency currency ->
                     let
+                        ( graph, graphEffects ) =
+                            case model.page of
+                                Graph ->
+                                    Graph.loadAddressPath plugins
+                                        { currency = currency
+                                        , addresses =
+                                            Search.query model.search
+                                                |> Search.getMulti
+                                        }
+                                        model.graph
+                                        |> mapSecond (List.map GraphEffect)
+                                        |> mapSecond
+                                            ((++)
+                                                [ Route.Graph.Root
+                                                    |> Route.graphRoute
+                                                    |> Route.toUrl
+                                                    |> NavPushUrlEffect
+                                                ]
+                                            )
+
+                                _ ->
+                                    n model.graph
+
+                        pathfinderEffects =
+                            case model.page of
+                                Graph ->
+                                    []
+
+                                _ ->
+                                    Search.query model.search
+                                        |> Search.getMulti
+                                        |> List.Extra.uncons
+                                        |> Maybe.map
+                                            (\( fst, rest ) ->
+                                                rest
+                                                    |> List.Extra.uncons
+                                                    |> Maybe.map
+                                                        (\( snd, rest2 ) ->
+                                                            fst
+                                                                :: snd
+                                                                :: rest2
+                                                                |> List.map (Route.Pathfinder.AddressHop Route.Pathfinder.NormalAddress)
+                                                                |> Route.Pathfinder.Path currency
+                                                        )
+                                                    |> Maybe.withDefault
+                                                        (Route.Pathfinder.Address fst
+                                                            |> Route.Pathfinder.Network currency
+                                                        )
+                                            )
+                                        |> Maybe.map
+                                            (Route.pathfinderRoute
+                                                >> Route.toUrl
+                                                >> NavPushUrlEffect
+                                                >> List.singleton
+                                            )
+                                        |> Maybe.withDefault []
+
                         ( search, searchEffects ) =
                             Search.update m model.search
                     in
-                    if model.page == Home then
-                        clearSearch plugins { model | search = search, dialog = Nothing }
-                            |> Tuple.mapSecond
-                                ((++)
-                                    [ Route.Pathfinder.addressRoute { network = currency, address = Search.query model.search }
-                                        |> Route.pathfinderRoute
-                                        |> Route.toUrl
-                                        |> NavPushUrlEffect
-                                    ]
-                                )
-
-                    else
-                        let
-                            ( graph, graphEffects ) =
-                                Graph.loadAddressPath plugins
-                                    { currency = currency
-                                    , addresses =
-                                        Search.query model.search
-                                            |> Search.getMulti
-                                    }
-                                    model.graph
-                        in
-                        clearSearch plugins { model | graph = graph, search = search, dialog = Nothing }
-                            |> mapSecond ((++) (List.map GraphEffect graphEffects))
-                            |> mapSecond ((++) (List.map SearchEffect searchEffects))
-                            |> mapSecond
-                                ((++)
-                                    [ Route.Graph.Root
-                                        |> Route.graphRoute
-                                        |> Route.toUrl
-                                        |> NavPushUrlEffect
-                                    ]
-                                )
+                    clearSearch plugins { model | graph = graph, search = search, dialog = Nothing }
+                        |> mapSecond ((++) graphEffects)
+                        |> mapSecond ((++) pathfinderEffects)
+                        |> mapSecond ((++) (List.map SearchEffect searchEffects))
 
                 _ ->
                     let
@@ -1052,7 +1083,7 @@ update plugins uc msg model =
                             )
                                 |> updateByPluginOutMsg plugins uc outMsg
 
-                        Pathfinder.BrowserGotAddressData id address ->
+                        Pathfinder.BrowserGotAddressData id _ address ->
                             let
                                 ( new, outMsg, cmd ) =
                                     address

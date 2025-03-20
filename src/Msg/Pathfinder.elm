@@ -42,7 +42,7 @@ type Msg
     | TxDetailsMsg TxDetailsMsg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
-    | BrowserGotAddressData Id Api.Data.Address
+    | BrowserGotAddressData Id FindPosition Api.Data.Address
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
