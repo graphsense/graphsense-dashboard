@@ -88,7 +88,7 @@ theme-refresh:
 	rm $(FIGMA_JSON)
 	make theme
 
-$(FIGMA_JSON): $(CODEGEN_CONFIG) $(CODEGEN_SRC)
+$(FIGMA_JSON): 
 	./tools/codegen.sh --refresh
 
 $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC)
