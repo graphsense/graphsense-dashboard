@@ -213,7 +213,7 @@ sidebar plugins vc model =
         (Nb.navbarMenuNewAttributes
             |> Rs.s_navbarMenuNew
                 (model.height |> toFloat |> Css.px |> Css.height |> List.singleton |> css |> List.singleton)
-            |> Rs.s_iknaioLogo
+            |> Rs.s_navbarIknaioLogo
                 [ [ Css.pointer |> Css.cursor
                   , Css.pointerEventsAll
                   ]
