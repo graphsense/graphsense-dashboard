@@ -634,28 +634,69 @@ update plugins uc msg model =
                 Search.UserPicksCurrency currency ->
                     let
                         ( graph, graphEffects ) =
-                            Graph.loadAddressPath plugins
-                                { currency = currency
-                                , addresses =
+                            case model.page of
+                                Graph ->
+                                    Graph.loadAddressPath plugins
+                                        { currency = currency
+                                        , addresses =
+                                            Search.query model.search
+                                                |> Search.getMulti
+                                        }
+                                        model.graph
+                                        |> mapSecond (List.map GraphEffect)
+                                        |> mapSecond
+                                            ((++)
+                                                [ Route.Graph.Root
+                                                    |> Route.graphRoute
+                                                    |> Route.toUrl
+                                                    |> NavPushUrlEffect
+                                                ]
+                                            )
+
+                                _ ->
+                                    n model.graph
+
+                        pathfinderEffects =
+                            case model.page of
+                                Graph ->
+                                    []
+
+                                _ ->
                                     Search.query model.search
                                         |> Search.getMulti
-                                }
-                                model.graph
+                                        |> List.Extra.uncons
+                                        |> Maybe.map
+                                            (\( fst, rest ) ->
+                                                rest
+                                                    |> List.Extra.uncons
+                                                    |> Maybe.map
+                                                        (\( snd, rest2 ) ->
+                                                            fst
+                                                                :: snd
+                                                                :: rest2
+                                                                |> List.map (Route.Pathfinder.AddressHop Route.Pathfinder.NormalAddress)
+                                                                |> Route.Pathfinder.Path currency
+                                                        )
+                                                    |> Maybe.withDefault
+                                                        (Route.Pathfinder.Address fst
+                                                            |> Route.Pathfinder.Network currency
+                                                        )
+                                            )
+                                        |> Maybe.map
+                                            (Route.pathfinderRoute
+                                                >> Route.toUrl
+                                                >> NavPushUrlEffect
+                                                >> List.singleton
+                                            )
+                                        |> Maybe.withDefault []
 
                         ( search, searchEffects ) =
                             Search.update m model.search
                     in
                     clearSearch plugins { model | graph = graph, search = search, dialog = Nothing }
-                        |> mapSecond ((++) (List.map GraphEffect graphEffects))
+                        |> mapSecond ((++) graphEffects)
+                        |> mapSecond ((++) pathfinderEffects)
                         |> mapSecond ((++) (List.map SearchEffect searchEffects))
-                        |> mapSecond
-                            ((++)
-                                [ Route.Graph.Root
-                                    |> Route.graphRoute
-                                    |> Route.toUrl
-                                    |> NavPushUrlEffect
-                                ]
-                            )
 
                 _ ->
                     let
