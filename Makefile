@@ -11,7 +11,7 @@ GENERATED_THEME=./generated/theme
 GENERATED_THEME_THEME=./generated/theme/Theme
 GENERATED_THEME_COLORMAPS=$(GENERATED_THEME)/colormaps.json
 PLUGINS=$(shell find plugins -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-CAPITALIZED_PLUGINS = $(foreach dir,$(PLUGINS),$(shell echo $(dir) | sed 's/./\U&/'))
+CAPITALIZED_PLUGINS = $(foreach dir,$(PLUGINS),$(shell echo $(dir) | awk '{ $$1=toupper(substr($$1,1,1)) substr($$1,2); print }'))
 THEME_GENERATED_MARKER=.generated
 PLUGIN_INSTALLED_MARKER=.installed
 

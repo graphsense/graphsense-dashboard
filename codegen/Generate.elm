@@ -246,26 +246,25 @@ frameNodesToFiles whitelist { light, dark } plugin_name frames =
 
         extraFile =
             plugin_name
-            |> Maybe.map
-                (\_ -> []
-                )
-            |> Maybe.withDefault
-                [ Colors.colorMapToStylesheet colorMapLight
-                    :: Colors.colorMapToDeclarations colorMapLight
-                    |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrame ]
-                , Colors.colorMapToStylesheet colorMapDark
-                    :: Colors.colorMapToDeclarations colorMapDark
-                    |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrameDark ]
-                , { path = "colormaps.json"
-                  , warnings = []
-                  , contents =
-                        Encode.object
-                            [ ( "light", Colors.colorMapToJson colorMapLight )
-                            , ( "dark", Colors.colorMapToJson colorMapDark )
-                            ]
-                            |> Encode.encode 0
-                  }
-                ]
+                |> Maybe.map
+                    (\_ -> [])
+                |> Maybe.withDefault
+                    [ Colors.colorMapToStylesheet colorMapLight
+                        :: Colors.colorMapToDeclarations colorMapLight
+                        |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrame ]
+                    , Colors.colorMapToStylesheet colorMapDark
+                        :: Colors.colorMapToDeclarations colorMapDark
+                        |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrameDark ]
+                    , { path = "colormaps.json"
+                      , warnings = []
+                      , contents =
+                            Encode.object
+                                [ ( "light", Colors.colorMapToJson colorMapLight )
+                                , ( "dark", Colors.colorMapToJson colorMapDark )
+                                ]
+                                |> Encode.encode 0
+                      }
+                    ]
     in
     (List.map (frameToFiles whitelist plugin_name colorMapLightDict) frames
         |> List.concat
@@ -303,9 +302,6 @@ isFrame arg1 =
 frameToFiles : Whitelist -> Maybe String -> ColorMap -> FrameNode -> List Generate.File
 frameToFiles whitelist plugin_name colorMap n =
     let
-        _ =
-            Debug.log "whitelist" whitelist
-
         name sub =
             n.frameTraits.isLayerTrait.name
                 |> toCamelCaseUpper

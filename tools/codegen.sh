@@ -80,15 +80,19 @@ else
     fi
     cmd="$ELM_CODEGEN --output ./generated/theme --flags-from=$tmp"
     echo $cmd
-    output=`$cmd 2>&1`
+    out=`mktemp`.out
+    $cmd 2>&1 > $out
+    found=`grep "files generated in" $out`
     # surprisingly elm-codegen yield exit code 0 if error
-    if [[ ! $output =~ "files generated in" ]]; then
-        echo "$output"
+    if [ -z "$found" ]; then
+        echo "Printing the first 100 lines of output:"
+        head -n 100 $out
+        echo "The full output can be inspected in $out"
         echo "Input file: $tmp"
         exit 1
     fi
-    echo "$output" | grep "files generated in"
-    rm $tmp
+    echo "$found"
+    rm $tmp $out
 fi
 
 exit 0
