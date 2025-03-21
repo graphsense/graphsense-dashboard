@@ -141,6 +141,10 @@ for(const plugin in plugins) {
 
 const elmJson = JSON.parse(fs.readFileSync('./elm.json'))
 
+// remove all plugin src directories first
+elmJson['source-directories'] = elmJson['source-directories'].filter(s => !s.startsWith(path.join(pluginsFolder)))
+
+// add the installed plugin src directories 
 plugins.forEach(plugin => {
   const p = path.join(pluginsFolder, plugin.name, 'src')
   if(elmJson['source-directories'].indexOf(p) === -1) {
