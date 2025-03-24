@@ -3129,6 +3129,9 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.UpdateAddressesByRootAddress _ _ ->
+                        n model
+
                     PluginInterface.UpdateAddressesByEntityPathfinder _ _ ->
                         n model
 

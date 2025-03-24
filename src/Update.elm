@@ -1566,6 +1566,9 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                     PluginInterface.UpdateAddresses _ _ ->
                         updateGraphByPluginOutMsg model eff
 
+                    PluginInterface.UpdateAddressesByRootAddress _ _ ->
+                        updateGraphByPluginOutMsg model eff
+
                     PluginInterface.UpdateAddressesByEntityPathfinder _ _ ->
                         updateGraphByPluginOutMsg model eff
 

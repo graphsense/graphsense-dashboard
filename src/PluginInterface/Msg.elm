@@ -23,6 +23,7 @@ type OutMsg msg addressMsg entityMsg
       ShowBrowser
       -- send addressMsg to all address nodes in the graph which match the one in `Address`
     | UpdateAddresses Address addressMsg
+    | UpdateAddressesByRootAddress Address addressMsg
     | UpdateAddressesByEntityPathfinder Api.Data.Entity addressMsg
       -- send entityMsg to the entity of all address nodes in the graph which match the one in `Address`
       -- core calls the `update.updateAddress` hook
@@ -99,6 +100,10 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         UpdateAddresses a addressMsg ->
             mapAddressMsg addressMsg
                 |> UpdateAddresses a
+
+        UpdateAddressesByRootAddress a addressMsg ->
+            mapAddressMsg addressMsg
+                |> UpdateAddressesByRootAddress a
 
         UpdateAddressesByEntityPathfinder a addressMsg ->
             mapAddressMsg addressMsg

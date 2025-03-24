@@ -1665,6 +1665,25 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.UpdateAddressesByRootAddress { currency, address } pmsg ->
+                        model.clusters
+                            |> Dict.values
+                            |> List.filterMap RemoteData.toMaybe
+                            |> List.Extra.find
+                                (\e ->
+                                    e.currency == currency && e.rootAddress == address
+                                )
+                            |> Maybe.map Id.initClusterIdFromRecord
+                            |> Maybe.map
+                                (\pId ->
+                                    ( { mo
+                                        | network = Network.updateAddressesByClusterId pId (Plugin.updateAddress plugins pmsg) mo.network
+                                      }
+                                    , eff
+                                    )
+                                )
+                            |> Maybe.withDefault ( mo, eff )
+
                     PluginInterface.UpdateAddressesByEntityPathfinder e pmsg ->
                         let
                             pId =
