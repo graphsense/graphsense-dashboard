@@ -1873,8 +1873,7 @@ selectAddress uc id model =
             Network.updateAddress id (s_selected True) m1.network
                 |> flip s_network m1
                 |> s_selection (SelectedAddress id)
-                |> openAddressTransactionsTable
-                |> mapSecond ((++) eff2)
+                |> pairTo eff2
 
         Nothing ->
             s_selection (WillSelectAddress id) model
@@ -2227,24 +2226,6 @@ checkSelection uc model =
 
         WillSelectAddress id ->
             selectAddress uc id model
-
-        _ ->
-            n model
-
-
-openAddressTransactionsTable : Model -> ( Model, List Effect )
-openAddressTransactionsTable model =
-    case model.details of
-        Just (AddressDetails id (Success ad)) ->
-            let
-                ( new, eff ) =
-                    AddressDetails.showTransactionsTable ad True
-            in
-            ( { model
-                | details = Just (AddressDetails id (Success new))
-              }
-            , eff
-            )
 
         _ ->
             n model
