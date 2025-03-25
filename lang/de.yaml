@@ -211,12 +211,17 @@ direction: Richtung
 both: beide
 search neighbors: Suche Nachbarn
 bad status: Fehler
-bad url: Fehlerhafter URL
-timeout: Zeitüberschreitung
+bad URL: Fehlerhafter URL
+request timeout: Zeitüberschreitung
+request error: Anfragefehler
 network error: Netzwerkfehler
 server error: Serverfehler
 not found: Nicht gefunden
 data error: Datenfehler
+service not reachable.: Service nicht erreichbar.
+unexpected data format.: unerwartetes Datenformat.
+unexpected status code.: unerwarteter Statuscode.
+service does not respond in time: Service antwortet nicht zeitnah.
 this table is empty: Keine Einträge gefunden.
 Do you want to start from scratch?: Wirklich neu loslegen?
 proprietary tag: Proprietäres Tag

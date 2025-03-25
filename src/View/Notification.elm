@@ -53,7 +53,7 @@ view vc model =
             model |> Notification.peek
     in
     case not of
-        Just (Notification.Error { title, message, variables }) ->
+        Just (Notification.Error { title, message, moreInfo, variables }) ->
             let
                 icon =
                     Icons.iconsError {}
@@ -70,7 +70,12 @@ view vc model =
                     , title = Locale.string vc.locale title
                     }
                 , messageText =
-                    { messageText = Locale.interpolated vc.locale message variables }
+                    { messageText =
+                        message
+                            :: moreInfo
+                            |> List.map (\m -> Locale.interpolated vc.locale m variables)
+                            |> String.join " "
+                    }
                 , typeError =
                     { bodyText = ""
                     , headlineText = ""
@@ -79,7 +84,7 @@ view vc model =
                 |> List.singleton
                 |> overlay (Notification.getMoved model)
 
-        Just (Notification.Info { title, message, variables }) ->
+        Just (Notification.Info { title, message, moreInfo, variables }) ->
             let
                 buttonAttrOk =
                     [ css (Css.btnBase vc), onClickWithStop UserClosesNotification ]
@@ -93,7 +98,13 @@ view vc model =
                     { iconInstance = icon
                     , title = Locale.string vc.locale title
                     }
-                , messageText = { messageText = Locale.interpolated vc.locale message variables }
+                , messageText =
+                    { messageText =
+                        message
+                            :: moreInfo
+                            |> List.map (\m -> Locale.interpolated vc.locale m variables)
+                            |> String.join " "
+                    }
                 , typeAlert = { bodyText = "", headlineText = "" }
                 }
                 |> List.singleton

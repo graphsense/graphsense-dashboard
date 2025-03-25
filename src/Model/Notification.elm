@@ -1,4 +1,4 @@
-module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, fromHttpError, getMoved, peek, perform, pop, setMoved, update)
+module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, fromHttpError, fromHttpErrorWithMoreInfo, getMoved, peek, perform, pop, setMoved, update)
 
 import Basics.Extra exposing (flip)
 import Http
@@ -11,6 +11,7 @@ import Tuple exposing (mapSecond, pair)
 type alias NotificationData =
     { title : String
     , message : String
+    , moreInfo : List String
     , variables : List String
     }
 
@@ -151,19 +152,54 @@ perform effect =
 
 
 fromHttpError : Http.Error -> Notification
-fromHttpError error =
+fromHttpError =
+    fromHttpErrorWithMoreInfo ""
+
+
+fromHttpErrorWithMoreInfo : String -> Http.Error -> Notification
+fromHttpErrorWithMoreInfo info error =
+    let
+        toMoreInfo =
+            (++) [ info ]
+                >> List.filter (String.isEmpty >> not)
+    in
     case error of
         Http.NetworkError ->
-            Error { title = "Network Issue", message = "There is no network connection...", variables = [] }
+            Error
+                { title = "Network error"
+                , message = "Service not reachable."
+                , moreInfo = toMoreInfo []
+                , variables = []
+                }
 
-        Http.BadBody _ ->
-            Error { title = "Data Error", message = "There was a problem while loading data.", variables = [] }
+        Http.BadBody body ->
+            Error
+                { title = "Data error"
+                , message = "Unexpected data format."
+                , moreInfo = toMoreInfo [ body ]
+                , variables = []
+                }
 
         Http.BadUrl _ ->
-            Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
+            Error
+                { title = "Bad URL"
+                , message = ""
+                , moreInfo = toMoreInfo []
+                , variables = []
+                }
 
         Http.BadStatus _ ->
-            Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
+            Error
+                { title = "Request error"
+                , message = "Unexpected status code."
+                , moreInfo = toMoreInfo []
+                , variables = []
+                }
 
         Http.Timeout ->
-            Error { title = "Request Timeout", message = "There was a problem while loading data.", variables = [] }
+            Error
+                { title = "Request timeout"
+                , message = "Service does not respond in time."
+                , moreInfo = toMoreInfo []
+                , variables = []
+                }

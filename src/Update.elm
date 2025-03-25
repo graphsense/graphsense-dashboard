@@ -1083,7 +1083,7 @@ update plugins uc msg model =
                             )
                                 |> updateByPluginOutMsg plugins uc outMsg
 
-                        Pathfinder.BrowserGotAddressData id _ address ->
+                        Pathfinder.BrowserGotAddressData _ _ address ->
                             let
                                 ( new, outMsg, cmd ) =
                                     address
@@ -1502,6 +1502,7 @@ apiRateExceededError locale auth =
                         "The request limit of your API key of {0} per {1} has been exceeded."
                     )
                 |> Maybe.withDefault "The request limit of your API key has been exceeded."
+        , moreInfo = []
         , variables =
             limited
                 |> Maybe.map
