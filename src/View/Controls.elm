@@ -1,4 +1,4 @@
-module View.Controls exposing (lightModeToggle, tabs, tabsSmall, tabsSmallItems, toggle, toggleSmall, toggleWithIcons, toggleWithText)
+module View.Controls exposing (lightModeToggle, tabs, tabsSmall, tabsSmallItems, toggle, toggleCell, toggleSmall, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -59,26 +59,51 @@ toggleSmall { selected, disabled, msg } =
 
 toggleWithText : { selectedA : Bool, titleA : String, titleB : String, msg : msg } -> Html msg
 toggleWithText { selectedA, titleA, titleB, msg } =
-    let
-        ( a, b ) =
-            if selectedA then
-                ( Sc.toggleCellWithTextStateSelected { stateSelected = { toggleText = titleA } }
-                , Sc.toggleCellWithTextStateDeselected { stateDeselected = { toggleText = titleB } }
-                )
-
-            else
-                ( Sc.toggleCellWithTextStateDeselected { stateDeselected = { toggleText = titleA } }
-                , Sc.toggleCellWithTextStateSelected { stateSelected = { toggleText = titleB } }
-                )
-    in
     Sc.toggleSwitchTextWithInstances
         (Sc.toggleSwitchTextAttributes
             |> Rs.s_toggleSwitchText [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
         )
         Sc.toggleSwitchTextInstances
-        { rightCell = { variant = b }
-        , leftCell = { variant = a }
+        { rightCell =
+            { variant =
+                toggleCell
+                    { title = titleA
+                    , selected = selectedA
+                    , msg = msg
+                    }
+            }
+        , leftCell =
+            { variant =
+                toggleCell
+                    { title = titleB
+                    , selected = not selectedA
+                    , msg = msg
+                    }
+            }
         }
+
+
+toggleCell : { title : String, selected : Bool, msg : msg } -> Html msg
+toggleCell { selected, title, msg } =
+    if selected then
+        Sc.toggleCellWithTextStateSelectedWithAttributes
+            (Sc.toggleCellWithTextStateSelectedAttributes
+                |> Rs.s_stateSelected
+                    [ Util.View.pointer
+                    , Util.View.onClickWithStop msg
+                    ]
+            )
+            { stateSelected = { toggleText = title } }
+
+    else
+        Sc.toggleCellWithTextStateDeselectedWithAttributes
+            (Sc.toggleCellWithTextStateDeselectedAttributes
+                |> Rs.s_stateDeselected
+                    [ Util.View.pointer
+                    , Util.View.onClickWithStop msg
+                    ]
+            )
+            { stateDeselected = { toggleText = title } }
 
 
 lightModeToggle : { selectedA : Bool, msg : msg } -> Html msg
