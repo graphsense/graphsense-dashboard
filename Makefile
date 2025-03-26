@@ -98,7 +98,9 @@ $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC)
 
 plugin-theme-refresh:
 	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh 
-	make plugin-theme
+	PLUGIN_NAME_CAPITALIZED=$(shell echo $(PLUGIN_NAME) | awk '{ $$1=toupper(substr($$1,1,1)) substr($$1,2); print }'); \
+		rm -f $(GENERATED_THEME_THEME)/$$PLUGIN_NAME_CAPITALIZED/$(THEME_GENERATED_MARKER); \
+		make PLUGIN_NAME=$$PLUGIN_NAME_CAPITALIZED plugin-theme
 
 plugin-theme: 
 	make $(GENERATED_THEME_THEME)/$(PLUGIN_NAME)/$(THEME_GENERATED_MARKER)
