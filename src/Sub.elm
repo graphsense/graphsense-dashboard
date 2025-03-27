@@ -43,6 +43,7 @@ subscriptions model =
     , model.tooltip
         |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map HovercardMsg)
         |> Maybe.withDefault Sub.none
+    , Ports.uncaughtError BrowserGotUncaughtError
     , Plugin.subscriptions Ports.pluginsIn model.plugins
         |> Sub.map PluginMsg
     ]

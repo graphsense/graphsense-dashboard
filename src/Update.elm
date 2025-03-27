@@ -1476,6 +1476,35 @@ update plugins uc msg model =
         NotificationMsg ms ->
             n { model | notifications = Notification.update ms model.notifications }
 
+        BrowserGotUncaughtError value ->
+            value
+                |> Json.Decode.decodeValue
+                    (Json.Decode.field "message" Json.Decode.string)
+                |> Result.Extra.unpack
+                    (Json.Decode.errorToString
+                        >> Ports.console
+                        >> CmdEffect
+                        >> List.singleton
+                        >> pair model
+                    )
+                    (\message ->
+                        let
+                            ( notifications, eff ) =
+                                Notification.add
+                                    (Notification.Error
+                                        { title = "An error occurred"
+                                        , message = message
+                                        , moreInfo = []
+                                        , variables = []
+                                        }
+                                    )
+                                    model.notifications
+                        in
+                        ( { model | notifications = notifications }
+                        , List.map NotificationEffect eff
+                        )
+                    )
+
 
 apiRateExceededError : Locale.Model -> Auth -> Notification
 apiRateExceededError locale auth =

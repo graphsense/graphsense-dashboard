@@ -136,6 +136,7 @@ type Msg
     | CloseTooltip (Maybe { context : String, domId : String }) (TooltipType Msg)
     | UserToggledNavbarSubMenu NavbarSubMenuType
     | UserClosesNavbarSubMenu
+    | BrowserGotUncaughtError Json.Encode.Value
 
 
 type SettingsMsg
