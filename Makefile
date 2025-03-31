@@ -116,7 +116,7 @@ plugin-themes: $(CAPITALIZED_PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERA
 
 generated/plugins/%/$(PLUGIN_INSTALLED_MARKER): 
 	while read dep; do yes | npx elm install $${dep}; done < plugins/$*/dependencies.txt
-	cd plugins/$*; npm install 
+	cd plugins/$*; test -f plugins/$*/package.json && npm install || true
 	mkdir -p generated/plugins/$*
 	touch $@
 
