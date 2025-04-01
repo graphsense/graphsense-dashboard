@@ -1,0 +1,6 @@
+{
+    "excludedPaths": [
+        "generated",
+        "openapi"
+    ]
+}
