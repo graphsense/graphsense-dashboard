@@ -75,10 +75,10 @@ format:
 format-plugins:
 	npx elm-format --yes plugins
 
-lint:
+lint: 
 	npx elm-review
 
-lint-fix:
+lint-fix: 
 	npx elm-review --fix-all
 
 lint-ci:
@@ -126,7 +126,6 @@ $(GENERATED_PLUGINS)/%/$(PLUGIN_INSTALLED_MARKER):
 	touch $@
 
 plugins-install: $(PLUGINS:%=$(GENERATED_PLUGINS)/%/.installed)
-	echo $(PLUGINS)
 
 elm.json: elm.json.base
 	cp elm.json.base elm.json

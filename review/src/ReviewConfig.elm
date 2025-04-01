@@ -70,5 +70,5 @@ config =
     -- , NoUnused.Patterns.rule
     , NoUnused.Variables.rule
     ]
-        |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins", "codegen/", "theme/", "plugins/casemgm", "src/PluginInterface" ])
-        |> List.map (Rule.ignoreErrorsForFiles [ "src/PluginInterface.elm", "plugins/taxreport/src/Taxreport/OpenApi.elm", "plugins/taxreport/src/Taxreport/Api.elm", "plugins/quicklock/src/QuicklockBackend.elm", "plugins/quicklock/src/QuicklockBackend/Api.elm", "plugins/quicklock/src/QuicklockBackend/OpenApi.elm" ])
+    |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "plugins", "src/PluginInterface"])
+    |> List.map (Rule.ignoreErrorsForFiles [ "src/PluginInterface.elm" ])
