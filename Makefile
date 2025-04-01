@@ -7,8 +7,13 @@ CODEGEN_CONFIG=codegen/config/Config.elm
 CODEGEN_RECORDSETTER=codegen/generated/RecordSetter.elm
 CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
 FIGMA_JSON=./theme/figma.json
-GENERATED_THEME=./generated/theme
-GENERATED_THEME_THEME=./generated/theme/Theme
+GENERATED=./generated
+CODEGEN=./codegen
+CODEGEN_GENERATED=$(CODEGEN)/$(GENERATED)
+GENERATED_PLUGINS=$(GENERATED)/plugins
+GENERATED_UTILS=$(GENERATED)/utils
+GENERATED_THEME=$(GENERATED)/theme
+GENERATED_THEME_THEME=$(GENERATED_THEME)/Theme
 GENERATED_THEME_COLORMAPS=$(GENERATED_THEME)/colormaps.json
 PLUGINS=$(shell find plugins -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -exec basename {} \;)
 CAPITALIZED_PLUGINS = $(foreach dir,$(PLUGINS),$(shell echo $(dir) | awk '{ $$1=toupper(substr($$1,1,1)) substr($$1,2); print }'))
@@ -36,17 +41,17 @@ openapi:
 clean:
 	rm -rf ./elm-stuff/
 	rm -rf ./dist/
-	rm -rf ./generated/
-	rm -rf ./codegen/generated/
+	rm -rf $(GENERATED)
+	rm -rf $(CODEGEN_GENERATED)
 	rm -rf elm.json
 
 setem: 
-	npx setem --output generated/utils
+	npx setem --output $(GENERATED_UTILS)
 
 setem-codegen: $(CODEGEN_RECORDSETTER)
 
 $(CODEGEN_RECORDSETTER):
-	cd codegen && mkdir -p codegen/generated && npx setem --output generated
+	cd $(CODEGEN) && mkdir -p $(GENERATED) && npx setem --output $(GENERATED)
 
 test:
 	npx elm-test-rs
@@ -114,17 +119,18 @@ $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(CODEGEN_RECORDSETTER)
 plugin-themes: $(CAPITALIZED_PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER))
 	make setem
 
-generated/plugins/%/$(PLUGIN_INSTALLED_MARKER): 
+$(GENERATED_PLUGINS)/%/$(PLUGIN_INSTALLED_MARKER): 
 	while read dep; do yes | npx elm install $${dep}; done < plugins/$*/dependencies.txt
 	cd plugins/$*; test -f plugins/$*/package.json && npm install || true
-	mkdir -p generated/plugins/$*
+	mkdir -p $(GENERATED_PLUGINS)/$*
 	touch $@
 
-plugins-install: $(PLUGINS:%=generated/plugins/%/.installed)
+plugins-install: $(PLUGINS:%=$(GENERATED_PLUGINS)/%/.installed)
+	echo $(PLUGINS)
 
 elm.json: elm.json.base
 	cp elm.json.base elm.json
-	mkdir -p generated/theme generated/utils generated/plugins
+	mkdir -p $(GENERATED_THEME) $(GENERATED_UTILS) $(GENERATED_PLUGINS)
 
 gen: 
 	node generate.js
