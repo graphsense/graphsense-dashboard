@@ -127,7 +127,7 @@ You can use it to define something like “only CSS files” like this:
 
 -}
 custom : String -> (String -> Maybe a) -> Parser (a -> b) b
-custom tipe stringToSomething =
+custom _ stringToSomething =
     Parser <|
         \{ visited, unvisited, params, frag, value } ->
             case unvisited of

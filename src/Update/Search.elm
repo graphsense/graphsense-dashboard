@@ -28,7 +28,7 @@ currencyToResult query found ( currency, latestBlock ) =
 
 
 currencyToResultWithoutBlock : String -> Api.Data.SearchResult -> String -> List ResultLine
-currencyToResultWithoutBlock query found currency =
+currencyToResultWithoutBlock _ found currency =
     found.currencies
         |> List.filter (.currency >> (==) currency)
         |> List.head

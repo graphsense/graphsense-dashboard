@@ -59,7 +59,7 @@ propertyBoxKey vc =
 
 
 propertyBoxImage : Config -> List Style
-propertyBoxImage vc =
+propertyBoxImage _ =
     [ display block
 
     {- :: marginLeft auto

@@ -2,7 +2,6 @@ module View.Header exposing (HeaderConfig, header)
 
 import Config.View exposing (Config)
 import Css
-import Css.Header as Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, id)
 import Model exposing (Msg(..), UserModel)

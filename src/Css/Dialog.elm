@@ -15,7 +15,7 @@ buttons vc =
 
 
 button : Config -> List Style
-button vc =
+button _ =
     [ px 100 |> minWidth, pct 50 |> width ]
 
 
