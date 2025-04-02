@@ -68,7 +68,8 @@ plugins = plugins.map(plugin => {
     const namespace = parseNamespace(path.join(pluginsFolder, plugin, 'src', packageName, 'Model.elm'))
     console.log('namespace', namespace)
     return { 
-      name : plugin,
+      raw_name : plugin,
+      name : plugin.toLowerCase(),
       namespace : namespace, 
       package : packageName
     }
@@ -134,8 +135,8 @@ const copyPublic = (plugin) => {
 transform('./')
 
 for(const plugin in plugins) {
-  appendLang(plugins[plugin].name)
-  copyPublic(plugins[plugin].name)
+  appendLang(plugins[plugin].raw_name)
+  copyPublic(plugins[plugin].raw_name)
 }
 
 
@@ -146,7 +147,7 @@ elmJson['source-directories'] = elmJson['source-directories'].filter(s => !s.sta
 
 // add the installed plugin src directories 
 plugins.forEach(plugin => {
-  const p = path.join(pluginsFolder, plugin.name, 'src')
+  const p = path.join(pluginsFolder, plugin.raw_name, 'src')
   if(elmJson['source-directories'].indexOf(p) === -1) {
     elmJson['source-directories'].push(p)
   }

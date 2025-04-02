@@ -2,6 +2,11 @@
 
 GraphSense's Web GUI for interactive cryptocurrency analysis written in [Elm](https://elm-lang.org).
 
+## Requirements
+
+* [NodeJS][nodejs]
+* [pre-commit][pre-commit]
+
 ## Configuration
 
 Run `cp config/Config.elm.tmp config/Config.elm` and optionally configure plugins and your custom theme here.
@@ -9,8 +14,7 @@ Run `cp config/Config.elm.tmp config/Config.elm` and optionally configure plugin
 ## Install plugins
 
 1. Place plugins in the `plugins` folder.
-2. Run `node generate.js` ([NodeJS][nodejs] needs to be installed)
-3. Run `elm install` for each package named in the plugin's `dependencies.txt`.
+2. Run `make clean-plugins && make`
 3. Configure the plugin in `config/Config.elm`, eg:
 
 ```elm
@@ -23,19 +27,11 @@ plugins =
 
 ## Development setup
 
-You need to have [NodeJS][nodejs] installed. It comes with [NPM][npm],
-the package manager for JavaScript.
+Run `make serve`. It starts Vite's development server.
 
-In order to install all dependencies, run the following from the root of
-this repository:
+## Production build
 
-    npm install
-
-Then start the [vite](https://vitejs.dev) development server:
-
-    npm run dev
-
-Point your browser to `localhost:3000`.
+Run `make build`. It builds the app together with all plugins to `./dist`.
 
 ## Develop plugins
 
@@ -58,7 +54,7 @@ Plugins can hook into the dashboard functionality in order to extend it.
 Plugin's hook implementations need to be set in your plugin's root module which was derived from `./Stub.elm`.
 Please see the comments in the respective files of `./src/PluginInterface` for detailed documentation.
 
-## Production setup
+## Docker build
 
 ### Prerequisites
 
@@ -76,7 +72,7 @@ Copy `docker/env.template` to `.env`:
 Edit the file `.env` and set the URL of the [graphsense-REST][graphsense-rest]
 service, e.g.:
 
-    REST_URL="https://example.com:9000"
+    REST_URL="https://api.ikna.io"
 
 ### Usage
 
@@ -92,15 +88,8 @@ Finally, test the application in a web browser:
 
     http://localhost:8000
 
-## Color configuration
-
-You can map tag concepts to colors in `./config/conceptsColors.yaml`.
-The file itself contains hints on the format.
-
-This file is deployed as is. You can easily replace it at runtime in the
-deployed directory.
-
 [nodejs]: https://nodejs.org
+[pre-commit]: https://pre-commit.com/#install
 [npm]: https://www.npmjs.com
 [graphsense-rest]: https://github.com/graphsense/graphsense-rest
 [docker]: https://www.docker.com

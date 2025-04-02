@@ -51,8 +51,13 @@ if [ $REFRESH -eq 1 ]; then
 	    mkdir -p theme
         output=`$ELM_CODEGEN --flags="{\"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output theme 2>&1`
     else
-	    mkdir -p plugins/$PLUGIN_NAME/theme
-	    output=`$ELM_CODEGEN --flags="{\"plugin_name\": \"$PLUGIN_NAME\", \"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output plugins/$PLUGIN_NAME/theme 2>&1`
+        PLUGIN_FIGMA="./plugins/$PLUGIN_NAME/theme/figma.json"
+        if [ -e "$PLUGIN_FIGMA" ]; then
+	        output=`$ELM_CODEGEN --flags="{\"plugin_name\": \"$PLUGIN_NAME\", \"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output plugins/$PLUGIN_NAME/theme 2>&1`
+        else
+            echo "No $PLUGIN_FIGMA found to refresh. Exiting."
+            exit 0
+        fi
     fi
     if [ $? -eq 0 ]; then
         if [[ ! $output =~ "generated" ]]; then
