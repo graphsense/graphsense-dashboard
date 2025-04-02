@@ -122,6 +122,7 @@ view vc model =
                 (errorMessageComponentTypeAlertAttributes
                     |> Rs.s_headerFrame hide
                     |> Rs.s_messageText hide
+                    |> Rs.s_content [ css [ Css.width Css.auto ] ]
                 )
                 { header =
                     { iconInstance = icon
