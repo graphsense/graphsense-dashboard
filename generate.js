@@ -43,7 +43,7 @@ const genLangFolder = path.join(genFolder, publicFolder, langFolder)
 fse.copySync(publicFolder, genPublicFolder, {recursive: true})
 fse.copySync(langFolder, genLangFolder, {recursive: true})
 
-console.log('Installing plugins:')
+console.log('Generating glue code for plugins:')
 let plugins = fs.readdirSync(pluginsFolder)
   .filter(fileName => isDir(path.join(pluginsFolder, fileName)))
 
@@ -66,7 +66,6 @@ plugins = plugins.map(plugin => {
     console.log(plugin)
     const packageName = plugin.charAt(0).toUpperCase() + plugin.slice(1)
     const namespace = parseNamespace(path.join(pluginsFolder, plugin, 'src', packageName, 'Model.elm'))
-    console.log('namespace', namespace)
     return { 
       raw_name : plugin,
       name : plugin.toLowerCase(),
@@ -125,18 +124,10 @@ const appendLang = (plugin) => {
     })
 }
 
-const copyPublic = (plugin) => {
-  const pluginPublicFolder = path.join(pluginsFolder, plugin, publicFolder)
-  if (!fs.existsSync(pluginPublicFolder)) return
-  fse.copySync(pluginPublicFolder, genPublicFolder)
-  console.log('Copied public folder', pluginPublicFolder)
-}
-
 transform('./')
 
 for(const plugin in plugins) {
   appendLang(plugins[plugin].raw_name)
-  copyPublic(plugins[plugin].raw_name)
 }
 
 

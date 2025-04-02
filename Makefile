@@ -21,8 +21,15 @@ GENERATED_PLUGINS=$(GENERATED)/$(PLUGINS_DIR)
 GENERATED_PLUGIN_ELM=$(GENERATED_PLUGINS)/Plugin.elm
 GENERATED_UTILS=$(GENERATED)/utils
 GENERATED_THEME=$(GENERATED)/theme
+PUBLIC_DIR=./public
+GENERATED_PUBLIC=$(GENERATED)/$(PUBLIC_DIR)
+GENERATED_LANG=$(GENERATED_PUBLIC)/lang
 GENERATED_THEME_THEME=$(GENERATED_THEME)/Theme
 GENERATED_THEME_COLORMAPS=$(GENERATED_THEME)/colormaps.json
+
+PUBLIC_FILES=$(shell find $(PUBLIC_DIR) -type f)
+
+
 PLUGINS=$(shell find $(PLUGINS_DIR) -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -exec basename {} \;)
 THEME_GENERATED_MARKER=.generated
 PLUGIN_INSTALLED_MARKER=.installed
@@ -81,6 +88,9 @@ clean-figma-json:
 
 clean-plugin-figma-json:
 	rm $(PLUGINS_DIR)/$(PLUGIN_NAME)/$(FIGMA_JSON)
+
+clean-public:
+	rm -rf $(GENERATED_PUBLIC)
 
 setem: $(RECORDSETTER_ELM)
 
@@ -165,10 +175,13 @@ elm.json: elm.json.base
 	cp elm.json.base elm.json
 	mkdir -p $(GENERATED_THEME) $(GENERATED_UTILS) $(GENERATED_PLUGINS)
 
-gen: $(GENERATED_PLUGIN_ELM) setem
+gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
-$(GENERATED_PLUGIN_ELM): generate.js $(PLUGIN_TEMPLATES)
+$(GENERATED_PLUGIN_ELM): generate.js $(PLUGIN_TEMPLATES) $(wildcard $(PLUGINS_DIR)/*/lang/*)
 	node generate.js
 
+copy-public: 
+	cp -r $(PUBLIC_DIR) $(GENERATED_PUBLIC)
+	for p in $(PLUGINS); do cp -r $(PLUGINS_DIR)/$$p/$(PUBLIC_DIR)/* $(GENERATED_PUBLIC)/; done
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh 
