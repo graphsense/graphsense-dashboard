@@ -74,9 +74,11 @@ view vc (ContextMenuItem { icon, text1, text2, action }) =
                     :: msg
                 )
             |> Rs.s_placeholder1
-                (unsetFontStyle :: msg)
+                (unsetFontStyle
+                    |> List.singleton
+                )
             |> Rs.s_placeholder2
-                (unsetFontStyle :: msg)
+                (unsetFontStyle |> List.singleton)
             |> Rs.s_iconsDividerNoPadding [ [ Css.position Css.relative ] |> css ]
         )
         { stateNeutralTypeWithIcon =

@@ -95,6 +95,11 @@ cell vc c =
                         |> css
                         |> List.singleton
                     )
+                |> Rs.s_label
+                    ([ Css.whiteSpace Css.preWrap |> Css.important, Css.overflowWrap Css.breakWord ]
+                        |> css
+                        |> List.singleton
+                    )
                 |> Rs.s_category
                     ([ Css.whiteSpace Css.normal |> Css.important
                      , Css.overflowWrap Css.breakWord

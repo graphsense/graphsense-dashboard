@@ -61,7 +61,7 @@ import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route as GlobalRoute
-import Route.Pathfinder as Route exposing (AddressHopType(..), Route)
+import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType, Route)
 import Set exposing (..)
 import Task
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
@@ -1513,6 +1513,110 @@ updateByRoute plugins uc route model =
             |> updateByRoute_ plugins uc route
 
 
+addPathToGraph : Plugins -> Update.Config -> Model -> String -> List PathHopType -> ( Model, List Effect )
+addPathToGraph plugins uc model net list =
+    let
+        getAddress adr =
+            case adr of
+                Route.AddressHop _ a ->
+                    Just a
+
+                _ ->
+                    Nothing
+
+        isDuplicateAddress i =
+            Maybe.andThen
+                (\adr ->
+                    list
+                        |> List.take i
+                        |> List.Extra.find (getAddress >> (==) (Just adr))
+                )
+                >> (/=) Nothing
+
+        addressCount =
+            list
+                |> List.filterMap getAddress
+                |> List.foldl
+                    (\a -> Dict.update a (Maybe.map ((+) 1) >> Maybe.withDefault 0 >> Just))
+                    Dict.empty
+
+        accf ( i, a ) { m, eff, x, y, previousAddress } =
+            let
+                address =
+                    getAddress a
+
+                prevCount =
+                    previousAddress
+                        |> Maybe.andThen (flip Dict.get addressCount)
+                        |> Maybe.withDefault 0
+
+                ( xOffset, yOffset ) =
+                    if isDuplicateAddress (i - 1) previousAddress && prevCount > 0 then
+                        ( 0, 0 )
+
+                    else if isDuplicateAddress i address then
+                        ( 0, 0 )
+
+                    else
+                        ( nodeXOffset, 0 )
+
+                x_ =
+                    x + xOffset
+
+                y_ =
+                    y + yOffset
+
+                action =
+                    case a of
+                        Route.AddressHop _ adr ->
+                            loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
+
+                        Route.TxHop h ->
+                            loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
+
+                annotations =
+                    case a of
+                        Route.AddressHop VictimAddress adr ->
+                            Annotations.set
+                                ( net, adr )
+                                (Locale.string uc.locale "victim")
+                                (Just annotationGreen)
+                                m.annotations
+
+                        Route.AddressHop PerpetratorAddress adr ->
+                            Annotations.set
+                                ( net, adr )
+                                (Locale.string uc.locale "perpetrator")
+                                (Just annotationRed)
+                                m.annotations
+
+                        _ ->
+                            m.annotations
+
+                ( nm, effn ) =
+                    m |> s_annotations annotations |> action
+            in
+            { m = nm
+            , eff = eff ++ effn
+            , x = x_
+            , y = y_
+            , previousAddress = address
+            }
+
+        result =
+            list
+                |> List.indexedMap pair
+                |> List.foldl accf
+                    { m = model
+                    , eff = []
+                    , x = 0
+                    , y = 0
+                    , previousAddress = Nothing
+                    }
+    in
+    ( result.m |> fitGraph uc, result.eff )
+
+
 updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
 updateByRoute_ plugins uc route model =
     case route |> Log.log "route" of
@@ -1540,119 +1644,23 @@ updateByRoute_ plugins uc route model =
                 |> and (selectTx id)
 
         Route.Path net list ->
-            let
-                getAddress adr =
-                    case adr of
-                        Route.AddressHop _ a ->
-                            Just a
-
-                        _ ->
-                            Nothing
-
-                isDuplicateAddress i =
-                    Maybe.andThen
-                        (\adr ->
-                            list
-                                |> List.take i
-                                |> List.Extra.find (getAddress >> (==) (Just adr))
-                        )
-                        >> (/=) Nothing
-
-                addressCount =
-                    list
-                        |> List.filterMap getAddress
-                        |> List.foldl
-                            (\a -> Dict.update a (Maybe.map ((+) 1) >> Maybe.withDefault 0 >> Just))
-                            Dict.empty
-
-                accf ( i, a ) { m, eff, x, y, previousAddress } =
-                    let
-                        address =
-                            getAddress a
-
-                        prevCount =
-                            previousAddress
-                                |> Maybe.andThen (flip Dict.get addressCount)
-                                |> Maybe.withDefault 0
-
-                        ( xOffset, yOffset ) =
-                            if isDuplicateAddress (i - 1) previousAddress && prevCount > 0 then
-                                ( 0, 0 )
-
-                            else if isDuplicateAddress i address then
-                                ( 0, 0 )
-
-                            else
-                                ( nodeXOffset, 0 )
-
-                        x_ =
-                            x + xOffset
-
-                        y_ =
-                            y + yOffset
-
-                        action =
-                            case a of
-                                Route.AddressHop _ adr ->
-                                    loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
-
-                                Route.TxHop h ->
-                                    loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
-
-                        annotations =
-                            case a of
-                                Route.AddressHop VictimAddress adr ->
-                                    Annotations.set
-                                        ( net, adr )
-                                        (Locale.string uc.locale "victim")
-                                        (Just annotationGreen)
-                                        m.annotations
-
-                                Route.AddressHop PerpetratorAddress adr ->
-                                    Annotations.set
-                                        ( net, adr )
-                                        (Locale.string uc.locale "perpetrator")
-                                        (Just annotationRed)
-                                        m.annotations
-
-                                _ ->
-                                    m.annotations
-
-                        ( nm, effn ) =
-                            m |> s_annotations annotations |> action
-                    in
-                    { m = nm
-                    , eff = eff ++ effn
-                    , x = x_
-                    , y = y_
-                    , previousAddress = address
-                    }
-
-                result =
-                    list
-                        |> List.indexedMap pair
-                        |> List.foldl accf
-                            { m = model
-                            , eff = []
-                            , x = 0
-                            , y = 0
-                            , previousAddress = Nothing
-                            }
-            in
-            ( result.m |> fitGraph uc, result.eff )
+            addPathToGraph plugins uc model net list
 
         _ ->
             n model
 
 
-updateByPluginOutMsg : Plugins -> List Plugin.OutMsg -> Model -> ( Model, List Effect )
-updateByPluginOutMsg plugins outMsgs model =
+updateByPluginOutMsg : Plugins -> Update.Config -> List Plugin.OutMsg -> Model -> ( Model, List Effect )
+updateByPluginOutMsg plugins uc outMsgs model =
     outMsgs
         |> List.foldl
             (\msg ( mo, eff ) ->
                 case Log.log "outMsg" msg of
                     PluginInterface.ShowBrowser ->
                         n model
+
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder net path) ->
+                        addPathToGraph plugins uc model net path
 
                     PluginInterface.UpdateAddresses { currency, address } pmsg ->
                         let

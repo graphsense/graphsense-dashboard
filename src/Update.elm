@@ -1575,7 +1575,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                     Graph.updateByPluginOutMsg plugins outMsgs model.graph
 
                 ( pathfinder, pathfinderEffect ) =
-                    Pathfinder.updateByPluginOutMsg plugins outMsgs model.pathfinder
+                    Pathfinder.updateByPluginOutMsg plugins uc outMsgs model.pathfinder
             in
             ( { model
                 | graph = graph
@@ -1612,6 +1612,9 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         updateGraphByPluginOutMsg model eff
 
                     PluginInterface.LoadAddressIntoGraph _ ->
+                        updateGraphByPluginOutMsg model eff
+
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder _ _) ->
                         updateGraphByPluginOutMsg model eff
 
                     PluginInterface.GetAddressDomElement id pmsg ->
@@ -1742,15 +1745,15 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         ( { model
                             | notifications = notifications
                           }
-                        , List.map NotificationEffect notificationEffects
+                        , List.map NotificationEffect notificationEffects ++ eff
                         )
 
                     PluginInterface.OpenTooltip s msgs ->
-                        update plugins uc (OpenTooltip s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg))) mo |> Tuple.mapSecond ((++) effects)
+                        update plugins uc (OpenTooltip s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg))) mo |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.CloseTooltip s withDelay ->
                         update plugins uc (ClosingTooltip (Just s) withDelay) mo
-                            |> Tuple.mapSecond ((++) effects)
+                            |> Tuple.mapSecond ((++) eff)
             )
             ( mo, effects )
 

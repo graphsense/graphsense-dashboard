@@ -110,6 +110,29 @@ view vc model =
                 |> List.singleton
                 |> overlay (Notification.getMoved model)
 
+        Just (Notification.InfoEphemeral title) ->
+            let
+                hide =
+                    [ css [ Css.display Css.none ] ]
+
+                icon =
+                    Icons.iconsAlert {}
+            in
+            errorMessageComponentTypeAlertWithAttributes
+                (errorMessageComponentTypeAlertAttributes
+                    |> Rs.s_headerFrame hide
+                    |> Rs.s_messageText hide
+                )
+                { header =
+                    { iconInstance = icon
+                    , title = Locale.string vc.locale title
+                    }
+                , typeAlert = { bodyText = "", headlineText = "" }
+                , messageText = { messageText = "" }
+                }
+                |> List.singleton
+                |> overlay (Notification.getMoved model)
+
         Just (Notification.Success title) ->
             let
                 hideClose =

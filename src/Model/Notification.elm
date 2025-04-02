@@ -24,6 +24,7 @@ empty =
 type Notification
     = Error NotificationData
     | Info NotificationData
+    | InfoEphemeral String
     | Success String
 
 
@@ -110,6 +111,9 @@ toId n =
 
         Success title ->
             String.join "|" [ "success", title ]
+
+        InfoEphemeral title ->
+            String.join "|" [ "infoEphemeral", title ]
 
 
 getMoved : Model -> Bool
