@@ -15,7 +15,7 @@ ENV WORKDIR=/app
 
 RUN mkdir $WORKDIR && \
     apk --no-cache --update add bash nginx nodejs npm && \
-    apk --no-cache --update --virtual build-dependendencies add python3 make g++
+    apk --no-cache --update --virtual build-dependendencies add python3 make g++ jq
 
 
 WORKDIR $WORKDIR
