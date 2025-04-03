@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [25.03.0] - 2025-03-01
+## [25.04.0] - 2025-04-03
 
 ### Added
 
@@ -11,11 +11,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Related addresses table in address details view (tagged/all cluster addresses)
 - Success notifications
 - Plugin hooks for new Pathfinder, new message based update hook
+- Display rate limiting period in settings
 
 ### Changed
 
 - Moved Pathfinder 1.0 to "More" tab
 - Numerous minor design patches and bug fixes
+- Plugins in plugins folder need to be capitialized
+- Improved the Makefile and build chain
+- Keep transactions table closed on address selection
+
+### Fixed
+
+- App remains usable after network issue
+- Trigger search automatically when using one of the examples on the landing page
 
 ## [24.01.5] - 2025-01-24
 
