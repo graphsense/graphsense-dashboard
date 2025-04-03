@@ -179,7 +179,7 @@ $(GENERATED_PLUGINS)/%/$(PLUGIN_INSTALLED_MARKER):
 		| while read dep; do \
 			yes | npx elm install $$dep; \
 		done 
-	cd $(PLUGINS_DIR)/$*; test -f $(PLUGINS_DIR)/$*/package.json && npm install || true
+	cd $(PLUGINS_DIR)/$*; test -f package.json && npm install || true
 	mkdir -p $(GENERATED_PLUGINS)/$*
 	touch $@
 
