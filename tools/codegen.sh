@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ELM_CODEGEN="npx --node-options='--max-old-space-size=8192' elm-codegen run --debug"
+ELM_CODEGEN="npx --node-options='--max-old-space-size=16384' elm-codegen run --debug"
 REFRESH=0
 FIGMA_WHITELIST_FRAMES=[]
 
