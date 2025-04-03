@@ -1,4 +1,4 @@
-module PluginInterface.Msg exposing (OutMsg(..), mapOutMsg)
+module PluginInterface.Msg exposing (InMsg(..), InMsgPathfinder(..), OutMsg(..), OutMsgPathfinder(..), mapOutMsg)
 
 import Api.Data
 import Browser.Dom
@@ -8,6 +8,10 @@ import Model.Address exposing (Address)
 import Model.Dialog
 import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
+import Model.Notification exposing (Notification)
+import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Tooltip exposing (TooltipMessages, mapMsgTooltipMsg)
+import Route.Pathfinder exposing (PathHopType)
 import Update.Dialog
 
 
@@ -20,6 +24,8 @@ type OutMsg msg addressMsg entityMsg
       ShowBrowser
       -- send addressMsg to all address nodes in the graph which match the one in `Address`
     | UpdateAddresses Address addressMsg
+    | UpdateAddressesByRootAddress Address addressMsg
+    | UpdateAddressesByEntityPathfinder Api.Data.Entity addressMsg
       -- send entityMsg to the entity of all address nodes in the graph which match the one in `Address`
       -- core calls the `update.updateAddress` hook
     | UpdateAddressEntities Address entityMsg
@@ -49,8 +55,42 @@ type OutMsg msg addressMsg entityMsg
     | ShowDialog (Model.Dialog.Model msg)
       -- close dialog
     | CloseDialog
+      -- open a tooltip
+    | OpenTooltip { context : String, domId : String } (TooltipMessages msg)
+      -- close a tooltip
+    | CloseTooltip { context : String, domId : String } Bool
       -- load address into graph
     | LoadAddressIntoGraph Address
+      -- show notification
+    | ShowNotification Notification
+      -- pathfinder Specific msgs
+    | OutMsgsPathfinder (OutMsgPathfinder msg)
+
+
+type OutMsgPathfinder msg
+    = -- retrieve a serialized state of the pathfinder grapn
+      GetPathfinderGraphJson (Json.Encode.Value -> msg)
+    | ShowPathInPathfinder String (List PathHopType)
+
+
+
+{- Core can communicate with plugins via these messages -}
+
+
+type InMsg
+    = -- User clicked to e.g. the graph or anything outside things with a handler attached (roughly corresponds to UserClickedLayout)
+      ClickedOnNeutralGround
+    | CoreGotStatsUpdate Api.Data.Stats
+    | AddressesAdded (List Address)
+    | AddressesAddedPathfinder (List ( Address, Api.Data.Entity ))
+    | InMsgsPathfinder InMsgPathfinder
+    | ClosedTooltip (Maybe { context : String, domId : String })
+    | Reset
+
+
+type InMsgPathfinder
+    = -- retrieve a serialized state of the pathfinder graph
+      PathfinderGraphChanged
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -62,6 +102,14 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         UpdateAddresses a addressMsg ->
             mapAddressMsg addressMsg
                 |> UpdateAddresses a
+
+        UpdateAddressesByRootAddress a addressMsg ->
+            mapAddressMsg addressMsg
+                |> UpdateAddressesByRootAddress a
+
+        UpdateAddressesByEntityPathfinder a addressMsg ->
+            mapAddressMsg addressMsg
+                |> UpdateAddressesByEntityPathfinder a
 
         UpdateEntities e entityMsg ->
             mapEntityMsg entityMsg
@@ -89,6 +137,12 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         GetSerialized msg ->
             (msg >> mapMsg) |> GetSerialized
 
+        OutMsgsPathfinder (GetPathfinderGraphJson msg) ->
+            ((msg >> mapMsg) |> GetPathfinderGraphJson) |> OutMsgsPathfinder
+
+        OutMsgsPathfinder (ShowPathInPathfinder s p) ->
+            ShowPathInPathfinder s p |> OutMsgsPathfinder
+
         Deserialize filename json ->
             Deserialize filename json
 
@@ -113,5 +167,14 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         CloseDialog ->
             CloseDialog
 
+        OpenTooltip x msgs ->
+            OpenTooltip x (mapMsgTooltipMsg msgs mapMsg)
+
+        CloseTooltip x delayed ->
+            CloseTooltip x delayed
+
         LoadAddressIntoGraph a ->
             LoadAddressIntoGraph a
+
+        ShowNotification a ->
+            ShowNotification a

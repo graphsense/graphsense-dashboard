@@ -40,18 +40,19 @@ pathFinderErrorToNotifications : Error -> List Notify.Notification
 pathFinderErrorToNotifications err =
     case err of
         InternalError (AddressNotFoundInDict _) ->
-            Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
+            Notify.Error { title = "Not Found", message = "Address not found", moreInfo = [], variables = [] } |> List.singleton
 
         InternalError (TxValuesEmpty _ _) ->
-            Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
+            Notify.Error { title = "Not Found", message = "Address not found", moreInfo = [], variables = [] } |> List.singleton
 
         InternalError (NoTxInputsOutputsFoundInDict _) ->
-            Notify.Error { title = "Not Found", message = "Address not found", variables = [] } |> List.singleton
+            Notify.Error { title = "Not Found", message = "Address not found", moreInfo = [], variables = [] } |> List.singleton
 
         InfoError (NoAdjaccentTxForAddressFound tid) ->
             Notify.Info
                 { title = "Transaction tracing not possible"
                 , message = "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent."
+                , moreInfo = []
                 , variables =
                     Id.id tid |> List.singleton
                 }
@@ -60,6 +61,7 @@ pathFinderErrorToNotifications err =
         InfoError (TxTracingThroughService id exchangeLabel) ->
             Notify.Info
                 { title = "Auto trace limit"
+                , moreInfo = []
                 , message =
                     "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel."
                 , variables =
@@ -79,20 +81,6 @@ addHttpError : Notify.Model -> Maybe String -> Http.Error -> ( Notify.Model, Lis
 addHttpError m _ error =
     let
         nn =
-            case error of
-                Http.NetworkError ->
-                    Notify.Error { title = "Network Issue", message = "There is no network connection...", variables = [] }
-
-                Http.BadBody _ ->
-                    Notify.Error { title = "Data Error", message = "There was a problem while loading data.", variables = [] }
-
-                Http.BadUrl _ ->
-                    Notify.Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
-
-                Http.BadStatus _ ->
-                    Notify.Error { title = "Request Error", message = "There was a problem while loading data.", variables = [] }
-
-                Http.Timeout ->
-                    Notify.Error { title = "Request Timeout", message = "There was a problem while loading data.", variables = [] }
+            Notify.fromHttpError error
     in
     Notify.add nn m

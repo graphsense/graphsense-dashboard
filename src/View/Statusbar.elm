@@ -2,6 +2,7 @@ module View.Statusbar exposing (view)
 
 import Api
 import Config.View as View
+import Css as CSS
 import Css.Statusbar as Css
 import Dict
 import FontAwesome
@@ -39,7 +40,7 @@ view vc model =
             , version
                 |> text
                 |> List.singleton
-                |> span []
+                |> span [ [ CSS.paddingRight (CSS.px 5) ] |> css ]
             ]
 
          else

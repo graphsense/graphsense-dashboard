@@ -143,6 +143,44 @@ addressSidePanelHeader plugins states vc address =
         |> List.map (Html.map Pathfinder.PluginMsg)
 
 
+addressSidePanelHeaderTags : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (Html Pathfinder.Msg)
+addressSidePanelHeaderTags plugins states vc address =
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.Extra.andThen3
+                    (\fun ->
+                        fun vc address
+                    )
+                    plugin.addressSidePanelHeaderTags
+                    states.{{name}}
+                    address.plugins.{{name}}
+                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.map (Html.map Pathfinder.PluginMsg)
+
+replaceAddressNodeTagIcon: Plugins ->  Plugin.Model.AddressState -> View.Config -> {hasTags: Bool} -> Pathfinder.Address -> List (Svg Pathfinder.Msg)
+replaceAddressNodeTagIcon plugins addressStates vc data address =
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.Extra.andThen2
+                    (\fun ->
+                        fun vc data address
+                    )
+                    plugin.replaceAddressNodeTagIcon
+                    addressStates.{{name}}
+                    |> Maybe.map (Svg.map Plugin.Msg.{{package}}Msg)
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.map (Html.map Pathfinder.PluginMsg)
+
+
 addressProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.AddressState -> View.Config -> Graph.Config -> List (Html Graph.Msg)
 addressProperties plugins states addressStates vc gc =
     [ {{#plugins}}plugins.{{name}}
@@ -393,14 +431,14 @@ login plugins states vc =
         |> List.map (Html.map Model.PluginMsg)
 
 
-dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Html Model.Msg
+dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Maybe (Html Model.Msg)
 dialog plugins states vc =
-    {{^plugins}}Util.View.none{{/plugins}}{{#plugins.length}}Nothing
+    Nothing
 {{#plugins}}   
     |> Maybe.Extra.orElseLazy (\_ -> plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
-                Maybe.map2
+                Maybe.Extra.andThen2
                     (\fun ->
                         fun vc
                     )
@@ -410,6 +448,43 @@ dialog plugins states vc =
             )
     )
 {{/plugins}}
-    |> Maybe.withDefault Util.View.none
-    |> Html.map Model.PluginMsg
-{{/plugins.length}}
+    |> Maybe.map (Html.map Model.PluginMsg)
+
+
+tooltip : Plugins -> { context : String, domId : String } -> Plugin.Model.ModelState -> View.Config -> Maybe (List (Html Model.Msg))
+tooltip plugins ctx states vc =
+    Nothing
+{{#plugins}}   
+    |> Maybe.Extra.orElseLazy (\_ -> plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.Extra.andThen2
+                    (\fun ->
+                        fun vc ctx
+                    )
+                    plugin.tooltip
+                    states.{{name}}
+                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
+            )
+    )
+{{/plugins}}
+    |> Maybe.map (List.map (Html.map Model.PluginMsg))
+
+
+pathfinderUpperLeftPanel : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Pathfinder.Msg)
+pathfinderUpperLeftPanel plugins states vc =
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.map2
+                    (\fun ->
+                        fun vc
+                    )
+                    plugin.pathfinderUpperLeftPanel
+                    states.{{name}}
+                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.map (Html.map Pathfinder.PluginMsg)

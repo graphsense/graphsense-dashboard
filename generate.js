@@ -3,8 +3,24 @@ var fse = require('fs-extra')
 var mustache = require('mustache')
 var path = require('path')
 var yaml = require('yaml')
-var codegen = require('elm-codegen')
 const { execSync } = require("child_process");
+
+function parseNamespace(filePath) {
+  // Read the content of the file
+  const content = fs.readFileSync(filePath, 'utf-8');
+  
+  // Define a regular expression to capture the value after 'namespace ='
+  const regex = /namespace\s*=\s*"([^"]+)"/;
+  
+  // Search for the pattern in the file content
+  const match = content.match(regex);
+  
+  if (match) {
+    return match[1];  // Return the captured value (namespace)
+  } else {
+    return null;  // Return null if no match is found
+  }
+}
 
 const isDir = fileName => {
   try {
@@ -21,14 +37,13 @@ const templatesFolder = './plugin_templates'
 const genFolder = './generated'
 const genPluginsFolder = path.join(genFolder, pluginsFolder)
 const langFolder = './lang'
-const themeFolder = './theme'
 const publicFolder = './public'
 const genPublicFolder = path.join(genFolder, publicFolder)
 const genLangFolder = path.join(genFolder, publicFolder, langFolder)
 fse.copySync(publicFolder, genPublicFolder, {recursive: true})
 fse.copySync(langFolder, genLangFolder, {recursive: true})
 
-console.log('Installing plugins:')
+console.log('Generating glue code for plugins:')
 let plugins = fs.readdirSync(pluginsFolder)
   .filter(fileName => isDir(path.join(pluginsFolder, fileName)))
 
@@ -46,11 +61,16 @@ plugins.sort((a, b) => {
   return aEndsWithPreview ? 1 : -1;
 });
 
+
 plugins = plugins.map(plugin => {
     console.log(plugin)
+    const packageName = plugin.charAt(0).toUpperCase() + plugin.slice(1)
+    const namespace = parseNamespace(path.join(pluginsFolder, plugin, 'src', packageName, 'Model.elm'))
     return { 
-      name : plugin,
-      package : plugin.charAt(0).toUpperCase() + plugin.slice(1)
+      raw_name : plugin,
+      name : plugin.toLowerCase(),
+      namespace : namespace, 
+      package : packageName
     }
   })
 
@@ -104,45 +124,21 @@ const appendLang = (plugin) => {
     })
 }
 
-const copyPublic = (plugin) => {
-  const pluginPublicFolder = path.join(pluginsFolder, plugin, publicFolder)
-  if (!fs.existsSync(pluginPublicFolder)) return
-  fse.copySync(pluginPublicFolder, genPublicFolder)
-  console.log('Copied public folder', pluginPublicFolder)
-}
-
-const makeTheme = (plugin) => {
-  const pluginThemeFile = path.join(pluginsFolder, plugin, themeFolder, 'figma.json')
-  console.log("Making theme from " + pluginThemeFile)
-  if (!fs.existsSync(pluginThemeFile)) return
-    /*
-  codegen.run("Generate.elm", {
-    debug: true,
-    output: "theme",
-    flags: JSON.parse(fs.readFileSync(pluginThemeFile, 'utf8')),
-    cwd: "./codegen",
-  })
-  */
-  try {
-    execSync(`make PLUGIN_NAME=${plugin} plugin-theme`)
-  } catch(e) {
-    console.log(e.message)
-  }
-}
-
 transform('./')
 
 for(const plugin in plugins) {
-  appendLang(plugins[plugin].name)
-  copyPublic(plugins[plugin].name)
-  makeTheme(plugins[plugin].name)
+  appendLang(plugins[plugin].raw_name)
 }
 
 
-const elmJson = JSON.parse(fs.readFileSync('./elm.json.base'))
+const elmJson = JSON.parse(fs.readFileSync('./elm.json'))
 
+// remove all plugin src directories first
+elmJson['source-directories'] = elmJson['source-directories'].filter(s => !s.startsWith(path.join(pluginsFolder)))
+
+// add the installed plugin src directories 
 plugins.forEach(plugin => {
-  const p = path.join(pluginsFolder, plugin.name, 'src')
+  const p = path.join(pluginsFolder, plugin.raw_name, 'src')
   if(elmJson['source-directories'].indexOf(p) === -1) {
     elmJson['source-directories'].push(p)
   }
@@ -152,18 +148,3 @@ fs.writeFileSync('./elm.json', JSON.stringify(elmJson, null, 4))
 
 console.log("\nUpdated src directories in elm.json")
 
-plugins.forEach(plugin => {
-  const deps = fs.readFileSync(path.join(pluginsFolder, plugin.name, 'dependencies.txt'), 'utf8')
-  deps.split("\n").forEach(dep => {
-    if(!dep) return
-    let cmd = 'yes | elm install ' + dep
-    console.log(cmd)
-    try {
-      console.log(execSync(cmd).toString('utf-8'))
-    } catch(e) {
-      console.error('ERROR:')
-      console.error(e.message)
-      process.exit(1)
-    }
-  })
-})

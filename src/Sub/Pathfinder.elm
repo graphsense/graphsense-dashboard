@@ -8,7 +8,6 @@ import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))
 import Set
 import Sub.Graph.Transform as Transform
-import Time
 
 
 keyDecoder : (String -> Decode.Decoder Msg) -> Decode.Decoder Msg
@@ -105,15 +104,13 @@ subscriptions model =
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)
-    , Time.every 60000 Tick
+
+    -- , Time.every 60000 Tick
     , if Set.isEmpty model.network.animatedAddresses && Set.isEmpty model.network.animatedTxs then
         Sub.none
 
       else
         Browser.Events.onAnimationFrameDelta AnimationFrameDeltaForMove
-    , model.tooltip
-        |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map HovercardMsg)
-        |> Maybe.withDefault Sub.none
     , model.toolbarHovercard
         |> Maybe.map (Tuple.second >> Hovercard.subscriptions >> Sub.map ToolbarHovercardMsg)
         |> Maybe.withDefault Sub.none

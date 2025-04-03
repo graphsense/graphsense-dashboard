@@ -1,5 +1,6 @@
-module Update.Pathfinder.AddressDetails exposing (showTransactionsTable, update)
+module Update.Pathfinder.AddressDetails exposing (browserGotClusterData, showTransactionsTable, update)
 
+import Api.Data
 import Basics.Extra exposing (flip)
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
@@ -7,62 +8,102 @@ import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import Maybe.Extra
 import Model.Direction exposing (Direction(..))
-import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.PagedTable as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
+import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
+import PagedTable
 import RecordSetter exposing (..)
-import Tuple exposing (mapFirst)
+import RemoteData
+import Set
+import Tuple exposing (mapFirst, mapSecond)
 import Update.DateRangePicker as DateRangePicker
-import Update.Graph.Table
-import Update.Pathfinder.PagedTable as PT
+import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (n)
 
 
-update : Update.Config -> Pathfinder.Model -> Msg -> Id -> Model -> ( Model, List Effect )
-update uc pathfinderModel msg id model =
+neighborsTableConfig : Id -> Direction -> PagedTable.Config Effect
+neighborsTableConfig addressId dir =
+    { fetch =
+        Just
+            (\pagesize nextpage ->
+                GotNeighborsForAddressDetails dir
+                    >> Pathfinder.AddressDetailsMsg addressId
+                    |> Api.GetAddressNeighborsEffect
+                        { currency = Id.network addressId
+                        , address = Id.id addressId
+                        , includeLabels = True
+                        , onlyIds = Nothing
+                        , isOutgoing = dir == Outgoing
+                        , pagesize = pagesize
+                        , nextpage = nextpage
+                        , includeActors = False
+                        }
+                    |> ApiEffect
+            )
+    }
+
+
+transactionTableConfig : TransactionTable.Model -> Id -> PagedTable.Config Effect
+transactionTableConfig =
+    transactionTableConfigWithMsg GotNextPageTxsForAddressDetails
+
+
+transactionTableConfigWithMsg : (Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> PagedTable.Config Effect
+transactionTableConfigWithMsg msg txs addressId =
+    { fetch =
+        Just
+            (\pagesize nextpage ->
+                msg
+                    >> Pathfinder.AddressDetailsMsg addressId
+                    |> Api.GetAddressTxsEffect
+                        { currency = Id.network addressId
+                        , address = Id.id addressId
+                        , direction = Nothing
+                        , pagesize = pagesize
+                        , nextpage = nextpage
+                        , order = txs.order
+                        , minHeight = txs.txMinBlock
+                        , maxHeight = txs.txMaxBlock
+                        }
+                    |> ApiEffect
+            )
+    }
+
+
+update : Update.Config -> Msg -> Model -> ( Model, List Effect )
+update uc msg model =
     case msg of
         UserClickedToggleTokenBalancesSelect ->
             ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
 
         UserClickedToggleNeighborsTable ->
             let
-                tables =
-                    [ ( model.neighborsIncoming, Incoming ), ( model.neighborsOutgoing, Outgoing ) ]
+                ( neighborsIncoming, eff1 ) =
+                    PagedTable.loadFirstPage
+                        (neighborsTableConfig model.addressId Incoming)
+                        model.neighborsIncoming
 
-                fetchFirstPageFn =
-                    \( tbl, dir ) ->
-                        if List.isEmpty tbl.table.data then
-                            Just
-                                ((GotNeighborsForAddressDetails id dir >> AddressDetailsMsg)
-                                    |> Api.GetAddressNeighborsEffect
-                                        { currency = Id.network id
-                                        , address = Id.id id
-                                        , includeLabels = True
-                                        , onlyIds = Nothing
-                                        , isOutgoing = dir == Outgoing
-                                        , pagesize = tbl.itemsPerPage
-                                        , nextpage = tbl.table.nextpage
-                                        , includeActors = False
-                                        }
-                                    |> ApiEffect
-                                )
-
-                        else
-                            Nothing
-
-                eff =
-                    List.filterMap fetchFirstPageFn tables
+                ( neighborsOutgoing, eff2 ) =
+                    PagedTable.loadFirstPage
+                        (neighborsTableConfig model.addressId Outgoing)
+                        model.neighborsOutgoing
             in
-            ( { model | neighborsTableOpen = not model.neighborsTableOpen }, eff )
+            ( { model
+                | neighborsTableOpen = not model.neighborsTableOpen
+                , neighborsIncoming = neighborsIncoming
+                , neighborsOutgoing = neighborsOutgoing
+              }
+            , Maybe.Extra.toList eff1 ++ Maybe.Extra.toList eff2
+            )
 
-        UserClickedNextPageNeighborsTable dir ->
+        NeighborsTablePagedTableMsg dir pm ->
             let
                 ( tbl, setter ) =
                     case dir of
@@ -72,34 +113,14 @@ update uc pathfinderModel msg id model =
                         Outgoing ->
                             ( model.neighborsOutgoing, s_neighborsOutgoing )
 
-                ( eff, loading ) =
-                    if tbl.table.nextpage /= Nothing then
-                        ( (GotNeighborsForAddressDetails id dir >> AddressDetailsMsg)
-                            |> Api.GetAddressNeighborsEffect
-                                { currency = Id.network id
-                                , address = Id.id id
-                                , includeLabels = True
-                                , onlyIds = Nothing
-                                , isOutgoing = dir == Outgoing
-                                , pagesize = tbl.itemsPerPage
-                                , nextpage = tbl.table.nextpage
-                                , includeActors = False
-                                }
-                            |> ApiEffect
-                            |> List.singleton
-                        , True
-                        )
-
-                    else
-                        ( [], False )
+                ( pt, eff ) =
+                    PagedTable.update (neighborsTableConfig model.addressId dir) pm tbl
             in
-            if loading then
-                ( model |> setter ((PT.incPage >> PT.setLoading loading) tbl), eff )
+            ( setter pt model
+            , Maybe.Extra.toList eff
+            )
 
-            else
-                n model
-
-        UserClickedPreviousPageNeighborsTable dir ->
+        GotNeighborsForAddressDetails dir neighbors ->
             let
                 ( tbl, setter ) =
                     case dir of
@@ -108,102 +129,51 @@ update uc pathfinderModel msg id model =
 
                         Outgoing ->
                             ( model.neighborsOutgoing, s_neighborsOutgoing )
+
+                ( pt, eff ) =
+                    PagedTable.appendData
+                        (neighborsTableConfig model.addressId dir)
+                        NeighborsTable.filter
+                        neighbors.nextPage
+                        neighbors.neighbors
+                        tbl
             in
-            ( model |> setter (PT.decPage tbl), [] )
+            ( setter pt model
+            , Maybe.Extra.toList eff
+            )
 
-        GotNeighborsForAddressDetails requestId dir neighbors ->
-            if requestId == id then
-                n
-                    (case dir of
-                        Incoming ->
-                            { model
-                                | neighborsIncoming = PT.appendData model.neighborsIncoming NeighborsTable.filter neighbors.nextPage neighbors.neighbors
-                            }
-
-                        Outgoing ->
-                            { model
-                                | neighborsOutgoing = PT.appendData model.neighborsOutgoing NeighborsTable.filter neighbors.nextPage neighbors.neighbors
-                            }
-                    )
-
-            else
-                n model
-
-        UserClickedNextPageTransactionTable ->
-            let
-                ( eff, loading ) =
-                    if (model.txs.table.table.nextpage /= Nothing) && not (PT.isNextPageLoaded model.txs.table) then
-                        ( (GotNextPageTxsForAddressDetails id >> AddressDetailsMsg)
-                            |> Api.GetAddressTxsEffect
-                                { currency = Id.network id
-                                , address = Id.id id
-                                , direction = Nothing
-                                , pagesize = model.txs.table.itemsPerPage
-                                , nextpage = model.txs.table.table.nextpage
-                                , order = model.txs.order
-                                , minHeight = model.txs.txMinBlock
-                                , maxHeight = model.txs.txMaxBlock
-                                }
-                            |> ApiEffect
-                            |> List.singleton
-                        , True
-                        )
-
-                    else
-                        ( [], False )
-            in
-            if loading then
-                ( { model
-                    | txs =
-                        PT.incPage model.txs.table
-                            |> PT.setLoading loading
-                            |> flip s_table model.txs
-                  }
-                , eff
-                )
-
-            else
-                n
-                    { model
-                        | txs =
-                            PT.incPage model.txs.table
-                                |> flip s_table model.txs
-                    }
-
-        UserClickedPreviousPageTransactionTable ->
-            ( { model | txs = PT.decPage model.txs.table |> flip s_table model.txs }, [] )
-
-        UserClickedFirstPageTransactionTable ->
-            ( { model | txs = PT.goToFirstPage model.txs.table |> flip s_table model.txs }, [] )
+        TransactionsTablePagedTableMsg pm ->
+            PagedTable.update (transactionTableConfig model.txs model.addressId) pm model.txs.table
+                |> mapFirst (flip s_table model.txs)
+                |> mapFirst (flip s_txs model)
+                |> mapSecond Maybe.Extra.toList
 
         UserClickedToggleTransactionTable ->
             not model.transactionsTableOpen
                 |> showTransactionsTable model
 
-        GotNextPageTxsForAddressDetails responseId txs ->
-            if responseId == id then
-                n
-                    { model
-                        | txs =
-                            PT.appendData model.txs.table TransactionTable.filter txs.nextPage txs.addressTxs
-                                |> flip s_table model.txs
-                    }
+        GotNextPageTxsForAddressDetails txs ->
+            PagedTable.appendData
+                (transactionTableConfig model.txs model.addressId)
+                TransactionTable.filter
+                txs.nextPage
+                txs.addressTxs
+                model.txs.table
+                |> mapFirst (flip s_table model.txs)
+                |> mapFirst (flip s_txs model)
+                |> mapSecond Maybe.Extra.toList
 
-            else
-                n model
-
-        GotTxsForAddressDetails responseId ( min, max ) txs ->
-            if responseId == id && model.txs.txMinBlock == min && model.txs.txMaxBlock == max then
-                n
-                    { model
-                        | txs =
-                            s_nextpage txs.nextPage model.txs.table.table
-                                |> Update.Graph.Table.setData
-                                    TransactionTable.filter
-                                    txs.addressTxs
-                                |> flip s_table model.txs.table
-                                |> flip s_table model.txs
-                    }
+        GotTxsForAddressDetails ( min, max ) txs ->
+            if model.txs.txMinBlock == min && model.txs.txMaxBlock == max then
+                PagedTable.setData
+                    (transactionTableConfig model.txs model.addressId)
+                    TransactionTable.filter
+                    txs.nextPage
+                    txs.addressTxs
+                    model.txs.table
+                    |> mapFirst (flip s_table model.txs)
+                    |> mapFirst (flip s_txs model)
+                    |> mapSecond Maybe.Extra.toList
 
             else
                 n model
@@ -272,13 +242,82 @@ update uc pathfinderModel msg id model =
                 |> mapFirst (flip s_txs model)
 
         BrowserGotFromDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange uc pathfinderModel id model (blockAt.beforeBlock |> Maybe.map Set |> Maybe.withDefault NoSet) NoSet
+            updateDatePickerRangeBlockRange uc model (blockAt.beforeBlock |> Maybe.map Set |> Maybe.withDefault NoSet) NoSet
 
         BrowserGotToDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange uc pathfinderModel id model NoSet (blockAt.afterBlock |> Maybe.map Set |> Maybe.withDefault NoSet)
+            updateDatePickerRangeBlockRange uc model NoSet (blockAt.afterBlock |> Maybe.map Set |> Maybe.withDefault NoSet)
 
         TableMsg _ ->
             n model
+
+        RelatedAddressesTableMsg _ ->
+            n model
+
+        UserClickedToggleRelatedAddressesTable ->
+            n { model | relatedAddressesTableOpen = not model.relatedAddressesTableOpen }
+
+        RelatedAddressesTablePagedTableMsg pm ->
+            (\rm ->
+                RelatedAddressesTable.updateTable
+                    (PagedTable.update (RelatedAddressesTable.tableConfig rm) pm)
+                    rm
+            )
+                |> updateRelatedAddressesTable model
+
+        BrowserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } ->
+            RelatedAddressesTable.appendClusterAddresses nextPage addresses
+                |> updateRelatedAddressesTable model
+
+        UserClickedTx _ ->
+            n model
+
+        UserClickedTxCheckboxInTable _ ->
+            n model
+
+        UserClickedAddressCheckboxInTable _ ->
+            n model
+
+        NoOp ->
+            n model
+
+        SelectBoxMsg sm ->
+            RelatedAddressesTable.selectBoxMsg sm
+                |> updateRelatedAddressesTable model
+
+        BrowserGotEntityAddressTagsForRelatedAddressesTable currency tags ->
+            if not <| List.isEmpty tags.addressTags then
+                ( model
+                , BrowserGotAddressesForTags tags.nextPage
+                    >> Pathfinder.AddressDetailsMsg model.addressId
+                    |> Api.BulkGetAddressEffect
+                        { currency = currency
+                        , addresses =
+                            List.map .address tags.addressTags
+                                |> Set.fromList
+                                |> Set.toList
+                        }
+                    |> ApiEffect
+                    |> List.singleton
+                )
+
+            else
+                RelatedAddressesTable.appendTaggedAddresses Nothing []
+                    |> updateRelatedAddressesTable model
+
+        BrowserGotAddressesForTags nextpage addresses ->
+            RelatedAddressesTable.appendTaggedAddresses nextpage addresses
+                |> updateRelatedAddressesTable model
+
+        TooltipMsg _ ->
+            n model
+
+
+updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )
+updateRelatedAddressesTable model upd =
+    model.relatedAddresses
+        |> RemoteData.toMaybe
+        |> Maybe.map (upd >> mapFirst (RemoteData.Success >> flip s_relatedAddresses model))
+        |> Maybe.withDefault (n model)
 
 
 type SetOrNoSet x
@@ -287,9 +326,12 @@ type SetOrNoSet x
     | Reset
 
 
-updateDatePickerRangeBlockRange : Update.Config -> Pathfinder.Model -> Id -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
-updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
+updateDatePickerRangeBlockRange : Update.Config -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
+updateDatePickerRangeBlockRange _ model txMinBlock txMaxBlock =
     let
+        id =
+            model.addressId
+
         txmin =
             case txMinBlock of
                 Reset ->
@@ -312,49 +354,41 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
                 Set x ->
                     Just x
 
-        effects =
-            case ( txmin, txmax ) of
-                ( Just min, Just max ) ->
-                    (GotTxsForAddressDetails id ( Just min, Just max ) >> AddressDetailsMsg)
-                        |> Api.GetAddressTxsEffect
-                            { currency = Id.network id
-                            , address = Id.id id
-                            , direction = Nothing
-                            , pagesize = model.txs.table.itemsPerPage
-                            , nextpage = Nothing
-                            , order = model.txs.order
-                            , minHeight = Just min
-                            , maxHeight = Just max
-                            }
-                        |> ApiEffect
-                        |> List.singleton
-
-                ( Nothing, Nothing ) ->
-                    (GotTxsForAddressDetails id ( Nothing, Nothing ) >> AddressDetailsMsg)
-                        |> Api.GetAddressTxsEffect
-                            { currency = Id.network id
-                            , address = Id.id id
-                            , direction = Nothing
-                            , pagesize = model.txs.table.itemsPerPage
-                            , nextpage = Nothing
-                            , order = model.txs.order
-                            , minHeight = Nothing
-                            , maxHeight = Nothing
-                            }
-                        |> ApiEffect
-                        |> List.singleton
-
-                _ ->
-                    []
-
         txsNew =
-            model.txs |> s_txMinBlock txmin |> s_txMaxBlock txmax
+            model.txs
+                |> s_txMinBlock txmin
+                |> s_txMaxBlock txmax
+
+        ( tableNew, eff ) =
+            model.txs.table
+                |> PagedTable.loadFirstPage
+                    (transactionTableConfigWithMsg
+                        (GotTxsForAddressDetails ( txmin, txmax ))
+                        txsNew
+                        id
+                    )
     in
-    ( { model | txs = txsNew }
-    , effects
+    ( { model
+        | txs =
+            { txsNew | table = tableNew }
+      }
+    , Maybe.Extra.toList eff
     )
 
 
 showTransactionsTable : Model -> Bool -> ( Model, List Effect )
 showTransactionsTable model show =
     ( { model | transactionsTableOpen = show }, [] )
+
+
+browserGotClusterData : Id -> Api.Data.Entity -> Model -> ( Model, List Effect )
+browserGotClusterData addressId entity model =
+    let
+        ( relatedAddresses, eff ) =
+            RelatedAddressesTable.init addressId entity
+    in
+    ( { model
+        | relatedAddresses = RemoteData.Success relatedAddresses
+      }
+    , eff
+    )

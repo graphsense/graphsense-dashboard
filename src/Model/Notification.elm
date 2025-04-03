@@ -1,6 +1,7 @@
-module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, getMoved, peek, perform, pop, setMoved, update)
+module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, fromHttpError, fromHttpErrorWithMoreInfo, getMoved, peek, perform, pop, setMoved, update)
 
 import Basics.Extra exposing (flip)
+import Http
 import Process
 import Set exposing (Set)
 import Task
@@ -10,6 +11,7 @@ import Tuple exposing (mapSecond, pair)
 type alias NotificationData =
     { title : String
     , message : String
+    , moreInfo : List String
     , variables : List String
     }
 
@@ -22,6 +24,8 @@ empty =
 type Notification
     = Error NotificationData
     | Info NotificationData
+    | InfoEphemeral String
+    | Success String
 
 
 type Model
@@ -30,10 +34,12 @@ type Model
 
 type Effect
     = MoveNotification
+    | RemoveNotification
 
 
 type Msg
     = MoveDelayPassed
+    | RemoveDelayPassed
 
 
 type alias InternalModel =
@@ -67,6 +73,17 @@ add n (NotificationModel m) =
     let
         id =
             n |> toId
+
+        effects =
+            MoveNotification
+                :: (case n of
+                        Success _ ->
+                            [ RemoveNotification
+                            ]
+
+                        _ ->
+                            []
+                   )
     in
     (if Set.member id m.messageIds then
         m
@@ -75,7 +92,7 @@ add n (NotificationModel m) =
         { m | messages = n :: m.messages, messageIds = Set.insert id m.messageIds }
     )
         |> NotificationModel
-        |> flip pair [ MoveNotification ]
+        |> flip pair effects
 
 
 addMany : Model -> List Notification -> ( Model, List Effect )
@@ -92,6 +109,12 @@ toId n =
         Info { title, message, variables } ->
             String.join "|" ("info" :: title :: message :: variables)
 
+        Success title ->
+            String.join "|" [ "success", title ]
+
+        InfoEphemeral title ->
+            String.join "|" [ "infoEphemeral", title ]
+
 
 getMoved : Model -> Bool
 getMoved (NotificationModel { moved }) =
@@ -104,11 +127,20 @@ setMoved (NotificationModel m) =
         |> NotificationModel
 
 
+unsetMoved : Model -> Model
+unsetMoved (NotificationModel m) =
+    { m | moved = False }
+        |> NotificationModel
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         MoveDelayPassed ->
             setMoved model
+
+        RemoveDelayPassed ->
+            unsetMoved model
 
 
 perform : Effect -> Cmd Msg
@@ -117,3 +149,61 @@ perform effect =
         MoveNotification ->
             Process.sleep 0
                 |> Task.perform (\_ -> MoveDelayPassed)
+
+        RemoveNotification ->
+            Process.sleep 3000
+                |> Task.perform (\_ -> RemoveDelayPassed)
+
+
+fromHttpError : Http.Error -> Notification
+fromHttpError =
+    fromHttpErrorWithMoreInfo ""
+
+
+fromHttpErrorWithMoreInfo : String -> Http.Error -> Notification
+fromHttpErrorWithMoreInfo info error =
+    let
+        toMoreInfo =
+            (++) [ info ]
+                >> List.filter (String.isEmpty >> not)
+    in
+    case error of
+        Http.NetworkError ->
+            Error
+                { title = "Network error"
+                , message = "Service not reachable."
+                , moreInfo = toMoreInfo []
+                , variables = []
+                }
+
+        Http.BadBody body ->
+            Error
+                { title = "Data error"
+                , message = "Unexpected data format."
+                , moreInfo = toMoreInfo [ body ]
+                , variables = []
+                }
+
+        Http.BadUrl _ ->
+            Error
+                { title = "Bad URL"
+                , message = ""
+                , moreInfo = toMoreInfo []
+                , variables = []
+                }
+
+        Http.BadStatus _ ->
+            Error
+                { title = "Request error"
+                , message = "Unexpected status code."
+                , moreInfo = toMoreInfo []
+                , variables = []
+                }
+
+        Http.Timeout ->
+            Error
+                { title = "Request timeout"
+                , message = "Service does not respond in time."
+                , moreInfo = toMoreInfo []
+                , variables = []
+                }

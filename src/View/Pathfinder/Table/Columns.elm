@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesCell, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
@@ -12,6 +12,7 @@ import RecordSetter as Rs
 import Table
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Tuple exposing (pair)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 
@@ -87,20 +88,25 @@ stringColumn _ { label, accessor } =
 type alias CheckboxColumnConfig data msg =
     { isChecked : data -> Bool
     , onClick : data -> msg
+    , readonly : data -> Bool
     }
 
 
 checkboxColumn : View.Config -> CheckboxColumnConfig data msg -> Table.Column data msg
-checkboxColumn _ { isChecked, onClick } =
+checkboxColumn _ { isChecked, onClick, readonly } =
     Table.veryCustomColumn
         { name = ""
         , viewData =
             \data ->
                 let
                     attrs =
-                        [ onClick data |> Html.Styled.Events.onClick
-                        , [ Css.cursor Css.pointer ] |> css
-                        ]
+                        if readonly data then
+                            [ [ Css.cursor Css.notAllowed ] |> css ]
+
+                        else
+                            [ onClick data |> Html.Styled.Events.onClick
+                            , [ Css.cursor Css.pointer ] |> css
+                            ]
                 in
                 Table.HtmlDetails
                     [ [ PCSS.mGap |> Css.padding
@@ -208,3 +214,36 @@ valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
                 }
             }
         ]
+
+
+type alias TwoValuesCellConfig data =
+    { coinCode : AssetIdentifier
+    , getValue1 : data -> Api.Data.Values
+    , getValue2 : data -> Api.Data.Values
+    , labelValue2 : String
+    }
+
+
+twoValuesCell : View.Config -> String -> TwoValuesCellConfig data -> Table.Column data msg
+twoValuesCell vc name conf =
+    let
+        toValue =
+            pair conf.coinCode
+                >> List.singleton
+                >> Locale.currencyWithoutCode vc.locale
+    in
+    Table.veryCustomColumn
+        { name = name
+        , viewData =
+            \data ->
+                Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
+                    [ SidePanelComponents.sidePanelAddListTwoValuesCell
+                        { sidePanelAddListTwoValuesCell =
+                            { value1 = conf.getValue1 data |> toValue
+                            , value2 = conf.getValue2 data |> toValue
+                            , labelValue2 = conf.labelValue2 ++ ":"
+                            }
+                        }
+                    ]
+        , sorter = Table.unsortable
+        }

@@ -211,13 +211,18 @@ direction: Richtung
 both: beide
 search neighbors: Suche Nachbarn
 bad status: Fehler
-bad url: Fehlerhafter URL
-timeout: Zeitüberschreitung
+bad URL: Fehlerhafter URL
+request timeout: Zeitüberschreitung
+request error: Anfragefehler
 network error: Netzwerkfehler
 server error: Serverfehler
 not found: Nicht gefunden
 data error: Datenfehler
-this table is empty: Diese Tabelle ist leer
+service not reachable.: Service nicht erreichbar.
+unexpected data format.: unerwartetes Datenformat.
+unexpected status code.: unerwarteter Statuscode.
+service does not respond in time: Service antwortet nicht zeitnah.
+this table is empty: Keine Einträge gefunden.
 Do you want to start from scratch?: Wirklich neu loslegen?
 proprietary tag: Proprietäres Tag
 "loading concepts for taxonomy {0}": lade Konzepte zur Taxonomie {0}
@@ -374,6 +379,7 @@ Cluster has addidional tags: Cluster hat zusätzliche Annotationen
 show more...: mehr...
 show less...: weniger...
 less...: weniger...
+less: weniger
 No records found: Keine Einträge gefunden
 From Address: Von
 To Address: Nach
@@ -445,3 +451,13 @@ eventTagDescriptionId: Ein Ereignis-Tag ist eine Aussage über ein Ereignis, das
 "Low confidence": "Geringe Zuversicht"
 "Medium confidence": "Mittlere Zuversicht"
 "High confidence": "Hohe Zuversicht"
+More: Mehr
+related addresses: verwandte Adressen
+tagged cluster addresses: Cluster-Adressen mit Schlagwort
+all cluster addresses: Alle Cluster-Adressen
+type: Typ
+cluster information: Cluster Info
+"{0} per {1}": "{0} pro {1}"
+"Request limit exceeded": "Abfrage-Limit erreicht"
+"The request limit of your API key of {0} per {1} has been exceeded.": "Begrenzung der API Abfragen von {0} pro {1} erreicht."
+"The request limit of your API key has been exceeded.": "Begrenzung der API Abfragen erreicht."

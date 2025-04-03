@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getAddressDetailStats, getLoadedAddress, unit)
+module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getAddressDetailStats, getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Config.Pathfinder exposing (Config)
@@ -14,12 +14,11 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
-import Model.Pathfinder.Tooltip exposing (Tooltip)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
 import Theme.Svg.GraphComponents as GraphComponents
-import Time exposing (Posix)
+import Tuple
 import Util.Annotations exposing (AnnotationModel)
 
 
@@ -32,7 +31,7 @@ type alias Model =
     { network : Network
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
-    , clusters : Dict Id Entity
+    , clusters : Dict Id (WebData Entity)
     , colors : ScopedColorAssignment
     , annotations : AnnotationModel
     , dragging : Dragging Id
@@ -43,22 +42,25 @@ type alias Model =
     , history : History.Model Entry.Model
     , details : Maybe Details
     , config : Config
-    , currentTime : Posix
     , pointerTool : PointerTool
     , modPressed : Bool
     , isDirty : Bool
-    , tooltip : Maybe Tooltip
     , toolbarHovercard : Maybe ToolbarHovercardModel
     , contextMenu : Maybe ContextMenu
     , name : String
+    , selectAfterLoad : Maybe Id
     }
 
 
 type HavingTags
     = LoadingTags
-    | HasTagSummary Api.Data.TagSummary
+    | HasTagSummaryWithCluster Api.Data.TagSummary
+    | HasTagSummaryWithoutCluster Api.Data.TagSummary
+    | HasTagSummaryOnlyWithCluster Api.Data.TagSummary
+    | HasTagSummaries { withCluster : Api.Data.TagSummary, withoutCluster : Api.Data.TagSummary }
     | HasExchangeTagOnly
     | HasTags Bool -- whether includes an exchange tag
+    | NoTagsWithoutCluster
     | NoTags
 
 
@@ -118,3 +120,23 @@ getAddressDetailStats id model madvs =
             maddress |> Maybe.andThen Address.getOutDegree
     in
     { nrTxs = nrTxs, nrIncomeingNeighbors = indegree, nrOutgoingNeighbors = outdegree }
+
+
+getHavingTags : Model -> Id -> HavingTags
+getHavingTags model id_ =
+    Dict.get id_ model.tagSummaries
+        |> Maybe.withDefault NoTags
+
+
+getSortedLabelSummariesByRelevance : Api.Data.TagSummary -> List ( String, Api.Data.LabelSummary )
+getSortedLabelSummariesByRelevance =
+    .labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse
+
+
+getSortedConceptsByWeight : Api.Data.TagSummary -> List String
+getSortedConceptsByWeight =
+    .conceptTagCloud
+        >> Dict.toList
+        >> List.sortBy (Tuple.second >> .weighted)
+        >> List.map Tuple.first
+        >> List.reverse

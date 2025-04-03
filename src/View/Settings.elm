@@ -5,39 +5,25 @@ import Css
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
-import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel)
+import List.Extra
+import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel, requestLimitIntervalToString)
+import Model.Locale as Locale
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import Theme.Html.Buttons as Btns
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
 import Time
+import Tuple exposing (first, second)
 import Util.ThemedSelectBox as TSelectBox
-import Util.ThemedSelectBoxes as TSelectBoxes
 import Util.View
+import View.Button as Button
 import View.Controls as Vc
 import View.Locale as Locale
 
 
 view : Plugins -> Config -> Model x -> Html Model.Msg
 view plugins vc m =
-    -- let
-    -- tbs =
-    --     Vc.tabs
-    --         ([ ( "General", GeneralTab )
-    --          , ( "Pathfinder", PathfinderTab )
-    --          , ( "Overview Network", GraphTab )
-    --          ]
-    --             |> List.map
-    --                 (\( t, msg ) ->
-    --                     { title = Locale.string vc.locale t
-    --                     , selected = m.selectedSettingsTab == msg
-    --                     , msg = Model.UserChangedSettingsTab msg |> Model.SettingsMsg
-    --                     }
-    --                 )
-    --         )
-    -- in
     Sp.settingsPageWithInstances
         (Sp.settingsPageAttributes
             |> Rs.s_backButton [ css [ Css.cursor Css.pointer ], onClick UserClickedNavBack ]
@@ -56,7 +42,7 @@ view plugins vc m =
         (Sp.settingsPageInstances
             |> Rs.s_settingsTabs (Just Util.View.none)
         )
-        { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBack {} }
+        { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBackStateDefaultBlack {} }
         , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
         , settingsPage =
             { instance = generalSettings plugins vc m }
@@ -93,16 +79,18 @@ generalSettings plugins vc m =
                 , msg = Model.UserClickedLightmode
                 }
 
-        sbId =
-            TSelectBoxes.SupportedLanguages
-
-        sb =
-            TSelectBoxes.get sbId m.selectBoxes
-                |> Maybe.withDefault TSelectBox.empty
-                |> TSelectBox.mapLabel (Locale.string vc.locale)
+        conf =
+            { optionToLabel =
+                \a ->
+                    Locale.locales
+                        |> List.Extra.find (first >> (==) a)
+                        |> Maybe.map (second >> Locale.string vc.locale)
+                        |> Maybe.withDefault ""
+            }
 
         languageSb =
-            TSelectBox.view sb vc.locale.locale |> Html.Styled.map (Model.SelectBoxMsg sbId)
+            TSelectBox.view conf m.localeSelectBox vc.locale.locale
+                |> Html.Styled.map Model.LocaleSelectBoxMsg
 
         ( expr, ( rqlPrim, rqlSec ) ) =
             authContent vc m.user
@@ -110,9 +98,10 @@ generalSettings plugins vc m =
         generalSettingsProperties =
             { button =
                 { variant =
-                    Btns.buttonTypeTextStateRegularStyleTextWithAttributes
-                        (Btns.buttonTypeTextStateRegularStyleTextAttributes |> Rs.s_button [ [ Css.cursor Css.pointer ] |> css, onClick UserClickedLogout ])
-                        { typeTextStateRegularStyleText = { buttonText = Locale.string vc.locale "Logout", iconInstance = Util.View.none, iconVisible = False } }
+                    Button.btnDefaultConfig
+                        |> Rs.s_text "Logout"
+                        |> Rs.s_onClick (Just UserClickedLogout)
+                        |> Button.linkButtonBlue vc
                 }
             , dropDownExtraTextClosed = { primaryText = "a", secondaryText = "b" }
             , languageDropDown = { text = "" }
@@ -205,19 +194,30 @@ requestLimit vc rl =
         Unlimited ->
             ( Locale.string vc.locale "unlimited", Nothing )
 
-        Limited { remaining, limit, reset } ->
-            ( String.fromInt remaining
+        Limited { remaining, limit, reset, interval } ->
+            ( String.fromInt <|
+                if reset == 0 then
+                    limit
+
+                else
+                    remaining
             , Just
-                (String.fromInt limit
+                (Locale.interpolated vc.locale
+                    "{0} per {1}"
+                    [ String.fromInt limit
+                    , requestLimitIntervalToString interval
+                        |> Locale.string vc.locale
+                    ]
                     ++ " "
                     ++ (if reset == 0 || remaining > Model.showResetCounterAtRemaining then
-                            Locale.string vc.locale "None"
+                            ""
 
                         else
                             reset
                                 |> String.fromInt
                                 |> List.singleton
                                 |> Locale.interpolated vc.locale "reset in {0}s"
+                                |> (\s -> "(" ++ s ++ ")")
                        )
                 )
             )

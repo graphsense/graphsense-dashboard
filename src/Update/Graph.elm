@@ -3129,6 +3129,12 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.UpdateAddressesByRootAddress _ _ ->
+                        n model
+
+                    PluginInterface.UpdateAddressesByEntityPathfinder _ _ ->
+                        n model
+
                     PluginInterface.UpdateAddressEntities id pmsg ->
                         let
                             entityIds =
@@ -3198,6 +3204,9 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.GetSerialized _ ->
                         ( mo, [] )
 
+                    PluginInterface.OutMsgsPathfinder _ ->
+                        ( mo, [] )
+
                     PluginInterface.Deserialize _ _ ->
                         ( mo, [] )
 
@@ -3214,6 +3223,15 @@ updateByPluginOutMsg plugins outMsgs model =
                         ( mo, [] )
 
                     PluginInterface.CloseDialog ->
+                        ( mo, [] )
+
+                    PluginInterface.ShowNotification _ ->
+                        ( mo, [] )
+
+                    PluginInterface.OpenTooltip _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.CloseTooltip _ _ ->
                         ( mo, [] )
             )
             ( model, [] )

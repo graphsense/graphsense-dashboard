@@ -7,7 +7,7 @@ import Tuple exposing (..)
 
 parseUrl : String -> Maybe ( Plugin.Model.PluginType, String )
 parseUrl url =
-    [ {{#plugins}}( "{{name}}", Plugin.Model.{{package}} )
+    [ {{#plugins}}( "{{namespace}}", Plugin.Model.{{package}} )
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> parseUrlHelp url

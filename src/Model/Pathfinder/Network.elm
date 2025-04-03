@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, hasLoadedAddress, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -65,9 +65,19 @@ hasAddress id network =
     Dict.member id network.addresses
 
 
+hasLoadedAddress : Id -> Network -> Bool
+hasLoadedAddress id network =
+    case Dict.get id network.addresses of
+        Just a ->
+            RemoteData.isSuccess a.data
+
+        _ ->
+            False
+
+
 getClustersOnGraph : Network -> Set Id
 getClustersOnGraph net =
-    net.addresses |> Dict.values |> List.filterMap (.data >> RemoteData.toMaybe) |> List.map (\x -> Id.initClusterId x.currency x.entity) |> Set.fromList
+    net.addresses |> Dict.values |> List.filterMap (.data >> RemoteData.toMaybe) |> List.map Id.initClusterIdFromRecord |> Set.fromList
 
 
 isClusterFriendAlreadyOnGraph : Id -> Network -> Bool
@@ -77,6 +87,15 @@ isClusterFriendAlreadyOnGraph id net =
             getClustersOnGraph net
     in
     Set.member id clusters
+
+
+getAddressIdsInCluster : Id -> Network -> List Id
+getAddressIdsInCluster cstrId n =
+    n.addresses
+        |> Dict.values
+        |> List.filterMap (.data >> RemoteData.toMaybe)
+        |> List.filter (Id.initClusterIdFromRecord >> (==) cstrId)
+        |> List.map Id.initFromRecord
 
 
 listTxsForAddress : Network -> Id -> List ( Direction, Tx )

@@ -4,12 +4,12 @@ import Api.Data
 import Api.Request.Addresses
 import Model.DateRangePicker as DateRangePicker
 import Model.Graph.Table as Table
-import Model.Pathfinder.PagedTable exposing (PagedTable)
 import Msg.Pathfinder.AddressDetails exposing (Msg)
+import PagedTable
 
 
 type alias Model =
-    { table : PagedTable Api.Data.AddressTx
+    { table : PagedTable.Model Api.Data.AddressTx
     , order : Maybe Api.Request.Addresses.Order_
     , dateRangePicker : Maybe (DateRangePicker.Model Msg)
     , txMinBlock : Maybe Int

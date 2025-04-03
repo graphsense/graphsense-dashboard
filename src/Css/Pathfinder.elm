@@ -12,6 +12,7 @@ module Css.Pathfinder exposing
     , plainLinkStyle
     , sGap
     , searchBoxMinWidth
+    , sidePanelCss
     , tagConfidenceTextHighStyle
     , tagConfidenceTextLowStyle
     , tagConfidenceTextMediumStyle
@@ -299,3 +300,11 @@ inoutStyle out =
 fullWidth : List Style
 fullWidth =
     [ all |> width ]
+
+
+sidePanelCss : List Css.Style
+sidePanelCss =
+    [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
+    , Css.overflowY Css.auto
+    , Css.overflowX Css.hidden
+    ]

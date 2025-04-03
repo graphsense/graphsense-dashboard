@@ -4,6 +4,7 @@ import Api.Data
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Table
+import Dict
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onMouseOut, onMouseOver)
@@ -20,10 +21,10 @@ import Theme.Html.TagsComponents as TagsComponents
 import Url
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (exchangeCategory)
-import Util.View exposing (none)
+import Util.View exposing (fixFillRule, none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (alignColumnsRight)
+import View.Pathfinder.PagedTable exposing (alignColumnHeader)
 
 
 tagId : Api.Data.AddressTag -> String
@@ -75,7 +76,9 @@ cell : View.Config -> Cell -> Table.HtmlDetails Msg
 cell vc c =
     let
         cellBase =
-            [ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCell_details.height) ]
+            [ Css.height Css.auto |> Css.important
+            , Css.minHeight (Css.px TagsComponents.tagRowCell_details.height)
+            ]
 
         cellWMinWidth =
             cellBase ++ [ Css.minWidth (Css.px 150) ]
@@ -85,8 +88,25 @@ cell vc c =
 
         attrs =
             TagsComponents.tagRowCellAttributes
-                |> Rs.s_iconText ([ Css.height Css.auto |> Css.important, Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height) ] |> css |> List.singleton)
-                |> Rs.s_category ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ] |> css |> List.singleton)
+                |> Rs.s_iconText
+                    ([ Css.height Css.auto |> Css.important
+                     , Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height)
+                     ]
+                        |> css
+                        |> List.singleton
+                    )
+                |> Rs.s_label
+                    ([ Css.whiteSpace Css.preWrap |> Css.important, Css.overflowWrap Css.breakWord ]
+                        |> css
+                        |> List.singleton
+                    )
+                |> Rs.s_category
+                    ([ Css.whiteSpace Css.normal |> Css.important
+                     , Css.overflowWrap Css.breakWord
+                     ]
+                        |> css
+                        |> List.singleton
+                    )
 
         -- to allow wrapping and growing of line
         defaultData cc tagIcon actionIcon =
@@ -172,7 +192,7 @@ cell vc c =
         TypeCell cc ->
             let
                 ttConfig =
-                    { anchorId = cc.cellid, text = cc.titletext }
+                    { domId = cc.cellid, text = cc.titletext }
 
                 sub =
                     case cc.confidence of
@@ -189,15 +209,11 @@ cell vc c =
                     span
                         [ onMouseOver (Msg.Pathfinder.ShowTextTooltip ttConfig |> PathfinderMsg)
                         , onMouseOut (Msg.Pathfinder.CloseTextTooltip ttConfig |> PathfinderMsg)
-                        , Html.Styled.Attributes.id cc.cellid
+                        , Html.Styled.Attributes.id ttConfig.domId
                         ]
                         [ Icons.iconsInfoSnoPaddingWithAttributes
                             (Icons.iconsInfoSnoPaddingAttributes
-                                |> Rs.s_shape
-                                    [ Css.property "fill-rule" "evenodd"
-                                        |> List.singleton
-                                        |> css
-                                    ]
+                                |> Rs.s_shape [ fixFillRule ]
                             )
                             {}
                         ]
@@ -256,7 +272,7 @@ labelColumn vc =
                         mconcept ++ (data.concepts |> Maybe.withDefault [])
 
                     concepts_w_default =
-                        if List.length concepts == 0 then
+                        if List.isEmpty concepts then
                             [ "unknown" ]
 
                         else
@@ -285,7 +301,7 @@ labelColumn vc =
                                 (concepts_w_default
                                     |> List.map
                                         (\x ->
-                                            getConceptName vc (Just x)
+                                            getConceptName vc x
                                                 |> Maybe.withDefault x
                                         )
                                     |> String.join ", "
@@ -451,5 +467,6 @@ config vc =
             , lastModColumn vc
             ]
         , customizations =
-            customizations styles vc |> alignColumnsRight styles vc (Set.singleton "Last Modified")
+            customizations styles vc
+                |> alignColumnHeader styles vc (Dict.fromList [ ( "Last Modified", View.Pathfinder.PagedTable.RightAligned ) ])
         }

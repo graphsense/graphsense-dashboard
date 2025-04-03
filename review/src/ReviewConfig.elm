@@ -20,10 +20,10 @@ import NoImportingEverything
 import NoMissingTypeAnnotation
 import NoMissingTypeAnnotationInLetIn
 import NoMissingTypeExpose
-import NoUnnecessaryTrailingUnderscore
-import NoRedundantlyQualifiedType
 import NoPrematureLetComputation
+import NoRedundantlyQualifiedType
 import NoSimpleLetBody
+import NoUnnecessaryTrailingUnderscore
 import NoUnused.CustomTypeConstructorArgs
 import NoUnused.CustomTypeConstructors
 import NoUnused.Dependencies
@@ -37,35 +37,38 @@ import Simplify
 
 config : List Rule
 config =
-    [
-    --   Docs.ReviewAtDocs.rule
-    -- NoConfusingPrefixOperator.rule
-    NoDebug.Log.rule |> Rule.ignoreErrorsForFiles [ "src/Util/Debug.elm" ]
+    [ --   Docs.ReviewAtDocs.rule
+      -- NoConfusingPrefixOperator.rule
+      NoDebug.Log.rule |> Rule.ignoreErrorsForFiles [ "src/Util/Debug.elm" ]
     , NoDebug.TodoOrToString.rule |> Rule.ignoreErrorsForDirectories [ "tests/" ]
     , NoExposingEverything.rule
     , NoImportingEverything.rule []
     , NoMissingTypeAnnotation.rule
+
     -- , NoMissingTypeAnnotationInLetIn.rule
     , NoMissingTypeExpose.rule
     , NoSimpleLetBody.rule
+
     -- , NoUnnecessaryTrailingUnderscore.rule
     , NoRedundantlyQualifiedType.rule
+
     -- , NoPrematureLetComputation.rule
     -- , NoUnused.CustomTypeConstructors.rule []
     -- , NoUnused.CustomTypeConstructorArgs.rule
     -- , NoUnused.Dependencies.rule
     -- , NoUnused.Exports.rule
     , NoUnused.Parameters.rule
+
     -- , NoUnused.Patterns.rule
     , Simplify.rule Simplify.defaults
+
     -- NoUnused.CustomTypeConstructors.rule []
     -- NoUnused.CustomTypeConstructorArgs.rule
     -- , NoUnused.Dependencies.rule
     -- , NoUnused.Exports.rule |> Rule.ignoreErrorsForFiles ["src/View/Locale.elm"]
     -- , NoUnused.Parameters.rule
     -- , NoUnused.Patterns.rule
-     , NoUnused.Variables.rule 
+    , NoUnused.Variables.rule
     ]
-    |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "generated/plugins", "codegen/", "theme/", "plugins/casemgm", "src/PluginInterface"])
-    |> List.map (Rule.ignoreErrorsForFiles [ "src/PluginInterface.elm", "plugins/taxreport/src/Taxreport/OpenApi.elm", "plugins/taxreport/src/Taxreport/Api.elm", "plugins/quicklock/src/QuicklockBackend.elm"])
-
+    |> List.map (Rule.ignoreErrorsForDirectories [ "generated/", "openapi/", "lib/", "plugins", "src/PluginInterface"])
+    |> List.map (Rule.ignoreErrorsForFiles [ "src/PluginInterface.elm" ])

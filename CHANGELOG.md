@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.03.0] - 2025-03-01
+
+### Added
+
+- "More" tab with Pathfinder 1.0 and help links
+- Related addresses table in address details view (tagged/all cluster addresses)
+- Success notifications
+- Plugin hooks for new Pathfinder, new message based update hook
+
+### Changed
+
+- Moved Pathfinder 1.0 to "More" tab
+- Numerous minor design patches and bug fixes
+
 ## [24.01.5] - 2025-01-24
 
 ### added

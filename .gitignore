@@ -15,6 +15,8 @@ plugins_iknaio/*
 plugins_empty/*
 !plugins/EMPTY
 config/Config.elm*
+!config/Config.elm.tmp
+codegen/config/Config.elm
 testdata
 elm.js
 conv

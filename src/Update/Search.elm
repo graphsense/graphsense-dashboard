@@ -28,7 +28,7 @@ currencyToResult query found ( currency, latestBlock ) =
 
 
 currencyToResultWithoutBlock : String -> Api.Data.SearchResult -> String -> List ResultLine
-currencyToResultWithoutBlock query found currency =
+currencyToResultWithoutBlock _ found currency =
     found.currencies
         |> List.filter (.currency >> (==) currency)
         |> List.head
@@ -127,7 +127,17 @@ update msg model =
                                     ++ labelResultLines result
 
                             SearchAddressAndTx conf ->
-                                List.concatMap (currencyToResultWithoutBlock query result) conf.currencies
+                                case conf.currencies_filter of
+                                    Just currency_filter ->
+                                        List.concatMap (currencyToResultWithoutBlock query result) currency_filter
+
+                                    _ ->
+                                        let
+                                            currency_filter =
+                                                result.currencies
+                                                    |> List.map .currency
+                                        in
+                                        List.concatMap (currencyToResultWithoutBlock query result) currency_filter
 
                             SearchTagsOnly ->
                                 labelResultLines result

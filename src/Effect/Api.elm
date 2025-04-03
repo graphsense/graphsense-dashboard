@@ -12,7 +12,6 @@ import Api.Request.Tags
 import Api.Request.Tokens
 import Api.Request.Txs
 import Api.Time exposing (Posix)
-import Dict exposing (Dict)
 import Http
 import IntDict exposing (IntDict)
 import Json.Decode
@@ -20,6 +19,8 @@ import Json.Encode
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
+import Model.Pathfinder.Id exposing (Id)
+import Util.Http exposing (Headers)
 
 
 type Effect msg
@@ -259,6 +260,12 @@ type Effect msg
         , txs : List String
         }
         (List Api.Data.Tx -> msg)
+    | BulkGetAddressTagSummaryEffect
+        { currency : String
+        , addresses : List String
+        , includeBestClusterTag : Bool
+        }
+        (List ( Id, Api.Data.TagSummary ) -> msg)
 
 
 getEntityEgonet :
@@ -330,6 +337,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetAddressTagSummaryEffect eff
+
+        BulkGetAddressTagSummaryEffect eff m ->
+            m
+                >> mapMsg
+                |> BulkGetAddressTagSummaryEffect eff
 
         SearchEffect eff m ->
             m
@@ -512,7 +524,7 @@ map mapMsg effect =
                 |> BulkGetTxEffect eff
 
 
-perform : String -> (Result ( Http.Error, Effect msg ) ( Dict String String, msg ) -> msg) -> Effect msg -> Cmd msg
+perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
     case effect of
         GetAddressTagSummaryEffect { currency, address, includeBestClusterTag } toMsg ->
@@ -813,6 +825,26 @@ perform apiKey wrapMsg effect =
                     )
                 |> send apiKey wrapMsg effect toMsg
 
+        BulkGetAddressTagSummaryEffect { currency, addresses, includeBestClusterTag } toMsg ->
+            Json.Decode.list
+                (Json.Decode.field "_request_address" Json.Decode.string
+                    |> Json.Decode.andThen
+                        (\requestAddress ->
+                            Json.Decode.map
+                                (\ts -> ( ( currency, requestAddress ), ts ))
+                                Api.Data.tagSummaryDecoder
+                        )
+                )
+                |> Api.Request.MyBulk.bulkJson
+                    currency
+                    Api.Request.MyBulk.OperationGetAddressTagSummary
+                    (Json.Encode.object
+                        [ ( "address", Json.Encode.list Json.Encode.string addresses )
+                        , ( "include_best_cluster_tag", Json.Encode.bool includeBestClusterTag )
+                        ]
+                    )
+                |> send apiKey wrapMsg effect toMsg
+
 
 withAuthorization : String -> Api.Request a -> Api.Request a
 withAuthorization apiKey request =
@@ -823,7 +855,7 @@ withAuthorization apiKey request =
         Api.withHeader "Authorization" apiKey request
 
 
-send : String -> (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg
+send : String -> (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg
 send apiKey wrapMsg effect toMsg =
     withAuthorization apiKey
         >> Api.sendAndAlsoReceiveHeaders wrapMsg effect toMsg

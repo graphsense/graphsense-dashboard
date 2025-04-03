@@ -1,60 +1,48 @@
 module Util.ThemedSelectBox exposing
-    ( Model
+    ( Config
+    , Model
     , Msg(..)
     , OutMsg(..)
-    , SelectOption
     , close
     , empty
-    , fromList
     , init
-    , mapLabel
     , update
     , view
     )
 
 import Css
-import Html.Styled exposing (Html, div)
+import Html.Styled exposing (Html)
 import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onMouseLeave)
 import List.Extra
 import RecordSetter as Rs
-import Theme.Html.Icons as Icons
 import Theme.Html.SelectionControls as Sc
 import Util.Css
 import Util.View
 
 
-type alias SelectOption =
-    { value : String
-    , label : String
-    }
-
-
-type Msg
-    = Select String
+type Msg a
+    = Select a
     | Open
     | Close
 
 
-type OutMsg
-    = Selected String
+type OutMsg a
+    = Selected a
+    | NoSelection
 
 
-type Model
-    = SelectBox SelectBoxModel
+type Model a
+    = SelectBox (SelectBoxModel a)
 
 
-type alias SelectBoxModel =
-    { options : List SelectOption
+type alias SelectBoxModel a =
+    { options : List a
     , open : Bool
     }
 
 
-fromList : List ( String, String ) -> Model
-fromList lst =
-    lst |> List.map (\( x, y ) -> { value = x, label = y }) |> init
-
-
-init : List SelectOption -> Model
+init : List a -> Model a
 init options =
     SelectBox
         { options = options
@@ -62,56 +50,53 @@ init options =
         }
 
 
-mapLabel : (String -> String) -> Model -> Model
-mapLabel f (SelectBox m) =
-    SelectBox
-        { m
-            | options = m.options |> List.map (\x -> { x | label = f x.label })
-        }
-
-
-empty : Model
+empty : Model a
 empty =
     SelectBox { options = [], open = False }
 
 
-close : Model -> Model
+close : Model a -> Model a
 close (SelectBox m) =
     { m | open = False } |> SelectBox
 
 
-open : Model -> Model
+open : Model a -> Model a
 open (SelectBox m) =
     { m | open = True }
         |> SelectBox
 
 
-select : Model -> Model
+select : Model a -> Model a
 select (SelectBox m) =
     { m | open = not m.open }
         |> SelectBox
 
 
-update : Msg -> Model -> ( Model, Maybe OutMsg )
+update : Msg a -> Model a -> ( Model a, OutMsg a )
 update msg model =
     case msg of
         Select x ->
             ( select model
-            , Selected x |> Just
+            , Selected x
             )
 
         Open ->
-            ( open model, Nothing )
+            ( open model, NoSelection )
 
         Close ->
-            ( close model, Nothing )
+            ( close model, NoSelection )
 
 
-view : Model -> String -> Html Msg
-view (SelectBox sBox) selected =
+type alias Config a =
+    { optionToLabel : a -> String
+    }
+
+
+view : Config a -> Model a -> a -> Html (Msg a)
+view config (SelectBox sBox) selected =
     let
         selectedItem =
-            List.Extra.find (.value >> (==) selected) sBox.options
+            List.Extra.find ((==) selected) sBox.options
 
         createRow sItem hoverEffect x =
             let
@@ -125,27 +110,27 @@ view (SelectBox sBox) selected =
                                 []
                            )
                         |> css
-                    , Util.View.onClickWithStop (Select x.value)
+                    , Util.View.onClickWithStop (Select x)
                     ]
             in
-            if Just x.value == (sItem |> Maybe.map .value) then
+            if Just x == sItem then
                 Sc.dropDownLabelsStateActiveSizeNormalWithAttributes
                     (Sc.dropDownLabelsStateActiveSizeNormalAttributes
                         |> Rs.s_stateActiveSizeNormal itemAttributes
                     )
-                    { stateActiveSizeNormal = { dropDownText = x.label } }
+                    { stateActiveSizeNormal = { dropDownText = config.optionToLabel x } }
 
             else
                 Sc.dropDownLabelsStateNeutralSizeNormalWithAttributes
                     (Sc.dropDownLabelsStateNeutralSizeNormalAttributes
                         |> Rs.s_stateNeutralSizeNormal itemAttributes
                     )
-                    { stateNeutralSizeNormal = { dropDownText = x.label } }
+                    { stateNeutralSizeNormal = { dropDownText = config.optionToLabel x } }
 
-        selectedRow =
+        selectedLabel =
             selectedItem
-                |> Maybe.map (createRow Nothing False)
-                |> Maybe.withDefault Util.View.none
+                |> Maybe.map config.optionToLabel
+                |> Maybe.withDefault ""
     in
     if sBox.open then
         let
@@ -155,45 +140,41 @@ view (SelectBox sBox) selected =
                 , Css.top (Css.px Sc.dropDownClosed_details.height)
                 , Css.width (Css.px Sc.dropDownClosed_details.width)
                 , Css.property "user-select" "none"
+                , Css.height Css.auto
                 ]
 
             dropDownList =
                 sBox.options
                     |> List.map (createRow selectedItem True)
-                    |> div
-                        [ (Sc.dropDownOpenDropDownListNormalDropDownListNormal_details.styles ++ dropdownOverlayCss)
-                            |> css
-                        ]
         in
-        Sc.dropDownOpenWithInstances
+        Sc.dropDownOpenWithAttributes
             (Sc.dropDownOpenAttributes
                 |> Rs.s_dropDownOpen
                     [ Util.View.onClickWithStop Close
-                    , css [ Css.cursor Css.pointer ]
+                    , onMouseLeave Close
+                    , Util.View.pointer
+                    , css
+                        [ Sc.dropDownClosed_details.height
+                            |> Css.px
+                            |> Css.height
+                            |> Css.important
+                        ]
                     ]
+                |> Rs.s_dropDownList [ css dropdownOverlayCss ]
             )
-            (Sc.dropDownOpenInstances
-                |> Rs.s_dropDownListNormal (Just dropDownList)
-                |> Rs.s_text (Just selectedRow)
-            )
+            { dropDownList = dropDownList
+            }
             { dropDownHeaderOpen =
-                { iconInstance = Icons.iconsChevronUpThick {}
-                , text = ""
+                { text = selectedLabel
                 }
-            , dropDownLabels3 = { variant = Util.View.none }
-            , dropDownLabels4 = { variant = Util.View.none }
-            , dropDownLabels5 = { variant = Util.View.none }
             }
 
     else
-        Sc.dropDownClosedWithInstances
+        Sc.dropDownClosedWithAttributes
             (Sc.dropDownClosedAttributes
                 |> Rs.s_dropDownClosed
                     [ Util.View.onClickWithStop Open
-                    , css [ Css.cursor Css.pointer ]
+                    , Util.View.pointer
                     ]
             )
-            (Sc.dropDownClosedInstances
-                |> Rs.s_text (Just selectedRow)
-            )
-            { dropDownClosed = { text = "" } }
+            { dropDownClosed = { text = selectedLabel } }

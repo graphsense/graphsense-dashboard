@@ -17,6 +17,7 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
+import PagedTable
 import Util.Data exposing (timestampToPosix)
 
 
@@ -32,12 +33,10 @@ init network locale addressId data =
             data.noIncomingTxs + data.noOutgoingTxs
 
         table isDesc =
-            { table =
-                Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
-            , nrItems = Just <| nrItems
-            , currentPage = 1
-            , itemsPerPage = itemsPerPage
-            }
+            Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
+                |> PagedTable.init
+                |> PagedTable.setNrItems nrItems
+                |> PagedTable.setItemsPerPage itemsPerPage
     in
     Network.getRecentTxForAddress network Incoming addressId
         |> Maybe.map
@@ -73,12 +72,10 @@ initWithoutFilter addressId data =
             data.noIncomingTxs + data.noOutgoingTxs
 
         table isDesc =
-            { table =
-                Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
-            , nrItems = Just <| nrItems
-            , currentPage = 1
-            , itemsPerPage = itemsPerPage
-            }
+            Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
+                |> PagedTable.init
+                |> PagedTable.setNrItems nrItems
+                |> PagedTable.setItemsPerPage itemsPerPage
     in
     ( { table = table True
       , order = Nothing
@@ -86,7 +83,7 @@ initWithoutFilter addressId data =
       , txMinBlock = Nothing
       , txMaxBlock = Nothing
       }
-    , (GotTxsForAddressDetails addressId ( Nothing, Nothing ) >> AddressDetailsMsg)
+    , (GotTxsForAddressDetails ( Nothing, Nothing ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsEffect
             { currency = Id.network addressId
             , address = Id.id addressId
@@ -112,7 +109,7 @@ loadTxs id mn mx =
 loadFromDateBlock : Id -> Posix -> Effect
 loadFromDateBlock id mx =
     BrowserGotFromDateBlock mx
-        >> AddressDetailsMsg
+        >> AddressDetailsMsg id
         |> Api.GetBlockByDateEffect
             { currency = Id.network id
             , datetime = mx
@@ -123,7 +120,7 @@ loadFromDateBlock id mx =
 loadToDateBlock : Id -> Posix -> Effect
 loadToDateBlock id mn =
     BrowserGotToDateBlock mn
-        >> AddressDetailsMsg
+        >> AddressDetailsMsg id
         |> Api.GetBlockByDateEffect
             { currency = Id.network id
             , datetime = mn

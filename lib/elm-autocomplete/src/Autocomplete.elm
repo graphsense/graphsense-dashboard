@@ -3,7 +3,7 @@ module Autocomplete exposing
     , init, update
     , selectedValue
     , viewState, query, choices
-    , enoughCharacters, inFocus, onFetch, setChoices, setQuery, setSelectedIndex, setStatus
+    , enoughCharacters, inFocus, isBlur, isFocus, onFetch, setChoices, setQuery, setSelectedIndex, setStatus
     )
 
 {-| Autocomplete contains the main logic to handle auto-complete.
@@ -222,7 +222,7 @@ init minQueryLength initChoices =
     -- ...
 
 -}
-update : Msg -> Autocomplete a -> ( Autocomplete a, Bool, Cmd (Msg) )
+update : Msg -> Autocomplete a -> ( Autocomplete a, Bool, Cmd Msg )
 update msg (Autocomplete state) =
     case msg of
         OnInput q ->
@@ -403,3 +403,23 @@ inFocus (Autocomplete s) =
 enoughCharacters : Autocomplete s -> Bool
 enoughCharacters (Autocomplete s) =
     String.length s.query >= s.minQueryLength
+
+
+isBlur : Msg -> Bool
+isBlur msg =
+    case msg of
+        OnBlur ->
+            True
+
+        _ ->
+            False
+
+
+isFocus : Msg -> Bool
+isFocus msg =
+    case msg of
+        OnFocus ->
+            True
+
+        _ ->
+            False

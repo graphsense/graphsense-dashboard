@@ -46,7 +46,7 @@ mousedown msg =
 
 
 filterTxValue : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> Bool
-filterTxValue gc network value tokenValues =
+filterTxValue gc _ value tokenValues =
     gc.showZeroTransactions
         || List.any (.value >> (/=) 0)
             (tokenValues

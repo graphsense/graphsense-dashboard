@@ -1,4 +1,4 @@
-module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), Page(..), RequestLimit(..), SettingsMsg(..), Thing(..), UserModel, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), Thing(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -18,6 +18,7 @@ import Model.Dialog
 import Model.Graph
 import Model.Notification
 import Model.Pathfinder
+import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType)
 import Model.Search
 import Model.Statusbar
 import Msg.Graph
@@ -30,8 +31,8 @@ import RemoteData exposing (WebData)
 import Table
 import Time
 import Url exposing (Url)
+import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as SelectBox
-import Util.ThemedSelectBoxes as SelectBoxes
 
 
 type alias Flags =
@@ -61,8 +62,19 @@ type alias Model navigationKey =
     , supportedTokens : Dict String Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , notifications : Model.Notification.Model
-    , selectBoxes : SelectBoxes.Model
+    , localeSelectBox : SelectBox.Model String
     , dirty : Bool
+    , tooltip : Maybe (Tooltip Msg)
+    , navbarSubMenu : Maybe NavbarSubMenu
+    }
+
+
+type NavbarSubMenuType
+    = NavbarMore
+
+
+type alias NavbarSubMenu =
+    { type_ : NavbarSubMenuType
     }
 
 
@@ -80,7 +92,7 @@ type Msg
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
     | BrowserGotStatistics Api.Data.Stats
-    | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Effect.Api.Effect Msg ) ( Dict String String, Msg ))
+    | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ))
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
@@ -112,11 +124,19 @@ type Msg
     | UserHovercardMsg Hovercard.Msg
     | UserClosesNotification
     | SettingsMsg SettingsMsg
-    | SelectBoxMsg SelectBoxes.SelectBoxesAvailable SelectBox.Msg
+    | LocaleSelectBoxMsg (SelectBox.Msg String)
     | UserClickedNavBack
     | UserClickedNavHome
     | NotificationMsg Model.Notification.Msg
     | RuntimePostponedUpdateByUrl Url
+    | OpenTooltip { context : String, domId : String } (TooltipType Msg)
+    | ClosingTooltip (Maybe { context : String, domId : String }) Bool
+    | RepositionTooltip
+    | HovercardMsg Hovercard.Msg
+    | CloseTooltip (Maybe { context : String, domId : String }) (TooltipType Msg)
+    | UserToggledNavbarSubMenu NavbarSubMenuType
+    | UserClosesNavbarSubMenu
+    | BrowserGotUncaughtError Json.Encode.Value
 
 
 type SettingsMsg
@@ -126,7 +146,30 @@ type SettingsMsg
 
 type RequestLimit
     = Unlimited
-    | Limited { remaining : Int, limit : Int, reset : Int }
+    | Limited { remaining : Int, limit : Int, reset : Int, interval : RequestLimitInterval }
+
+
+type RequestLimitInterval
+    = Minute
+    | Hour
+    | Day
+    | Month
+
+
+requestLimitIntervalToString : RequestLimitInterval -> String
+requestLimitIntervalToString i =
+    case i of
+        Minute ->
+            "minute"
+
+        Hour ->
+            "hour"
+
+        Day ->
+            "day"
+
+        Month ->
+            "month"
 
 
 showResetCounterAtRemaining : Int
@@ -194,6 +237,4 @@ userSettingsFromMainModel model =
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
     , highlightClusterFriends = Just model.config.highlightClusterFriends
     , snapToGrid = Just model.config.snapToGrid
-
-    -- , showLabelsInTaggingOverview = Just model.config.showLabelsInTaggingOverview
     }

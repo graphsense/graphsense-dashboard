@@ -6,9 +6,9 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "elm-tooling install",
-    "dev": "make gen && vite",
+    "dev": "vite",
     "prebuild": "elm-tooling install",
-    "build": "make gen && NODE_ENV=${NODE_ENV:=production} vite build",
+    "build": "NODE_ENV=${NODE_ENV:=production} vite build",
     "serve": "vite preview",
     "test": "elm-test-rs"
   },

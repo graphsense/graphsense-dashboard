@@ -25,7 +25,7 @@ type SearchType
         { latestBlocks : List ( String, Int )
         , pickingCurrency : Bool
         }
-    | SearchAddressAndTx { currencies : List String }
+    | SearchAddressAndTx { currencies_filter : Maybe (List String) }
     | SearchTagsOnly
 
 

@@ -19,3 +19,4 @@ Value format: Value Format
 mentionTagDescriptionId: A mention tag expresses that this address was mentioned e.g. on a website. It might be of relevance, but it depends on the context.
 actorTagDescriptionId: An actor tag is a statement about the party controlling the address.
 eventTagDescriptionId: An event tag is a statement about an event taking place with relation to this address e.g. if the address was part of a hack.
+this table is empty: No entries found.

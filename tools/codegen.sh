@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ELM_CODEGEN="./node_modules/.bin/elm-codegen run --debug"
+ELM_CODEGEN="npx --node-options='--max-old-space-size=16384' elm-codegen run --debug"
 REFRESH=0
 FIGMA_WHITELIST_FRAMES=[]
 
@@ -51,15 +51,21 @@ if [ $REFRESH -eq 1 ]; then
 	    mkdir -p theme
         output=`$ELM_CODEGEN --flags="{\"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output theme 2>&1`
     else
-	    mkdir -p plugins/$PLUGIN_NAME/theme
-	    output=`$ELM_CODEGEN --flags="{\"plugin_name\": \"$PLUGIN_NAME\", \"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output plugins/$PLUGIN_NAME/theme 2>&1`
+        PLUGIN_FIGMA="./plugins/$PLUGIN_NAME/theme/figma.json"
+        if [ -e "$PLUGIN_FIGMA" ]; then
+	        output=`$ELM_CODEGEN --flags="{\"plugin_name\": \"$PLUGIN_NAME\", \"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" --output plugins/$PLUGIN_NAME/theme 2>&1`
+        else
+            echo "No $PLUGIN_FIGMA found to refresh. Exiting."
+            exit 0
+        fi
     fi
     if [ $? -eq 0 ]; then
-        if [[ ! $output =~ "generated!" ]]; then
+        if [[ ! $output =~ "generated" ]]; then
             echo "$output"
             exit 1
         fi
     fi
+    echo "$output" | grep "generated"
 else
     echo "Running codegen ..."
     tmp=`mktemp`.json
@@ -69,16 +75,29 @@ else
           echo '}'; \
         } > $tmp
     else
-        echo "{\"colormaps\": `cat ./theme/colormaps.json`, \"theme\": `cat ./plugins/$PLUGIN_NAME/theme/figma.json`}" > $tmp
+        PLUGIN_FIGMA="./plugins/$PLUGIN_NAME/theme/figma.json"
+        if [ -e "$PLUGIN_FIGMA" ]; then
+            echo "{\"colormaps\": `cat ./generated/theme/colormaps.json`, \"theme\": `cat $PLUGIN_FIGMA`}" > $tmp
+        else
+            echo "No $PLUGIN_FIGMA found. Skipping."
+            exit 0
+        fi
     fi
-    output=`$ELM_CODEGEN --output theme --flags-from=$tmp 2>&1`
+    cmd="$ELM_CODEGEN --output ./generated/theme --flags-from=$tmp"
+    echo $cmd
+    out=`mktemp`.out
+    $cmd 2>&1 > $out
+    found=`grep "files generated in" $out`
     # surprisingly elm-codegen yield exit code 0 if error
-    if [ $? -eq 0 ]; then
-        echo "$output"
+    if [ -z "$found" ]; then
+        echo "Printing the first 100 lines of output:"
+        head -n 100 $out
+        echo "The full output can be inspected in $out"
         echo "Input file: $tmp"
         exit 1
     fi
-    rm $tmp
+    echo "$found"
+    rm $tmp $out
 fi
 
 exit 0

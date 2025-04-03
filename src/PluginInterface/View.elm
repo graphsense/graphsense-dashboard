@@ -68,8 +68,20 @@ type alias View modelState addressState entityState msg =
     -- additional stuff for the new Pathfinder's address side panel header
     , addressSidePanelHeader : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Html msg)
 
+    -- additional stuff for the new Pathfinder's address side panel header tags
+    , addressSidePanelHeaderTags : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Maybe (Html msg))
+
     -- show a dialog
-    , dialog : Maybe (View.Config -> modelState -> Html msg)
+    , dialog : Maybe (View.Config -> modelState -> Maybe (Html msg))
+
+    -- show a tooltip
+    , tooltip : Maybe (View.Config -> { context : String, domId : String } -> modelState -> Maybe (List (Html msg)))
+
+    -- Upper left panel in pathfinder (right besides the logo)
+    , pathfinderUpperLeftPanel : Maybe (View.Config -> modelState -> Html msg)
+
+    -- allows to replace the tag icon on the address node with something more specific
+    , replaceAddressNodeTagIcon : Maybe (View.Config -> { hasTags : Bool } -> Pathfinder.Address -> addressState -> Maybe (Svg msg))
     }
 
 
@@ -93,5 +105,9 @@ init =
     , profile = Nothing
     , login = Nothing
     , addressSidePanelHeader = Nothing
+    , addressSidePanelHeaderTags = Nothing
     , dialog = Nothing
+    , tooltip = Nothing
+    , pathfinderUpperLeftPanel = Nothing
+    , replaceAddressNodeTagIcon = Nothing
     }

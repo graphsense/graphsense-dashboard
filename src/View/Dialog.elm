@@ -28,6 +28,7 @@ import Theme.Html.ErrorMessagesAlerts
         )
 import Theme.Html.Icons as Icons
 import Util.View exposing (addDot, none, onClickWithStop)
+import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.TagDetailsList as TagsDetailList
 
@@ -64,24 +65,32 @@ view plugins pluginStates vc model =
 confirm : Config -> ConfirmConfig Msg -> Html Msg
 confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
     let
-        buttonAttrYes =
-            [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm onYes) ]
-
         buttonAttrNo =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm onNo) ]
 
         ybtn =
-            Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
-                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> Rs.s_button buttonAttrYes)
-                { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale (confirmText |> Maybe.withDefault "Yes"), iconInstance = none, iconVisible = True } }
+            Button.btnDefaultConfig
+                |> Rs.s_text (confirmText |> Maybe.withDefault "Yes")
+                |> Rs.s_onClick (Just (UserClickedConfirm onYes))
+                |> Rs.s_onClickWithStop True
+                |> Button.primaryButton vc
 
         nbtn =
-            Buttons.buttonTypeTextStateRegularStyleOutlinedWithAttributes
-                (Buttons.buttonTypeTextStateRegularStyleOutlinedAttributes |> Rs.s_button buttonAttrNo)
-                { typeTextStateRegularStyleOutlined = { buttonText = Locale.string vc.locale (cancelText |> Maybe.withDefault "No"), iconInstance = none, iconVisible = True } }
+            Button.btnDefaultConfig
+                |> Rs.s_text (cancelText |> Maybe.withDefault "No")
+                |> Rs.s_onClick (Just (UserClickedConfirm onNo))
+                |> Rs.s_onClickWithStop True
+                |> Button.linkButtonBlue vc
     in
     dialogConfirmationMessageWithAttributes
-        (dialogConfirmationMessageAttributes |> Rs.s_iconsCloseBlack buttonAttrNo)
+        (dialogConfirmationMessageAttributes
+            |> Rs.s_iconsCloseBlack buttonAttrNo
+            |> Rs.s_popupTitle
+                (Css.textWrap vc
+                    |> css
+                    |> List.singleton
+                )
+        )
         { cancelButton = { variant = nbtn }, confirmButton = { variant = ybtn }, dialogConfirmationMessage = { bodyText = Locale.string vc.locale message, headerText = Locale.string vc.locale title } }
 
 
@@ -280,7 +289,7 @@ info vc inf =
     in
     errorMessageComponentTypeAlertWithAttributes
         (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
-        { header = { iconInstance = icon, title = Locale.string vc.locale (inf.title |> Maybe.withDefault "Information") }, messageText = { messageText = Locale.string vc.locale inf.info }, typeAlert = { bodyText = "", headlineText = "" } }
+        { header = { iconInstance = icon, title = Locale.interpolated vc.locale (inf.title |> Maybe.withDefault "Information") inf.variables }, messageText = { messageText = Locale.interpolated vc.locale inf.info inf.variables }, typeAlert = { bodyText = "", headlineText = "" } }
 
 
 custom : CustomConfig Msg -> Html Msg
@@ -291,3 +300,4 @@ custom { html } =
 plugin : Plugins -> Plugin.Model.ModelState -> Config -> PluginConfig Msg -> Html Msg
 plugin plugins pluginStates vc _ =
     Plugin.dialog plugins pluginStates vc
+        |> Maybe.withDefault none

@@ -10,13 +10,13 @@ import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
-import Model.Pathfinder.Tooltip exposing (TooltipType)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
 import Table
-import Time exposing (Posix)
+import Time
+import Util.Tag exposing (TooltipContext)
 
 
 type Msg
@@ -38,14 +38,15 @@ type Msg
     | UserReleasedEscape
     | UserPressedNormalKey String
     | UserReleasedNormalKey String
-    | AddressDetailsMsg AddressDetails.Msg
+    | AddressDetailsMsg Id AddressDetails.Msg
     | TxDetailsMsg TxDetailsMsg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
     | BrowserGotAddressData Id FindPosition Api.Data.Address
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
-    | BrowserGotTagSummary Id Api.Data.TagSummary
+    | BrowserGotTagSummary Bool Id Api.Data.TagSummary
+    | BrowserGotTagSummaries Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id
     | PluginMsg Plugin.Msg
@@ -55,9 +56,7 @@ type Msg
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx FindPosition Bool Api.Data.Tx
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
-    | Tick Posix
     | UserClickedTx Id
-    | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedAddressCheckboxInTable Id
     | WorkflowNextUtxoTx WorkflowNextTxContext WorkflowNextUtxoTxMsg
     | WorkflowNextTxByTime WorkflowNextTxContext WorkflowNextTxByTimeMsg
@@ -68,16 +67,12 @@ type Msg
     | UserMovesMouseOutUtxoTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
-    | UserMovesMouseOverTagLabel String
-    | UserMovesMouseOutTagLabel String
-    | CloseTooltip TooltipType
-    | UserMovesMouseOverTagConcept String
-    | UserMovesMouseOutTagConcept String
-    | UserMovesMouseOverActorLabel String
-    | UserMovesMouseOutActorLabel String
+    | UserMovesMouseOverTagLabel TooltipContext
+    | UserMovesMouseOutTagLabel TooltipContext
+    | UserMovesMouseOverActorLabel TooltipContext
+    | UserMovesMouseOutActorLabel TooltipContext
     | UserInputsAnnotation Id String
     | UserSelectsAnnotationColor Id (Maybe Color)
-    | HovercardMsg Hovercard.Msg
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsImage String
     | UserClickedToggleClusterDetailsOpen
@@ -103,7 +98,7 @@ type Msg
 
 
 type alias TextTooltipConfig =
-    { anchorId : String, text : String }
+    { domId : String, text : String }
 
 
 type OverlayWindows

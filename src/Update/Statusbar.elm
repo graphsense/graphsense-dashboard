@@ -157,6 +157,15 @@ messageFromEffect model effect =
         Model.PostponeUpdateByUrlEffect _ ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.OpenTooltipEffect _ _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.CloseTooltipEffect _ _) ->
+            Nothing
+
+        Model.PathfinderEffect Pathfinder.RepositionTooltipEffect ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =
@@ -424,6 +433,14 @@ messageFromApiEffect model effect =
         Api.GetEntityAddressesEffect e _ ->
             ( "{1}: loading addresses of entity {0}"
             , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.BulkGetAddressTagSummaryEffect e _ ->
+            ( "{1}: loading {0} tag summaries"
+            , [ List.length e.addresses |> String.fromInt
               , e.currency |> String.toUpper
               ]
             )

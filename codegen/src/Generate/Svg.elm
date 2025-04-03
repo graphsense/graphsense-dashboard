@@ -2,6 +2,7 @@ module Generate.Svg exposing (..)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (uncurry)
+import Config exposing (showId)
 import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
@@ -18,7 +19,7 @@ import Generate.Svg.LineNode as LineNode
 import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
 import Generate.Svg.VectorNode as VectorNode
-import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, toTranslate, withVisibility)
+import Generate.Util exposing (addIdAttribute, detailsToDeclaration, getElementAttributes, sanitize, toTranslate, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details)
@@ -303,6 +304,7 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
                             , parentName = parentName
                             , componentName = details.name
                             , instanceName = ""
+                            , showId = showId
                             }
                     in
                     Gen.Svg.Styled.call_.g

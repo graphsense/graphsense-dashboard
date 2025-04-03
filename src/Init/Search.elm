@@ -21,8 +21,8 @@ initSearchAll stats =
         }
 
 
-initSearchAddressAndTxs : List String -> SearchType
+initSearchAddressAndTxs : Maybe (List String) -> SearchType
 initSearchAddressAndTxs currencies =
     SearchAddressAndTx
-        { currencies = currencies
+        { currencies_filter = currencies
         }

@@ -15,7 +15,7 @@ ENV WORKDIR=/app
 
 RUN mkdir $WORKDIR && \
     apk --no-cache --update add bash nginx nodejs npm && \
-    apk --no-cache --update --virtual build-dependendencies add python3 make g++
+    apk --no-cache --update --virtual build-dependendencies add python3 make g++ jq
 
 
 WORKDIR $WORKDIR
@@ -28,6 +28,7 @@ COPY ./src $WORKDIR/src
 COPY ./openapi $WORKDIR/openapi
 COPY ./public $WORKDIR/public
 COPY ./lang $WORKDIR/lang
+#COPY ./generated/theme $WORKDIR/generated/theme
 COPY ./plugins $WORKDIR/plugins
 COPY ./plugin_templates $WORKDIR/plugin_templates
 COPY ./themes $WORKDIR/themes
@@ -40,12 +41,12 @@ COPY ./generate.js $WORKDIR/generate.js
 RUN mkdir -p /usr/share/nginx/html /run/nginx && \
     rm -f /etc/nginx/http.d/default.conf 
 
-RUN npm install 
-
 COPY ./docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 COPY ./tools $WORKDIR/tools
+
+RUN touch .env && make prepare
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]

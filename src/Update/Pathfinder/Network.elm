@@ -12,6 +12,7 @@ module Update.Pathfinder.Network exposing
     , ingestTxs
     , snapToGrid
     , updateAddress
+    , updateAddressesByClusterId
     , updateTx
     )
 
@@ -367,6 +368,20 @@ updateAddress id update model =
             { model
                 | addresses = Dict.update id (Maybe.map update) model.addresses
             }
+
+
+updateAddressesByClusterId : Id -> (Address -> Address) -> Network -> Network
+updateAddressesByClusterId id update model =
+    let
+        toUpdate =
+            getAddressIdsInCluster
+                id
+                model
+
+        agg ida n =
+            updateAddress ida update n
+    in
+    toUpdate |> List.foldl agg model
 
 
 updateTx : Id -> (Tx -> Tx) -> Network -> Network

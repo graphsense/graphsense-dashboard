@@ -8,6 +8,7 @@ module View.Locale exposing
     , date
     , durationPosix
     , durationToString
+    , durationToStringWithPrecision
     , fiat
     , fiatWithoutCode
     , httpErrorToString

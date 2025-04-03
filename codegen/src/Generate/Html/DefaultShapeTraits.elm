@@ -19,7 +19,7 @@ import Types exposing (ColorMap, Config, Details)
 toStyles : ColorMap -> DefaultShapeTraits -> List Elm.Expression
 toStyles colorMap node =
     HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
-        ++ HasGeometryTrait.toStyles colorMap node.hasGeometryTrait
+        ++ HasGeometryTrait.toStyles colorMap node.hasGeometryTrait Nothing
         ++ HasEffectsTrait.toStyles colorMap node.hasEffectsTrait
 
 
