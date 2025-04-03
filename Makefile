@@ -127,6 +127,14 @@ lint:
 lint-fix: 
 	npx elm-review --fix-all
 
+lint-plugins:
+	@for p in $(PLUGINS); do \
+		if [ -e $(PLUGINS_DIR)/$$p/elm.json -a -e $(PLUGINS_DIR)/$$p/review ]; then \
+			echo "Linting $$p ..."; \
+			cd plugins/$$p; npx elm-review; cd -; \
+		fi \
+	done
+
 lint-ci:
 	npx elm-review --ignore-files src/Util/View.elm,src/View/Box.elm,src/View/Locale.elm,src/Update/Search.elm,src/Route/Graph.elm,src/Route.elm,src/View/Graph/Table.elm,src/Css/Button.elm,config/Config.elm
 
@@ -164,7 +172,10 @@ $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(CODEGEN_RECORDSETTER) $(
 plugin-themes: $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER)) setem
 
 $(GENERATED_PLUGINS)/%/$(PLUGIN_INSTALLED_MARKER): 
-	while read dep; do yes | npx elm install $${dep}; done < $(PLUGINS_DIR)/$*/dependencies.txt
+	jq -r '.dependencies | keys[]' $(PLUGINS_DIR)/$*/elm.json \
+		| while read dep; do \
+			yes | npx elm install $$dep; \
+		done 
 	cd $(PLUGINS_DIR)/$*; test -f $(PLUGINS_DIR)/$*/package.json && npm install || true
 	mkdir -p $(GENERATED_PLUGINS)/$*
 	touch $@
