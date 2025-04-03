@@ -116,7 +116,7 @@ serve-docker: build-docker
 	docker run -it --network='host' -e REST_URL=http://localhost:9000 localhost/graphsense-dashboard:latest
 
 format:
-	npx elm-format --yes src tests $(PLUGINS_DIR)
+	npx elm-format --yes src tests 
 
 format-plugins:
 	npx elm-format --yes $(PLUGINS_DIR)
@@ -134,9 +134,6 @@ lint-plugins:
 			cd plugins/$$p; npx elm-review; cd -; \
 		fi \
 	done
-
-lint-ci:
-	npx elm-review --ignore-files src/Util/View.elm,src/View/Box.elm,src/View/Locale.elm,src/Update/Search.elm,src/Route/Graph.elm,src/Route.elm,src/View/Graph/Table.elm,src/Css/Button.elm,config/Config.elm
 
 $(CODEGEN_CONFIG):
 	[ ! -e $(CODEGEN_CONFIG) ] && cp $(CODEGEN_CONFIG).tmp $(CODEGEN_CONFIG)
