@@ -160,7 +160,10 @@ check-plugin-exists:
 plugin-theme-refresh: check-plugin-exists clean-plugin-figma-json $(PLUGINS_DIR)/$(PLUGIN_NAME)/$(FIGMA_JSON) plugin-theme
 
 $(PLUGINS_DIR)/%/$(FIGMA_JSON):
-	./tools/codegen.sh --plugin=$* --file-id=$(FIGMA_FILE_ID) --refresh 
+	@# only update an existing figma.json
+	if [ -e $(PLUGINS_DIR)/%/$(FIGMA_JSON) ]; then \
+		./tools/codegen.sh --plugin=$* --file-id=$(FIGMA_FILE_ID) --refresh; \
+	fi
 
 plugin-theme: check-plugin-exists $(GENERATED_THEME_THEME)/$(PLUGIN_NAME)/$(THEME_GENERATED_MARKER) setem
 
