@@ -66,6 +66,7 @@ view _ vc _ tx utxo annotation =
                         tx
                         GraphComponents.txNodeUtxo_details
                         offset
+                        UserOpensAddressAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
     in

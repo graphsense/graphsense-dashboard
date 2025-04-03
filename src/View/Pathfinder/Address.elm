@@ -3,7 +3,6 @@ module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 import Animation as A
 import Api.Data
 import Color
-import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Html.Styled.Attributes as Html
@@ -12,6 +11,7 @@ import Init.Pathfinder.Id as Id
 import Json.Decode
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
+import Model.Entity exposing (isPossibleService)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, Txs(..), expandAllowed, getTxs, txsGetSet)
@@ -21,7 +21,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
-import RemoteData
+import RemoteData exposing (WebData)
 import Svg.Styled as Svg exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
@@ -34,8 +34,8 @@ import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Maybe Annotations.AnnotationItem -> Svg Msg
-view _ vc _ colors address getCluster annotation =
+view : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe (WebData Api.Data.Entity)) -> Maybe Annotations.AnnotationItem -> Svg Msg
+view plugins vc colors address getCluster annotation =
     let
         data =
             RemoteData.toMaybe address.data
@@ -53,7 +53,9 @@ view _ vc _ colors address getCluster annotation =
             clusterColor |> Maybe.map (Color.toRgba >> halfAlpha)
 
         cluster =
-            clusterid |> Maybe.andThen getCluster
+            clusterid
+                |> Maybe.andThen getCluster
+                |> Maybe.andThen RemoteData.toMaybe
 
         directionToField direction =
             case direction of
@@ -100,8 +102,8 @@ view _ vc _ colors address getCluster annotation =
             fd.y + fd.height / 2
 
         nodeLabel =
-            address.exchange
-                |> Maybe.Extra.or address.actor
+            address.actor
+                |> Maybe.Extra.or address.exchange
                 |> Maybe.Extra.or
                     (case getAddressType address cluster of
                         LikelyUnknownService ->
@@ -110,6 +112,29 @@ view _ vc _ colors address getCluster annotation =
                         _ ->
                             Nothing
                     )
+
+        replacementTagIcons =
+            Plugin.View.replaceAddressNodeTagIcon plugins address.plugins vc { hasTags = address.hasTags } address
+
+        replacementIconCombined =
+            if List.length replacementTagIcons > 0 then
+                Just
+                    (replacementTagIcons
+                        |> List.indexedMap
+                            (\i x ->
+                                x
+                                    |> List.singleton
+                                    |> g
+                                        [ translate
+                                            ((i |> toFloat) * 4.0)
+                                            ((i |> toFloat) * 4.0)
+                                            |> transform
+                                        ]
+                            )
+                    )
+
+            else
+                Nothing
 
         offset =
             2
@@ -127,6 +152,7 @@ view _ vc _ colors address getCluster annotation =
                         address
                         GraphComponents.addressNode_details
                         offset
+                        UserOpensAddressAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
     in
@@ -136,7 +162,7 @@ view _ vc _ colors address getCluster annotation =
             ((A.animate address.clock address.y + address.dy) * unit - adjY)
             |> transform
         ]
-        (GraphComponents.addressNodeWithAttributes
+        (GraphComponents.addressNodeWithInstances
             (GraphComponents.addressNodeAttributes
                 |> Rs.s_addressNode
                     [ A.animate address.clock address.opacity
@@ -169,6 +195,7 @@ view _ vc _ colors address getCluster annotation =
                     )
              -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
             )
+            GraphComponents.addressNodeInstances
             { addressNode =
                 { addressId =
                     address.id
@@ -182,7 +209,10 @@ view _ vc _ colors address getCluster annotation =
                 , exchangeLabel = nodeLabel |> Maybe.withDefault ""
                 , exchangeLabelVisible = nodeLabel /= Nothing
                 , isStartingPoint = address.isStartingPoint || address.selected
-                , tagIconVisible = address.hasTags
+                , tagIconVisible = address.hasTags || List.length replacementTagIcons > 0
+                , tagIconInstance =
+                    (replacementIconCombined |> Maybe.map (g []))
+                        |> Maybe.withDefault (Icons.iconsTagLtypeDirect {})
                 }
             , iconsNodeOpenLeft =
                 { variant =
@@ -268,15 +298,9 @@ expandHandleLoadingSpinner vc address direction details =
         Nothing
 
 
-toNodeIconHtml : Maybe Address -> Maybe Api.Data.Entity -> Svg msg
+toNodeIconHtml : Address -> Maybe Api.Data.Entity -> Svg msg
 toNodeIconHtml address cluster =
-    (case address of
-        Just addr ->
-            toNodeIcon addr cluster
-
-        Nothing ->
-            Icons.iconsUntagged {}
-    )
+    toNodeIcon address cluster
         |> List.singleton
         |> Svg.svg
             [ Svg.width "24"
@@ -292,20 +316,7 @@ type AddressServiceType
 
 getAddressType : Address -> Maybe Api.Data.Entity -> AddressServiceType
 getAddressType address cluster =
-    let
-        clstrSize =
-            cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
-
-        clusterIndegree =
-            cluster |> Maybe.map .inDegree |> Maybe.withDefault 0
-
-        maxClusterSizeUser =
-            100
-
-        maxInDegreeUser =
-            7500
-    in
-    if clstrSize > maxClusterSizeUser || clusterIndegree > maxInDegreeUser then
+    if Maybe.map isPossibleService cluster |> Maybe.withDefault False then
         if address.actor == Nothing then
             LikelyUnknownService
 

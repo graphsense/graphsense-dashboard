@@ -1,7 +1,5 @@
 module Init.Pathfinder exposing (init)
 
-import Api.Data
-import Config.UserSettings exposing (UserSettings)
 import Dict
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
@@ -11,14 +9,12 @@ import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Tools exposing (PointerTool(..))
-import Msg.Pathfinder exposing (Msg(..))
-import Task
-import Time
+import Msg.Pathfinder exposing (Msg)
 import Util.Annotations as Annotations
 
 
-init : UserSettings -> Maybe Api.Data.Stats -> ( Model, Cmd Msg )
-init us _ =
+init : { x | snapToGrid : Maybe Bool } -> ( Model, Cmd Msg )
+init us =
     ( { network = Network.init
       , actors = Dict.empty
       , tagSummaries = Dict.empty
@@ -27,7 +23,7 @@ init us _ =
       , clusters = Dict.empty
       , selection = NoSelection
       , hovered = NoHover
-      , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "zec", "ltc", "eth", "trx" ])
+      , search = Search.init (Search.initSearchAddressAndTxs Nothing)
       , dragging = NoDragging
       , transform = Transform.init
       , history = History.init
@@ -37,14 +33,13 @@ init us _ =
             , displayAllTagsInDetails = False
             , snapToGrid = us.snapToGrid |> Maybe.withDefault False
             }
-      , currentTime = Time.millisToPosix 0
       , pointerTool = Drag
       , modPressed = False
       , isDirty = False
-      , tooltip = Nothing
       , toolbarHovercard = Nothing
       , contextMenu = Nothing
       , name = "graph"
+      , selectAfterLoad = Nothing
       }
-    , Task.perform Tick Time.now
+    , Cmd.none
     )

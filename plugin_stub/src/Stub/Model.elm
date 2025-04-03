@@ -20,3 +20,7 @@ type alias AddressState =
 
 type alias EntityState =
     ()
+
+
+type alias Dialog =
+    ()

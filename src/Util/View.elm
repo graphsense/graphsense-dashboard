@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, frame, hovercard, loadingSpinner, longIdentifier, nona, none, onClickWithStop, onOffSwitch, p, setAlpha, switch, switchInternal, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -14,9 +14,12 @@ import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
+import List.Extra
 import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
 import Switch
 import Theme.Html.GraphComponents
+import Time exposing (Posix)
+import Util.Css
 import View.Locale as Locale
 
 
@@ -70,11 +73,15 @@ truncate len str =
 
 truncateLongIdentifier : String -> String
 truncateLongIdentifier =
-    truncateLongIdentifierWithLengths 8 8
+    truncateLongIdentifierWithLengths 8 4
 
 
 truncateLongIdentifierWithLengths : Int -> Int -> String -> String
 truncateLongIdentifierWithLengths start end str =
+    let
+        zeroInfoPrefixes =
+            [ "bc1", "ltc1", "0x" ]
+    in
     if String.length str > 18 then
         let
             -- sigPart =
@@ -86,11 +93,12 @@ truncateLongIdentifierWithLengths start end str =
                 str
 
             startwOffset =
-                if String.startsWith "0x" str then
-                    start + 2
-
-                else
-                    start
+                start
+                    + (zeroInfoPrefixes
+                        |> List.Extra.find (\prefix -> String.startsWith prefix str)
+                        |> Maybe.map String.length
+                        |> Maybe.withDefault 0
+                      )
         in
         String.left startwOffset sigPart ++ "…" ++ String.right end sigPart
 
@@ -103,6 +111,23 @@ setAlpha alpha =
     BColor.toRgba
         >> (\c -> { c | alpha = alpha })
         >> BColor.fromRgba
+
+
+hovercardFullViewPort : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
+hovercardFullViewPort vc element zIndex =
+    Hovercard.view
+        { tickLength = 16
+        , zIndex = zIndex
+        , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
+        , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
+        , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
+        , viewport = Nothing
+        }
+        element
+        (Css.hovercard vc
+            |> List.map (\( k, v ) -> Html.Attributes.style k v)
+        )
+        >> Html.Styled.fromUnstyled
 
 
 hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
@@ -224,11 +249,16 @@ copyableLongIdentifierPathfinder vc attr identifier =
 
 copyIconPathfinder : View.Config -> String -> Html msg
 copyIconPathfinder =
-    copyIconWithAttrPathfinder (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
+    copyIconWithAttrPathfinder False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
 
 
-copyIconWithAttrPathfinder : List (Attribute msg) -> View.Config -> String -> Html msg
-copyIconWithAttrPathfinder attr vc value =
+copyIconWithoutHint : View.Config -> String -> Html msg
+copyIconWithoutHint =
+    copyIconWithAttrPathfinder True (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
+
+
+copyIconWithAttrPathfinder : Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
+copyIconWithAttrPathfinder hideHint attr vc value =
     Html.Styled.a
         ((Css.copyIcon vc |> css)
             :: attr
@@ -238,7 +268,7 @@ copyIconWithAttrPathfinder attr vc value =
             , Locale.string vc.locale "Copied!"
                 |> Html.Styled.Attributes.attribute "data-copied-label"
             ]
-            [ Theme.Html.GraphComponents.copyShortcutWithAttributes
+            [ Theme.Html.GraphComponents.copyShortcutWithInstances
                 (Theme.Html.GraphComponents.copyShortcutAttributes
                     |> s_iconsCopyS
                         [ css
@@ -250,7 +280,8 @@ copyIconWithAttrPathfinder attr vc value =
                         [ Html.Styled.Attributes.attribute "data-hint" ""
                         , css
                             [ Css.display Css.none
-                            , Css.zIndex <| Css.int 50
+                            , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
+                            , Css.position Css.fixed |> Css.important
                             ]
                         ]
                     |> s_label
@@ -266,6 +297,15 @@ copyIconWithAttrPathfinder attr vc value =
                             [ Css.px 1 |> Css.left
                             ]
                         ]
+                )
+                (Theme.Html.GraphComponents.copyShortcutInstances
+                    |> s_hint
+                        (if hideHint then
+                            Just none
+
+                         else
+                            Nothing
+                        )
                 )
                 { copyShortcut = { hint = Locale.string vc.locale "Copy" }
                 }
@@ -326,3 +366,48 @@ onClickWithStop : msg -> Attribute msg
 onClickWithStop msg =
     Json.Decode.succeed ( msg, True )
         |> stopPropagationOn "click"
+
+
+pointer : Attribute msg
+pointer =
+    css [ Css.cursor Css.pointer ]
+
+
+noTextSelection : Attribute msg
+noTextSelection =
+    css
+        [ Css.property "user-select"
+            "none"
+        , Css.property
+            "-ms-user-select"
+            "none"
+        , Css.property
+            "-webkit-user-select"
+            "none"
+        ]
+
+
+fullWidthCss : Style
+fullWidthCss =
+    Css.pct 100 |> Css.width |> Css.important
+
+
+fixFillRule : Attribute msg
+fixFillRule =
+    [ Css.property "fill-rule" "evenodd"
+    ]
+        |> css
+
+
+posixToCell : View.Config -> Posix -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+posixToCell vc posix =
+    Locale.posixToTimestampSeconds posix
+        |> timeToCell vc
+
+
+timeToCell : View.Config -> Int -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+timeToCell vc d =
+    { firstRowText = Locale.timestampDateUniform vc.locale d
+    , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
+    , secondRowVisible = True
+    }

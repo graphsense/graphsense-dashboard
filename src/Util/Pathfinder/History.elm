@@ -67,7 +67,7 @@ shallPushHistory msg _ =
         UserReleasedNormalKey _ ->
             False
 
-        AddressDetailsMsg _ ->
+        AddressDetailsMsg _ _ ->
             False
 
         TxDetailsMsg _ ->
@@ -88,7 +88,7 @@ shallPushHistory msg _ =
         BrowserGotAddressesTags _ _ ->
             False
 
-        BrowserGotTagSummary _ _ ->
+        BrowserGotTagSummary _ _ _ ->
             False
 
         UserClickedAddressExpandHandle _ _ ->
@@ -112,14 +112,8 @@ shallPushHistory msg _ =
         ChangedDisplaySettingsMsg _ ->
             False
 
-        Tick _ ->
-            False
-
         UserClickedTx _ ->
             False
-
-        UserClickedTxCheckboxInTable _ ->
-            True
 
         UserClickedAddressCheckboxInTable _ ->
             True
@@ -157,12 +151,6 @@ shallPushHistory msg _ =
         UserMovesMouseOutTagLabel _ ->
             False
 
-        UserMovesMouseOverTagConcept _ ->
-            False
-
-        UserMovesMouseOutTagConcept _ ->
-            False
-
         UserMovesMouseOverActorLabel _ ->
             False
 
@@ -173,9 +161,6 @@ shallPushHistory msg _ =
             False
 
         UserSelectsAnnotationColor _ _ ->
-            False
-
-        HovercardMsg _ ->
             False
 
         ToolbarHovercardMsg _ ->
@@ -238,11 +223,11 @@ shallPushHistory msg _ =
         UserGotDataForTagsListDialog _ _ ->
             False
 
-        CloseTooltip _ ->
-            False
-
         ShowTextTooltip _ ->
             False
 
         CloseTextTooltip _ ->
+            False
+
+        BrowserGotTagSummaries _ _ ->
             False

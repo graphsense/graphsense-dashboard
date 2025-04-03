@@ -292,3 +292,9 @@ app.ports.saveToLocalStorage.subscribe(data => {
     localStorage.setItem(k, data[k]);
   }
 });
+
+window.onerror = (message) => {
+  app.ports.uncaughtError.send({message})
+  console.error(message)
+  return true
+}

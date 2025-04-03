@@ -14,4 +14,5 @@ type alias Config =
     , size : Maybe BBox -- position and size of the main pane
     , allConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
+    , snapToGrid : Bool
     }

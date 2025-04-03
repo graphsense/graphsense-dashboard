@@ -16,10 +16,10 @@ import Model exposing (..)
 import Model.Locale as Locale
 import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
+import Tuple exposing (first)
 import Update exposing (updateByPluginOutMsg)
 import Url exposing (Url)
 import Util.ThemedSelectBox as TSelectBox
-import Util.ThemedSelectBoxes as TSelectBoxes
 
 
 init : Plugins -> Update.Config -> Flags -> Url -> key -> ( Model key, List Effect )
@@ -37,12 +37,7 @@ init plugins uc flags url key =
             Plugin.init plugins flags.pluginFlags
 
         ( pathfinderState, pathfinderCmd ) =
-            Pathfinder.init settings Nothing
-
-        selectBoxes =
-            TSelectBoxes.init
-                [ ( TSelectBoxes.SupportedLanguages, TSelectBox.fromList Locale.locales )
-                ]
+            Pathfinder.init settings
     in
     ( { url = url
       , key = key
@@ -63,7 +58,7 @@ init plugins uc flags url key =
             , abuseConcepts = []
             }
       , page = Home
-      , search = Search.init (Search.initSearchAll Nothing)
+      , search = Search.init (Search.initSearchAddressAndTxs Nothing)
       , graph = Graph.init settings flags.now
       , pathfinder = pathfinderState
       , user =
@@ -81,7 +76,9 @@ init plugins uc flags url key =
       , plugins = pluginStates
       , dirty = False
       , notifications = Notification.init
-      , selectBoxes = selectBoxes
+      , localeSelectBox = TSelectBox.init <| List.map first Locale.locales
+      , tooltip = Nothing
+      , navbarSubMenu = Nothing
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy

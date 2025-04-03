@@ -1,24 +1,19 @@
 module View.Graph.Table.AddressTagsTable exposing (config)
 
 import Api.Data
-import Config.Graph as Graph
 import Config.View as View
 import Css
 import Css.Table exposing (styles)
 import Css.View
-import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Init.Graph.Table
 import Model.Address as A
 import Model.Graph.Id as Id
-import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.AddressTagsTable exposing (..)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
-import Util.Graph
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
@@ -111,7 +106,7 @@ config vc bestAddressTag entityId entityHasAddress =
                 vc
                 "Category"
                 (.category
-                    >> View.getConceptName vc
+                    >> Maybe.andThen (View.getConceptName vc)
                     >> Maybe.withDefault ""
                 )
             , T.stringColumn styles

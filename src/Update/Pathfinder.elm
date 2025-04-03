@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fromDeserialized, removeAddress, unselect, update, updateByRoute)
+module Update.Pathfinder exposing (deserialize, fromDeserialized, removeAddress, unselect, update, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -15,10 +15,10 @@ import Hovercard
 import Iknaio.ColorScheme exposing (annotationGreen, annotationRed)
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
+import Init.Pathfinder as Pathfinder
 import Init.Pathfinder.AddressDetails as AddressDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
-import Init.Pathfinder.Tooltip as Tooltip
 import Init.Pathfinder.TxDetails as TxDetails
 import Json.Decode
 import List.Extra
@@ -30,6 +30,7 @@ import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
+import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Deserialize exposing (Deserialized)
@@ -49,19 +50,23 @@ import Msg.Pathfinder
         , OverlayWindows(..)
         , WorkflowNextTxByTimeMsg(..)
         )
+import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
-import Plugin.Update exposing (Plugins)
+import Plugin.Msg as Plugin
+import Plugin.Update as Plugin exposing (Plugins)
+import PluginInterface.Msg as PluginInterface
 import Ports
 import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route as GlobalRoute
-import Route.Pathfinder as Route exposing (AddressHopType(..), Route)
+import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType, Route)
 import Set exposing (..)
 import Task
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
+import Tuple3
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
@@ -77,49 +82,8 @@ import Util.Annotations as Annotations
 import Util.Data as Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
+import Util.Tag as Tag
 import View.Locale as Locale
-
-
-delay : Float -> msg -> Cmd msg
-delay time msg =
-    -- create a task that sleeps for `time`
-    Process.sleep time
-        |> -- once the sleep is over, ignore its output (using `always`)
-           -- and then we create a new task that simply returns a success, and the msg
-           Task.map (always <| msg)
-        |> -- finally, we ask Elm to perform the Task, which
-           -- takes the result of the above task and
-           -- returns it to our update function
-           Task.perform identity
-
-
-tooltipBeginClosing : Msg -> ( Model, List Effect ) -> ( Model, List Effect )
-tooltipBeginClosing closingMsg ( model, eff ) =
-    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }, ((delay 2000.0 <| closingMsg) |> CmdEffect) :: eff )
-
-
-tooltipAbortClosing : ( Model, List Effect ) -> ( Model, List Effect )
-tooltipAbortClosing ( model, eff ) =
-    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing False) }, eff )
-
-
-tooltipCloseIfNotAborted : ( Model, List Effect ) -> ( Model, List Effect )
-tooltipCloseIfNotAborted ( model, eff ) =
-    ( { model
-        | tooltip =
-            case model.tooltip of
-                Just { closing } ->
-                    if closing then
-                        Nothing
-
-                    else
-                        model.tooltip
-
-                _ ->
-                    model.tooltip
-      }
-    , eff
-    )
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -197,7 +161,7 @@ updateByMsg plugins uc msg model =
             n { model | modPressed = False }
 
         UserReleasedEscape ->
-            n (model |> unselect |> s_details Nothing)
+            n model |> unselect |> Tuple.mapFirst (s_details Nothing)
 
         UserReleasedDeleteKey ->
             deleteSelection model
@@ -237,7 +201,7 @@ updateByMsg plugins uc msg model =
                                     _ ->
                                         Dict.get id net.addresses
                                             |> Maybe.map
-                                                (\address -> AddressDetails.init net uc.locale address.id data)
+                                                (\address -> AddressDetails.init net clusters uc.locale address.id data)
                                             |> Maybe.map (mapFirst Success)
                                             |> Maybe.map (mapFirst (AddressDetails id))
                                             |> Maybe.map (mapFirst Just)
@@ -255,7 +219,9 @@ updateByMsg plugins uc msg model =
                     Id.initClusterId data.currency data.entity
 
                 isSecondAddressFromSameCluster =
-                    Network.isClusterFriendAlreadyOnGraph clusterId model.network
+                    Network.isClusterFriendAlreadyOnGraph clusterId
+                        model.network
+                        && not (Network.hasLoadedAddress id model.network)
 
                 ncolors =
                     if isSecondAddressFromSameCluster then
@@ -264,25 +230,45 @@ updateByMsg plugins uc msg model =
                     else
                         model.colors
 
-                effwithCluster =
-                    eff
-                        ++ (if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
-                                []
+                ( clusters, effCluster ) =
+                    if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
+                        ( model.clusters, [] )
 
-                            else
-                                [ BrowserGotClusterData clusterId |> Api.GetEntityEffectWithDetails { currency = Id.network id, entity = data.entity, includeActors = False, includeBestTag = False } |> ApiEffect ]
-                           )
+                    else
+                        ( Dict.insert clusterId RemoteData.Loading model.clusters
+                        , [ BrowserGotClusterData id
+                                |> Api.GetEntityEffectWithDetails
+                                    { currency = Id.network id
+                                    , entity = data.entity
+                                    , includeActors = False
+                                    , includeBestTag = False
+                                    }
+                                |> ApiEffect
+                          ]
+                        )
             in
             model
                 |> s_network net
                 |> updateTagDataOnAddress id
                 |> s_details details
                 |> s_colors ncolors
-                |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ effwithCluster)
+                |> s_clusters clusters
+                |> pairTo (fetchTagSummaryForId True model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
                 |> and (checkSelection uc)
 
-        BrowserGotClusterData id data ->
-            n { model | clusters = Dict.insert id data model.clusters }
+        BrowserGotClusterData addressId data ->
+            let
+                clusterId =
+                    Id.initClusterId data.currency data.entity
+            in
+            n
+                { model
+                    | clusters = Dict.insert clusterId (Success data) model.clusters
+                }
+                |> and
+                    (AddressDetails.browserGotClusterData addressId data
+                        |> updateAddressDetails addressId
+                    )
 
         BrowserGotTxForAddress addressId direction data ->
             addTx plugins uc addressId direction data model
@@ -339,17 +325,69 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        AddressDetailsMsg subm ->
-            case model.details of
-                Just (AddressDetails id (Success ad)) ->
+        AddressDetailsMsg addressId subm ->
+            case subm of
+                AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable addresses ->
                     let
-                        ( addressViewDetails, eff ) =
-                            AddressDetails.update uc model subm id ad
+                        network =
+                            Id.network addressId
                     in
-                    ( { model | details = Just (AddressDetails id (Success addressViewDetails)) }, eff )
+                    addresses.addresses
+                        |> List.map (.address >> Id.init network)
+                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.singleton
+                        |> pair model
+                        |> and
+                            (AddressDetails.update uc subm
+                                |> updateAddressDetails addressId
+                            )
+
+                AddressDetails.BrowserGotAddressesForTags _ addresses ->
+                    let
+                        network =
+                            Id.network addressId
+                    in
+                    addresses
+                        |> List.map (.address >> Id.init network)
+                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.singleton
+                        |> pair model
+                        |> and
+                            (AddressDetails.update uc subm
+                                |> updateAddressDetails addressId
+                            )
+
+                AddressDetails.UserClickedAddressCheckboxInTable id ->
+                    userClickedAddressCheckboxInTable plugins id model
+
+                AddressDetails.UserClickedTxCheckboxInTable tx ->
+                    let
+                        addOrRemoveTx txId =
+                            if Dict.member txId model.network.txs then
+                                Network.deleteTx txId model.network
+                                    |> flip s_network model
+                                    |> n
+
+                            else
+                                loadTx True plugins txId model
+                    in
+                    case tx of
+                        Api.Data.AddressTxTxAccount _ ->
+                            addOrRemoveTx (Tx.getTxIdForAddressTx tx)
+
+                        Api.Data.AddressTxAddressTxUtxo _ ->
+                            addOrRemoveTx (Tx.getTxIdForAddressTx tx)
+
+                AddressDetails.UserClickedTx id ->
+                    userClickedTx id model
+
+                AddressDetails.TooltipMsg tm ->
+                    handleTooltipMsg tm model
 
                 _ ->
-                    n model
+                    model
+                        |> updateAddressDetails addressId
+                            (AddressDetails.update uc subm)
 
         UserClickedRestart ->
             -- Handled upstream
@@ -380,10 +418,8 @@ updateByMsg plugins uc msg model =
 
                 m1 =
                     model
-                        |> s_tooltip Nothing
                         |> s_toolbarHovercard Nothing
                         |> s_contextMenu Nothing
-                        |> unselect
             in
             if click then
                 ( m1
@@ -391,9 +427,10 @@ updateByMsg plugins uc msg model =
                     |> NavPushRouteEffect
                     |> List.singleton
                 )
+                    |> unselect
 
             else
-                n m1
+                n m1 |> unselect
 
         UserClickedFitGraph ->
             fitGraph uc model
@@ -544,7 +581,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserPushesLeftMouseButtonOnGraph coords ->
-            { model
+            ( { model
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
@@ -552,12 +589,12 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             NoDragging
-                , tooltip = Nothing
-            }
-                |> n
+              }
+            , CloseTooltipEffect Nothing False |> List.singleton
+            )
 
         UserPushesLeftMouseButtonOnAddress id coords ->
-            { model
+            ( { model
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
@@ -565,9 +602,9 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             model.dragging
-                , tooltip = Nothing
-            }
-                |> n
+              }
+            , CloseTooltipEffect Nothing False |> List.singleton
+            )
 
         UserMovesMouseOverUtxoTx id ->
             if model.hovered == HoveredTx id then
@@ -575,32 +612,33 @@ updateByMsg plugins uc msg model =
 
             else
                 let
-                    ( hc, cmd ) =
+                    domId =
                         Id.toString id
-                            |> Hovercard.init
+
+                    maybeTT =
+                        model.network.txs
+                            |> Dict.get id
+                            |> Maybe.map
+                                (\tx ->
+                                    case tx.type_ of
+                                        Tx.Utxo t ->
+                                            Tooltip.UtxoTx t
+
+                                        Tx.Account t ->
+                                            Tooltip.AccountTx t
+                                )
 
                     hovered =
                         ( { model
-                            | tooltip =
-                                model.network.txs
-                                    |> Dict.get id
-                                    |> Maybe.map
-                                        (\tx ->
-                                            case tx.type_ of
-                                                Tx.Utxo t ->
-                                                    Tooltip.UtxoTx t
-                                                        |> Tooltip.init hc
-
-                                                Tx.Account t ->
-                                                    Tooltip.AccountTx t
-                                                        |> Tooltip.init hc
-                                        )
-                            , network = Network.updateTx id (s_hovered True) model.network
+                            | network = Network.updateTx id (s_hovered True) model.network
                             , hovered = HoveredTx id
                           }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
+                        , case maybeTT of
+                            Just tt ->
+                                OpenTooltipEffect { context = domId, domId = domId } tt |> List.singleton
+
+                            _ ->
+                                []
                         )
                 in
                 case model.details of
@@ -620,26 +658,37 @@ updateByMsg plugins uc msg model =
 
             else
                 let
-                    ( hc, cmd ) =
+                    domId =
                         Id.toString id
-                            |> Hovercard.init
+
+                    maybeTT =
+                        model.network.addresses
+                            |> Dict.get id
+                            |> Maybe.map
+                                (\addr ->
+                                    Tooltip.Address addr
+                                        (case Dict.get id model.tagSummaries of
+                                            Just (HasTagSummaries { withCluster }) ->
+                                                Just withCluster
+
+                                            Just (HasTagSummaryWithCluster ts) ->
+                                                Just ts
+
+                                            _ ->
+                                                Nothing
+                                        )
+                                )
 
                     showHover =
                         ( { model
-                            | tooltip =
-                                model.network.addresses
-                                    |> Dict.get id
-                                    |> Maybe.map
-                                        (\addr ->
-                                            Tooltip.Address addr |> Tooltip.init hc
-                                        )
-
-                            -- , network = Network.updateTx id (s_hovered True) model.network
-                            , hovered = HoveredAddress id
+                            | hovered = HoveredAddress id
                           }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
+                        , case maybeTT of
+                            Just tt ->
+                                OpenTooltipEffect { context = domId, domId = domId } tt |> List.singleton
+
+                            _ ->
+                                []
                         )
                 in
                 case model.details of
@@ -653,200 +702,84 @@ updateByMsg plugins uc msg model =
                     _ ->
                         showHover
 
-        UserMovesMouseOutAddress _ ->
-            unhover model
-                |> n
-
-        UserMovesMouseOverTagConcept x ->
-            case model.details of
-                Just (AddressDetails id _) ->
-                    let
-                        ( hc, cmd ) =
-                            (x ++ "_tags_concept_tag") |> Hovercard.init
-
-                        ( hasToChange, newTooltip ) =
-                            case Dict.get id model.tagSummaries of
-                                Just (HasTagSummary ts) ->
-                                    let
-                                        tt =
-                                            Tooltip.TagConcept id x ts |> Tooltip.init hc
-                                    in
-                                    ( model.tooltip
-                                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                                        |> Maybe.withDefault True
-                                    , Just tt
-                                    )
-
-                                _ ->
-                                    ( True, Nothing )
-                    in
-                    if hasToChange then
-                        ( { model
-                            | tooltip = newTooltip
-                          }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
-
-                    else
-                        n model |> tooltipAbortClosing
-
-                _ ->
-                    n model
+        UserMovesMouseOutAddress id ->
+            ( unhover model, CloseTooltipEffect (Just { context = Id.toString id, domId = Id.toString id }) False |> List.singleton )
 
         ShowTextTooltip config ->
+            ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } (Tooltip.Text config.text) |> List.singleton )
+
+        CloseTextTooltip config ->
+            ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
+
+        UserMovesMouseOverTagLabel ctx ->
             let
-                ( hc, cmd ) =
-                    config.anchorId |> Hovercard.init
-
-                tt =
-                    Tooltip.Text config.text |> Tooltip.init hc
-
-                hasToChange =
-                    model.tooltip
-                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                        |> Maybe.withDefault True
+                tsToTooltip ts =
+                    let
+                        tt =
+                            Tooltip.TagLabel ctx.context
+                                ts
+                                { openTooltip = UserMovesMouseOverTagLabel ctx
+                                , closeTooltip = UserMovesMouseOutTagLabel ctx
+                                , openDetails = Nothing
+                                }
+                    in
+                    ( model
+                    , OpenTooltipEffect ctx tt |> List.singleton
+                    )
             in
-            if hasToChange then
-                ( { model
-                    | tooltip = Just tt
-                  }
-                , Cmd.map HovercardMsg cmd
-                    |> CmdEffect
-                    |> List.singleton
-                )
-
-            else
-                n model |> tooltipAbortClosing
-
-        CloseTextTooltip _ ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
-
-                _ ->
-                    n model
-
-        UserMovesMouseOverTagLabel x ->
             case model.details of
                 Just (AddressDetails id _) ->
-                    let
-                        ( hc, cmd ) =
-                            x |> Hovercard.init
+                    case Dict.get id model.tagSummaries of
+                        Just (HasTagSummaries { withCluster }) ->
+                            tsToTooltip withCluster
 
-                        ( hasToChange, newTooltip ) =
-                            case Dict.get id model.tagSummaries of
-                                Just (HasTagSummary ts) ->
-                                    let
-                                        tt =
-                                            Tooltip.TagLabel x ts |> Tooltip.init hc
-                                    in
-                                    ( model.tooltip
-                                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                                        |> Maybe.withDefault True
-                                    , Just tt
-                                    )
+                        Just (HasTagSummaryOnlyWithCluster ts) ->
+                            tsToTooltip ts
 
-                                _ ->
-                                    ( True, Nothing )
-                    in
-                    if hasToChange then
-                        ( { model
-                            | tooltip = newTooltip
-                          }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
+                        Just (HasTagSummaryWithCluster ts) ->
+                            tsToTooltip ts
 
-                    else
-                        n model |> tooltipAbortClosing
+                        _ ->
+                            n model
 
                 _ ->
                     n model
 
-        UserMovesMouseOverActorLabel x ->
-            case Dict.get x model.actors of
+        UserMovesMouseOverActorLabel ctx ->
+            case Dict.get ctx.context model.actors of
                 Just actor ->
                     let
-                        ( hc, cmd ) =
-                            (x ++ "_actor") |> Hovercard.init
-
                         tt =
-                            Tooltip.ActorDetails actor |> Tooltip.init hc
-
-                        ( hasToChange, newTooltip ) =
-                            ( model.tooltip
-                                |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                                |> Maybe.withDefault True
-                            , Just tt
-                            )
+                            Tooltip.ActorDetails actor
+                                { openTooltip = UserMovesMouseOverActorLabel ctx
+                                , closeTooltip = UserMovesMouseOutActorLabel ctx
+                                , openDetails = Nothing
+                                }
                     in
-                    if hasToChange then
-                        ( { model | tooltip = newTooltip }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
-
-                    else
-                        n model |> tooltipAbortClosing
-
-                _ ->
-                    n model
-
-        UserMovesMouseOutActorLabel _ ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
-
-                _ ->
-                    n model
-
-        UserMovesMouseOutTagLabel _ ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
-
-                _ ->
-                    n model
-
-        UserMovesMouseOutTagConcept _ ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip tt.type_)
-
-                _ ->
-                    n model
-
-        CloseTooltip _ ->
-            n model |> tooltipCloseIfNotAborted
-
-        HovercardMsg hcMsg ->
-            model.tooltip
-                |> Maybe.map
-                    (\tooltip ->
-                        let
-                            ( hc, cmd ) =
-                                Hovercard.update hcMsg tooltip.hovercard
-                        in
-                        ( { model
-                            | tooltip = Just { tooltip | hovercard = hc }
-                          }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
+                    ( model
+                    , OpenTooltipEffect ctx tt
+                        |> List.singleton
                     )
-                |> Maybe.withDefault (n model)
 
-        UserMovesMouseOutUtxoTx _ ->
-            unhover model
-                |> n
+                _ ->
+                    n model
+
+        UserMovesMouseOutActorLabel ctx ->
+            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
+
+        UserMovesMouseOutTagLabel ctx ->
+            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
+
+        UserMovesMouseOutUtxoTx id ->
+            ( unhover model
+            , CloseTooltipEffect
+                (Just { context = Id.toString id, domId = Id.toString id })
+                False
+                |> List.singleton
+            )
 
         UserPushesLeftMouseButtonOnUtxoTx id coords ->
-            { model
+            ( { model
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
@@ -854,14 +787,14 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             model.dragging
-                , tooltip = Nothing
-            }
-                |> n
+              }
+            , CloseTooltipEffect Nothing False |> List.singleton
+            )
 
         UserMovesMouseOnGraph coords ->
             case model.dragging of
                 NoDragging ->
-                    n (model |> s_tooltip Nothing)
+                    ( model, CloseTooltipEffect Nothing False |> List.singleton )
 
                 Dragging transform start _ ->
                     (case model.pointerTool of
@@ -927,15 +860,7 @@ updateByMsg plugins uc msg model =
                     Network.animateAddresses delta model.network
                         |> Network.animateTxs delta
               }
-            , Maybe.map
-                (.hovercard
-                    >> Hovercard.getElement
-                    >> Cmd.map HovercardMsg
-                    >> CmdEffect
-                    >> List.singleton
-                )
-                model.tooltip
-                |> Maybe.withDefault []
+            , [ RepositionTooltipEffect ]
             )
 
         UserClickedAddressExpandHandle id direction ->
@@ -974,47 +899,10 @@ updateByMsg plugins uc msg model =
                 )
 
         UserClickedAddressCheckboxInTable id ->
-            if Dict.member id model.network.addresses then
-                removeAddress id model
-
-            else
-                loadAddress plugins id model
+            userClickedAddressCheckboxInTable plugins id model
 
         UserClickedTx id ->
-            if model.modPressed then
-                let
-                    ( modelS, _ ) =
-                        multiSelect model [ MSelectedTx id ] True
-                in
-                n { modelS | details = Nothing }
-
-            else
-                ( model
-                , Route.txRoute
-                    { network = Id.network id
-                    , txHash = Id.id id
-                    }
-                    |> NavPushRouteEffect
-                    |> List.singleton
-                )
-
-        UserClickedTxCheckboxInTable tx ->
-            let
-                addOrRemoveTx txId =
-                    if Dict.member txId model.network.txs then
-                        Network.deleteTx txId model.network
-                            |> flip s_network model
-                            |> n
-
-                    else
-                        loadTx True plugins txId model
-            in
-            case tx of
-                Api.Data.AddressTxTxAccount _ ->
-                    addOrRemoveTx (Tx.getTxIdForAddressTx tx)
-
-                Api.Data.AddressTxAddressTxUtxo _ ->
-                    addOrRemoveTx (Tx.getTxIdForAddressTx tx)
+            userClickedTx id model
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
@@ -1166,30 +1054,21 @@ updateByMsg plugins uc msg model =
         UserClickedToggleDisplayAllTagsInDetails ->
             n (model |> s_config (model.config |> s_displayAllTagsInDetails (not model.config.displayAllTagsInDetails)))
 
-        Tick time ->
-            n { model | currentTime = time }
-
         WorkflowNextUtxoTx context wm ->
             WorkflowNextUtxoTx.update context wm model
 
         WorkflowNextTxByTime context wm ->
             WorkflowNextTxByTime.update context wm model
 
-        BrowserGotTagSummary id data ->
+        BrowserGotTagSummaries includesBestClusterTag data ->
             let
-                d =
-                    if data.tagCount > 0 then
-                        HasTagSummary data
-
-                    else
-                        NoTags
+                combine ( id, ts ) r =
+                    addTagSummaryToModel r includesBestClusterTag id ts
             in
-            ( { model
-                | tagSummaries = Dict.insert id d model.tagSummaries
-              }
-                |> updateTagDataOnAddress id
-            , data.bestActor |> Maybe.map (List.singleton >> flip fetchActors model.actors) |> Maybe.withDefault []
-            )
+            List.foldl combine (n model) data
+
+        BrowserGotTagSummary includesBestClusterTag id data ->
+            addTagSummaryToModel (n model) includesBestClusterTag id data
 
         BrowserGotAddressesTags _ data ->
             let
@@ -1201,7 +1080,19 @@ updateByMsg plugins uc msg model =
                         (Maybe.map
                             (\curr ->
                                 case ( curr, tag ) of
-                                    ( HasTagSummary _, _ ) ->
+                                    ( HasTagSummaries _, _ ) ->
+                                        curr
+
+                                    ( HasTagSummaryWithCluster _, _ ) ->
+                                        curr
+
+                                    ( HasTagSummaryWithoutCluster _, _ ) ->
+                                        curr
+
+                                    ( HasTagSummaryOnlyWithCluster _, _ ) ->
+                                        curr
+
+                                    ( NoTagsWithoutCluster, _ ) ->
                                         curr
 
                                     ( HasTags withExchangeTag, Just { category } ) ->
@@ -1322,6 +1213,93 @@ updateByMsg plugins uc msg model =
             )
 
 
+handleTooltipMsg : Tag.Msg -> Model -> ( Model, List Effect )
+handleTooltipMsg msg model =
+    case msg of
+        Tag.UserMovesMouseOutTagConcept ctx ->
+            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
+
+        Tag.UserMovesMouseOverTagConcept ctx ->
+            let
+                decoder =
+                    Json.Decode.map3 Tuple3.join
+                        (Json.Decode.index 0 Json.Decode.string)
+                        (Json.Decode.index 1 Json.Decode.string)
+                        (Json.Decode.index 2 Json.Decode.string)
+            in
+            Json.Decode.decodeString decoder ctx.context
+                |> Result.map
+                    (\( concept, currency, address ) ->
+                        let
+                            id =
+                                Id.init currency address
+
+                            tsToTooltip ts =
+                                Tooltip.TagConcept id
+                                    concept
+                                    ts
+                                    { openTooltip =
+                                        Tag.UserMovesMouseOverTagConcept ctx
+                                            |> AddressDetails.TooltipMsg
+                                            |> AddressDetailsMsg id
+                                    , closeTooltip =
+                                        Tag.UserMovesMouseOutTagConcept ctx
+                                            |> AddressDetails.TooltipMsg
+                                            |> AddressDetailsMsg id
+                                    , openDetails = Just (UserOpensDialogWindow (TagsList id))
+                                    }
+                        in
+                        case Dict.get id model.tagSummaries of
+                            Just (HasTagSummaries { withCluster }) ->
+                                ( model
+                                , OpenTooltipEffect ctx (tsToTooltip withCluster) |> List.singleton
+                                )
+
+                            Just (HasTagSummaryWithCluster ts) ->
+                                ( model
+                                , OpenTooltipEffect ctx (tsToTooltip ts) |> List.singleton
+                                )
+
+                            Just (HasTagSummaryOnlyWithCluster ts) ->
+                                ( model
+                                , OpenTooltipEffect ctx (tsToTooltip ts) |> List.singleton
+                                )
+
+                            _ ->
+                                n model
+                    )
+                |> Result.withDefault (n model)
+
+
+userClickedAddressCheckboxInTable : Plugins -> Id -> Model -> ( Model, List Effect )
+userClickedAddressCheckboxInTable plugins id model =
+    if Dict.member id model.network.addresses then
+        removeAddress id model
+
+    else
+        loadAddress plugins id model
+
+
+userClickedTx : Id -> Model -> ( Model, List Effect )
+userClickedTx id model =
+    if model.modPressed then
+        let
+            ( modelS, _ ) =
+                multiSelect model [ MSelectedTx id ] True
+        in
+        n { modelS | details = Nothing }
+
+    else
+        ( model
+        , Route.txRoute
+            { network = Id.network id
+            , txHash = Id.id id
+            }
+            |> NavPushRouteEffect
+            |> List.singleton
+        )
+
+
 fitGraph : Update.Config -> Model -> Model
 fitGraph uc model =
     let
@@ -1420,7 +1398,7 @@ deleteSelection model =
         _ ->
             n model
     )
-        |> Tuple.mapFirst unselect
+        |> unselect
 
 
 updateTagDataOnAddress : Id -> Model -> Model
@@ -1429,28 +1407,37 @@ updateTagDataOnAddress addressId m =
         tag =
             Dict.get addressId m.tagSummaries
 
+        updateTagsummaryData tagdata =
+            let
+                actorlabel =
+                    case tagdata.bestActor of
+                        Just _ ->
+                            tagdata.bestLabel
+
+                        _ ->
+                            Nothing
+            in
+            (if TagSummary.isExchangeNode tagdata then
+                Network.updateAddress addressId
+                    (s_exchange tagdata.bestLabel)
+                    m.network
+
+             else
+                m.network
+            )
+                |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
+                |> Network.updateAddress addressId (s_actor actorlabel)
+
         net td =
             case td of
-                HasTagSummary tagdata ->
-                    let
-                        actorlabel =
-                            case tagdata.bestActor of
-                                Just _ ->
-                                    tagdata.bestLabel
+                HasTagSummaries { withCluster } ->
+                    updateTagsummaryData withCluster
 
-                                _ ->
-                                    Nothing
-                    in
-                    (if TagSummary.isExchangeNode tagdata then
-                        Network.updateAddress addressId
-                            (s_exchange tagdata.bestLabel)
-                            m.network
+                HasTagSummaryWithCluster ts ->
+                    updateTagsummaryData ts
 
-                     else
-                        m.network
-                    )
-                        |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
-                        |> Network.updateAddress addressId (s_actor actorlabel)
+                HasTagSummaryOnlyWithCluster ts ->
+                    updateTagsummaryData ts
 
                 HasExchangeTagOnly ->
                     Network.updateAddress addressId (s_hasTags False) m.network
@@ -1526,12 +1513,115 @@ updateByRoute plugins uc route model =
             |> updateByRoute_ plugins uc route
 
 
+addPathToGraph : Plugins -> Update.Config -> Model -> String -> List PathHopType -> ( Model, List Effect )
+addPathToGraph plugins uc model net list =
+    let
+        getAddress adr =
+            case adr of
+                Route.AddressHop _ a ->
+                    Just a
+
+                _ ->
+                    Nothing
+
+        isDuplicateAddress i =
+            Maybe.andThen
+                (\adr ->
+                    list
+                        |> List.take i
+                        |> List.Extra.find (getAddress >> (==) (Just adr))
+                )
+                >> (/=) Nothing
+
+        addressCount =
+            list
+                |> List.filterMap getAddress
+                |> List.foldl
+                    (\a -> Dict.update a (Maybe.map ((+) 1) >> Maybe.withDefault 0 >> Just))
+                    Dict.empty
+
+        accf ( i, a ) { m, eff, x, y, previousAddress } =
+            let
+                address =
+                    getAddress a
+
+                prevCount =
+                    previousAddress
+                        |> Maybe.andThen (flip Dict.get addressCount)
+                        |> Maybe.withDefault 0
+
+                ( xOffset, yOffset ) =
+                    if isDuplicateAddress (i - 1) previousAddress && prevCount > 0 then
+                        ( 0, 0 )
+
+                    else if isDuplicateAddress i address then
+                        ( 0, 0 )
+
+                    else
+                        ( nodeXOffset, 0 )
+
+                x_ =
+                    x + xOffset
+
+                y_ =
+                    y + yOffset
+
+                action =
+                    case a of
+                        Route.AddressHop _ adr ->
+                            loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
+
+                        Route.TxHop h ->
+                            loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
+
+                annotations =
+                    case a of
+                        Route.AddressHop VictimAddress adr ->
+                            Annotations.set
+                                ( net, adr )
+                                (Locale.string uc.locale "victim")
+                                (Just annotationGreen)
+                                m.annotations
+
+                        Route.AddressHop PerpetratorAddress adr ->
+                            Annotations.set
+                                ( net, adr )
+                                (Locale.string uc.locale "perpetrator")
+                                (Just annotationRed)
+                                m.annotations
+
+                        _ ->
+                            m.annotations
+
+                ( nm, effn ) =
+                    m |> s_annotations annotations |> action
+            in
+            { m = nm
+            , eff = eff ++ effn
+            , x = x_
+            , y = y_
+            , previousAddress = address
+            }
+
+        result =
+            list
+                |> List.indexedMap pair
+                |> List.foldl accf
+                    { m = model
+                    , eff = []
+                    , x = 0
+                    , y = 0
+                    , previousAddress = Nothing
+                    }
+    in
+    ( result.m |> fitGraph uc, result.eff )
+
+
 updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
 updateByRoute_ plugins uc route model =
     case route |> Log.log "route" of
         Route.Root ->
-            unselect model
-                |> n
+            unselect (n model)
 
         Route.Network network (Route.Address a) ->
             let
@@ -1554,109 +1644,120 @@ updateByRoute_ plugins uc route model =
                 |> and (selectTx id)
 
         Route.Path net list ->
-            let
-                getAddress adr =
-                    case adr of
-                        Route.AddressHop _ a ->
-                            Just a
-
-                        _ ->
-                            Nothing
-
-                isDuplicateAddress i =
-                    Maybe.andThen
-                        (\adr ->
-                            list
-                                |> List.take i
-                                |> List.Extra.find (getAddress >> (==) (Just adr))
-                        )
-                        >> (/=) Nothing
-
-                addressCount =
-                    list
-                        |> List.filterMap getAddress
-                        |> List.foldl
-                            (\a -> Dict.update a (Maybe.map ((+) 1) >> Maybe.withDefault 0 >> Just))
-                            Dict.empty
-
-                accf ( i, a ) { m, eff, x, y, previousAddress } =
-                    let
-                        address =
-                            getAddress a
-
-                        prevCount =
-                            previousAddress
-                                |> Maybe.andThen (flip Dict.get addressCount)
-                                |> Maybe.withDefault 0
-
-                        ( xOffset, yOffset ) =
-                            if isDuplicateAddress (i - 1) previousAddress && prevCount > 0 then
-                                ( 0, 0 )
-
-                            else if isDuplicateAddress i address then
-                                ( 0, 0 )
-
-                            else
-                                ( nodeXOffset, 0 )
-
-                        x_ =
-                            x + xOffset
-
-                        y_ =
-                            y + yOffset
-
-                        action =
-                            case a of
-                                Route.AddressHop _ adr ->
-                                    loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
-
-                                Route.TxHop h ->
-                                    loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
-
-                        annotations =
-                            case a of
-                                Route.AddressHop VictimAddress adr ->
-                                    Annotations.set
-                                        ( net, adr )
-                                        (Locale.string uc.locale "victim")
-                                        (Just annotationGreen)
-                                        m.annotations
-
-                                Route.AddressHop PerpetratorAddress adr ->
-                                    Annotations.set
-                                        ( net, adr )
-                                        (Locale.string uc.locale "perpetrator")
-                                        (Just annotationRed)
-                                        m.annotations
-
-                                _ ->
-                                    m.annotations
-
-                        ( nm, effn ) =
-                            m |> s_annotations annotations |> action
-                    in
-                    { m = nm
-                    , eff = eff ++ effn
-                    , x = x_
-                    , y = y_
-                    , previousAddress = address
-                    }
-
-                result =
-                    list
-                        |> List.indexedMap pair
-                        |> List.foldl accf
-                            { m = model
-                            , eff = []
-                            , x = 0
-                            , y = 0
-                            , previousAddress = Nothing
-                            }
-            in
-            ( result.m |> fitGraph uc, result.eff )
+            addPathToGraph plugins uc model net list
 
         _ ->
             n model
+
+
+updateByPluginOutMsg : Plugins -> Update.Config -> List Plugin.OutMsg -> Model -> ( Model, List Effect )
+updateByPluginOutMsg plugins uc outMsgs model =
+    outMsgs
+        |> List.foldl
+            (\msg ( mo, eff ) ->
+                case Log.log "outMsg" msg of
+                    PluginInterface.ShowBrowser ->
+                        n model
+
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder net path) ->
+                        addPathToGraph plugins uc model net path
+
+                    PluginInterface.UpdateAddresses { currency, address } pmsg ->
+                        let
+                            pId =
+                                ( currency, address )
+                        in
+                        ( { mo
+                            | network = Network.updateAddress pId (Plugin.updateAddress plugins pmsg) mo.network
+                          }
+                        , eff
+                        )
+
+                    PluginInterface.UpdateAddressesByRootAddress { currency, address } pmsg ->
+                        model.clusters
+                            |> Dict.values
+                            |> List.filterMap RemoteData.toMaybe
+                            |> List.Extra.find
+                                (\e ->
+                                    e.currency == currency && e.rootAddress == address
+                                )
+                            |> Maybe.map Id.initClusterIdFromRecord
+                            |> Maybe.map
+                                (\pId ->
+                                    ( { mo
+                                        | network = Network.updateAddressesByClusterId pId (Plugin.updateAddress plugins pmsg) mo.network
+                                      }
+                                    , eff
+                                    )
+                                )
+                            |> Maybe.withDefault ( mo, eff )
+
+                    PluginInterface.UpdateAddressesByEntityPathfinder e pmsg ->
+                        let
+                            pId =
+                                Id.initClusterIdFromRecord e
+                        in
+                        ( { mo
+                            | network = Network.updateAddressesByClusterId pId (Plugin.updateAddress plugins pmsg) mo.network
+                          }
+                        , eff
+                        )
+
+                    PluginInterface.UpdateAddressEntities _ _ ->
+                        n mo
+
+                    PluginInterface.UpdateEntities _ _ ->
+                        n mo
+
+                    PluginInterface.UpdateEntitiesByRootAddress _ _ ->
+                        n mo
+
+                    PluginInterface.LoadAddressIntoGraph _ ->
+                        n mo
+
+                    PluginInterface.GetEntitiesForAddresses _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.GetEntities _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.PushUrl _ ->
+                        ( mo, [] )
+
+                    PluginInterface.GetSerialized _ ->
+                        ( mo, [] )
+
+                    PluginInterface.Deserialize _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.GetAddressDomElement _ _ ->
+                        ( mo, [] )
+
+                    PluginInterface.SendToPort _ ->
+                        ( mo, [] )
+
+                    PluginInterface.ApiRequest _ ->
+                        ( mo, [] )
+
+                    PluginInterface.ShowDialog _ ->
+                        ( mo, [] )
+
+                    PluginInterface.CloseDialog ->
+                        ( mo, [] )
+
+                    PluginInterface.ShowNotification _ ->
+                        ( mo, [] )
+
+                    PluginInterface.OutMsgsPathfinder _ ->
+                        ( mo, [] )
+
+                    PluginInterface.OpenTooltip s msgs ->
+                        ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg)) ] )
+
+                    PluginInterface.CloseTooltip s withDelay ->
+                        ( mo, [ CloseTooltipEffect (Just s) withDelay ] )
+            )
+            ( model, [] )
 
 
 loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
@@ -1719,9 +1820,10 @@ selectTx id model =
                         _ ->
                             Nothing
 
-                m1 =
-                    unselect model
-                        |> s_details (TxDetails.init tx |> TxDetails id |> Just)
+                ( m1, eff ) =
+                    unselect (n model)
+                        |> Tuple.mapFirst
+                            (s_details (TxDetails.init tx |> TxDetails id |> Just))
             in
             selectedTx
                 |> Maybe.map (\a -> Network.updateTx a (s_selected False) m1.network)
@@ -1730,6 +1832,7 @@ selectTx id model =
                 |> flip s_network m1
                 |> s_selection (SelectedTx id)
                 |> bulkfetchTagsForTx tx
+                |> Tuple.mapSecond ((++) eff)
 
         Nothing ->
             s_selection (WillSelectTx id) model
@@ -1743,7 +1846,7 @@ selectAddress uc id model =
             let
                 newDetails =
                     address.data
-                        |> RemoteData.map (AddressDetails.init model.network uc.locale address.id)
+                        |> RemoteData.map (AddressDetails.init model.network model.clusters uc.locale address.id)
 
                 details =
                     case model.details of
@@ -1765,27 +1868,28 @@ selectAddress uc id model =
                         |> Maybe.map second
                         |> Maybe.withDefault []
 
-                m1 =
-                    unselect model
-                        |> s_details
-                            (RemoteData.map first details
-                                |> AddressDetails id
-                                |> Just
+                ( m1, eff2 ) =
+                    unselect ( model, eff )
+                        |> Tuple.mapFirst
+                            (s_details
+                                (RemoteData.map first details
+                                    |> AddressDetails id
+                                    |> Just
+                                )
                             )
             in
             Network.updateAddress id (s_selected True) m1.network
                 |> flip s_network m1
                 |> s_selection (SelectedAddress id)
-                |> openAddressTransactionsTable
-                |> mapSecond ((++) eff)
+                |> pairTo eff2
 
         Nothing ->
             s_selection (WillSelectAddress id) model
                 |> n
 
 
-unselect : Model -> Model
-unselect model =
+unselect : ( Model, List Effect ) -> ( Model, List Effect )
+unselect ( model, eff ) =
     let
         unselectAddress a nw =
             Network.updateAddress a (s_selected False) nw
@@ -1823,11 +1927,12 @@ unselect model =
                 NoSelection ->
                     model.network
     in
-    network
+    ( network
         |> flip s_network model
         |> s_details Nothing
-        |> s_tooltip Nothing
         |> s_selection NoSelection
+    , eff ++ [ CloseTooltipEffect Nothing False ]
+    )
 
 
 unhover : Model -> Model
@@ -1847,7 +1952,6 @@ unhover model =
     in
     network
         |> flip s_network model
-        |> s_tooltip Nothing
         |> s_hovered NoHover
 
 
@@ -1871,7 +1975,7 @@ forcePushHistory model =
 
 makeHistoryEntry : Model -> Entry.Model
 makeHistoryEntry model =
-    { network = (unselect model |> unhover).network
+    { network = (unselect (n model) |> Tuple.first |> unhover).network
     , annotations = model.annotations
     }
 
@@ -1918,48 +2022,117 @@ bulkfetchTagsForTx tx model =
                         |> Maybe.withDefault []
                         |> List.map (Id.init raw.currency)
                         |> List.filter (flip Dict.member model.tagSummaries >> not)
-
-                addr =
-                    addresses raw.inputs
-                        ++ addresses raw.outputs
-                        |> Set.fromList
-                        |> Set.toList
             in
-            ( { model
-                | tagSummaries =
-                    addr
-                        |> List.foldl
-                            (\a -> Dict.insert a LoadingTags)
-                            model.tagSummaries
-              }
-            , List.Extra.greedyGroupsOf 100 addr
-                |> List.map
-                    (\adr ->
-                        BrowserGotAddressesTags adr
-                            |> Api.BulkGetAddressTagsEffect
-                                { currency = raw.currency
-                                , addresses = List.map Id.id adr
-                                , pagesize = Just 1
-                                , includeBestClusterTag = True
-                                }
-                            |> ApiEffect
-                    )
-            )
+            addresses raw.inputs
+                ++ addresses raw.outputs
+                |> Set.fromList
+                |> Set.toList
+                |> bulkfetchTagsForAddresses raw.currency model
 
         _ ->
             n model
 
 
-fetchTagSummaryForId : Dict Id HavingTags -> Id -> Effect
-fetchTagSummaryForId existing id =
+bulkfetchTagsForAddresses : String -> Model -> List Id -> ( Model, List Effect )
+bulkfetchTagsForAddresses network model addr =
+    ( { model
+        | tagSummaries =
+            addr
+                |> List.foldl
+                    -- (\a -> Dict.insert a LoadingTags)
+                    (\id -> upsertTagSummary id LoadingTags)
+                    model.tagSummaries
+      }
+    , List.Extra.greedyGroupsOf 100 addr
+        |> List.map
+            (\adr ->
+                BrowserGotAddressesTags adr
+                    |> Api.BulkGetAddressTagsEffect
+                        { currency = network
+                        , addresses = List.map Id.id adr
+                        , pagesize = Just 1
+                        , includeBestClusterTag = True
+                        }
+                    |> ApiEffect
+            )
+    )
+
+
+isTagSummaryLoaded : Bool -> Dict Id HavingTags -> Id -> Bool
+isTagSummaryLoaded includeBestClusterTag existing id =
     case Dict.get id existing of
-        Just (HasTagSummary _) ->
-            CmdEffect Cmd.none
+        Just (HasTagSummaries _) ->
+            True
+
+        Just (HasTagSummaryOnlyWithCluster _) ->
+            True
+
+        Just (HasTagSummaryWithCluster _) ->
+            includeBestClusterTag
+
+        Just (HasTagSummaryWithoutCluster _) ->
+            includeBestClusterTag == False
+
+        Just NoTagsWithoutCluster ->
+            includeBestClusterTag == False
 
         _ ->
-            BrowserGotTagSummary id
-                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id, includeBestClusterTag = True }
+            False
+
+
+fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> List Id -> Effect
+fetchTagSummaryForIds includeBestClusterTag existing ids =
+    let
+        idsToLoad =
+            ids |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
+    in
+    case idsToLoad of
+        [] ->
+            CmdEffect Cmd.none
+
+        x :: rest ->
+            BrowserGotTagSummaries includeBestClusterTag
+                |> Api.BulkGetAddressTagSummaryEffect { currency = Id.network x, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
                 |> ApiEffect
+
+
+fetchTagSummaryForId : Bool -> Dict Id HavingTags -> Id -> Effect
+fetchTagSummaryForId includeBestClusterTag existing id =
+    let
+        fetch =
+            BrowserGotTagSummary includeBestClusterTag id
+                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id, includeBestClusterTag = includeBestClusterTag }
+                |> ApiEffect
+    in
+    if isTagSummaryLoaded includeBestClusterTag existing id then
+        CmdEffect Cmd.none
+
+    else
+        fetch
+
+
+addTagSummaryToModel : ( Model, List Effect ) -> Bool -> Id -> Api.Data.TagSummary -> ( Model, List Effect )
+addTagSummaryToModel ( m, e ) includesBestClusterTag id data =
+    let
+        d =
+            if data.tagCount > 0 && includesBestClusterTag then
+                HasTagSummaryWithCluster data
+
+            else if data.tagCount > 0 && not includesBestClusterTag then
+                HasTagSummaryWithoutCluster data
+
+            else if data.tagCount == 0 && not includesBestClusterTag then
+                NoTagsWithoutCluster
+
+            else
+                NoTags
+    in
+    ( { m
+        | tagSummaries = upsertTagSummary id d m.tagSummaries
+      }
+        |> updateTagDataOnAddress id
+    , e ++ (data.bestActor |> Maybe.map (List.singleton >> flip fetchActors m.actors) |> Maybe.withDefault [])
+    )
 
 
 fetchActorsForAddress : Api.Data.Address -> Dict String Api.Data.Actor -> List Effect
@@ -2066,24 +2239,6 @@ checkSelection uc model =
             n model
 
 
-openAddressTransactionsTable : Model -> ( Model, List Effect )
-openAddressTransactionsTable model =
-    case model.details of
-        Just (AddressDetails id (Success ad)) ->
-            let
-                ( new, eff ) =
-                    AddressDetails.showTransactionsTable ad True
-            in
-            ( { model
-                | details = Just (AddressDetails id (Success new))
-              }
-            , eff
-            )
-
-        _ ->
-            n model
-
-
 removeAddress : Id -> Model -> ( Model, List Effect )
 removeAddress id model =
     { model
@@ -2129,7 +2284,6 @@ removeTx id model =
 
                 _ ->
                     model.details
-        , tooltip = Nothing
         , selection =
             case model.selection of
                 SelectedAddress addressId ->
@@ -2142,7 +2296,7 @@ removeTx id model =
                 _ ->
                     model.selection
       }
-    , []
+    , [ CloseTooltipEffect Nothing False ]
     )
 
 
@@ -2241,8 +2395,8 @@ deserializeByVersion version =
         Json.Decode.fail ("unknown version " ++ version)
 
 
-fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )
-fromDeserialized plugins deserialized model =
+fromDeserialized : Plugins -> Update.Config -> Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized plugins uc deserialized model =
     let
         groupByNetwork =
             List.map .id
@@ -2278,8 +2432,11 @@ fromDeserialized plugins deserialized model =
                                 }
                             |> ApiEffect
                     )
+
+        ( newAndEmptyPathfinder, _ ) =
+            Pathfinder.init { snapToGrid = Just uc.snapToGrid }
     in
-    ( { model
+    ( { newAndEmptyPathfinder
         | network = ingestAddresses plugins Network.init deserialized.addresses
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
@@ -2319,3 +2476,78 @@ autoLoadAddresses plugins tx model =
     [ src, dst ]
         |> List.filterMap identity
         |> List.foldl aggAddressAdd (n model)
+
+
+updateAddressDetails : Id -> (AddressDetails.Model -> ( AddressDetails.Model, List Effect )) -> Model -> ( Model, List Effect )
+updateAddressDetails id upd model =
+    case model.details of
+        Just (AddressDetails id_ (Success ad)) ->
+            if id == id_ then
+                let
+                    ( addressViewDetails, eff ) =
+                        upd ad
+                in
+                ( { model
+                    | details =
+                        Success addressViewDetails
+                            |> AddressDetails id
+                            |> Just
+                  }
+                , eff
+                )
+
+            else
+                n model
+
+        _ ->
+            n model
+
+
+upsertTagSummary : Id -> HavingTags -> Dict Id HavingTags -> Dict Id HavingTags
+upsertTagSummary id newTagSummary dict =
+    if Dict.member id dict then
+        Dict.update id
+            (Maybe.map
+                (\curr ->
+                    case ( curr, newTagSummary ) of
+                        ( HasTagSummaries _, _ ) ->
+                            curr
+
+                        ( HasTagSummaryWithCluster wc, HasTagSummaryWithoutCluster woc ) ->
+                            HasTagSummaries { withCluster = wc, withoutCluster = woc }
+
+                        ( HasTagSummaryWithCluster _, HasTagSummaryWithCluster new ) ->
+                            HasTagSummaryWithCluster new
+
+                        ( HasTagSummaryWithoutCluster woc, HasTagSummaryWithCluster wc ) ->
+                            HasTagSummaries { withCluster = wc, withoutCluster = woc }
+
+                        ( HasTagSummaryWithoutCluster _, HasTagSummaryWithoutCluster new ) ->
+                            HasTagSummaryWithoutCluster new
+
+                        ( HasTagSummaryWithCluster x, NoTagsWithoutCluster ) ->
+                            HasTagSummaryOnlyWithCluster x
+
+                        ( NoTagsWithoutCluster, HasTagSummaryWithCluster wc ) ->
+                            HasTagSummaryOnlyWithCluster wc
+
+                        ( NoTagsWithoutCluster, NoTags ) ->
+                            NoTags
+
+                        ( HasTags withExchangeTag, new ) ->
+                            new
+
+                        ( LoadingTags, new ) ->
+                            new
+
+                        ( NoTags, new ) ->
+                            new
+
+                        ( _, _ ) ->
+                            curr
+                )
+            )
+            dict
+
+    else
+        Dict.insert id newTagSummary dict

@@ -533,7 +533,8 @@ browseValue vc value =
                                         ]
                                         [ text
                                             (if String.isEmpty tag.label && not tag.tagpackIsPublic then
-                                                View.getConceptName vc tag.category
+                                                tag.category
+                                                    |> Maybe.andThen (View.getConceptName vc)
                                                     |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
 
                                              else

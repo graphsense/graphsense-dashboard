@@ -5,6 +5,8 @@ import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
+import Css.View
+import Dict
 import Html.Styled exposing (span)
 import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
@@ -13,7 +15,6 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx exposing (ioToId)
 import Msg.Pathfinder exposing (IoDirection, Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
-import Set
 import Table
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
@@ -22,7 +23,7 @@ import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (alignColumnsRight)
+import View.Pathfinder.PagedTable exposing (alignColumnHeader)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
 
 
@@ -37,7 +38,7 @@ config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> IoColumnConfig 
 config styles vc ioDirection isCheckedFn ioColumnConfig =
     let
         rightAlignedColumns =
-            Set.singleton "Value"
+            Dict.fromList [ ( "Value", View.Pathfinder.PagedTable.RightAligned ) ]
 
         styles_ =
             styles
@@ -70,6 +71,7 @@ config styles vc ioDirection isCheckedFn ioColumnConfig =
                         >> Maybe.withDefault False
                 , onClick =
                     ioToId network >> Maybe.map UserClickedAddressCheckboxInTable >> Maybe.withDefault NoOp
+                , readonly = \_ -> False
                 }
             , ioColumn vc
                 { label = "Address"
@@ -84,7 +86,7 @@ config styles vc ioDirection isCheckedFn ioColumnConfig =
                 "Value"
                 .value
             ]
-        , customizations = customizations styles_ vc |> alignColumnsRight styles_ vc rightAlignedColumns
+        , customizations = customizations styles_ vc |> alignColumnHeader styles_ vc rightAlignedColumns
         }
 
 
@@ -122,7 +124,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                     , Css.position Css.absolute
                     ]
                 ]
-                [ loadingSpinner vc (\_ -> [])
+                [ loadingSpinner vc Css.View.loadingSpinner
                 ]
 
         hasTags_ =
@@ -138,6 +140,14 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                     SidePanelComponents.sidePanelIoListIdentifierCellAttributes
                     { sidePanelIoListIdentifierCell =
                         { position1Instance =
+                            let
+                                withTagSummary ts =
+                                    if hasOnlyExchangeTags ts then
+                                        exchangeIcon
+
+                                    else
+                                        tagIcon
+                            in
                             case hasTags_ data of
                                 LoadingTags ->
                                     loadingIcon
@@ -151,20 +161,38 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                                 NoTags ->
                                     none
 
-                                HasTagSummary ts ->
-                                    if hasOnlyExchangeTags ts then
-                                        exchangeIcon
+                                NoTagsWithoutCluster ->
+                                    none
 
-                                    else
-                                        tagIcon
+                                HasTagSummaryWithCluster ts ->
+                                    withTagSummary ts
+
+                                HasTagSummaryWithoutCluster ts ->
+                                    none
+
+                                HasTagSummaryOnlyWithCluster ts ->
+                                    withTagSummary ts
+
+                                HasTagSummaries { withCluster } ->
+                                    withTagSummary withCluster
                         , position2Instance =
-                            case hasTags_ data of
-                                HasTagSummary ts ->
+                            let
+                                withTagSummary ts =
                                     if isExchangeNode ts && not (hasOnlyExchangeTags ts) then
                                         exchangeIcon
 
                                     else
                                         none
+                            in
+                            case hasTags_ data of
+                                HasTagSummaryWithCluster ts ->
+                                    withTagSummary ts
+
+                                HasTagSummaryWithoutCluster ts ->
+                                    none
+
+                                HasTagSummaries { withCluster } ->
+                                    withTagSummary withCluster
 
                                 HasTags True ->
                                     exchangeIcon

@@ -3,6 +3,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.04.0] - 2025-04-03
+
+### Added
+
+- "More" tab with Pathfinder 1.0 and help links
+- Related addresses table in address details view (tagged/all cluster addresses)
+- Success notifications
+- Plugin hooks for new Pathfinder, new message based update hook
+- Display rate limiting period in settings
+
+### Changed
+
+- Moved Pathfinder 1.0 to "More" tab
+- Numerous minor design patches and bug fixes
+- Plugins in plugins folder need to be capitialized
+- Improved the Makefile and build chain
+- Keep transactions table closed on address selection
+
+### Fixed
+
+- App remains usable after network issue
+- Trigger search automatically when using one of the examples on the landing page
+
+## [24.01.5] - 2025-01-24
+
+### added
+- tag confidence indicator in tags list are now also colored.
+
+### fixed
+- tags list table in pathfinder overflowing on small screens.
+
+## [24.01.4] - 2025-01-20
+
+### fixed
+- fixed some color issues in the dark theme
+
+## [24.01.3] - 2025-01-20
+
+### fixed
+- to short address digest for unique search
+
+## [24.01.2] - 2025-01-14
+
+### fixed
+- fixed missing categories in pathsearch (Pathfinder 1)
 
 ## [24.01.1] - 2025-01-10
 

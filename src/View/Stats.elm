@@ -28,7 +28,7 @@ stats vc sts tokens =
             ]
         , sts
             |> webdata
-                { onFailure = statsLoadFailure vc
+                { onFailure = statsLoadFailure
                 , onNotAsked = text ""
                 , onLoading = statsLoading vc
                 , onSuccess = statsLoaded vc tokens
@@ -36,8 +36,8 @@ stats vc sts tokens =
         ]
 
 
-statsLoadFailure : Config -> Http.Error -> Html msg
-statsLoadFailure vc error =
+statsLoadFailure : Http.Error -> Html msg
+statsLoadFailure _ =
     text "error"
 
 

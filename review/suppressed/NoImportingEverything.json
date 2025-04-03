@@ -108,7 +108,6 @@
     { "count": 1, "filePath": "src/Init/Graph/Transform.elm" },
     { "count": 1, "filePath": "src/Init/Statusbar.elm" },
     { "count": 1, "filePath": "src/Init/Store.elm" },
-    { "count": 1, "filePath": "src/Lense.elm" },
     { "count": 1, "filePath": "src/Lense/Dialog.elm" },
     { "count": 1, "filePath": "src/Main.elm" },
     { "count": 1, "filePath": "src/Model/Graph/Address.elm" },

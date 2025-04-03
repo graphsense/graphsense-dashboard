@@ -18,7 +18,7 @@ toStyles colorMap node =
         ++ HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
         ++ HasLayoutTrait.toStyles node.hasLayoutTrait
         ++ HasFramePropertiesTrait.toStyles colorMap node.hasFramePropertiesTrait
-        ++ HasGeometryTrait.toStyles colorMap node.hasGeometryTrait
+        ++ HasGeometryTrait.toStyles colorMap node.hasGeometryTrait node.individualStrokeWeights
         ++ HasEffectsTrait.toStyles colorMap node.hasEffectsTrait
 
 

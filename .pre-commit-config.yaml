@@ -5,7 +5,7 @@ repos:
   hooks:
   - id: set-version
     name: Set version in Version.elm
-    entry: pre_commit_hooks/set_version.sh
+    entry: tools/set_version.sh
     language: script
     always_run: true
     stages: [pre-push]
@@ -15,21 +15,25 @@ repos:
     language: system
     pass_filenames: false
     always_run: true
+    stages: [pre-commit]
   - id: code_formatting
     name: Run uniform code formatting
     entry: make format
     language: system
     pass_filenames: false
     always_run: true
+    stages: [pre-commit]
   - id: linting
     name: Run linting (elm-review)
     entry: make lint
     language: system
     pass_filenames: false
     always_run: true
+    stages: [pre-commit]
   - id: unit_tests
     name: Run Unit Tests
     entry: make test
     language: system
     pass_filenames: false
     always_run: true
+    stages: [pre-commit]

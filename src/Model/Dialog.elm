@@ -1,4 +1,4 @@
-module Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, TagListConfig, defaultMsg)
+module Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg)
 
 import Api.Data
 import Html.Styled exposing (Html)
@@ -14,6 +14,7 @@ type Model msg
     | Info (InfoConfig msg)
     | TagsList (TagListConfig msg)
     | Custom (CustomConfig msg)
+    | Plugin (PluginConfig msg)
 
 
 type alias ConfirmConfig msg =
@@ -60,6 +61,11 @@ type alias TagListConfig msg =
     }
 
 
+type alias PluginConfig msg =
+    { defaultMsg : msg
+    }
+
+
 type ErrorType
     = AddressNotFound (List String)
     | Http String Http.Error
@@ -93,3 +99,6 @@ defaultMsg model =
 
         TagsList c ->
             c.closeMsg
+
+        Plugin c ->
+            c.defaultMsg

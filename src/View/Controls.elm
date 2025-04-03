@@ -1,4 +1,4 @@
-module View.Controls exposing (lightModeToggle, tabs, toggle, toggleSmall, toggleWithIcons, toggleWithText)
+module View.Controls exposing (lightModeToggle, tabs, tabsSmall, tabsSmallItems, toggle, toggleCell, toggleSmall, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -59,26 +59,51 @@ toggleSmall { selected, disabled, msg } =
 
 toggleWithText : { selectedA : Bool, titleA : String, titleB : String, msg : msg } -> Html msg
 toggleWithText { selectedA, titleA, titleB, msg } =
-    let
-        ( a, b ) =
-            if selectedA then
-                ( Sc.toggleCellWithTextStateSelected { stateSelected = { toggleText = titleA } }
-                , Sc.toggleCellWithTextStateDeselected { stateDeselected = { toggleText = titleB } }
-                )
-
-            else
-                ( Sc.toggleCellWithTextStateDeselected { stateDeselected = { toggleText = titleA } }
-                , Sc.toggleCellWithTextStateSelected { stateSelected = { toggleText = titleB } }
-                )
-    in
     Sc.toggleSwitchTextWithInstances
         (Sc.toggleSwitchTextAttributes
             |> Rs.s_toggleSwitchText [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
         )
         Sc.toggleSwitchTextInstances
-        { rightCell = { variant = b }
-        , leftCell = { variant = a }
+        { rightCell =
+            { variant =
+                toggleCell
+                    { title = titleA
+                    , selected = selectedA
+                    , msg = msg
+                    }
+            }
+        , leftCell =
+            { variant =
+                toggleCell
+                    { title = titleB
+                    , selected = not selectedA
+                    , msg = msg
+                    }
+            }
         }
+
+
+toggleCell : { title : String, selected : Bool, msg : msg } -> Html msg
+toggleCell { selected, title, msg } =
+    if selected then
+        Sc.toggleCellWithTextStateSelectedWithAttributes
+            (Sc.toggleCellWithTextStateSelectedAttributes
+                |> Rs.s_stateSelected
+                    [ Util.View.pointer
+                    , Util.View.onClickWithStop msg
+                    ]
+            )
+            { stateSelected = { toggleText = title } }
+
+    else
+        Sc.toggleCellWithTextStateDeselectedWithAttributes
+            (Sc.toggleCellWithTextStateDeselectedAttributes
+                |> Rs.s_stateDeselected
+                    [ Util.View.pointer
+                    , Util.View.onClickWithStop msg
+                    ]
+            )
+            { stateDeselected = { toggleText = title } }
 
 
 lightModeToggle : { selectedA : Bool, msg : msg } -> Html msg
@@ -172,19 +197,47 @@ tabs tbs =
     let
         viewTab t =
             if t.selected then
-                Sc.singleTabStateSelectedWithAttributes
-                    Sc.singleTabStateSelectedAttributes
-                    { stateSelected = { tabLabel = t.title } }
+                Sc.singleTabStateSelectedSizeLargeWithAttributes
+                    Sc.singleTabStateSelectedSizeLargeAttributes
+                    { stateSelectedSizeLarge = { tabLabel = t.title } }
 
             else
-                Sc.singleTabStateNeutralWithAttributes
-                    (Sc.singleTabStateNeutralAttributes
-                        |> Rs.s_stateNeutral [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
+                Sc.singleTabStateNeutralSizeLargeWithAttributes
+                    (Sc.singleTabStateNeutralSizeLargeAttributes
+                        |> Rs.s_stateNeutralSizeLarge [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
                     )
-                    { stateNeutral = { tabLabel = t.title } }
+                    { stateNeutralSizeLarge = { tabLabel = t.title } }
     in
     div
         [ Html.Styled.Attributes.css
             Sp.settingsPageSettingsTabsSettingsTabs_details.styles
         ]
         (tbs |> List.map viewTab)
+
+
+tabsSmallItems : List { title : String, selected : Bool, msg : msg } -> List (Html msg)
+tabsSmallItems tbs =
+    let
+        viewTab t =
+            if t.selected then
+                Sc.singleTabStateSelectedSizeSmallWithAttributes
+                    Sc.singleTabStateSelectedSizeSmallAttributes
+                    { stateSelectedSizeSmall = { tabLabel = t.title } }
+
+            else
+                Sc.singleTabStateNeutralSizeSmallWithAttributes
+                    (Sc.singleTabStateNeutralSizeSmallAttributes
+                        |> Rs.s_stateNeutralSizeSmall [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
+                    )
+                    { stateNeutralSizeSmall = { tabLabel = t.title } }
+    in
+    tbs |> List.map viewTab
+
+
+tabsSmall : List { title : String, selected : Bool, msg : msg } -> Html msg
+tabsSmall tbs =
+    div
+        [ Html.Styled.Attributes.css
+            Sp.settingsPageSettingsTabsSettingsTabs_details.styles
+        ]
+        (tabsSmallItems tbs)

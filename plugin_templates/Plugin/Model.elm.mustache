@@ -33,12 +33,17 @@ type PluginType
     {{^last}}| {{/last}}{{/plugins}}
 
 
+type Dialog
+    = {{^plugins}}Dialog{{/plugins}}{{#plugins}}Dialog{{package}}
+    {{^last}}| {{/last}}{{/plugins}}
+
+
 pluginTypeToNamespace : PluginType -> String
 pluginTypeToNamespace type_ =
     {{#plugins.length}}case type_ of{{/plugins.length}}{{^plugins}}""{{/plugins}}
 {{#plugins}}
         {{package}} ->
-            "{{name}}"
+            "{{namespace}}"
 {{/plugins}}
 
 
@@ -46,7 +51,7 @@ namespaceToPluginType : String -> Maybe PluginType
 namespaceToPluginType str =
     {{#plugins.length}}case str of{{/plugins.length}}{{^plugins}}case "" of{{/plugins}}
 {{#plugins}}
-        "{{name}}" ->
+        "{{namespace}}" ->
             Just {{package}}
 {{/plugins}}
 

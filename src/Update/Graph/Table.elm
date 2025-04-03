@@ -77,5 +77,5 @@ filterTable : (a -> Bool) -> Table a -> Table a
 filterTable filter table =
     { table
         | data = List.filter filter table.data
-        , filtered = List.filter filter table.data
+        , filtered = List.filter filter table.filtered
     }

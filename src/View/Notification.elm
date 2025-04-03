@@ -15,10 +15,13 @@ import Theme.Html.ErrorMessagesAlerts
         , errorMessageComponentTypeAlertWithAttributes
         , errorMessageComponentTypeErrorAttributes
         , errorMessageComponentTypeErrorWithAttributes
+        , errorMessageComponentTypeSuccessAttributes
+        , errorMessageComponentTypeSuccessWithAttributes
         )
 import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
-import Util.View exposing (none, onClickWithStop)
+import Util.Css
+import Util.View exposing (fixFillRule, none, onClickWithStop)
 import View.Locale as Locale
 
 
@@ -38,6 +41,7 @@ overlay moved =
 
                     else
                         -100
+            , Util.Css.zIndexMain
             ]
         ]
 
@@ -49,7 +53,7 @@ view vc model =
             model |> Notification.peek
     in
     case not of
-        Just (Notification.Error { title, message, variables }) ->
+        Just (Notification.Error { title, message, moreInfo, variables }) ->
             let
                 icon =
                     Icons.iconsError {}
@@ -66,7 +70,12 @@ view vc model =
                     , title = Locale.string vc.locale title
                     }
                 , messageText =
-                    { messageText = Locale.interpolated vc.locale message variables }
+                    { messageText =
+                        message
+                            :: moreInfo
+                            |> List.map (\m -> Locale.interpolated vc.locale m variables)
+                            |> String.join " "
+                    }
                 , typeError =
                     { bodyText = ""
                     , headlineText = ""
@@ -75,7 +84,7 @@ view vc model =
                 |> List.singleton
                 |> overlay (Notification.getMoved model)
 
-        Just (Notification.Info { title, message, variables }) ->
+        Just (Notification.Info { title, message, moreInfo, variables }) ->
             let
                 buttonAttrOk =
                     [ css (Css.btnBase vc), onClickWithStop UserClosesNotification ]
@@ -89,8 +98,63 @@ view vc model =
                     { iconInstance = icon
                     , title = Locale.string vc.locale title
                     }
-                , messageText = { messageText = Locale.interpolated vc.locale message variables }
+                , messageText =
+                    { messageText =
+                        message
+                            :: moreInfo
+                            |> List.map (\m -> Locale.interpolated vc.locale m variables)
+                            |> String.join " "
+                    }
                 , typeAlert = { bodyText = "", headlineText = "" }
+                }
+                |> List.singleton
+                |> overlay (Notification.getMoved model)
+
+        Just (Notification.InfoEphemeral title) ->
+            let
+                hide =
+                    [ css [ Css.display Css.none ] ]
+
+                icon =
+                    Icons.iconsAlert {}
+            in
+            errorMessageComponentTypeAlertWithAttributes
+                (errorMessageComponentTypeAlertAttributes
+                    |> Rs.s_headerFrame hide
+                    |> Rs.s_messageText hide
+                    |> Rs.s_content [ css [ Css.width Css.auto ] ]
+                )
+                { header =
+                    { iconInstance = icon
+                    , title = Locale.string vc.locale title
+                    }
+                , typeAlert = { bodyText = "", headlineText = "" }
+                , messageText = { messageText = "" }
+                }
+                |> List.singleton
+                |> overlay (Notification.getMoved model)
+
+        Just (Notification.Success title) ->
+            let
+                hideClose =
+                    [ css [ Css.display Css.none ] ]
+
+                icon =
+                    Icons.iconsAlertDoneWithAttributes
+                        (Icons.iconsAlertDoneAttributes
+                            |> Rs.s_subtract [ fixFillRule ]
+                        )
+                        {}
+            in
+            errorMessageComponentTypeSuccessWithAttributes
+                (errorMessageComponentTypeSuccessAttributes
+                    |> Rs.s_headerFrame hideClose
+                )
+                { header =
+                    { iconInstance = icon
+                    , title = Locale.string vc.locale title
+                    }
+                , typeSuccess = { bodyText = "", headlineText = "" }
                 }
                 |> List.singleton
                 |> overlay (Notification.getMoved model)

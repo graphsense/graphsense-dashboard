@@ -25,10 +25,10 @@ type alias Config =
     }
 
 
-getConceptName : { t | allConcepts : List Api.Data.Concept } -> Maybe String -> Maybe String
-getConceptName gc =
-    Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.allConcepts)
-        >> Maybe.map .label
+getConceptName : { t | allConcepts : List Api.Data.Concept } -> String -> Maybe String
+getConceptName vc cat =
+    List.Extra.find (.id >> (==) cat) vc.allConcepts
+        |> Maybe.map .label
 
 
 getAbuseName : { t | abuseConcepts : List Api.Data.Concept } -> Maybe String -> Maybe String

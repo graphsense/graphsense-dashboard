@@ -129,5 +129,13 @@ toUrl route =
         Home ->
             absolute [] []
 
-        Plugin ( pid, _ ) ->
-            absolute [ Plugin.Model.pluginTypeToNamespace pid ] []
+        Plugin ( pid, s ) ->
+            absolute
+                [ Plugin.Model.pluginTypeToNamespace pid
+                , if s |> String.startsWith "/" then
+                    String.dropLeft 1 s
+
+                  else
+                    s
+                ]
+                []

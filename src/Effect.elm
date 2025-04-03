@@ -13,6 +13,7 @@ import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Msg(..))
 import Model.Notification
+import Model.Pathfinder.Tooltip
 import Msg.Graph as Graph
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
@@ -102,6 +103,15 @@ perform plugins key statusbarToken apiKey effect =
                 Pathfinder.PostponeUpdateByRouteEffect _ ->
                     Pathfinder.perform eff
                         |> Cmd.map PathfinderMsg
+
+                Pathfinder.OpenTooltipEffect ctx tttype ->
+                    Task.perform (always (OpenTooltip ctx (Model.Pathfinder.Tooltip.mapMsgTooltipType tttype PathfinderMsg))) (Task.succeed ())
+
+                Pathfinder.CloseTooltipEffect ctx withDelay ->
+                    Task.perform (always (ClosingTooltip ctx withDelay)) (Task.succeed ())
+
+                Pathfinder.RepositionTooltipEffect ->
+                    Task.perform (always RepositionTooltip) (Task.succeed ())
 
         GraphEffect eff ->
             case eff of

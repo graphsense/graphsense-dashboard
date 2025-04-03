@@ -11,6 +11,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
+import RemoteData exposing (WebData)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
@@ -20,13 +21,13 @@ import View.Pathfinder.Address as Address
 import View.Pathfinder.Tx as Tx
 
 
-addresses : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Dict Id Api.Data.Entity -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses plugins vc gc colors clusters annotations =
+addresses : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Dict Id (WebData Api.Data.Entity) -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses plugins vc colors clusters annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
             , Annotations.getAnnotation id annotations
-                |> Svg.lazy7 Address.view plugins vc gc colors address (flip Dict.get clusters)
+                |> Svg.lazy6 Address.view plugins vc colors address (flip Dict.get clusters)
             )
                 :: svg
         )

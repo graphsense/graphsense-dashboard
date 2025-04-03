@@ -2,14 +2,15 @@
     "type": "application",
     "source-directories": [
         "src",
-        "generated",
+        "generated/utils",
         "generated/plugins",
-        "theme",
+        "generated/theme",
         "openapi/src",
         "themes",
         "config",
         "lib/elm-autocomplete/src",
-        "lib/elm-css-sortable-table/src"
+        "lib/elm-css-sortable-table/src",
+        "lib/pagedtable/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {

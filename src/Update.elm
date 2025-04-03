@@ -18,7 +18,9 @@ import Hovercard
 import Http exposing (Error(..))
 import Init.Graph
 import Init.Pathfinder
+import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.TagsTable as TagsTable
+import Init.Pathfinder.Tooltip as Tooltip
 import Init.Search as Search
 import Json.Decode
 import Json.Encode exposing (Value)
@@ -26,14 +28,16 @@ import List.Extra
 import Log
 import Maybe.Extra
 import Model exposing (..)
+import Model.Address as Address
 import Model.Currency
 import Model.Dialog as Dialog
 import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
-import Model.Notification as Notification
+import Model.Notification as Notification exposing (Notification)
 import Model.Pathfinder.Error exposing (Error(..))
+import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
 import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
@@ -45,12 +49,14 @@ import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
 import PluginInterface.Update as PluginInterface
 import Ports
+import Process
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Result.Extra
 import Route
 import Route.Graph
 import Route.Pathfinder
+import Set
 import Sha256
 import Task
 import Time
@@ -64,8 +70,8 @@ import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import Util exposing (n)
+import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
-import Util.ThemedSelectBoxes as TSelectBoxes
 import View.Locale as Locale
 import Yaml.Decode
 
@@ -88,23 +94,175 @@ setAbuseConcepts concepts model =
     }
 
 
+delay : Float -> msg -> Cmd msg
+delay time msg =
+    -- create a task that sleeps for `time`
+    Process.sleep time
+        |> -- once the sleep is over, ignore its output (using `always`)
+           -- and then we create a new task that simply returns a success, and the msg
+           Task.map (always <| msg)
+        |> -- finally, we ask Elm to perform the Task, which
+           -- takes the result of the above task and
+           -- returns it to our update function
+           Task.perform identity
+
+
+tooltipBeginClosing : Msg -> Bool -> ( Model key, List Effect ) -> ( Model key, List Effect )
+tooltipBeginClosing closingMsg withDelay ( model, eff ) =
+    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }
+    , ((delay
+            (if withDelay then
+                2000.0
+
+             else
+                0
+            )
+        <|
+            closingMsg
+       )
+        |> CmdEffect
+      )
+        :: eff
+    )
+
+
+tooltipAbortClosing : ( Model key, List Effect ) -> ( Model key, List Effect )
+tooltipAbortClosing ( model, eff ) =
+    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing False) }, eff )
+
+
+tooltipCloseIfNotAborted : ( Model key, List Effect ) -> ( Model key, List Effect )
+tooltipCloseIfNotAborted ( model, eff ) =
+    ( { model
+        | tooltip =
+            case model.tooltip of
+                Just { closing } ->
+                    if closing then
+                        Nothing
+
+                    else
+                        model.tooltip
+
+                _ ->
+                    model.tooltip
+      }
+    , eff
+    )
+
+
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
     case Log.truncate "msg" msg of
         NoOp ->
             n model
 
+        UserClosesNavbarSubMenu ->
+            n { model | navbarSubMenu = Nothing }
+
+        UserToggledNavbarSubMenu t ->
+            n
+                { model
+                    | navbarSubMenu =
+                        case model.navbarSubMenu of
+                            Just _ ->
+                                Nothing
+
+                            Nothing ->
+                                Just { type_ = t }
+                }
+
+        HovercardMsg hcMsg ->
+            model.tooltip
+                |> Maybe.map
+                    (\tooltip ->
+                        let
+                            ( hc, cmd ) =
+                                Hovercard.update hcMsg tooltip.hovercard
+                        in
+                        ( { model
+                            | tooltip = Just { tooltip | hovercard = hc }
+                          }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
+
+        OpenTooltip ctx tttype ->
+            let
+                ( hc, cmd ) =
+                    ctx.domId |> Hovercard.init
+
+                tt =
+                    tttype |> Tooltip.init hc
+
+                ( hasToChange, newTooltip ) =
+                    ( model.tooltip
+                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                        |> Maybe.withDefault True
+                    , Just tt
+                    )
+            in
+            if hasToChange then
+                ( { model | tooltip = newTooltip }
+                , Cmd.map HovercardMsg cmd
+                    |> CmdEffect
+                    |> List.singleton
+                )
+
+            else
+                n model |> tooltipAbortClosing
+
+        ClosingTooltip ctx withDelay ->
+            case model.tooltip of
+                Just tt ->
+                    n model |> tooltipBeginClosing (CloseTooltip ctx tt.type_) withDelay
+
+                _ ->
+                    n model
+
+        RepositionTooltip ->
+            ( model
+            , Maybe.map
+                (.hovercard
+                    >> Hovercard.getElement
+                    >> Cmd.map HovercardMsg
+                    >> CmdEffect
+                    >> List.singleton
+                )
+                model.tooltip
+                |> Maybe.withDefault []
+            )
+
+        CloseTooltip ctx _ ->
+            let
+                ( nm, eff ) =
+                    model |> n |> tooltipCloseIfNotAborted
+
+                ( newPluginsState, outMsg, cmdp ) =
+                    if model.tooltip /= nm.tooltip then
+                        PluginInterface.ClosedTooltip ctx
+                            |> Plugin.updateByCoreMsg plugins uc nm.plugins
+
+                    else
+                        ( model.plugins, [], Cmd.none )
+            in
+            (( nm, eff ) |> Tuple.mapFirst (s_plugins newPluginsState))
+                |> updateByPluginOutMsg plugins uc outMsg
+                |> Tuple.mapSecond ((++) [ PluginEffect cmdp ])
+
         UserRequestsUrl request ->
             case request of
                 Browser.Internal url ->
-                    ( model
+                    ( model |> s_navbarSubMenu Nothing
                     , Url.toString url
                         |> NavPushUrlEffect
                         |> List.singleton
                     )
 
                 Browser.External url ->
-                    ( model
+                    ( model |> s_navbarSubMenu Nothing
                     , NavLoadEffect url
                         |> List.singleton
                     )
@@ -116,6 +274,11 @@ update plugins uc msg model =
             updateByUrl plugins uc url model
 
         BrowserGotStatistics stats ->
+            let
+                ( newPluginsState, outMsg, cmd ) =
+                    PluginInterface.CoreGotStatsUpdate stats
+                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+            in
             n
                 { model
                     | stats = RD.Success stats
@@ -123,9 +286,13 @@ update plugins uc msg model =
                     , search =
                         model.search
                             |> s_searchType
-                                (Search.initSearchAll (Just stats))
+                                (Search.initSearchAddressAndTxs Nothing)
+                    , plugins = newPluginsState
                 }
+                |> Tuple.mapSecond ((::) (PluginEffect cmd))
+                |> updateByPluginOutMsg plugins uc outMsg
 
+        -- Plugin handling
         BrowserGotEntityTaxonomy concepts ->
             setConcepts concepts model
                 |> n
@@ -154,7 +321,7 @@ update plugins uc msg model =
                         |> Maybe.andThen
                             (\token ->
                                 case result of
-                                    Err ( Http.BadStatus 404, _ ) ->
+                                    Err ( Http.BadStatus 404, _, _ ) ->
                                         Statusbar.getMessage token model.statusbar
                                             |> Maybe.andThen
                                                 (\( key, v ) ->
@@ -186,8 +353,15 @@ update plugins uc msg model =
 
                 ( notifications, notificationEffects ) =
                     case ( isErrorDialogShown, result ) of
-                        ( False, Err ( httpErr, _ ) ) ->
-                            Notification.addHttpError model.notifications Nothing httpErr
+                        ( False, Err ( httpErr, _, _ ) ) ->
+                            case httpErr of
+                                Http.BadStatus 429 ->
+                                    Notification.add
+                                        (apiRateExceededError model.config.locale model.user.auth)
+                                        model.notifications
+
+                                _ ->
+                                    Notification.addHttpError model.notifications Nothing httpErr
 
                         _ ->
                             n model.notifications
@@ -199,10 +373,10 @@ update plugins uc msg model =
                             Statusbar.update
                                 t
                                 (case result of
-                                    Err ( Http.BadStatus 401, _ ) ->
+                                    Err ( Http.BadStatus 401, _, _ ) ->
                                         Nothing
 
-                                    Err ( err, _ ) ->
+                                    Err ( err, _, _ ) ->
                                         Just err
 
                                     Ok _ ->
@@ -212,7 +386,7 @@ update plugins uc msg model =
 
                         Nothing ->
                             case result of
-                                Err ( Http.BadStatus 429, _ ) ->
+                                Err ( Http.BadStatus 429, _, _ ) ->
                                     Just (Http.BadStatus 429)
                                         |> Statusbar.add model.statusbar "search" []
 
@@ -232,11 +406,7 @@ update plugins uc msg model =
                     n { model | dialog = Nothing }
 
                 Just (Dialog.TagsList _) ->
-                    let
-                        pfm =
-                            model.pathfinder
-                    in
-                    n { model | dialog = Nothing, pathfinder = { pfm | tooltip = Nothing } }
+                    n { model | dialog = Nothing, tooltip = Nothing, navbarSubMenu = Nothing }
 
                 _ ->
                     n model
@@ -403,13 +573,21 @@ update plugins uc msg model =
                 |> n
 
         UserClickedLayout ->
+            let
+                ( new, outMsg, cmd ) =
+                    PluginInterface.ClickedOnNeutralGround
+                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+            in
             clearSearch plugins
                 { model
                     | user =
                         model.user
                             |> s_hovercard Nothing
-                    , selectBoxes = TSelectBoxes.closeAll model.selectBoxes
+                    , plugins = new
+                    , navbarSubMenu = Nothing
                 }
+                |> Tuple.mapSecond ((::) (PluginEffect cmd))
+                |> updateByPluginOutMsg plugins uc outMsg
 
         UserClickedNavBack ->
             ( model, NavBackEffect |> List.singleton )
@@ -756,111 +934,60 @@ update plugins uc msg model =
             else
                 n model
 
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleValueDisplay) ->
-            update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleValueDetail) ->
-            let
-                option =
-                    case model.config.locale.valueDetail of
-                        Locale.Exact ->
-                            "magnitude"
-
-                        _ ->
-                            "exact"
-            in
-            update plugins uc (Graph.UserChangesValueDetail option |> GraphMsg) model
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleDatesInUserLocale) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleDatesInUserLocale) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    toggleShowDatesInUserLocale nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleSnapToGrid) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleSnapToGrid) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    toggleSnapToGrid nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTimeZoneOffset) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTimeZoneOffset) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    toggleShowTimeZoneOffset nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleHighlightClusterFriends) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleHighlightClusterFriends) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    toggleHighlightClusterFriends nm
-            in
-            ( m, eff ++ neff )
-
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTxTimestamp) ->
-            let
-                ( pf, pfeff ) =
-                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTxTimestamp) model.pathfinder
-
-                ( nm, neff ) =
-                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
-
-                ( m, eff ) =
-                    togglShowTimestampOnTxEdge nm
-            in
-            ( m, eff ++ neff )
-
         PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let
                 ( m, cmd ) =
-                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model) (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
-            in
-            ( { model | pathfinder = m }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
+                    Init.Pathfinder.init (Model.userSettingsFromMainModel model)
 
-        PathfinderMsg Pathfinder.UserReleasedEscape ->
+                ( newPluginsState, outMsg, cmdp ) =
+                    PluginInterface.Reset
+                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+            in
+            ( { model | pathfinder = m, plugins = newPluginsState }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
+                |> updateByPluginOutMsg plugins uc outMsg
+                |> Tuple.mapSecond ((++) [ PluginEffect cmdp ])
+
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg dsm) ->
             let
                 ( pf, pfeff ) =
-                    Pathfinder.update plugins uc Pathfinder.UserReleasedEscape model.pathfinder
+                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg dsm) model.pathfinder
 
                 ( nm, neff ) =
                     ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
             in
-            ( nm |> s_dialog Nothing |> s_notifications (nm.notifications |> Notification.pop), neff )
+            case dsm of
+                Pathfinder.UserClickedToggleDatesInUserLocale ->
+                    toggleShowDatesInUserLocale nm |> Tuple.mapSecond ((++) neff)
 
-        PathfinderMsg (Pathfinder.UserClickedExportGraphAsImage name) ->
-            ( model
-            , (name ++ ".png")
-                |> Ports.exportGraphImage
-                |> Pathfinder.CmdEffect
-                |> PathfinderEffect
-                |> List.singleton
-            )
+                Pathfinder.UserClickedToggleSnapToGrid ->
+                    toggleSnapToGrid nm |> Tuple.mapSecond ((++) neff)
+
+                Pathfinder.UserClickedToggleShowTimeZoneOffset ->
+                    toggleShowTimeZoneOffset nm |> Tuple.mapSecond ((++) neff)
+
+                Pathfinder.UserClickedToggleHighlightClusterFriends ->
+                    toggleHighlightClusterFriends nm |> Tuple.mapSecond ((++) neff)
+
+                Pathfinder.UserClickedToggleShowTxTimestamp ->
+                    togglShowTimestampOnTxEdge nm |> Tuple.mapSecond ((++) neff)
+
+                Pathfinder.UserClickedToggleDisplaySettings ->
+                    ( nm, neff )
+
+                Pathfinder.UserClickedToggleValueDetail ->
+                    let
+                        option =
+                            case model.config.locale.valueDetail of
+                                Locale.Exact ->
+                                    "magnitude"
+
+                                _ ->
+                                    "exact"
+                    in
+                    update plugins uc (Graph.UserChangesValueDetail option |> GraphMsg) model
+
+                Pathfinder.UserClickedToggleValueDisplay ->
+                    update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
 
         PathfinderMsg (Pathfinder.UserClickedSaveGraph time) ->
             ( model
@@ -907,12 +1034,127 @@ update plugins uc msg model =
 
         PathfinderMsg m ->
             let
-                ( pathfinder, eff ) =
-                    Pathfinder.update plugins uc m model.pathfinder
+                pathfinderOld =
+                    model.pathfinder
+
+                ( newModel, newEffects ) =
+                    case m of
+                        Pathfinder.UserClickedExportGraphAsImage name ->
+                            ( model
+                            , (name ++ ".png")
+                                |> Ports.exportGraphImage
+                                |> Pathfinder.CmdEffect
+                                |> PathfinderEffect
+                                |> List.singleton
+                            )
+
+                        Pathfinder.UserReleasedEscape ->
+                            let
+                                ( pf, pfeff ) =
+                                    Pathfinder.update plugins uc Pathfinder.UserReleasedEscape model.pathfinder
+
+                                ( nm, neff ) =
+                                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
+                            in
+                            ( nm |> s_dialog Nothing |> s_notifications (nm.notifications |> Notification.pop), neff )
+
+                        Pathfinder.BrowserGotBulkAddresses addresses ->
+                            let
+                                ( new, outMsg, cmd ) =
+                                    addresses
+                                        |> List.filterMap
+                                            (\a ->
+                                                Dict.get (a |> Id.initClusterIdFromRecord) model.pathfinder.clusters
+                                                    |> Maybe.andThen (RD.toMaybe >> Maybe.map (Tuple.pair a))
+                                            )
+                                        |> List.map (\( x, e ) -> ( { address = x.address, currency = x.currency }, e ))
+                                        |> PluginInterface.AddressesAddedPathfinder
+                                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+
+                                ( pathfinder, pathfinderEffects ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+                            in
+                            ( { model
+                                | plugins = new
+                                , pathfinder = pathfinder
+                              }
+                            , PluginEffect cmd
+                                :: List.map PathfinderEffect pathfinderEffects
+                            )
+                                |> updateByPluginOutMsg plugins uc outMsg
+
+                        Pathfinder.BrowserGotAddressData _ _ address ->
+                            let
+                                ( new, outMsg, cmd ) =
+                                    address
+                                        |> List.singleton
+                                        |> List.filterMap
+                                            (\a ->
+                                                Dict.get (a |> Id.initClusterIdFromRecord) model.pathfinder.clusters
+                                                    |> Maybe.andThen (RD.toMaybe >> Maybe.map (Tuple.pair a))
+                                            )
+                                        |> List.map (\( x, e ) -> ( { address = x.address, currency = x.currency }, e ))
+                                        |> PluginInterface.AddressesAddedPathfinder
+                                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+
+                                ( pathfinder, pathfinderEffects ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+                            in
+                            ( { model
+                                | plugins = new
+                                , pathfinder = pathfinder
+                              }
+                            , PluginEffect cmd
+                                :: List.map PathfinderEffect pathfinderEffects
+                            )
+                                |> updateByPluginOutMsg plugins uc outMsg
+
+                        Pathfinder.BrowserGotClusterData id data ->
+                            let
+                                ( new, outMsg, cmd ) =
+                                    ( id |> Address.fromPathfinderId, data )
+                                        |> List.singleton
+                                        |> PluginInterface.AddressesAddedPathfinder
+                                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+
+                                ( pathfinder, pathfinderEffects ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+                            in
+                            ( { model
+                                | plugins = new
+                                , pathfinder = pathfinder
+                              }
+                            , PluginEffect cmd
+                                :: List.map PathfinderEffect pathfinderEffects
+                            )
+                                |> updateByPluginOutMsg plugins uc outMsg
+
+                        Pathfinder.PluginMsg ms ->
+                            updatePlugins plugins uc ms model
+
+                        _ ->
+                            let
+                                ( pathfinder, eff ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+
+                                nm =
+                                    { model | pathfinder = pathfinder }
+                            in
+                            ( nm
+                            , List.map PathfinderEffect eff
+                            )
             in
-            ( { model | pathfinder = pathfinder }
-            , List.map PathfinderEffect eff
-            )
+            if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
+                ( newModel, newEffects )
+
+            else
+                let
+                    ( newPluginsState, outMsg, cmd ) =
+                        (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
+                            |> Plugin.updateByCoreMsg plugins uc model.plugins
+                in
+                ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
+                    |> updateByPluginOutMsg plugins uc outMsg
 
         GraphMsg m ->
             case m of
@@ -922,7 +1164,11 @@ update plugins uc msg model =
                 Graph.InternalGraphAddedAddresses ids ->
                     let
                         ( new, outMsg, cmd ) =
-                            Plugin.addressesAdded plugins model.plugins ids
+                            ids
+                                |> Set.toList
+                                |> List.map Address.fromId
+                                |> PluginInterface.AddressesAdded
+                                |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
@@ -1138,7 +1384,7 @@ update plugins uc msg model =
                 Graph.PortDeserializedGS ( filename, data ) ->
                     pluginNewGraph plugins ( model, [] )
                         |> (\( mdl, eff ) ->
-                                deserialize plugins filename data mdl
+                                deserialize plugins uc filename data mdl
                                     |> mapSecond ((++) eff)
                            )
 
@@ -1211,24 +1457,92 @@ update plugins uc msg model =
         UserClosesNotification ->
             n { model | notifications = Notification.pop model.notifications }
 
-        SelectBoxMsg sb subMsg ->
+        LocaleSelectBoxMsg subMsg ->
             let
-                ( selectBoxes, outMsg ) =
-                    model.selectBoxes
-                        |> TSelectBoxes.update sb subMsg
+                ( selectBox, outMsg ) =
+                    model.localeSelectBox
+                        |> TSelectBox.update subMsg
 
                 newModel =
-                    { model | selectBoxes = selectBoxes }
+                    { model | localeSelectBox = selectBox }
             in
-            case ( sb, outMsg ) of
-                ( TSelectBoxes.SupportedLanguages, Just (TSelectBox.Selected x) ) ->
+            case outMsg of
+                TSelectBox.Selected x ->
                     switchLocale x newModel
 
-                _ ->
+                TSelectBox.NoSelection ->
                     n newModel
 
         NotificationMsg ms ->
             n { model | notifications = Notification.update ms model.notifications }
+
+        BrowserGotUncaughtError value ->
+            value
+                |> Json.Decode.decodeValue
+                    (Json.Decode.field "message" Json.Decode.string)
+                |> Result.Extra.unpack
+                    (Json.Decode.errorToString
+                        >> Ports.console
+                        >> CmdEffect
+                        >> List.singleton
+                        >> pair model
+                    )
+                    (\message ->
+                        let
+                            ( notifications, eff ) =
+                                Notification.add
+                                    (Notification.Error
+                                        { title = "An error occurred"
+                                        , message = message
+                                        , moreInfo = []
+                                        , variables = []
+                                        }
+                                    )
+                                    model.notifications
+                        in
+                        ( { model | notifications = notifications }
+                        , List.map NotificationEffect eff
+                        )
+                    )
+
+
+apiRateExceededError : Locale.Model -> Auth -> Notification
+apiRateExceededError locale auth =
+    let
+        limited =
+            case auth of
+                Authorized { requestLimit } ->
+                    case requestLimit of
+                        Limited l ->
+                            Just l
+
+                        Unlimited ->
+                            Nothing
+
+                _ ->
+                    Nothing
+    in
+    Notification.Error
+        { title = "Request limit exceeded"
+        , message =
+            limited
+                |> Maybe.map
+                    (\_ ->
+                        "The request limit of your API key of {0} per {1} has been exceeded."
+                    )
+                |> Maybe.withDefault "The request limit of your API key has been exceeded."
+        , moreInfo = []
+        , variables =
+            limited
+                |> Maybe.map
+                    (\{ limit, interval } ->
+                        [ String.fromInt limit
+                        , requestLimitIntervalToString interval
+                            |> Locale.string locale
+                        ]
+                    )
+                |> Maybe.withDefault []
+        }
 
 
 switchLocale : String -> Model key -> ( Model key, List Effect )
@@ -1259,11 +1573,17 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
             let
                 ( graph, graphEffect ) =
                     Graph.updateByPluginOutMsg plugins outMsgs model.graph
+
+                ( pathfinder, pathfinderEffect ) =
+                    Pathfinder.updateByPluginOutMsg plugins uc outMsgs model.pathfinder
             in
             ( { model
                 | graph = graph
+                , pathfinder = pathfinder
               }
-            , eff ++ List.map GraphEffect graphEffect
+            , eff
+                ++ List.map GraphEffect graphEffect
+                ++ List.map PathfinderEffect pathfinderEffect
             )
     in
     outMsgs
@@ -1276,6 +1596,12 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                     PluginInterface.UpdateAddresses _ _ ->
                         updateGraphByPluginOutMsg model eff
 
+                    PluginInterface.UpdateAddressesByRootAddress _ _ ->
+                        updateGraphByPluginOutMsg model eff
+
+                    PluginInterface.UpdateAddressesByEntityPathfinder _ _ ->
+                        updateGraphByPluginOutMsg model eff
+
                     PluginInterface.UpdateAddressEntities _ _ ->
                         updateGraphByPluginOutMsg model eff
 
@@ -1286,6 +1612,9 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         updateGraphByPluginOutMsg model eff
 
                     PluginInterface.LoadAddressIntoGraph _ ->
+                        updateGraphByPluginOutMsg model eff
+
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder _ _) ->
                         updateGraphByPluginOutMsg model eff
 
                     PluginInterface.GetAddressDomElement id pmsg ->
@@ -1359,8 +1688,23 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         )
                             |> updateByPluginOutMsg plugins uc outMsg
 
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.GetPathfinderGraphJson toMsg) ->
+                        let
+                            serialized =
+                                Pathfinder.encode model.pathfinder
+
+                            ( new, outMsg, cmd ) =
+                                Plugin.update plugins uc (toMsg serialized) model.plugins
+                        in
+                        ( { model
+                            | plugins = new
+                          }
+                        , PluginEffect cmd :: eff
+                        )
+                            |> updateByPluginOutMsg plugins uc outMsg
+
                     PluginInterface.Deserialize filename data ->
-                        deserialize plugins filename data model
+                        deserialize plugins uc filename data model
                             |> mapSecond ((++) eff)
 
                     PluginInterface.SendToPort value ->
@@ -1392,6 +1736,24 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                           }
                         , eff
                         )
+
+                    PluginInterface.ShowNotification nt ->
+                        let
+                            ( notifications, notificationEffects ) =
+                                Notification.add nt model.notifications
+                        in
+                        ( { model
+                            | notifications = notifications
+                          }
+                        , List.map NotificationEffect notificationEffects ++ eff
+                        )
+
+                    PluginInterface.OpenTooltip s msgs ->
+                        update plugins uc (OpenTooltip s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg))) mo |> Tuple.mapSecond ((++) eff)
+
+                    PluginInterface.CloseTooltip s withDelay ->
+                        update plugins uc (ClosingTooltip (Just s) withDelay) mo
+                            |> Tuple.mapSecond ((++) eff)
             )
             ( mo, effects )
 
@@ -1399,135 +1761,149 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
 updateByUrl : Plugins -> Config -> Url -> Model key -> ( Model key, List Effect )
 updateByUrl plugins uc url model =
     let
-        modelReady =
-            not (Locale.isEmpty model.config.locale)
-                && RD.isSuccess model.stats
+        routeConfig =
+            model.stats
+                |> RD.map (.currencies >> List.map .name)
+                |> RD.withDefault []
+                |> (\c ->
+                        { graph = { currencies = c }
+                        , pathfinder = { networks = c }
+                        }
+                   )
     in
-    if not modelReady then
-        ( model
-        , [ PostponeUpdateByUrlEffect url
-          ]
-        )
-
-    else
-        let
-            routeConfig =
-                model.stats
-                    |> RD.map (.currencies >> List.map .name)
-                    |> RD.withDefault []
-                    |> (\c ->
-                            { graph = { currencies = c }
-                            , pathfinder = { networks = c }
-                            }
-                       )
-        in
-        Route.parse routeConfig url
-            |> Maybe.map2
-                (\oldRoute route ->
-                    case route of
-                        Route.Home ->
-                            ( { model
-                                | page = Home
-                                , url = url
-                              }
-                            , []
-                            )
-
-                        Route.Stats ->
-                            ( { model
-                                | page = Stats
-                                , url = url
-                              }
-                            , case oldRoute of
-                                Route.Stats ->
-                                    []
-
-                                _ ->
-                                    [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
-                            )
-
-                        Route.Settings ->
-                            ( { model
-                                | page = Model.Settings
-                                , url = url
-                              }
-                            , []
-                            )
-
-                        Route.Graph graphRoute ->
-                            case graphRoute |> Log.log "graphRoute" of
-                                Route.Graph.Plugin ( pid, value ) ->
-                                    let
-                                        ( new, outMsg, cmd ) =
-                                            Plugin.updateGraphByUrl pid plugins value model.plugins
-                                    in
-                                    ( { model
-                                        | plugins = new
-                                        , page = Graph
-                                        , url = url
-                                      }
-                                    , [ PluginEffect cmd ]
-                                    )
-                                        |> updateByPluginOutMsg plugins uc outMsg
-
-                                _ ->
-                                    let
-                                        ( graph, graphEffect ) =
-                                            Graph.updateByRoute plugins graphRoute model.graph
-                                    in
-                                    ( { model
-                                        | page = Graph
-                                        , graph = graph
-                                        , url = url
-                                      }
-                                    , graphEffect
-                                        |> List.map GraphEffect
-                                    )
-
-                        Route.Pathfinder pfRoute ->
-                            let
-                                ( pfn, graphEffect ) =
-                                    Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
-                            in
-                            ( { model
-                                | page = Pathfinder
-                                , pathfinder = pfn
-                                , url = url
-                              }
-                            , graphEffect
-                                |> List.map PathfinderEffect
-                            )
-
-                        Route.Plugin ( pluginType, urlValue ) ->
-                            let
-                                ( new, outMsg, cmd ) =
-                                    Plugin.updateByUrl pluginType plugins uc urlValue model.plugins
-                            in
-                            ( { model
-                                | plugins = new
-                                , page = Plugin pluginType
-                                , url = url
-                              }
-                            , [ PluginEffect cmd ]
-                            )
-                                |> updateByPluginOutMsg plugins uc outMsg
-                )
-                (Route.parse routeConfig model.url
-                    -- in case url is invalid, assume root url
-                    |> Maybe.Extra.orElse (Just Route.Stats)
-                )
-            |> Maybe.map
-                (mapSecond
-                    ((++)
-                        (if uc.size == Nothing then
-                            [ GetContentsElementEffect ]
-
-                         else
-                            []
+    Route.parse routeConfig url
+        |> Maybe.map2
+            (\oldRoute route ->
+                case route of
+                    Route.Home ->
+                        ( { model
+                            | page = Home
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                            , search =
+                                model.search
+                                    |> s_searchType
+                                        (Search.initSearchAddressAndTxs Nothing)
+                          }
+                        , []
                         )
+
+                    Route.Stats ->
+                        ( { model
+                            | page = Stats
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                          }
+                        , case oldRoute of
+                            Route.Stats ->
+                                []
+
+                            _ ->
+                                [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
+                        )
+
+                    Route.Settings ->
+                        ( { model
+                            | page = Model.Settings
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                          }
+                        , []
+                        )
+
+                    Route.Graph graphRoute ->
+                        case graphRoute |> Log.log "graphRoute" of
+                            Route.Graph.Plugin ( pid, value ) ->
+                                let
+                                    ( new, outMsg, cmd ) =
+                                        Plugin.updateGraphByUrl pid plugins value model.plugins
+                                in
+                                ( { model
+                                    | plugins = new
+                                    , page = Graph
+                                    , url = url
+                                    , tooltip = Nothing
+                                    , navbarSubMenu = Nothing
+                                  }
+                                , [ PluginEffect cmd ]
+                                )
+                                    |> updateByPluginOutMsg plugins uc outMsg
+
+                            _ ->
+                                let
+                                    ( graph, graphEffect ) =
+                                        Graph.updateByRoute plugins graphRoute model.graph
+                                in
+                                ( { model
+                                    | page = Graph
+                                    , graph = graph
+                                    , url = url
+                                    , tooltip = Nothing
+                                    , navbarSubMenu = Nothing
+                                    , search =
+                                        model.search
+                                            |> s_searchType
+                                                (Search.initSearchAll (model.stats |> RD.toMaybe))
+                                  }
+                                , graphEffect
+                                    |> List.map GraphEffect
+                                )
+
+                    Route.Pathfinder pfRoute ->
+                        let
+                            ( pfn, graphEffect ) =
+                                Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
+                        in
+                        ( { model
+                            | page = Pathfinder
+                            , pathfinder = pfn
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                          }
+                        , graphEffect
+                            |> List.map PathfinderEffect
+                        )
+
+                    Route.Plugin ( pluginType, urlValue ) ->
+                        let
+                            ( new, outMsg, cmd ) =
+                                Plugin.updateByUrl pluginType plugins uc urlValue model.plugins
+                        in
+                        ( { model
+                            | plugins = new
+                            , page = Plugin pluginType
+                            , url = url
+                            , tooltip = Nothing
+                            , navbarSubMenu = Nothing
+                          }
+                        , [ PluginEffect cmd ]
+                        )
+                            |> updateByPluginOutMsg plugins uc outMsg
+            )
+            (Route.parse routeConfig model.url
+                -- in case url is invalid, assume root url
+                |> Maybe.Extra.orElse (Just Route.Stats)
+            )
+        |> Maybe.map
+            (mapSecond
+                ((++)
+                    (if uc.size == Nothing then
+                        [ GetContentsElementEffect ]
+
+                     else
+                        []
                     )
                 )
-            |> Maybe.withDefault (n model)
+            )
+        |> Maybe.withDefault
+            ( model
+            , [ PostponeUpdateByUrlEffect url
+              ]
+            )
 
 
 updateRequestLimit : Dict String String -> UserModel -> UserModel
@@ -1536,17 +1912,39 @@ updateRequestLimit headers model =
         get key =
             Dict.get key headers
                 |> Maybe.andThen String.toInt
+
+        limitInterval =
+            if Dict.member "x-ratelimit-limit-minute" headers then
+                Just Minute
+
+            else if Dict.member "x-ratelimit-limit-hour" headers then
+                Just Hour
+
+            else if Dict.member "x-ratelimit-limit-day" headers then
+                Just Day
+
+            else if Dict.member "x-ratelimit-limit-month" headers then
+                Just Month
+
+            else
+                Nothing
     in
     { model
         | auth =
             { requestLimit =
-                Maybe.map3
-                    (\limit remaining reset ->
-                        Limited { limit = limit, remaining = remaining, reset = reset }
+                Maybe.map4
+                    (\limit remaining reset interval ->
+                        Limited
+                            { limit = limit
+                            , remaining = remaining
+                            , reset = reset
+                            , interval = interval
+                            }
                     )
                     (get "ratelimit-limit")
                     (get "ratelimit-remaining")
                     (get "ratelimit-reset")
+                    limitInterval
                     |> Maybe.withDefault Unlimited
             , expiration = Nothing
             , loggingOut = False
@@ -1555,7 +1953,7 @@ updateRequestLimit headers model =
     }
 
 
-handleResponse : Plugins -> Config -> Result ( Http.Error, Effect.Api.Effect Msg ) ( Dict String String, Msg ) -> Model key -> ( Model key, List Effect )
+handleResponse : Plugins -> Config -> Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ) -> Model key -> ( Model key, List Effect )
 handleResponse plugins uc result model =
     case result of
         Ok ( headers, message ) ->
@@ -1568,7 +1966,7 @@ handleResponse plugins uc result model =
                             |> s_hovercard Nothing
                 }
 
-        Err ( BadStatus 401, eff ) ->
+        Err ( BadStatus 401, headers, eff ) ->
             ( { model
                 | user =
                     model.user
@@ -1580,6 +1978,7 @@ handleResponse plugins uc result model =
                                 _ ->
                                     Unauthorized False [ eff ]
                             )
+                        |> updateRequestLimit headers
               }
             , "userTool"
                 |> Task.succeed
@@ -1588,7 +1987,7 @@ handleResponse plugins uc result model =
                 |> List.singleton
             )
 
-        Err ( BadBody err, _ ) ->
+        Err ( BadBody err, headers, _ ) ->
             let
                 ( notifications, notificationEffects ) =
                     Notification.addHttpError model.notifications Nothing (Http.BadBody err)
@@ -1603,15 +2002,21 @@ handleResponse plugins uc result model =
                             |> Just
                             |> Statusbar.add model.statusbar "error" []
                 , notifications = notifications
+                , user = updateRequestLimit headers model.user
               }
             , PortsConsoleEffect err
                 :: List.map NotificationEffect notificationEffects
             )
 
-        Err ( BadStatus 404, _ ) ->
+        Err ( BadStatus 404, headers, _ ) ->
             { model
                 | graph = Graph.handleNotFound model.graph
+                , user = updateRequestLimit headers model.user
             }
+                |> n
+
+        Err ( BadStatus _, headers, _ ) ->
+            { model | user = updateRequestLimit headers model.user }
                 |> n
 
         Err _ ->
@@ -1655,8 +2060,8 @@ clearSearch plugins model =
         |> n
 
 
-deserialize : Plugins -> String -> Value -> Model key -> ( Model key, List Effect )
-deserialize plugins filename data model =
+deserialize : Plugins -> Config -> String -> Value -> Model key -> ( Model key, List Effect )
+deserialize plugins uc filename data model =
     Graph.deserialize data
         |> Result.map
             (\deser ->
@@ -1678,7 +2083,7 @@ deserialize plugins filename data model =
                         (\deser ->
                             let
                                 ( pathfinder, pathfinderEffects ) =
-                                    Pathfinder.fromDeserialized plugins deser model.pathfinder
+                                    Pathfinder.fromDeserialized plugins uc deser model.pathfinder
                             in
                             ( { model
                                 | pathfinder = pathfinder

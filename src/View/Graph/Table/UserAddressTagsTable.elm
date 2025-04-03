@@ -1,23 +1,19 @@
 module View.Graph.Table.UserAddressTagsTable exposing (config, prepareCSV)
 
-import Config.Graph as Graph
 import Config.Update
 import Config.View as View
 import Css
 import Css.Table exposing (styles)
 import Css.View
-import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Init.Graph.Table
-import Model.Graph.Table exposing (Table, titleAddress, titleCurrency, titleLabel)
+import Model.Graph.Table exposing (titleAddress, titleCurrency, titleLabel)
 import Model.Graph.Table.UserAddressTagsTable exposing (titleAbuse, titleCategory, titleDefinesEntity, titleSource)
 import Model.Graph.Tag as Tag
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Util.Csv
-import Util.Graph
 import Util.View
 import View.Graph.Table as T exposing (customizations)
 
@@ -69,7 +65,10 @@ config vc =
                         text truncated
                     ]
                 )
-            , T.stringColumn styles vc titleCategory (.category >> View.getConceptName vc >> Maybe.withDefault "")
+            , T.stringColumn styles
+                vc
+                titleCategory
+                (.category >> Maybe.andThen (View.getConceptName vc) >> Maybe.withDefault "")
             , T.stringColumn styles vc titleAbuse (.abuse >> View.getAbuseName vc >> Maybe.withDefault "")
             ]
         , customizations =
@@ -110,6 +109,6 @@ prepareCSV uc row =
     , ( n "label", Util.Csv.string row.label )
     , ( n "is_cluster_definer", Util.Csv.bool row.isClusterDefiner )
     , ( n "source", Util.Csv.string row.source )
-    , ( n "category", row.category |> View.getConceptName uc |> Maybe.withDefault "" |> Util.Csv.string )
+    , ( n "category", row.category |> Maybe.andThen (View.getConceptName uc) |> Maybe.withDefault "" |> Util.Csv.string )
     , ( n "abuse", row.abuse |> View.getAbuseName uc |> Maybe.withDefault "" |> Util.Csv.string )
     ]

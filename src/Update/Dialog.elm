@@ -108,3 +108,8 @@ mapMsg map model =
             , id = conf.id
             }
                 |> TagsList
+
+        Plugin conf ->
+            { defaultMsg = map conf.defaultMsg
+            }
+                |> Plugin

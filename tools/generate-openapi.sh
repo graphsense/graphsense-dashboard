@@ -46,8 +46,8 @@ sed -i 's/taginheritedFromVariants/tagInheritedFromVariants/' "${dir}/../openapi
 
 # remove duplicate Direction and order types
 patterns='^type Direction,^directionVariants : List Direction,^stringFromDirection : Direction -> String,^makeDirectionFromString : String -> Maybe Direction,^type Order_,^orderVariants : List Order_,^stringFromOrder_ : Order_ -> String,^makeOrder_FromString : String -> Maybe Order_'
-python ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/Api/Request/Entities.elm
-python ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/Api/Request/Addresses.elm
+python3 ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/Api/Request/Entities.elm
+python3 ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/Api/Request/Addresses.elm
 
 
 sed -i 's/tx_hash/txHash/' "${dir}/../openapi/src/Api/Request/Txs.elm"

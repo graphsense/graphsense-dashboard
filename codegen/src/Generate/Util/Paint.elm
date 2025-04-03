@@ -4,6 +4,7 @@ import Api.Raw exposing (BasePaint, Paint(..), RGBA)
 import Elm
 import Gen.Color as Color
 import Generate.Util.RGBA as RGBA
+import Round as R
 import Types exposing (ColorMap)
 
 
@@ -31,7 +32,7 @@ toRGBA =
                 case p of
                     PaintSolidPaint { color, basePaint } ->
                         { color
-                            | a = color.a * Maybe.withDefault 1 basePaint.opacity
+                            | a = R.roundNum 2 (color.a * Maybe.withDefault 1 basePaint.opacity)
                         }
                             |> Just
 

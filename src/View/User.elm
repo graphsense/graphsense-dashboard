@@ -1,10 +1,9 @@
-module View.User exposing (hovercard, localeSwitch, user)
+module View.User exposing (hovercard, localeSwitch)
 
 import Config.View exposing (Config)
 import Css.Button
 import Css.User as Css
 import Css.View as Css
-import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events as Events exposing (onClick, onInput)
@@ -14,24 +13,8 @@ import Model.Locale as Locale
 import Plugin.View as Plugin exposing (Plugins)
 import Time
 import Util.View exposing (loadingSpinner, none, switch)
-import View.Button as Button
 import View.Dialog as Dialog
 import View.Locale as Locale
-
-
-user : Config -> UserModel -> Html Msg
-user vc model =
-    div
-        [ Css.root vc |> css
-        , Events.stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
-        ]
-        [ Button.tool vc
-            { icon = FontAwesome.user
-            }
-            [ id "userTool"
-            , Events.onClick (UserClickedUserIcon "userTool")
-            ]
-        ]
 
 
 hovercard : Plugins -> Config -> Model key -> UserModel -> List (Html Msg)
