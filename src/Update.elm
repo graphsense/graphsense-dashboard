@@ -112,7 +112,7 @@ tooltipBeginClosing closingMsg withDelay ( model, eff ) =
     ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }
     , ((delay
             (if withDelay then
-                2000.0
+                500.0
 
              else
                 0
