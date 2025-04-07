@@ -132,6 +132,7 @@ pagedTableView vc attributes config tblPaged msgTag =
         (css
             [ Css.displayFlex
             , Css.flexDirection Css.column
+            , Css.justifyContent Css.spaceBetween
             ]
             :: attributes
         )
