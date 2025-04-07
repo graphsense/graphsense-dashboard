@@ -10,9 +10,9 @@ import Html.Styled.Events
 import Model.Currency exposing (AssetIdentifier)
 import RecordSetter as Rs
 import Table
-import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple exposing (pair)
+import Util.Checkbox
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 
@@ -104,9 +104,7 @@ checkboxColumn _ { isChecked, onClick, readonly } =
                             [ [ Css.cursor Css.notAllowed ] |> css ]
 
                         else
-                            [ onClick data |> Html.Styled.Events.onClick
-                            , [ Css.cursor Css.pointer ] |> css
-                            ]
+                            []
                 in
                 Table.HtmlDetails
                     [ [ PCSS.mGap |> Css.padding
@@ -114,19 +112,12 @@ checkboxColumn _ { isChecked, onClick, readonly } =
                       ]
                         |> css
                     ]
-                    [ if isChecked data then
-                        Icons.checkboxesSize14pxStateSelectedWithAttributes
-                            (Icons.checkboxesSize14pxStateSelectedAttributes
-                                |> Rs.s_size14pxStateSelected attrs
-                            )
-                            {}
-
-                      else
-                        Icons.checkboxesSize14pxStateDeselectedWithAttributes
-                            (Icons.checkboxesSize14pxStateDeselectedAttributes
-                                |> Rs.s_size14pxStateDeselected attrs
-                            )
-                            {}
+                    [ Util.Checkbox.checkbox
+                        { state = isChecked data |> Util.Checkbox.stateFromBool
+                        , size = Util.Checkbox.Small
+                        , msg = onClick data
+                        }
+                        attrs
                     ]
         , sorter = Table.unsortable
         }
