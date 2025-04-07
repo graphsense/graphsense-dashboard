@@ -149,12 +149,13 @@ $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC) $(C
 	./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
 
 check-plugin-exists:
-	@if [ ! -z "$(PLUGIN_NAME)" && ! -e $(PLUGINS_DIR)/$(PLUGIN_NAME) ]; then \
+	@if [ ! -z "$(PLUGIN_NAME)" -a ! -e $(PLUGINS_DIR)/$(PLUGIN_NAME) ]; then \
 		echo "$(PLUGIN_NAME) does not exists"; \
 		exit 1; \
 	fi
 
-plugin-theme-refresh: check-plugin-exists clean-plugin-figma-json $(PLUGINS_DIR)/$(PLUGIN_NAME)/$(FIGMA_JSON) plugin-theme
+plugin-theme-refresh: 
+	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh
 
 $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 	@# only update an existing figma.json
