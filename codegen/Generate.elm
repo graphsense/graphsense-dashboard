@@ -34,6 +34,7 @@ type alias FigmaContent =
 
 type alias Whitelist =
     { frames : List String
+    , components : List String
     }
 
 
@@ -53,7 +54,6 @@ get { api_key, file_id } { url, expect } =
             "https://api.figma.com/v1/files/{{ file_id }}"
                 ++ url
                 |> String.Format.namedValue "file_id" file_id
-                |> Debug.log "fetching"
         , body = Http.emptyBody
         , expect = expect
         , timeout = Nothing
@@ -99,7 +99,7 @@ main =
                         case Json.Decode.decodeValue decodeFlagsWithColorMaps input of
                             Ok ( colormaps, ( plugin_name, nodes ) ) ->
                                 ( ()
-                                , frameNodesToFiles { frames = [] } colormaps plugin_name nodes
+                                , frameNodesToFiles { frames = [], components = [] } colormaps plugin_name nodes
                                     |> Generate.files
                                 )
 
@@ -139,7 +139,7 @@ main =
                                 ( ()
                                 , Generate.error
                                     [ { title = "Error decoding figma main"
-                                      , description = Debug.toString err
+                                      , description = ""
                                       }
                                     ]
                                 )
@@ -150,7 +150,7 @@ main =
                                 ( ()
                                 , Generate.error
                                     [ { title = "Error fetching figma frames"
-                                      , description = Debug.toString err
+                                      , description = ""
                                       }
                                     ]
                                 )
@@ -194,8 +194,9 @@ decodeFigmaNodesFileWithModuleName =
 decodeWithWhitelist : Json.Decode.Decoder ( Whitelist, FigmaContent )
 decodeWithWhitelist =
     Json.Decode.map2 pair
-        (Json.Decode.map Whitelist
+        (Json.Decode.map2 Whitelist
             (Json.Decode.field "frames" (Json.Decode.list Json.Decode.string))
+            (Json.Decode.field "components" (Json.Decode.list Json.Decode.string))
             |> Json.Decode.field "whitelist"
         )
         (Json.Decode.field "theme" decodeFigmaNodesFileWithModuleName)
