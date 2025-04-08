@@ -324,11 +324,11 @@ frameToFiles whitelist plugin_name colorMap n =
     in
     if matchOnlyFrames && not (String.startsWith (String.toLower colorsFrame) nameLowered) then
         [ frameNodeToDeclarations
-            (Common.subcanvasNodeComponentsToDeclarations (Generate.Svg.componentNodeToDeclarations colorMap))
+            (Common.subcanvasNodeComponentsToDeclarations whitelist.components (Generate.Svg.componentNodeToDeclarations colorMap))
             n
             |> Elm.file (name "Svg")
         , frameNodeToDeclarations
-            (Common.subcanvasNodeComponentsToDeclarations (Generate.Html.componentNodeToDeclarations colorMap))
+            (Common.subcanvasNodeComponentsToDeclarations whitelist.components (Generate.Html.componentNodeToDeclarations colorMap))
             n
             |> Elm.file (name "Html")
         ]
