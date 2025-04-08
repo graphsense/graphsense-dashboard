@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ELM_CODEGEN="npx --node-options='--max-old-space-size=32768' elm-codegen run --debug"
+ELM_CODEGEN="npx --node-options='--max-old-space-size=32768' elm-codegen run"
 REFRESH=0
 FIGMA_WHITELIST_FRAMES=[]
 
@@ -70,7 +70,7 @@ else
     echo "Running codegen ..."
     tmp=`mktemp`.json
     if [ -z "$PLUGIN_NAME" ]; then
-        { echo "{\"whitelist\": {\"frames\": $FIGMA_WHITELIST_FRAMES}, \"theme\":"; \
+        { echo "{\"whitelist\": {\"frames\": $FIGMA_WHITELIST_FRAMES, \"components\":[]}, \"theme\":"; \
           cat ./theme/figma.json; 
           echo '}'; \
         } > $tmp
