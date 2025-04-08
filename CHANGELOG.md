@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.04.1] - 2025-04-08
+
+### Added
+
+- Checkbox component
+
+### Changed
+
+- Shorten tooltip display
+
+### Fixed
+
+- Fixed Makefile targets plugin-theme-refresh, check-plugin-exists
+
 ## [25.04.0] - 2025-04-03
 
 ### Added
