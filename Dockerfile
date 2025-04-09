@@ -46,7 +46,7 @@ RUN chmod +x /docker-entrypoint.sh
 
 COPY ./tools $WORKDIR/tools
 
-RUN touch .env && make prepare
+RUN touch .env && make build
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]
