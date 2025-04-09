@@ -89,6 +89,7 @@ else
     out=`mktemp`.out
     $cmd 2>&1 > $out
     found=`grep "files generated in" $out`
+    # grep DEBUG $out
     # surprisingly elm-codegen yield exit code 0 if error
     if [ -z "$found" ]; then
         echo "Printing the first 100 lines of output:"

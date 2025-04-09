@@ -4164,6 +4164,7 @@ frameNodeDecoder =
 type alias FrameNodeWithChildrenSeparated =
     ( FrameNode, List Json.Encode.Value )
 
+
 frameNodeDecoderWithChildrenSeparated : Json.Decode.Decoder FrameNodeWithChildrenSeparated
 frameNodeDecoderWithChildrenSeparated =
     frameTraitsDecoderWithChildrenSeparated
