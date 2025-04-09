@@ -28,9 +28,6 @@ import Types exposing (ComponentPropertyExpressions, Config, OriginAdjust)
 subcanvasNodeComponentsToDeclarations : List String -> (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration) -> SubcanvasNode -> List Elm.Declaration
 subcanvasNodeComponentsToDeclarations whitelist componentNodeToDeclarations node =
     let
-        whitelistSet =
-            Set.fromList whitelist
-
         toDeclarations parentName parentProperties n =
             filterUnneededParts n
                 |> adjustBoundingBoxes
@@ -42,17 +39,11 @@ subcanvasNodeComponentsToDeclarations whitelist componentNodeToDeclarations node
             if FrameTraits.isHidden n then
                 []
 
-            else if Set.member (FrameTraits.getName n) whitelistSet |> not then
-                []
-
             else
                 toDeclarations "" Dict.empty n
 
         SubcanvasNodeComponentSetNode n ->
             if FrameTraits.isHidden n then
-                []
-
-            else if Set.member (FrameTraits.getName n) whitelistSet |> not then
                 []
 
             else
