@@ -6,9 +6,11 @@ import Api.Raw exposing (..)
 import Basics.Extra exposing (flip)
 import Dict exposing (Dict)
 import Elm
+import Elm.ToString
 import Gen.CodeGen.Generate as Generate
 import Generate.Colors as Colors exposing (ColorMapRaw)
 import Generate.Common as Common
+import Generate.Common.FrameTraits as FrameTraits
 import Generate.Html
 import Generate.Svg
 import Generate.Util.RGBA as RGBA
@@ -177,6 +179,11 @@ main =
                                 case Json.Decode.decodeValue decodeWithWhitelist input of
                                     Ok ( whitelist, ( plugin_name, frames ) ) ->
                                         let
+                                            _ =
+                                                frames
+                                                    |> List.map (first >> FrameTraits.getName)
+                                                    |> log "frames"
+
                                             colorMapLight =
                                                 frames
                                                     |> findColorMap colorsFrameLight
@@ -519,9 +526,9 @@ frameToFiles model ( ( n, children ), htmlDeclarations, svgDeclarations ) =
                     , files =
                         model.files
                             ++ [ htmlDeclarations
-                                    |> Elm.file (name "Svg")
-                               , svgDeclarations
                                     |> Elm.file (name "Html")
+                               , svgDeclarations
+                                    |> Elm.file (name "Svg")
                                ]
                   }
                 , nextIteration
