@@ -29,7 +29,7 @@ type alias Flags =
 
 
 type alias FigmaContent =
-    ( Maybe String, List FrameNode )
+    ( Maybe String, List FrameNodeWithChildrenSeparated )
 
 
 type alias Whitelist =
@@ -61,7 +61,18 @@ get { api_key, file_id } { url, expect } =
         }
 
 
-main : Program Json.Decode.Value () Msg
+type alias Model =
+    { files : List Generate.File
+    }
+
+
+init : Model
+init =
+    { files = []
+    }
+
+
+main : Program Json.Decode.Value Model Msg
 main =
     let
         decodeFlags =
@@ -86,7 +97,7 @@ main =
             \input ->
                 case Json.Decode.decodeValue decodeFlags input of
                     Ok flags ->
-                        ( ()
+                        ( init
                         , get flags
                             { url = "/nodes?ids=0:1&depth=1"
                             , expect =
@@ -96,23 +107,69 @@ main =
                         )
 
                     Err err1 ->
+                        -- decoding plugin figma
                         case Json.Decode.decodeValue decodeFlagsWithColorMaps input of
-                            Ok ( colormaps, ( plugin_name, nodes ) ) ->
-                                ( ()
-                                , frameNodesToFiles { frames = [], components = [] } colormaps plugin_name nodes
+                            Ok ( colormaps, ( plugin_name, firstFrame :: restFrames ) ) ->
+                                let
+                                    frames =
+                                        firstFrame :: restFrames
+
+                                    colorMapLight =
+                                        frames
+                                            |> findColorMap colorsFrameLight
+                                            |> (++) light
+
+                                    colorMapDark =
+                                        frames
+                                            |> findColorMap colorsFrameDark
+                                            |> (++) dark
+                                in
+                                ( { init
+                                    | frames = restFrames
+                                    , files = [ colorMapFile ]
+                                    , colorMapDark = colorMapDark
+                                    , colorMapLight = colorMapLight
+                                  }
+                                , frameNodeToFile { frames = [], components = [] } colormaps plugin_name nodes
                                     |> Generate.files
                                 )
 
                             Err err2 ->
+                                -- decoding core figma
                                 case Json.Decode.decodeValue decodeWithWhitelist input of
-                                    Ok ( whitelist, ( plugin_name, nodes ) ) ->
-                                        ( ()
-                                        , frameNodesToFiles whitelist { light = [], dark = [] } plugin_name nodes
+                                    Ok ( whitelist, ( plugin_name, frames ) ) ->
+                                        let
+                                            colorMapLight =
+                                                frames
+                                                    |> findColorMap colorsFrameLight
+
+                                            colorMapDark =
+                                                frames
+                                                    |> findColorMap colorsFrameDark
+
+                                            colorMapFile =
+                                                { path = "colormaps.json"
+                                                , warnings = []
+                                                , contents =
+                                                    Encode.object
+                                                        [ ( "light", Colors.colorMapToJson colorMapLight )
+                                                        , ( "dark", Colors.colorMapToJson colorMapDark )
+                                                        ]
+                                                        |> Encode.encode 0
+                                                }
+                                        in
+                                        ( { init
+                                            | frames = frames
+                                            , files = [ colorMapFile ]
+                                            , colorMapLight = colorMapLight
+                                            , colorMapDark = colorMapDark
+                                          }
+                                        , frameNodeToFile whitelist { light = [], dark = [] } plugin_name nodes
                                             |> Generate.files
                                         )
 
                                     Err err3 ->
-                                        ( ()
+                                        ( init
                                         , Generate.error
                                             [ { title = "Error decoding flags"
                                               , description = Json.Decode.errorToString err1
@@ -126,17 +183,17 @@ main =
                                             ]
                                         )
         , update =
-            \msg _ ->
+            \msg model ->
                 case msg of
                     GotFigmaMain flags result ->
                         case result of
                             Ok canvas ->
-                                ( ()
+                                ( model
                                 , canvasNodeToRequests flags canvas
                                 )
 
                             Err err ->
-                                ( ()
+                                ( model
                                 , Generate.error
                                     [ { title = "Error decoding figma main"
                                       , description = ""
@@ -147,7 +204,7 @@ main =
                     GotFrameNodes plugin_name result ->
                         case result of
                             Err err ->
-                                ( ()
+                                ( model
                                 , Generate.error
                                     [ { title = "Error fetching figma frames"
                                       , description = ""
@@ -162,7 +219,7 @@ main =
                                             |> Maybe.map (\mn_ -> "\"" ++ mn_ ++ "\"")
                                             |> Maybe.withDefault "null"
                                 in
-                                ( ()
+                                ( model
                                 , { path = "figma.json"
                                   , warnings = []
                                   , contents =
@@ -177,9 +234,9 @@ main =
         }
 
 
-decodeFigmaNodesFile : Json.Decode.Decoder (List FrameNode)
+decodeFigmaNodesFile : Json.Decode.Decoder (List FrameNodeWithChildrenSeparated)
 decodeFigmaNodesFile =
-    Json.Decode.dict (Json.Decode.field "document" Api.Raw.frameNodeDecoder)
+    Json.Decode.dict (Json.Decode.field "document" frameNodeDecoderWithChildrenSeparated)
         |> Json.Decode.map Dict.values
         |> Json.Decode.field "nodes"
 
@@ -222,25 +279,9 @@ themeFolder =
     "Theme"
 
 
-frameNodesToFiles : Whitelist -> { light : ColorMapRaw, dark : ColorMapRaw } -> Maybe String -> List FrameNode -> List Generate.File
-frameNodesToFiles whitelist { light, dark } plugin_name frames =
+frameNodeToFile : Whitelist -> { light : ColorMapRaw, dark : ColorMapRaw } -> Maybe String -> FrameNodeWithChildrenSeparated -> Generate.File
+frameNodeToFile whitelist { light, dark } plugin_name frames =
     let
-        colorsFrameLight =
-            colorsFrame ++ " Light"
-
-        colorsFrameDark =
-            colorsFrame ++ " Dark"
-
-        colorMapLight =
-            frames
-                |> findColorMap colorsFrameLight
-                |> (++) light
-
-        colorMapDark =
-            frames
-                |> findColorMap colorsFrameDark
-                |> (++) dark
-
         colorMapLightDict =
             List.map (mapFirst (RGBA.toStylesString Dict.empty)) colorMapLight
                 |> Dict.fromList
@@ -256,15 +297,6 @@ frameNodesToFiles whitelist { light, dark } plugin_name frames =
                     , Colors.colorMapToStylesheet colorMapDark
                         :: Colors.colorMapToDeclarations colorMapDark
                         |> Elm.file [ themeFolder, toCamelCaseUpper colorsFrameDark ]
-                    , { path = "colormaps.json"
-                      , warnings = []
-                      , contents =
-                            Encode.object
-                                [ ( "light", Colors.colorMapToJson colorMapLight )
-                                , ( "dark", Colors.colorMapToJson colorMapDark )
-                                ]
-                                |> Encode.encode 0
-                      }
                     ]
     in
     (List.map (frameToFiles whitelist plugin_name colorMapLightDict) frames
@@ -284,6 +316,16 @@ findColorMap name =
 colorsFrame : String
 colorsFrame =
     "Colors"
+
+
+colorsFrameLight : String
+colorsFrameLight =
+    colorsFrame ++ " Light"
+
+
+colorsFrameDark : String
+colorsFrameDark =
+    colorsFrame ++ " Dark"
 
 
 isFrame : SubcanvasNode -> Maybe FrameNode
