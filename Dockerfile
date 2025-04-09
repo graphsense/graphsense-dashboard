@@ -47,8 +47,8 @@ RUN chmod +x /docker-entrypoint.sh
 
 COPY ./tools $WORKDIR/tools
 
-#RUN touch .env && make prepare
+RUN touch .env && make prepare
 
-#ENTRYPOINT ["/docker-entrypoint.sh"]
-#CMD ["nginx", "-g", "daemon off;"]
-#EXPOSE 8000
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 8000
