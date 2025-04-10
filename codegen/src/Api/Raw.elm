@@ -74,6 +74,7 @@ module Api.Raw exposing
     , FrameInfo
     , FrameNode
     , FrameNodeType(..)
+    , FrameNodeWithChildrenSeparated
     , FrameTraits
     , GradientPaint
     , GradientPaintType(..)
@@ -297,6 +298,7 @@ module Api.Raw exposing
     , ellipseNodeTypeVariants
     , frameInfoDecoder
     , frameNodeDecoder
+    , frameNodeDecoderWithChildrenSeparated
     , frameNodeTypeVariants
     , frameTraitsDecoder
     , gradientPaintDecoder
@@ -4159,6 +4161,24 @@ frameNodeDecoder =
         |> decode "type" frameNodeTypeDecoder
 
 
+type alias FrameNodeWithChildrenSeparated =
+    ( FrameNode, List Json.Encode.Value )
+
+
+frameNodeDecoderWithChildrenSeparated : Json.Decode.Decoder FrameNodeWithChildrenSeparated
+frameNodeDecoderWithChildrenSeparated =
+    frameTraitsDecoderWithChildrenSeparated
+        |> Json.Decode.andThen
+            (\( frameTrait, children ) ->
+                Json.Decode.succeed children
+                    |> Json.Decode.map2 pair
+                        (Json.Decode.map2 FrameNode
+                            (Json.Decode.succeed frameTrait)
+                            (Json.Decode.field "type" frameNodeTypeDecoder)
+                        )
+            )
+
+
 frameNodeTypeDecoder : Json.Decode.Decoder FrameNodeType
 frameNodeTypeDecoder =
     Json.Decode.string
@@ -4246,6 +4266,84 @@ frameTraitsDecoder =
         |> maybeDecode "transitionEasing" easingTypeDecoder Nothing
         |> maybeDecode "individualStrokeWeights" strokeWeightsDecoder Nothing
         |> decodeChain devStatusDecoder
+
+
+frameTraitsDecoderWithChildrenSeparated : Json.Decode.Decoder ( FrameTraits, List Json.Encode.Value )
+frameTraitsDecoderWithChildrenSeparated =
+    Json.Decode.field "children" (Json.Decode.list Json.Decode.value)
+        |> Json.Decode.map2 pair
+            (Json.Decode.succeed FrameTraits
+                |> decodeChain cornerTraitDecoder
+                |> decodeChain hasBlendModeAndOpacityTraitDecoder
+                |> decodeChain hasChildrenTraitDecoder
+                |> decodeChain hasEffectsTraitDecoder
+                |> decodeChain hasFramePropertiesTraitDecoder
+                |> decodeChain hasGeometryTraitDecoder
+                |> decodeChain hasLayoutTraitDecoder
+                |> decodeChain hasMaskTraitDecoder
+                |> decodeChain individualStrokesTraitDecoder
+                |> decodeChain isLayerTraitDecoder
+                |> decodeChain transitionSourceTraitDecoder
+                |> decode "blendMode" blendModeDecoder
+                |> maybeDecode "opacity" Json.Decode.float (Just 1)
+                |> decode "children" (Json.Decode.succeed [])
+                |> decode "absoluteBoundingBox" rectangleDecoder
+                |> decodeNullable "absoluteRenderBounds" rectangleDecoder
+                |> maybeDecode "preserveRatio" Json.Decode.bool (Just False)
+                |> maybeDecode "constraints" layoutConstraintDecoder Nothing
+                |> maybeDecode "size" vectorDecoder Nothing
+                |> maybeDecode "layoutAlign" layoutAlignDecoder Nothing
+                |> maybeDecode "layoutGrow" layoutGrowDecoder (Just LayoutGrow0)
+                |> maybeDecode "layoutPositioning" layoutPositioningDecoder (Just LayoutPositioningAUTO)
+                |> maybeDecode "minWidth" Json.Decode.float Nothing
+                |> maybeDecode "maxWidth" Json.Decode.float (Just 0)
+                |> maybeDecode "minHeight" Json.Decode.float (Just 0)
+                |> maybeDecode "maxHeight" Json.Decode.float (Just 0)
+                |> maybeDecode "layoutSizingHorizontal" layoutSizingHorizontalDecoder Nothing
+                |> maybeDecode "layoutSizingVertical" layoutSizingVerticalDecoder Nothing
+                |> decode "clipsContent" Json.Decode.bool
+                |> maybeDecode "background" (Json.Decode.list paintDecoder) Nothing
+                |> maybeDecode "backgroundColor" rGBADecoder Nothing
+                |> maybeDecode "layoutGrids" (Json.Decode.list layoutGridDecoder) Nothing
+                |> maybeDecode "overflowDirection" overflowDirectionDecoder (Just OverflowDirectionNONE)
+                |> maybeDecode "layoutMode" layoutModeDecoder (Just LayoutModeNONE)
+                |> maybeDecode "primaryAxisSizingMode" primaryAxisSizingModeDecoder (Just PrimaryAxisSizingModeAUTO)
+                |> maybeDecode "counterAxisSizingMode" counterAxisSizingModeDecoder (Just CounterAxisSizingModeAUTO)
+                |> maybeDecode "primaryAxisAlignItems" primaryAxisAlignItemsDecoder (Just PrimaryAxisAlignItemsMIN)
+                |> maybeDecode "counterAxisAlignItems" counterAxisAlignItemsDecoder (Just CounterAxisAlignItemsMIN)
+                |> maybeDecode "paddingLeft" Json.Decode.float (Just 0)
+                |> maybeDecode "paddingRight" Json.Decode.float (Just 0)
+                |> maybeDecode "paddingTop" Json.Decode.float (Just 0)
+                |> maybeDecode "paddingBottom" Json.Decode.float (Just 0)
+                |> maybeDecode "itemSpacing" Json.Decode.float (Just 0)
+                |> maybeDecode "itemReverseZIndex" Json.Decode.bool (Just False)
+                |> maybeDecode "strokesIncludedInLayout" Json.Decode.bool (Just False)
+                |> maybeDecode "layoutWrap" layoutWrapDecoder Nothing
+                |> maybeDecode "counterAxisSpacing" Json.Decode.float Nothing
+                |> maybeDecode "counterAxisAlignContent" counterAxisAlignContentDecoder (Just CounterAxisAlignContentAUTO)
+                |> maybeDecode "cornerRadius" Json.Decode.float (Just 0)
+                |> maybeDecode "cornerSmoothing" Json.Decode.float Nothing
+                |> maybeDecode "rectangleCornerRadii" rectangleCornerRadiiDecoder Nothing
+                |> decode "fills" (Json.Decode.list paintDecoder)
+                |> maybeDecode "styles" stylesDecoder Nothing
+                |> maybeDecode "strokes" (Json.Decode.list paintDecoder) Nothing
+                |> maybeDecode "strokeWeight" Json.Decode.float (Just 1)
+                |> maybeDecode "strokeAlign" strokeAlignDecoder Nothing
+                |> maybeDecode "strokeJoin" strokeJoinDecoder (Just StrokeJoinMITER)
+                |> maybeDecode "fillGeometry" (Json.Decode.list pathDecoder) Nothing
+                |> maybeDecode "strokeGeometry" (Json.Decode.list pathDecoder) Nothing
+                |> maybeDecode "strokeCap" strokeCapDecoder (Just StrokeCapNONE)
+                |> maybeDecode "strokeMiterAngle" Json.Decode.float (Just 28.96)
+                |> decode "effects" (Json.Decode.list effectDecoder)
+                |> maybeDecode "isMask" Json.Decode.bool (Just False)
+                |> maybeDecode "maskType" maskTypeDecoder Nothing
+                |> maybeDecode "isMaskOutline" Json.Decode.bool (Just False)
+                |> maybeDecode "transitionNodeID" Json.Decode.string Nothing
+                |> maybeDecode "transitionDuration" Json.Decode.float Nothing
+                |> maybeDecode "transitionEasing" easingTypeDecoder Nothing
+                |> maybeDecode "individualStrokeWeights" strokeWeightsDecoder Nothing
+                |> decodeChain devStatusDecoder
+            )
 
 
 devStatusDecoder : Json.Decode.Decoder Bool

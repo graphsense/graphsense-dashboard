@@ -25,8 +25,8 @@ import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Types exposing (ComponentPropertyExpressions, Config, OriginAdjust)
 
 
-subcanvasNodeComponentsToDeclarations : List String -> (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration) -> SubcanvasNode -> List Elm.Declaration
-subcanvasNodeComponentsToDeclarations whitelist componentNodeToDeclarations node =
+subcanvasNodeComponentsToDeclarations : (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration) -> SubcanvasNode -> List Elm.Declaration
+subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
     let
         toDeclarations parentName parentProperties n =
             filterUnneededParts n
