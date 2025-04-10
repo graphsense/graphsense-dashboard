@@ -4,16 +4,21 @@
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
 FIGMA_WHITELIST_FRAMES?=[]
-CODEGEN_CONFIG=$(CODEGEN)/config/Config.elm
+CONFIG=./config/Config.elm
+CODEGEN_CONFIG=$(CODEGEN)/$(CONFIG)
 FIGMA_JSON=./theme/figma.json
 GENERATED=./generated
+
 CODEGEN=./codegen
 CODEGEN_GENERATED=$(CODEGEN)/$(GENERATED)
 CODEGEN_RECORDSETTER=$(CODEGEN_GENERATED)/RecordSetter.elm
 CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
+
 RECORDSETTER_ELM=$(GENERATED_UTILS)/RecordSetter.elm
+
 PLUGINS_DIR=./plugins
 
+PLUGINS:=$(shell grep "import" $(CONFIG) | awk '{if (system("test -e $(PLUGINS_DIR)/" $$2) == 0) { print $$2 }}')
 SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm)
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
@@ -21,18 +26,16 @@ GENERATED_PLUGINS=$(GENERATED)/$(PLUGINS_DIR)
 GENERATED_PLUGIN_ELM=$(GENERATED_PLUGINS)/Plugin.elm
 GENERATED_UTILS=$(GENERATED)/utils
 GENERATED_THEME=$(GENERATED)/theme
-PUBLIC_DIR=./public
 GENERATED_PUBLIC=$(GENERATED)/$(PUBLIC_DIR)
 GENERATED_LANG=$(GENERATED_PUBLIC)/lang
 GENERATED_THEME_THEME=$(GENERATED_THEME)/Theme
 GENERATED_THEME_COLORMAPS=$(GENERATED_THEME)/colormaps.json
 
-PUBLIC_FILES=$(shell find $(PUBLIC_DIR) -type f)
-
-
-PLUGINS=$(shell find $(PLUGINS_DIR) -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -exec basename {} \;)
 THEME_GENERATED_MARKER=.generated
 PLUGIN_INSTALLED_MARKER=.installed
+
+PUBLIC_DIR=./public
+PUBLIC_FILES=$(shell find $(PUBLIC_DIR) -type f)
 
 serve: prepare gen
 	npm run dev
@@ -189,8 +192,8 @@ elm.json: elm.json.base
 
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
-$(GENERATED_PLUGIN_ELM): generate.js $(PLUGIN_TEMPLATES) $(wildcard $(PLUGINS_DIR)/*/lang/*)
-	node generate.js
+$(GENERATED_PLUGIN_ELM): elm.json generate.js $(PLUGIN_TEMPLATES) $(wildcard $(PLUGINS_DIR)/*/lang/*)
+	node generate.js $(PLUGINS)
 
 copy-public: 
 	cp -r $(PUBLIC_DIR) $(GENERATED_PUBLIC)

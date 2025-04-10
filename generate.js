@@ -44,8 +44,20 @@ fse.copySync(publicFolder, genPublicFolder, {recursive: true})
 fse.copySync(langFolder, genLangFolder, {recursive: true})
 
 console.log('Generating glue code for plugins:')
-let plugins = fs.readdirSync(pluginsFolder)
+let plugins = process.argv.slice(2)
+let availablePlugins = fs.readdirSync(pluginsFolder)
   .filter(fileName => isDir(path.join(pluginsFolder, fileName)))
+
+let error = false
+plugins.forEach(p => {
+  if (availablePlugins.indexOf(p) === -1) {
+    console.error('Plugin not found: ' + p)
+    error = true
+  }
+})
+if(error) {
+  process.exit(1)
+}
 
 plugins.sort((a, b) => {
   // Check if strings end with '_preview'
@@ -75,7 +87,7 @@ plugins = plugins.map(plugin => {
   })
 
 if(plugins.length === 0) {
-  console.log('No plugins found')
+  console.log('No plugins')
 } else {
   plugins[plugins.length - 1].last = true
 }
