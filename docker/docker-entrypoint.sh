@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
+touch elm.json # touch to force re-run of generate.js
 make build
+
 cp -r ./dist/* /usr/share/nginx/html/ 
 
 # remove node_modules to save space

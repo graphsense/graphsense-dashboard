@@ -14,10 +14,13 @@ Run `cp config/Config.elm.tmp config/Config.elm` and optionally configure plugin
 ## Install plugins
 
 1. Place plugins in the `plugins` folder.
-2. Run `make clean-plugins && make`
+2. Run `make clean-generated-plugins && make`
 3. Configure the plugin in `config/Config.elm`, eg:
 
 ```elm
+import Myplugin
+
+...
 
 plugins : Plugin.Plugins
 plugins =
@@ -31,7 +34,7 @@ Run `make serve`. It starts Vite's development server.
 
 ## Production build
 
-Run `make build`. It builds the app together with all plugins to `./dist`.
+Run `make build`. It builds the app together with all configured plugins to `./dist`.
 
 ## Develop plugins
 

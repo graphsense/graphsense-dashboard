@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM alpine:3.19
 LABEL org.opencontainers.image.title="graphsense-dashboard"
 LABEL org.opencontainers.image.maintainer="contact@ikna.io"
 LABEL org.opencontainers.image.url="https://www.ikna.io/"
@@ -14,9 +14,8 @@ ENV REST_URL=http://localhost:9000
 ENV WORKDIR=/app
 
 RUN mkdir $WORKDIR && \
-    apt update && \
-    apt install -y bash nginx nodejs npm python3 make g++ jq && \
-    rm -rf /var/lib/apt/lists/*
+    apk --no-cache --update add bash nginx nodejs npm && \
+    apk --no-cache --update --virtual build-dependendencies add python3 make g++ jq
 
 
 WORKDIR $WORKDIR
@@ -24,7 +23,7 @@ WORKDIR $WORKDIR
 COPY ./elm.json.base ./elm-tooling.json ./index.html ./package*.json ./vite.config.mjs ./Makefile $WORKDIR/
 
 COPY ./config $WORKDIR/config
-RUN cp $WORKDIR/config/Config.elm.tmp $WORKDIR/config/Config.elm
+RUN cp -n $WORKDIR/config/Config.elm.tmp $WORKDIR/config/Config.elm
 COPY ./src $WORKDIR/src
 COPY ./openapi $WORKDIR/openapi
 COPY ./public $WORKDIR/public
@@ -47,8 +46,8 @@ RUN chmod +x /docker-entrypoint.sh
 
 COPY ./tools $WORKDIR/tools
 
-RUN touch .env && make prepare
+RUN touch .env && make build
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]
 EXPOSE 8000
