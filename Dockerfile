@@ -23,7 +23,7 @@ WORKDIR $WORKDIR
 COPY ./elm.json.base ./elm-tooling.json ./index.html ./package*.json ./vite.config.mjs ./Makefile $WORKDIR/
 
 COPY ./config $WORKDIR/config
-RUN cp $WORKDIR/config/Config.elm.tmp $WORKDIR/config/Config.elm
+RUN cp -n $WORKDIR/config/Config.elm.tmp $WORKDIR/config/Config.elm
 COPY ./src $WORKDIR/src
 COPY ./openapi $WORKDIR/openapi
 COPY ./public $WORKDIR/public
