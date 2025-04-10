@@ -81,6 +81,9 @@ add n (NotificationModel m) =
                             [ RemoveNotification
                             ]
 
+                        InfoEphemeral _ ->
+                            [ RemoveNotification ]
+
                         _ ->
                             []
                    )

@@ -265,7 +265,7 @@ freeSpaceAroundCoords coords model =
                             Nothing
                     )
                 |> List.partition
-                    (\a -> A.getTo a.y <= coords.y)
+                    (\a -> A.getTo a.y < coords.y)
 
         movedTxs =
             (getMaxY txsAbove |> moveThings 1 txsAbove)

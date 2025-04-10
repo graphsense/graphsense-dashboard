@@ -1660,7 +1660,7 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         n model
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder net path) ->
-                        addPathToGraph plugins uc model net path
+                        addPathToGraph plugins uc mo net path |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.UpdateAddresses { currency, address } pmsg ->
                         let
