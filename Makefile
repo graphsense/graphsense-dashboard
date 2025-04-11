@@ -14,8 +14,6 @@ CODEGEN_GENERATED=$(CODEGEN)/$(GENERATED)
 CODEGEN_RECORDSETTER=$(CODEGEN_GENERATED)/RecordSetter.elm
 CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
 
-RECORDSETTER_ELM=$(GENERATED_UTILS)/RecordSetter.elm
-
 PLUGINS_DIR=./plugins
 
 PLUGINS:=$(shell grep "import" $(CONFIG) | awk '{if (system("test -e $(PLUGINS_DIR)/" $$2) == 0) { print $$2 }}')
@@ -31,11 +29,15 @@ GENERATED_LANG=$(GENERATED_PUBLIC)/lang
 GENERATED_THEME_THEME=$(GENERATED_THEME)/Theme
 GENERATED_THEME_COLORMAPS=$(GENERATED_THEME)/colormaps.json
 
+RECORDSETTER_ELM=$(GENERATED_UTILS)/RecordSetter.elm
+
 THEME_GENERATED_MARKER=.generated
 PLUGIN_INSTALLED_MARKER=.installed
 
 PUBLIC_DIR=./public
 PUBLIC_FILES=$(shell find $(PUBLIC_DIR) -type f)
+
+SETEM=npx setem --output $(GENERATED_UTILS) && touch $(RECORDSETTER_ELM)
 
 serve: prepare gen
 	npm run dev
@@ -97,8 +99,8 @@ clean-public:
 
 setem: $(RECORDSETTER_ELM)
 
-$(RECORDSETTER_ELM): elm.json $(SRC_FILES) $(GENERATED_THEME_COLORMAPS) $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER)) $(GENERATED_PLUGINS)/Plugin.elm
-	npx setem --output $(GENERATED_UTILS) && touch $(RECORDSETTER_ELM)
+$(RECORDSETTER_ELM): elm.json $(SRC_FILES) $(GENERATED_THEME_COLORMAPS) $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER)) $(GENERATED_PLUGIN_ELM)
+	$(SETEM)
 
 setem-codegen: $(CODEGEN_RECORDSETTER)
 
