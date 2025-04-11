@@ -61,7 +61,7 @@ import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route as GlobalRoute
-import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType, Route)
+import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType(..), Route)
 import Set exposing (..)
 import Task
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
@@ -1524,6 +1524,27 @@ addPathToGraph plugins uc model net list =
                 _ ->
                     Nothing
 
+        pathTypeToAddressId pt =
+            case pt of
+                AddressHop _ x ->
+                    Just (Id.init net x)
+
+                _ ->
+                    Nothing
+
+        startAddressCoords =
+            list
+                |> List.head
+                |> Maybe.andThen pathTypeToAddressId
+                |> Maybe.andThen (flip Network.getAddressCoords model.network)
+
+        startCoords =
+            startAddressCoords
+                |> Maybe.withDefault { x = 0, y = 0 }
+
+        startAddressOnGraphAlready =
+            startAddressCoords /= Nothing
+
         isDuplicateAddress i =
             Maybe.andThen
                 (\adr ->
@@ -1558,7 +1579,13 @@ addPathToGraph plugins uc model net list =
                         ( 0, 0 )
 
                     else
-                        ( nodeXOffset, 0 )
+                        ( if startAddressOnGraphAlready && i == 0 then
+                            0
+
+                          else
+                            nodeXOffset
+                        , 0
+                        )
 
                 x_ =
                     x + xOffset
@@ -1609,8 +1636,8 @@ addPathToGraph plugins uc model net list =
                 |> List.foldl accf
                     { m = model
                     , eff = []
-                    , x = 0
-                    , y = 0
+                    , x = startCoords.x
+                    , y = startCoords.y
                     , previousAddress = Nothing
                     }
     in

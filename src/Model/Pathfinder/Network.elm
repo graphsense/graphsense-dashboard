@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, hasLoadedAddress, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, hasLoadedAddress, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -6,7 +6,7 @@ import Init.Pathfinder.Id as Id
 import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
-import Model.Pathfinder.Address exposing (Address, txsGetSet)
+import Model.Pathfinder.Address exposing (Address, getCoords, txsGetSet)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData
@@ -63,6 +63,11 @@ getBoundingBox net =
 hasAddress : Id -> Network -> Bool
 hasAddress id network =
     Dict.member id network.addresses
+
+
+getAddressCoords : Id -> Network -> Maybe { x : Float, y : Float }
+getAddressCoords id n =
+    Dict.get id n.addresses |> Maybe.map getCoords
 
 
 hasLoadedAddress : Id -> Network -> Bool
