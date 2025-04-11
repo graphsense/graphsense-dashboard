@@ -13,7 +13,6 @@ import Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorTyp
 import Plugin.Model
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import Theme.Html.Buttons as Buttons
 import Theme.Html.ErrorMessagesAlerts
     exposing
         ( dialogConfirmationMessageAttributes
@@ -101,10 +100,15 @@ options_ vc { message, options } =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedOption NoOp) ]
 
         btn ( title, msg ) =
-            Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
-                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> Rs.s_button [ css (Css.btnBase vc), onClickWithStop (UserClickedOption msg) ])
-                { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale title, iconInstance = none, iconVisible = True } }
+            Button.btnDefaultConfig
+                |> Rs.s_text (Locale.string vc.locale title)
+                |> Rs.s_onClick (Just (UserClickedOption msg))
+                |> Rs.s_onClickWithStop True
+                |> Button.primaryButton vc
 
+        -- Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
+        --     (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> Rs.s_button [ css (Css.btnBase vc), onClickWithStop (UserClickedOption msg) ])
+        --     { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale title, iconInstance = none, iconVisible = True } }
         btns =
             options |> List.map btn |> div [ Css.optionsButtonsContainer |> css ]
     in
