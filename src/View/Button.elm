@@ -12,7 +12,7 @@ import RecordSetter as Rs
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Theme.Html.Buttons as Btns
-import Util.View exposing (none, onClickWithStop)
+import Util.View exposing (none, onClickWithStop, pointer)
 import View.Locale as Locale
 
 
@@ -80,8 +80,7 @@ primaryButton vc btn =
                 onClick
 
         style =
-            ([ Css.cursor Css.pointer
-             , Css.paddingTop <| Css.px 2
+            ([ Css.paddingTop <| Css.px 2
              ]
                 |> css
             )
@@ -89,9 +88,15 @@ primaryButton vc btn =
                         |> Maybe.map (clickAttr >> List.singleton)
                         |> Maybe.withDefault []
                    )
+                ++ (if btn.disabled then
+                        []
+
+                    else
+                        [ pointer ]
+                   )
     in
-    case btn.icon of
-        Just icon ->
+    case ( btn.icon, btn.disabled ) of
+        ( Just icon, False ) ->
             Btns.buttonTypeTextIconStateRegularStylePrimaryWithAttributes
                 (Btns.buttonTypeTextIconStateRegularStylePrimaryAttributes
                     |> Rs.s_typeTextIconStateRegularStylePrimary
@@ -104,13 +109,39 @@ primaryButton vc btn =
                     }
                 }
 
-        Nothing ->
+        ( Nothing, False ) ->
             Btns.buttonTypeTextStateRegularStylePrimaryWithAttributes
                 (Btns.buttonTypeTextStateRegularStylePrimaryAttributes
                     |> Rs.s_typeTextStateRegularStylePrimary
                         style
                 )
                 { typeTextStateRegularStylePrimary =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = none
+                    , iconVisible = False
+                    }
+                }
+
+        ( Just icon, True ) ->
+            Btns.buttonTypeTextIconStateDisabledStylePrimaryWithAttributes
+                (Btns.buttonTypeTextIconStateDisabledStylePrimaryAttributes
+                    |> Rs.s_typeTextIconStateDisabledStylePrimary
+                        style
+                )
+                { typeTextIconStateDisabledStylePrimary =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = icon
+                    , iconVisible = True
+                    }
+                }
+
+        ( Nothing, True ) ->
+            Btns.buttonTypeTextStateDisabledStylePrimaryWithAttributes
+                (Btns.buttonTypeTextStateDisabledStylePrimaryAttributes
+                    |> Rs.s_typeTextStateDisabledStylePrimary
+                        style
+                )
+                { typeTextStateDisabledStylePrimary =
                     { buttonText = Locale.string vc.locale btn.text
                     , iconInstance = none
                     , iconVisible = False
@@ -129,8 +160,7 @@ secondaryButton vc btn =
                 onClick
 
         style =
-            ([ Css.cursor Css.pointer
-             , Css.paddingTop <| Css.px 2
+            ([ Css.paddingTop <| Css.px 2
              ]
                 |> css
             )
@@ -138,9 +168,15 @@ secondaryButton vc btn =
                         |> Maybe.map (clickAttr >> List.singleton)
                         |> Maybe.withDefault []
                    )
+                ++ (if btn.disabled then
+                        []
+
+                    else
+                        [ pointer ]
+                   )
     in
-    case btn.icon of
-        Just icon ->
+    case ( btn.icon, btn.disabled ) of
+        ( Just icon, False ) ->
             Btns.buttonTypeTextIconStateRegularStyleOutlinedWithAttributes
                 (Btns.buttonTypeTextIconStateRegularStyleOutlinedAttributes
                     |> Rs.s_typeTextIconStateRegularStyleOutlined
@@ -153,13 +189,39 @@ secondaryButton vc btn =
                     }
                 }
 
-        Nothing ->
+        ( Nothing, False ) ->
             Btns.buttonTypeTextStateRegularStyleOutlinedWithAttributes
                 (Btns.buttonTypeTextStateRegularStyleOutlinedAttributes
                     |> Rs.s_typeTextStateRegularStyleOutlined
                         style
                 )
                 { typeTextStateRegularStyleOutlined =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = none
+                    , iconVisible = False
+                    }
+                }
+
+        ( Just icon, True ) ->
+            Btns.buttonTypeTextIconStateDisabledStyleOutlinedWithAttributes
+                (Btns.buttonTypeTextIconStateDisabledStyleOutlinedAttributes
+                    |> Rs.s_typeTextIconStateDisabledStyleOutlined
+                        style
+                )
+                { typeTextIconStateDisabledStyleOutlined =
+                    { buttonText = Locale.string vc.locale btn.text
+                    , iconInstance = icon
+                    , iconVisible = True
+                    }
+                }
+
+        ( Nothing, True ) ->
+            Btns.buttonTypeTextStateDisabledStyleOutlinedWithAttributes
+                (Btns.buttonTypeTextStateDisabledStyleOutlinedAttributes
+                    |> Rs.s_typeTextStateDisabledStyleOutlined
+                        style
+                )
+                { typeTextStateDisabledStyleOutlined =
                     { buttonText = Locale.string vc.locale btn.text
                     , iconInstance = none
                     , iconVisible = False
