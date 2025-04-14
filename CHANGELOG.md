@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Shorten tooltip display
+- Plugin build solely depends on configured plugins in config/Config.elm now
+- Improved codegen memory consumption
 
 ### Fixed
 
