@@ -72,6 +72,7 @@ graph plugins pluginStates vc gc model =
     , topLeftPanel plugins pluginStates vc
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc gc model
+    , bottomRightPanel plugins pluginStates vc gc model
     ]
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)
@@ -343,9 +344,23 @@ settingsHovercardView vc _ hc =
 
 topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 topRightPanel plugins pluginStates vc gc model =
-    div [ Css.topRightPanelStyle vc |> css ]
+    div
+        [ Css.topRightPanelStyle vc |> css ]
         [ detailsView plugins pluginStates vc gc model
         ]
+
+
+bottomRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
+bottomRightPanel plugins pluginStates vc gc model =
+    div
+        [ [ position absolute
+          , px 50 |> right
+          , px 50 |> bottom
+          , zIndex 10000 -- should always be on top
+          ]
+            |> css
+        ]
+        []
 
 
 graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
