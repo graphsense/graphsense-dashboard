@@ -6,6 +6,7 @@ import Css.Dialog as Css
 import Css.Transitions
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Maybe.Extra
 import Model exposing (Msg(..))
 import Model.Notification as Notification
 import RecordSetter as Rs
@@ -51,110 +52,154 @@ view vc model =
     let
         not =
             model |> Notification.peek
+
+        hide =
+            [ css [ Css.display Css.none ] ]
+
+        closeBtnAttr =
+            [ css (Css.btnBase vc), onClickWithStop UserClosesNotification ]
+
+        notificationViewConfig { title, message, moreInfo, variables, showClose } =
+            let
+                showHeader =
+                    showClose || Maybe.Extra.isJust title
+
+                showMsgText =
+                    Maybe.Extra.isJust title
+
+                msgText =
+                    message
+                        :: moreInfo
+                        |> List.map (\m -> Locale.interpolated vc.locale m variables)
+                        |> String.join " "
+            in
+            { msg =
+                msgText
+            , btnOkAttr =
+                if showClose then
+                    closeBtnAttr
+
+                else
+                    hide
+            , headerFrameAttr =
+                if showHeader then
+                    []
+
+                else
+                    hide
+            , title = title |> Maybe.withDefault msgText |> Locale.string vc.locale
+            , msgTextAttr =
+                if showMsgText then
+                    []
+
+                else
+                    hide
+            }
     in
     case not of
-        Just (Notification.Error { title, message, moreInfo, variables }) ->
+        Just (Notification.Error nd) ->
             let
                 icon =
                     Icons.iconsError {}
 
-                buttonAttrOk =
-                    [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm UserClosesNotification) ]
+                nvc =
+                    notificationViewConfig nd
             in
             errorMessageComponentTypeErrorWithAttributes
                 (errorMessageComponentTypeErrorAttributes
-                    |> Rs.s_iconsCloseSnoPadding buttonAttrOk
-                )
-                { header =
-                    { iconInstance = icon
-                    , title = Locale.string vc.locale title
-                    }
-                , messageText =
-                    { messageText =
-                        message
-                            :: moreInfo
-                            |> List.map (\m -> Locale.interpolated vc.locale m variables)
-                            |> String.join " "
-                    }
-                , typeError =
-                    { bodyText = ""
-                    , headlineText = ""
-                    }
-                }
-                |> List.singleton
-                |> overlay (Notification.getMoved model)
-
-        Just (Notification.Info { title, message, moreInfo, variables }) ->
-            let
-                buttonAttrOk =
-                    [ css (Css.btnBase vc), onClickWithStop UserClosesNotification ]
-
-                icon =
-                    Icons.iconsAlert {}
-            in
-            errorMessageComponentTypeAlertWithAttributes
-                (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
-                { header =
-                    { iconInstance = icon
-                    , title = Locale.string vc.locale title
-                    }
-                , messageText =
-                    { messageText =
-                        message
-                            :: moreInfo
-                            |> List.map (\m -> Locale.interpolated vc.locale m variables)
-                            |> String.join " "
-                    }
-                , typeAlert = { bodyText = "", headlineText = "" }
-                }
-                |> List.singleton
-                |> overlay (Notification.getMoved model)
-
-        Just (Notification.InfoEphemeral title) ->
-            let
-                hide =
-                    [ css [ Css.display Css.none ] ]
-
-                icon =
-                    Icons.iconsAlert {}
-            in
-            errorMessageComponentTypeAlertWithAttributes
-                (errorMessageComponentTypeAlertAttributes
-                    |> Rs.s_headerFrame hide
-                    |> Rs.s_messageText hide
+                    |> Rs.s_headerFrame nvc.headerFrameAttr
+                    |> Rs.s_messageText nvc.msgTextAttr
+                    |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content [ css [ Css.width Css.auto ] ]
                 )
                 { header =
                     { iconInstance = icon
-                    , title = Locale.string vc.locale title
+                    , title = nvc.title
                     }
-                , typeAlert = { bodyText = "", headlineText = "" }
-                , messageText = { messageText = "" }
+                , typeError = { bodyText = "", headlineText = "" }
+                , messageText = { messageText = nvc.msg }
                 }
                 |> List.singleton
                 |> overlay (Notification.getMoved model)
 
-        Just (Notification.Success title) ->
+        -- let
+        --     icon =
+        --         Icons.iconsError {}
+        --     buttonAttrOk =
+        --         [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm UserClosesNotification) ]
+        -- in
+        -- errorMessageComponentTypeErrorWithAttributes
+        --     (errorMessageComponentTypeErrorAttributes
+        --         |> Rs.s_iconsCloseSnoPadding buttonAttrOk
+        --     )
+        --     { header =
+        --         { iconInstance = icon
+        --         , title = Locale.string vc.locale (title |> Maybe.withDefault "")
+        --         }
+        --     , messageText =
+        --         { messageText =
+        --             message
+        --                 :: moreInfo
+        --                 |> List.map (\m -> Locale.interpolated vc.locale m variables)
+        --                 |> String.join " "
+        --         }
+        --     , typeError =
+        --         { bodyText = ""
+        --         , headlineText = ""
+        --         }
+        --     }
+        --     |> List.singleton
+        --     |> overlay (Notification.getMoved model)
+        Just (Notification.Info nd) ->
             let
-                hideClose =
-                    [ css [ Css.display Css.none ] ]
+                icon =
+                    Icons.iconsAlert {}
 
+                nvc =
+                    notificationViewConfig nd
+            in
+            errorMessageComponentTypeAlertWithAttributes
+                (errorMessageComponentTypeAlertAttributes
+                    |> Rs.s_headerFrame nvc.headerFrameAttr
+                    |> Rs.s_messageText nvc.msgTextAttr
+                    |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
+                    |> Rs.s_content [ css [ Css.width Css.auto ] ]
+                )
+                { header =
+                    { iconInstance = icon
+                    , title = nvc.title
+                    }
+                , typeAlert = { bodyText = "", headlineText = "" }
+                , messageText = { messageText = nvc.msg }
+                }
+                |> List.singleton
+                |> overlay (Notification.getMoved model)
+
+        Just (Notification.Success nd) ->
+            let
                 icon =
                     Icons.iconsAlertDoneWithAttributes
                         (Icons.iconsAlertDoneAttributes
                             |> Rs.s_subtract [ fixFillRule ]
                         )
                         {}
+
+                nvc =
+                    notificationViewConfig nd
             in
             errorMessageComponentTypeSuccessWithAttributes
                 (errorMessageComponentTypeSuccessAttributes
-                    |> Rs.s_headerFrame hideClose
+                    |> Rs.s_headerFrame nvc.headerFrameAttr
+                    |> Rs.s_messageText nvc.msgTextAttr
+                    |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
+                    |> Rs.s_content [ css [ Css.width Css.auto ] ]
                 )
                 { header =
                     { iconInstance = icon
-                    , title = Locale.string vc.locale title
+                    , title = nvc.title
                     }
                 , typeSuccess = { bodyText = "", headlineText = "" }
+                , messageText = { messageText = nvc.msg }
                 }
                 |> List.singleton
                 |> overlay (Notification.getMoved model)

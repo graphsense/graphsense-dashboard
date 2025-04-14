@@ -6,6 +6,7 @@ import Model exposing (Effect(..), Model)
 import Model.Notification as Notify
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..), InternalError(..))
 import Model.Pathfinder.Id as Id
+import RecordSetter as Rs
 import Util.View exposing (truncateLongIdentifierWithLengths)
 
 
@@ -40,39 +41,61 @@ pathFinderErrorToNotifications : Error -> List Notify.Notification
 pathFinderErrorToNotifications err =
     case err of
         InternalError (AddressNotFoundInDict _) ->
-            Notify.Error { title = "Not Found", message = "Address not found", moreInfo = [], variables = [] } |> List.singleton
+            Notify.errorDefault "Address not found"
+                |> Notify.map (Rs.s_title (Just "Not Found"))
+                |> List.singleton
 
         InternalError (TxValuesEmpty _ _) ->
-            Notify.Error { title = "Not Found", message = "Address not found", moreInfo = [], variables = [] } |> List.singleton
+            Notify.errorDefault "Address not found"
+                |> Notify.map (Rs.s_title (Just "Not Found"))
+                |> List.singleton
 
         InternalError (NoTxInputsOutputsFoundInDict _) ->
-            Notify.Error { title = "Not Found", message = "Address not found", moreInfo = [], variables = [] } |> List.singleton
+            Notify.errorDefault "Address not found"
+                |> Notify.map (Rs.s_title (Just "Not Found"))
+                |> List.singleton
 
         InfoError (NoAdjaccentTxForAddressFound tid) ->
-            Notify.Info
-                { title = "Transaction tracing not possible"
-                , message = "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent."
-                , moreInfo = []
-                , variables =
-                    Id.id tid |> List.singleton
-                }
+            Notify.infoDefault "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent."
+                |> Notify.map (Rs.s_title (Just "Transaction tracing not possible"))
+                |> Notify.map (Rs.s_variables (Id.id tid |> List.singleton))
                 |> List.singleton
 
+        -- Notify.Info
+        --     { title = "Transaction tracing not possible"
+        --     , message = "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent."
+        --     , moreInfo = []
+        --     , variables =
+        --
+        --     }
+        --     |> List.singleton
         InfoError (TxTracingThroughService id exchangeLabel) ->
-            Notify.Info
-                { title = "Auto trace limit"
-                , moreInfo = []
-                , message =
-                    "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel."
-                , variables =
-                    (Id.id id |> truncateLongIdentifierWithLengths 8 4)
-                        :: (exchangeLabel
-                                |> Maybe.map List.singleton
-                                |> Maybe.withDefault []
-                           )
-                }
+            Notify.infoDefault "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel."
+                |> Notify.map (Rs.s_title (Just "Auto trace limit"))
+                |> Notify.map
+                    (Rs.s_variables
+                        ((Id.id id |> truncateLongIdentifierWithLengths 8 4)
+                            :: (exchangeLabel
+                                    |> Maybe.map List.singleton
+                                    |> Maybe.withDefault []
+                               )
+                        )
+                    )
                 |> List.singleton
 
+        -- Notify.Info
+        --     { title = "Auto trace limit"
+        --     , moreInfo = []
+        --     , message =
+        --         "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel."
+        --     , variables =
+        --         (Id.id id |> truncateLongIdentifierWithLengths 8 4)
+        --             :: (exchangeLabel
+        --                     |> Maybe.map List.singleton
+        --                     |> Maybe.withDefault []
+        --                )
+        --     }
+        --     |> List.singleton
         Errors x ->
             x |> List.concatMap pathFinderErrorToNotifications
 

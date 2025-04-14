@@ -1491,12 +1491,8 @@ update plugins uc msg model =
                         let
                             ( notifications, eff ) =
                                 Notification.add
-                                    (Notification.Error
-                                        { title = "An error occurred"
-                                        , message = message
-                                        , moreInfo = []
-                                        , variables = []
-                                        }
+                                    (Notification.errorDefault message
+                                        |> Notification.map (s_title (Just "An error occurred"))
                                     )
                                     model.notifications
                         in
@@ -1522,27 +1518,28 @@ apiRateExceededError locale auth =
                 _ ->
                     Nothing
     in
-    Notification.Error
-        { title = "Request limit exceeded"
-        , message =
-            limited
-                |> Maybe.map
-                    (\_ ->
-                        "The request limit of your API key of {0} per {1} has been exceeded."
-                    )
-                |> Maybe.withDefault "The request limit of your API key has been exceeded."
-        , moreInfo = []
-        , variables =
-            limited
-                |> Maybe.map
-                    (\{ limit, interval } ->
-                        [ String.fromInt limit
-                        , requestLimitIntervalToString interval
-                            |> Locale.string locale
-                        ]
-                    )
-                |> Maybe.withDefault []
-        }
+    Notification.errorDefault
+        (limited
+            |> Maybe.map
+                (\_ ->
+                    "The request limit of your API key of {0} per {1} has been exceeded."
+                )
+            |> Maybe.withDefault "The request limit of your API key has been exceeded."
+        )
+        |> Notification.map (s_title (Just "Request limit exceeded"))
+        |> Notification.map
+            (s_variables
+                (limited
+                    |> Maybe.map
+                        (\{ limit, interval } ->
+                            [ String.fromInt limit
+                            , requestLimitIntervalToString interval
+                                |> Locale.string locale
+                            ]
+                        )
+                    |> Maybe.withDefault []
+                )
+            )
 
 
 switchLocale : String -> Model key -> ( Model key, List Effect )
