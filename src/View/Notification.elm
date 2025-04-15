@@ -10,7 +10,7 @@ import Maybe.Extra
 import Model exposing (Msg(..))
 import Model.Notification as Notification
 import RecordSetter as Rs
-import Theme.Html.ErrorMessagesAlerts
+import Theme.Html.ErrorMessagesAlerts as Msg
     exposing
         ( errorMessageComponentTypeAlertAttributes
         , errorMessageComponentTypeAlertWithAttributes
@@ -58,6 +58,9 @@ view vc model =
 
         closeBtnAttr =
             [ css (Css.btnBase vc), onClickWithStop UserClosesNotification ]
+
+        contentAttr =
+            [ css [ Css.width Css.auto, Css.maxWidth (Css.px Msg.messageText_details.renderedWidth) ] ]
 
         notificationViewConfig { title, message, moreInfo, variables, showClose } =
             let
@@ -110,7 +113,7 @@ view vc model =
                     |> Rs.s_headerFrame nvc.headerFrameAttr
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
-                    |> Rs.s_content [ css [ Css.width Css.auto ] ]
+                    |> Rs.s_content contentAttr
                 )
                 { header =
                     { iconInstance = icon
@@ -122,34 +125,6 @@ view vc model =
                 |> List.singleton
                 |> overlay (Notification.getMoved model)
 
-        -- let
-        --     icon =
-        --         Icons.iconsError {}
-        --     buttonAttrOk =
-        --         [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm UserClosesNotification) ]
-        -- in
-        -- errorMessageComponentTypeErrorWithAttributes
-        --     (errorMessageComponentTypeErrorAttributes
-        --         |> Rs.s_iconsCloseSnoPadding buttonAttrOk
-        --     )
-        --     { header =
-        --         { iconInstance = icon
-        --         , title = Locale.string vc.locale (title |> Maybe.withDefault "")
-        --         }
-        --     , messageText =
-        --         { messageText =
-        --             message
-        --                 :: moreInfo
-        --                 |> List.map (\m -> Locale.interpolated vc.locale m variables)
-        --                 |> String.join " "
-        --         }
-        --     , typeError =
-        --         { bodyText = ""
-        --         , headlineText = ""
-        --         }
-        --     }
-        --     |> List.singleton
-        --     |> overlay (Notification.getMoved model)
         Just (Notification.Info nd) ->
             let
                 icon =
@@ -163,7 +138,7 @@ view vc model =
                     |> Rs.s_headerFrame nvc.headerFrameAttr
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
-                    |> Rs.s_content [ css [ Css.width Css.auto ] ]
+                    |> Rs.s_content contentAttr
                 )
                 { header =
                     { iconInstance = icon
@@ -192,7 +167,7 @@ view vc model =
                     |> Rs.s_headerFrame nvc.headerFrameAttr
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
-                    |> Rs.s_content [ css [ Css.width Css.auto ] ]
+                    |> Rs.s_content contentAttr
                 )
                 { header =
                     { iconInstance = icon

@@ -146,7 +146,7 @@ utxo plugins pluginStates vc gc model id viewState address =
                     [ css [ Css.display Css.none ] ]
 
                  else
-                    []
+                    [ css [ Css.flexDirection Css.row, Css.justifyContent Css.spaceBetween ] ]
                 )
         )
         (SidePanelComponents.sidePanelAddressInstances

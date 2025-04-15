@@ -16,6 +16,7 @@ type alias NotificationData =
     , variables : List String
     , showClose : Bool
     , isEphemeral : Bool
+    , removeDelayMs : Float
     }
 
 
@@ -27,7 +28,7 @@ type Notification
 
 defaultNotificationData : String -> NotificationData
 defaultNotificationData message =
-    { title = Nothing, message = message, moreInfo = [], variables = [], showClose = True, isEphemeral = False }
+    { title = Nothing, message = message, moreInfo = [], variables = [], showClose = True, isEphemeral = False, removeDelayMs = 5000 }
 
 
 successDefault : String -> Notification
@@ -45,6 +46,19 @@ infoDefault message =
     Info (defaultNotificationData message)
 
 
+getNotificationData : Notification -> NotificationData
+getNotificationData n =
+    case n of
+        Success d ->
+            d
+
+        Info d ->
+            d
+
+        Error d ->
+            d
+
+
 map : (NotificationData -> NotificationData) -> Notification -> Notification
 map fn n =
     case n of
@@ -56,11 +70,6 @@ map fn n =
 
         Error d ->
             fn d |> Error
-
-
-
--- | InfoEphemeral String
--- | Success String
 
 
 empty : Model
@@ -223,9 +232,9 @@ perform effect =
             Process.sleep 0
                 |> Task.perform (MoveDelayPassed |> always)
 
-        RemoveNotification id ->
-            Process.sleep 3000
-                |> Task.perform (RemoveDelayPassed id |> always)
+        RemoveNotification n ->
+            Process.sleep (n |> getNotificationData |> .removeDelayMs)
+                |> Task.perform (RemoveDelayPassed n |> always)
 
 
 fromHttpError : Http.Error -> Notification
