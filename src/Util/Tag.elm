@@ -34,7 +34,7 @@ conceptItem vc id k =
         [ onMouseEnter (UserMovesMouseOverTagConcept ctx)
         , onMouseLeave (UserMovesMouseOutTagConcept ctx)
         , HA.id ctx.domId
-        , css [ Css.cursor Css.pointer ]
+        , css [ Css.cursor Css.default ]
         ]
         [ TagComponents.categoryTags
             { categoryTags =

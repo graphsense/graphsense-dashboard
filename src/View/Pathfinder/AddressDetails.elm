@@ -624,7 +624,7 @@ account plugins pluginStates vc gc model id viewState address =
                     [ css [ Css.display Css.none ] ]
 
                  else
-                    []
+                    [ css [ Css.flexDirection Css.row, Css.justifyContent Css.spaceBetween ] ]
                 )
             |> Rs.s_pluginTagsList
                 (if List.isEmpty pluginTagsList then
@@ -918,6 +918,7 @@ setTags vc gc model id =
                                 [ css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
                                 , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
                                 , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
+                                , css [ Css.cursor Css.default ]
                                 , HA.id ctx.domId
                                 ]
                                 [ Html.text text

@@ -1130,7 +1130,19 @@ update plugins uc msg model =
                                 |> updateByPluginOutMsg plugins uc outMsg
 
                         Pathfinder.PluginMsg ms ->
-                            updatePlugins plugins uc ms model
+                            let
+                                -- route plugin msgs through pathfinder
+                                -- needed to handle things like undo/redo
+                                ( pathfinder, eff ) =
+                                    Pathfinder.update plugins uc m model.pathfinder
+
+                                nm =
+                                    { model | pathfinder = pathfinder }
+
+                                neff =
+                                    List.map PathfinderEffect eff
+                            in
+                            updatePlugins plugins uc ms nm |> Tuple.mapSecond ((++) neff)
 
                         _ ->
                             let
@@ -1566,13 +1578,13 @@ switchLocale loc model =
 updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
 updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
     let
-        updateGraphByPluginOutMsg model eff =
+        updateGraphByPluginOutMsg model eff subMsg =
             let
                 ( graph, graphEffect ) =
-                    Graph.updateByPluginOutMsg plugins outMsgs model.graph
+                    Graph.updateByPluginOutMsg plugins [ subMsg ] model.graph
 
                 ( pathfinder, pathfinderEffect ) =
-                    Pathfinder.updateByPluginOutMsg plugins uc outMsgs model.pathfinder
+                    Pathfinder.updateByPluginOutMsg plugins uc [ subMsg ] model.pathfinder
             in
             ( { model
                 | graph = graph
@@ -1588,31 +1600,31 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
             (\msg ( model, eff ) ->
                 case Log.log "outMsg" msg of
                     PluginInterface.ShowBrowser ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.UpdateAddresses _ _ ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.UpdateAddressesByRootAddress _ _ ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.UpdateAddressesByEntityPathfinder _ _ ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.UpdateAddressEntities _ _ ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.UpdateEntities _ _ ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.UpdateEntitiesByRootAddress _ _ ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.LoadAddressIntoGraph _ ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder _ _) ->
-                        updateGraphByPluginOutMsg model eff
+                        updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.GetAddressDomElement id pmsg ->
                         ( mo
