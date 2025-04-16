@@ -64,9 +64,8 @@ view vc model =
 
         notificationViewConfig { title, message, moreInfo, variables, showClose } =
             let
-                showHeader =
-                    showClose || Maybe.Extra.isJust title
-
+                -- showHeader =
+                --     showClose || Maybe.Extra.isJust title
                 showMsgText =
                     Maybe.Extra.isJust title
 
@@ -85,7 +84,7 @@ view vc model =
                 else
                     hide
             , headerFrameAttr =
-                if showHeader then
+                if showClose then
                     []
 
                 else

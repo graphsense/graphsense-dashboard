@@ -88,6 +88,7 @@ type Effect
 
 type Msg
     = MoveDelayPassed
+    | RemoveDelayPrePassed Notification
     | RemoveDelayPassed Notification
 
 
@@ -221,8 +222,19 @@ update msg model =
         MoveDelayPassed ->
             setMoved model
 
+        RemoveDelayPrePassed n ->
+            if peek model == Just n then
+                unsetMoved model
+
+            else
+                model
+
         RemoveDelayPassed n ->
-            unsetMoved model |> remove n
+            if peek model == Just n then
+                unsetMoved model |> remove n
+
+            else
+                model |> remove n
 
 
 perform : Effect -> Cmd Msg
@@ -233,8 +245,12 @@ perform effect =
                 |> Task.perform (MoveDelayPassed |> always)
 
         RemoveNotification n ->
-            Process.sleep (n |> getNotificationData |> .removeDelayMs)
-                |> Task.perform (RemoveDelayPassed n |> always)
+            Cmd.batch
+                [ Process.sleep (n |> getNotificationData |> .removeDelayMs)
+                    |> Task.perform (RemoveDelayPassed n |> always)
+                , Process.sleep ((n |> getNotificationData |> .removeDelayMs) - 300)
+                    |> Task.perform (RemoveDelayPrePassed n |> always)
+                ]
 
 
 fromHttpError : Http.Error -> Notification
@@ -255,55 +271,22 @@ fromHttpErrorWithMoreInfo infoData errorData =
                 |> map (Rs.s_title (Just "Network Error"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
 
-        -- Error
-        --     { title = "Network error"
-        --     , message =
-        --     , moreInfo = toMoreInfo []
-        --     , variables = []
-        --     }
         Http.BadBody body ->
             errorDefault "Unexpected data format."
                 |> map (Rs.s_title (Just "Data Error"))
                 |> map (Rs.s_moreInfo (toMoreInfo [ body ]))
 
-        -- Error
-        --     { title = "Data error"
-        --     , message = "Unexpected data format."
-        --     , moreInfo =
-        --     , variables = []
-        --     }
         Http.BadUrl _ ->
             errorDefault "Unexpected data format."
                 |> map (Rs.s_title (Just "Bad URL"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
 
-        -- Error
-        --     { title = "Bad URL"
-        --     , message = ""
-        --     , moreInfo = toMoreInfo []
-        --     , variables = []
-        --     }
         Http.BadStatus _ ->
             errorDefault "Unexpected status code."
                 |> map (Rs.s_title (Just "Request error"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
 
-        -- Error
-        --     { title = "Request error"
-        --     , message = "Unexpected status code."
-        --     , moreInfo = toMoreInfo []
-        --     , variables = []
-        --     }
         Http.Timeout ->
             errorDefault "Service does not respond in time."
                 |> map (Rs.s_title (Just "Request timeout"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
-
-
-
--- Error
---     { title = "Request timeout"
---     , message = "Service does not respond in time."
---     , moreInfo = toMoreInfo []
---     , variables = []
---     }
