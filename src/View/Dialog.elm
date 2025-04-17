@@ -9,11 +9,10 @@ import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick, stopPropagationOn)
 import Json.Decode
 import Model exposing (Msg(..))
-import Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig, PluginConfig)
+import Model.Dialog exposing (ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig, PluginConfig)
 import Plugin.Model
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import Theme.Html.Buttons as Buttons
 import Theme.Html.ErrorMessagesAlerts
     exposing
         ( dialogConfirmationMessageAttributes
@@ -53,6 +52,9 @@ view plugins pluginStates vc model =
 
             Custom conf ->
                 custom conf
+
+            CustomWithVc conf ->
+                customWithVc vc conf
 
             TagsList conf ->
                 TagsDetailList.view vc conf.closeMsg conf.id conf.tagsTable
@@ -101,9 +103,11 @@ options_ vc { message, options } =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedOption NoOp) ]
 
         btn ( title, msg ) =
-            Buttons.buttonTypeTextStateRegularStylePrimaryWithAttributes
-                (Buttons.buttonTypeTextStateRegularStylePrimaryAttributes |> Rs.s_button [ css (Css.btnBase vc), onClickWithStop (UserClickedOption msg) ])
-                { typeTextStateRegularStylePrimary = { buttonText = Locale.string vc.locale title, iconInstance = none, iconVisible = True } }
+            Button.btnDefaultConfig
+                |> Rs.s_text (Locale.string vc.locale title)
+                |> Rs.s_onClick (Just (UserClickedOption msg))
+                |> Rs.s_onClickWithStop True
+                |> Button.primaryButton vc
 
         btns =
             options |> List.map btn |> div [ Css.optionsButtonsContainer |> css ]
@@ -295,6 +299,11 @@ info vc inf =
 custom : CustomConfig Msg -> Html Msg
 custom { html } =
     html
+
+
+customWithVc : Config -> CustomConfigWithVc Msg -> Html Msg
+customWithVc vc { html } =
+    html vc
 
 
 plugin : Plugins -> Plugin.Model.ModelState -> Config -> PluginConfig Msg -> Html Msg

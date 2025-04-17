@@ -61,7 +61,7 @@ import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route as GlobalRoute
-import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType, Route)
+import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType(..), Route)
 import Set exposing (..)
 import Task
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
@@ -89,8 +89,8 @@ import View.Locale as Locale
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
-        |> pushHistory msg
-        |> markDirty msg
+        |> pushHistory plugins msg
+        |> markDirty plugins msg
         |> updateByMsg plugins uc msg
 
 
@@ -1524,6 +1524,33 @@ addPathToGraph plugins uc model net list =
                 _ ->
                     Nothing
 
+        pathTypeToAddressId pt =
+            case pt of
+                AddressHop _ x ->
+                    Just (Id.init net x)
+
+                _ ->
+                    Nothing
+
+        startAddressCoords =
+            list
+                |> List.head
+                |> Maybe.andThen pathTypeToAddressId
+                |> Maybe.andThen (flip Network.getAddressCoords model.network)
+
+        startCoordsPrel =
+            startAddressCoords
+                |> Maybe.withDefault { x = 0, y = 0 }
+
+        startY =
+            Network.getYForPathAfterX model.network startCoordsPrel.x
+
+        startCoords =
+            startCoordsPrel |> s_y (max startY startCoordsPrel.y)
+
+        startAddressOnGraphAlready =
+            startAddressCoords /= Nothing
+
         isDuplicateAddress i =
             Maybe.andThen
                 (\adr ->
@@ -1558,7 +1585,13 @@ addPathToGraph plugins uc model net list =
                         ( 0, 0 )
 
                     else
-                        ( nodeXOffset, 0 )
+                        ( if startAddressOnGraphAlready && i == 0 then
+                            0
+
+                          else
+                            nodeXOffset
+                        , 0
+                        )
 
                 x_ =
                     x + xOffset
@@ -1609,8 +1642,8 @@ addPathToGraph plugins uc model net list =
                 |> List.foldl accf
                     { m = model
                     , eff = []
-                    , x = 0
-                    , y = 0
+                    , x = startCoords.x
+                    , y = startCoords.y
                     , previousAddress = Nothing
                     }
     in
@@ -1655,12 +1688,13 @@ updateByPluginOutMsg plugins uc outMsgs model =
     outMsgs
         |> List.foldl
             (\msg ( mo, eff ) ->
-                case Log.log "outMsg" msg of
+                case Log.log "outMsgPF" msg of
                     PluginInterface.ShowBrowser ->
-                        n model
+                        ( mo, eff )
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder net path) ->
-                        addPathToGraph plugins uc model net path
+                        addPathToGraph plugins uc mo net path
+                            |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.UpdateAddresses { currency, address } pmsg ->
                         let
@@ -1704,52 +1738,52 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         )
 
                     PluginInterface.UpdateAddressEntities _ _ ->
-                        n mo
+                        ( mo, eff )
 
                     PluginInterface.UpdateEntities _ _ ->
-                        n mo
+                        ( mo, eff )
 
                     PluginInterface.UpdateEntitiesByRootAddress _ _ ->
-                        n mo
+                        ( mo, eff )
 
                     PluginInterface.LoadAddressIntoGraph _ ->
-                        n mo
+                        ( mo, eff )
 
                     PluginInterface.GetEntitiesForAddresses _ _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.GetEntities _ _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.PushUrl _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.GetSerialized _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.Deserialize _ _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.GetAddressDomElement _ _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.SendToPort _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.ApiRequest _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.ShowDialog _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.CloseDialog ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.ShowNotification _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.OutMsgsPathfinder _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.OpenTooltip s msgs ->
                         ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg)) ] )
@@ -1766,12 +1800,12 @@ loadAddress plugins =
 
 
 loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition _ position id model =
+loadAddressWithPosition plugins position id model =
     if Dict.member id model.network.addresses then
         n model
 
     else
-        ( model
+        ( { model | network = Network.addAddressWithPosition plugins position id model.network }
         , [ BrowserGotAddressData id position
                 |> Api.GetAddressEffect
                     { currency = Id.network id
@@ -1955,9 +1989,9 @@ unhover model =
         |> s_hovered NoHover
 
 
-pushHistory : Msg -> Model -> Model
-pushHistory msg model =
-    if History.shallPushHistory msg model then
+pushHistory : Plugins -> Msg -> Model -> Model
+pushHistory plugins msg model =
+    if History.shallPushHistory plugins msg model then
         forcePushHistory model
 
     else
@@ -1997,9 +2031,9 @@ undoRedo fun model =
         |> n
 
 
-markDirty : Msg -> Model -> Model
-markDirty msg model =
-    if History.shallPushHistory msg model then
+markDirty : Plugins -> Msg -> Model -> Model
+markDirty plugins msg model =
+    if History.shallPushHistory plugins msg model then
         model |> s_isDirty True
 
     else

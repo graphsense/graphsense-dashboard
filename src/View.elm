@@ -138,6 +138,7 @@ navbarSubMenuView vc model { type_ } =
                           }
                             |> ContextMenuItem.initLink2
                             |> ContextMenuItem.view vc
+                        , ContextMenuItem.rule vc
                         ]
                     , pluginsList =
                         [ { link = "https://www.iknaio.com/learning#pathfinder20"

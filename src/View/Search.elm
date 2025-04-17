@@ -319,7 +319,7 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
 
                 Tx _ a ->
                     ( FontAwesome.exchangeAlt
-                    , Util.View.truncate 64 a
+                    , Util.View.truncate 70 a
                     , True
                     )
 

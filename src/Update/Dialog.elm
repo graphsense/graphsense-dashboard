@@ -102,6 +102,12 @@ mapMsg map model =
             }
                 |> Custom
 
+        CustomWithVc conf ->
+            { html = conf.html >> Html.map map
+            , defaultMsg = map conf.defaultMsg
+            }
+                |> CustomWithVc
+
         TagsList conf ->
             { tagsTable = conf.tagsTable
             , closeMsg = map conf.closeMsg

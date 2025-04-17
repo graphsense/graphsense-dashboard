@@ -1,4 +1,4 @@
-module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, view)
+module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, rule, view)
 
 import Config.View as View
 import Css
@@ -8,6 +8,7 @@ import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
 import RecordSetter as Rs
+import Theme.Colors as Colors
 import Theme.Html.GraphComponents as HGraphComponents
 import View.Locale as Locale
 
@@ -27,6 +28,21 @@ type alias ContextMenuItemInternal msg =
     , text2 : Maybe String
     , action : ContextMenuItemActions msg
     }
+
+
+rule : View.Config -> Html msg
+rule _ =
+    Html.hr
+        [ css
+            [ Css.property "border" "none"
+            , Css.property "background-color" Colors.grey50
+            , Css.width (Css.pct 95)
+            , Css.height (Css.px 1)
+            , Css.marginTop (Css.px 3)
+            , Css.marginBottom (Css.px 2)
+            ]
+        ]
+        []
 
 
 view : View.Config -> ContextMenuItem msg -> Html msg

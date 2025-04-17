@@ -55,6 +55,9 @@ type alias Update flags modelState addressState entityState msg addressMsg entit
 
     -- when the user logs out
     , logout : Maybe (modelState -> Return modelState msg addressMsg entityMsg)
+
+    -- plugin can decide when core should store a history entry, before a plugin action.
+    , shallPushHistory : Maybe (msg -> Bool)
     }
 
 
@@ -75,6 +78,7 @@ init =
     , clearSearch = Nothing
     , newGraph = Nothing
     , logout = Nothing
+    , shallPushHistory = Nothing
     }
 
 

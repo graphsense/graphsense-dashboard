@@ -8,6 +8,7 @@ module Update.Pathfinder.Network exposing
     , clearSelection
     , deleteAddress
     , deleteTx
+    , getYForPathAfterX
     , ingestAddresses
     , ingestTxs
     , snapToGrid
@@ -265,7 +266,7 @@ freeSpaceAroundCoords coords model =
                             Nothing
                     )
                 |> List.partition
-                    (\a -> A.getTo a.y <= coords.y)
+                    (\a -> A.getTo a.y < coords.y)
 
         movedTxs =
             (getMaxY txsAbove |> moveThings 1 txsAbove)
@@ -387,6 +388,21 @@ updateAddressesByClusterId id update model =
 updateTx : Id -> (Tx -> Tx) -> Network -> Network
 updateTx id update model =
     { model | txs = Dict.update id (Maybe.map update) model.txs }
+
+
+getYForPathAfterX : Network -> Float -> Float
+getYForPathAfterX model xBasis =
+    let
+        coords item =
+            { x = item.x, y = item.y |> A.getTo }
+
+        allCoords =
+            ((model.addresses |> Dict.values |> List.map coords)
+                ++ (model.txs |> Dict.values |> List.map coords)
+            )
+                |> List.filter (\c -> c.x > xBasis)
+    in
+    allCoords |> List.map .y |> List.maximum |> Maybe.map ((+) nodeYOffset) |> Maybe.withDefault 0
 
 
 findFreeCoords : Network -> Coords
