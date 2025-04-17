@@ -58,8 +58,8 @@ getStrokeWidth node =
         |> Maybe.withDefault 0
 
 
-toDetails : (FrameTraits -> List Elm.Expression) -> { a | frameTraits : FrameTraits } -> Details
-toDetails getStyles node =
+toDetails : { a | frameTraits : FrameTraits } -> Details
+toDetails node =
     let
         bbox =
             getBoundingBox node
@@ -76,7 +76,6 @@ toDetails getStyles node =
         , height = rbox.height
         }
     , strokeWidth = getStrokeWidth node
-    , styles = getStyles node.frameTraits
     }
 
 

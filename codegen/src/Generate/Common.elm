@@ -1,13 +1,16 @@
 module Generate.Common exposing (..)
 
 import Api.Raw exposing (..)
-import Basics.Extra exposing (flip)
+import Basics.Extra exposing (flip, uncurry)
 import Dict exposing (Dict)
 import Dict.Extra
 import Elm exposing (Expression)
 import Elm.Annotation as Annotation exposing (Annotation)
+import Elm.Case
+import Elm.Let
 import Elm.Op
 import Gen.Css as Css
+import Gen.Html as Html
 import Gen.Html.Styled
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
@@ -16,23 +19,22 @@ import Generate.Common.FrameTraits as FrameTraits
 import Generate.Common.RectangleNode as RectangleNode
 import Generate.Common.VectorNode as VectorNode
 import Generate.Html.HasLayoutTrait as HasLayoutTrait
-import Generate.Util exposing (getElementAttributes, getMainComponentProperty, mm2, sanitize)
+import Generate.Util exposing (getElementAttributes, getMainComponentProperty, mm2, rootName, sanitize)
 import List.Extra
-import RecordSetter exposing (s_children, s_frameTraits)
+import RecordSetter exposing (s_children, s_defaultShapeTraits, s_frameTraits, s_instanceName, s_name)
 import Set
+import String.Case exposing (toCamelCaseUpper)
 import String.Extra
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
-import Types exposing (ComponentPropertyExpressions, Config, OriginAdjust)
+import Types exposing (ComponentPropertyExpressions, Config, Details, OriginAdjust)
 
 
-subcanvasNodeComponentsToDeclarations : (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration) -> SubcanvasNode -> List Elm.Declaration
+subcanvasNodeComponentsToDeclarations : (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNodeOrSet -> List Elm.Declaration) -> SubcanvasNode -> List Elm.Declaration
 subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
     let
-        toDeclarations parentName parentProperties n =
+        filter n =
             filterUnneededParts n
                 |> adjustBoundingBoxes
-                |> adjustNames
-                |> componentNodeToDeclarations parentName parentProperties
     in
     case node of
         SubcanvasNodeComponentNode n ->
@@ -40,7 +42,11 @@ subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
                 []
 
             else
-                toDeclarations "" Dict.empty n
+                filter n
+                    |> adjustNames
+                    |> toComponentNodeOrSet
+                    |> componentNodeToDeclarations ""
+                        Dict.empty
 
         SubcanvasNodeComponentSetNode n ->
             if FrameTraits.isHidden n then
@@ -48,60 +54,319 @@ subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
 
             else
                 let
-                    parentName =
-                        FrameTraits.getName n
+                    filtered =
+                        filter n
+
+                    cns =
+                        filtered
+                            |> toComponentNodeOrSet
                 in
-                -- for component sets we need to
-                -- get its properties before
-                -- going deeper down to components of the set
-                n.frameTraits.children
-                    |> List.map
-                        (\child ->
-                            case child of
-                                SubcanvasNodeComponentNode nn ->
-                                    let
-                                        name =
-                                            FrameTraits.getName nn
-                                                |> sanitize
-
-                                        nothingIfEmpty d =
-                                            if Dict.isEmpty d then
-                                                Nothing
-
-                                            else
-                                                Just d
-
-                                        properties =
-                                            componentNodeToProperties name n
-                                                |> Dict.toList
-                                                |> List.filterMap
-                                                    (\( k, types ) ->
-                                                        if k == name then
-                                                            Dict.filter
-                                                                (\_ type_ ->
-                                                                    type_ /= ComponentPropertyTypeVARIANT
-                                                                )
-                                                                types
-                                                                |> nothingIfEmpty
-                                                                |> Maybe.map (pair k)
-
-                                                        else
-                                                            Just ( k, types )
-                                                    )
-                                                |> Dict.fromList
-                                    in
-                                    toDeclarations
-                                        parentName
-                                        properties
-                                        nn
-
-                                _ ->
-                                    []
-                        )
-                    |> List.concat
+                componentSetNodeToDeclarations componentNodeToDeclarations cns
 
         _ ->
             []
+
+
+toComponentNodeOrSet : { a | componentPropertiesTrait : ComponentPropertiesTrait, frameTraits : FrameTraits } -> ComponentNodeOrSet
+toComponentNodeOrSet n =
+    { componentPropertiesTrait = n.componentPropertiesTrait
+    , frameTraits = n.frameTraits
+    }
+
+
+componentNodesForComponentSet : (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNodeOrSet -> List Elm.Declaration) -> Dict String (Dict String ComponentPropertyType) -> ComponentNodeOrSet -> String -> List Elm.Declaration
+componentNodesForComponentSet toDeclarations parentProperties n parentName =
+    n.frameTraits.children
+        |> List.map
+            (\child ->
+                case child of
+                    SubcanvasNodeComponentNode nn ->
+                        adjustNames nn
+                            |> toComponentNodeOrSet
+                            |> toDeclarations
+                                parentName
+                                parentProperties
+
+                    _ ->
+                        []
+            )
+        |> List.concat
+
+
+type alias ComponentNodeOrSet =
+    { componentPropertiesTrait : ComponentPropertiesTrait, frameTraits : FrameTraits }
+
+
+componentSetNodeToDeclarations : (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNodeOrSet -> List Elm.Declaration) -> ComponentNodeOrSet -> List Elm.Declaration
+componentSetNodeToDeclarations toDeclarations node =
+    let
+        ( details, descendantsDetails ) =
+            componentNodeToDetails node
+
+        names =
+            rootName
+                :: List.map .name descendantsDetails
+                |> Set.fromList
+                |> Set.toList
+
+        attributesType =
+            names
+                |> List.map (\n -> ( n, Gen.Html.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list ))
+                |> Annotation.record
+
+        attributesParam =
+            ( "attributes"
+            , attributesType
+                |> Just
+            )
+
+        instancesType =
+            names
+                |> List.map
+                    (\n ->
+                        ( n
+                        , Gen.Html.Styled.annotation_.html (Annotation.var "msg")
+                            |> Annotation.maybe
+                        )
+                    )
+                |> Annotation.record
+
+        instancesParam =
+            ( "instances"
+            , instancesType
+                |> Just
+            )
+
+        name =
+            FrameTraits.getName node
+                |> sanitize
+
+        properties =
+            componentNodeToProperties name node
+
+        nothingIfEmpty d =
+            if Dict.isEmpty d then
+                Nothing
+
+            else
+                Just d
+
+        propertiesWithoutVariants =
+            properties
+                |> Dict.toList
+                |> List.filterMap
+                    (\( k, types ) ->
+                        if k == rootName then
+                            Dict.filter
+                                (\_ type_ ->
+                                    type_ /= ComponentPropertyTypeVARIANT
+                                )
+                                types
+                                |> nothingIfEmpty
+                                |> Maybe.map (pair k)
+
+                        else
+                            Just ( k, types )
+                    )
+                |> Dict.fromList
+
+        variantProperties : List ( String, List String )
+        variantProperties =
+            node.componentPropertiesTrait.componentPropertyDefinitions
+                |> Maybe.withDefault Dict.empty
+                |> Dict.toList
+                |> List.filter (second >> .type_ >> (==) ComponentPropertyTypeVARIANT)
+                |> List.filterMap
+                    (\( nam, def ) ->
+                        def.variantOptions
+                            |> Maybe.map (pair nam)
+                    )
+
+        propertiesType_old =
+            variantProperties
+                |> List.map (mapSecond (\_ -> ComponentPropertyTypeVARIANT))
+                |> Dict.fromList
+                |> Dict.singleton name
+                |> propertiesType name Gen.Html.Styled.annotation_.html
+
+        propertiesType_ =
+            properties
+                |> propertiesType name Gen.Html.Styled.annotation_.html
+
+        propertiesParam =
+            ( "properties"
+            , Just propertiesType_
+            )
+
+        switches : Expression -> List ( String, Expression )
+        switches propertiesRecord =
+            variantProperties
+                |> List.map
+                    (\( prop, values ) ->
+                        List.map
+                            (\value ->
+                                ( prop ++ "=" ++ value
+                                , (name
+                                    ++ " "
+                                    ++ prop
+                                    ++ " "
+                                    ++ value
+                                    |> toCamelCaseUpper
+                                    |> Elm.val
+                                  )
+                                    |> Elm.Op.equal
+                                        (Elm.get prop propertiesRecord)
+                                )
+                            )
+                            values
+                    )
+                |> List.Extra.cartesianProduct
+                -- combine the comparisons
+                |> List.filterMap
+                    (List.Extra.foldl1
+                        (\( na, a ) ( nb, b ) ->
+                            ( na ++ " " ++ nb
+                            , Elm.Op.and a b
+                            )
+                        )
+                    )
+
+        declarationNameAttributes =
+            name ++ " attributes" |> sanitize
+
+        declarationNameInstances =
+            name ++ " instances" |> sanitize
+
+        componentFunction propertiesRecord nam =
+            Elm.apply
+                (Elm.value
+                    { importFrom = []
+                    , name = name ++ " " ++ nam ++ " with instances" |> sanitize
+                    , annotation = Nothing
+                    }
+                )
+                [ Elm.value
+                    { importFrom = []
+                    , name = declarationNameAttributes
+                    , annotation = Nothing
+                    }
+                , Elm.value
+                    { importFrom = []
+                    , name = declarationNameInstances
+                    , annotation = Nothing
+                    }
+                , propertiesRecord
+                ]
+    in
+    (propertiesType_
+        |> Elm.alias (name ++ " properties" |> sanitize)
+    )
+        :: (variantProperties |> List.map (uncurry (variantPropertyToType name)))
+        ++ [ names
+                |> defaultAttributeConfig Gen.Html.Styled.annotation_.attribute
+                |> Elm.declaration declarationNameAttributes
+           , names
+                |> defaultInstancesConfig Gen.Html.Styled.annotation_.html
+                |> Elm.declaration declarationNameInstances
+           ]
+        ++ ((Elm.fn propertiesParam
+                (\properties_ ->
+                    Elm.Let.letIn
+                        (\propsWithoutVariants ->
+                            node.frameTraits.children
+                                |> List.filterMap
+                                    (\child ->
+                                        case child of
+                                            SubcanvasNodeComponentNode n ->
+                                                Just n
+
+                                            _ ->
+                                                Nothing
+                                    )
+                                |> List.Extra.uncons
+                                |> Maybe.map
+                                    (\( fst, rest ) ->
+                                        List.foldl
+                                            (\comp acc ->
+                                                let
+                                                    nam =
+                                                        FrameTraits.getName comp
+                                                in
+                                                Elm.ifThen
+                                                    (variantNameToComparisionExpression properties_ name nam)
+                                                    (componentFunction propsWithoutVariants nam)
+                                                    acc
+                                            )
+                                            (FrameTraits.getName fst |> componentFunction propsWithoutVariants)
+                                            rest
+                                    )
+                                |> Maybe.withDefault (Html.text "")
+                        )
+                        |> Elm.Let.value "propsWithoutVariants"
+                            (propertiesWithoutVariants
+                                |> Dict.toList
+                                |> List.map
+                                    (\( comp, props ) ->
+                                        props
+                                            |> Dict.keys
+                                            |> List.map
+                                                (\k ->
+                                                    let
+                                                        kk =
+                                                            formatComponentPropertyName k
+                                                                |> sanitize
+                                                    in
+                                                    ( kk, Elm.get comp properties_ |> Elm.get kk )
+                                                )
+                                            |> Elm.record
+                                            |> pair comp
+                                    )
+                                |> Elm.record
+                            )
+                        |> Elm.Let.toExpression
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ propertiesType_ ]
+                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    )
+                |> Elm.declaration name
+            )
+                :: componentNodesForComponentSet toDeclarations propertiesWithoutVariants node name
+           )
+
+
+variantNameToComparisionExpression : Expression -> String -> String -> Expression
+variantNameToComparisionExpression propertiesRecord parentName name =
+    String.split ", " name
+        |> List.filterMap
+            (\part ->
+                case String.split "=" part of
+                    prop :: value :: [] ->
+                        (parentName
+                            ++ " "
+                            ++ prop
+                            ++ " "
+                            ++ value
+                            |> toCamelCaseUpper
+                            |> Elm.val
+                        )
+                            |> Elm.Op.equal
+                                (Elm.get rootName propertiesRecord |> Elm.get prop)
+                            |> Just
+
+                    _ ->
+                        Nothing
+            )
+        |> List.Extra.foldl1 Elm.Op.and
+        |> Maybe.withDefault (Elm.bool False)
+
+
+variantPropertyToType : String -> String -> List String -> Elm.Declaration
+variantPropertyToType componentName name options =
+    options
+        |> List.map ((++) (componentName ++ " " ++ name ++ " ") >> toCamelCaseUpper >> Elm.variant)
+        |> Elm.customType (componentName ++ " " ++ name |> toCamelCaseUpper)
 
 
 subcanvasNodeFilter : SubcanvasNode -> Maybe SubcanvasNode
@@ -267,7 +532,7 @@ disambiguateCollectedNames dict =
         |> Dict.fromList
 
 
-collectName : List String -> { a | defaultShapeTraits : DefaultShapeTraits } -> Dict String (List String) -> Dict String (List String)
+collectName : List String -> DefaultShapeTraits -> Dict String (List String) -> Dict String (List String)
 collectName parentNames child =
     Dict.insert
         (DefaultShapeTraits.getId child)
@@ -288,10 +553,10 @@ collectNames parentNames node names =
             (\child dict ->
                 case child of
                     SubcanvasNodeTextNode n ->
-                        collectName newParentNames n dict
+                        collectName newParentNames n.defaultShapeTraits dict
 
                     SubcanvasNodeEllipseNode n ->
-                        collectName newParentNames n dict
+                        collectName newParentNames n.defaultShapeTraits dict
 
                     SubcanvasNodeComponentNode n ->
                         collectComponentNames newParentNames n dict
@@ -309,13 +574,13 @@ collectNames parentNames node names =
                         collectInstanceNames newParentNames n dict
 
                     SubcanvasNodeVectorNode n ->
-                        collectName newParentNames n.cornerRadiusShapeTraits dict
+                        collectName newParentNames n.cornerRadiusShapeTraits.defaultShapeTraits dict
 
                     SubcanvasNodeLineNode n ->
-                        collectName newParentNames n dict
+                        collectName newParentNames n.defaultShapeTraits dict
 
                     SubcanvasNodeRectangleNode n ->
-                        collectName newParentNames n.rectangularShapeTraits dict
+                        collectName newParentNames n.rectangularShapeTraits.defaultShapeTraits dict
 
                     _ ->
                         dict
@@ -356,11 +621,13 @@ subcanvasNodeAdjustBoundingBox : OriginAdjust -> SubcanvasNode -> SubcanvasNode
 subcanvasNodeAdjustBoundingBox adjust node =
     case node of
         SubcanvasNodeTextNode n ->
-            DefaultShapeTraits.adjustBoundingBox adjust n
+            DefaultShapeTraits.adjustBoundingBox adjust n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeTextNode
 
         SubcanvasNodeEllipseNode n ->
-            DefaultShapeTraits.adjustBoundingBox adjust n
+            DefaultShapeTraits.adjustBoundingBox adjust n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeEllipseNode
 
         SubcanvasNodeFrameNode n ->
@@ -380,7 +647,8 @@ subcanvasNodeAdjustBoundingBox adjust node =
                 |> SubcanvasNodeVectorNode
 
         SubcanvasNodeLineNode n ->
-            DefaultShapeTraits.adjustBoundingBox adjust n
+            DefaultShapeTraits.adjustBoundingBox adjust n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeLineNode
 
         SubcanvasNodeRectangleNode n ->
@@ -395,11 +663,13 @@ subcanvasNodeAdjustNames : Dict String String -> SubcanvasNode -> SubcanvasNode
 subcanvasNodeAdjustNames names node =
     case node of
         SubcanvasNodeTextNode n ->
-            DefaultShapeTraits.adjustName names n
+            DefaultShapeTraits.adjustName names n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeTextNode
 
         SubcanvasNodeEllipseNode n ->
-            DefaultShapeTraits.adjustName names n
+            DefaultShapeTraits.adjustName names n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeEllipseNode
 
         SubcanvasNodeComponentNode n ->
@@ -427,7 +697,8 @@ subcanvasNodeAdjustNames names node =
                 |> SubcanvasNodeVectorNode
 
         SubcanvasNodeLineNode n ->
-            DefaultShapeTraits.adjustName names n
+            DefaultShapeTraits.adjustName names n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeLineNode
 
         SubcanvasNodeRectangleNode n ->
@@ -475,25 +746,24 @@ formatComponentPropertyName str =
         str
 
 
-componentNodeToProperties : String -> { a | componentPropertiesTrait : ComponentPropertiesTrait, frameTraits : FrameTraits } -> Dict String (Dict String ComponentPropertyType)
+componentNodeToProperties : String -> ComponentNodeOrSet -> Dict String (Dict String ComponentPropertyType)
 componentNodeToProperties name node =
     node.componentPropertiesTrait.componentPropertyDefinitions
         |> Maybe.map
             (Dict.toList
-                >> List.map
-                    (mapSecond .type_)
-                >> List.filter (instancePropertyIsNotPartOfAList False node)
+                >> List.map (mapSecond .type_)
+                >> List.filter (instancePropertyIsNotPartOfAList node)
                 >> Dict.fromList
             )
-        |> Maybe.map (pair name >> List.singleton)
+        |> Maybe.map (pair rootName >> List.singleton)
         |> Maybe.withDefault []
         |> (++)
             (withFrameTraitsToProperties node)
         |> Dict.fromList
 
 
-instancePropertyIsNotPartOfAList : Bool -> { a | frameTraits : FrameTraits } -> ( String, ComponentPropertyType ) -> Bool
-instancePropertyIsNotPartOfAList isList node ( name, type_ ) =
+instancePropertyIsNotPartOfAList : { a | frameTraits : FrameTraits } -> ( String, ComponentPropertyType ) -> Bool
+instancePropertyIsNotPartOfAList node ( name, type_ ) =
     let
         withFrameTraits : Bool -> { b | frameTraits : FrameTraits } -> Bool
         withFrameTraits isList_ n =
@@ -563,7 +833,7 @@ subcanvasNodeToProperties node =
 
             else if hasVariantProperty n then
                 [ ( FrameTraits.getName n
-                  , Dict.singleton "variant" ComponentPropertyTypeVARIANT
+                  , Dict.singleton "variant" ComponentPropertyTypeINSTANCESWAP
                   )
                 ]
 
@@ -602,8 +872,8 @@ propertiesToPropertyExpressions properties_ =
         )
 
 
-propertiesType : (Annotation -> Annotation) -> Dict String (Dict String ComponentPropertyType) -> Annotation
-propertiesType elementType =
+propertiesType : String -> (Annotation -> Annotation) -> Dict String (Dict String ComponentPropertyType) -> Annotation
+propertiesType componentName elementType =
     Dict.map
         (\_ ->
             Dict.foldl
@@ -619,7 +889,12 @@ propertiesType elementType =
                             Dict.insert k Annotation.string
 
                         ComponentPropertyTypeVARIANT ->
-                            Dict.insert k (elementType (Annotation.var "msg"))
+                            componentName
+                                ++ " "
+                                ++ k
+                                |> toCamelCaseUpper
+                                |> Annotation.named []
+                                |> Dict.insert k
                 )
                 Dict.empty
                 >> Dict.toList
@@ -758,3 +1033,109 @@ wrapInSvg config name { absoluteRenderBounds, absoluteBoundingBox, layoutPositio
                         |> Elm.list
                     )
             )
+
+
+componentNodeToDetails : { a | frameTraits : FrameTraits } -> ( Details, List Details )
+componentNodeToDetails node =
+    ( FrameTraits.toDetails node
+    , node.frameTraits.children
+        |> List.map subcanvasNodeToDetails
+        |> List.concat
+    )
+
+
+withFrameTraitsNodeToDetails : { a | frameTraits : FrameTraits } -> ( Details, List Details )
+withFrameTraitsNodeToDetails node =
+    ( FrameTraits.toDetails node
+    , if FrameTraits.isList node then
+        []
+
+      else
+        node.frameTraits.children
+            |> List.map subcanvasNodeToDetails
+            |> List.concat
+    )
+
+
+subcanvasNodeToDetails : SubcanvasNode -> List Details
+subcanvasNodeToDetails node =
+    case node of
+        SubcanvasNodeTextNode n ->
+            if DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.defaultShapeTraits
+                    |> List.singleton
+
+        SubcanvasNodeComponentNode n ->
+            if FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> mapFirst (s_name rootName)
+                    |> uncurry (::)
+
+        SubcanvasNodeGroupNode n ->
+            if FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
+
+        SubcanvasNodeFrameNode n ->
+            if FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
+
+        SubcanvasNodeInstanceNode n ->
+            if FrameTraits.isHidden n then
+                []
+
+            else if hasVariantProperty n || hasMainComponentProperty n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
+                    |> List.map (s_instanceName (FrameTraits.getName n))
+
+        SubcanvasNodeRectangleNode n ->
+            if DefaultShapeTraits.isHidden n.rectangularShapeTraits then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.rectangularShapeTraits.defaultShapeTraits
+                    |> List.singleton
+
+        SubcanvasNodeVectorNode n ->
+            if DefaultShapeTraits.isHidden n.cornerRadiusShapeTraits then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.cornerRadiusShapeTraits.defaultShapeTraits
+                    |> List.singleton
+
+        SubcanvasNodeLineNode n ->
+            if DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.defaultShapeTraits
+                    |> List.singleton
+
+        SubcanvasNodeEllipseNode n ->
+            if DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.defaultShapeTraits
+                    |> List.singleton
+
+        _ ->
+            []

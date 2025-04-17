@@ -27,8 +27,11 @@ type alias Details =
     , bbox : Rectangle
     , renderedSize : Size
     , strokeWidth : Float
-    , styles : List Elm.Expression
     }
+
+
+type alias Styles =
+    List Elm.Expression
 
 
 type alias OriginAdjust =

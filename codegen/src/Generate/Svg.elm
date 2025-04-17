@@ -10,7 +10,7 @@ import Elm.Op
 import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
-import Generate.Common as Common exposing (hasMainComponentProperty, hasVariantProperty)
+import Generate.Common as Common exposing (ComponentNodeOrSet, hasMainComponentProperty, hasVariantProperty)
 import Generate.Common.DefaultShapeTraits
 import Generate.Common.FrameTraits
 import Generate.Svg.EllipseNode as EllipseNode
@@ -19,10 +19,11 @@ import Generate.Svg.LineNode as LineNode
 import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
 import Generate.Svg.VectorNode as VectorNode
-import Generate.Util exposing (addIdAttribute, detailsToDeclaration, getElementAttributes, sanitize, toTranslate, withVisibility)
+import Generate.Util exposing (detailsAndStylesToDeclaration, getElementAttributes, sanitize, toTranslate, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (..)
-import Types exposing (ColorMap, Config, Details)
+import Tuple exposing (first, pair)
+import Types exposing (ColorMap, Config, Styles)
 
 
 subcanvasNodeToExpressions : Config -> String -> SubcanvasNode -> List Elm.Expression
@@ -100,15 +101,15 @@ subcanvasNodeToExpressions config name node =
             []
 
 
-subcanvasNodeToDetails : ColorMap -> SubcanvasNode -> List Details
-subcanvasNodeToDetails colorMap node =
+subcanvasNodeToStyles : ColorMap -> SubcanvasNode -> List Styles
+subcanvasNodeToStyles colorMap node =
     case node of
         SubcanvasNodeComponentNode n ->
             if Generate.Common.FrameTraits.isHidden n then
                 []
 
             else
-                withFrameTraitsNodeToDetails colorMap n
+                withFrameTraitsNodeToStyles colorMap n
                     |> uncurry (::)
 
         SubcanvasNodeComponentSetNode n ->
@@ -116,7 +117,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                withFrameTraitsNodeToDetails colorMap n
+                withFrameTraitsNodeToStyles colorMap n
                     |> uncurry (::)
 
         SubcanvasNodeTextNode n ->
@@ -124,7 +125,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                TextNode.toDetails colorMap n
+                TextNode.toStyles colorMap n
                     |> List.singleton
 
         SubcanvasNodeEllipseNode n ->
@@ -132,7 +133,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                EllipseNode.toDetails colorMap n
+                EllipseNode.toStyles colorMap n
                     |> List.singleton
 
         SubcanvasNodeGroupNode n ->
@@ -140,7 +141,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                withFrameTraitsNodeToDetails colorMap n
+                withFrameTraitsNodeToStyles colorMap n
                     |> uncurry (::)
 
         SubcanvasNodeFrameNode n ->
@@ -148,7 +149,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                withFrameTraitsNodeToDetails colorMap n
+                withFrameTraitsNodeToStyles colorMap n
                     |> uncurry (::)
 
         SubcanvasNodeInstanceNode n ->
@@ -156,16 +157,15 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                withFrameTraitsNodeToDetails colorMap n
+                withFrameTraitsNodeToStyles colorMap n
                     |> uncurry (::)
-                    |> List.map (s_instanceName (Generate.Common.FrameTraits.getName n))
 
         SubcanvasNodeRectangleNode n ->
             if Generate.Common.DefaultShapeTraits.isHidden n.rectangularShapeTraits then
                 []
 
             else
-                RectangleNode.toDetails colorMap n
+                RectangleNode.toStyles colorMap n
                     |> List.singleton
 
         SubcanvasNodeVectorNode n ->
@@ -173,7 +173,7 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                VectorNode.toDetails colorMap n.cornerRadiusShapeTraits
+                VectorNode.toStyles colorMap n.cornerRadiusShapeTraits
                     |> List.singleton
 
         SubcanvasNodeLineNode n ->
@@ -181,18 +181,21 @@ subcanvasNodeToDetails colorMap node =
                 []
 
             else
-                LineNode.toDetails colorMap n
+                LineNode.toStyles colorMap n
                     |> List.singleton
 
         _ ->
             []
 
 
-componentNodeToDeclarations : ColorMap -> String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration
+componentNodeToDeclarations : ColorMap -> String -> Dict String (Dict String ComponentPropertyType) -> ComponentNodeOrSet -> List Elm.Declaration
 componentNodeToDeclarations colorMap parentName parentProperties node =
     let
         ( details, descendantsDetails ) =
-            componentNodeToDetails colorMap node
+            Common.componentNodeToDetails node
+
+        ( styles, descendantsStyles ) =
+            componentNodeToStyles colorMap node
 
         names =
             details.name
@@ -223,7 +226,8 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
             )
 
         propertiesType =
-            properties |> Common.propertiesType Gen.Svg.Styled.annotation_.svg
+            properties
+                |> Common.propertiesType details.name Gen.Svg.Styled.annotation_.svg
 
         propertiesParam =
             ( propertiesParamName
@@ -268,18 +272,21 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
         declarationNameInstances =
             declarationName ++ " instances" |> sanitize
     in
-    details
-        :: descendantsDetails
+    (styles :: descendantsStyles)
+        |> List.map2 pair
+            (details
+                :: descendantsDetails
+            )
         |> List.foldl
             (\md ->
-                Dict.insert md.name md
+                Dict.insert (first md).name md
             )
             Dict.empty
         |> Dict.values
-        |> List.map (detailsToDeclaration parentName details.name)
+        |> List.map (detailsAndStylesToDeclaration parentName details.name)
         |> (++)
             [ properties
-                |> Common.propertiesType Gen.Svg.Styled.annotation_.svg
+                |> Common.propertiesType details.name Gen.Svg.Styled.annotation_.svg
                 |> Elm.alias (declarationName ++ " properties" |> sanitize)
             , names
                 |> Common.defaultAttributeConfig Gen.Svg.Styled.annotation_.attribute
@@ -481,18 +488,18 @@ componentNodeToDeclarations colorMap parentName parentProperties node =
             ]
 
 
-withFrameTraitsNodeToDetails : ColorMap -> { a | frameTraits : FrameTraits } -> ( Details, List Details )
-withFrameTraitsNodeToDetails colorMap node =
-    ( FrameTraits.toDetails node
+withFrameTraitsNodeToStyles : ColorMap -> { a | frameTraits : FrameTraits } -> ( Styles, List Styles )
+withFrameTraitsNodeToStyles colorMap node =
+    ( FrameTraits.toStyles node.frameTraits
     , node.frameTraits.children
-        |> List.map (subcanvasNodeToDetails colorMap)
+        |> List.map (subcanvasNodeToStyles colorMap)
         |> List.concat
     )
 
 
-componentNodeToDetails : ColorMap -> ComponentNode -> ( Details, List Details )
-componentNodeToDetails =
-    withFrameTraitsNodeToDetails
+componentNodeToStyles : ColorMap -> { a | frameTraits : FrameTraits } -> ( Styles, List Styles )
+componentNodeToStyles =
+    withFrameTraitsNodeToStyles
 
 
 frameTraitsToExpressions : Config -> String -> FrameTraits -> List Elm.Expression

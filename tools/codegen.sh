@@ -88,6 +88,7 @@ else
     echo $cmd
     out=`mktemp`.out
     $cmd 2>&1 > $out
+    grep DEBUG $out
     found=`grep "files generated in" $out`
     # grep DEBUG $out
     # surprisingly elm-codegen yield exit code 0 if error

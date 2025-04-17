@@ -10,72 +10,69 @@ import RecordSetter exposing (..)
 import Types exposing (Config, Details, OriginAdjust)
 
 
-adjustBoundingBox : OriginAdjust -> { a | defaultShapeTraits : DefaultShapeTraits } -> { a | defaultShapeTraits : DefaultShapeTraits }
+adjustBoundingBox : OriginAdjust -> DefaultShapeTraits -> DefaultShapeTraits
 adjustBoundingBox { x, y } node =
-    node.defaultShapeTraits.absoluteBoundingBox
+    node.absoluteBoundingBox
         |> (\bb -> { bb | x = bb.x - x, y = bb.y - y })
-        |> flip s_absoluteBoundingBox node.defaultShapeTraits
-        |> flip s_defaultShapeTraits node
+        |> flip s_absoluteBoundingBox node
 
 
-adjustName : Dict String String -> { a | defaultShapeTraits : DefaultShapeTraits } -> { a | defaultShapeTraits : DefaultShapeTraits }
+adjustName : Dict String String -> DefaultShapeTraits -> DefaultShapeTraits
 adjustName names node =
     Dict.get (getId node) names
         |> Maybe.map
-            (flip s_name node.defaultShapeTraits.isLayerTrait
-                >> flip s_isLayerTrait node.defaultShapeTraits
-                >> flip s_defaultShapeTraits node
+            (flip s_name node.isLayerTrait
+                >> flip s_isLayerTrait node
             )
         |> Maybe.withDefault node
 
 
-getId : { a | defaultShapeTraits : DefaultShapeTraits } -> String
-getId node =
-    node.defaultShapeTraits.isLayerTrait.id
+getId : DefaultShapeTraits -> String
+getId defaultShapeTraits =
+    defaultShapeTraits.isLayerTrait.id
 
 
-getName : { a | defaultShapeTraits : DefaultShapeTraits } -> String
-getName node =
-    node.defaultShapeTraits.isLayerTrait.name
+getName : DefaultShapeTraits -> String
+getName defaultShapeTraits =
+    defaultShapeTraits.isLayerTrait.name
 
 
-getNameId : { a | defaultShapeTraits : DefaultShapeTraits } -> ( String, String )
-getNameId node =
-    ( getName node
-    , getId node
+getNameId : DefaultShapeTraits -> ( String, String )
+getNameId defaultShapeTraits =
+    ( getName defaultShapeTraits
+    , getId defaultShapeTraits
     )
 
 
-getBoundingBox : { a | defaultShapeTraits : DefaultShapeTraits } -> Rectangle
-getBoundingBox node =
-    node.defaultShapeTraits.absoluteBoundingBox
+getBoundingBox : DefaultShapeTraits -> Rectangle
+getBoundingBox defaultShapeTraits =
+    defaultShapeTraits.absoluteBoundingBox
 
 
-getStrokeWidth : { a | defaultShapeTraits : DefaultShapeTraits } -> Float
-getStrokeWidth node =
-    node.defaultShapeTraits.strokeWeight
+getStrokeWidth : DefaultShapeTraits -> Float
+getStrokeWidth defaultShapeTraits =
+    defaultShapeTraits.strokeWeight
         |> Maybe.withDefault 0
 
 
-toDetails : List Elm.Expression -> { a | defaultShapeTraits : DefaultShapeTraits } -> Details
-toDetails styles node =
+toDetails : DefaultShapeTraits -> Details
+toDetails defaultShapeTraits =
     let
         bbox =
-            getBoundingBox node
+            getBoundingBox defaultShapeTraits
 
         rbox =
-            node.defaultShapeTraits.absoluteRenderBounds
+            defaultShapeTraits.absoluteRenderBounds
                 |> Maybe.withDefault bbox
     in
-    { name = getName node
+    { name = getName defaultShapeTraits
     , instanceName = ""
     , bbox = bbox
     , renderedSize =
         { width = rbox.width
         , height = rbox.height
         }
-    , strokeWidth = getStrokeWidth node
-    , styles = styles
+    , strokeWidth = getStrokeWidth defaultShapeTraits
     }
 
 

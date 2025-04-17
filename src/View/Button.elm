@@ -12,7 +12,7 @@ import RecordSetter as Rs
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Theme.Colors
-import Theme.Html.Buttons as Btns
+import Theme.Html.Buttons as Buttons
 import Util.View exposing (none, onClickWithStop, pointer)
 import View.Locale as Locale
 
@@ -119,8 +119,9 @@ primaryButtonWithAttributes vc btn attr =
     in
     case btn.icon of
         Just icon ->
-            Btns.buttonTypeTextIconStateRegularStylePrimarySizeMediumWithAttributes
-                (Btns.buttonTypeTextIconStateRegularStylePrimarySizeMediumAttributes
+            Debug.todo """
+            Buttons.button
+                (Buttons.buttonTypeTextIconStateRegularStylePrimarySizeMediumAttributes
                     |> Rs.s_typeTextIconStateRegularStylePrimarySizeMedium
                         style
                     |> Rs.s_button attr.button
@@ -131,10 +132,12 @@ primaryButtonWithAttributes vc btn attr =
                     , iconVisible = True
                     }
                 }
+                """
 
         Nothing ->
-            Btns.buttonTypeTextStateRegularStylePrimarySizeMediumWithAttributes
-                (Btns.buttonTypeTextStateRegularStylePrimarySizeMediumAttributes
+            Debug.todo """
+            Buttons.buttonTypeTextStateRegularStylePrimarySizeMediumWithAttributes
+                (Buttons.buttonTypeTextStateRegularStylePrimarySizeMediumAttributes
                     |> Rs.s_typeTextStateRegularStylePrimarySizeMedium
                         style
                     |> Rs.s_button attr.button
@@ -145,32 +148,7 @@ primaryButtonWithAttributes vc btn attr =
                     , iconVisible = False
                     }
                 }
-
-        ( Just icon, True ) ->
-            Btns.buttonTypeTextIconStateDisabledStylePrimaryWithAttributes
-                (Btns.buttonTypeTextIconStateDisabledStylePrimaryAttributes
-                    |> Rs.s_typeTextIconStateDisabledStylePrimary
-                        style
-                )
-                { typeTextIconStateDisabledStylePrimary =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = icon
-                    , iconVisible = True
-                    }
-                }
-
-        ( Nothing, True ) ->
-            Btns.buttonTypeTextStateDisabledStylePrimaryWithAttributes
-                (Btns.buttonTypeTextStateDisabledStylePrimaryAttributes
-                    |> Rs.s_typeTextStateDisabledStylePrimary
-                        style
-                )
-                { typeTextStateDisabledStylePrimary =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = none
-                    , iconVisible = False
-                    }
-                }
+                """
 
 
 secondaryButton : View.Config -> BtnConfig msg -> Html msg
@@ -201,8 +179,9 @@ secondaryButton vc btn =
     in
     case btn.icon of
         Just icon ->
-            Btns.buttonTypeTextIconStateRegularStyleOutlinedSizeMediumWithAttributes
-                (Btns.buttonTypeTextIconStateRegularStyleOutlinedSizeMediumAttributes
+            Debug.todo """
+            Buttons.buttonTypeTextIconStateRegularStyleOutlinedSizeMediumWithAttributes
+                (Buttons.buttonTypeTextIconStateRegularStyleOutlinedSizeMediumAttributes
                     |> Rs.s_typeTextIconStateRegularStyleOutlinedSizeMedium
                         style
                 )
@@ -212,10 +191,12 @@ secondaryButton vc btn =
                     , iconVisible = True
                     }
                 }
+                Debug.todo """
 
         Nothing ->
-            Btns.buttonTypeTextStateRegularStyleOutlinedSizeMediumWithAttributes
-                (Btns.buttonTypeTextStateRegularStyleOutlinedSizeMediumAttributes
+            Debug.todo """
+            Buttons.buttonTypeTextStateRegularStyleOutlinedSizeMediumWithAttributes
+                (Buttons.buttonTypeTextStateRegularStyleOutlinedSizeMediumAttributes
                     |> Rs.s_typeTextStateRegularStyleOutlinedSizeMedium
                         style
                 )
@@ -225,32 +206,8 @@ secondaryButton vc btn =
                     , iconVisible = False
                     }
                 }
+                Debug.todo """
 
-        ( Just icon, True ) ->
-            Btns.buttonTypeTextIconStateDisabledStyleOutlinedWithAttributes
-                (Btns.buttonTypeTextIconStateDisabledStyleOutlinedAttributes
-                    |> Rs.s_typeTextIconStateDisabledStyleOutlined
-                        style
-                )
-                { typeTextIconStateDisabledStyleOutlined =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = icon
-                    , iconVisible = True
-                    }
-                }
-
-        ( Nothing, True ) ->
-            Btns.buttonTypeTextStateDisabledStyleOutlinedWithAttributes
-                (Btns.buttonTypeTextStateDisabledStyleOutlinedAttributes
-                    |> Rs.s_typeTextStateDisabledStyleOutlined
-                        style
-                )
-                { typeTextStateDisabledStyleOutlined =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = none
-                    , iconVisible = False
-                    }
-                }
 
 
 linkButtonUnderlinedGray : View.Config -> BtnConfig msg -> Html msg
@@ -274,8 +231,9 @@ linkButtonUnderlinedGray vc btn =
                         |> Maybe.withDefault []
                    )
     in
-    Btns.buttonTypeTextIconStateRegularStyleTextGreySizeMediumWithAttributes
-        (Btns.buttonTypeTextIconStateRegularStyleTextGreySizeMediumAttributes
+    Debug.todo """
+    Buttons.buttonTypeTextIconStateRegularStyleTextGreySizeMediumWithAttributes
+        (Buttons.buttonTypeTextIconStateRegularStyleTextGreySizeMediumAttributes
             |> Rs.s_typeTextIconStateRegularStyleTextGreySizeMedium style
         )
         { typeTextIconStateRegularStyleTextGreySizeMedium =
@@ -284,6 +242,7 @@ linkButtonUnderlinedGray vc btn =
             , iconVisible = Maybe.Extra.isJust btn.icon
             }
         }
+        Debug.todo """
 
 
 linkButtonBlue : View.Config -> BtnConfig msg -> Html msg
@@ -307,8 +266,9 @@ linkButtonBlue vc btn =
                         |> Maybe.withDefault []
                    )
     in
-    Btns.buttonTypeTextStateRegularStyleTextBlueSizeMediumWithAttributes
-        (Btns.buttonTypeTextStateRegularStyleTextBlueSizeMediumAttributes
+    Debug.todo """
+    Buttons.buttonTypeTextStateRegularStyleTextBlueSizeMediumWithAttributes
+        (Buttons.buttonTypeTextStateRegularStyleTextBlueSizeMediumAttributes
             |> Rs.s_typeTextStateRegularStyleTextBlueSizeMedium
                 style
         )
@@ -318,3 +278,4 @@ linkButtonBlue vc btn =
             , iconVisible = Maybe.Extra.isJust btn.icon
             }
         }
+        Debug.todo """
