@@ -1569,7 +1569,7 @@ addPathToGraph plugins uc model net list =
                 |> Maybe.withDefault { x = 0, y = 0 }
 
         startY =
-            Network.getYForPathAfterX model.network startCoordsPrel.x
+            Network.getYForPathAfterX model.network startCoordsPrel.x startCoordsPrel.y
 
         startCoords =
             startCoordsPrel |> s_y (max startY startCoordsPrel.y)

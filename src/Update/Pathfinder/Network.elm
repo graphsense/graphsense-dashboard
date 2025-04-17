@@ -390,8 +390,8 @@ updateTx id update model =
     { model | txs = Dict.update id (Maybe.map update) model.txs }
 
 
-getYForPathAfterX : Network -> Float -> Float
-getYForPathAfterX model xBasis =
+getYForPathAfterX : Network -> Float -> Float -> Float
+getYForPathAfterX model xBasis yDefault =
     let
         coords item =
             { x = item.x, y = item.y |> A.getTo }
@@ -402,7 +402,7 @@ getYForPathAfterX model xBasis =
             )
                 |> List.filter (\c -> c.x > xBasis)
     in
-    allCoords |> List.map .y |> List.maximum |> Maybe.map ((+) nodeYOffset) |> Maybe.withDefault 0
+    allCoords |> List.map .y |> List.maximum |> Maybe.map ((+) nodeYOffset) |> Maybe.withDefault yDefault
 
 
 findFreeCoords : Network -> Coords
