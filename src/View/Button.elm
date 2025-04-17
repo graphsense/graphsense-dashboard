@@ -117,38 +117,59 @@ primaryButtonWithAttributes vc btn attr =
                    )
                 ++ attr.container
     in
-    case btn.icon of
-        Just icon ->
-            Debug.todo """
-            Buttons.button
-                (Buttons.buttonTypeTextIconStateRegularStylePrimarySizeMediumAttributes
-                    |> Rs.s_typeTextIconStateRegularStylePrimarySizeMedium
-                        style
-                    |> Rs.s_button attr.button
-                )
-                { typeTextIconStateRegularStylePrimarySizeMedium =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = icon
-                    , iconVisible = True
-                    }
-                }
-                """
+    Buttons.button
+        { root =
+            { state = Buttons.ButtonStateRegular
+            , type_ =
+                if btn.icon == Nothing then
+                    Buttons.ButtonTypeText
 
-        Nothing ->
-            Debug.todo """
-            Buttons.buttonTypeTextStateRegularStylePrimarySizeMediumWithAttributes
-                (Buttons.buttonTypeTextStateRegularStylePrimarySizeMediumAttributes
-                    |> Rs.s_typeTextStateRegularStylePrimarySizeMedium
-                        style
-                    |> Rs.s_button attr.button
-                )
-                { typeTextStateRegularStylePrimarySizeMedium =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = none
-                    , iconVisible = False
-                    }
-                }
-                """
+                else
+                    Buttons.ButtonTypeTextIcon
+            , style = Buttons.ButtonStylePrimary
+            , size = Buttons.ButtonSizeMedium
+            , buttonText = Locale.string vc.locale btn.text
+            , iconInstance = btn.icon |> Maybe.withDefault none
+            , iconVisible = True
+            }
+        }
+
+
+
+{-
+   case btn.icon of
+       Just icon ->
+           Debug.todo """
+           Buttons.button
+               (Buttons.buttonTypeTextIconStateRegularStylePrimarySizeMediumAttributes
+                   |> Rs.s_typeTextIconStateRegularStylePrimarySizeMedium
+                       style
+                   |> Rs.s_button attr.button
+               )
+               { typeTextIconStateRegularStylePrimarySizeMedium =
+                   { buttonText = Locale.string vc.locale btn.text
+                   , iconInstance = icon
+                   , iconVisible = True
+                   }
+               }
+               """
+
+       Nothing ->
+           Debug.todo """
+           Buttons.buttonTypeTextStateRegularStylePrimarySizeMediumWithAttributes
+               (Buttons.buttonTypeTextStateRegularStylePrimarySizeMediumAttributes
+                   |> Rs.s_typeTextStateRegularStylePrimarySizeMedium
+                       style
+                   |> Rs.s_button attr.button
+               )
+               { typeTextStateRegularStylePrimarySizeMedium =
+                   { buttonText = Locale.string vc.locale btn.text
+                   , iconInstance = none
+                   , iconVisible = False
+                   }
+               }
+               """
+-}
 
 
 secondaryButton : View.Config -> BtnConfig msg -> Html msg
@@ -177,37 +198,57 @@ secondaryButton vc btn =
                         [ pointer ]
                    )
     in
-    case btn.icon of
-        Just icon ->
-            Debug.todo """
-            Buttons.buttonTypeTextIconStateRegularStyleOutlinedSizeMediumWithAttributes
-                (Buttons.buttonTypeTextIconStateRegularStyleOutlinedSizeMediumAttributes
-                    |> Rs.s_typeTextIconStateRegularStyleOutlinedSizeMedium
-                        style
-                )
-                { typeTextIconStateRegularStyleOutlinedSizeMedium =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = icon
-                    , iconVisible = True
-                    }
-                }
-                Debug.todo """
+    Buttons.button
+        { root =
+            { state = Buttons.ButtonStateRegular
+            , type_ =
+                if btn.icon == Nothing then
+                    Buttons.ButtonTypeText
 
-        Nothing ->
-            Debug.todo """
-            Buttons.buttonTypeTextStateRegularStyleOutlinedSizeMediumWithAttributes
-                (Buttons.buttonTypeTextStateRegularStyleOutlinedSizeMediumAttributes
-                    |> Rs.s_typeTextStateRegularStyleOutlinedSizeMedium
-                        style
-                )
-                { typeTextStateRegularStyleOutlinedSizeMedium =
-                    { buttonText = Locale.string vc.locale btn.text
-                    , iconInstance = none
-                    , iconVisible = False
-                    }
-                }
-                Debug.todo """
+                else
+                    Buttons.ButtonTypeTextIcon
+            , style = Buttons.ButtonStyleOutlined
+            , size = Buttons.ButtonSizeMedium
+            , buttonText = Locale.string vc.locale btn.text
+            , iconInstance = btn.icon |> Maybe.withDefault none
+            , iconVisible = True
+            }
+        }
 
+
+
+{-
+   case btn.icon of
+       Just icon ->
+           Debug.todo """
+           Buttons.buttonTypeTextIconStateRegularStyleOutlinedSizeMediumWithAttributes
+               (Buttons.buttonTypeTextIconStateRegularStyleOutlinedSizeMediumAttributes
+                   |> Rs.s_typeTextIconStateRegularStyleOutlinedSizeMedium
+                       style
+               )
+               { typeTextIconStateRegularStyleOutlinedSizeMedium =
+                   { buttonText = Locale.string vc.locale btn.text
+                   , iconInstance = icon
+                   , iconVisible = True
+                   }
+               }
+               Debug.todo """
+
+       Nothing ->
+           Debug.todo """
+           Buttons.buttonTypeTextStateRegularStyleOutlinedSizeMediumWithAttributes
+               (Buttons.buttonTypeTextStateRegularStyleOutlinedSizeMediumAttributes
+                   |> Rs.s_typeTextStateRegularStyleOutlinedSizeMedium
+                       style
+               )
+               { typeTextStateRegularStyleOutlinedSizeMedium =
+                   { buttonText = Locale.string vc.locale btn.text
+                   , iconInstance = none
+                   , iconVisible = False
+                   }
+               }
+               Debug.todo """
+-}
 
 
 linkButtonUnderlinedGray : View.Config -> BtnConfig msg -> Html msg
@@ -231,18 +272,32 @@ linkButtonUnderlinedGray vc btn =
                         |> Maybe.withDefault []
                    )
     in
-    Debug.todo """
-    Buttons.buttonTypeTextIconStateRegularStyleTextGreySizeMediumWithAttributes
-        (Buttons.buttonTypeTextIconStateRegularStyleTextGreySizeMediumAttributes
-            |> Rs.s_typeTextIconStateRegularStyleTextGreySizeMedium style
-        )
-        { typeTextIconStateRegularStyleTextGreySizeMedium =
-            { buttonText = Locale.string vc.locale btn.text
+    Buttons.button
+        { root =
+            { state = Buttons.ButtonStateRegular
+            , type_ = Buttons.ButtonTypeTextIcon
+            , style = Buttons.ButtonStyleTextGrey
+            , size = Buttons.ButtonSizeMedium
+            , buttonText = Locale.string vc.locale btn.text
             , iconInstance = btn.icon |> Maybe.withDefault none
             , iconVisible = Maybe.Extra.isJust btn.icon
             }
         }
-        Debug.todo """
+
+
+
+{-
+   Buttons.buttonTypeTextIconStateRegularStyleTextGreySizeMediumWithAttributes
+       (Buttons.buttonTypeTextIconStateRegularStyleTextGreySizeMediumAttributes
+           |> Rs.s_typeTextIconStateRegularStyleTextGreySizeMedium style
+       )
+       { typeTextIconStateRegularStyleTextGreySizeMedium =
+           { buttonText = Locale.string vc.locale btn.text
+           , iconInstance = btn.icon |> Maybe.withDefault none
+           , iconVisible = Maybe.Extra.isJust btn.icon
+           }
+       }
+-}
 
 
 linkButtonBlue : View.Config -> BtnConfig msg -> Html msg
@@ -266,16 +321,32 @@ linkButtonBlue vc btn =
                         |> Maybe.withDefault []
                    )
     in
-    Debug.todo """
-    Buttons.buttonTypeTextStateRegularStyleTextBlueSizeMediumWithAttributes
-        (Buttons.buttonTypeTextStateRegularStyleTextBlueSizeMediumAttributes
-            |> Rs.s_typeTextStateRegularStyleTextBlueSizeMedium
-                style
-        )
-        { typeTextStateRegularStyleTextBlueSizeMedium =
-            { buttonText = Locale.string vc.locale btn.text
+    Buttons.button
+        { root =
+            { state = Buttons.ButtonStateRegular
+            , type_ = Buttons.ButtonTypeText
+            , style = Buttons.ButtonStyleTextBlue
+            , size = Buttons.ButtonSizeMedium
+            , buttonText = Locale.string vc.locale btn.text
             , iconInstance = btn.icon |> Maybe.withDefault none
             , iconVisible = Maybe.Extra.isJust btn.icon
             }
         }
-        Debug.todo """
+
+
+
+{-
+   Debug.todo """
+   Buttons.buttonTypeTextStateRegularStyleTextBlueSizeMediumWithAttributes
+       (Buttons.buttonTypeTextStateRegularStyleTextBlueSizeMediumAttributes
+           |> Rs.s_typeTextStateRegularStyleTextBlueSizeMedium
+               style
+       )
+       { typeTextStateRegularStyleTextBlueSizeMedium =
+           { buttonText = Locale.string vc.locale btn.text
+           , iconInstance = btn.icon |> Maybe.withDefault none
+           , iconVisible = Maybe.Extra.isJust btn.icon
+           }
+       }
+       Debug.todo """
+-}
