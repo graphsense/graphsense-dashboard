@@ -75,9 +75,9 @@ view vc (ContextMenuItem { icon, text1, text2, action }) =
                 ClickMsg m ->
                     ( [ onClick m ], identity )
     in
-    HGraphComponents.rightClickItemStateNeutralTypeWithIconWithAttributes
-        (HGraphComponents.rightClickItemStateNeutralTypeWithIconAttributes
-            |> Rs.s_stateNeutralTypeWithIcon
+    HGraphComponents.rightClickItemWithAttributes
+        (HGraphComponents.rightClickItemAttributes
+            |> Rs.s_root
                 (([ HGraphComponents.rightClickItemStateHoverTypeWithIcon_details.styles
                         ++ HGraphComponents.rightClickItemStateHoverTypeWithIconPlaceholder1_details.styles
                         ++ fullWidth
@@ -97,11 +97,13 @@ view vc (ContextMenuItem { icon, text1, text2, action }) =
                 (unsetFontStyle |> List.singleton)
             |> Rs.s_iconsDividerNoPadding [ [ Css.position Css.relative ] |> css ]
         )
-        { stateNeutralTypeWithIcon =
+        { root =
             { iconInstance = icon
             , text1 = Locale.string vc.locale text1
             , text2 = Locale.string vc.locale (text2 |> Maybe.withDefault "")
             , text2Visible = Maybe.Extra.isJust text2
+            , state = HGraphComponents.RightClickItemStateNeutral
+            , type_ = HGraphComponents.RightClickItemTypeWithIcon
             }
         }
         |> wrapper

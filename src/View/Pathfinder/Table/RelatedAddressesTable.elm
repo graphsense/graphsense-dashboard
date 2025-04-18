@@ -78,7 +78,7 @@ config styles vc ratc _ =
                 (\{ address } -> address)
                 (\{ address } ->
                     [ SidePanelComponents.sidePanelListIdentifierCell
-                        { sidePanelListIdentifierCell =
+                        { root =
                             { identifier = truncateLongIdentifier address
                             , copyIconInstance = copyIconPathfinder vc address
                             }
@@ -112,10 +112,10 @@ config styles vc ratc _ =
                         HasTags _ ->
                             []
 
-                        HasTagSummaryWithCluster ts ->
+                        HasTagSummaryWithCluster _ ->
                             []
 
-                        HasTagSummaryOnlyWithCluster ts ->
+                        HasTagSummaryOnlyWithCluster _ ->
                             []
 
                         HasTagSummaryWithoutCluster ts ->

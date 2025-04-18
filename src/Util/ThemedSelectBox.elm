@@ -113,19 +113,21 @@ view config (SelectBox sBox) selected =
                     , Util.View.onClickWithStop (Select x)
                     ]
             in
-            if Just x == sItem then
-                Sc.dropDownLabelsStateActiveSizeNormalWithAttributes
-                    (Sc.dropDownLabelsStateActiveSizeNormalAttributes
-                        |> Rs.s_stateActiveSizeNormal itemAttributes
-                    )
-                    { stateActiveSizeNormal = { dropDownText = config.optionToLabel x } }
+            Sc.dropDownLabelsWithAttributes
+                (Sc.dropDownLabelsAttributes
+                    |> Rs.s_root itemAttributes
+                )
+                { root =
+                    { state =
+                        if Just x == sItem then
+                            Sc.DropDownLabelsStateActive
 
-            else
-                Sc.dropDownLabelsStateNeutralSizeNormalWithAttributes
-                    (Sc.dropDownLabelsStateNeutralSizeNormalAttributes
-                        |> Rs.s_stateNeutralSizeNormal itemAttributes
-                    )
-                    { stateNeutralSizeNormal = { dropDownText = config.optionToLabel x } }
+                        else
+                            Sc.DropDownLabelsStateNeutral
+                    , size = Sc.DropDownLabelsSizeNormal
+                    , dropDownText = config.optionToLabel x
+                    }
+                }
 
         selectedLabel =
             selectedItem
@@ -149,7 +151,7 @@ view config (SelectBox sBox) selected =
         in
         Sc.dropDownOpenWithAttributes
             (Sc.dropDownOpenAttributes
-                |> Rs.s_dropDownOpen
+                |> Rs.s_root
                     [ Util.View.onClickWithStop Close
                     , onMouseLeave Close
                     , Util.View.pointer
@@ -172,9 +174,9 @@ view config (SelectBox sBox) selected =
     else
         Sc.dropDownClosedWithAttributes
             (Sc.dropDownClosedAttributes
-                |> Rs.s_dropDownClosed
+                |> Rs.s_root
                     [ Util.View.onClickWithStop Open
                     , Util.View.pointer
                     ]
             )
-            { dropDownClosed = { text = selectedLabel } }
+            { root = { text = selectedLabel } }

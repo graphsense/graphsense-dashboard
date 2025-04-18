@@ -37,9 +37,9 @@ adjustName names node =
         |> Maybe.withDefault node
 
 
-getName : { a | frameTraits : FrameTraits } -> String
+getName : FrameTraits -> String
 getName node =
-    node.frameTraits.isLayerTrait.name
+    node.isLayerTrait.name
 
 
 getId : { a | frameTraits : FrameTraits } -> String
@@ -68,7 +68,7 @@ toDetails node =
             node.frameTraits.absoluteRenderBounds
                 |> Maybe.withDefault bbox
     in
-    { name = getName node
+    { name = getName node.frameTraits
     , instanceName = ""
     , bbox = getBoundingBox node
     , renderedSize =
@@ -87,7 +87,7 @@ isHidden { frameTraits } =
 
 isList : { a | frameTraits : FrameTraits } -> Bool
 isList =
-    getName >> nameIsList
+    .frameTraits >> getName >> nameIsList
 
 
 nameIsList : String -> Bool

@@ -57,9 +57,9 @@ dataTab config =
                 SidePanelComponents.sidePanelDataTabOpenWithAttributes
                     (SidePanelComponents.sidePanelDataTabOpenAttributes
                         |> Rs.s_titleRow attr
-                        |> Rs.s_sidePanelDataTabOpen [ css fullWidth ]
+                        |> Rs.s_root [ css fullWidth ]
                     )
-                    { sidePanelDataTabOpen =
+                    { root =
                         { contentInstance =
                             Html.Styled.div
                                 [ css fullWidth
@@ -73,9 +73,9 @@ dataTab config =
         |> Maybe.withDefault
             (SidePanelComponents.sidePanelDataTabClosedWithAttributes
                 (SidePanelComponents.sidePanelDataTabClosedAttributes
-                    |> Rs.s_sidePanelDataTabClosed (css fullWidth :: attr)
+                    |> Rs.s_root (css fullWidth :: attr)
                 )
-                { sidePanelDataTabClosed =
+                { root =
                     { titleInstance = config.title
                     }
                 }

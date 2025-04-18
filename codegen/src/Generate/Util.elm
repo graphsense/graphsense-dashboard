@@ -297,4 +297,5 @@ addIdAttribute { showId } id =
 
 
 rootName : String
-rootName = "root"
+rootName =
+    "root"

@@ -42,7 +42,7 @@ account : View.Config -> Id -> Tx.AccountTx -> Html Msg
 account vc id tx =
     SidePanelComponents.sidePanelEthTransactionWithAttributes
         (SidePanelComponents.sidePanelEthTransactionAttributes
-            |> Rs.s_sidePanelEthTransaction
+            |> Rs.s_root
                 [ sidePanelCss
                     |> css
                 ]
@@ -69,7 +69,7 @@ account vc id tx =
             { firstRowText = Id.id tx.to |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id tx.to |> copyIconPathfinder vc
             }
-        , sidePanelEthTransaction =
+        , root =
             { tabsVisible = False
             }
         , sidePanelEthTxDetails =
@@ -103,7 +103,7 @@ utxo : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Tx.UtxoTx -> 
 utxo vc model id viewState tx =
     SidePanelComponents.sidePanelTransactionWithAttributes
         (SidePanelComponents.sidePanelTransactionAttributes
-            |> Rs.s_sidePanelTransaction
+            |> Rs.s_root
                 [ sidePanelCss
                     |> css
                 ]
@@ -121,13 +121,13 @@ utxo vc model id viewState tx =
         , valueOfTimestamp = timeToCell vc tx.raw.timestamp
         , titleOfTxValue = { infoLabel = Locale.string vc.locale "Value" }
         , valueOfTxValue = valuesToCell vc (assetFromBase tx.raw.currency) tx.raw.totalOutput
-        , sidePanelTransaction =
+        , root =
             { tabsVisible = False
             , inputListInstance =
                 dataTab
                     { title =
                         SidePanelComponents.sidePanelListHeaderTitleInputs
-                            { sidePanelListHeaderTitleInputs =
+                            { root =
                                 { title = Locale.string vc.locale "Sending addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noInputs
                                 }
@@ -154,7 +154,7 @@ utxo vc model id viewState tx =
                 dataTab
                     { title =
                         SidePanelComponents.sidePanelListHeaderTitleOutputs
-                            { sidePanelListHeaderTitleOutputs =
+                            { root =
                                 { title = Locale.string vc.locale "Receiving addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs
                                 }

@@ -1,10 +1,10 @@
 module Util.Checkbox exposing
     ( Config
-    , Size(..)
-    , State
+    , bigSize
     , checkbox
     , disabledState
     , removeState
+    , smallSize
     , stateFromBool
     )
 
@@ -15,42 +15,40 @@ import Theme.Html.Icons as Icons
 import Util.View exposing (pointer)
 
 
-type Size
-    = Large
-    | Small
-
-
-type State
-    = Selected
-    | Deselected
-    | Disabled
-    | Remove
-
-
 type alias Config msg =
-    { state : State
-    , size : Size
+    { state : Icons.CheckboxesState
+    , size : Icons.CheckboxesSize
     , msg : msg
     }
 
 
-stateFromBool : Bool -> State
+stateFromBool : Bool -> Icons.CheckboxesState
 stateFromBool checked =
     if checked then
-        Selected
+        Icons.CheckboxesStateSelected
 
     else
-        Deselected
+        Icons.CheckboxesStateDeselected
 
 
-disabledState : State
+disabledState : Icons.CheckboxesState
 disabledState =
-    Disabled
+    Icons.CheckboxesStateDisabled
 
 
-removeState : State
+removeState : Icons.CheckboxesState
 removeState =
-    Remove
+    Icons.CheckboxesStateRemove
+
+
+smallSize : Icons.CheckboxesSize
+smallSize =
+    Icons.CheckboxesSize14px
+
+
+bigSize : Icons.CheckboxesSize
+bigSize =
+    Icons.CheckboxesSize18px
 
 
 checkbox : Config msg -> List (Attribute msg) -> Html msg
@@ -62,59 +60,12 @@ checkbox { state, size, msg } attrs =
             ]
                 ++ attrs
     in
-    case ( state, size ) of
-        ( Selected, Small ) ->
-            Icons.checkboxesSize14pxStateSelectedWithAttributes
-                (Icons.checkboxesSize14pxStateSelectedAttributes
-                    |> Rs.s_size14pxStateSelected attributes
-                )
-                {}
-
-        ( Deselected, Small ) ->
-            Icons.checkboxesSize14pxStateDeselectedWithAttributes
-                (Icons.checkboxesSize14pxStateDeselectedAttributes
-                    |> Rs.s_size14pxStateDeselected attributes
-                )
-                {}
-
-        ( Selected, Large ) ->
-            Icons.checkboxesSize18pxStateSelectedWithAttributes
-                (Icons.checkboxesSize18pxStateSelectedAttributes
-                    |> Rs.s_size18pxStateSelected attributes
-                )
-                {}
-
-        ( Deselected, Large ) ->
-            Icons.checkboxesSize18pxStateDeselectedWithAttributes
-                (Icons.checkboxesSize18pxStateDeselectedAttributes
-                    |> Rs.s_size18pxStateDeselected attributes
-                )
-                {}
-
-        ( Disabled, Small ) ->
-            Icons.checkboxesSize14pxStateDisabledWithAttributes
-                (Icons.checkboxesSize14pxStateDisabledAttributes
-                    |> Rs.s_size14pxStateDisabled attributes
-                )
-                {}
-
-        ( Remove, Small ) ->
-            Icons.checkboxesSize14pxStateRemoveWithAttributes
-                (Icons.checkboxesSize14pxStateRemoveAttributes
-                    |> Rs.s_size14pxStateRemove attributes
-                )
-                {}
-
-        ( Disabled, Large ) ->
-            Icons.checkboxesSize18pxStateDisabledWithAttributes
-                (Icons.checkboxesSize18pxStateDisabledAttributes
-                    |> Rs.s_size18pxStateDisabled attributes
-                )
-                {}
-
-        ( Remove, Large ) ->
-            Icons.checkboxesSize18pxStateRemoveWithAttributes
-                (Icons.checkboxesSize18pxStateRemoveAttributes
-                    |> Rs.s_size18pxStateRemove attributes
-                )
-                {}
+    Icons.checkboxesWithAttributes
+        (Icons.checkboxesAttributes
+            |> Rs.s_root attributes
+        )
+        { root =
+            { size = size
+            , state = state
+            }
+        }

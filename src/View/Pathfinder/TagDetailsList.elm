@@ -25,11 +25,11 @@ view vc closeMsg id tags =
         header =
             TagsComponents.dialogTagHeaderWithAttributes
                 (TagsComponents.dialogTagHeaderAttributes
-                    |> Rs.s_dialogTagHeader fullWidthAttr
+                    |> Rs.s_root fullWidthAttr
                     |> Rs.s_header fullWidthAttr
                     |> Rs.s_closeIcon [ [ Css.cursor Css.pointer ] |> css, onClickWithStop closeMsg ]
                 )
-                { dialogTagHeader = { headerTitle = Locale.string vc.locale "Tags list" }
+                { root = { headerTitle = Locale.string vc.locale "Tags list" }
                 , identifierWithCopyIcon =
                     { chevronInstance = none
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc

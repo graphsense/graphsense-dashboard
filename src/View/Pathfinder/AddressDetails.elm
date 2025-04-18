@@ -37,7 +37,6 @@ import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Theme.Svg.Icons as Icons
 import Util.Css as Css
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
@@ -126,7 +125,7 @@ utxo plugins pluginStates vc gc model id viewState address =
     in
     SidePanelComponents.sidePanelAddressWithInstances
         (SidePanelComponents.sidePanelAddressAttributes
-            |> Rs.s_sidePanelAddress
+            |> Rs.s_root
                 [ sidePanelCss
                     |> css
                 ]
@@ -159,7 +158,7 @@ utxo plugins pluginStates vc gc model id viewState address =
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
         }
-        { sidePanelAddress = sidePanelData
+        { root = sidePanelData
         , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -199,14 +198,14 @@ relatedAddressesDataTab vc model _ viewState cluster =
                 |> RemoteData.unpack
                     (\_ ->
                         SidePanelComponents.sidePanelListHeaderTitle
-                            { sidePanelListHeaderTitle =
+                            { root =
                                 { label = label
                                 }
                             }
                     )
                     (\_ ->
                         SidePanelComponents.sidePanelListHeaderTitleWithNumber
-                            { sidePanelListHeaderTitleWithNumber =
+                            { root =
                                 { label = label
                                 , number = Locale.int vc.locale noRelatedAddresses
                                 }
@@ -305,10 +304,10 @@ clusterInfoView vc open colors clstr =
         if open then
             SidePanelComponents.clusterInformationOpenWithAttributes
                 (SidePanelComponents.clusterInformationOpenAttributes
-                    |> Rs.s_clusterInformationOpen headerAttr
+                    |> Rs.s_root headerAttr
                     |> Rs.s_ellipse25 clusterColor
                 )
-                { clusterInformationOpen = { label = label }
+                { root = { label = label }
                 , titleOfClusterId = { infoLabel = Locale.string vc.locale "Cluster" }
                 , valueOfClusterId = { label = String.fromInt clstr.entity }
                 , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number of addresses" }
@@ -334,9 +333,9 @@ clusterInfoView vc open colors clstr =
         else
             SidePanelComponents.clusterInformationClosedWithAttributes
                 (SidePanelComponents.clusterInformationClosedAttributes
-                    |> Rs.s_clusterInformationClosed headerAttr
+                    |> Rs.s_root headerAttr
                 )
-                { clusterInformationClosed = { label = label }
+                { root = { label = label }
                 }
 
 
@@ -366,7 +365,7 @@ dateRangePickerSelectionView vc model =
     in
     SidePanelComponents.sidePanelListFilterRowWithInstances
         (SidePanelComponents.sidePanelListFilterRowAttributes
-            |> Rs.s_sidePanelListFilterRow [ css fullWidth ]
+            |> Rs.s_root [ css fullWidth ]
             |> Rs.s_iconsCloseBlack
                 [ onClickWithStop AddressDetails.ResetDateRangePicker
                 , css [ Css.cursor Css.pointer ]
@@ -458,7 +457,7 @@ transactionsDataTab vc model id viewState =
     dataTab
         { title =
             SidePanelComponents.sidePanelListHeaderTitleTransactions
-                { sidePanelListHeaderTitleTransactions =
+                { root =
                     { totalNumber =
                         (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs)
                             |> Locale.int vc.locale
@@ -507,9 +506,9 @@ account plugins pluginStates vc gc model id viewState address =
             in
             SidePanelComponents.tokenRowStateNeutralWithAttributes
                 (SidePanelComponents.tokenRowStateNeutralAttributes
-                    |> Rs.s_stateNeutral [ [ Css.hover SidePanelComponents.tokenRowStateHighlight_details.styles ] |> css ]
+                    |> Rs.s_root [ [ Css.hover SidePanelComponents.tokenRowStateHighlight_details.styles ] |> css ]
                 )
-                { stateNeutral =
+                { root =
                     { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
                     , tokenCode = ""
                     , tokenName = String.toUpper symbol
@@ -562,10 +561,10 @@ account plugins pluginStates vc gc model id viewState address =
         tokensDropDownClosed =
             SidePanelComponents.tokensDropDownClosedWithInstances
                 (SidePanelComponents.tokensDropDownClosedAttributes
-                    |> Rs.s_tokensDropDownClosed attrClickSelect
+                    |> Rs.s_root attrClickSelect
                 )
                 SidePanelComponents.tokensDropDownClosedInstances
-                { tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = valueSumString } }
+                { root = { numberOfToken = ntokensString, totalTokenValue = valueSumString } }
 
         tokensDropdown =
             if viewState.tokenBalancesOpen then
@@ -605,7 +604,7 @@ account plugins pluginStates vc gc model id viewState address =
     in
     SidePanelComponents.sidePanelEthAddressWithInstances
         (SidePanelComponents.sidePanelEthAddressAttributes
-            |> Rs.s_sidePanelEthAddress
+            |> Rs.s_root
                 [ sidePanelCss
                     |> css
                 ]
@@ -653,7 +652,7 @@ account plugins pluginStates vc gc model id viewState address =
         , leftTab = { variant = none }
         , rightTab = { variant = none }
         , sidePanelAddressHeader = sidePanelAddressHeader
-        , sidePanelEthAddress = sidePanelData
+        , root = sidePanelData
         , sidePanelEthAddressDetails =
             { clusterInfoVisible = False
             , clusterInfoInstance = none
@@ -870,7 +869,7 @@ makeSidePanelData model id pluginTagsVisible =
                                 ]
                             ]
                 )
-            |> Maybe.withDefault (Icons.iconsAssignSvg [] {})
+            |> Maybe.withDefault (HIcons.iconsAssign {})
     , tabsVisible = False
     , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible
     , pluginSTagVisible = pluginTagsVisible

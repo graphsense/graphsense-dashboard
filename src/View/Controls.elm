@@ -1,4 +1,4 @@
-module View.Controls exposing (lightModeToggle, tabs, tabsSmall, tabsSmallItems, toggle, toggleCell, toggleSmall, toggleWithIcons, toggleWithText)
+module View.Controls exposing (ToggleConfig, lightModeToggle, tabs, toggle, toggleCell, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -9,59 +9,46 @@ import Theme.Html.SettingsPage as Sp
 import Util.View
 
 
-toggle : { selected : Bool, disabled : Bool, msg : msg } -> Html msg
-toggle { selected, disabled, msg } =
-    case ( selected, disabled ) of
-        ( True, True ) ->
-            Sc.switchStateDisabledSizeBig {}
+type alias ToggleConfig msg =
+    { size : Sc.SwitchSize
+    , selected : Bool
+    , disabled : Bool
+    , msg : msg
+    }
 
-        ( True, False ) ->
-            Sc.switchStateOnSizeBigWithAttributes
-                (Sc.switchStateOnSizeBigAttributes
-                    |> Rs.s_stateOnSizeBig [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
+
+toggle : ToggleConfig msg -> Html msg
+toggle { size, selected, disabled, msg } =
+    Sc.switchWithAttributes
+        (Sc.switchAttributes
+            |> Rs.s_root
+                (if disabled then
+                    []
+
+                 else
+                    [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
                 )
-                {}
+        )
+        { root =
+            { state =
+                if disabled then
+                    Sc.SwitchStateDisabled
 
-        ( False, False ) ->
-            Sc.switchStateOffSizeBigWithAttributes
-                (Sc.switchStateOffSizeBigAttributes
-                    |> Rs.s_stateOffSizeBig [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
-                )
-                {}
+                else if selected then
+                    Sc.SwitchStateOn
 
-        ( False, True ) ->
-            Sc.switchStateDisabledSizeBig {}
-
-
-toggleSmall : { selected : Bool, disabled : Bool, msg : msg } -> Html msg
-toggleSmall { selected, disabled, msg } =
-    case ( selected, disabled ) of
-        ( True, True ) ->
-            Sc.switchStateDisabledSizeSmall {}
-
-        ( True, False ) ->
-            Sc.switchStateOnSizeSmallWithAttributes
-                (Sc.switchStateOnSizeSmallAttributes
-                    |> Rs.s_stateOnSizeSmall [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
-                )
-                {}
-
-        ( False, False ) ->
-            Sc.switchStateOffSizeSmallWithAttributes
-                (Sc.switchStateOffSizeSmallAttributes
-                    |> Rs.s_stateOffSizeSmall [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
-                )
-                {}
-
-        ( False, True ) ->
-            Sc.switchStateDisabledSizeSmall {}
+                else
+                    Sc.SwitchStateOff
+            , size = size
+            }
+        }
 
 
 toggleWithText : { selectedA : Bool, titleA : String, titleB : String, msg : msg } -> Html msg
 toggleWithText { selectedA, titleA, titleB, msg } =
     Sc.toggleSwitchTextWithInstances
         (Sc.toggleSwitchTextAttributes
-            |> Rs.s_toggleSwitchText [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
+            |> Rs.s_root [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
         )
         Sc.toggleSwitchTextInstances
         { rightCell =
@@ -85,25 +72,23 @@ toggleWithText { selectedA, titleA, titleB, msg } =
 
 toggleCell : { title : String, selected : Bool, msg : msg } -> Html msg
 toggleCell { selected, title, msg } =
-    if selected then
-        Sc.toggleCellWithTextStateSelectedWithAttributes
-            (Sc.toggleCellWithTextStateSelectedAttributes
-                |> Rs.s_stateSelected
-                    [ Util.View.pointer
-                    , Util.View.onClickWithStop msg
-                    ]
-            )
-            { stateSelected = { toggleText = title } }
+    Sc.toggleCellWithTextWithAttributes
+        (Sc.toggleCellWithTextAttributes
+            |> Rs.s_root
+                [ Util.View.pointer
+                , Util.View.onClickWithStop msg
+                ]
+        )
+        { root =
+            { state =
+                if selected then
+                    Sc.ToggleCellWithTextStateSelected
 
-    else
-        Sc.toggleCellWithTextStateDeselectedWithAttributes
-            (Sc.toggleCellWithTextStateDeselectedAttributes
-                |> Rs.s_stateDeselected
-                    [ Util.View.pointer
-                    , Util.View.onClickWithStop msg
-                    ]
-            )
-            { stateDeselected = { toggleText = title } }
+                else
+                    Sc.ToggleCellWithTextStateDeselected
+            , toggleText = title
+            }
+        }
 
 
 lightModeToggle : { selectedA : Bool, msg : msg } -> Html msg
@@ -129,7 +114,7 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
                                 (Sc.toggleCellWithTextStateSelectedInstances
                                     |> Rs.s_placeholder (Just i)
                                 )
-                                { stateSelected = { toggleText = "" } }
+                                { root = { toggleText = "" } }
                         )
                 , iconB
                     |> Maybe.map
@@ -139,7 +124,7 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
                                 (Sc.toggleCellWithTextStateDeselectedInstances
                                     |> Rs.s_placeholder (Just i)
                                 )
-                                { stateDeselected = { toggleText = "" } }
+                                { root = { toggleText = "" } }
                         )
                 )
 
@@ -152,7 +137,7 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
                                 (Sc.toggleCellWithTextStateDeselectedInstances
                                     |> Rs.s_placeholder (Just i)
                                 )
-                                { stateDeselected = { toggleText = "" } }
+                                { root = { toggleText = "" } }
                         )
                 , iconB
                     |> Maybe.map
@@ -162,7 +147,7 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
                                 (Sc.toggleCellWithTextStateSelectedInstances
                                     |> Rs.s_placeholder (Just i)
                                 )
-                                { stateSelected = { toggleText = "" } }
+                                { root = { toggleText = "" } }
                         )
                 )
 
@@ -172,7 +157,7 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
     if selectedA then
         Sc.modeToggleModeLightWithInstances
             (Sc.modeToggleModeLightAttributes
-                |> Rs.s_modeLight shapeAttrs
+                |> Rs.s_root shapeAttrs
             )
             (Sc.modeToggleModeLightInstances
                 |> Rs.s_iconsDarkMode b
@@ -183,7 +168,7 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
     else
         Sc.modeToggleModeDarkWithInstances
             (Sc.modeToggleModeDarkAttributes
-                |> Rs.s_modeDark shapeAttrs
+                |> Rs.s_root shapeAttrs
             )
             (Sc.modeToggleModeDarkInstances
                 |> Rs.s_iconsLightMode a
@@ -192,52 +177,28 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
             {}
 
 
-tabs : List { title : String, selected : Bool, msg : msg } -> Html msg
-tabs tbs =
+tabs : Sc.SingleTabSize -> List { title : String, selected : Bool, msg : msg } -> Html msg
+tabs size tbs =
     let
         viewTab t =
-            if t.selected then
-                Sc.singleTabStateSelectedSizeLargeWithAttributes
-                    Sc.singleTabStateSelectedSizeLargeAttributes
-                    { stateSelectedSizeLarge = { tabLabel = t.title } }
+            Sc.singleTabWithAttributes
+                (Sc.singleTabAttributes
+                    |> Rs.s_root [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
+                )
+                { root =
+                    { state =
+                        if t.selected then
+                            Sc.SingleTabStateSelected
 
-            else
-                Sc.singleTabStateNeutralSizeLargeWithAttributes
-                    (Sc.singleTabStateNeutralSizeLargeAttributes
-                        |> Rs.s_stateNeutralSizeLarge [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
-                    )
-                    { stateNeutralSizeLarge = { tabLabel = t.title } }
+                        else
+                            Sc.SingleTabStateNeutral
+                    , size = size
+                    , tabLabel = t.title
+                    }
+                }
     in
     div
         [ Html.Styled.Attributes.css
             Sp.settingsPageSettingsTabsSettingsTabs_details.styles
         ]
         (tbs |> List.map viewTab)
-
-
-tabsSmallItems : List { title : String, selected : Bool, msg : msg } -> List (Html msg)
-tabsSmallItems tbs =
-    let
-        viewTab t =
-            if t.selected then
-                Sc.singleTabStateSelectedSizeSmallWithAttributes
-                    Sc.singleTabStateSelectedSizeSmallAttributes
-                    { stateSelectedSizeSmall = { tabLabel = t.title } }
-
-            else
-                Sc.singleTabStateNeutralSizeSmallWithAttributes
-                    (Sc.singleTabStateNeutralSizeSmallAttributes
-                        |> Rs.s_stateNeutralSizeSmall [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
-                    )
-                    { stateNeutralSizeSmall = { tabLabel = t.title } }
-    in
-    tbs |> List.map viewTab
-
-
-tabsSmall : List { title : String, selected : Bool, msg : msg } -> Html msg
-tabsSmall tbs =
-    div
-        [ Html.Styled.Attributes.css
-            Sp.settingsPageSettingsTabsSettingsTabs_details.styles
-        ]
-        (tabsSmallItems tbs)

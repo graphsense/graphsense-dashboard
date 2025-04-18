@@ -1,8 +1,9 @@
 module Types exposing (..)
 
-import Api.Raw exposing (Rectangle, Size)
+import Api.Raw exposing (ComponentPropertiesTrait, FrameTraits, Rectangle, Size)
 import Dict exposing (Dict)
 import Elm exposing (Expression)
+import Elm.Annotation exposing (Annotation)
 
 
 type alias Config =
@@ -46,3 +47,15 @@ type alias ComponentPropertyExpressions =
 
 type alias ColorMap =
     Dict String String
+
+
+type alias ComponentNodeOrSet =
+    { componentPropertiesTrait : ComponentPropertiesTrait, frameTraits : FrameTraits }
+
+
+type alias FormatSpecifics =
+    { toStyles : ColorMap -> FrameTraits -> ( Styles, List Styles )
+    , withFrameTraitsNodeToExpression : Config -> String -> String -> FrameTraits -> Elm.Expression
+    , elementAnnotation : Annotation -> Annotation
+    , attributeAnnotation : Annotation -> Annotation
+    }

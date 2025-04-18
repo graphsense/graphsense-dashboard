@@ -93,7 +93,13 @@ confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
                     |> List.singleton
                 )
         )
-        { cancelButton = { variant = nbtn }, confirmButton = { variant = ybtn }, dialogConfirmationMessage = { bodyText = Locale.string vc.locale message, headerText = Locale.string vc.locale title } }
+        { cancelButton = { variant = nbtn }
+        , confirmButton = { variant = ybtn }
+        , root =
+            { bodyText = Locale.string vc.locale message
+            , headerText = Locale.string vc.locale title
+            }
+        }
 
 
 options_ : Config -> OptionsConfig Msg -> Html Msg
@@ -115,7 +121,14 @@ options_ vc { message, options } =
     dialogConfirmationMessageWithInstances
         (dialogConfirmationMessageAttributes |> Rs.s_iconsCloseBlack buttonAttrNo)
         (dialogConfirmationMessageInstances |> Rs.s_buttonsLayout (Just btns))
-        { cancelButton = { variant = none }, confirmButton = { variant = none }, dialogConfirmationMessage = { bodyText = message, headerText = Locale.string vc.locale "Please select..." } }
+        { cancelButton =
+            { variant = none }
+        , confirmButton = { variant = none }
+        , root =
+            { bodyText = message
+            , headerText = Locale.string vc.locale "Please select..."
+            }
+        }
 
 
 part : Config -> String -> List (Html msg) -> Html msg
@@ -279,7 +292,16 @@ error vc err =
     errorMessageComponentTypeErrorWithInstances
         (errorMessageComponentTypeErrorAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
         (errorMessageComponentTypeErrorInstances |> Rs.s_messageText (Just (div [] details)))
-        { header = { iconInstance = icon, title = Locale.string vc.locale title }, messageText = { messageText = "" }, typeError = { bodyText = "", headlineText = "" } }
+        { header =
+            { iconInstance = icon
+            , title = Locale.string vc.locale title
+            }
+        , messageText = { messageText = "" }
+        , root =
+            { bodyText = ""
+            , headlineText = ""
+            }
+        }
 
 
 info : Config -> InfoConfig Msg -> Html Msg
@@ -293,7 +315,15 @@ info vc inf =
     in
     errorMessageComponentTypeAlertWithAttributes
         (errorMessageComponentTypeAlertAttributes |> Rs.s_iconsCloseSnoPadding buttonAttrOk)
-        { header = { iconInstance = icon, title = Locale.interpolated vc.locale (inf.title |> Maybe.withDefault "Information") inf.variables }, messageText = { messageText = Locale.interpolated vc.locale inf.info inf.variables }, typeAlert = { bodyText = "", headlineText = "" } }
+        { header =
+            { iconInstance = icon
+            , title = Locale.interpolated vc.locale (inf.title |> Maybe.withDefault "Information") inf.variables
+            }
+        , messageText =
+            { messageText = Locale.interpolated vc.locale inf.info inf.variables
+            }
+        , root = { bodyText = "", headlineText = "" }
+        }
 
 
 custom : CustomConfig Msg -> Html Msg
