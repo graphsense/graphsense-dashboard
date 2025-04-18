@@ -1,4 +1,4 @@
-module View.CurrencyMeta exposing (CurrencyMeta, currencies)
+module View.CurrencyMeta exposing (CurrencyMeta, getHumanReadableName, networks)
 
 import Dict exposing (Dict)
 
@@ -7,6 +7,16 @@ type alias CurrencyMeta =
     { name : String
     , icon : String
     }
+
+
+getHumanReadableName : String -> Maybe String
+getHumanReadableName code =
+    Dict.get (String.toLower code) networks |> Maybe.map .name
+
+
+networks : Dict String CurrencyMeta
+networks =
+    currencies
 
 
 currencies : Dict String CurrencyMeta
