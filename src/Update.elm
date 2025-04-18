@@ -1623,7 +1623,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                     PluginInterface.LoadAddressIntoGraph _ ->
                         updateGraphByPluginOutMsg model eff msg
 
-                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder _ _) ->
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder _ _) ->
                         updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.GetAddressDomElement id pmsg ->

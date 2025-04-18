@@ -489,7 +489,7 @@ updateByMsg plugins uc msg model =
                                 selectedAdr =
                                     List.filter isinRectAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
 
-                                ( modelS, _ ) =
+                                modelS =
                                     multiSelect model (selectedTxs ++ selectedAdr) False
                             in
                             n
@@ -883,7 +883,7 @@ updateByMsg plugins uc msg model =
         UserClickedAddress id ->
             if model.modPressed then
                 let
-                    ( modelS, _ ) =
+                    modelS =
                         multiSelect model [ MSelectedAddress id ] True
                 in
                 n { modelS | details = Nothing }
@@ -1284,7 +1284,7 @@ userClickedTx : Id -> Model -> ( Model, List Effect )
 userClickedTx id model =
     if model.modPressed then
         let
-            ( modelS, _ ) =
+            modelS =
                 multiSelect model [ MSelectedTx id ] True
         in
         n { modelS | details = Nothing }
@@ -1513,6 +1513,21 @@ updateByRoute plugins uc route model =
             |> updateByRoute_ plugins uc route
 
 
+addPathsToGraph : Plugins -> Update.Config -> Model -> String -> List (List PathHopType) -> ( Model, List Effect )
+addPathsToGraph plugins uc model net listOfPaths =
+    let
+        baseModelUnselected =
+            ( model, [] ) |> unselect
+    in
+    List.foldl
+        (\paths ( m, eff ) ->
+            addPathToGraph plugins uc m net paths
+                |> Tuple.mapSecond ((++) eff)
+        )
+        baseModelUnselected
+        listOfPaths
+
+
 addPathToGraph : Plugins -> Update.Config -> Model -> String -> List PathHopType -> ( Model, List Effect )
 addPathToGraph plugins uc model net list =
     let
@@ -1532,18 +1547,29 @@ addPathToGraph plugins uc model net list =
                 _ ->
                     Nothing
 
+        pathTypeToSelection pt =
+            case pt of
+                AddressHop _ x ->
+                    MSelectedAddress (Id.init net x)
+
+                TxHop txh ->
+                    MSelectedTx (Id.init net txh)
+
         startAddressCoords =
             list
                 |> List.head
                 |> Maybe.andThen pathTypeToAddressId
                 |> Maybe.andThen (flip Network.getAddressCoords model.network)
 
+        newSelections =
+            list |> List.map pathTypeToSelection
+
         startCoordsPrel =
             startAddressCoords
                 |> Maybe.withDefault { x = 0, y = 0 }
 
         startY =
-            Network.getYForPathAfterX model.network startCoordsPrel.x
+            Network.getYForPathAfterX model.network startCoordsPrel.x startCoordsPrel.y
 
         startCoords =
             startCoordsPrel |> s_y (max startY startCoordsPrel.y)
@@ -1647,7 +1673,7 @@ addPathToGraph plugins uc model net list =
                     , previousAddress = Nothing
                     }
     in
-    ( result.m |> fitGraph uc, result.eff )
+    ( result.m |> (\m -> multiSelect m newSelections True) |> fitGraph uc, result.eff )
 
 
 updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
@@ -1692,8 +1718,8 @@ updateByPluginOutMsg plugins uc outMsgs model =
                     PluginInterface.ShowBrowser ->
                         ( mo, eff )
 
-                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder net path) ->
-                        addPathToGraph plugins uc mo net path
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder net paths) ->
+                        addPathsToGraph plugins uc mo net paths
                             |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.UpdateAddresses { currency, address } pmsg ->
@@ -2357,7 +2383,7 @@ removeIsolatedTransactions model =
     List.foldl (\i ( m, _ ) -> removeTx i m) ( model, [] ) idsToRemove
 
 
-multiSelect : Model -> List MultiSelectOptions -> Bool -> ( Model, List Effect )
+multiSelect : Model -> List MultiSelectOptions -> Bool -> Model
 multiSelect m sel keepOld =
     let
         newSelection =
@@ -2402,7 +2428,7 @@ multiSelect m sel keepOld =
         nNet =
             List.foldl (selectItem True) (Network.clearSelection m.network) newSelection
     in
-    ( { m | selection = liftedNewSelection, network = nNet }, [] )
+    { m | selection = liftedNewSelection, network = nNet }
 
 
 deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized

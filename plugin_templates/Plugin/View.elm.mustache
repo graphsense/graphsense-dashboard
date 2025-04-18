@@ -136,6 +136,7 @@ addressSidePanelHeader plugins states vc address =
                     plugin.addressSidePanelHeaderWithPriority
                     states.{{name}}
                     address.plugins.{{name}}
+                    |> Maybe.Extra.join
                     |> Maybe.map (\x -> {priority = x.priority, content = x.content |> Html.map Plugin.Msg.{{package}}Msg}))
                 |> Maybe.Extra.or (
                                 Maybe.map3
