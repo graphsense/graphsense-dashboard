@@ -16,7 +16,7 @@ CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
 
 PLUGINS_DIR=./plugins
 
-PLUGINS:=$(shell grep "import" $(CONFIG) | awk '{if (system("test -e $(PLUGINS_DIR)/" $$2) == 0) { print $$2 }}')
+PLUGINS=$(shell grep "import" $(CONFIG) | awk '{if (system("test -e $(PLUGINS_DIR)/" $$2) == 0) { print $$2 }}')
 SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm)
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
@@ -194,7 +194,7 @@ elm.json: elm.json.base
 
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
-$(GENERATED_PLUGIN_ELM): elm.json generate.js $(PLUGIN_TEMPLATES) $(wildcard $(PLUGINS_DIR)/*/lang/*)
+$(GENERATED_PLUGIN_ELM): elm.json generate.js $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard $(PLUGINS_DIR)/*/lang/*)
 	node generate.js $(PLUGINS)
 
 copy-public: 
