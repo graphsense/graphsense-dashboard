@@ -111,6 +111,12 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                 HGraphComponents.rightClickMenuWithAttributes
                     (HGraphComponents.rightClickMenuAttributes
                         |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> (if List.isEmpty pluginsList then
+                                Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
+
+                            else
+                                identity
+                           )
                     )
                     { shortcutList =
                         [ { msg = UserOpensAddressAnnotationDialog id
