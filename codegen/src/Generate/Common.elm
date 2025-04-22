@@ -520,13 +520,6 @@ componentNodeToDeclarations { toStyles, withFrameTraitsNodeToExpression, element
             rootName
                 :: List.map .name descendantsDetails
 
-        _ =
-            if details.name == "Framed_icon/circle" || details.name == "framedIconCircle" then
-                Debug.log "DEBUG framed icon names" names
-
-            else
-                names
-
         properties =
             componentNodeToProperties details.name node
                 |> Dict.union parentProperties
@@ -1079,6 +1072,15 @@ subcanvasNodeAdjustBoundingBox adjust node =
             DefaultShapeTraits.adjustBoundingBox adjust n.defaultShapeTraits
                 |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeEllipseNode
+
+        SubcanvasNodeComponentNode n ->
+            -- applied when wrapped in ComponentSet
+            let
+                originAdjust =
+                    getOriginAdjust n
+            in
+            withFrameTraitsAdjustBoundingBox originAdjust n
+                |> SubcanvasNodeComponentNode
 
         SubcanvasNodeFrameNode n ->
             withFrameTraitsAdjustBoundingBox adjust n
