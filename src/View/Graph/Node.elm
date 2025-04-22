@@ -5,7 +5,7 @@ import Config.View exposing (Config)
 import Css
 import Css.Graph as Css
 import Json.Decode
-import Model.Graph exposing (NodeType)
+import Model.Node exposing (NodeType)
 import Msg.Graph exposing (Msg)
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)

@@ -4,9 +4,8 @@ import Color
 import Config.Graph exposing (addressesCountHeight, labelHeight, linkLabelHeight)
 import Config.View exposing (Config)
 import Css exposing (..)
-import Model.Graph exposing (NodeType)
 import Model.Graph.Tool as Tool
-import Util.Css
+import Model.Node exposing (NodeType)
 
 
 contextMenuRule : Config -> List Style

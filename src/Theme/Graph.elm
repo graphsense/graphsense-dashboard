@@ -2,8 +2,8 @@ module Theme.Graph exposing (Graph, default)
 
 import Color exposing (Color)
 import Css exposing (Style)
-import Model.Graph exposing (NodeType)
 import Model.Graph.Tool as Tool
+import Model.Node exposing (NodeType)
 
 
 type alias Graph =
