@@ -37,7 +37,7 @@ conceptItem vc id k =
         , css [ Css.cursor Css.default ]
         ]
         [ TagComponents.categoryTags
-            { categoryTags =
+            { root =
                 { tagLabel =
                     View.getConceptName vc k |> Maybe.withDefault k
                 }

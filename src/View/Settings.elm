@@ -27,7 +27,7 @@ view plugins vc m =
     Sp.settingsPageWithInstances
         (Sp.settingsPageAttributes
             |> Rs.s_backButton [ css [ Css.cursor Css.pointer ], onClick UserClickedNavBack ]
-            |> Rs.s_settingsPage
+            |> Rs.s_root
                 [ css
                     [ Css.flexGrow <| Css.num 1
                     , Css.width Css.auto
@@ -44,7 +44,7 @@ view plugins vc m =
         )
         { backButton = { buttonText = Locale.string vc.locale "Back", iconInstance = Icons.iconsArrowBackStateDefaultBlack {} }
         , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
-        , settingsPage =
+        , root =
             { instance = generalSettings plugins vc m }
         , singleTab1 = { variant = Util.View.none }
         , singleTab2 = { variant = Util.View.none }
@@ -98,7 +98,7 @@ generalSettings plugins vc m =
         generalSettingsProperties =
             { button =
                 { variant =
-                    Button.btnDefaultConfig
+                    Button.defaultConfig
                         |> Rs.s_text "Logout"
                         |> Rs.s_onClick (Just UserClickedLogout)
                         |> Button.linkButtonBlue vc
@@ -144,7 +144,7 @@ generalSettings plugins vc m =
                     )
                 ]
             |> Rs.s_planDetails [ css [ Css.height Css.auto ] ]
-            |> Rs.s_settingsPageGeneral
+            |> Rs.s_root
                 [ css
                     [ Css.height Css.auto
                     , Css.alignItems Css.stretch
@@ -165,7 +165,7 @@ generalSettings plugins vc m =
                             , css [ Css.height Css.auto |> Css.important ]
                             ]
                             [ Sp.settingsSectionHeader
-                                { settingsSectionHeader = { text = title } }
+                                { root = { text = title } }
                             , part
                             ]
                     )

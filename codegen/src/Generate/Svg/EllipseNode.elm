@@ -84,8 +84,3 @@ toSize shape =
     [ shape.absoluteBoundingBox.width / 2 + adjustStrokeAlign |> String.fromFloat |> rx
     , shape.absoluteBoundingBox.height / 2 + adjustStrokeAlign |> String.fromFloat |> ry
     ]
-
-
-toDetails : ColorMap -> EllipseNode -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap node) node

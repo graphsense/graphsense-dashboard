@@ -76,7 +76,7 @@ view _ vc _ tx accTx annotation =
         ]
         (GraphComponents.txNodeEthWithAttributes
             { txNodeEthAttributes
-                | txNodeEth =
+                | root =
                     [ UserClickedTx tx.id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx tx.id
                         |> Util.Graph.mousedown
@@ -93,7 +93,7 @@ view _ vc _ tx accTx annotation =
                     ]
                 , nodeEllipse = annAttr
             }
-            { txNodeEth =
+            { root =
                 { highlightVisible = tx.selected
                 , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
                 , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp

@@ -34,7 +34,7 @@ timestampDateMultiRowColumn vc name accessor =
                                 |> Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset
                       in
                       SidePanelComponents.sidePanelListTimeCell
-                        { sidePanelListTimeCell =
+                        { root =
                             { date = date
                             , time = time
                             }
@@ -114,7 +114,7 @@ checkboxColumn _ { isChecked, onClick, readonly } =
                     ]
                     [ Util.Checkbox.checkbox
                         { state = isChecked data |> Util.Checkbox.stateFromBool
-                        , size = Util.Checkbox.Small
+                        , size = Util.Checkbox.smallSize
                         , msg = onClick data
                         }
                         attrs
@@ -200,7 +200,7 @@ valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
             (SidePanelComponents.sidePanelListValueCellAttributes
                 |> Rs.s_value [ addCss |> List.map Css.important |> css ]
             )
-            { sidePanelListValueCell =
+            { root =
                 { value = value
                 }
             }
@@ -229,7 +229,7 @@ twoValuesCell vc name conf =
             \data ->
                 Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
                     [ SidePanelComponents.sidePanelAddListTwoValuesCell
-                        { sidePanelAddListTwoValuesCell =
+                        { root =
                             { value1 = conf.getValue1 data |> toValue
                             , value2 = conf.getValue2 data |> toValue
                             , labelValue2 = conf.labelValue2 ++ ":"

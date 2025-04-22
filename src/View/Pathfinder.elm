@@ -34,6 +34,7 @@ import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.GraphComponents as HGraphComponents
 import Theme.Html.Icons as HIcons
+import Theme.Html.SelectionControls exposing (SwitchSize(..))
 import Theme.Html.SettingsComponents as Sc
 import Theme.Svg.GraphComponents as GraphComponents
 import Update.Graph.Transform as Transform
@@ -109,8 +110,6 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                 in
                 HGraphComponents.rightClickMenuWithAttributes
                     (HGraphComponents.rightClickMenuAttributes
-                        |> Rs.s_lineFrame
-                            [ css [ Css.display Css.none ] ]
                         |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
                     )
                     { shortcutList =
@@ -139,12 +138,6 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         ]
-                            ++ (if pluginsList |> List.isEmpty then
-                                    []
-
-                                else
-                                    [ ContextMenuItem.rule vc ]
-                               )
                     , pluginsList = pluginsList
                     }
                     {}
@@ -152,8 +145,6 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
             ContextMenu.TransactionContextMenu _ ->
                 HGraphComponents.rightClickMenuWithAttributes
                     (HGraphComponents.rightClickMenuAttributes
-                        |> Rs.s_lineFrame
-                            [ css [ Css.display Css.none ] ]
                         |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
                     )
                     { shortcutList =
@@ -275,21 +266,21 @@ annotationHovercardView vc id annotation hc =
                 Just c ->
                     Sc.colorSquareStyleColorFillWithAttributes
                         (Sc.colorSquareStyleColorFillAttributes
-                            |> Rs.s_styleColorFill [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor id color) ]
+                            |> Rs.s_root [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor id color) ]
                             |> Rs.s_vectorShape [ css [ Css.important (Css.fill (c |> Util.View.toCssColor)) ] ]
                         )
-                        { styleColorFill = { selectionVisible = isSelected } }
+                        { root = { selectionVisible = isSelected } }
 
                 Nothing ->
                     Sc.colorSquareStyleNoColorWithAttributes
                         (Sc.colorSquareStyleNoColorAttributes
-                            |> Rs.s_styleNoColor [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor id Nothing) ]
+                            |> Rs.s_root [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor id Nothing) ]
                         )
-                        { styleNoColor = { selectionVisible = isSelected } }
+                        { root = { selectionVisible = isSelected } }
     in
     Sc.annotationWithAttributes
         Sc.annotationAttributes
-        { annotation = { colorText = Locale.string vc.locale "Color", labelText = Locale.string vc.locale "Label" }
+        { root = { colorText = Locale.string vc.locale "Color", labelText = Locale.string vc.locale "Label" }
         , labelField = { variant = inputField }
         , noColor = { variant = colorBtn selectedColor Nothing }
         , color1 = { variant = colorBtn selectedColor (Just Colors.annotation1_color) }
@@ -312,21 +303,22 @@ settingsHovercardView vc _ hc =
         switchWithText primary text enabled msg =
             let
                 toggle =
-                    Vc.toggleSmall
-                        { selected = enabled
+                    Vc.toggle
+                        { size = SwitchSizeBig
+                        , selected = enabled
                         , disabled = False
                         , msg = msg
                         }
             in
             if primary then
                 Sc.textSwitchStylePrimary
-                    { stylePrimary = { label = Locale.string vc.locale text }
+                    { root = { label = Locale.string vc.locale text }
                     , switch = { variant = toggle }
                     }
 
             else
                 Sc.textSwitchStyleSecondary
-                    { styleSecondary = { label = Locale.string vc.locale text }
+                    { root = { label = Locale.string vc.locale text }
                     , switch = { variant = toggle }
                     }
     in
@@ -614,7 +606,7 @@ drawDragSelector _ m =
             in
             GraphComponents.selectionBoxWithAttributes
                 (GraphComponents.selectionBoxAttributes
-                    |> Rs.s_selectionBox
+                    |> Rs.s_root
                         [ Util.Graph.translate xn yn |> transform
                         ]
                     |> Rs.s_rectangle

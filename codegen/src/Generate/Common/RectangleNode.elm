@@ -10,18 +10,20 @@ import Types exposing (OriginAdjust)
 
 getName : RectangleNode -> String
 getName node =
-    DefaultShapeTraits.getName node.rectangularShapeTraits
+    DefaultShapeTraits.getName node.rectangularShapeTraits.defaultShapeTraits
 
 
 adjustBoundingBox : OriginAdjust -> RectangleNode -> RectangleNode
 adjustBoundingBox adjust node =
-    node.rectangularShapeTraits
+    node.rectangularShapeTraits.defaultShapeTraits
         |> DefaultShapeTraits.adjustBoundingBox adjust
+        |> flip s_defaultShapeTraits node.rectangularShapeTraits
         |> flip s_rectangularShapeTraits node
 
 
 adjustName : Dict String String -> RectangleNode -> RectangleNode
 adjustName names node =
-    node.rectangularShapeTraits
+    node.rectangularShapeTraits.defaultShapeTraits
         |> DefaultShapeTraits.adjustName names
+        |> flip s_defaultShapeTraits node.rectangularShapeTraits
         |> flip s_rectangularShapeTraits node

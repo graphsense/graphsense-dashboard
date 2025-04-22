@@ -164,7 +164,7 @@ view plugins vc colors address getCluster annotation =
         ]
         (GraphComponents.addressNodeWithInstances
             (GraphComponents.addressNodeAttributes
-                |> Rs.s_addressNode
+                |> Rs.s_root
                     [ A.animate address.clock address.opacity
                         |> String.fromFloat
                         |> opacity
@@ -196,7 +196,7 @@ view plugins vc colors address getCluster annotation =
              -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
             )
             GraphComponents.addressNodeInstances
-            { addressNode =
+            { root =
                 { addressId =
                     address.id
                         |> Id.id
@@ -212,44 +212,44 @@ view plugins vc colors address getCluster annotation =
                 , tagIconVisible = address.hasTags || List.length replacementTagIcons > 0
                 , tagIconInstance =
                     (replacementIconCombined |> Maybe.map (g []))
-                        |> Maybe.withDefault (Icons.iconsTagLtypeDirect {})
+                        |> Maybe.withDefault (Icons.iconsTagLTypeDirect {})
                 }
             , iconsNodeOpenLeft =
                 { variant =
                     expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
                         |> Maybe.withDefault
-                            (if expandAllowed address then
-                                Icons.iconsNodeOpenLeftStateActivWithAttributes
-                                    (Icons.iconsNodeOpenLeftStateActivAttributes
-                                        |> Rs.s_stateActiv (expand Incoming)
-                                    )
-                                    {}
+                            (Icons.iconsNodeOpenLeftWithAttributes
+                                (Icons.iconsNodeOpenLeftAttributes
+                                    |> Rs.s_root (expand Incoming)
+                                )
+                                { root =
+                                    { state =
+                                        if expandAllowed address then
+                                            Icons.IconsNodeOpenLeftStateActiv
 
-                             else
-                                Icons.iconsNodeOpenLeftStateDisabledWithAttributes
-                                    (Icons.iconsNodeOpenRightStateDisabledAttributes
-                                        |> Rs.s_stateDisabled (expand Incoming)
-                                    )
-                                    {}
+                                        else
+                                            Icons.IconsNodeOpenLeftStateDisabled
+                                    }
+                                }
                             )
                 }
             , iconsNodeOpenRight =
                 { variant =
                     expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
                         |> Maybe.withDefault
-                            (if expandAllowed address then
-                                Icons.iconsNodeOpenRightStateActivWithAttributes
-                                    (Icons.iconsNodeOpenRightStateActivAttributes
-                                        |> Rs.s_stateActiv (expand Outgoing)
-                                    )
-                                    {}
+                            (Icons.iconsNodeOpenRightWithAttributes
+                                (Icons.iconsNodeOpenRightAttributes
+                                    |> Rs.s_root (expand Outgoing)
+                                )
+                                { root =
+                                    { state =
+                                        if expandAllowed address then
+                                            Icons.IconsNodeOpenRightStateActiv
 
-                             else
-                                Icons.iconsNodeOpenRightStateDisabledWithAttributes
-                                    (Icons.iconsNodeOpenRightStateDisabledAttributes
-                                        |> Rs.s_stateDisabled (expand Outgoing)
-                                    )
-                                    {}
+                                        else
+                                            Icons.IconsNodeOpenRightStateDisabled
+                                    }
+                                }
                             )
                 }
             , iconsNodeMarker =

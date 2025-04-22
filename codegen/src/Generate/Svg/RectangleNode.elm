@@ -42,11 +42,6 @@ toStyles colorMap node =
     HasGeometryTrait.toStyles colorMap node.rectangularShapeTraits.defaultShapeTraits.hasGeometryTrait
 
 
-toDetails : ColorMap -> RectangleNode -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap node) node.rectangularShapeTraits
-
-
 toAttributes : RectangleNode -> List Elm.Expression
 toAttributes node =
     toSize node.rectangularShapeTraits.defaultShapeTraits
@@ -93,6 +88,7 @@ toSize shape =
 
 adjustBoundingBox : OriginAdjust -> RectangleNode -> RectangleNode
 adjustBoundingBox adjust node =
-    node.rectangularShapeTraits
+    node.rectangularShapeTraits.defaultShapeTraits
         |> Common.adjustBoundingBox adjust
+        |> flip s_defaultShapeTraits node.rectangularShapeTraits
         |> flip s_rectangularShapeTraits node

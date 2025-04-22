@@ -1,13 +1,16 @@
 module Generate.Common exposing (..)
 
 import Api.Raw exposing (..)
-import Basics.Extra exposing (flip)
+import Basics.Extra exposing (flip, uncurry)
+import Config exposing (showId)
 import Dict exposing (Dict)
 import Dict.Extra
 import Elm exposing (Expression)
 import Elm.Annotation as Annotation exposing (Annotation)
+import Elm.Let
 import Elm.Op
 import Gen.Css as Css
+import Gen.Html as Html
 import Gen.Html.Styled
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
@@ -16,23 +19,22 @@ import Generate.Common.FrameTraits as FrameTraits
 import Generate.Common.RectangleNode as RectangleNode
 import Generate.Common.VectorNode as VectorNode
 import Generate.Html.HasLayoutTrait as HasLayoutTrait
-import Generate.Util exposing (getElementAttributes, getMainComponentProperty, mm2, sanitize)
+import Generate.Util exposing (detailsAndStylesToDeclaration, getElementAttributes, getMainComponentProperty, mm2, rootName, sanitize)
 import List.Extra
-import RecordSetter exposing (s_children, s_frameTraits)
+import RecordSetter exposing (s_children, s_defaultShapeTraits, s_frameTraits, s_instanceName, s_name)
 import Set
+import String.Case exposing (toCamelCaseUpper)
 import String.Extra
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
-import Types exposing (ComponentPropertyExpressions, Config, OriginAdjust)
+import Types exposing (ColorMap, ComponentNodeOrSet, ComponentPropertyExpressions, Config, Details, FormatSpecifics, OriginAdjust)
 
 
-subcanvasNodeComponentsToDeclarations : (String -> Dict String (Dict String ComponentPropertyType) -> ComponentNode -> List Elm.Declaration) -> SubcanvasNode -> List Elm.Declaration
-subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
+subcanvasNodeComponentsToDeclarations : FormatSpecifics -> ColorMap -> SubcanvasNode -> List Elm.Declaration
+subcanvasNodeComponentsToDeclarations specifics colorMap node =
     let
-        toDeclarations parentName parentProperties n =
+        filter n =
             filterUnneededParts n
                 |> adjustBoundingBoxes
-                |> adjustNames
-                |> componentNodeToDeclarations parentName parentProperties
     in
     case node of
         SubcanvasNodeComponentNode n ->
@@ -40,68 +42,774 @@ subcanvasNodeComponentsToDeclarations componentNodeToDeclarations node =
                 []
 
             else
-                toDeclarations "" Dict.empty n
+                filter n
+                    |> adjustNames
+                    |> toComponentNodeOrSet
+                    |> componentNodeToDeclarations specifics colorMap "" Dict.empty
 
         SubcanvasNodeComponentSetNode n ->
             if FrameTraits.isHidden n then
                 []
 
             else
-                let
-                    parentName =
-                        FrameTraits.getName n
-                in
-                -- for component sets we need to
-                -- get its properties before
-                -- going deeper down to components of the set
-                n.frameTraits.children
-                    |> List.map
-                        (\child ->
-                            case child of
-                                SubcanvasNodeComponentNode nn ->
-                                    let
-                                        name =
-                                            FrameTraits.getName nn
-                                                |> sanitize
-
-                                        nothingIfEmpty d =
-                                            if Dict.isEmpty d then
-                                                Nothing
-
-                                            else
-                                                Just d
-
-                                        properties =
-                                            componentNodeToProperties name n
-                                                |> Dict.toList
-                                                |> List.filterMap
-                                                    (\( k, types ) ->
-                                                        if k == name then
-                                                            Dict.filter
-                                                                (\_ type_ ->
-                                                                    type_ /= ComponentPropertyTypeVARIANT
-                                                                )
-                                                                types
-                                                                |> nothingIfEmpty
-                                                                |> Maybe.map (pair k)
-
-                                                        else
-                                                            Just ( k, types )
-                                                    )
-                                                |> Dict.fromList
-                                    in
-                                    toDeclarations
-                                        parentName
-                                        properties
-                                        nn
-
-                                _ ->
-                                    []
-                        )
-                    |> List.concat
+                filter n
+                    |> toComponentNodeOrSet
+                    |> componentSetNodeToDeclarations specifics colorMap
 
         _ ->
             []
+
+
+toComponentNodeOrSet : { a | componentPropertiesTrait : ComponentPropertiesTrait, frameTraits : FrameTraits } -> ComponentNodeOrSet
+toComponentNodeOrSet n =
+    { componentPropertiesTrait = n.componentPropertiesTrait
+    , frameTraits = n.frameTraits
+    }
+
+
+componentNodesForComponentSet : FormatSpecifics -> ColorMap -> Dict String (Dict String ComponentPropertyType) -> ComponentNodeOrSet -> String -> List Elm.Declaration
+componentNodesForComponentSet formatSpecifics colorMap parentProperties n parentName =
+    n.frameTraits.children
+        |> List.map
+            (\child ->
+                case child of
+                    SubcanvasNodeComponentNode nn ->
+                        toComponentNodeOrSet nn
+                            |> componentNodeToDeclarations
+                                formatSpecifics
+                                colorMap
+                                parentName
+                                parentProperties
+
+                    _ ->
+                        []
+            )
+        |> List.concat
+
+
+componentSetNodeToDeclarations : FormatSpecifics -> ColorMap -> ComponentNodeOrSet -> List Elm.Declaration
+componentSetNodeToDeclarations ({ elementAnnotation, attributeAnnotation } as formatSpecifics) colorMap node =
+    let
+        sanitizedChildrenNode =
+            node.frameTraits.children
+                |> List.filterMap
+                    (\child ->
+                        case child of
+                            SubcanvasNodeComponentNode nn ->
+                                adjustNames nn
+                                    |> SubcanvasNodeComponentNode
+                                    |> Just
+
+                            _ ->
+                                Nothing
+                    )
+                |> flip s_children node.frameTraits
+                |> flip s_frameTraits node
+
+        ( details, descendantsDetails ) =
+            componentNodeToDetails sanitizedChildrenNode
+
+        names =
+            rootName
+                :: List.map .name descendantsDetails
+                |> Set.fromList
+                |> Set.toList
+
+        attributesType =
+            names
+                |> List.map sanitize
+                |> List.map (\n -> ( n, attributeAnnotation (Annotation.var "msg") |> Annotation.list ))
+                |> Annotation.record
+
+        attributesParam =
+            ( "attributes"
+            , attributesType
+                |> Just
+            )
+
+        instancesType =
+            names
+                |> List.map sanitize
+                |> List.map
+                    (\n ->
+                        ( n
+                        , elementAnnotation (Annotation.var "msg")
+                            |> Annotation.maybe
+                        )
+                    )
+                |> Annotation.record
+
+        instancesParam =
+            ( "instances"
+            , instancesType
+                |> Just
+            )
+
+        namesWithList =
+            details.name
+                :: List.map .name descendantsDetails
+                |> List.filter FrameTraits.nameIsList
+
+        childrenType =
+            namesWithList
+                |> List.map
+                    (\n ->
+                        ( n
+                        , elementAnnotation (Annotation.var "msg")
+                            |> Annotation.list
+                        )
+                    )
+                |> Annotation.record
+
+        childrenParam =
+            ( "children"
+            , childrenType
+                |> Just
+            )
+
+        name =
+            FrameTraits.getName node.frameTraits
+                |> sanitize
+
+        properties =
+            sanitizedChildrenNode
+                |> componentNodeToProperties name
+
+        nothingIfEmpty d =
+            if Dict.isEmpty d then
+                Nothing
+
+            else
+                Just d
+
+        propertiesWithoutVariants =
+            properties
+                |> Dict.toList
+                |> List.filterMap
+                    (\( k, types ) ->
+                        if k == rootName then
+                            Dict.filter
+                                (\_ type_ ->
+                                    type_ /= ComponentPropertyTypeVARIANT
+                                )
+                                types
+                                |> nothingIfEmpty
+                                |> Maybe.map (pair (sanitize k))
+
+                        else
+                            Just ( sanitize k, types )
+                    )
+                |> Dict.fromList
+
+        variantProperties : List ( String, List String )
+        variantProperties =
+            node.componentPropertiesTrait.componentPropertyDefinitions
+                |> Maybe.withDefault Dict.empty
+                |> Dict.toList
+                |> List.filter (second >> .type_ >> (==) ComponentPropertyTypeVARIANT)
+                |> List.filterMap
+                    (\( nam, def ) ->
+                        def.variantOptions
+                            |> Maybe.map (pair nam)
+                    )
+
+        propertiesType_ =
+            properties
+                |> propertiesType name elementAnnotation
+
+        propertiesParam =
+            ( "properties"
+            , Just propertiesType_
+            )
+
+        declarationName =
+            name |> sanitize
+
+        declarationNameAttributes =
+            name ++ " attributes" |> sanitize
+
+        declarationNameInstances =
+            name ++ " instances" |> sanitize
+
+        declarationNameWithInstances =
+            (name ++ " with instances") |> sanitize
+
+        declarationNameWithAttributes =
+            (name ++ " with attributes") |> sanitize
+
+        componentFunctionWithChildren attributesRecord instancesRecord childrenRecord propertiesRecord nam =
+            Elm.apply
+                (Elm.value
+                    { importFrom = []
+                    , name = nam
+                    , annotation = Nothing
+                    }
+                )
+                [ attributesRecord
+                , instancesRecord
+                , childrenRecord
+                , propertiesRecord
+                ]
+
+        componentFunction attributesRecord instancesRecord propertiesRecord nam =
+            Elm.apply
+                (Elm.value
+                    { importFrom = []
+                    , name = nam
+                    , annotation = Nothing
+                    }
+                )
+                [ attributesRecord
+                , instancesRecord
+                , propertiesRecord
+                ]
+
+        propsWithoutVariantsForLetIn properties_ =
+            propertiesWithoutVariants
+                |> Dict.toList
+                |> List.map
+                    (\( comp, props ) ->
+                        props
+                            |> Dict.keys
+                            |> List.map
+                                (\k ->
+                                    let
+                                        kk =
+                                            formatComponentPropertyName k
+                                                |> sanitize
+                                    in
+                                    ( kk, Elm.get comp properties_ |> Elm.get kk )
+                                )
+                            |> Elm.record
+                            |> pair comp
+                    )
+                |> Elm.record
+
+        body properties_ compFunction =
+            -- using the non-name-adjusted children nodes here
+            node.frameTraits.children
+                |> List.filterMap
+                    (\child ->
+                        case child of
+                            SubcanvasNodeComponentNode n ->
+                                Just n
+
+                            _ ->
+                                Nothing
+                    )
+                |> List.Extra.uncons
+                |> Maybe.map
+                    (\( fst, rest ) ->
+                        let
+                            nam w =
+                                name
+                                    ++ " "
+                                    ++ FrameTraits.getName w.frameTraits
+                                    ++ " with instances"
+                                    |> sanitize
+                        in
+                        List.foldl
+                            (\comp acc ->
+                                Elm.ifThen
+                                    (FrameTraits.getName comp.frameTraits
+                                        |> variantNameToComparisionExpression properties_ name
+                                    )
+                                    (nam comp
+                                        |> compFunction
+                                    )
+                                    acc
+                            )
+                            (nam fst |> compFunction)
+                            rest
+                    )
+                |> Maybe.withDefault (Html.text "")
+    in
+    (propertiesType_
+        |> Elm.alias (name ++ " properties" |> sanitize)
+    )
+        :: (variantProperties |> List.map (uncurry (variantPropertyToType name)))
+        ++ [ names
+                |> defaultAttributeConfig attributeAnnotation
+                |> Elm.declaration declarationNameAttributes
+           , names
+                |> defaultInstancesConfig elementAnnotation
+                |> Elm.declaration declarationNameInstances
+           , if List.isEmpty namesWithList then
+                Elm.fn3 attributesParam
+                    instancesParam
+                    propertiesParam
+                    (\attributes instances properties_ ->
+                        Elm.Let.letIn
+                            (componentFunction attributes instances
+                                >> body properties_
+                            )
+                            |> Elm.Let.value "propsWithoutVariants" (propsWithoutVariantsForLetIn properties_)
+                            |> Elm.Let.toExpression
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, instancesType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithInstances
+
+             else
+                Elm.fn4 attributesParam
+                    instancesParam
+                    childrenParam
+                    propertiesParam
+                    (\attributes instances children properties_ ->
+                        Elm.Let.letIn
+                            (componentFunctionWithChildren attributes instances children
+                                >> body properties_
+                            )
+                            |> Elm.Let.value "propsWithoutVariants" (propsWithoutVariantsForLetIn properties_)
+                            |> Elm.Let.toExpression
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, instancesType, childrenType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithInstances
+           , if List.isEmpty namesWithList then
+                Elm.fn2 attributesParam
+                    propertiesParam
+                    (\attributes properties_ ->
+                        componentFunction
+                            attributes
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            properties_
+                            declarationNameWithInstances
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithAttributes
+
+             else
+                Elm.fn3 attributesParam
+                    childrenParam
+                    propertiesParam
+                    (\attributes children properties_ ->
+                        componentFunctionWithChildren
+                            attributes
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            children
+                            properties_
+                            declarationNameWithInstances
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, childrenType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithAttributes
+           , if List.isEmpty namesWithList then
+                Elm.fn propertiesParam
+                    (\properties_ ->
+                        componentFunction
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameAttributes
+                                , annotation = Nothing
+                                }
+                            )
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            properties_
+                            declarationNameWithInstances
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationName
+
+             else
+                Elm.fn2 childrenParam
+                    propertiesParam
+                    (\children properties_ ->
+                        componentFunctionWithChildren
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameAttributes
+                                , annotation = Nothing
+                                }
+                            )
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            children
+                            properties_
+                            declarationNameWithInstances
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ childrenType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationName
+           ]
+        ++ componentNodesForComponentSet formatSpecifics colorMap propertiesWithoutVariants sanitizedChildrenNode name
+
+
+variantNameToComparisionExpression : Expression -> String -> String -> Expression
+variantNameToComparisionExpression propertiesRecord parentName name =
+    String.split ", " name
+        |> List.filterMap
+            (\part ->
+                case String.split "=" part of
+                    prop :: value :: [] ->
+                        (parentName
+                            ++ " "
+                            ++ prop
+                            ++ " "
+                            ++ value
+                            |> toCamelCaseUpper
+                            |> Elm.val
+                        )
+                            |> Elm.Op.equal
+                                (Elm.get rootName propertiesRecord |> Elm.get (sanitize prop))
+                            |> Just
+
+                    _ ->
+                        Nothing
+            )
+        |> List.Extra.foldl1 Elm.Op.and
+        |> Maybe.withDefault (Elm.bool False)
+
+
+variantPropertyToType : String -> String -> List String -> Elm.Declaration
+variantPropertyToType componentName name options =
+    options
+        |> List.map ((++) (componentName ++ " " ++ name ++ " ") >> toCamelCaseUpper >> Elm.variant)
+        |> Elm.customType (componentName ++ " " ++ name |> toCamelCaseUpper)
+
+
+componentNodeToDeclarations : FormatSpecifics -> ColorMap -> String -> Dict String (Dict String ComponentPropertyType) -> ComponentNodeOrSet -> List Elm.Declaration
+componentNodeToDeclarations { toStyles, withFrameTraitsNodeToExpression, elementAnnotation, attributeAnnotation } colorMap parentName parentProperties node =
+    let
+        ( details, descendantsDetails ) =
+            componentNodeToDetails node
+
+        ( styles, descendantsStyles ) =
+            toStyles colorMap node.frameTraits
+
+        names =
+            rootName
+                :: List.map .name descendantsDetails
+
+        properties =
+            componentNodeToProperties details.name node
+                |> Dict.union parentProperties
+
+        propertiesType_ =
+            properties
+                |> propertiesType details.name elementAnnotation
+
+        propertiesParamName =
+            "properties"
+
+        propertiesParam =
+            ( propertiesParamName
+            , Just propertiesType_
+            )
+
+        attributesType =
+            names
+                |> List.map (\n -> ( n, attributeAnnotation (Annotation.var "msg") |> Annotation.list ))
+                |> Annotation.extensible "a"
+
+        attributesParam =
+            ( "attributes"
+            , attributesType
+                |> Just
+            )
+
+        instancesType =
+            names
+                |> List.map
+                    (\n ->
+                        ( n
+                        , elementAnnotation (Annotation.var "msg")
+                            |> Annotation.maybe
+                        )
+                    )
+                |> Annotation.extensible "i"
+
+        instancesParam =
+            ( "instances"
+            , instancesType
+                |> Just
+            )
+
+        namesWithList =
+            details.name
+                :: List.map .name descendantsDetails
+                |> List.filter FrameTraits.nameIsList
+
+        childrenType =
+            namesWithList
+                |> List.map
+                    (\n ->
+                        ( n
+                        , elementAnnotation (Annotation.var "msg")
+                            |> Annotation.list
+                        )
+                    )
+                |> Annotation.record
+
+        childrenParam =
+            ( "children"
+            , childrenType
+                |> Just
+            )
+
+        declarationName =
+            parentName
+                ++ " "
+                ++ details.name
+
+        declarationNameWithAttributes =
+            declarationName ++ " with attributes" |> sanitize
+
+        declarationNameWithInstances =
+            declarationName
+                ++ " with instances"
+                |> sanitize
+
+        declarationNameProperties =
+            declarationName ++ " properties" |> sanitize
+
+        declarationNameAttributes =
+            declarationName ++ " attributes" |> sanitize
+
+        declarationNameInstances =
+            declarationName ++ " instances" |> sanitize
+    in
+    (styles :: descendantsStyles)
+        |> List.map2 pair
+            (details
+                :: descendantsDetails
+            )
+        |> List.foldl
+            (\md ->
+                Dict.insert (first md).name md
+            )
+            Dict.empty
+        |> Dict.values
+        |> List.map (detailsAndStylesToDeclaration parentName details.name)
+        |> (++)
+            [ propertiesType_
+                |> Elm.alias declarationNameProperties
+            , names
+                |> defaultAttributeConfig attributeAnnotation
+                |> Elm.declaration declarationNameAttributes
+            , names
+                |> defaultInstancesConfig elementAnnotation
+                |> Elm.declaration declarationNameInstances
+            , if List.isEmpty namesWithList then
+                Elm.fn3
+                    attributesParam
+                    instancesParam
+                    propertiesParam
+                    (\attributes instances properties_ ->
+                        let
+                            config =
+                                { propertyExpressions =
+                                    propertiesToPropertyExpressions properties_ properties
+                                , positionRelatively = Nothing
+                                , attributes = attributes
+                                , instances = instances
+                                , children = Elm.record []
+                                , colorMap = colorMap
+                                , parentName = parentName
+                                , componentName = details.name
+                                , instanceName = ""
+                                , showId = showId
+                                }
+                        in
+                        withFrameTraitsNodeToExpression config details.name rootName node.frameTraits
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, instancesType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithInstances
+
+              else
+                Elm.fn4
+                    attributesParam
+                    instancesParam
+                    childrenParam
+                    propertiesParam
+                    (\attributes instances children properties_ ->
+                        let
+                            config =
+                                { propertyExpressions =
+                                    propertiesToPropertyExpressions properties_ properties
+                                , positionRelatively = Nothing
+                                , attributes = attributes
+                                , instances = instances
+                                , children = children
+                                , colorMap = colorMap
+                                , parentName = parentName
+                                , componentName = details.name
+                                , instanceName = ""
+                                , showId = showId
+                                }
+                        in
+                        withFrameTraitsNodeToExpression config details.name rootName node.frameTraits
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, instancesType, childrenType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithInstances
+            , if List.isEmpty namesWithList then
+                Elm.fn
+                    propertiesParam
+                    (\properties_ ->
+                        Elm.apply
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameWithInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            [ Elm.value
+                                { importFrom = []
+                                , name = declarationNameAttributes
+                                , annotation = Nothing
+                                }
+                            , Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            , properties_
+                            ]
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration (sanitize declarationName)
+
+              else
+                Elm.fn2
+                    childrenParam
+                    propertiesParam
+                    (\children properties_ ->
+                        Elm.apply
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameWithInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            [ Elm.value
+                                { importFrom = []
+                                , name = declarationNameAttributes
+                                , annotation = Nothing
+                                }
+                            , Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            , children
+                            , properties_
+                            ]
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ childrenType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration (sanitize declarationName)
+            , if List.isEmpty namesWithList then
+                Elm.fn2
+                    attributesParam
+                    propertiesParam
+                    (\attributes properties_ ->
+                        Elm.apply
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameWithInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            [ attributes
+                            , Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            , properties_
+                            ]
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithAttributes
+
+              else
+                Elm.fn3
+                    attributesParam
+                    childrenParam
+                    propertiesParam
+                    (\attributes children properties_ ->
+                        Elm.apply
+                            (Elm.value
+                                { importFrom = []
+                                , name = declarationNameWithInstances
+                                , annotation = Nothing
+                                }
+                            )
+                            [ attributes
+                            , Elm.value
+                                { importFrom = []
+                                , name = declarationNameInstances
+                                , annotation = Nothing
+                                }
+                            , children
+                            , properties_
+                            ]
+                    )
+                    |> Elm.withType
+                        (Annotation.function
+                            [ attributesType, childrenType, propertiesType_ ]
+                            (elementAnnotation (Annotation.var "msg"))
+                        )
+                    |> Elm.declaration declarationNameWithAttributes
+            ]
 
 
 subcanvasNodeFilter : SubcanvasNode -> Maybe SubcanvasNode
@@ -267,7 +975,7 @@ disambiguateCollectedNames dict =
         |> Dict.fromList
 
 
-collectName : List String -> { a | defaultShapeTraits : DefaultShapeTraits } -> Dict String (List String) -> Dict String (List String)
+collectName : List String -> DefaultShapeTraits -> Dict String (List String) -> Dict String (List String)
 collectName parentNames child =
     Dict.insert
         (DefaultShapeTraits.getId child)
@@ -278,7 +986,7 @@ collectNames : List String -> { a | frameTraits : FrameTraits } -> Dict String (
 collectNames parentNames node names =
     let
         name =
-            FrameTraits.getName node
+            FrameTraits.getName node.frameTraits
 
         newParentNames =
             name :: parentNames
@@ -288,10 +996,10 @@ collectNames parentNames node names =
             (\child dict ->
                 case child of
                     SubcanvasNodeTextNode n ->
-                        collectName newParentNames n dict
+                        collectName newParentNames n.defaultShapeTraits dict
 
                     SubcanvasNodeEllipseNode n ->
-                        collectName newParentNames n dict
+                        collectName newParentNames n.defaultShapeTraits dict
 
                     SubcanvasNodeComponentNode n ->
                         collectComponentNames newParentNames n dict
@@ -309,13 +1017,13 @@ collectNames parentNames node names =
                         collectInstanceNames newParentNames n dict
 
                     SubcanvasNodeVectorNode n ->
-                        collectName newParentNames n.cornerRadiusShapeTraits dict
+                        collectName newParentNames n.cornerRadiusShapeTraits.defaultShapeTraits dict
 
                     SubcanvasNodeLineNode n ->
-                        collectName newParentNames n dict
+                        collectName newParentNames n.defaultShapeTraits dict
 
                     SubcanvasNodeRectangleNode n ->
-                        collectName newParentNames n.rectangularShapeTraits dict
+                        collectName newParentNames n.rectangularShapeTraits.defaultShapeTraits dict
 
                     _ ->
                         dict
@@ -346,7 +1054,7 @@ collectComponentSetNames =
 collectInstanceNames : List String -> InstanceNode -> Dict String (List String) -> Dict String (List String)
 collectInstanceNames names node collected =
     if hasMainComponentProperty node || hasVariantProperty node then
-        Dict.insert (FrameTraits.getId node) (FrameTraits.getName node :: names) collected
+        Dict.insert (FrameTraits.getId node) (FrameTraits.getName node.frameTraits :: names) collected
 
     else
         collectNames names node collected
@@ -356,12 +1064,23 @@ subcanvasNodeAdjustBoundingBox : OriginAdjust -> SubcanvasNode -> SubcanvasNode
 subcanvasNodeAdjustBoundingBox adjust node =
     case node of
         SubcanvasNodeTextNode n ->
-            DefaultShapeTraits.adjustBoundingBox adjust n
+            DefaultShapeTraits.adjustBoundingBox adjust n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeTextNode
 
         SubcanvasNodeEllipseNode n ->
-            DefaultShapeTraits.adjustBoundingBox adjust n
+            DefaultShapeTraits.adjustBoundingBox adjust n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeEllipseNode
+
+        SubcanvasNodeComponentNode n ->
+            -- applied when wrapped in ComponentSet
+            let
+                originAdjust =
+                    getOriginAdjust n
+            in
+            withFrameTraitsAdjustBoundingBox originAdjust n
+                |> SubcanvasNodeComponentNode
 
         SubcanvasNodeFrameNode n ->
             withFrameTraitsAdjustBoundingBox adjust n
@@ -380,7 +1099,8 @@ subcanvasNodeAdjustBoundingBox adjust node =
                 |> SubcanvasNodeVectorNode
 
         SubcanvasNodeLineNode n ->
-            DefaultShapeTraits.adjustBoundingBox adjust n
+            DefaultShapeTraits.adjustBoundingBox adjust n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeLineNode
 
         SubcanvasNodeRectangleNode n ->
@@ -395,11 +1115,13 @@ subcanvasNodeAdjustNames : Dict String String -> SubcanvasNode -> SubcanvasNode
 subcanvasNodeAdjustNames names node =
     case node of
         SubcanvasNodeTextNode n ->
-            DefaultShapeTraits.adjustName names n
+            DefaultShapeTraits.adjustName names n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeTextNode
 
         SubcanvasNodeEllipseNode n ->
-            DefaultShapeTraits.adjustName names n
+            DefaultShapeTraits.adjustName names n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeEllipseNode
 
         SubcanvasNodeComponentNode n ->
@@ -427,7 +1149,8 @@ subcanvasNodeAdjustNames names node =
                 |> SubcanvasNodeVectorNode
 
         SubcanvasNodeLineNode n ->
-            DefaultShapeTraits.adjustName names n
+            DefaultShapeTraits.adjustName names n.defaultShapeTraits
+                |> flip s_defaultShapeTraits n
                 |> SubcanvasNodeLineNode
 
         SubcanvasNodeRectangleNode n ->
@@ -475,25 +1198,24 @@ formatComponentPropertyName str =
         str
 
 
-componentNodeToProperties : String -> { a | componentPropertiesTrait : ComponentPropertiesTrait, frameTraits : FrameTraits } -> Dict String (Dict String ComponentPropertyType)
+componentNodeToProperties : String -> ComponentNodeOrSet -> Dict String (Dict String ComponentPropertyType)
 componentNodeToProperties name node =
     node.componentPropertiesTrait.componentPropertyDefinitions
         |> Maybe.map
             (Dict.toList
-                >> List.map
-                    (mapSecond .type_)
-                >> List.filter (instancePropertyIsNotPartOfAList False node)
+                >> List.map (mapSecond .type_)
+                >> List.filter (instancePropertyIsNotPartOfAList node)
                 >> Dict.fromList
             )
-        |> Maybe.map (pair name >> List.singleton)
+        |> Maybe.map (pair rootName >> List.singleton)
         |> Maybe.withDefault []
         |> (++)
             (withFrameTraitsToProperties node)
         |> Dict.fromList
 
 
-instancePropertyIsNotPartOfAList : Bool -> { a | frameTraits : FrameTraits } -> ( String, ComponentPropertyType ) -> Bool
-instancePropertyIsNotPartOfAList isList node ( name, type_ ) =
+instancePropertyIsNotPartOfAList : { a | frameTraits : FrameTraits } -> ( String, ComponentPropertyType ) -> Bool
+instancePropertyIsNotPartOfAList node ( name, type_ ) =
     let
         withFrameTraits : Bool -> { b | frameTraits : FrameTraits } -> Bool
         withFrameTraits isList_ n =
@@ -557,13 +1279,16 @@ hasMainComponentProperty n =
 subcanvasNodeToProperties : SubcanvasNode -> List ( String, Dict String ComponentPropertyType )
 subcanvasNodeToProperties node =
     case node of
+        SubcanvasNodeComponentNode n ->
+            withFrameTraitsToProperties n
+
         SubcanvasNodeInstanceNode n ->
             if hasMainComponentProperty n then
                 []
 
             else if hasVariantProperty n then
-                [ ( FrameTraits.getName n
-                  , Dict.singleton "variant" ComponentPropertyTypeVARIANT
+                [ ( FrameTraits.getName n.frameTraits
+                  , Dict.singleton "variant" ComponentPropertyTypeINSTANCESWAP
                   )
                 ]
 
@@ -573,7 +1298,7 @@ subcanvasNodeToProperties node =
                         (Dict.toList
                             >> List.map (mapSecond .type_)
                             >> Dict.fromList
-                            >> pair (FrameTraits.getName n)
+                            >> pair (FrameTraits.getName n.frameTraits)
                             >> List.singleton
                         )
                     |> Maybe.withDefault []
@@ -602,8 +1327,8 @@ propertiesToPropertyExpressions properties_ =
         )
 
 
-propertiesType : (Annotation -> Annotation) -> Dict String (Dict String ComponentPropertyType) -> Annotation
-propertiesType elementType =
+propertiesType : String -> (Annotation -> Annotation) -> Dict String (Dict String ComponentPropertyType) -> Annotation
+propertiesType componentName elementType =
     Dict.map
         (\_ ->
             Dict.foldl
@@ -619,7 +1344,12 @@ propertiesType elementType =
                             Dict.insert k Annotation.string
 
                         ComponentPropertyTypeVARIANT ->
-                            Dict.insert k (elementType (Annotation.var "msg"))
+                            componentName
+                                ++ " "
+                                ++ k
+                                |> toCamelCaseUpper
+                                |> Annotation.named []
+                                |> Dict.insert k
                 )
                 Dict.empty
                 >> Dict.toList
@@ -758,3 +1488,109 @@ wrapInSvg config name { absoluteRenderBounds, absoluteBoundingBox, layoutPositio
                         |> Elm.list
                     )
             )
+
+
+componentNodeToDetails : { a | frameTraits : FrameTraits } -> ( Details, List Details )
+componentNodeToDetails node =
+    ( FrameTraits.toDetails node
+    , node.frameTraits.children
+        |> List.map subcanvasNodeToDetails
+        |> List.concat
+    )
+
+
+withFrameTraitsNodeToDetails : { a | frameTraits : FrameTraits } -> ( Details, List Details )
+withFrameTraitsNodeToDetails node =
+    ( FrameTraits.toDetails node
+    , if FrameTraits.isList node then
+        []
+
+      else
+        node.frameTraits.children
+            |> List.map subcanvasNodeToDetails
+            |> List.concat
+    )
+
+
+subcanvasNodeToDetails : SubcanvasNode -> List Details
+subcanvasNodeToDetails node =
+    case node of
+        SubcanvasNodeTextNode n ->
+            if DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.defaultShapeTraits
+                    |> List.singleton
+
+        SubcanvasNodeComponentNode n ->
+            if FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> mapFirst (s_name rootName)
+                    |> uncurry (::)
+
+        SubcanvasNodeGroupNode n ->
+            if FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
+
+        SubcanvasNodeFrameNode n ->
+            if FrameTraits.isHidden n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
+
+        SubcanvasNodeInstanceNode n ->
+            if FrameTraits.isHidden n then
+                []
+
+            else if hasVariantProperty n || hasMainComponentProperty n then
+                []
+
+            else
+                withFrameTraitsNodeToDetails n
+                    |> uncurry (::)
+                    |> List.map (s_instanceName (FrameTraits.getName n.frameTraits))
+
+        SubcanvasNodeRectangleNode n ->
+            if DefaultShapeTraits.isHidden n.rectangularShapeTraits then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.rectangularShapeTraits.defaultShapeTraits
+                    |> List.singleton
+
+        SubcanvasNodeVectorNode n ->
+            if DefaultShapeTraits.isHidden n.cornerRadiusShapeTraits then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.cornerRadiusShapeTraits.defaultShapeTraits
+                    |> List.singleton
+
+        SubcanvasNodeLineNode n ->
+            if DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.defaultShapeTraits
+                    |> List.singleton
+
+        SubcanvasNodeEllipseNode n ->
+            if DefaultShapeTraits.isHidden n then
+                []
+
+            else
+                DefaultShapeTraits.toDetails n.defaultShapeTraits
+                    |> List.singleton
+
+        _ ->
+            []

@@ -307,7 +307,7 @@ copyIconWithAttrPathfinder hideHint attr vc value =
                             Nothing
                         )
                 )
-                { copyShortcut = { hint = Locale.string vc.locale "Copy" }
+                { root = { hint = Locale.string vc.locale "Copy" }
                 }
             ]
         ]

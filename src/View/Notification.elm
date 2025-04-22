@@ -118,7 +118,7 @@ view vc model =
                     { iconInstance = icon
                     , title = nvc.title
                     }
-                , typeError = { bodyText = "", headlineText = "" }
+                , root = { bodyText = "", headlineText = "" }
                 , messageText = { messageText = nvc.msg }
                 }
                 |> List.singleton
@@ -143,7 +143,7 @@ view vc model =
                     { iconInstance = icon
                     , title = nvc.title
                     }
-                , typeAlert = { bodyText = "", headlineText = "" }
+                , root = { bodyText = "", headlineText = "" }
                 , messageText = { messageText = nvc.msg }
                 }
                 |> List.singleton
@@ -172,7 +172,7 @@ view vc model =
                     { iconInstance = icon
                     , title = nvc.title
                     }
-                , typeSuccess = { bodyText = "", headlineText = "" }
+                , root = { bodyText = "", headlineText = "" }
                 , messageText = { messageText = nvc.msg }
                 }
                 |> List.singleton

@@ -18,7 +18,7 @@ import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import Set
 import Theme.Html.GraphComponents as GraphComponents
-import Theme.Html.TagsComponents as TagComponents
+import Theme.Html.TagsComponents as TagsComponents
 import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
@@ -52,14 +52,14 @@ view plugins pluginStates vc tt =
                     ( showActor vc ac, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
                 Text t ->
-                    ( [ div [ [ Css.width (Css.px GraphComponents.tooltipProperty1Down_details.width) ] |> css ] [ text t ] ], [] )
+                    ( [ div [ [ Css.width (Css.px GraphComponents.tooltipDown_details.width) ] |> css ] [ text t ] ], [] )
 
                 Plugin s msgs ->
                     ( Plugin.tooltip plugins s pluginStates vc |> Maybe.withDefault [], [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
     in
     content
         |> div
-            (css (GraphComponents.tooltipProperty1Down_details.styles ++ [ Css.minWidth (Css.px 230) ])
+            (css (GraphComponents.tooltipDown_details.styles ++ [ Css.minWidth (Css.px 230) ])
                 :: containerAttributes
             )
         |> toUnstyled
@@ -72,16 +72,36 @@ getConfidenceIndicator vc x =
     let
         r =
             getConfidenceRangeFromFloat x
+
+        lbl =
+            case r of
+                High ->
+                    "High confidence"
+
+                Medium ->
+                    "Medium confidence"
+
+                Low ->
+                    "Low confidence"
+
+        cl =
+            case r of
+                High ->
+                    TagsComponents.ConfidenceLevelConfidenceLevelHigh
+
+                Medium ->
+                    TagsComponents.ConfidenceLevelConfidenceLevelMedium
+
+                Low ->
+                    TagsComponents.ConfidenceLevelConfidenceLevelLow
     in
-    case r of
-        High ->
-            TagComponents.confidenceLevelConfidenceLevelHighSizeSmall { confidenceLevelHighSizeSmall = { text = Locale.string vc.locale "High" } }
-
-        Medium ->
-            TagComponents.confidenceLevelConfidenceLevelMediumSizeSmall { confidenceLevelMediumSizeSmall = { text = Locale.string vc.locale "Medium" } }
-
-        Low ->
-            TagComponents.confidenceLevelConfidenceLevelLowSizeSmall { confidenceLevelLowSizeSmall = { text = Locale.string vc.locale "Low" } }
+    TagsComponents.confidenceLevel
+        { root =
+            { size = TagsComponents.ConfidenceLevelSizeSmall
+            , confidenceLevel = cl
+            , text = Locale.string vc.locale lbl
+            }
+        }
 
 
 val : View.Config -> String -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
@@ -101,7 +121,7 @@ tooltipRow : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRo
 tooltipRow =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css baseRowStyle ]
+            |> Rs.s_root [ css baseRowStyle ]
         )
 
 
@@ -109,7 +129,7 @@ tooltipRowCustomValue : String -> Html msg -> Html msg
 tooltipRowCustomValue title rowValue =
     GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_tooltipRow [ css baseRowStyle ]
+            |> Rs.s_root [ css baseRowStyle ]
         )
         (GraphComponents.tooltipRowInstances |> Rs.s_tooltipRowValue (Just rowValue))
         { tooltipRowLabel = { title = title }
@@ -121,7 +141,7 @@ tooltipRowCustomValue title rowValue =
 linkRow : View.Config -> String -> msg -> Html msg
 linkRow vc txt msg =
     tooltipRowCustomValue ""
-        (Button.btnDefaultConfig
+        (Button.defaultConfig
             |> Rs.s_text txt
             |> Rs.s_onClick (Just msg)
             |> Button.linkButtonBlue vc

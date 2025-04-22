@@ -23,14 +23,9 @@ toStyles colorMap node =
         ++ HasEffectsTrait.toStyles colorMap node.hasEffectsTrait
 
 
-toDetails : ColorMap -> { a | defaultShapeTraits : DefaultShapeTraits } -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap node.defaultShapeTraits) node
-
-
-toExpressions : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression -> List Elm.Expression
+toExpressions : Config -> DefaultShapeTraits -> List Elm.Expression -> List Elm.Expression
 toExpressions config node =
-    wrapInSvg config (Common.getName node) node.defaultShapeTraits
+    wrapInSvg config (Common.getName node) node
         >> List.singleton
 
 

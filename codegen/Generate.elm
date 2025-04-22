@@ -4,10 +4,11 @@ module Generate exposing (main)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (flip)
-import Dict exposing (Dict)
+import Dict
 import Elm
-import Elm.ToString
 import Gen.CodeGen.Generate as Generate
+import Gen.Html.Styled
+import Gen.Svg.Styled
 import Generate.Colors as Colors exposing (ColorMapRaw)
 import Generate.Common as Common
 import Generate.Common.FrameTraits as FrameTraits
@@ -23,8 +24,8 @@ import String.Case exposing (toCamelCaseUpper)
 import String.Extra
 import String.Format
 import Task
-import Tuple exposing (first, mapFirst, mapSecond, pair)
-import Types exposing (ColorMap)
+import Tuple exposing (first, mapFirst, pair)
+import Types exposing (FormatSpecifics)
 
 
 type alias Flags =
@@ -181,7 +182,7 @@ main =
                                         let
                                             _ =
                                                 frames
-                                                    |> List.map (first >> FrameTraits.getName)
+                                                    |> List.map (first >> .frameTraits >> FrameTraits.getName)
                                                     |> log "frames"
 
                                             colorMapLight =
@@ -275,7 +276,7 @@ main =
                                 , canvasNodeToRequests flags canvas
                                 )
 
-                            Err err ->
+                            Err _ ->
                                 ( model
                                 , Generate.error
                                     [ { title = "Error decoding figma main"
@@ -286,7 +287,7 @@ main =
 
                     GotFrameNodes plugin_name result ->
                         case result of
-                            Err err ->
+                            Err _ ->
                                 ( model
                                 , Generate.error
                                     [ { title = "Error fetching figma frames"
@@ -504,9 +505,9 @@ frameToFiles model ( ( n, children ), htmlDeclarations, svgDeclarations ) =
                                       , rest
                                       )
                                     , htmlDeclarations
-                                        ++ fun (Generate.Html.componentNodeToDeclarations colorMap) ok
+                                        ++ fun (getFormatSpecifics False) colorMap ok
                                     , svgDeclarations
-                                        ++ fun (Generate.Svg.componentNodeToDeclarations colorMap) ok
+                                        ++ fun (getFormatSpecifics True) colorMap ok
                                     )
 
                                 _ =
@@ -540,7 +541,18 @@ frameToFiles model ( ( n, children ), htmlDeclarations, svgDeclarations ) =
         )
 
 
-frameNodeToDeclarations : (SubcanvasNode -> List Elm.Declaration) -> FrameNode -> List Elm.Declaration
-frameNodeToDeclarations gen node =
-    List.map gen node.frameTraits.children
-        |> List.concat
+getFormatSpecifics : Bool -> FormatSpecifics
+getFormatSpecifics isSvg =
+    if isSvg then
+        { toStyles = Generate.Svg.componentNodeToStyles
+        , withFrameTraitsNodeToExpression = Generate.Svg.withFrameTraitsNodeToExpression
+        , elementAnnotation = Gen.Svg.Styled.annotation_.svg
+        , attributeAnnotation = Gen.Svg.Styled.annotation_.attribute
+        }
+
+    else
+        { toStyles = Generate.Html.componentNodeToStyles
+        , withFrameTraitsNodeToExpression = Generate.Html.withFrameTraitsNodeToExpression
+        , elementAnnotation = Gen.Html.Styled.annotation_.html
+        , attributeAnnotation = Gen.Html.Styled.annotation_.attribute
+        }

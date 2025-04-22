@@ -73,7 +73,7 @@ linkCellStyle =
 
 
 cell : View.Config -> Cell -> Table.HtmlDetails Msg
-cell vc c =
+cell _ c =
     let
         cellBase =
             [ Css.height Css.auto |> Css.important
@@ -110,7 +110,7 @@ cell vc c =
 
         -- to allow wrapping and growing of line
         defaultData cc tagIcon actionIcon =
-            { tagRowCell =
+            { root =
                 { infoIconInstance = actionIcon |> Maybe.withDefault none
                 , tagIconVisible = tagIcon /= Nothing
                 , infoIconVisible = actionIcon /= Nothing
@@ -125,7 +125,7 @@ cell vc c =
         LastModCell cc ->
             TagsComponents.tagRowCellWithAttributes
                 (attrs
-                    |> Rs.s_tagRowCell (cellBase ++ [ Css.alignItems Css.end |> Css.important ] |> css |> List.singleton)
+                    |> Rs.s_root (cellBase ++ [ Css.alignItems Css.end |> Css.important ] |> css |> List.singleton)
                 )
                 (defaultData cc Nothing Nothing)
 
@@ -134,13 +134,13 @@ cell vc c =
                 Exchange ->
                     TagsComponents.tagRowIconCellWithAttributes
                         (TagsComponents.tagRowIconCellAttributes
-                            |> Rs.s_tagRowIconCell
+                            |> Rs.s_root
                                 [ css
                                     [ Css.verticalAlign Css.top
                                     ]
                                 ]
                         )
-                        { tagRowIconCell =
+                        { root =
                             { iconInstance = Icons.iconsExchangeSnoPadding {}
                             }
                         }
@@ -150,7 +150,7 @@ cell vc c =
 
         LabelCell cc _ ->
             TagsComponents.tagRowCellWithAttributes
-                (attrs |> Rs.s_tagRowCell (cellWWidth |> css |> List.singleton))
+                (attrs |> Rs.s_root (cellWWidth |> css |> List.singleton))
                 (defaultData cc Nothing Nothing)
 
         SourceCell cc ->
@@ -182,7 +182,7 @@ cell vc c =
                         [ text subText ]
             in
             TagsComponents.tagRowCellWithInstances
-                (attrs |> Rs.s_tagRowCell (cellWWidth |> css |> List.singleton))
+                (attrs |> Rs.s_root (cellWWidth |> css |> List.singleton))
                 (TagsComponents.tagRowCellInstances
                     |> Rs.s_label linkBody
                     |> Rs.s_category (Just sub)
@@ -194,16 +194,36 @@ cell vc c =
                 ttConfig =
                     { domId = cc.cellid, text = cc.titletext }
 
-                sub =
+                lbl =
                     case cc.confidence of
                         High ->
-                            TagsComponents.confidenceLevelConfidenceLevelHighSizeSmall { confidenceLevelHighSizeSmall = { text = Locale.string vc.locale "High confidence" } }
+                            "High confidence"
 
                         Medium ->
-                            TagsComponents.confidenceLevelConfidenceLevelMediumSizeSmall { confidenceLevelMediumSizeSmall = { text = Locale.string vc.locale "Medium confidence" } }
+                            "Medium confidence"
 
                         Low ->
-                            TagsComponents.confidenceLevelConfidenceLevelLowSizeSmall { confidenceLevelLowSizeSmall = { text = Locale.string vc.locale "Low confidence" } }
+                            "Low confidence"
+
+                cl =
+                    case cc.confidence of
+                        High ->
+                            TagsComponents.ConfidenceLevelConfidenceLevelHigh
+
+                        Medium ->
+                            TagsComponents.ConfidenceLevelConfidenceLevelMedium
+
+                        Low ->
+                            TagsComponents.ConfidenceLevelConfidenceLevelLow
+
+                sub =
+                    TagsComponents.confidenceLevel
+                        { root =
+                            { size = TagsComponents.ConfidenceLevelSizeSmall
+                            , confidenceLevel = cl
+                            , text = lbl
+                            }
+                        }
 
                 icon =
                     span
@@ -219,7 +239,7 @@ cell vc c =
                         ]
             in
             TagsComponents.tagRowCellWithInstances
-                (attrs |> Rs.s_tagRowCell (cellWMinWidth |> css |> List.singleton))
+                (attrs |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
                 (TagsComponents.tagRowCellInstances
                     |> Rs.s_category (Just sub)
                 )
