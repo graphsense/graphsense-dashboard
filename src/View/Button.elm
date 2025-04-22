@@ -1,4 +1,4 @@
-module View.Button exposing (BtnConfig, actorLink, btnDefaultConfig, linkButtonBlue, linkButtonUnderlinedGray, primaryButton, primaryButtonGreen, secondaryButton, tool)
+module View.Button exposing (BtnConfig, actorLink, button, buttonWithAttributes, defaultConfig, linkButtonBlue, linkButtonUnderlinedGray, primaryButton, primaryButtonGreen, secondaryButton, tool)
 
 import Config.View as View
 import Css
@@ -7,12 +7,12 @@ import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
-import Maybe.Extra
 import RecordSetter as Rs
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Theme.Colors
 import Theme.Html.Buttons as Buttons
+import Util.Css
 import Util.View exposing (none, onClickWithStop, pointer)
 import View.Locale as Locale
 
@@ -21,14 +21,25 @@ type alias BtnConfig msg =
     { icon : Maybe (Html msg)
     , text : String
     , onClick : Maybe msg
+    , state : Buttons.ButtonState
+    , style : Buttons.ButtonStyle
+    , size : Buttons.ButtonSize
     , disabled : Bool
     , onClickWithStop : Bool
     }
 
 
-btnDefaultConfig : BtnConfig msg
-btnDefaultConfig =
-    { icon = Nothing, text = "", onClick = Nothing, disabled = False, onClickWithStop = False }
+defaultConfig : BtnConfig msg
+defaultConfig =
+    { icon = Nothing
+    , text = ""
+    , onClick = Nothing
+    , state = Buttons.ButtonStateRegular
+    , style = Buttons.ButtonStylePrimary
+    , size = Buttons.ButtonSizeMedium
+    , disabled = False
+    , onClickWithStop = False
+    }
 
 
 tool :
@@ -70,18 +81,81 @@ actorLink vc id label =
         ]
 
 
+button : View.Config -> BtnConfig msg -> Html msg
+button =
+    buttonWithAttributes { root = [], button = [] }
+
+
+buttonWithAttributes : { root : List (Attribute msg), button : List (Attribute msg) } -> View.Config -> BtnConfig msg -> Html msg
+buttonWithAttributes attr vc btn =
+    let
+        clickAttr =
+            if btn.onClickWithStop then
+                onClickWithStop
+
+            else
+                onClick
+
+        state =
+            if btn.disabled then
+                Buttons.ButtonStateDisabled
+
+            else
+                btn.state
+
+        style =
+            ((Css.paddingTop <| Css.px 2)
+                :: (if btn.disabled then
+                        [ Util.Css.overrideBlack Theme.Colors.greyBlue100 ]
+
+                    else
+                        []
+                   )
+                |> css
+            )
+                :: (if state /= Buttons.ButtonStateDisabled then
+                        pointer
+                            :: (btn.onClick
+                                    |> Maybe.map (clickAttr >> List.singleton)
+                                    |> Maybe.withDefault []
+                               )
+
+                    else
+                        []
+                   )
+                ++ attr.root
+    in
+    Buttons.buttonWithAttributes
+        (Buttons.buttonAttributes
+            |> Rs.s_root style
+            |> Rs.s_button attr.button
+        )
+        { root =
+            { state = state
+            , type_ =
+                if btn.icon == Nothing then
+                    Buttons.ButtonTypeText
+
+                else
+                    Buttons.ButtonTypeTextIcon
+            , style = btn.style
+            , size = btn.size
+            , buttonText = Locale.string vc.locale btn.text
+            , iconInstance = btn.icon |> Maybe.withDefault none
+            , iconVisible = btn.icon /= Nothing
+            }
+        }
+
+
 primaryButton : View.Config -> BtnConfig msg -> Html msg
 primaryButton vc btn =
-    primaryButtonWithAttributes vc
-        btn
-        { container = [], button = [] }
+    button vc { btn | style = Buttons.ButtonStylePrimary }
 
 
 primaryButtonGreen : View.Config -> BtnConfig msg -> Html msg
 primaryButtonGreen vc btn =
-    primaryButtonWithAttributes vc
-        btn
-        { container =
+    buttonWithAttributes
+        { root =
             [ Css.property "background-color" Theme.Colors.green300
                 |> Css.important
             ]
@@ -94,163 +168,28 @@ primaryButtonGreen vc btn =
                 |> css
                 |> List.singleton
         }
-
-
-primaryButtonWithAttributes : View.Config -> BtnConfig msg -> { container : List (Attribute msg), button : List (Attribute msg) } -> Html msg
-primaryButtonWithAttributes vc btn attr =
-    let
-        clickAttr =
-            if btn.onClickWithStop then
-                onClickWithStop
-
-            else
-                onClick
-
-        style =
-            ([ Css.paddingTop <| Css.px 2
-             ]
-                |> css
-            )
-                :: (btn.onClick
-                        |> Maybe.map (clickAttr >> List.singleton)
-                        |> Maybe.withDefault []
-                   )
-                ++ attr.container
-    in
-    Buttons.buttonWithAttributes
-        (Buttons.buttonAttributes
-            |> Rs.s_root style
-            |> Rs.s_button attr.button
-        )
-        { root =
-            { state = Buttons.ButtonStateRegular
-            , type_ =
-                if btn.icon == Nothing then
-                    Buttons.ButtonTypeText
-
-                else
-                    Buttons.ButtonTypeTextIcon
-            , style = Buttons.ButtonStylePrimary
-            , size = Buttons.ButtonSizeMedium
-            , buttonText = Locale.string vc.locale btn.text
-            , iconInstance = btn.icon |> Maybe.withDefault none
-            , iconVisible = True
-            }
+        vc
+        { btn
+            | style = Buttons.ButtonStylePrimary
         }
 
 
 secondaryButton : View.Config -> BtnConfig msg -> Html msg
 secondaryButton vc btn =
-    let
-        clickAttr =
-            if btn.onClickWithStop then
-                onClickWithStop
-
-            else
-                onClick
-
-        style =
-            ([ Css.paddingTop <| Css.px 2
-             ]
-                |> css
-            )
-                :: (btn.onClick
-                        |> Maybe.map (clickAttr >> List.singleton)
-                        |> Maybe.withDefault []
-                   )
-                ++ (if btn.disabled then
-                        []
-
-                    else
-                        [ pointer ]
-                   )
-    in
-    Buttons.buttonWithAttributes
-        (Buttons.buttonAttributes
-            |> Rs.s_root style
-        )
-        { root =
-            { state = Buttons.ButtonStateRegular
-            , type_ =
-                if btn.icon == Nothing then
-                    Buttons.ButtonTypeText
-
-                else
-                    Buttons.ButtonTypeTextIcon
-            , style = Buttons.ButtonStyleOutlined
-            , size = Buttons.ButtonSizeMedium
-            , buttonText = Locale.string vc.locale btn.text
-            , iconInstance = btn.icon |> Maybe.withDefault none
-            , iconVisible = True
-            }
-        }
+    button vc { btn | style = Buttons.ButtonStyleOutlined }
 
 
 linkButtonUnderlinedGray : View.Config -> BtnConfig msg -> Html msg
 linkButtonUnderlinedGray vc btn =
-    let
-        clickAttr =
-            if btn.onClickWithStop then
-                onClickWithStop
-
-            else
-                onClick
-
-        style =
-            ([ Css.cursor Css.pointer
-             , Css.paddingTop <| Css.px 2
-             ]
-                |> css
-            )
-                :: (btn.onClick
-                        |> Maybe.map (clickAttr >> List.singleton)
-                        |> Maybe.withDefault []
-                   )
-    in
-    Buttons.buttonWithAttributes
-        (Buttons.buttonAttributes |> Rs.s_root style)
-        { root =
-            { state = Buttons.ButtonStateRegular
-            , type_ = Buttons.ButtonTypeTextIcon
-            , style = Buttons.ButtonStyleTextGrey
-            , size = Buttons.ButtonSizeMedium
-            , buttonText = Locale.string vc.locale btn.text
-            , iconInstance = btn.icon |> Maybe.withDefault none
-            , iconVisible = Maybe.Extra.isJust btn.icon
-            }
+    button vc
+        { btn
+            | style = Buttons.ButtonStyleTextGrey
         }
 
 
 linkButtonBlue : View.Config -> BtnConfig msg -> Html msg
 linkButtonBlue vc btn =
-    let
-        clickAttr =
-            if btn.onClickWithStop then
-                onClickWithStop
-
-            else
-                onClick
-
-        style =
-            ([ Css.cursor Css.pointer
-             , Css.paddingTop <| Css.px 2
-             ]
-                |> css
-            )
-                :: (btn.onClick
-                        |> Maybe.map (clickAttr >> List.singleton)
-                        |> Maybe.withDefault []
-                   )
-    in
-    Buttons.buttonWithAttributes
-        (Buttons.buttonAttributes |> Rs.s_root style)
-        { root =
-            { state = Buttons.ButtonStateRegular
-            , type_ = Buttons.ButtonTypeText
-            , style = Buttons.ButtonStyleTextBlue
-            , size = Buttons.ButtonSizeMedium
-            , buttonText = Locale.string vc.locale btn.text
-            , iconInstance = btn.icon |> Maybe.withDefault none
-            , iconVisible = Maybe.Extra.isJust btn.icon
-            }
+    button vc
+        { btn
+            | style = Buttons.ButtonStyleTextBlue
         }

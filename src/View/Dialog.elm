@@ -71,14 +71,14 @@ confirm vc { message, onYes, onNo, title, confirmText, cancelText } =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedConfirm onNo) ]
 
         ybtn =
-            Button.btnDefaultConfig
+            Button.defaultConfig
                 |> Rs.s_text (confirmText |> Maybe.withDefault "Yes")
                 |> Rs.s_onClick (Just (UserClickedConfirm onYes))
                 |> Rs.s_onClickWithStop True
                 |> Button.primaryButton vc
 
         nbtn =
-            Button.btnDefaultConfig
+            Button.defaultConfig
                 |> Rs.s_text (cancelText |> Maybe.withDefault "No")
                 |> Rs.s_onClick (Just (UserClickedConfirm onNo))
                 |> Rs.s_onClickWithStop True
@@ -109,8 +109,8 @@ options_ vc { message, options } =
             [ css (Css.btnBase vc), onClickWithStop (UserClickedOption NoOp) ]
 
         btn ( title, msg ) =
-            Button.btnDefaultConfig
-                |> Rs.s_text (Locale.string vc.locale title)
+            Button.defaultConfig
+                |> Rs.s_text title
                 |> Rs.s_onClick (Just (UserClickedOption msg))
                 |> Rs.s_onClickWithStop True
                 |> Button.primaryButton vc

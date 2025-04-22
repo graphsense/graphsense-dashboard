@@ -1,4 +1,4 @@
-module View.Controls exposing (ToggleConfig, lightModeToggle, tabs, toggle, toggleCell, toggleWithIcons, toggleWithText)
+module View.Controls exposing (ToggleConfig, lightModeToggle, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -177,28 +177,34 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
             {}
 
 
+viewTab : Sc.SingleTabSize -> { a | msg : msg, selected : Bool, title : String } -> Html msg
+viewTab size t =
+    Sc.singleTabWithAttributes
+        (Sc.singleTabAttributes
+            |> Rs.s_root [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
+        )
+        { root =
+            { state =
+                if t.selected then
+                    Sc.SingleTabStateSelected
+
+                else
+                    Sc.SingleTabStateNeutral
+            , size = size
+            , tabLabel = t.title
+            }
+        }
+
+
 tabs : Sc.SingleTabSize -> List { title : String, selected : Bool, msg : msg } -> Html msg
 tabs size tbs =
-    let
-        viewTab t =
-            Sc.singleTabWithAttributes
-                (Sc.singleTabAttributes
-                    |> Rs.s_root [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
-                )
-                { root =
-                    { state =
-                        if t.selected then
-                            Sc.SingleTabStateSelected
-
-                        else
-                            Sc.SingleTabStateNeutral
-                    , size = size
-                    , tabLabel = t.title
-                    }
-                }
-    in
     div
         [ Html.Styled.Attributes.css
             Sp.settingsPageSettingsTabsSettingsTabs_details.styles
         ]
-        (tbs |> List.map viewTab)
+        (tbs |> List.map (viewTab size))
+
+
+tabsSmallItems : List { title : String, selected : Bool, msg : msg } -> List (Html msg)
+tabsSmallItems =
+    List.map (viewTab Sc.SingleTabSizeSmall)

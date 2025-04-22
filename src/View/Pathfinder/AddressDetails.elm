@@ -422,12 +422,12 @@ transactionTableView vc addressId txOnGraphFn model =
                         |> css
                     ]
                     [ Button.secondaryButton vc
-                        (Button.btnDefaultConfig
+                        (Button.defaultConfig
                             |> Rs.s_text "Reset"
                             |> Rs.s_onClick (Just AddressDetails.ResetDateRangePicker)
                         )
                     , Button.primaryButton vc
-                        (Button.btnDefaultConfig
+                        (Button.defaultConfig
                             |> Rs.s_text "Apply filter"
                             |> Rs.s_onClick (Just AddressDetails.CloseDateRangePicker)
                         )
@@ -786,7 +786,7 @@ viewLabelOfTags vc gc model id =
 
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg
 learnMoreButton vc id =
-    Button.btnDefaultConfig
+    Button.defaultConfig
         |> Rs.s_text "Learn more"
         |> Rs.s_onClick (Just (Pathfinder.UserOpensDialogWindow (TagsList id)))
         |> Button.linkButtonBlue vc

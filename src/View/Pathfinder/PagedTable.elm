@@ -11,9 +11,11 @@ import Html.Styled.Events exposing (onClick)
 import PagedTable
 import RecordSetter as Rs
 import Table
+import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
+import Util.Css
 import Util.View
 import View.Graph.Table exposing (simpleThead)
 import View.Locale as Locale
@@ -86,16 +88,29 @@ pagedTableView vc attributes config tblPaged msgTag =
         nextPageAvailable =
             PagedTable.hasNextPage tblPaged
 
+        overrideColor =
+            Util.Css.overrideBlack Theme.Colors.greyBlue500
+
         nextActiveAttributes =
             if nextPageAvailable then
-                [ onClick (PagedTable.NextPage |> msgTag), [ Css.cursor Css.pointer ] |> css ]
+                [ onClick (PagedTable.NextPage |> msgTag)
+                , [ Css.cursor Css.pointer
+                  , overrideColor
+                  ]
+                    |> css
+                ]
 
             else
                 []
 
         prevActiveAttributes =
             if PagedTable.hasPrevPage tblPaged then
-                [ onClick (PagedTable.PrevPage |> msgTag), [ Css.cursor Css.pointer ] |> css ]
+                [ onClick (PagedTable.PrevPage |> msgTag)
+                , [ Css.cursor Css.pointer
+                  , overrideColor
+                  ]
+                    |> css
+                ]
 
             else
                 []
@@ -108,39 +123,35 @@ pagedTableView vc attributes config tblPaged msgTag =
                 []
 
         paggingBlockAttributes =
-            [ [ Css.width (Css.pct 100) ] |> css, Util.View.noTextSelection ]
+            [ [ Css.width (Css.pct 100)
+              ]
+                |> css
+            , Util.View.noTextSelection
+            ]
 
-        { listPartState, chevronLeftAttributes, chevronLeftState, chevronRightAttributes, chevronRightState } =
+        { listPartState, leftDisabled, rightDisabled } =
             if PagedTable.getCurrentPage tblPaged == 1 && nextPageAvailable then
                 { listPartState = SidePanelComponents.PaginationListPartStart
-                , chevronLeftAttributes = Icons.iconsChevronLeftThinAttributes
-                , chevronLeftState = Icons.IconsChevronLeftThinStateDisabled
-                , chevronRightAttributes = Icons.iconsChevronRightThinAttributes
-                , chevronRightState = Icons.IconsChevronRightThinStateDefault
+                , leftDisabled = True
+                , rightDisabled = False
                 }
 
             else if PagedTable.getCurrentPage tblPaged == 1 && not nextPageAvailable then
                 { listPartState = SidePanelComponents.PaginationListPartOnePage
-                , chevronLeftAttributes = Icons.iconsChevronLeftThinAttributes
-                , chevronLeftState = Icons.IconsChevronLeftThinStateDisabled
-                , chevronRightAttributes = Icons.iconsChevronRightThinAttributes
-                , chevronRightState = Icons.IconsChevronRightThinStateDisabled
+                , leftDisabled = True
+                , rightDisabled = True
                 }
 
             else if nextPageAvailable then
                 { listPartState = SidePanelComponents.PaginationListPartMiddle
-                , chevronLeftAttributes = Icons.iconsChevronLeftThinAttributes
-                , chevronLeftState = Icons.IconsChevronLeftThinStateDefault
-                , chevronRightAttributes = Icons.iconsChevronRightThinAttributes
-                , chevronRightState = Icons.IconsChevronRightThinStateDefault
+                , leftDisabled = False
+                , rightDisabled = False
                 }
 
             else
                 { listPartState = SidePanelComponents.PaginationListPartEnd
-                , chevronLeftAttributes = Icons.iconsChevronLeftThinAttributes
-                , chevronLeftState = Icons.IconsChevronLeftThinStateDefault
-                , chevronRightAttributes = Icons.iconsChevronRightThinAttributes
-                , chevronRightState = Icons.IconsChevronRightThinStateDisabled
+                , leftDisabled = False
+                , rightDisabled = True
                 }
 
         listPart =
@@ -154,14 +165,28 @@ pagedTableView vc attributes config tblPaged msgTag =
             }
 
         chevronLeft =
-            Icons.iconsChevronLeftThinWithAttributes
-                chevronLeftAttributes
-                { root = { state = chevronLeftState } }
+            Icons.iconsChevronLeftThin
+                { root =
+                    { state =
+                        if leftDisabled then
+                            Icons.IconsChevronLeftThinStateDisabled
+
+                        else
+                            Icons.IconsChevronLeftThinStateDefault
+                    }
+                }
 
         chevronRight =
-            Icons.iconsChevronRightThinWithAttributes
-                chevronRightAttributes
-                { root = { state = chevronRightState } }
+            Icons.iconsChevronRightThin
+                { root =
+                    { state =
+                        if rightDisabled then
+                            Icons.IconsChevronRightThinStateDisabled
+
+                        else
+                            Icons.IconsChevronRightThinStateDefault
+                    }
+                }
 
         wrapNote =
             List.singleton
@@ -199,9 +224,9 @@ pagedTableView vc attributes config tblPaged msgTag =
             ++ [ SidePanelComponents.paginationWithAttributes
                     (SidePanelComponents.paginationAttributes
                         |> Rs.s_root paggingBlockAttributes
-                        |> Rs.s_next nextActiveAttributes
+                        |> Rs.s_nextButton nextActiveAttributes
                         |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
-                        |> Rs.s_previous prevActiveAttributes
+                        |> Rs.s_previousButton prevActiveAttributes
                     )
                     { root = listPart
                     , iconsChevronLeftThin = { variant = chevronLeft }

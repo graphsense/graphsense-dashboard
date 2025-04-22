@@ -141,7 +141,7 @@ tooltipRowCustomValue title rowValue =
 linkRow : View.Config -> String -> msg -> Html msg
 linkRow vc txt msg =
     tooltipRowCustomValue ""
-        (Button.btnDefaultConfig
+        (Button.defaultConfig
             |> Rs.s_text txt
             |> Rs.s_onClick (Just msg)
             |> Button.linkButtonBlue vc

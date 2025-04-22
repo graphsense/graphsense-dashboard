@@ -98,7 +98,7 @@ view vc config =
                 Icons.iconsUndoWithAttributes
                     (Icons.iconsUndoAttributes
                         |> Rs.s_root
-                            (iconsAttr "Undo" config.redoDisabled UserClickedUndo)
+                            (iconsAttr "Undo" config.undoDisabled UserClickedUndo)
                     )
                     { root = { state = Icons.IconsUndoStateActive } }
             }

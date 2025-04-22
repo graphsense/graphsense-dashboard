@@ -239,7 +239,7 @@ view plugins vc colors address getCluster annotation =
                         |> Maybe.withDefault
                             (Icons.iconsNodeOpenRightWithAttributes
                                 (Icons.iconsNodeOpenRightAttributes
-                                    |> Rs.s_root (expand Incoming)
+                                    |> Rs.s_root (expand Outgoing)
                                 )
                                 { root =
                                     { state =

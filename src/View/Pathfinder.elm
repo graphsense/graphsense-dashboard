@@ -138,12 +138,6 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         ]
-                            ++ (if pluginsList |> List.isEmpty then
-                                    []
-
-                                else
-                                    [ ContextMenuItem.rule vc ]
-                               )
                     , pluginsList = pluginsList
                     }
                     {}

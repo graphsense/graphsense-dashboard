@@ -98,7 +98,7 @@ generalSettings plugins vc m =
         generalSettingsProperties =
             { button =
                 { variant =
-                    Button.btnDefaultConfig
+                    Button.defaultConfig
                         |> Rs.s_text "Logout"
                         |> Rs.s_onClick (Just UserClickedLogout)
                         |> Button.linkButtonBlue vc

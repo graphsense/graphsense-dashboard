@@ -136,7 +136,6 @@ navbarSubMenuView vc model { type_ } =
                           }
                             |> ContextMenuItem.initLink2
                             |> ContextMenuItem.view vc
-                        , ContextMenuItem.rule vc
                         ]
                     , pluginsList =
                         [ { link = "https://www.iknaio.com/learning#pathfinder20"
@@ -199,13 +198,18 @@ sidebarMenuItemPlain img label selected new =
         (Nb.navbarProductItemAttributes
             |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
             |> Rs.s_root
-                [ [ Css.hover
-                        (Css.property Theme.Colors.sidebarNeutral_name Theme.Colors.sidebarHovered
+                (if not selected then
+                    [ Css.hover
+                        (Util.Css.overrideBlack Theme.Colors.sidebarHovered
                             :: Nb.navbarProductItemStateHover_details.styles
                         )
-                  ]
-                    |> css
-                ]
+                    ]
+                        |> css
+                        |> List.singleton
+
+                 else
+                    []
+                )
             |> ifNewAddEvenOdd
         )
         { root =
