@@ -156,10 +156,10 @@ statsRowBadge vc label values =
             ]
             [ Locale.text vc.locale label
             ]
-        , span
-            [ Css.statsTableCellValue vc |> css
+        , div
+            [ Css.statsBadgeContainer |> css
             ]
-            (values |> List.map (\x -> span [ Css.statsBadge vc |> css ] [ text x ]))
+            (values |> List.map (\x -> div [ Css.statsBadge vc |> css ] [ text x ]))
         ]
 
 
