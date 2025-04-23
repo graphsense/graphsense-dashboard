@@ -2295,6 +2295,21 @@ checkSelection uc model =
         WillSelectAddress id ->
             selectAddress uc id model
 
+        MultiSelect selections ->
+            -- not using selectAddress/tx here since they deselect other stuff
+            -- do some other steps.
+            selections
+                |> List.foldl
+                    (\msel ( m, eff ) ->
+                        case msel of
+                            MSelectedAddress id ->
+                                ( m |> s_network (Network.updateTx id (s_selected True) m.network), eff )
+
+                            MSelectedTx id ->
+                                ( m |> s_network (Network.updateTx id (s_selected True) m.network), eff )
+                    )
+                    ( model, [] )
+
         _ ->
             n model
 
