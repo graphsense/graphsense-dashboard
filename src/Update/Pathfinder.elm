@@ -23,6 +23,7 @@ import Init.Pathfinder.TxDetails as TxDetails
 import Json.Decode
 import List.Extra
 import Log
+import Maybe.Extra
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
@@ -84,6 +85,25 @@ import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
 import View.Locale as Locale
+
+
+getTagsummary : HavingTags -> Maybe Api.Data.TagSummary
+getTagsummary ht =
+    case ht of
+        HasTagSummaryWithCluster ts ->
+            Just ts
+
+        HasTagSummaryWithoutCluster ts ->
+            Just ts
+
+        HasTagSummaryOnlyWithCluster ts ->
+            Just ts
+
+        HasTagSummaries { withCluster } ->
+            Just withCluster
+
+        _ ->
+            Nothing
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -149,10 +169,30 @@ updateByMsg plugins uc msg model =
             n model
 
         BrowserGotActor id data ->
+            let
+                isMatchingActor ( aid, a ) =
+                    let
+                        isMatching ts =
+                            if ts.bestActor |> Maybe.map ((==) id) |> Maybe.withDefault False then
+                                Just aid
+
+                            else
+                                Nothing
+                    in
+                    a |> getTagsummary |> Maybe.andThen isMatching
+
+                idsToUpdate =
+                    model.tagSummaries
+                        |> Dict.toList
+                        |> List.filterMap isMatchingActor
+            in
             n
-                { model
-                    | actors = Dict.insert id data model.actors
-                }
+                (idsToUpdate
+                    |> List.foldl (\addressId m -> updateTagDataOnAddress addressId m)
+                        { model
+                            | actors = Dict.insert id data model.actors
+                        }
+                )
 
         UserPressedModKey ->
             n { model | modPressed = True }
@@ -1411,8 +1451,10 @@ updateTagDataOnAddress addressId m =
             let
                 actorlabel =
                     case tagdata.bestActor of
-                        Just _ ->
-                            tagdata.bestLabel
+                        Just actor ->
+                            Dict.get actor m.actors
+                                |> Maybe.map .label
+                                |> Maybe.Extra.orElse tagdata.bestLabel
 
                         _ ->
                             Nothing
