@@ -91,7 +91,7 @@ filterByPrefix input result =
                     in
                     { currency
                         | addresses = List.filter (String.startsWith addr) currency.addresses
-                        , txs = List.filter (\x -> String.startsWith (removeLeading0x input) (removeLeading0x x)) currency.txs
+                        , txs = List.filter (\x -> String.startsWith (removeSubTxIndicators (removeLeading0x input)) (removeLeading0x x)) currency.txs
                     }
                 )
                 result.currencies
@@ -105,6 +105,14 @@ removeLeading0x s =
 
     else
         s
+
+
+removeSubTxIndicators : String -> String
+removeSubTxIndicators tx =
+    tx
+        |> String.split "_"
+        |> List.head
+        |> Maybe.withDefault tx
 
 
 update : Msg -> Model -> ( Model, List Effect )
