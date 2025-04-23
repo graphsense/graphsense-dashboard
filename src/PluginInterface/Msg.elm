@@ -9,6 +9,7 @@ import Model.Dialog
 import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Notification exposing (Notification)
+import Model.Pathfinder.Address as Pathfinder
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (TooltipMessages, mapMsgTooltipMsg)
 import Route.Pathfinder exposing (PathHopType)
@@ -71,6 +72,7 @@ type OutMsgPathfinder msg
     = -- retrieve a serialized state of the pathfinder grapn
       GetPathfinderGraphJson (Json.Encode.Value -> msg)
     | ShowPathsInPathfinder String (List (List PathHopType))
+    | GetAddressesShown (List Pathfinder.Address -> msg)
 
 
 
@@ -139,6 +141,9 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         OutMsgsPathfinder (GetPathfinderGraphJson msg) ->
             ((msg >> mapMsg) |> GetPathfinderGraphJson) |> OutMsgsPathfinder
+
+        OutMsgsPathfinder (GetAddressesShown msg) ->
+            ((msg >> mapMsg) |> GetAddressesShown) |> OutMsgsPathfinder
 
         OutMsgsPathfinder (ShowPathsInPathfinder s p) ->
             ShowPathsInPathfinder s p |> OutMsgsPathfinder

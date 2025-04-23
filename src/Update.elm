@@ -1712,6 +1712,21 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         )
                             |> updateByPluginOutMsg plugins uc outMsg
 
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.GetAddressesShown toMsg) ->
+                        let
+                            data =
+                                model.pathfinder.network.addresses |> Dict.values
+
+                            ( new, outMsg, cmd ) =
+                                Plugin.update plugins uc (toMsg data) model.plugins
+                        in
+                        ( { model
+                            | plugins = new
+                          }
+                        , PluginEffect cmd :: eff
+                        )
+                            |> updateByPluginOutMsg plugins uc outMsg
+
                     PluginInterface.Deserialize filename data ->
                         deserialize plugins uc filename data model
                             |> mapSecond ((++) eff)
