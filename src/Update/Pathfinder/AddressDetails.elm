@@ -285,16 +285,28 @@ update uc msg model =
                 |> updateRelatedAddressesTable model
 
         BrowserGotEntityAddressTagsForRelatedAddressesTable currency tags ->
-            if not <| List.isEmpty tags.addressTags then
+            let
+                existingAddresses =
+                    model.relatedAddresses
+                        |> RemoteData.toMaybe
+                        |> Maybe.map (.taggedAddresses >> PagedTable.getTable >> .data)
+                        |> Maybe.withDefault []
+                        |> List.map .address
+                        |> Set.fromList
+
+                addressesToLoad =
+                    List.map .address tags.addressTags
+                        |> Set.fromList
+                        |> flip Set.diff existingAddresses
+                        |> Set.toList
+            in
+            if not <| List.isEmpty addressesToLoad then
                 ( model
                 , BrowserGotAddressesForTags tags.nextPage
                     >> Pathfinder.AddressDetailsMsg model.addressId
                     |> Api.BulkGetAddressEffect
                         { currency = currency
-                        , addresses =
-                            List.map .address tags.addressTags
-                                |> Set.fromList
-                                |> Set.toList
+                        , addresses = addressesToLoad
                         }
                     |> ApiEffect
                     |> List.singleton
