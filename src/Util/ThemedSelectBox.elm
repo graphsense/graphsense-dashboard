@@ -5,6 +5,7 @@ module Util.ThemedSelectBox exposing
     , OutMsg(..)
     , close
     , empty
+    , getOptions
     , init
     , update
     , view
@@ -48,6 +49,11 @@ init options =
         { options = options
         , open = False
         }
+
+
+getOptions : Model a -> List a
+getOptions (SelectBox m) =
+    m.options
 
 
 empty : Model a
