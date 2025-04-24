@@ -16,6 +16,9 @@ type Msg
     = UserClickedToggleNeighborsTable
     | UserClickedToggleTokenBalancesSelect
     | UserClickedToggleTransactionTable
+    | UserClickedToggleBalanceDetails
+    | UserClickedToggleTotalReceivedDetails
+    | UserClickedToggleTotalSpentDetails
     | TransactionsTablePagedTableMsg PagedTable.Msg
     | NeighborsTablePagedTableMsg Direction PagedTable.Msg
     | GotTxsForAddressDetails ( Maybe Int, Maybe Int ) Api.Data.AddressTxs

@@ -43,6 +43,9 @@ init network clusters locale addressId data =
       , relatedAddresses =
             RemoteData.map first related
       , relatedAddressesTableOpen = False
+      , totalReceivedDetailsOpen = False
+      , balanceDetailsOpen = False
+      , totalSentDetailsOpen = False
       }
     , eff
         ++ (related

@@ -19,4 +19,7 @@ type alias Model =
     , data : Api.Data.Address
     , relatedAddresses : WebData RelatedAddressesTable.Model
     , relatedAddressesTableOpen : Bool
+    , totalReceivedDetailsOpen : Bool
+    , balanceDetailsOpen : Bool
+    , totalSentDetailsOpen : Bool
     }

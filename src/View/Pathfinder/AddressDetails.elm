@@ -37,7 +37,6 @@ import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.Css as Css
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
@@ -481,98 +480,252 @@ transactionsDataTab vc model id viewState =
         }
 
 
-account : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
-account plugins pluginStates vc gc model id viewState address =
+accountValuesRundown : View.Config -> AddressDetails.Model -> { totalReceived : Html Pathfinder.Msg, totalSpent : Html Pathfinder.Msg, balance : Html Pathfinder.Msg }
+accountValuesRundown vc viewState =
     let
         fiatCurr =
             vc.preferredFiatCurrency
 
-        fiatSum =
-            viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.toList |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr) |> List.sum
-
-        valueSumString =
-            Locale.fiat vc.locale fiatCurr fiatSum
-
-        toTokenRow _ ( symbol, values ) =
+        getValue ( symbol, values ) =
             let
                 ass =
                     asset viewState.data.currency symbol
 
                 value =
-                    Locale.coin vc.locale ass values.value
+                    Locale.coinWithoutCode vc.locale ass values.value
 
                 fvalue =
                     Locale.getFiatValue fiatCurr values
             in
-            SidePanelComponents.tokenRowStateNeutralWithAttributes
-                (SidePanelComponents.tokenRowStateNeutralAttributes
-                    |> Rs.s_root [ [ Css.hover SidePanelComponents.tokenRowStateHighlight_details.styles ] |> css ]
-                )
-                { root =
-                    { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
-                    , tokenCode = ""
-                    , tokenName = String.toUpper symbol
-                    , tokenValue = value
-                    }
-                }
+            { fiat =
+                fvalue
+                    |> Maybe.map (Locale.fiat vc.locale fiatCurr)
+                    |> Maybe.withDefault ""
+            , native = value
+            , asset = ass
+            }
 
-        attrClickSelect =
-            if ntokens > 0 then
-                [ Svg.onClick
-                    (AddressDetails.UserClickedToggleTokenBalancesSelect
-                        |> Pathfinder.AddressDetailsMsg viewState.addressId
+        compute ( open, msg ) title values valueToken =
+            let
+                fiatSumTotalTokens =
+                    valueToken
+                        |> Maybe.withDefault Dict.empty
+                        |> Dict.toList
+                        |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr)
+                        |> List.sum
+
+                fiatSumTotal =
+                    fiatSumTotalTokens
+                        + (values
+                            |> Locale.getFiatValue fiatCurr
+                            |> Maybe.withDefault 0.0
+                          )
+
+                nativeValue =
+                    getValue ( viewState.data.currency, values )
+
+                row inpt =
+                    let
+                        dotsL =
+                            div
+                                [ [ Css.flexGrow (Css.int 1)
+                                  , Css.borderBottomWidth (Css.px 1)
+                                  , Css.borderBottomStyle Css.dotted
+                                  , Css.height (Css.px SidePanelComponents.sidePanelRowChevronSubRow_details.height)
+                                  ]
+                                    |> css
+                                ]
+                                []
+                    in
+                    SidePanelComponents.sidePanelRowChevronSubRowWithInstances
+                        (SidePanelComponents.sidePanelRowChevronSubRowAttributes
+                            |> Rs.s_root
+                                [ [ Css.justifyContent Css.stretch
+                                  , Css.width (Css.pct 100)
+                                  ]
+                                    |> css
+                                ]
+                        )
+                        (SidePanelComponents.sidePanelRowChevronSubRowInstances
+                            |> Rs.s_dotsLine (Just dotsL)
+                        )
+                        { root =
+                            { coinLabel = inpt.asset.asset |> String.toUpper
+                            , coinValue = inpt.native
+                            , dotsLine = ""
+                            , fiatValue = inpt.fiat
+                            }
+                        }
+
+                vCenterAttr =
+                    [ Css.alignItems Css.center |> Css.important ] |> css |> List.singleton
+
+                fw =
+                    [ Css.width (Css.pct 100) ] |> css
+
+                clickAttr =
+                    [ onClick msg, fw, Util.View.pointer ]
+            in
+            if open then
+                SidePanelComponents.sidePanelRowOpenListWithAttributes
+                    (SidePanelComponents.sidePanelRowOpenListAttributes
+                        |> Rs.s_root clickAttr
                     )
-                , [ Css.cursor Css.pointer ] |> css
-                ]
-
-            else
-                [ [ Css.cursor Css.notAllowed ] |> css ]
-
-        tokenRows =
-            viewState.data.tokenBalances
-                |> Maybe.withDefault Dict.empty
-                |> Dict.toList
-                |> List.indexedMap toTokenRow
-
-        ntokens =
-            viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size
-
-        ntokensString =
-            "(" ++ (ntokens |> String.fromInt) ++ " tokens)"
-
-        tokensDropDownOpen =
-            SidePanelComponents.tokensDropDownOpenWithAttributes
-                (SidePanelComponents.tokensDropDownOpenAttributes
-                    |> Rs.s_tokensDropDownHeaderOpen attrClickSelect
-                    |> Rs.s_tokensList
-                        [ [ Css.position Css.absolute
-                          , Css.zIndex (Css.int (Css.zIndexMainValue + 1))
-                          , Css.top (Css.px SidePanelComponents.tokensDropDownClosed_details.height)
-                          , Css.width (Css.px SidePanelComponents.tokensDropDownOpen_details.width)
-                          ]
-                            |> css
+                    { sidePanelRowOpenList =
+                        [ SidePanelComponents.sidePanelRowChevronOpenWithAttributes
+                            (SidePanelComponents.sidePanelRowChevronOpenAttributes
+                                |> Rs.s_root
+                                    (fw
+                                        |> List.singleton
+                                    )
+                                |> Rs.s_iconAndTitle vCenterAttr
+                                |> Rs.s_totalReceived vCenterAttr
+                                |> Rs.s_value vCenterAttr
+                            )
+                            { root =
+                                { iconInstance = HIcons.iconsChevronDownThin {}
+                                , title = Locale.string vc.locale title
+                                , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
+                                }
+                            }
+                        , row nativeValue
                         ]
-                )
-                { tokensList = tokenRows }
-                { tokensDropDownHeaderOpen =
-                    { numberOfToken = ntokensString, totalTokenValue = valueSumString }
-                }
-
-        tokensDropDownClosed =
-            SidePanelComponents.tokensDropDownClosedWithInstances
-                (SidePanelComponents.tokensDropDownClosedAttributes
-                    |> Rs.s_root attrClickSelect
-                )
-                SidePanelComponents.tokensDropDownClosedInstances
-                { root = { numberOfToken = ntokensString, totalTokenValue = valueSumString } }
-
-        tokensDropdown =
-            if viewState.tokenBalancesOpen then
-                tokensDropDownOpen
+                            ++ (valueToken
+                                    |> Maybe.withDefault Dict.empty
+                                    |> Dict.toList
+                                    |> List.map getValue
+                                    |> List.map row
+                               )
+                    }
+                    {}
 
             else
-                tokensDropDownClosed
+                SidePanelComponents.sidePanelRowChevronClosedWithAttributes
+                    (SidePanelComponents.sidePanelRowChevronClosedAttributes
+                        |> Rs.s_root
+                            clickAttr
+                        |> Rs.s_iconAndTitle vCenterAttr
+                        |> Rs.s_totalReceived vCenterAttr
+                        |> Rs.s_value vCenterAttr
+                    )
+                    { root =
+                        { iconInstance = HIcons.iconsChevronDownThin {}
+                        , title = Locale.string vc.locale title
+                        , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
+                        }
+                    }
+    in
+    { totalReceived =
+        compute
+            ( viewState.totalReceivedDetailsOpen
+            , AddressDetails.UserClickedToggleTotalReceivedDetails
+                |> Pathfinder.AddressDetailsMsg viewState.addressId
+            )
+            "Total received"
+            viewState.data.totalReceived
+            viewState.data.totalTokensReceived
+    , totalSpent =
+        compute
+            ( viewState.totalSentDetailsOpen
+            , AddressDetails.UserClickedToggleTotalSpentDetails
+                |> Pathfinder.AddressDetailsMsg viewState.addressId
+            )
+            "Total sent"
+            viewState.data.totalSpent
+            viewState.data.totalTokensSpent
+    , balance =
+        compute
+            ( viewState.balanceDetailsOpen
+            , AddressDetails.UserClickedToggleBalanceDetails
+                |> Pathfinder.AddressDetailsMsg viewState.addressId
+            )
+            "Balance"
+            viewState.data.balance
+            viewState.data.tokenBalances
+    }
 
+
+account : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
+account plugins pluginStates vc gc model id viewState address =
+    let
+        -- fiatCurr =
+        --     vc.preferredFiatCurrency
+        -- fiatSum =
+        --     viewState.data.tokenBalances
+        --         |> Maybe.withDefault Dict.empty
+        --         |> Dict.toList
+        --         |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr)
+        --         |> List.sum
+        -- valueSumString =
+        --     Locale.fiat vc.locale fiatCurr fiatSum
+        -- toTokenRow _ ( symbol, values ) =
+        --     let
+        --         ass =
+        --             asset viewState.data.currency symbol
+        --         value =
+        --             Locale.coin vc.locale ass values.value
+        --         fvalue =
+        --             Locale.getFiatValue fiatCurr values
+        --     in
+        --     SidePanelComponents.tokenRowStateNeutralWithAttributes
+        --         (SidePanelComponents.tokenRowStateNeutralAttributes
+        --             |> Rs.s_root [ [ Css.hover SidePanelComponents.tokenRowStateHighlight_details.styles ] |> css ]
+        --         )
+        --         { root =
+        --             { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
+        --             , tokenCode = ""
+        --             , tokenName = String.toUpper symbol
+        --             , tokenValue = value
+        --             }
+        --         }
+        -- attrClickSelect =
+        --     if ntokens > 0 then
+        --         [ Svg.onClick
+        --             (AddressDetails.UserClickedToggleTokenBalancesSelect
+        --                 |> Pathfinder.AddressDetailsMsg viewState.addressId
+        --             )
+        --         , [ Css.cursor Css.pointer ] |> css
+        --         ]
+        --     else
+        --         [ [ Css.cursor Css.notAllowed ] |> css ]
+        -- tokenRows =
+        --     viewState.data.tokenBalances
+        --         |> Maybe.withDefault Dict.empty
+        --         |> Dict.toList
+        --         |> List.indexedMap toTokenRow
+        -- ntokens =
+        --     viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size
+        -- ntokensString =
+        --     "(" ++ (ntokens |> String.fromInt) ++ " tokens)"
+        -- tokensDropDownOpen =
+        --     SidePanelComponents.tokensDropDownOpenWithAttributes
+        --         (SidePanelComponents.tokensDropDownOpenAttributes
+        --             |> Rs.s_tokensDropDownHeaderOpen attrClickSelect
+        --             |> Rs.s_tokensList
+        --                 [ [ Css.position Css.absolute
+        --                   , Css.zIndex (Css.int (Css.zIndexMainValue + 1))
+        --                   , Css.top (Css.px SidePanelComponents.tokensDropDownClosed_details.height)
+        --                   , Css.width (Css.px SidePanelComponents.tokensDropDownOpen_details.width)
+        --                   ]
+        --                     |> css
+        --                 ]
+        --         )
+        --         { tokensList = tokenRows }
+        --         { tokensDropDownHeaderOpen =
+        --             { numberOfToken = ntokensString, totalTokenValue = valueSumString }
+        --         }
+        -- tokensDropDownClosed =
+        --     SidePanelComponents.tokensDropDownClosedWithInstances
+        --         (SidePanelComponents.tokensDropDownClosedAttributes
+        --             |> Rs.s_root attrClickSelect
+        --         )
+        --         SidePanelComponents.tokensDropDownClosedInstances
+        --         { root = { numberOfToken = ntokensString, totalTokenValue = valueSumString } }
+        -- tokensDropdown =
+        --     if viewState.tokenBalancesOpen then
+        --         tokensDropDownOpen
+        --     else
+        --         tokensDropDownClosed
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
 
@@ -601,6 +754,9 @@ account plugins pluginStates vc gc model id viewState address =
 
         assetId =
             assetFromBase viewState.data.currency
+
+        accountValuesRundownHtml =
+            accountValuesRundown vc viewState
     in
     SidePanelComponents.sidePanelEthAddressWithInstances
         (SidePanelComponents.sidePanelEthAddressAttributes
@@ -611,6 +767,7 @@ account plugins pluginStates vc gc model id viewState address =
             |> Rs.s_iconsCloseBlack closeAttrs
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
+            |> Rs.s_sidePanelRowWithDropdown [ css [ Css.display Css.none ] ]
             |> Rs.s_tagsLayout
                 (if sidePanelData.actorVisible || sidePanelData.tagsVisible then
                     []
@@ -635,8 +792,11 @@ account plugins pluginStates vc gc model id viewState address =
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> setTags vc gc model id
-            |> Rs.s_tokensDropDownClosed (Just tokensDropdown)
+            -- |> Rs.s_tokensDropDownClosed (Just tokensDropdown)
             |> Rs.s_learnMore (Just none)
+            |> Rs.s_totalReceived (Just accountValuesRundownHtml.totalReceived)
+            |> Rs.s_totalSent (Just accountValuesRundownHtml.totalSpent)
+            |> Rs.s_ethBalance (Just accountValuesRundownHtml.balance)
          -- |> Rs.s_iconsBinanceL
          --     (Just sidePanelData.actorIconInstance)
         )
@@ -658,7 +818,9 @@ account plugins pluginStates vc gc model id viewState address =
             , clusterInfoInstance = none
             }
         , sidePanelRowWithDropdown = { valueCellInstance = none }
-        , tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = valueSumString }
+
+        -- , tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = valueSumString }
+        , tokensDropDownClosed = { numberOfToken = "", totalTokenValue = "valueSumString" }
         , titleOfEthBalance = { infoLabel = Locale.string vc.locale "Balance" ++ " " ++ String.toUpper viewState.data.currency }
         , titleOfSidePanelRowWithDropdown = { infoLabel = Locale.string vc.locale "Token holdings" }
         , valueOfEthBalance = valuesToCell vc assetId viewState.data.balance

@@ -80,6 +80,15 @@ transactionTableConfigWithMsg msg txs addressId =
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
 update uc msg model =
     case msg of
+        UserClickedToggleBalanceDetails ->
+            ( model |> s_balanceDetailsOpen (not model.balanceDetailsOpen), [] )
+
+        UserClickedToggleTotalReceivedDetails ->
+            ( model |> s_totalReceivedDetailsOpen (not model.totalReceivedDetailsOpen), [] )
+
+        UserClickedToggleTotalSpentDetails ->
+            ( model |> s_totalSentDetailsOpen (not model.totalSentDetailsOpen), [] )
+
         UserClickedToggleTokenBalancesSelect ->
             ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
 
