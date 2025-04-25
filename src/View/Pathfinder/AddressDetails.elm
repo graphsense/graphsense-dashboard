@@ -35,7 +35,6 @@ import RemoteData exposing (WebData)
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
-import Theme.Colors as TColors
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Data as Data
@@ -528,17 +527,12 @@ accountValuesRundown vc viewState =
 
                 row inpt =
                     let
-                        dotsL =
-                            div
-                                [ [ Css.flexGrow (Css.int 1)
-                                  , Css.borderBottomWidth (Css.px 1)
-                                  , Css.borderBottomStyle Css.dotted
-                                  , Css.property "border-color" TColors.greyBlue200
-                                  , Css.height (Css.px SidePanelComponents.sidePanelRowChevronSubRow_details.height)
-                                  ]
-                                    |> css
-                                ]
-                                []
+                        dotsLAttr =
+                            [ [ Css.flexGrow (Css.int 1)
+                              , Css.borderBottomStyle Css.dotted
+                              ]
+                                |> css
+                            ]
                     in
                     SidePanelComponents.sidePanelRowChevronSubRowWithInstances
                         (SidePanelComponents.sidePanelRowChevronSubRowAttributes
@@ -548,23 +542,26 @@ accountValuesRundown vc viewState =
                                   ]
                                     |> css
                                 ]
+                            |> Rs.s_dotsLine dotsLAttr
                         )
-                        (SidePanelComponents.sidePanelRowChevronSubRowInstances
-                            |> Rs.s_dotsLine (Just dotsL)
-                        )
+                        SidePanelComponents.sidePanelRowChevronSubRowInstances
                         { root =
                             { coinLabel = inpt.asset.asset |> String.toUpper
                             , coinValue = inpt.native
-                            , dotsLine = ""
                             , fiatValue = inpt.fiat
                             }
                         }
 
-                vCenterAttr =
-                    [ Css.alignItems Css.center |> Css.important ] |> css |> List.singleton
+                fixedleftAttr =
+                    [ [ Css.left (Css.px (SidePanelComponents.sidePanelRowChevronClosedIconGroup_details.x * 2))
+                      , Css.alignItems Css.center |> Css.important
+                      ]
+                        |> css
+                    ]
 
                 fw =
-                    [ Css.width (Css.pct 100) ] |> css
+                    [ Css.width (Css.pct 100) ]
+                        |> css
 
                 clickAttr =
                     [ onClick msg, fw, Util.View.pointer ]
@@ -581,9 +578,8 @@ accountValuesRundown vc viewState =
                                     (fw
                                         |> List.singleton
                                     )
-                                |> Rs.s_iconAndTitle vCenterAttr
-                                |> Rs.s_totalReceived vCenterAttr
-                                |> Rs.s_value vCenterAttr
+                                |> Rs.s_iconGroup
+                                    fixedleftAttr
                             )
                             { root =
                                 { iconInstance = HIcons.iconsChevronDownThin {}
@@ -613,9 +609,7 @@ accountValuesRundown vc viewState =
                     (SidePanelComponents.sidePanelRowChevronClosedAttributes
                         |> Rs.s_root
                             clickAttr
-                        |> Rs.s_iconAndTitle vCenterAttr
-                        |> Rs.s_totalReceived vCenterAttr
-                        |> Rs.s_value vCenterAttr
+                        |> Rs.s_iconGroup fixedleftAttr
                     )
                     { root =
                         { iconInstance = HIcons.iconsChevronRightThin { root = { state = HIcons.IconsChevronRightThinStateDefault } }
@@ -657,84 +651,12 @@ accountValuesRundown vc viewState =
 account : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
 account plugins pluginStates vc gc model id viewState address =
     let
-        -- fiatCurr =
-        --     vc.preferredFiatCurrency
-        -- fiatSum =
-        --     viewState.data.tokenBalances
-        --         |> Maybe.withDefault Dict.empty
-        --         |> Dict.toList
-        --         |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr)
-        --         |> List.sum
-        -- valueSumString =
-        --     Locale.fiat vc.locale fiatCurr fiatSum
-        -- toTokenRow _ ( symbol, values ) =
-        --     let
-        --         ass =
-        --             asset viewState.data.currency symbol
-        --         value =
-        --             Locale.coin vc.locale ass values.value
-        --         fvalue =
-        --             Locale.getFiatValue fiatCurr values
-        --     in
-        --     SidePanelComponents.tokenRowStateNeutralWithAttributes
-        --         (SidePanelComponents.tokenRowStateNeutralAttributes
-        --             |> Rs.s_root [ [ Css.hover SidePanelComponents.tokenRowStateHighlight_details.styles ] |> css ]
-        --         )
-        --         { root =
-        --             { fiatValue = fvalue |> Maybe.map (Locale.fiat vc.locale fiatCurr) |> Maybe.withDefault ""
-        --             , tokenCode = ""
-        --             , tokenName = String.toUpper symbol
-        --             , tokenValue = value
-        --             }
-        --         }
-        -- attrClickSelect =
-        --     if ntokens > 0 then
-        --         [ Svg.onClick
-        --             (AddressDetails.UserClickedToggleTokenBalancesSelect
-        --                 |> Pathfinder.AddressDetailsMsg viewState.addressId
-        --             )
-        --         , [ Css.cursor Css.pointer ] |> css
-        --         ]
-        --     else
-        --         [ [ Css.cursor Css.notAllowed ] |> css ]
-        -- tokenRows =
-        --     viewState.data.tokenBalances
-        --         |> Maybe.withDefault Dict.empty
-        --         |> Dict.toList
-        --         |> List.indexedMap toTokenRow
-        -- ntokens =
-        --     viewState.data.tokenBalances |> Maybe.withDefault Dict.empty |> Dict.size
-        -- ntokensString =
-        --     "(" ++ (ntokens |> String.fromInt) ++ " tokens)"
-        -- tokensDropDownOpen =
-        --     SidePanelComponents.tokensDropDownOpenWithAttributes
-        --         (SidePanelComponents.tokensDropDownOpenAttributes
-        --             |> Rs.s_tokensDropDownHeaderOpen attrClickSelect
-        --             |> Rs.s_tokensList
-        --                 [ [ Css.position Css.absolute
-        --                   , Css.zIndex (Css.int (Css.zIndexMainValue + 1))
-        --                   , Css.top (Css.px SidePanelComponents.tokensDropDownClosed_details.height)
-        --                   , Css.width (Css.px SidePanelComponents.tokensDropDownOpen_details.width)
-        --                   ]
-        --                     |> css
-        --                 ]
-        --         )
-        --         { tokensList = tokenRows }
-        --         { tokensDropDownHeaderOpen =
-        --             { numberOfToken = ntokensString, totalTokenValue = valueSumString }
-        --         }
-        -- tokensDropDownClosed =
-        --     SidePanelComponents.tokensDropDownClosedWithInstances
-        --         (SidePanelComponents.tokensDropDownClosedAttributes
-        --             |> Rs.s_root attrClickSelect
-        --         )
-        --         SidePanelComponents.tokensDropDownClosedInstances
-        --         { root = { numberOfToken = ntokensString, totalTokenValue = valueSumString } }
-        -- tokensDropdown =
-        --     if viewState.tokenBalancesOpen then
-        --         tokensDropDownOpen
-        --     else
-        --         tokensDropDownClosed
+        emptySubRow =
+            { coinLabel = ""
+            , coinValue = ""
+            , fiatValue = ""
+            }
+
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
 
@@ -761,9 +683,6 @@ account plugins pluginStates vc gc model id viewState address =
                        )
             }
 
-        assetId =
-            assetFromBase viewState.data.currency
-
         accountValuesRundownHtml =
             accountValuesRundown vc viewState
     in
@@ -776,7 +695,6 @@ account plugins pluginStates vc gc model id viewState address =
             |> Rs.s_iconsCloseBlack closeAttrs
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
-            |> Rs.s_sidePanelRowWithDropdown [ css [ Css.display Css.none ] ]
             |> Rs.s_tagsLayout
                 (if sidePanelData.actorVisible || sidePanelData.tagsVisible then
                     []
@@ -801,13 +719,10 @@ account plugins pluginStates vc gc model id viewState address =
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> setTags vc gc model id
-            -- |> Rs.s_tokensDropDownClosed (Just tokensDropdown)
             |> Rs.s_learnMore (Just none)
-            |> Rs.s_totalReceived (Just accountValuesRundownHtml.totalReceived)
-            |> Rs.s_totalSent (Just accountValuesRundownHtml.totalSpent)
-            |> Rs.s_ethBalance (Just accountValuesRundownHtml.balance)
-         -- |> Rs.s_iconsBinanceL
-         --     (Just sidePanelData.actorIconInstance)
+            |> Rs.s_totalReceivedRow (Just accountValuesRundownHtml.totalReceived)
+            |> Rs.s_totalSentRow (Just accountValuesRundownHtml.totalSpent)
+            |> Rs.s_balanceRow (Just accountValuesRundownHtml.balance)
         )
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
@@ -826,24 +741,18 @@ account plugins pluginStates vc gc model id viewState address =
             { clusterInfoVisible = False
             , clusterInfoInstance = none
             }
-        , sidePanelRowWithDropdown = { valueCellInstance = none }
-
-        -- , tokensDropDownClosed = { numberOfToken = ntokensString, totalTokenValue = valueSumString }
-        , tokensDropDownClosed = { numberOfToken = "", totalTokenValue = "valueSumString" }
-        , titleOfEthBalance = { infoLabel = Locale.string vc.locale "Balance" ++ " " ++ String.toUpper viewState.data.currency }
-        , titleOfSidePanelRowWithDropdown = { infoLabel = Locale.string vc.locale "Token holdings" }
-        , valueOfEthBalance = valuesToCell vc assetId viewState.data.balance
-        , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
-        , valueOfTotalReceived = valuesToCell vc assetId viewState.data.totalReceived
-        , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
-        , valueOfTotalSent = valuesToCell vc assetId viewState.data.totalSpent
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
         , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
         , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
-
-        -- , learnMoreButton = { variant = none }
         , categoryTags = { tagLabel = "" }
+        , sidePanelRowChevronSubRowUsdc = emptySubRow
+        , sidePanelRowChevronSubRowUsdt = emptySubRow
+        , sidePanelRowChevronSubRowWeth = emptySubRow
+        , sidePanelRowChevronSubRowEth = emptySubRow
+        , balanceRow = { iconInstance = none, title = "", value = "" }
+        , totalSentRow = { iconInstance = none, title = "", value = "" }
+        , sidePanelRowChevronOpen = { iconInstance = none, title = "", value = "" }
         }
 
 
