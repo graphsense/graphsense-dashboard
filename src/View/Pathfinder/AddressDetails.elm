@@ -35,6 +35,7 @@ import RemoteData exposing (WebData)
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
+import Theme.Colors as TColors
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Data as Data
@@ -501,6 +502,7 @@ accountValuesRundown vc viewState =
                 fvalue
                     |> Maybe.map (Locale.fiat vc.locale fiatCurr)
                     |> Maybe.withDefault ""
+            , fiatFloat = fvalue
             , native = value
             , asset = ass
             }
@@ -531,6 +533,7 @@ accountValuesRundown vc viewState =
                                 [ [ Css.flexGrow (Css.int 1)
                                   , Css.borderBottomWidth (Css.px 1)
                                   , Css.borderBottomStyle Css.dotted
+                                  , Css.property "border-color" TColors.greyBlue200
                                   , Css.height (Css.px SidePanelComponents.sidePanelRowChevronSubRow_details.height)
                                   ]
                                     |> css
@@ -572,7 +575,7 @@ accountValuesRundown vc viewState =
                         |> Rs.s_root clickAttr
                     )
                     { sidePanelRowOpenList =
-                        [ SidePanelComponents.sidePanelRowChevronOpenWithAttributes
+                        SidePanelComponents.sidePanelRowChevronOpenWithAttributes
                             (SidePanelComponents.sidePanelRowChevronOpenAttributes
                                 |> Rs.s_root
                                     (fw
@@ -588,12 +591,18 @@ accountValuesRundown vc viewState =
                                 , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
                                 }
                             }
-                        , row nativeValue
-                        ]
-                            ++ (valueToken
-                                    |> Maybe.withDefault Dict.empty
-                                    |> Dict.toList
-                                    |> List.map getValue
+                            :: ((nativeValue
+                                    :: (valueToken
+                                            |> Maybe.withDefault Dict.empty
+                                            |> Dict.toList
+                                            |> List.map getValue
+                                       )
+                                )
+                                    |> List.sortBy
+                                        (.fiatFloat
+                                            >> Maybe.withDefault 0.0
+                                        )
+                                    |> List.reverse
                                     |> List.map row
                                )
                     }
@@ -609,7 +618,7 @@ accountValuesRundown vc viewState =
                         |> Rs.s_value vCenterAttr
                     )
                     { root =
-                        { iconInstance = HIcons.iconsChevronDownThin {}
+                        { iconInstance = HIcons.iconsChevronRightThin { root = { state = HIcons.IconsChevronRightThinStateDefault } }
                         , title = Locale.string vc.locale title
                         , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
                         }
