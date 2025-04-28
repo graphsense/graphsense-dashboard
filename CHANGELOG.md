@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.04.2] - 2025-04-28
+
+### Added
+
+- Cache busting hash to translation request urls.
+
 ## [25.04.1] - 2025-04-08
 
 ### Added
