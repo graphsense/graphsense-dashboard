@@ -4,6 +4,7 @@
 ELM_CODEGEN="npx --node-options='--max-old-space-size=16384' elm-codegen run"
 REFRESH=0
 FIGMA_WHITELIST_FRAMES=[]
+PLUGIN_NAME=""
 
 source .env
 
