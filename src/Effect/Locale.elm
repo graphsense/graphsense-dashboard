@@ -4,7 +4,6 @@ import Http
 import Msg.Locale exposing (Msg(..))
 import Task
 import Time
-import Version
 import Yaml.Decode exposing (dict, fromString, string)
 
 
@@ -29,7 +28,7 @@ perform effect =
 
 getTranslationEffect : String -> Effect
 getTranslationEffect locale =
-    { url = "/lang/" ++ locale ++ ".yaml?" ++ Version.version
+    { url = "/lang/" ++ locale ++ ".yaml?{{TRANSLATION_FILES_HASH}}"
     , toMsg =
         Result.andThen
             (fromString (dict string)

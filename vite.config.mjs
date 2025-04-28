@@ -26,6 +26,7 @@ export default defineConfig({
   },
   publicDir: "generated/public",
   build: { 
+    manifest: true,
     outDir: 'dist', 
     minify: 'terser',
     sourcemap: false
