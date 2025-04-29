@@ -6,7 +6,8 @@ import Css.View
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Events exposing (keyCode, on, onClick)
+import Json.Decode as Json
 import RecordSetter as Rs
 import Route exposing (toUrl)
 import Route.Graph as Route
@@ -26,6 +27,7 @@ type alias BtnConfig msg =
     , size : Buttons.ButtonSize
     , disabled : Bool
     , onClickWithStop : Bool
+    , tabindex : Int
     }
 
 
@@ -39,6 +41,7 @@ defaultConfig =
     , size = Buttons.ButtonSizeMedium
     , disabled = False
     , onClickWithStop = False
+    , tabindex = 0
     }
 
 
@@ -113,10 +116,18 @@ buttonWithAttributes attr vc btn =
                    )
                 |> css
             )
+                :: tabindex btn.tabindex
+                :: attribute "role" "button"
+                :: attribute "aria-pressed" "false"
                 :: (if state /= Buttons.ButtonStateDisabled then
                         pointer
                             :: (btn.onClick
-                                    |> Maybe.map (clickAttr >> List.singleton)
+                                    |> Maybe.map
+                                        (\ms ->
+                                            [ clickAttr ms
+                                            , onEnterOrSpacebar ms
+                                            ]
+                                        )
                                     |> Maybe.withDefault []
                                )
 
@@ -193,3 +204,20 @@ linkButtonBlue vc btn =
         { btn
             | style = Buttons.ButtonStyleTextBlue
         }
+
+
+onEnterOrSpacebar : msg -> Attribute msg
+onEnterOrSpacebar onEnterAction =
+    on "keyup" <|
+        Json.andThen
+            (\keyCode ->
+                if keyCode == 13 then
+                    Json.succeed onEnterAction
+
+                else if keyCode == 32 then
+                    Json.succeed onEnterAction
+
+                else
+                    Json.fail (String.fromInt keyCode)
+            )
+            keyCode
