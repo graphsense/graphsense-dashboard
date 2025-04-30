@@ -108,6 +108,7 @@ utxo plugins pluginStates vc gc model id viewState address =
                 (String.toUpper <| Id.network id)
                     ++ " "
                     ++ Locale.string vc.locale "address"
+                    |> Locale.titleCase vc.locale
             }
 
         sidePanelAddressDetails =
@@ -185,6 +186,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
             Locale.string vc.locale "Related addresses"
+                |> Locale.titleCase vc.locale
 
         noRelatedAddresses =
             cluster
