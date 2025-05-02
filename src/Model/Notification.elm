@@ -28,7 +28,7 @@ type Notification
 
 defaultNotificationData : String -> NotificationData
 defaultNotificationData message =
-    { title = Nothing, message = message, moreInfo = [], variables = [], showClose = True, isEphemeral = False, removeDelayMs = 9000 }
+    { title = Nothing, message = message, moreInfo = [], variables = [], showClose = True, isEphemeral = False, removeDelayMs = 12000 }
 
 
 successDefault : String -> Notification
