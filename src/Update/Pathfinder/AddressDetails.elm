@@ -274,7 +274,7 @@ update uc msg model =
                 |> updateRelatedAddressesTable model
 
         BrowserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } ->
-            RelatedAddressesTable.appendClusterAddresses nextPage addresses
+            RelatedAddressesTable.appendAddresses nextPage addresses
                 |> updateRelatedAddressesTable model
 
         UserClickedTx _ ->
@@ -289,19 +289,13 @@ update uc msg model =
         NoOp ->
             n model
 
-        SelectBoxMsg sm ->
-            RelatedAddressesTable.selectBoxMsg sm
-                |> updateRelatedAddressesTable model
-
         BrowserGotEntityAddressTagsForRelatedAddressesTable currency tags ->
             let
                 existingAddresses =
                     model.relatedAddresses
                         |> RemoteData.toMaybe
-                        |> Maybe.map (.taggedAddresses >> PagedTable.getTable >> .data)
-                        |> Maybe.withDefault []
-                        |> List.map .address
-                        |> Set.fromList
+                        |> Maybe.map .existingTaggedAddresses
+                        |> Maybe.withDefault Set.empty
 
                 addressesToLoad =
                     List.map .address tags.addressTags
@@ -322,7 +316,7 @@ update uc msg model =
                 )
 
             else
-                RelatedAddressesTable.appendTaggedAddresses Nothing []
+                RelatedAddressesTable.appendTaggedAddresses tags.nextPage []
                     |> updateRelatedAddressesTable model
 
         BrowserGotAddressesForTags nextpage addresses ->

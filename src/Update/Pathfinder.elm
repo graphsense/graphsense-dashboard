@@ -367,21 +367,25 @@ updateByMsg plugins uc msg model =
 
         AddressDetailsMsg addressId subm ->
             case subm of
-                AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable addresses ->
-                    let
-                        network =
-                            Id.network addressId
-                    in
-                    addresses.addresses
-                        |> List.map (.address >> Id.init network)
-                        |> fetchTagSummaryForIds False model.tagSummaries
-                        |> List.singleton
-                        |> pair model
-                        |> and
-                            (AddressDetails.update uc subm
-                                |> updateAddressDetails addressId
-                            )
-
+                {-
+                           -- we can omit querying tags here because the
+                           -- entity addresses are only retrieved after
+                           -- checking all tagged addresses of the entity
+                   AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable addresses ->
+                       let
+                           network =
+                               Id.network addressId
+                       in
+                       addresses.addresses
+                           |> List.map (.address >> Id.init network)
+                           |> fetchTagSummaryForIds False model.tagSummaries
+                           |> List.singleton
+                           |> pair model
+                           |> and
+                               (AddressDetails.update uc subm
+                                   |> updateAddressDetails addressId
+                               )
+                -}
                 AddressDetails.BrowserGotAddressesForTags _ addresses ->
                     let
                         network =

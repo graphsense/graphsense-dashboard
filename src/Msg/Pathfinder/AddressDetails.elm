@@ -4,12 +4,10 @@ import Api.Data
 import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType)
 import PagedTable
 import Table
 import Time exposing (Posix)
 import Util.Tag as Tag
-import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type Msg
@@ -37,7 +35,6 @@ type Msg
     | UserClickedToggleRelatedAddressesTable
     | RelatedAddressesTablePagedTableMsg PagedTable.Msg
     | UserClickedAddressCheckboxInTable Id
-    | SelectBoxMsg (ThemedSelectBox.Msg ListType)
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedTx Id
     | NoOp

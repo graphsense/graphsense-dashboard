@@ -24,7 +24,7 @@ import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), getCurrentTable)
+import Model.Pathfinder.Table.RelatedAddressesTable exposing (getTable)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
@@ -41,7 +41,6 @@ import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
-import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
@@ -236,32 +235,16 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 , hasTags = getHavingTags model
                                 , coinCode = assetFromBase viewState.data.currency
                                 }
-
-                            conf =
-                                { optionToLabel =
-                                    \a ->
-                                        case a of
-                                            TaggedAddresses ->
-                                                Locale.string vc.locale "Tagged cluster addresses"
-
-                                            ClusterAddresses ->
-                                                Locale.string vc.locale "All cluster addresses"
-                                }
                         in
                         div
                             [ css <|
                                 SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                                     ++ fullWidth
                             ]
-                            [ ThemedSelectBox.view conf ra.selectBox ra.selected
-                                |> Html.map AddressDetails.SelectBoxMsg
-                                |> List.singleton
-                                |> div
-                                    [ css SidePanelComponents.sidePanelRelatedAddressesContentSidePanelAddListFilterRow_details.styles ]
-                            , PagedTable.pagedTableView vc
+                            [ PagedTable.pagedTableView vc
                                 [ css fullWidth ]
                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
-                                (getCurrentTable ra)
+                                (getTable ra)
                                 AddressDetails.RelatedAddressesTablePagedTableMsg
                             ]
                             |> Just

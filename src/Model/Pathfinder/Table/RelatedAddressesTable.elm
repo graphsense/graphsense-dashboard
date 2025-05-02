@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table.RelatedAddressesTable exposing (ListType(..), Model, filter, getCurrentTable, setCurrentTable, totalReceivedColumn)
+module Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, filter, getTable, setTable, totalReceivedColumn)
 
 import Api.Data
 import Init.Pathfinder.Id as Pathfinder
@@ -7,22 +7,16 @@ import Model.Graph.Table as Table
 import Model.Pathfinder.Id as Pathfinder
 import PagedTable
 import RecordSetter as Rs
-import Util.ThemedSelectBox as ThemedSelectBox
+import Set exposing (Set)
 
 
 type alias Model =
-    { clusterAddresses : PagedTable.Model Api.Data.Address
-    , taggedAddresses : PagedTable.Model Api.Data.Address
+    { table : PagedTable.Model Api.Data.Address
     , entity : Entity
     , addressId : Pathfinder.Id
-    , selectBox : ThemedSelectBox.Model ListType
-    , selected : ListType
+    , existingTaggedAddresses : Set String
+    , allTaggedAddressesFetched : Bool
     }
-
-
-type ListType
-    = TaggedAddresses
-    | ClusterAddresses
 
 
 totalReceivedColumn : String
@@ -39,21 +33,11 @@ filter { addressId } =
     }
 
 
-setCurrentTable : Model -> PagedTable.Model Api.Data.Address -> Model
-setCurrentTable ra table =
-    case ra.selected of
-        TaggedAddresses ->
-            Rs.s_taggedAddresses table ra
-
-        ClusterAddresses ->
-            Rs.s_clusterAddresses table ra
+setTable : Model -> PagedTable.Model Api.Data.Address -> Model
+setTable ra table =
+    Rs.s_table table ra
 
 
-getCurrentTable : Model -> PagedTable.Model Api.Data.Address
-getCurrentTable ra =
-    case ra.selected of
-        TaggedAddresses ->
-            ra.taggedAddresses
-
-        ClusterAddresses ->
-            ra.clusterAddresses
+getTable : Model -> PagedTable.Model Api.Data.Address
+getTable ra =
+    ra.table
