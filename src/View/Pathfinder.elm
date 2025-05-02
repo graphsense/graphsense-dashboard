@@ -330,12 +330,12 @@ settingsHovercardView vc _ hc =
     in
     Sc.displayProperties
         { exactValueSwitch = { variant = switchWithText True "Show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
-        , fiatSwitch = { variant = switchWithText False "Amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
+        , amountInFiatSwitch = { variant = switchWithText True "Amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
         , gridSwitch = { variant = switchWithText True "Snap to Grid" vc.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
         , highlightSwitch = { variant = switchWithText True "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
         , settingsLabelOfClustersSettings = { settingsLabel = Locale.string vc.locale "Clusters" }
         , settingsLabelOfGeneralSettings = { settingsLabel = Locale.string vc.locale "General" }
-        , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "Transaction" }
+        , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "Values" }
         , timestampSwitch = { variant = switchWithText True "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) }
         , timezoneSwitch = { variant = switchWithText False "with zone code" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) }
         , utcSwitch = { variant = switchWithText False "in UTC" (not vc.showDatesInUserLocale) (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) }
