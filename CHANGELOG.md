@@ -3,6 +3,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.05.0] - 2025-05-02
+
+### Fixed
+
+- d2999371 go to root Pathfinder url on restart
+- c84bfe61 make button behave like button
+- 53e0f10a add a cache bust hash to translation yaml url
+- b105ba87 fix actor display
+- be41e47d fix tx hash/identifier ambiguity (closes #476)
+
+### Changed
+
+- 6522743d show tagged addresses and cluster addresses in one table
+- 90fe99f4 extend sidepanel maxheight
+- e5dda9e5 increse notification delay
+- 23ada568 reordered Pathfinder settings
+- f3896dc4 new token display in eth address details (closes #470)
+- 1643364f allow multiple paths in show path plugin interface, select address nodes on new path
+
+### Added
+
+- b77aedd3 plugins elements in side panel header placed in row
+
+
 ## [25.04.1] - 2025-04-08
 
 ### Added
