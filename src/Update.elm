@@ -945,7 +945,15 @@ update plugins uc msg model =
             in
             ( { model | pathfinder = m, plugins = newPluginsState }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
                 |> updateByPluginOutMsg plugins uc outMsg
-                |> Tuple.mapSecond ((++) [ PluginEffect cmdp ])
+                |> Tuple.mapSecond
+                    ((++)
+                        [ PluginEffect cmdp
+                        , Route.Pathfinder.Root
+                            |> Route.pathfinderRoute
+                            |> Route.toUrl
+                            |> NavPushUrlEffect
+                        ]
+                    )
 
         PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg dsm) ->
             let
