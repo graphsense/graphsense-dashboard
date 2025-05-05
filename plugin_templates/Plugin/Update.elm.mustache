@@ -54,6 +54,24 @@ update plugins uc msg state =
                 |> Maybe.withDefault ( state, [], Cmd.none ){{/plugins}} 
 
 
+shallPushHistory : Plugins -> Plugin.Msg.Msg -> Bool
+shallPushHistory plugins msg =
+    case msg of
+        Plugin.Msg.NoOp ->
+            ( False ){{#plugins}}
+
+        Plugin.Msg.{{package}}Msg m ->
+            plugins.{{name}}
+                |> Maybe.andThen
+                    (\plugin ->
+                        Maybe.map
+                            (\upd ->
+                                upd m)
+                            plugin.shallPushHistory
+                    )
+            |> Maybe.withDefault ( False ){{/plugins}}
+
+
 updateByCoreMsg : Plugins -> Update.Config -> Plugin.Model.ModelState -> PluginInterface.Msg.InMsg -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 updateByCoreMsg plugins uc state msg =
     let

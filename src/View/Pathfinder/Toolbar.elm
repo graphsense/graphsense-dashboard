@@ -28,12 +28,19 @@ type alias Config =
 view : View.Config -> Config -> Html Msg
 view vc config =
     let
-        iconsAttr =
+        iconsAttr titl disabled msg =
             [ css
                 [ Css.cursor Css.pointer
                 , Css.property "pointer-events" "bounding-box"
                 ]
+            , title (Locale.string vc.locale titl)
             ]
+                ++ (if disabled then
+                        [ css [ Css.opacity <| Css.num 0.3 ] ]
+
+                    else
+                        [ onClickWithStop msg ]
+                   )
 
         highlightBackground pointer =
             [ Css.important <|
@@ -50,122 +57,50 @@ view vc config =
             Locale.string vc.locale str
                 |> HA.title
     in
-    SettingsComponents.toolbarWithInstances
+    SettingsComponents.toolbarWithAttributes
         (SettingsComponents.toolbarAttributes
             |> Rs.s_iconsDelete
-                (onClickWithStop UserClickedToolbarDeleteIcon
-                    :: title (Locale.string vc.locale "Delete")
-                    :: (iconsAttr
-                            ++ (if config.deleteDisabled then
-                                    [ css [ Css.opacity <| Css.num 0.3 ] ]
-
-                                else
-                                    []
-                               )
-                       )
-                )
+                (iconsAttr "Delete" config.deleteDisabled UserClickedToolbarDeleteIcon)
             |> Rs.s_iconsAnnotate
-                (onClickWithStop UserToggleAnnotationSettings
-                    :: id (toolbarHovercardTypeToId Annotation)
-                    :: title (Locale.string vc.locale "Annotate")
-                    :: (iconsAttr
-                            ++ (if config.annotateDisabled then
-                                    [ css [ Css.opacity <| Css.num 0.3 ] ]
-
-                                else
-                                    []
-                               )
-                       )
+                (id (toolbarHovercardTypeToId Annotation)
+                    :: iconsAttr "Annotate" config.annotateDisabled UserToggleAnnotationSettings
                 )
             |> Rs.s_iconsNewFile
-                (onClickWithStop UserClickedRestart
-                    :: title (Locale.string vc.locale "Restart")
-                    :: (iconsAttr
-                            ++ (if config.newDisabled then
-                                    [ css [ Css.opacity <| Css.num 0.3 ] ]
-
-                                else
-                                    []
-                               )
-                       )
-                )
+                (iconsAttr "Restart" config.newDisabled UserClickedRestart)
             |> Rs.s_iconsSelectionTool
-                (onClickWithStop UserClickedSelectionTool
-                    :: title (Locale.string vc.locale "Selection tool")
-                    :: css (highlightBackground Select)
-                    :: iconsAttr
+                (css (highlightBackground Select)
+                    :: iconsAttr "Selection tool" False UserClickedSelectionTool
                 )
             |> Rs.s_iconsDisplayConfiguration
                 (id (toolbarHovercardTypeToId Settings)
-                    :: title (Locale.string vc.locale "Display settings")
-                    :: onClickWithStop (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
-                    :: iconsAttr
+                    :: iconsAttr "Display settings" False (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
                 )
             |> Rs.s_iconsCenterGraph
-                (onClickWithStop UserClickedFitGraph
-                    :: title (Locale.string vc.locale "Center graph")
-                    :: iconsAttr
-                )
+                (iconsAttr "Center graph" False UserClickedFitGraph)
             |> Rs.s_iconsSave
-                (onClickWithStop (UserClickedSaveGraph Nothing)
-                    :: title (Locale.string vc.locale "Save file")
-                    :: iconsAttr
-                )
+                (iconsAttr "Save file" False (UserClickedSaveGraph Nothing))
             |> Rs.s_iconsScrennshot
-                (onClickWithStop (UserClickedExportGraphAsImage config.exportName)
-                    :: title (Locale.string vc.locale "Screenshot")
-                    :: iconsAttr
-                )
+                (iconsAttr "Screenshot" False (UserClickedExportGraphAsImage config.exportName))
             |> Rs.s_iconsOpen
-                (onClickWithStop UserClickedOpenGraph
-                    :: title (Locale.string vc.locale "Open")
-                    :: iconsAttr
-                )
+                (iconsAttr "Open" False UserClickedOpenGraph)
         )
-        SettingsComponents.toolbarInstances
         { iconsRedo =
             { variant =
-                if config.redoDisabled then
-                    Icons.iconsRedoStateDisabledWithAttributes
-                        (Icons.iconsRedoStateDisabledAttributes
-                            |> Rs.s_stateDisabled
-                                [ title (Locale.string vc.locale "Redo")
-                                ]
-                        )
-                        {}
-
-                else
-                    Icons.iconsRedoStateActiveWithAttributes
-                        (Icons.iconsRedoStateActiveAttributes
-                            |> Rs.s_stateActive
-                                (onClickWithStop UserClickedRedo
-                                    :: title (Locale.string vc.locale "Redo")
-                                    :: iconsAttr
-                                )
-                        )
-                        {}
+                Icons.iconsRedoWithAttributes
+                    (Icons.iconsRedoAttributes
+                        |> Rs.s_root
+                            (iconsAttr "Redo" config.redoDisabled UserClickedRedo)
+                    )
+                    { root = { state = Icons.IconsRedoStateActive } }
             }
         , iconsUndo =
             { variant =
-                if config.undoDisabled then
-                    Icons.iconsUndoStateDisabledWithAttributes
-                        (Icons.iconsUndoStateDisabledAttributes
-                            |> Rs.s_stateDisabled
-                                [ title (Locale.string vc.locale "Undo")
-                                ]
-                        )
-                        {}
-
-                else
-                    Icons.iconsUndoStateActiveWithAttributes
-                        (Icons.iconsUndoStateActiveAttributes
-                            |> Rs.s_stateActive
-                                (onClickWithStop UserClickedUndo
-                                    :: title (Locale.string vc.locale "Undo")
-                                    :: iconsAttr
-                                )
-                        )
-                        {}
+                Icons.iconsUndoWithAttributes
+                    (Icons.iconsUndoAttributes
+                        |> Rs.s_root
+                            (iconsAttr "Undo" config.undoDisabled UserClickedUndo)
+                    )
+                    { root = { state = Icons.IconsUndoStateActive } }
             }
-        , toolbar = { highlightVisible = False }
+        , root = { highlightVisible = False }
         }

@@ -96,7 +96,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
         exchangeIcon =
             Icons.iconsExchangeSWithAttributes
                 (Icons.iconsExchangeSAttributes
-                    |> Rs.s_iconsExchangeS
+                    |> Rs.s_root
                         [ Locale.string vc.locale "is an exchange"
                             |> title
                         ]
@@ -106,7 +106,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
         tagIcon =
             Icons.iconsTagSWithAttributes
                 (Icons.iconsTagSAttributes
-                    |> Rs.s_iconsTagS
+                    |> Rs.s_root
                         [ Locale.string vc.locale "has tags"
                             |> title
                         ]
@@ -138,7 +138,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
             \data ->
                 SidePanelComponents.sidePanelIoListIdentifierCellWithAttributes
                     SidePanelComponents.sidePanelIoListIdentifierCellAttributes
-                    { sidePanelIoListIdentifierCell =
+                    { root =
                         { position1Instance =
                             let
                                 withTagSummary ts =
@@ -167,7 +167,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                                 HasTagSummaryWithCluster ts ->
                                     withTagSummary ts
 
-                                HasTagSummaryWithoutCluster ts ->
+                                HasTagSummaryWithoutCluster _ ->
                                     none
 
                                 HasTagSummaryOnlyWithCluster ts ->
@@ -188,7 +188,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
                                 HasTagSummaryWithCluster ts ->
                                     withTagSummary ts
 
-                                HasTagSummaryWithoutCluster ts ->
+                                HasTagSummaryWithoutCluster _ ->
                                     none
 
                                 HasTagSummaries { withCluster } ->

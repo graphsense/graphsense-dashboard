@@ -12,10 +12,10 @@ import Init.Graph.Id as Id
 import Json.Decode
 import Log
 import Maybe.Extra
-import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id as Id
+import Model.Node exposing (NodeType(..))
 import Msg.Graph exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import String.Interpolate
@@ -89,7 +89,7 @@ address plugins vc gc addr =
             ]
             []
         , Svg.path
-            [ Css.nodeFrame vc Model.Graph.AddressType isSelected |> css
+            [ Css.nodeFrame vc AddressType isSelected |> css
             , String.Interpolate.interpolate
                 "M {2} 0 H {0} Z M {2} {1} H {0} Z"
                 [ Address.getInnerWidth addr + expandHandleWidth |> String.fromFloat
@@ -100,7 +100,7 @@ address plugins vc gc addr =
             ]
             []
         , Svg.path
-            [ Css.nodeSeparatorToExpandHandle vc Model.Graph.AddressType |> css
+            [ Css.nodeSeparatorToExpandHandle vc AddressType |> css
             , String.Interpolate.interpolate
                 "M {2} 0 V {0} Z M {1} 0 V {0} Z"
                 [ Address.getHeight addr |> String.fromFloat
@@ -115,7 +115,7 @@ address plugins vc gc addr =
         , Node.expand vc
             gc
             { isOutgoing = False
-            , nodeType = Model.Graph.AddressType
+            , nodeType = AddressType
             , degree = addr.address.inDegree
             , onClick = UserClickedAddressExpandHandle addr.id
             , width = Address.getInnerWidth addr
@@ -126,7 +126,7 @@ address plugins vc gc addr =
         , Node.expand vc
             gc
             { isOutgoing = True
-            , nodeType = Model.Graph.AddressType
+            , nodeType = AddressType
             , degree = addr.address.outDegree
             , onClick = UserClickedAddressExpandHandle addr.id
             , width = Address.getInnerWidth addr
@@ -149,7 +149,7 @@ label vc gc addr =
         [ getLabel vc gc addr
             |> Label.label vc
                 gc
-                Model.Graph.AddressType
+                AddressType
         ]
 
 

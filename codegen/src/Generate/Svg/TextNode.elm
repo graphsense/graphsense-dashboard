@@ -5,7 +5,6 @@ import Elm
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
-import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.TextNode exposing (getName)
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.TypeStyle as TypeStyle
@@ -42,11 +41,6 @@ toStyles : ColorMap -> TextNode -> List Elm.Expression
 toStyles colorMap node =
     TypeStyle.toStyles colorMap node.style
         ++ HasGeometryTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait
-
-
-toDetails : ColorMap -> TextNode -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap node) node
 
 
 toAlignmentBaseline : TypeStyleTextAlignVertical -> Elm.Expression

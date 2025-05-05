@@ -11,9 +11,11 @@ import Html.Styled.Events exposing (onClick)
 import PagedTable
 import RecordSetter as Rs
 import Table
+import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
+import Util.Css
 import Util.View
 import View.Graph.Table exposing (simpleThead)
 import View.Locale as Locale
@@ -86,16 +88,29 @@ pagedTableView vc attributes config tblPaged msgTag =
         nextPageAvailable =
             PagedTable.hasNextPage tblPaged
 
+        overrideColor =
+            Util.Css.overrideBlack Theme.Colors.greyBlue500
+
         nextActiveAttributes =
             if nextPageAvailable then
-                [ onClick (PagedTable.NextPage |> msgTag), [ Css.cursor Css.pointer ] |> css ]
+                [ onClick (PagedTable.NextPage |> msgTag)
+                , [ Css.cursor Css.pointer
+                  , overrideColor
+                  ]
+                    |> css
+                ]
 
             else
                 []
 
         prevActiveAttributes =
             if PagedTable.hasPrevPage tblPaged then
-                [ onClick (PagedTable.PrevPage |> msgTag), [ Css.cursor Css.pointer ] |> css ]
+                [ onClick (PagedTable.PrevPage |> msgTag)
+                , [ Css.cursor Css.pointer
+                  , overrideColor
+                  ]
+                    |> css
+                ]
 
             else
                 []
@@ -108,7 +123,36 @@ pagedTableView vc attributes config tblPaged msgTag =
                 []
 
         paggingBlockAttributes =
-            [ [ Css.width (Css.pct 100) ] |> css, Util.View.noTextSelection ]
+            [ [ Css.width (Css.pct 100)
+              ]
+                |> css
+            , Util.View.noTextSelection
+            ]
+
+        { listPartState, leftDisabled, rightDisabled } =
+            if PagedTable.getCurrentPage tblPaged == 1 && nextPageAvailable then
+                { listPartState = SidePanelComponents.PaginationListPartStart
+                , leftDisabled = True
+                , rightDisabled = False
+                }
+
+            else if PagedTable.getCurrentPage tblPaged == 1 && not nextPageAvailable then
+                { listPartState = SidePanelComponents.PaginationListPartOnePage
+                , leftDisabled = True
+                , rightDisabled = True
+                }
+
+            else if nextPageAvailable then
+                { listPartState = SidePanelComponents.PaginationListPartMiddle
+                , leftDisabled = False
+                , rightDisabled = False
+                }
+
+            else
+                { listPartState = SidePanelComponents.PaginationListPartEnd
+                , leftDisabled = False
+                , rightDisabled = True
+                }
 
         listPart =
             { nextLabel = Locale.string vc.locale "Next"
@@ -117,7 +161,32 @@ pagedTableView vc attributes config tblPaged msgTag =
                 PagedTable.getCurrentPage tblPaged
                     |> String.fromInt
                     |> (++) (Locale.string vc.locale "Page" ++ " ")
+            , listPart = listPartState
             }
+
+        chevronLeft =
+            Icons.iconsChevronLeftThin
+                { root =
+                    { state =
+                        if leftDisabled then
+                            Icons.IconsChevronLeftThinStateDisabled
+
+                        else
+                            Icons.IconsChevronLeftThinStateDefault
+                    }
+                }
+
+        chevronRight =
+            Icons.iconsChevronRightThin
+                { root =
+                    { state =
+                        if rightDisabled then
+                            Icons.IconsChevronRightThinStateDisabled
+
+                        else
+                            Icons.IconsChevronRightThinStateDefault
+                    }
+                }
 
         wrapNote =
             List.singleton
@@ -152,95 +221,16 @@ pagedTableView vc attributes config tblPaged msgTag =
                 else
                     []
                )
-            ++ [ if PagedTable.getCurrentPage tblPaged == 1 && nextPageAvailable then
-                    SidePanelComponents.paginationListPartStartWithInstances
-                        (SidePanelComponents.paginationListPartStartAttributes
-                            |> Rs.s_listPartStart paggingBlockAttributes
-                            |> Rs.s_next nextActiveAttributes
-                        )
-                        (SidePanelComponents.paginationListPartStartInstances
-                         -- |> s_iconsChevronRightEnd (Just Util.View.none)
-                        )
-                        { listPartStart = listPart
-                        , iconsChevronLeftThin =
-                            { variant = Icons.iconsChevronLeftThinStateDisabled {} }
-                        , iconsChevronRightThin =
-                            { variant =
-                                Icons.iconsChevronRightThinStateDefaultWithAttributes
-                                    (Icons.iconsChevronRightThinStateDefaultAttributes
-                                        |> Rs.s_stateDefault nextActiveAttributes
-                                    )
-                                    {}
-                            }
-                        }
-
-                 else if PagedTable.getCurrentPage tblPaged == 1 && not nextPageAvailable then
-                    SidePanelComponents.paginationListPartOnePageWithInstances
-                        (SidePanelComponents.paginationListPartOnePageAttributes
-                            |> Rs.s_listPartOnePage paggingBlockAttributes
-                            |> Rs.s_next nextActiveAttributes
-                        )
-                        (SidePanelComponents.paginationListPartOnePageInstances
-                         -- |> s_iconsChevronRightEnd (Just Util.View.none)
-                        )
-                        { listPartOnePage = listPart
-                        , iconsChevronLeftThin =
-                            { variant = Icons.iconsChevronLeftThinStateDisabled {} }
-                        , iconsChevronRightThin =
-                            { variant = Icons.iconsChevronRightThinStateDisabled {} }
-                        }
-
-                 else if nextPageAvailable then
-                    SidePanelComponents.paginationListPartMiddleWithInstances
-                        (SidePanelComponents.paginationListPartMiddleAttributes
-                            |> Rs.s_listPartMiddle paggingBlockAttributes
-                            |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
-                            |> Rs.s_next nextActiveAttributes
-                            |> Rs.s_previous prevActiveAttributes
-                        )
-                        (SidePanelComponents.paginationListPartMiddleInstances
-                         -- |> s_iconsChevronRightEnd (Just Util.View.none)
-                        )
-                        { listPartMiddle = listPart
-                        , iconsChevronLeftThin =
-                            { variant =
-                                Icons.iconsChevronLeftThinStateDefaultWithAttributes
-                                    (Icons.iconsChevronLeftThinStateDefaultAttributes
-                                        |> Rs.s_stateDefault prevActiveAttributes
-                                    )
-                                    {}
-                            }
-                        , iconsChevronRightThin =
-                            { variant =
-                                Icons.iconsChevronRightThinStateDefaultWithAttributes
-                                    (Icons.iconsChevronRightThinStateDefaultAttributes
-                                        |> Rs.s_stateDefault nextActiveAttributes
-                                    )
-                                    {}
-                            }
-                        }
-
-                 else
-                    SidePanelComponents.paginationListPartEndWithInstances
-                        (SidePanelComponents.paginationListPartEndAttributes
-                            |> Rs.s_listPartEnd paggingBlockAttributes
-                            |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
-                            |> Rs.s_previous prevActiveAttributes
-                        )
-                        (SidePanelComponents.paginationListPartEndInstances
-                         -- |> s_iconsChevronRightEnd (Just Util.View.none)
-                        )
-                        { listPartEnd = listPart
-                        , iconsChevronLeftThin =
-                            { variant =
-                                Icons.iconsChevronLeftThinStateDefaultWithAttributes
-                                    (Icons.iconsChevronLeftThinStateDefaultAttributes
-                                        |> Rs.s_stateDefault prevActiveAttributes
-                                    )
-                                    {}
-                            }
-                        , iconsChevronRightThin =
-                            { variant = Icons.iconsChevronRightThinStateDisabled {} }
-                        }
+            ++ [ SidePanelComponents.paginationWithAttributes
+                    (SidePanelComponents.paginationAttributes
+                        |> Rs.s_root paggingBlockAttributes
+                        |> Rs.s_nextButton nextActiveAttributes
+                        |> Rs.s_iconsChevronLeftEnd firstActiveAttributes
+                        |> Rs.s_previousButton prevActiveAttributes
+                    )
+                    { root = listPart
+                    , iconsChevronLeftThin = { variant = chevronLeft }
+                    , iconsChevronRightThin = { variant = chevronRight }
+                    }
                ]
         )

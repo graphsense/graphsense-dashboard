@@ -1,31 +1,80 @@
-module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, fromHttpError, fromHttpErrorWithMoreInfo, getMoved, peek, perform, pop, setMoved, update)
+module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, errorDefault, fromHttpError, fromHttpErrorWithMoreInfo, getMoved, infoDefault, map, peek, perform, pop, setMoved, successDefault, update)
 
 import Basics.Extra exposing (flip)
 import Http
 import Process
+import RecordSetter as Rs
 import Set exposing (Set)
 import Task
 import Tuple exposing (mapSecond, pair)
 
 
 type alias NotificationData =
-    { title : String
+    { title : Maybe String
     , message : String
     , moreInfo : List String
     , variables : List String
+    , showClose : Bool
+    , isEphemeral : Bool
+    , removeDelayMs : Float
     }
-
-
-empty : Model
-empty =
-    NotificationModel { messages = [], messageIds = Set.empty, moved = False }
 
 
 type Notification
     = Error NotificationData
     | Info NotificationData
-    | InfoEphemeral String
-    | Success String
+    | Success NotificationData
+
+
+defaultNotificationData : String -> NotificationData
+defaultNotificationData message =
+    { title = Nothing, message = message, moreInfo = [], variables = [], showClose = True, isEphemeral = False, removeDelayMs = 12000 }
+
+
+successDefault : String -> Notification
+successDefault message =
+    Success (defaultNotificationData message)
+
+
+errorDefault : String -> Notification
+errorDefault message =
+    Error (defaultNotificationData message)
+
+
+infoDefault : String -> Notification
+infoDefault message =
+    Info (defaultNotificationData message)
+
+
+getNotificationData : Notification -> NotificationData
+getNotificationData n =
+    case n of
+        Success d ->
+            d
+
+        Info d ->
+            d
+
+        Error d ->
+            d
+
+
+map : (NotificationData -> NotificationData) -> Notification -> Notification
+map fn n =
+    case n of
+        Success d ->
+            fn d |> Success
+
+        Info d ->
+            fn d |> Info
+
+        Error d ->
+            fn d |> Error
+
+
+empty : Model
+empty =
+    NotificationModel { messages = [], messageIds = Set.empty, moved = False }
 
 
 type Model
@@ -34,12 +83,13 @@ type Model
 
 type Effect
     = MoveNotification
-    | RemoveNotification
+    | RemoveNotification Notification
 
 
 type Msg
     = MoveDelayPassed
-    | RemoveDelayPassed
+    | RemoveDelayPrePassed Notification
+    | RemoveDelayPassed Notification
 
 
 type alias InternalModel =
@@ -74,15 +124,24 @@ add n (NotificationModel m) =
         id =
             n |> toId
 
+        produceEff d =
+            if d.isEphemeral then
+                [ RemoveNotification n ]
+
+            else
+                []
+
         effects =
             MoveNotification
                 :: (case n of
-                        Success _ ->
-                            [ RemoveNotification
-                            ]
+                        Success d ->
+                            produceEff d
 
-                        _ ->
-                            []
+                        Info d ->
+                            produceEff d
+
+                        Error d ->
+                            produceEff d
                    )
     in
     (if Set.member id m.messageIds then
@@ -95,6 +154,19 @@ add n (NotificationModel m) =
         |> flip pair effects
 
 
+remove : Notification -> Model -> Model
+remove n (NotificationModel m) =
+    let
+        mnew =
+            m.messages |> List.filter ((/=) n)
+    in
+    { m
+        | messages = mnew
+        , messageIds = mnew |> List.map toId |> Set.fromList
+    }
+        |> NotificationModel
+
+
 addMany : Model -> List Notification -> ( Model, List Effect )
 addMany m ln =
     List.foldl (\n_ ( m_, eff ) -> add n_ m_ |> mapSecond ((++) eff)) ( m, [] ) ln
@@ -102,18 +174,29 @@ addMany m ln =
 
 toId : Notification -> String
 toId n =
-    case n of
-        Error { title, message, variables } ->
-            String.join "|" ("error" :: title :: message :: variables)
+    let
+        dId { title, message, variables, isEphemeral } =
+            (title |> Maybe.withDefault "")
+                :: message
+                :: (if isEphemeral then
+                        "yes"
 
-        Info { title, message, variables } ->
-            String.join "|" ("info" :: title :: message :: variables)
+                    else
+                        "no"
+                   )
+                :: variables
+    in
+    String.join "|"
+        (case n of
+            Error data ->
+                "error" :: dId data
 
-        Success title ->
-            String.join "|" [ "success", title ]
+            Info data ->
+                "info" :: dId data
 
-        InfoEphemeral title ->
-            String.join "|" [ "infoEphemeral", title ]
+            Success data ->
+                "success" :: dId data
+        )
 
 
 getMoved : Model -> Bool
@@ -139,8 +222,19 @@ update msg model =
         MoveDelayPassed ->
             setMoved model
 
-        RemoveDelayPassed ->
-            unsetMoved model
+        RemoveDelayPrePassed n ->
+            if peek model == Just n then
+                unsetMoved model
+
+            else
+                model
+
+        RemoveDelayPassed n ->
+            if peek model == Just n then
+                unsetMoved model |> remove n
+
+            else
+                model |> remove n
 
 
 perform : Effect -> Cmd Msg
@@ -148,11 +242,15 @@ perform effect =
     case effect of
         MoveNotification ->
             Process.sleep 0
-                |> Task.perform (\_ -> MoveDelayPassed)
+                |> Task.perform (MoveDelayPassed |> always)
 
-        RemoveNotification ->
-            Process.sleep 3000
-                |> Task.perform (\_ -> RemoveDelayPassed)
+        RemoveNotification n ->
+            Cmd.batch
+                [ Process.sleep (n |> getNotificationData |> .removeDelayMs)
+                    |> Task.perform (RemoveDelayPassed n |> always)
+                , Process.sleep ((n |> getNotificationData |> .removeDelayMs) - 300)
+                    |> Task.perform (RemoveDelayPrePassed n |> always)
+                ]
 
 
 fromHttpError : Http.Error -> Notification
@@ -161,49 +259,34 @@ fromHttpError =
 
 
 fromHttpErrorWithMoreInfo : String -> Http.Error -> Notification
-fromHttpErrorWithMoreInfo info error =
+fromHttpErrorWithMoreInfo infoData errorData =
     let
         toMoreInfo =
-            (++) [ info ]
+            (++) [ infoData ]
                 >> List.filter (String.isEmpty >> not)
     in
-    case error of
+    case errorData of
         Http.NetworkError ->
-            Error
-                { title = "Network error"
-                , message = "Service not reachable."
-                , moreInfo = toMoreInfo []
-                , variables = []
-                }
+            errorDefault "Service not reachable."
+                |> map (Rs.s_title (Just "Network Error"))
+                |> map (Rs.s_moreInfo (toMoreInfo []))
 
         Http.BadBody body ->
-            Error
-                { title = "Data error"
-                , message = "Unexpected data format."
-                , moreInfo = toMoreInfo [ body ]
-                , variables = []
-                }
+            errorDefault "Unexpected data format."
+                |> map (Rs.s_title (Just "Data Error"))
+                |> map (Rs.s_moreInfo (toMoreInfo [ body ]))
 
         Http.BadUrl _ ->
-            Error
-                { title = "Bad URL"
-                , message = ""
-                , moreInfo = toMoreInfo []
-                , variables = []
-                }
+            errorDefault "Unexpected data format."
+                |> map (Rs.s_title (Just "Bad URL"))
+                |> map (Rs.s_moreInfo (toMoreInfo []))
 
         Http.BadStatus _ ->
-            Error
-                { title = "Request error"
-                , message = "Unexpected status code."
-                , moreInfo = toMoreInfo []
-                , variables = []
-                }
+            errorDefault "Unexpected status code."
+                |> map (Rs.s_title (Just "Request error"))
+                |> map (Rs.s_moreInfo (toMoreInfo []))
 
         Http.Timeout ->
-            Error
-                { title = "Request timeout"
-                , message = "Service does not respond in time."
-                , moreInfo = toMoreInfo []
-                , variables = []
-                }
+            errorDefault "Service does not respond in time."
+                |> map (Rs.s_title (Just "Request timeout"))
+                |> map (Rs.s_moreInfo (toMoreInfo []))

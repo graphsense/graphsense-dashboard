@@ -37,9 +37,9 @@ adjustName names node =
         |> Maybe.withDefault node
 
 
-getName : { a | frameTraits : FrameTraits } -> String
+getName : FrameTraits -> String
 getName node =
-    node.frameTraits.isLayerTrait.name
+    node.isLayerTrait.name
 
 
 getId : { a | frameTraits : FrameTraits } -> String
@@ -58,8 +58,8 @@ getStrokeWidth node =
         |> Maybe.withDefault 0
 
 
-toDetails : (FrameTraits -> List Elm.Expression) -> { a | frameTraits : FrameTraits } -> Details
-toDetails getStyles node =
+toDetails : { a | frameTraits : FrameTraits } -> Details
+toDetails node =
     let
         bbox =
             getBoundingBox node
@@ -68,7 +68,7 @@ toDetails getStyles node =
             node.frameTraits.absoluteRenderBounds
                 |> Maybe.withDefault bbox
     in
-    { name = getName node
+    { name = getName node.frameTraits
     , instanceName = ""
     , bbox = getBoundingBox node
     , renderedSize =
@@ -76,7 +76,6 @@ toDetails getStyles node =
         , height = rbox.height
         }
     , strokeWidth = getStrokeWidth node
-    , styles = getStyles node.frameTraits
     }
 
 
@@ -88,7 +87,7 @@ isHidden { frameTraits } =
 
 isList : { a | frameTraits : FrameTraits } -> Bool
 isList =
-    getName >> nameIsList
+    .frameTraits >> getName >> nameIsList
 
 
 nameIsList : String -> Bool

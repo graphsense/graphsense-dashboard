@@ -1,4 +1,4 @@
-module Css.Stats exposing (currency, currencyBackground, currencyBackgroundPath, currencyHeading, loadingSpinner, root, stats, statsBadge, statsTable, statsTableCellKey, statsTableCellValue, statsTableInnerWrapper, statsTableRow, statsTableWrapper)
+module Css.Stats exposing (currency, currencyBackground, currencyBackgroundPath, currencyHeading, loadingSpinner, root, stats, statsBadge, statsBadgeContainer, statsTable, statsTableCellKey, statsTableCellValue, statsTableInnerWrapper, statsTableRow, statsTableWrapper)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -66,16 +66,21 @@ statsTableCellKey vc =
 
 statsBadge : Config -> List Style
 statsBadge vc =
-    [ px 5 |> marginRight
-    , px 2 |> paddingLeft
-    , px 2 |> paddingRight
-    , px 1 |> paddingTop
-    , px 1 |> paddingBottom
-
-    --, px 3 |> borderRadius
+    [ px 50 |> width
     , textAlign center
     ]
         ++ vc.theme.stats.tokenBadgeStyle vc.lightmode
+
+
+statsBadgeContainer : List Style
+statsBadgeContainer =
+    [ Css.displayFlex
+    , Css.flexDirection Css.row
+    , Css.flexWrap Css.wrap
+    , Css.property "align-content" "space-between"
+    , Css.property "gap" "2px"
+    , Css.width (Css.px 130)
+    ]
 
 
 currencyBackground : Config -> List Style

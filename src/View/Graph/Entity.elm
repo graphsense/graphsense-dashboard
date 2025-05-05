@@ -9,12 +9,12 @@ import Dict exposing (Dict)
 import Init.Graph.Id as Id
 import Json.Decode
 import Maybe.Extra
-import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Link exposing (Link)
+import Model.Node exposing (NodeType(..))
 import Msg.Graph exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import String.Interpolate
@@ -99,7 +99,7 @@ entity plugins vc gc ent =
             []
         , Svg.path
             [ ent.selected
-                |> Css.nodeFrame vc Model.Graph.EntityType
+                |> Css.nodeFrame vc EntityType
                 |> css
             , String.Interpolate.interpolate
                 "M {2} 0 H {0} Z M {2} {1} H {0} Z"
@@ -111,7 +111,7 @@ entity plugins vc gc ent =
             ]
             []
         , Svg.path
-            [ Css.nodeSeparatorToExpandHandle vc Model.Graph.EntityType |> css
+            [ Css.nodeSeparatorToExpandHandle vc EntityType |> css
             , String.Interpolate.interpolate
                 "M {2} 0 V {0} Z M {1} 0 V {0} Z"
                 [ Entity.getHeight ent |> String.fromFloat
@@ -128,7 +128,7 @@ entity plugins vc gc ent =
         , Node.expand vc
             gc
             { isOutgoing = False
-            , nodeType = Model.Graph.EntityType
+            , nodeType = EntityType
             , degree = ent.entity.inDegree
             , onClick = UserClickedEntityExpandHandle ent.id
             , width = Entity.getInnerWidth ent
@@ -139,7 +139,7 @@ entity plugins vc gc ent =
         , Node.expand vc
             gc
             { isOutgoing = True
-            , nodeType = Model.Graph.EntityType
+            , nodeType = EntityType
             , degree = ent.entity.outDegree
             , onClick = UserClickedEntityExpandHandle ent.id
             , width = Entity.getInnerWidth ent
@@ -159,7 +159,7 @@ label vc gc ent =
             |> transform
         ]
         [ getLabel vc gc ent
-            |> Label.label vc gc Model.Graph.EntityType
+            |> Label.label vc gc EntityType
         ]
 
 

@@ -7,7 +7,7 @@ import Generate.Html.FrameTraits as FrameTraits
 import Types exposing (ColorMap)
 
 
-toStyles : ColorMap -> ComponentNode -> List Elm.Expression
+toStyles : ColorMap -> FrameTraits -> List Elm.Expression
 toStyles colorMap node =
-    FrameTraits.toStyles colorMap node.frameTraits
+    FrameTraits.toStyles colorMap node
         ++ [ Css.position Css.relative ]

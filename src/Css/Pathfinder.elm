@@ -259,8 +259,13 @@ topRightPanelStyle : View.Config -> List Style
 topRightPanelStyle _ =
     [ position absolute
     , px 0 |> right
-    , top (px 70)
+    , top (px topRightPanelY)
     ]
+
+
+topRightPanelY : Float
+topRightPanelY =
+    70
 
 
 searchBoxMinWidth : Float
@@ -304,7 +309,7 @@ fullWidth =
 
 sidePanelCss : List Css.Style
 sidePanelCss =
-    [ Css.calc (Css.vh 100) Css.minus (Css.px 150) |> Css.maxHeight
+    [ Css.calc (Css.vh 100) Css.minus (Css.px <| topRightPanelY) |> Css.maxHeight
     , Css.overflowY Css.auto
     , Css.overflowX Css.hidden
     ]

@@ -2,10 +2,11 @@ module Util.Pathfinder.History exposing (shallPushHistory)
 
 import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))
+import Plugin.Update as Plugin exposing (Plugins)
 
 
-shallPushHistory : Msg -> Model -> Bool
-shallPushHistory msg _ =
+shallPushHistory : Plugins -> Msg -> Model -> Bool
+shallPushHistory plugins msg _ =
     case msg of
         UserClickedGraph _ ->
             False
@@ -22,8 +23,8 @@ shallPushHistory msg _ =
         UserWheeledOnGraph _ _ _ ->
             False
 
-        PluginMsg _ ->
-            False
+        PluginMsg pmsg ->
+            Plugin.shallPushHistory plugins pmsg
 
         UserPushesLeftMouseButtonOnAddress _ _ ->
             False

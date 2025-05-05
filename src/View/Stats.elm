@@ -13,7 +13,7 @@ import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as Svg exposing (d, viewBox)
 import Util.RemoteData exposing (webdata)
 import Util.View
-import View.CurrencyMeta exposing (currencies)
+import View.CurrencyMeta exposing (networks)
 import View.Locale as Locale
 
 
@@ -72,7 +72,7 @@ currency vc cs tokens =
         [ h3
             [ Css.currencyHeading vc |> css
             ]
-            [ Dict.get cs.name currencies
+            [ Dict.get cs.name networks
                 |> Maybe.map .name
                 |> Maybe.withDefault (cs.name |> String.toUpper)
                 |> text
@@ -107,7 +107,7 @@ currency vc cs tokens =
             , div
                 [ Css.currencyBackground vc |> css
                 ]
-                [ Dict.get cs.name currencies
+                [ Dict.get cs.name networks
                     |> Maybe.map
                         (\{ icon } ->
                             svg
@@ -156,10 +156,10 @@ statsRowBadge vc label values =
             ]
             [ Locale.text vc.locale label
             ]
-        , span
-            [ Css.statsTableCellValue vc |> css
+        , div
+            [ Css.statsBadgeContainer |> css
             ]
-            (values |> List.map (\x -> span [ Css.statsBadge vc |> css ] [ text x ]))
+            (values |> List.map (\x -> div [ Css.statsBadge vc |> css ] [ text x ]))
         ]
 
 

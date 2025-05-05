@@ -12,6 +12,7 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Html.HasEffectsTrait as HasEffectsTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
+import Generate.Html.HasLayoutTrait as HasLayoutTrait
 import Generate.Util exposing (..)
 import Types exposing (ColorMap, Config, Details)
 
@@ -21,16 +22,12 @@ toStyles colorMap node =
     HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
         ++ HasGeometryTrait.toStyles colorMap node.hasGeometryTrait Nothing
         ++ HasEffectsTrait.toStyles colorMap node.hasEffectsTrait
+        ++ HasLayoutTrait.toStyles node.hasLayoutTrait
 
 
-toDetails : ColorMap -> { a | defaultShapeTraits : DefaultShapeTraits } -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap node.defaultShapeTraits) node
-
-
-toExpressions : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression -> List Elm.Expression
+toExpressions : Config -> DefaultShapeTraits -> List Elm.Expression -> List Elm.Expression
 toExpressions config node =
-    wrapInSvg config (Common.getName node) node.defaultShapeTraits
+    wrapInSvg config (Common.getName node) node
         >> List.singleton
 
 

@@ -81,7 +81,7 @@ view _ vc _ tx utxo annotation =
         ]
         (GraphComponents.txNodeUtxoWithAttributes
             { txNodeUtxoAttributes
-                | txNodeUtxo =
+                | root =
                     [ UserClickedTx id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx id
                         |> Util.Graph.mousedown
@@ -98,7 +98,7 @@ view _ vc _ tx utxo annotation =
                     ]
                 , txNode = annAttr
             }
-            { txNodeUtxo =
+            { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
                 , highlightVisible = tx.selected || tx.hovered
                 , date = Locale.timestampDateUniform vc.locale utxo.raw.timestamp

@@ -1,9 +1,10 @@
 module Autocomplete exposing
     ( Autocomplete, Msg, Choices, ViewState, ViewStatus(..)
     , init, update
-    , selectedValue
-    , viewState, query, choices
-    , enoughCharacters, inFocus, isBlur, isFocus, onFetch, setChoices, setQuery, setSelectedIndex, setStatus
+    , selectedValue, enoughCharacters
+    , setChoices, setQuery, setSelectedIndex, setStatus
+    , viewState, query, choices, inFocus, isFocus, isInput, isBlur
+    , onFetch
     )
 
 {-| Autocomplete contains the main logic to handle auto-complete.
@@ -25,12 +26,17 @@ To render the Autocomplete, please refer to `Autocomplete.View` or `Autocomplete
 
 # Helpers
 
-@docs selectedValue
+@docs selectedValue, enoughCharacters
+
+
+# Setters
+
+@docs setChoices, setQuery, setSelectedIndex, setStatus
 
 
 # Accessors
 
-@docs viewState, query, choices
+@docs viewState, query, choices, inFocus, isFocus, isInput, isBlur
 
 -}
 
@@ -304,6 +310,9 @@ update msg (Autocomplete state) =
                 ( Autocomplete state, False, Cmd.none )
 
 
+{-|
+Update the Autocomplete state with a search request result
+-}
 onFetch : Result String (Choices a) -> Autocomplete a -> Autocomplete a
 onFetch result (Autocomplete state) =
     case result of
@@ -371,40 +380,61 @@ choices (Autocomplete s) =
     s.choices
 
 
+{-|
+Set the selected index
+-}
 setSelectedIndex : Int -> Autocomplete a -> Autocomplete a
 setSelectedIndex i (Autocomplete s) =
     { s | selectedIndex = Just i }
         |> Autocomplete
 
 
+{-|
+Set the query
+-}
 setQuery : String -> Autocomplete a -> Autocomplete a
 setQuery q (Autocomplete s) =
     { s | query = q }
         |> Autocomplete
 
 
+{-|
+Set the choices
+-}
 setChoices : List a -> Autocomplete a -> Autocomplete a
 setChoices ch (Autocomplete s) =
     { s | choices = ch }
         |> Autocomplete
 
 
+{-|
+Set the view status
+-}
 setStatus : ViewStatus -> Autocomplete a -> Autocomplete a
 setStatus st (Autocomplete s) =
     { s | viewStatus = st }
         |> Autocomplete
 
 
+{-|
+Get the focus state
+-}
 inFocus : Autocomplete a -> Bool
 inFocus (Autocomplete s) =
     s.inFocus
 
 
+{-|
+Is the query string long enough for triggering a search request?
+-}
 enoughCharacters : Autocomplete s -> Bool
 enoughCharacters (Autocomplete s) =
     String.length s.query >= s.minQueryLength
 
 
+{-|
+Is the message a blur message?
+-}
 isBlur : Msg -> Bool
 isBlur msg =
     case msg of
@@ -415,10 +445,27 @@ isBlur msg =
             False
 
 
+
+{-|
+Is the message a focus message?
+-}
 isFocus : Msg -> Bool
 isFocus msg =
     case msg of
         OnFocus ->
+            True
+
+        _ ->
+            False
+
+
+{-|
+Is the message an input message?
+-}
+isInput : Msg -> Bool
+isInput msg =
+    case msg of
+        OnInput _ ->
             True
 
         _ ->

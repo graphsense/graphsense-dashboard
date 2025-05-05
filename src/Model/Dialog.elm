@@ -1,6 +1,7 @@
-module Model.Dialog exposing (ConfirmConfig, CustomConfig, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg)
+module Model.Dialog exposing (ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg)
 
 import Api.Data
+import Config.View exposing (Config)
 import Html.Styled exposing (Html)
 import Http
 import Model.Graph.Table exposing (Table)
@@ -14,6 +15,7 @@ type Model msg
     | Info (InfoConfig msg)
     | TagsList (TagListConfig msg)
     | Custom (CustomConfig msg)
+    | CustomWithVc (CustomConfigWithVc msg)
     | Plugin (PluginConfig msg)
 
 
@@ -50,6 +52,12 @@ type alias InfoConfig msg =
 
 type alias CustomConfig msg =
     { html : Html msg
+    , defaultMsg : msg
+    }
+
+
+type alias CustomConfigWithVc msg =
+    { html : Config -> Html msg
     , defaultMsg : msg
     }
 
@@ -95,6 +103,9 @@ defaultMsg model =
             onOk
 
         Custom c ->
+            c.defaultMsg
+
+        CustomWithVc c ->
             c.defaultMsg
 
         TagsList c ->

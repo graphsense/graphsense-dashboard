@@ -11,12 +11,12 @@ import Init.Graph.Id as Id
 import Json.Decode
 import List.Extra
 import Model.Currency as Currency exposing (assetFromBase)
-import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Link as Link exposing (Link)
 import Model.Locale as Locale
+import Model.Node exposing (NodeType)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Regex
@@ -70,7 +70,7 @@ entityLinkOptions vc gc entity link =
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
     , onClick = Id.initLinkId entity.id link.node.id |> UserClicksEntityLink
     , onRightClick = Id.initLinkId entity.id link.node.id |> UserRightClicksEntityLink
-    , nodeType = Model.Graph.EntityType
+    , nodeType = Model.Node.EntityType
     , color =
         if entity.color /= Nothing && entity.color == link.node.color then
             entity.color
@@ -97,7 +97,7 @@ addressLinkOptions vc gc address link =
     , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
     , onClick = Id.initLinkId address.id link.node.id |> UserClicksAddressLink
     , onRightClick = Id.initLinkId address.id link.node.id |> UserRightClicksAddressLink
-    , nodeType = Model.Graph.AddressType
+    , nodeType = Model.Node.AddressType
     , color =
         if address.color /= Nothing && address.color == link.node.color then
             address.color

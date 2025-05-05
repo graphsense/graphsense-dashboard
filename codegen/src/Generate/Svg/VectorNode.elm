@@ -11,7 +11,7 @@ import Generate.Svg.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Util exposing (..)
 import Generate.Util.Paint as Paint
 import List.Nonempty as NList
-import Types exposing (ColorMap, Config, Details)
+import Types exposing (ColorMap, Config)
 
 
 toExpressions : Config -> String -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
@@ -51,7 +51,7 @@ toStrokePaths config node =
             (List.map renderPath
                 >> Elm.list
                 >> Gen.Svg.Styled.call_.g
-                    (Common.getName node
+                    (Common.getName node.defaultShapeTraits
                         |> getElementAttributes config
                         |> Elm.Op.append
                             ([ css |> Attributes.css ]
@@ -74,7 +74,7 @@ toFillPaths config node =
         |> Maybe.withDefault []
         |> Elm.list
         |> Gen.Svg.Styled.call_.g
-            (Common.getName node
+            (Common.getName node.defaultShapeTraits
                 |> getElementAttributes config
                 |> Elm.Op.append
                     ([ css |> Attributes.css ]
@@ -95,11 +95,6 @@ strokeStyles colorMap node =
     []
         |> m (Paint.toStylesString colorMap >> Maybe.withDefault "transparent" >> Css.property "fill") node.strokes
         |> a MinimalFillsTrait.opacity node.strokes
-
-
-toDetails : ColorMap -> { a | defaultShapeTraits : DefaultShapeTraits } -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap node) node
 
 
 toAttributes : { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression

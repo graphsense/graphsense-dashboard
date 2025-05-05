@@ -22,6 +22,6 @@ toStyles colorMap node =
         ++ HasEffectsTrait.toStyles colorMap node.hasEffectsTrait
 
 
-toDetails : ColorMap -> { a | frameTraits : FrameTraits } -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap) node
+toDetails : { a | frameTraits : FrameTraits } -> Details
+toDetails node =
+    Common.toDetails node

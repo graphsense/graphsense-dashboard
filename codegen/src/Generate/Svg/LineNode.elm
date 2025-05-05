@@ -9,7 +9,7 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Util exposing (..)
 import List.Nonempty as NList
-import Types exposing (ColorMap, Config, Details)
+import Types exposing (ColorMap, Config)
 
 
 toExpressions : Config -> String -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
@@ -38,7 +38,7 @@ toStrokePaths : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> Elm
 toStrokePaths config node =
     let
         name =
-            Common.getName node
+            Common.getName node.defaultShapeTraits
     in
     node.defaultShapeTraits.strokeGeometry
         |> Maybe.andThen NList.fromList
@@ -63,11 +63,6 @@ toStrokePaths config node =
 toStyles : ColorMap -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
 toStyles colorMap node =
     HasGeometryTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait
-
-
-toDetails : ColorMap -> { a | defaultShapeTraits : DefaultShapeTraits } -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap node) node
 
 
 toAttributes : { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression

@@ -18,7 +18,7 @@ toExpressions : Config -> String -> TextNode -> List Elm.Expression
 toExpressions config componentName node =
     let
         name =
-            Common.getName node
+            Common.getName node.defaultShapeTraits
     in
     if Common.isHidden node then
         []
@@ -52,8 +52,3 @@ toStyles colorMap node =
     TypeStyle.toStyles colorMap node.style
         ++ MinimalFillsTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait
         ++ DefaultShapeTraits.toStyles colorMap node.defaultShapeTraits
-
-
-toDetails : ColorMap -> TextNode -> Details
-toDetails colorMap node =
-    Common.toDetails (toStyles colorMap node) node

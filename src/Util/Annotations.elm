@@ -97,14 +97,14 @@ annotationToAttrAndLabel node details offset msg ann =
     , (if String.length ann.label > 0 then
         HtmlGraphComponents.annotationLabelWithAttributes
             (HtmlGraphComponents.annotationLabelAttributes
-                |> Rs.s_annotationLabel
+                |> Rs.s_root
                     (css
                         [ Css.display Css.inlineBlock
                         ]
                         :: colorAttributes "border-color"
                     )
             )
-            { annotationLabel = { labelText = ann.label } }
+            { root = { labelText = ann.label } }
             |> List.singleton
             |> Html.Styled.div
                 [ css

@@ -30,6 +30,7 @@ module View.Locale exposing
     , timestampDateUniform
     , timestampTimeUniform
     , timestampWithFormat
+    , titleCase
     , tokenCurrencies
     , valuesToFloat
     )
@@ -49,6 +50,7 @@ import List.Extra exposing (find)
 import Locale.Durations
 import Model.Currency exposing (..)
 import Model.Locale exposing (..)
+import String.Extra
 import String.Interpolate
 import Time exposing (Posix)
 import Time.Extra exposing (toOffset)
@@ -637,3 +639,12 @@ httpErrorToString model error =
 
         Http.BadBody str ->
             string model str
+
+
+titleCase : Model -> String -> String
+titleCase model =
+    if model.locale == "en" then
+        String.Extra.toTitleCase
+
+    else
+        identity

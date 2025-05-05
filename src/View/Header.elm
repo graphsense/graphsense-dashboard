@@ -44,7 +44,7 @@ header plugins _ vc hc =
           else
             SettingsComponents.searchBarFieldStateTypingWithInstances
                 (SettingsComponents.searchBarFieldStateTypingAttributes
-                    |> Rs.s_fieldStateTyping
+                    |> Rs.s_root
                         [ css
                             [ Css.alignItems Css.stretch |> Css.important
                             , Css.px 325 |> Css.width |> Css.important

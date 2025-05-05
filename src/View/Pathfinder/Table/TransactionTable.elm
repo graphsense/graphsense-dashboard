@@ -102,7 +102,7 @@ txColumn vc { label, accessor, onClick } =
             \data ->
                 SidePanelComponents.sidePanelListIdentifierCellWithAttributes
                     SidePanelComponents.sidePanelListIdentifierCellAttributes
-                    { sidePanelListIdentifierCell =
+                    { root =
                         { copyIconInstance =
                             accessor data |> copyIconPathfinder vc
                         , identifier =

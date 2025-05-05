@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -17,6 +17,7 @@ import Json.Decode
 import List.Extra
 import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
 import Switch
+import Theme.Html.Fields as Fields
 import Theme.Html.GraphComponents
 import Time exposing (Posix)
 import Util.Css
@@ -307,7 +308,7 @@ copyIconWithAttrPathfinder hideHint attr vc value =
                             Nothing
                         )
                 )
-                { copyShortcut = { hint = Locale.string vc.locale "Copy" }
+                { root = { hint = Locale.string vc.locale "Copy" }
                 }
             ]
         ]
@@ -411,3 +412,23 @@ timeToCell vc d =
     , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
     , secondRowVisible = True
     }
+
+
+inputFieldStyles : Bool -> List Css.Style
+inputFieldStyles hasError =
+    if hasError then
+        Fields.textFieldStateError_details.styles
+            ++ Fields.textFieldStateErrorText_details.styles
+
+    else
+        Fields.textFieldStateDefault_details.styles
+            ++ Fields.textFieldStateTypingText_details.styles
+            ++ [ Css.pseudoClass "placeholder"
+                    Fields.textFieldStateDefaultText_details.styles
+               , Css.focus
+                    (Fields.textFieldStateTyping_details.styles
+                        |> List.map Css.important
+                    )
+               , Css.hover
+                    Fields.textFieldStateHover_details.styles
+               ]

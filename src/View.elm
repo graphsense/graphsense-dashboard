@@ -123,9 +123,7 @@ navbarSubMenuView vc model { type_ } =
             NavbarMore ->
                 GraphComponents.rightClickMenuWithAttributes
                     (GraphComponents.rightClickMenuAttributes
-                        |> Rs.s_lineFrame
-                            [ css [ Css.display Css.none ] ]
-                        |> Rs.s_rightClickMenu [ [ Css.width (Css.px fixedWidth) ] |> css ]
+                        |> Rs.s_root [ [ Css.width (Css.px fixedWidth) ] |> css ]
                         |> Rs.s_shortcutList [ [ Css.width (Css.px fixedWidth) ] |> css ]
                         |> Rs.s_pluginsList [ [ Css.width (Css.px fixedWidth) ] |> css ]
                     )
@@ -196,30 +194,36 @@ sidebarMenuItemPlain img label selected new =
             else
                 identity
     in
-    if not selected then
-        Nb.navbarProductItemStateNeutralWithInstances
-            (Nb.navbarProductItemStateNeutralAttributes
-                |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
-                |> Rs.s_stateNeutral
-                    [ [ Css.hover
-                            (Css.property Theme.Colors.sidebarNeutral_name Theme.Colors.sidebarHovered
-                                :: Nb.navbarProductItemStateHover_details.styles
-                            )
-                      ]
-                        |> css
+    Nb.navbarProductItemWithAttributes
+        (Nb.navbarProductItemAttributes
+            |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
+            |> Rs.s_root
+                (if not selected then
+                    [ Css.hover
+                        (Util.Css.overrideBlack Theme.Colors.sidebarHovered
+                            :: Nb.navbarProductItemStateHover_details.styles
+                        )
                     ]
-                |> ifNewAddEvenOdd
-            )
-            Nb.navbarProductItemStateNeutralInstances
-            { stateNeutral = { iconInstance = img, productLabel = label, newLabelVisible = new } }
+                        |> css
+                        |> List.singleton
 
-    else
-        Nb.navbarProductItemStateSelectedWithInstances
-            (Nb.navbarProductItemStateSelectedAttributes
-                |> ifNewAddEvenOdd
-            )
-            Nb.navbarProductItemStateSelectedInstances
-            { stateSelected = { iconInstance = img, productLabel = label, newLabelVisible = new } }
+                 else
+                    []
+                )
+            |> ifNewAddEvenOdd
+        )
+        { root =
+            { iconInstance = img
+            , productLabel = label
+            , newLabelVisible = new
+            , state =
+                if not selected then
+                    Nb.NavbarProductItemStateNeutral
+
+                else
+                    Nb.NavbarProductItemStateSelected
+            }
+        }
 
 
 sidebarMenuItemWithNewParam : Html msg -> String -> String -> Bool -> String -> Bool -> Html msg
@@ -251,24 +255,25 @@ sidebar plugins vc model =
                 ++ [ sidebarMenuItemWithSubMenu vc model (UserToggledNavbarSubMenu NavbarMore) (Nb.iconsMoreHorizL {}) (Locale.string vc.locale "More") False False
                    ]
 
-        statLabel =
-            { textLabel = Locale.string vc.locale "Statistics" }
-
         statsLinkItem =
-            if model.page == Stats then
-                Nb.textItremStateSelected
-                    { stateSelected = statLabel }
+            Nb.textItremWithAttributes
+                (Nb.textItremAttributes
+                    |> Rs.s_statistics
+                        [ Css.hover Nb.textItremStateSelectedStatistics_details.styles
+                            |> List.singleton
+                            |> css
+                        ]
+                )
+                { root =
+                    { state =
+                        if model.page == Stats then
+                            Nb.TextItremStateSelected
 
-            else
-                Nb.textItremStateNeutralWithAttributes
-                    (Nb.textItremStateNeutralAttributes
-                        |> Rs.s_statistics
-                            [ Css.hover Nb.textItremStateSelectedStatistics_details.styles
-                                |> List.singleton
-                                |> css
-                            ]
-                    )
-                    { stateNeutral = statLabel }
+                        else
+                            Nb.TextItremStateNeutral
+                    , textLabel = Locale.string vc.locale "Statistics"
+                    }
+                }
 
         statisticsLink =
             statsLinkItem
@@ -281,22 +286,25 @@ sidebar plugins vc model =
                     ]
 
         settingsLink =
-            (if model.page == Settings then
-                Nb.iconsSettingsLargeStateSelected {}
-
-             else
-                Nb.iconsSettingsLargeStateNeutralWithAttributes
-                    (Nb.iconsSettingsLargeStateNeutralAttributes
-                        |> Rs.s_stateNeutral
-                            [ Css.hover
-                                [ Css.property Theme.Colors.sidebarNeutral_name Theme.Colors.sidebarHovered
-                                ]
-                                |> List.singleton
-                                |> css
+            Nb.iconsSettingsLargeWithAttributes
+                (Nb.iconsSettingsLargeAttributes
+                    |> Rs.s_root
+                        [ Css.hover
+                            [ Css.property Theme.Colors.sidebarNeutral_name Theme.Colors.sidebarHovered
                             ]
-                    )
-                    {}
-            )
+                            |> List.singleton
+                            |> css
+                        ]
+                )
+                { root =
+                    { state =
+                        if model.page == Settings then
+                            Nb.IconsSettingsLargeStateSelected
+
+                        else
+                            Nb.IconsSettingsLargeStateNeutral
+                    }
+                }
                 |> List.singleton
                 |> a
                     [ title (Locale.string vc.locale "Settings")
@@ -307,7 +315,7 @@ sidebar plugins vc model =
     in
     Nb.navbarMenuNewWithInstances
         (Nb.navbarMenuNewAttributes
-            |> Rs.s_navbarMenuNew
+            |> Rs.s_root
                 (model.height |> toFloat |> Css.px |> Css.height |> List.singleton |> css |> List.singleton)
             |> Rs.s_navbarIknaioLogo
                 [ [ Css.pointer |> Css.cursor
@@ -322,7 +330,7 @@ sidebar plugins vc model =
          -- |> Rs.s_help (Just Util.View.none)
         )
         { productsList = products }
-        { navbarMenuNew =
+        { root =
             { helpLabel = ""
 
             -- , iconInstance = sidebarMenuItem (Nb.iconsSettingsLargeStateNeutral {}) "" (Locale.string vc.locale "Settings") (model.page == Settings) (Route.settingsRoute |> Route.toUrl)

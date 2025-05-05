@@ -1,4 +1,4 @@
-module Model.Graph exposing (ActiveTool, Dragging(..), Hovered(..), Model, NodeType(..), SelectIfLoaded(..), Selected(..))
+module Model.Graph exposing (ActiveTool, Dragging(..), Hovered(..), Model, SelectIfLoaded(..), Selected(..))
 
 import Api.Data
 import Browser.Dom as Dom
@@ -51,11 +51,6 @@ type alias ActiveTool =
     { element : Maybe ( Dom.Element, Bool ) -- visibility
     , toolbox : Tool.Toolbox
     }
-
-
-type NodeType
-    = AddressType
-    | EntityType
 
 
 type SelectIfLoaded

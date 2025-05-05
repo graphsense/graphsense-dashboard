@@ -14,4 +14,4 @@ toStyles node =
 
 toDetails : { a | frameTraits : FrameTraits } -> Details
 toDetails node =
-    Common.toDetails toStyles node
+    Common.toDetails node

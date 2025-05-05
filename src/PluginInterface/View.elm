@@ -67,6 +67,7 @@ type alias View modelState addressState entityState msg =
 
     -- additional stuff for the new Pathfinder's address side panel header
     , addressSidePanelHeader : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Html msg)
+    , addressSidePanelHeaderWithPriority : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Maybe { priority : Int, content : Html msg })
 
     -- additional stuff for the new Pathfinder's address side panel header tags
     , addressSidePanelHeaderTags : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Maybe (Html msg))
@@ -105,6 +106,7 @@ init =
     , profile = Nothing
     , login = Nothing
     , addressSidePanelHeader = Nothing
+    , addressSidePanelHeaderWithPriority = Nothing
     , addressSidePanelHeaderTags = Nothing
     , dialog = Nothing
     , tooltip = Nothing

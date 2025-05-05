@@ -8,7 +8,7 @@ import Css.Graph as Css
 import Dict exposing (Dict)
 import List.Extra
 import Model.Currency exposing (AssetIdentifier)
-import Model.Graph
+import Model.Node
 import Msg.Graph exposing (Msg)
 import String.Extra
 import Svg.Styled exposing (..)
@@ -18,15 +18,15 @@ import Util.Graph as Util exposing (filterTxValue)
 import View.Locale as Locale
 
 
-label : Config -> Graph.Config -> Model.Graph.NodeType -> String -> Svg Msg
+label : Config -> Graph.Config -> Model.Node.NodeType -> String -> Svg Msg
 label vc gc nodeType title =
     let
         ( dyOffset, linespacing ) =
             case nodeType of
-                Model.Graph.AddressType ->
+                Model.Node.AddressType ->
                     ( 0.36, 0.8 )
 
-                Model.Graph.EntityType ->
+                Model.Node.EntityType ->
                     ( 0.75, 0.2 )
     in
     if title == "tag locked" then
@@ -34,10 +34,10 @@ label vc gc nodeType title =
             offset =
                 String.fromInt <|
                     case nodeType of
-                        Model.Graph.AddressType ->
+                        Model.Node.AddressType ->
                             -10
 
-                        Model.Graph.EntityType ->
+                        Model.Node.EntityType ->
                             -2
         in
         g []

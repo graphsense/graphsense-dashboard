@@ -13,7 +13,7 @@ import Maybe.Extra
 import RecordSetter exposing (s_annotation)
 import String.Case exposing (toCamelCaseLower)
 import String.Format as Format
-import Types exposing (ComponentPropertyExpressions, Config, Details)
+import Types exposing (ComponentPropertyExpressions, Config, Details, Styles)
 
 
 m : (a -> Elm.Expression) -> Maybe a -> List Elm.Expression -> List Elm.Expression
@@ -133,7 +133,15 @@ intOrAutoType =
 
 getElementAttributes : Config -> String -> Elm.Expression
 getElementAttributes config name =
-    Elm.get (sanitize name) config.attributes
+    let
+        attrName =
+            if config.componentName == name then
+                rootName
+
+            else
+                sanitize name
+    in
+    Elm.get attrName config.attributes
         |> addIdAttribute config name
 
 
@@ -232,8 +240,8 @@ combineNames =
     String.join " "
 
 
-detailsToDeclaration : String -> String -> Details -> Elm.Declaration
-detailsToDeclaration parentName componentName details =
+detailsAndStylesToDeclaration : String -> String -> ( Details, Styles ) -> Elm.Declaration
+detailsAndStylesToDeclaration parentName componentName ( details, styles ) =
     let
         name =
             combineDetailsName parentName componentName details.instanceName details.name
@@ -245,7 +253,7 @@ detailsToDeclaration parentName componentName details =
     , ( "renderedWidth", Elm.float details.renderedSize.width )
     , ( "renderedHeight", Elm.float details.renderedSize.height )
     , ( "strokeWidth", Elm.float details.strokeWidth )
-    , ( "styles", Elm.list details.styles )
+    , ( "styles", Elm.list styles )
     ]
         |> Elm.record
         |> Elm.declaration name
@@ -286,3 +294,8 @@ addIdAttribute { showId } id =
 
     else
         identity
+
+
+rootName : String
+rootName =
+    "root"

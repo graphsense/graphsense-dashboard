@@ -80,6 +80,15 @@ transactionTableConfigWithMsg msg txs addressId =
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
 update uc msg model =
     case msg of
+        UserClickedToggleBalanceDetails ->
+            ( model |> s_balanceDetailsOpen (not model.balanceDetailsOpen), [] )
+
+        UserClickedToggleTotalReceivedDetails ->
+            ( model |> s_totalReceivedDetailsOpen (not model.totalReceivedDetailsOpen), [] )
+
+        UserClickedToggleTotalSpentDetails ->
+            ( model |> s_totalSentDetailsOpen (not model.totalSentDetailsOpen), [] )
+
         UserClickedToggleTokenBalancesSelect ->
             ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
 
@@ -265,7 +274,7 @@ update uc msg model =
                 |> updateRelatedAddressesTable model
 
         BrowserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } ->
-            RelatedAddressesTable.appendClusterAddresses nextPage addresses
+            RelatedAddressesTable.appendAddresses nextPage addresses
                 |> updateRelatedAddressesTable model
 
         UserClickedTx _ ->
@@ -280,28 +289,34 @@ update uc msg model =
         NoOp ->
             n model
 
-        SelectBoxMsg sm ->
-            RelatedAddressesTable.selectBoxMsg sm
-                |> updateRelatedAddressesTable model
-
         BrowserGotEntityAddressTagsForRelatedAddressesTable currency tags ->
-            if not <| List.isEmpty tags.addressTags then
+            let
+                existingAddresses =
+                    model.relatedAddresses
+                        |> RemoteData.toMaybe
+                        |> Maybe.map .existingTaggedAddresses
+                        |> Maybe.withDefault Set.empty
+
+                addressesToLoad =
+                    List.map .address tags.addressTags
+                        |> Set.fromList
+                        |> flip Set.diff existingAddresses
+                        |> Set.toList
+            in
+            if not <| List.isEmpty addressesToLoad then
                 ( model
                 , BrowserGotAddressesForTags tags.nextPage
                     >> Pathfinder.AddressDetailsMsg model.addressId
                     |> Api.BulkGetAddressEffect
                         { currency = currency
-                        , addresses =
-                            List.map .address tags.addressTags
-                                |> Set.fromList
-                                |> Set.toList
+                        , addresses = addressesToLoad
                         }
                     |> ApiEffect
                     |> List.singleton
                 )
 
             else
-                RelatedAddressesTable.appendTaggedAddresses Nothing []
+                RelatedAddressesTable.appendTaggedAddresses tags.nextPage []
                     |> updateRelatedAddressesTable model
 
         BrowserGotAddressesForTags nextpage addresses ->

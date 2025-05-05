@@ -23,6 +23,7 @@ import Init.Pathfinder.TxDetails as TxDetails
 import Json.Decode
 import List.Extra
 import Log
+import Maybe.Extra
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
@@ -61,7 +62,7 @@ import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route as GlobalRoute
-import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType, Route)
+import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType(..), Route)
 import Set exposing (..)
 import Task
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
@@ -86,11 +87,30 @@ import Util.Tag as Tag
 import View.Locale as Locale
 
 
+getTagsummary : HavingTags -> Maybe Api.Data.TagSummary
+getTagsummary ht =
+    case ht of
+        HasTagSummaryWithCluster ts ->
+            Just ts
+
+        HasTagSummaryWithoutCluster ts ->
+            Just ts
+
+        HasTagSummaryOnlyWithCluster ts ->
+            Just ts
+
+        HasTagSummaries { withCluster } ->
+            Just withCluster
+
+        _ ->
+            Nothing
+
+
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
-        |> pushHistory msg
-        |> markDirty msg
+        |> pushHistory plugins msg
+        |> markDirty plugins msg
         |> updateByMsg plugins uc msg
 
 
@@ -149,10 +169,30 @@ updateByMsg plugins uc msg model =
             n model
 
         BrowserGotActor id data ->
+            let
+                isMatchingActor ( aid, a ) =
+                    let
+                        isMatching ts =
+                            if ts.bestActor |> Maybe.map ((==) id) |> Maybe.withDefault False then
+                                Just aid
+
+                            else
+                                Nothing
+                    in
+                    a |> getTagsummary |> Maybe.andThen isMatching
+
+                idsToUpdate =
+                    model.tagSummaries
+                        |> Dict.toList
+                        |> List.filterMap isMatchingActor
+            in
             n
-                { model
-                    | actors = Dict.insert id data model.actors
-                }
+                (idsToUpdate
+                    |> List.foldl (\addressId m -> updateTagDataOnAddress addressId m)
+                        { model
+                            | actors = Dict.insert id data model.actors
+                        }
+                )
 
         UserPressedModKey ->
             n { model | modPressed = True }
@@ -327,21 +367,25 @@ updateByMsg plugins uc msg model =
 
         AddressDetailsMsg addressId subm ->
             case subm of
-                AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable addresses ->
-                    let
-                        network =
-                            Id.network addressId
-                    in
-                    addresses.addresses
-                        |> List.map (.address >> Id.init network)
-                        |> fetchTagSummaryForIds False model.tagSummaries
-                        |> List.singleton
-                        |> pair model
-                        |> and
-                            (AddressDetails.update uc subm
-                                |> updateAddressDetails addressId
-                            )
-
+                {-
+                           -- we can omit querying tags here because the
+                           -- entity addresses are only retrieved after
+                           -- checking all tagged addresses of the entity
+                   AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable addresses ->
+                       let
+                           network =
+                               Id.network addressId
+                       in
+                       addresses.addresses
+                           |> List.map (.address >> Id.init network)
+                           |> fetchTagSummaryForIds False model.tagSummaries
+                           |> List.singleton
+                           |> pair model
+                           |> and
+                               (AddressDetails.update uc subm
+                                   |> updateAddressDetails addressId
+                               )
+                -}
                 AddressDetails.BrowserGotAddressesForTags _ addresses ->
                     let
                         network =
@@ -489,7 +533,7 @@ updateByMsg plugins uc msg model =
                                 selectedAdr =
                                     List.filter isinRectAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
 
-                                ( modelS, _ ) =
+                                modelS =
                                     multiSelect model (selectedTxs ++ selectedAdr) False
                             in
                             n
@@ -883,7 +927,7 @@ updateByMsg plugins uc msg model =
         UserClickedAddress id ->
             if model.modPressed then
                 let
-                    ( modelS, _ ) =
+                    modelS =
                         multiSelect model [ MSelectedAddress id ] True
                 in
                 n { modelS | details = Nothing }
@@ -1284,7 +1328,7 @@ userClickedTx : Id -> Model -> ( Model, List Effect )
 userClickedTx id model =
     if model.modPressed then
         let
-            ( modelS, _ ) =
+            modelS =
                 multiSelect model [ MSelectedTx id ] True
         in
         n { modelS | details = Nothing }
@@ -1411,8 +1455,10 @@ updateTagDataOnAddress addressId m =
             let
                 actorlabel =
                     case tagdata.bestActor of
-                        Just _ ->
-                            tagdata.bestLabel
+                        Just actor ->
+                            Dict.get actor m.actors
+                                |> Maybe.map .label
+                                |> Maybe.Extra.orElse tagdata.bestLabel
 
                         _ ->
                             Nothing
@@ -1513,6 +1559,21 @@ updateByRoute plugins uc route model =
             |> updateByRoute_ plugins uc route
 
 
+addPathsToGraph : Plugins -> Update.Config -> Model -> String -> List (List PathHopType) -> ( Model, List Effect )
+addPathsToGraph plugins uc model net listOfPaths =
+    let
+        baseModelUnselected =
+            ( model, [] ) |> unselect
+    in
+    List.foldl
+        (\paths ( m, eff ) ->
+            addPathToGraph plugins uc m net paths
+                |> Tuple.mapSecond ((++) eff)
+        )
+        baseModelUnselected
+        listOfPaths
+
+
 addPathToGraph : Plugins -> Update.Config -> Model -> String -> List PathHopType -> ( Model, List Effect )
 addPathToGraph plugins uc model net list =
     let
@@ -1523,6 +1584,44 @@ addPathToGraph plugins uc model net list =
 
                 _ ->
                     Nothing
+
+        pathTypeToAddressId pt =
+            case pt of
+                AddressHop _ x ->
+                    Just (Id.init net x)
+
+                _ ->
+                    Nothing
+
+        pathTypeToSelection pt =
+            case pt of
+                AddressHop _ x ->
+                    MSelectedAddress (Id.init net x)
+
+                TxHop txh ->
+                    MSelectedTx (Id.init net txh)
+
+        startAddressCoords =
+            list
+                |> List.head
+                |> Maybe.andThen pathTypeToAddressId
+                |> Maybe.andThen (flip Network.getAddressCoords model.network)
+
+        newSelections =
+            list |> List.map pathTypeToSelection
+
+        startCoordsPrel =
+            startAddressCoords
+                |> Maybe.withDefault { x = 0, y = 0 }
+
+        startY =
+            Network.getYForPathAfterX model.network startCoordsPrel.x startCoordsPrel.y
+
+        startCoords =
+            startCoordsPrel |> s_y (max startY startCoordsPrel.y)
+
+        startAddressOnGraphAlready =
+            startAddressCoords /= Nothing
 
         isDuplicateAddress i =
             Maybe.andThen
@@ -1558,7 +1657,13 @@ addPathToGraph plugins uc model net list =
                         ( 0, 0 )
 
                     else
-                        ( nodeXOffset, 0 )
+                        ( if startAddressOnGraphAlready && i == 0 then
+                            0
+
+                          else
+                            nodeXOffset
+                        , 0
+                        )
 
                 x_ =
                     x + xOffset
@@ -1609,12 +1714,12 @@ addPathToGraph plugins uc model net list =
                 |> List.foldl accf
                     { m = model
                     , eff = []
-                    , x = 0
-                    , y = 0
+                    , x = startCoords.x
+                    , y = startCoords.y
                     , previousAddress = Nothing
                     }
     in
-    ( result.m |> fitGraph uc, result.eff )
+    ( result.m |> (\m -> multiSelect m newSelections True) |> fitGraph uc, result.eff )
 
 
 updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
@@ -1655,12 +1760,13 @@ updateByPluginOutMsg plugins uc outMsgs model =
     outMsgs
         |> List.foldl
             (\msg ( mo, eff ) ->
-                case Log.log "outMsg" msg of
+                case Log.log "outMsgPF" msg of
                     PluginInterface.ShowBrowser ->
-                        n model
+                        ( mo, eff )
 
-                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathInPathfinder net path) ->
-                        addPathToGraph plugins uc model net path
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder net paths) ->
+                        addPathsToGraph plugins uc mo net paths
+                            |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.UpdateAddresses { currency, address } pmsg ->
                         let
@@ -1704,52 +1810,52 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         )
 
                     PluginInterface.UpdateAddressEntities _ _ ->
-                        n mo
+                        ( mo, eff )
 
                     PluginInterface.UpdateEntities _ _ ->
-                        n mo
+                        ( mo, eff )
 
                     PluginInterface.UpdateEntitiesByRootAddress _ _ ->
-                        n mo
+                        ( mo, eff )
 
                     PluginInterface.LoadAddressIntoGraph _ ->
-                        n mo
+                        ( mo, eff )
 
                     PluginInterface.GetEntitiesForAddresses _ _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.GetEntities _ _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.PushUrl _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.GetSerialized _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.Deserialize _ _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.GetAddressDomElement _ _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.SendToPort _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.ApiRequest _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.ShowDialog _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.CloseDialog ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.ShowNotification _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.OutMsgsPathfinder _ ->
-                        ( mo, [] )
+                        ( mo, eff )
 
                     PluginInterface.OpenTooltip s msgs ->
                         ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg)) ] )
@@ -1766,12 +1872,12 @@ loadAddress plugins =
 
 
 loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition _ position id model =
+loadAddressWithPosition plugins position id model =
     if Dict.member id model.network.addresses then
         n model
 
     else
-        ( model
+        ( { model | network = Network.addAddressWithPosition plugins position id model.network }
         , [ BrowserGotAddressData id position
                 |> Api.GetAddressEffect
                     { currency = Id.network id
@@ -1955,9 +2061,9 @@ unhover model =
         |> s_hovered NoHover
 
 
-pushHistory : Msg -> Model -> Model
-pushHistory msg model =
-    if History.shallPushHistory msg model then
+pushHistory : Plugins -> Msg -> Model -> Model
+pushHistory plugins msg model =
+    if History.shallPushHistory plugins msg model then
         forcePushHistory model
 
     else
@@ -1997,9 +2103,9 @@ undoRedo fun model =
         |> n
 
 
-markDirty : Msg -> Model -> Model
-markDirty msg model =
-    if History.shallPushHistory msg model then
+markDirty : Plugins -> Msg -> Model -> Model
+markDirty plugins msg model =
+    if History.shallPushHistory plugins msg model then
         model |> s_isDirty True
 
     else
@@ -2235,6 +2341,21 @@ checkSelection uc model =
         WillSelectAddress id ->
             selectAddress uc id model
 
+        MultiSelect selections ->
+            -- not using selectAddress/tx here since they deselect other stuff
+            -- do some other steps.
+            selections
+                |> List.foldl
+                    (\msel ( m, eff ) ->
+                        case msel of
+                            MSelectedAddress id ->
+                                ( m |> s_network (Network.updateTx id (s_selected True) m.network), eff )
+
+                            MSelectedTx id ->
+                                ( m |> s_network (Network.updateTx id (s_selected True) m.network), eff )
+                    )
+                    ( model, [] )
+
         _ ->
             n model
 
@@ -2323,7 +2444,7 @@ removeIsolatedTransactions model =
     List.foldl (\i ( m, _ ) -> removeTx i m) ( model, [] ) idsToRemove
 
 
-multiSelect : Model -> List MultiSelectOptions -> Bool -> ( Model, List Effect )
+multiSelect : Model -> List MultiSelectOptions -> Bool -> Model
 multiSelect m sel keepOld =
     let
         newSelection =
@@ -2368,7 +2489,7 @@ multiSelect m sel keepOld =
         nNet =
             List.foldl (selectItem True) (Network.clearSelection m.network) newSelection
     in
-    ( { m | selection = liftedNewSelection, network = nNet }, [] )
+    { m | selection = liftedNewSelection, network = nNet }
 
 
 deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized

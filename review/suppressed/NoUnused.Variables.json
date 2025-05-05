@@ -20,7 +20,6 @@
     { "count": 2, "filePath": "src/View/Graph/Table/LinksTable.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/TxsAccountTable.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/TxsUtxoTable.elm" },
-    { "count": 1, "filePath": "src/Css/Graph.elm" },
     { "count": 1, "filePath": "src/Init/Graph/Tag.elm" },
     { "count": 1, "filePath": "src/Model/Graph.elm" },
     { "count": 1, "filePath": "src/Model/Graph/Layer.elm" },
