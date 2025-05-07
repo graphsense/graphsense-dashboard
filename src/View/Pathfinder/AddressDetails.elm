@@ -37,6 +37,7 @@ import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.Css exposing (spread)
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
@@ -129,6 +130,7 @@ utxo plugins pluginStates vc gc model id viewState address =
                     |> css
                 ]
             |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
+            |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack closeAttrs
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
@@ -197,14 +199,20 @@ relatedAddressesDataTab vc model _ viewState cluster =
             cluster
                 |> RemoteData.unpack
                     (\_ ->
-                        SidePanelComponents.sidePanelListHeaderTitle
+                        SidePanelComponents.sidePanelListHeaderTitleWithAttributes
+                            (SidePanelComponents.sidePanelListHeaderTitleAttributes
+                                |> Rs.s_root [ spread ]
+                            )
                             { root =
                                 { label = label
                                 }
                             }
                     )
                     (\_ ->
-                        SidePanelComponents.sidePanelListHeaderTitleWithNumber
+                        SidePanelComponents.sidePanelListHeaderTitleWithNumberWithAttributes
+                            (SidePanelComponents.sidePanelListHeaderTitleWithNumberAttributes
+                                |> Rs.s_root [ spread ]
+                            )
                             { root =
                                 { label = label
                                 , number = Locale.int vc.locale noRelatedAddresses
@@ -440,7 +448,10 @@ transactionsDataTab vc model id viewState =
     in
     dataTab
         { title =
-            SidePanelComponents.sidePanelListHeaderTitleTransactions
+            SidePanelComponents.sidePanelListHeaderTitleTransactionsWithAttributes
+                (SidePanelComponents.sidePanelListHeaderTitleTransactionsAttributes
+                    |> Rs.s_root [ spread ]
+                )
                 { root =
                     { totalNumber =
                         (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs)
@@ -677,6 +688,7 @@ account plugins pluginStates vc gc model id viewState address =
                 [ sidePanelCss
                     |> css
                 ]
+            |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack closeAttrs
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_learnMore [ css [ Css.display Css.none ] ]

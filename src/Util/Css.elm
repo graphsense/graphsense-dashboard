@@ -1,4 +1,4 @@
-module Util.Css exposing (alignItemsStretch, overrideBlack, zIndexMain, zIndexMainValue)
+module Util.Css exposing (alignItemsStretch, overrideBlack, spread, zIndexMain, zIndexMainValue)
 
 import Css exposing (Style, int, zIndex)
 import Html.Styled exposing (Attribute)
@@ -25,3 +25,11 @@ overrideBlack =
 alignItemsStretch : Attribute msg
 alignItemsStretch =
     css [ Css.alignItems Css.stretch |> Css.important ]
+
+
+spread : Attribute msg
+spread =
+    css
+        [ Css.flexGrow <| Css.num 1
+        , Css.justifyContent Css.spaceBetween
+        ]

@@ -45,6 +45,7 @@ import Css
         , fontSize
         , height
         , hex
+        , important
         , justifyContent
         , left
         , margin
@@ -304,7 +305,7 @@ inoutStyle out =
 
 fullWidth : List Style
 fullWidth =
-    [ all |> width ]
+    [ all |> width |> important ]
 
 
 sidePanelCss : List Css.Style
