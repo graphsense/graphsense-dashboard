@@ -129,14 +129,17 @@ annotationToAttrAndLabel node details offset msg ann =
                     * 2
                     + 2
                   )
-                    * (1 + (toFloat <| String.length ann.label // 10))
+                    * (1 + (toFloat <| String.length ann.label // 12))
                     |> String.fromFloat
                     |> Svg.height
                 , A.animate node.clock node.opacity
                     |> String.fromFloat
                     |> opacity
                 , msg node.id |> onClickWithStop
-                , css [ Css.cursor Css.pointer ]
+                , css
+                    [ Css.cursor Css.pointer
+                    , Css.pointerEvents Css.none
+                    ]
                 ]
 
        else
