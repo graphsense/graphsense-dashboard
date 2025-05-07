@@ -1272,7 +1272,7 @@ theme =
                     , fontBold
                     , position sticky
                     , top <| px 0
-                    , zIndex <| int 2
+                    , zIndex <| int 1
                     ]
                 |> s_headCellSortable
                     [ cursor pointer

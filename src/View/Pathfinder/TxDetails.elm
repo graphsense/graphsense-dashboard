@@ -21,6 +21,7 @@ import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
 import Svg.Styled.Attributes exposing (css)
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.Css exposing (spread)
 import Util.View exposing (copyIconPathfinder, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Locale as Locale
@@ -46,6 +47,7 @@ account vc id tx =
                 [ sidePanelCss
                     |> css
                 ]
+            |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack closeAttrs
         )
         { identifierWithCopyIcon =
@@ -108,6 +110,7 @@ utxo vc model id viewState tx =
                     |> css
                 ]
             |> Rs.s_sidePanelTxDetails [ css fullWidth ]
+            |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack closeAttrs
         )
         { identifierWithCopyIcon =
@@ -126,7 +129,10 @@ utxo vc model id viewState tx =
             , inputListInstance =
                 dataTab
                     { title =
-                        SidePanelComponents.sidePanelListHeaderTitleInputs
+                        SidePanelComponents.sidePanelListHeaderTitleInputsWithAttributes
+                            (SidePanelComponents.sidePanelListHeaderTitleInputsAttributes
+                                |> Rs.s_root [ spread ]
+                            )
                             { root =
                                 { title = Locale.string vc.locale "Sending addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noInputs
@@ -153,7 +159,10 @@ utxo vc model id viewState tx =
             , outputListInstance =
                 dataTab
                     { title =
-                        SidePanelComponents.sidePanelListHeaderTitleOutputs
+                        SidePanelComponents.sidePanelListHeaderTitleOutputsWithAttributes
+                            (SidePanelComponents.sidePanelListHeaderTitleOutputsAttributes
+                                |> Rs.s_root [ spread ]
+                            )
                             { root =
                                 { title = Locale.string vc.locale "Receiving addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs

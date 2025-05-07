@@ -49,6 +49,7 @@ dataTab config =
         attr =
             [ pointer
             , onClick config.onClick
+            , css [ Css.zIndex <| Css.int 2 ]
             ]
     in
     config.content
