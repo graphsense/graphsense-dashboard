@@ -103,8 +103,8 @@ view plugins vc colors address getCluster annotation =
 
         nodeLabel =
             address.actor
-                |> Maybe.Extra.or address.exchange
-                |> Maybe.Extra.or
+                |> Maybe.Extra.orElse address.exchange
+                |> Maybe.Extra.orElse
                     (case getAddressType address cluster of
                         LikelyUnknownService ->
                             Just (Locale.string vc.locale "possible service")
