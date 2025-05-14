@@ -22,4 +22,5 @@ type alias Model =
     , totalReceivedDetailsOpen : Bool
     , balanceDetailsOpen : Bool
     , totalSentDetailsOpen : Bool
+    , sendingAddressesTableOpen : Bool
     }

@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getAddressDetailStats, getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
+module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), TracingMode(..), getAddressDetailStats, getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Config.Pathfinder exposing (Config)
@@ -49,7 +49,13 @@ type alias Model =
     , contextMenu : Maybe ContextMenu
     , name : String
     , selectAfterLoad : Maybe Id
+    , tracingMode : TracingMode
     }
+
+
+type TracingMode
+    = TransactionTracingMode
+    | AggregateTracingMode
 
 
 type HavingTags
