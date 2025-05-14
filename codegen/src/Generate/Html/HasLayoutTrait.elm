@@ -14,26 +14,19 @@ toStyles node =
         |> mm2 layoutPositioning node.layoutPositioning node.absoluteBoundingBox
         |> a3 (width node.minWidth) node.layoutGrow node.layoutSizingHorizontal node.absoluteBoundingBox
         |> a2 (height node.minHeight) node.layoutSizingVertical node.absoluteBoundingBox
-        |> a minWidth node.minWidth
-        |> a minHeight node.minHeight
+        |> a (ifNotZero Css.minWidth) node.minWidth
+        |> a (ifNotZero Css.minHeight) node.minHeight
+        |> a (ifNotZero Css.maxWidth) node.maxWidth
+        |> a (ifNotZero Css.maxHeight) node.maxHeight
 
 
-minWidth : Float -> Maybe Elm.Expression
-minWidth w =
+ifNotZero : (Elm.Expression -> Elm.Expression) -> Float -> Maybe Elm.Expression
+ifNotZero prop w =
     if w == 0 then
         Nothing
 
     else
-        Css.minWidth (Css.px w) |> Just
-
-
-minHeight : Float -> Maybe Elm.Expression
-minHeight w =
-    if w == 0 then
-        Nothing
-
-    else
-        Css.minHeight (Css.px w) |> Just
+        prop (Css.px w) |> Just
 
 
 width : Maybe Float -> LayoutGrow -> LayoutSizingHorizontal -> Rectangle -> Maybe Elm.Expression
