@@ -563,42 +563,35 @@ accountValuesRundown vc viewState =
                     [ onClick msg, fw, Util.View.pointer ]
             in
             if open then
-                SidePanelComponents.sidePanelRowOpenListWithAttributes
-                    (SidePanelComponents.sidePanelRowOpenListAttributes
+                SidePanelComponents.sidePanelRowOpenWithAttributes
+                    (SidePanelComponents.sidePanelRowOpenAttributes
                         |> Rs.s_root clickAttr
+                        |> Rs.s_sidePanelRowChevronOpen [ fw ]
+                        |> Rs.s_iconGroup fixedleftAttr
+                        |> Rs.s_tokensList
+                            [ css [ Css.overflowY Css.auto ] ]
                     )
-                    { sidePanelRowOpenList =
-                        SidePanelComponents.sidePanelRowChevronOpenWithAttributes
-                            (SidePanelComponents.sidePanelRowChevronOpenAttributes
-                                |> Rs.s_root
-                                    (fw
-                                        |> List.singleton
-                                    )
-                                |> Rs.s_iconGroup
-                                    fixedleftAttr
-                            )
-                            { root =
-                                { iconInstance = HIcons.iconsChevronDownThin {}
-                                , title = Locale.string vc.locale title
-                                , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
-                                }
-                            }
-                            :: ((nativeValue
-                                    :: (valueToken
-                                            |> Maybe.withDefault Dict.empty
-                                            |> Dict.toList
-                                            |> List.map getValue
-                                       )
-                                )
-                                    |> List.sortBy
-                                        (.fiatFloat
-                                            >> Maybe.withDefault 0.0
-                                        )
-                                    |> List.reverse
-                                    |> List.map row
+                    { tokensList =
+                        (nativeValue
+                            :: (valueToken
+                                    |> Maybe.withDefault Dict.empty
+                                    |> Dict.toList
+                                    |> List.map getValue
                                )
+                        )
+                            |> List.sortBy
+                                (.fiatFloat
+                                    >> Maybe.withDefault 0.0
+                                )
+                            |> List.reverse
+                            |> List.map row
                     }
-                    {}
+                    { sidePanelRowChevronOpen =
+                        { iconInstance = HIcons.iconsChevronDownThin {}
+                        , title = Locale.string vc.locale title
+                        , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
+                        }
+                    }
 
             else
                 SidePanelComponents.sidePanelRowChevronClosedWithAttributes
@@ -647,12 +640,6 @@ accountValuesRundown vc viewState =
 account : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
 account plugins pluginStates vc gc model id viewState address =
     let
-        emptySubRow =
-            { coinLabel = ""
-            , coinValue = ""
-            , fiatValue = ""
-            }
-
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
 
@@ -727,6 +714,7 @@ account plugins pluginStates vc gc model id viewState address =
             [ transactionsDataTab vc model id viewState
                 |> Html.map (Pathfinder.AddressDetailsMsg viewState.addressId)
             ]
+        , tokensList = []
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
         , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
@@ -743,10 +731,6 @@ account plugins pluginStates vc gc model id viewState address =
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
         , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
         , categoryTags = { tagLabel = "" }
-        , sidePanelRowChevronSubRowUsdc = emptySubRow
-        , sidePanelRowChevronSubRowUsdt = emptySubRow
-        , sidePanelRowChevronSubRowWeth = emptySubRow
-        , sidePanelRowChevronSubRowEth = emptySubRow
         , balanceRow = { iconInstance = none, title = "", value = "" }
         , totalSentRow = { iconInstance = none, title = "", value = "" }
         , sidePanelRowChevronOpen = { iconInstance = none, title = "", value = "" }

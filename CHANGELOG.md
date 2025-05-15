@@ -3,11 +3,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.05.2] - 2025-05-15
+
+### Fixed
+
+- 505fdbab check shallPushHistory for AddressDetailsMsgs
+- d4f3f8b7 fix selection box
+- 5b3d1b54 scrollable token list
+- 801e2c60 fix actor label display on address 
+
 ## [25.05.1] - 2025-05-07
 
 ### Fixed
 
 - Annotation label style
+- Minor layout issues in side panel
 
 ## [25.05.0] - 2025-05-02
 
