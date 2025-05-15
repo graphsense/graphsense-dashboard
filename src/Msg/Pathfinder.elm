@@ -95,6 +95,7 @@ type Msg
     | UserGotDataForTagsListDialog Id Api.Data.AddressTags
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
+    | UserClickedToggleTracingMode
 
 
 type alias TextTooltipConfig =

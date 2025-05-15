@@ -16,7 +16,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (BBox, Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Locale as Locale
-import Model.Pathfinder as Pathfinder
+import Model.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
@@ -33,6 +33,7 @@ import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.GraphComponents as HGraphComponents
+import Theme.Html.GraphComponentsAggregatedTracing as GraphComponentsAggregatedTracing
 import Theme.Html.Icons as HIcons
 import Theme.Html.SelectionControls exposing (SwitchSize(..))
 import Theme.Html.SettingsComponents as Sc
@@ -42,7 +43,7 @@ import Util.Annotations as Annotations
 import Util.Css as Css
 import Util.Graph
 import Util.View exposing (hovercard, none)
-import View.Controls as Vc
+import View.Controls as Controls
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.AddressDetails as AddressDetails
@@ -73,6 +74,7 @@ graph plugins pluginStates vc gc model =
     , topLeftPanel plugins pluginStates vc
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc gc model
+    , bottomCenterPanel vc model
     ]
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)
@@ -176,6 +178,31 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     , pluginsList = []
                     }
                     {}
+        ]
+
+
+bottomCenterPanel : View.Config -> Pathfinder.Model -> Html Msg
+bottomCenterPanel vc model =
+    div
+        [ css Css.bottomCenterPanelStyle
+        ]
+        [ GraphComponentsAggregatedTracing.traceModeToggleWithInstances
+            GraphComponentsAggregatedTracing.traceModeToggleAttributes
+            (GraphComponentsAggregatedTracing.traceModeToggleInstances
+                |> Rs.s_toggleSwitchText
+                    (Controls.toggleWithText
+                        { selectedA = model.tracingMode == TransactionTracingMode
+                        , titleA = Locale.string vc.locale "Transaction"
+                        , titleB = Locale.string vc.locale "Address"
+                        , msg = UserClickedToggleTracingMode
+                        }
+                        |> Just
+                    )
+            )
+            { leftCell = { variant = none }
+            , rightCell = { variant = none }
+            , root = { toggleLabel = Locale.string vc.locale "Tracing mode" }
+            }
         ]
 
 
@@ -309,7 +336,7 @@ settingsHovercardView vc _ hc =
         switchWithText primary text enabled msg =
             let
                 toggle =
-                    Vc.toggle
+                    Controls.toggle
                         { size = SwitchSizeBig
                         , selected = enabled
                         , disabled = False

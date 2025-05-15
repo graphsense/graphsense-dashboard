@@ -1256,6 +1256,18 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        UserClickedToggleTracingMode ->
+            { model
+                | tracingMode =
+                    case model.tracingMode of
+                        TransactionTracingMode ->
+                            AggregateTracingMode
+
+                        AggregateTracingMode ->
+                            TransactionTracingMode
+            }
+                |> n
+
 
 handleTooltipMsg : Tag.Msg -> Model -> ( Model, List Effect )
 handleTooltipMsg msg model =
@@ -2196,7 +2208,7 @@ fetchTagSummaryForIds includeBestClusterTag existing ids =
         [] ->
             CmdEffect Cmd.none
 
-        x :: rest ->
+        x :: _ ->
             BrowserGotTagSummaries includeBestClusterTag
                 |> Api.BulkGetAddressTagSummaryEffect { currency = Id.network x, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
                 |> ApiEffect
@@ -2655,7 +2667,7 @@ upsertTagSummary id newTagSummary dict =
                         ( NoTagsWithoutCluster, NoTags ) ->
                             NoTags
 
-                        ( HasTags withExchangeTag, new ) ->
+                        ( HasTags _, new ) ->
                             new
 
                         ( LoadingTags, new ) ->

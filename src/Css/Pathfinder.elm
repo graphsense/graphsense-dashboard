@@ -1,5 +1,6 @@
 module Css.Pathfinder exposing
     ( annotationInputStyle
+    , bottomCenterPanelStyle
     , emptyTableMsg
     , fullWidth
     , graphActionsViewStyle
@@ -35,6 +36,7 @@ import Css
         , block
         , border2
         , borderWidth
+        , bottom
         , calc
         , center
         , color
@@ -70,6 +72,7 @@ import Css
         , spaceBetween
         , textAlign
         , top
+        , visible
         , width
         )
 import Theme.Colors as TColors
@@ -253,6 +256,17 @@ topPanelStyle =
     , width all
     , pointerEvents none
     , justifyContent spaceBetween
+    ]
+
+
+bottomCenterPanelStyle : List Style
+bottomCenterPanelStyle =
+    [ position absolute
+    , Css.px 50 |> bottom
+    , displayFlex
+    , justifyContent center
+    , width all
+    , pointerEvents visible
     ]
 
 

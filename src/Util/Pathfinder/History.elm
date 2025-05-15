@@ -319,3 +319,6 @@ shallPushHistory plugins msg _ =
 
         BrowserGotTagSummaries _ _ ->
             False
+
+        UserClickedToggleTracingMode ->
+            False
