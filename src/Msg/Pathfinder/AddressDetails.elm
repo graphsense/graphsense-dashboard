@@ -11,9 +11,9 @@ import Util.Tag as Tag
 
 
 type Msg
-    = UserClickedToggleNeighborsTable
-    | UserClickedToggleTokenBalancesSelect
+    = UserClickedToggleTokenBalancesSelect
     | UserClickedToggleTransactionTable
+    | UserClickedToggleNeighborsTable Direction
     | UserClickedToggleBalanceDetails
     | UserClickedToggleTotalReceivedDetails
     | UserClickedToggleTotalSpentDetails

@@ -40,7 +40,7 @@ init us =
       , contextMenu = Nothing
       , name = "graph"
       , selectAfterLoad = Nothing
-      , tracingMode = TransactionTracingMode
+      , tracingMode = AggregateTracingMode
       }
     , Cmd.none
     )

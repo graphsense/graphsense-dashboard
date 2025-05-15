@@ -17,14 +17,15 @@ import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
+import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
-import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
+import Model.Pathfinder as Pathfinder exposing (TracingMode(..), getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (getTable)
+import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
@@ -48,6 +49,7 @@ import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.PagedTable as PagedTable
+import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 
@@ -85,15 +87,17 @@ utxo plugins pluginStates vc gc model id viewState address =
         cluster =
             Dict.get clstrId model.clusters
 
+        relatedAddressesTab =
+            cluster
+                |> Maybe.map
+                    (relatedAddressesDataTab vc model id viewState
+                        >> List.singleton
+                    )
+                |> Maybe.withDefault []
+
         relatedDataTabsList =
-            transactionsDataTab vc model id viewState
-                :: (cluster
-                        |> Maybe.map
-                            (relatedAddressesDataTab vc model id viewState
-                                >> List.singleton
-                            )
-                        |> Maybe.withDefault []
-                   )
+            transactionsOrNeighborsDataTabs vc model id viewState
+                ++ relatedAddressesTab
                 |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.addressId))
 
         clstrId =
@@ -182,6 +186,69 @@ utxo plugins pluginStates vc gc model id viewState address =
         }
 
 
+neighborsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Direction -> Html AddressDetails.Msg
+neighborsDataTab vc model _ viewState direction =
+    let
+        { lbl, noAddresses, getTableOpen, getTable } =
+            case direction of
+                Outgoing ->
+                    { lbl = "Receiving addresses"
+                    , noAddresses = viewState.data.outDegree
+                    , getTableOpen = .outgoingNeighborsTableOpen
+                    , getTable = .neighborsOutgoing
+                    }
+
+                Incoming ->
+                    { lbl = "Sending addresses"
+                    , noAddresses = viewState.data.inDegree
+                    , getTableOpen = .incomingNeighborsTableOpen
+                    , getTable = .neighborsIncoming
+                    }
+
+        label =
+            Locale.string vc.locale lbl
+                |> Locale.titleCase vc.locale
+    in
+    dataTab
+        { title =
+            SidePanelComponents.sidePanelListHeaderTitleWithNumberWithAttributes
+                (SidePanelComponents.sidePanelListHeaderTitleWithNumberAttributes
+                    |> Rs.s_root [ spread ]
+                )
+                { root =
+                    { label = label
+                    , number = Locale.int vc.locale noAddresses
+                    }
+                }
+        , content =
+            if not (getTableOpen viewState) then
+                Nothing
+
+            else
+                let
+                    conf =
+                        { isChecked = flip Network.hasAddress model.network
+                        , hasTags = getHavingTags model
+                        , coinCode = assetFromBase viewState.data.currency
+                        , direction = direction
+                        }
+                in
+                div
+                    [ css <|
+                        SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                            ++ fullWidth
+                    ]
+                    [ PagedTable.pagedTableView vc
+                        [ css fullWidth ]
+                        (NeighborAddressesTable.config Css.Table.styles vc conf)
+                        (getTable viewState)
+                        (AddressDetails.NeighborsTablePagedTableMsg direction)
+                    ]
+                    |> Just
+        , onClick = AddressDetails.UserClickedToggleNeighborsTable direction
+        }
+
+
 relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Entity -> Html AddressDetails.Msg
 relatedAddressesDataTab vc model _ viewState cluster =
     let
@@ -252,7 +319,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                             [ PagedTable.pagedTableView vc
                                 [ css fullWidth ]
                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
-                                (getTable ra)
+                                (RelatedAddressesTable.getTable ra)
                                 AddressDetails.RelatedAddressesTablePagedTableMsg
                             ]
                             |> Just
@@ -711,9 +778,8 @@ account plugins pluginStates vc gc model id viewState address =
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList =
-            [ transactionsDataTab vc model id viewState
-                |> Html.map (Pathfinder.AddressDetailsMsg viewState.addressId)
-            ]
+            transactionsOrNeighborsDataTabs vc model id viewState
+                |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.addressId))
         , tokensList = []
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
@@ -735,6 +801,19 @@ account plugins pluginStates vc gc model id viewState address =
         , totalSentRow = { iconInstance = none, title = "", value = "" }
         , sidePanelRowChevronOpen = { iconInstance = none, title = "", value = "" }
         }
+
+
+transactionsOrNeighborsDataTabs : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> List (Html AddressDetails.Msg)
+transactionsOrNeighborsDataTabs vc model id viewState =
+    case model.tracingMode of
+        TransactionTracingMode ->
+            [ transactionsDataTab vc model id viewState
+            ]
+
+        AggregateTracingMode ->
+            [ neighborsDataTab vc model id viewState Outgoing
+            , neighborsDataTab vc model id viewState Incoming
+            ]
 
 
 viewLabelOfTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> Html Pathfinder.Msg

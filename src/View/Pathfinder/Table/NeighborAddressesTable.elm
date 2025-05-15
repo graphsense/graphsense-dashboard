@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.RelatedAddressesTable exposing (RelatedAddressesTableConfig, config)
+module View.Pathfinder.Table.NeighborAddressesTable exposing (NeighborAddressesTableConfig, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -10,10 +10,10 @@ import Css.View
 import Dict
 import Html.Styled as Html
 import Init.Pathfinder.Id as Id
-import Model.Currency exposing (AssetIdentifier)
+import Model.Currency as Currency exposing (AssetIdentifier)
+import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (HavingTags(..), getSortedConceptsByWeight)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, totalReceivedColumn)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import RecordSetter as Rs
 import Table
@@ -24,21 +24,30 @@ import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdent
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
 import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
-import View.Pathfinder.Table.Columns exposing (checkboxColumn, twoValuesColumn)
+import View.Pathfinder.Table.Columns exposing (checkboxColumn, valueColumn)
 
 
-type alias RelatedAddressesTableConfig =
+type alias NeighborAddressesTableConfig =
     { coinCode : AssetIdentifier
     , isChecked : Id -> Bool
     , hasTags : Id -> HavingTags
+    , direction : Direction
     }
 
 
-config : Styles -> View.Config -> RelatedAddressesTableConfig -> Model -> Table.Config Api.Data.Address AddressDetails.Msg
-config styles vc ratc _ =
+config : Styles -> View.Config -> NeighborAddressesTableConfig -> Table.Config Api.Data.NeighborAddress AddressDetails.Msg
+config styles vc conf =
     let
+        cellLabel =
+            case conf.direction of
+                Outgoing ->
+                    "Total received"
+
+                Incoming ->
+                    "Total sent"
+
         rightAlignedColumns =
-            Dict.fromList [ ( totalReceivedColumn, View.Pathfinder.PagedTable.RightAligned ) ]
+            Dict.fromList [ ( cellLabel, View.Pathfinder.PagedTable.RightAligned ) ]
 
         styles_ =
             styles
@@ -59,15 +68,15 @@ config styles vc ratc _ =
                 |> Rs.s_table
                     (styles.table >> flip (++) fullWidth)
 
-        toId { currency, address } =
-            Id.init currency address
+        toId nb =
+            Id.init nb.address.currency nb.address.address
     in
     Table.customConfig
-        { toId = .address
-        , toMsg = AddressDetails.RelatedAddressesTableMsg
+        { toId = .address >> .address
+        , toMsg = \_ -> AddressDetails.NoOp
         , columns =
             [ checkboxColumn vc
-                { isChecked = toId >> ratc.isChecked
+                { isChecked = toId >> conf.isChecked
                 , onClick = toId >> AddressDetails.UserClickedAddressCheckboxInTable
                 , readonly = \_ -> False
                 }
@@ -75,12 +84,12 @@ config styles vc ratc _ =
                 styles
                 vc
                 (Locale.string vc.locale "Address")
-                (\{ address } -> address)
+                (\{ address } -> address.address)
                 (\{ address } ->
                     [ SidePanelComponents.sidePanelListIdentifierCell
                         { root =
-                            { identifier = truncateLongIdentifier address
-                            , copyIconInstance = copyIconPathfinder vc address
+                            { identifier = truncateLongIdentifier address.address
+                            , copyIconInstance = copyIconPathfinder vc address.address
                             }
                         }
                     ]
@@ -89,7 +98,7 @@ config styles vc ratc _ =
                 styles
                 vc
                 (Locale.string vc.locale "Category")
-                (\{ address } -> address)
+                (\{ address } -> address.address)
                 (\data ->
                     let
                         withTagSummary ts =
@@ -102,7 +111,7 @@ config styles vc ratc _ =
                                     )
                                 |> Maybe.withDefault []
                     in
-                    case toId data |> ratc.hasTags of
+                    case toId data |> conf.hasTags of
                         NoTags ->
                             []
 
@@ -131,13 +140,10 @@ config styles vc ratc _ =
                         HasExchangeTagOnly ->
                             []
                 )
-            , twoValuesColumn vc
-                (Locale.string vc.locale "Total received")
-                { coinCode = ratc.coinCode
-                , getValue1 = .totalReceived
-                , getValue2 = .balance
-                , labelValue2 = Locale.string vc.locale "Balance"
-                }
+            , valueColumn vc
+                (.address >> .currency >> Currency.assetFromBase)
+                (Locale.string vc.locale cellLabel)
+                .value
             ]
         , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
         }

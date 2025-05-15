@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesCell, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
@@ -215,8 +215,8 @@ type alias TwoValuesCellConfig data =
     }
 
 
-twoValuesCell : View.Config -> String -> TwoValuesCellConfig data -> Table.Column data msg
-twoValuesCell vc name conf =
+twoValuesColumn : View.Config -> String -> TwoValuesCellConfig data -> Table.Column data msg
+twoValuesColumn vc name conf =
     let
         toValue =
             pair conf.coinCode

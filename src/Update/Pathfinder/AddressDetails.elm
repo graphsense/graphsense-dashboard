@@ -92,24 +92,32 @@ update uc msg model =
         UserClickedToggleTokenBalancesSelect ->
             ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
 
-        UserClickedToggleNeighborsTable ->
+        UserClickedToggleNeighborsTable Outgoing ->
             let
-                ( neighborsIncoming, eff1 ) =
-                    PagedTable.loadFirstPage
-                        (neighborsTableConfig model.addressId Incoming)
-                        model.neighborsIncoming
-
                 ( neighborsOutgoing, eff2 ) =
                     PagedTable.loadFirstPage
                         (neighborsTableConfig model.addressId Outgoing)
                         model.neighborsOutgoing
             in
             ( { model
-                | neighborsTableOpen = not model.neighborsTableOpen
-                , neighborsIncoming = neighborsIncoming
+                | outgoingNeighborsTableOpen = not model.outgoingNeighborsTableOpen
                 , neighborsOutgoing = neighborsOutgoing
               }
-            , Maybe.Extra.toList eff1 ++ Maybe.Extra.toList eff2
+            , Maybe.Extra.toList eff2
+            )
+
+        UserClickedToggleNeighborsTable Incoming ->
+            let
+                ( neighborsIncoming, eff1 ) =
+                    PagedTable.loadFirstPage
+                        (neighborsTableConfig model.addressId Incoming)
+                        model.neighborsIncoming
+            in
+            ( { model
+                | incomingNeighborsTableOpen = not model.incomingNeighborsTableOpen
+                , neighborsIncoming = neighborsIncoming
+              }
+            , Maybe.Extra.toList eff1
             )
 
         NeighborsTablePagedTableMsg dir pm ->

@@ -46,6 +46,8 @@ init network clusters locale addressId data =
       , totalReceivedDetailsOpen = False
       , balanceDetailsOpen = False
       , totalSentDetailsOpen = False
+      , outgoingNeighborsTableOpen = False
+      , incomingNeighborsTableOpen = False
       }
     , eff
         ++ (related
