@@ -2,6 +2,7 @@ module Util.Pathfinder.History exposing (shallPushHistory)
 
 import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder.AddressDetails as AddressDetails
 import Plugin.Update as Plugin exposing (Plugins)
 
 
@@ -68,8 +69,94 @@ shallPushHistory plugins msg _ =
         UserReleasedNormalKey _ ->
             False
 
-        AddressDetailsMsg _ _ ->
-            False
+        AddressDetailsMsg _ am ->
+            case am of
+                AddressDetails.UserClickedTxCheckboxInTable _ ->
+                    True
+
+                AddressDetails.UserClickedToggleNeighborsTable ->
+                    False
+
+                AddressDetails.UserClickedToggleTokenBalancesSelect ->
+                    False
+
+                AddressDetails.UserClickedToggleTransactionTable ->
+                    False
+
+                AddressDetails.UserClickedToggleBalanceDetails ->
+                    False
+
+                AddressDetails.UserClickedToggleTotalReceivedDetails ->
+                    False
+
+                AddressDetails.UserClickedToggleTotalSpentDetails ->
+                    False
+
+                AddressDetails.TransactionsTablePagedTableMsg _ ->
+                    False
+
+                AddressDetails.NeighborsTablePagedTableMsg _ _ ->
+                    False
+
+                AddressDetails.GotTxsForAddressDetails _ _ ->
+                    False
+
+                AddressDetails.GotNextPageTxsForAddressDetails _ ->
+                    False
+
+                AddressDetails.GotNeighborsForAddressDetails _ _ ->
+                    False
+
+                AddressDetails.UpdateDateRangePicker _ ->
+                    False
+
+                AddressDetails.OpenDateRangePicker ->
+                    False
+
+                AddressDetails.CloseDateRangePicker ->
+                    False
+
+                AddressDetails.ResetDateRangePicker ->
+                    False
+
+                AddressDetails.BrowserGotFromDateBlock _ _ ->
+                    False
+
+                AddressDetails.BrowserGotToDateBlock _ _ ->
+                    False
+
+                AddressDetails.TableMsg _ ->
+                    False
+
+                AddressDetails.RelatedAddressesTableMsg _ ->
+                    False
+
+                AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable _ ->
+                    False
+
+                AddressDetails.BrowserGotEntityAddressTagsForRelatedAddressesTable _ _ ->
+                    False
+
+                AddressDetails.UserClickedToggleRelatedAddressesTable ->
+                    False
+
+                AddressDetails.RelatedAddressesTablePagedTableMsg _ ->
+                    False
+
+                AddressDetails.UserClickedAddressCheckboxInTable _ ->
+                    True
+
+                AddressDetails.NoOp ->
+                    False
+
+                AddressDetails.UserClickedTx _ ->
+                    False
+
+                AddressDetails.BrowserGotAddressesForTags _ _ ->
+                    False
+
+                AddressDetails.TooltipMsg _ ->
+                    False
 
         TxDetailsMsg _ ->
             False
