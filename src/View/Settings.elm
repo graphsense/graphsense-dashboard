@@ -74,8 +74,8 @@ generalSettings plugins vc m =
         currencyToggle =
             Vc.toggleWithText
                 { selectedA = usdSelected
-                , titleA = "USD"
-                , titleB = "EUR"
+                , titleA = "EUR"
+                , titleB = "USD"
                 , msg =
                     UserChangedPreferredCurrency
                         (if usdSelected then
