@@ -48,7 +48,6 @@ type alias Model =
     , toolbarHovercard : Maybe ToolbarHovercardModel
     , contextMenu : Maybe ContextMenu
     , name : String
-    , selectAfterLoad : Maybe Id
     }
 
 

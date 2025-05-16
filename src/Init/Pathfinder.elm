@@ -39,7 +39,6 @@ init us =
       , toolbarHovercard = Nothing
       , contextMenu = Nothing
       , name = "graph"
-      , selectAfterLoad = Nothing
       }
     , Cmd.none
     )
