@@ -1,10 +1,11 @@
 module Update.Pathfinder.WorkflowNextTxByTime exposing (update)
 
+-- import Api.Request.Addresses exposing (Order_(..))
+-- import Model.Direction exposing (Direction(..))
+
 import Api.Data
-import Api.Request.Addresses exposing (Order_(..))
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
-import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
@@ -17,44 +18,40 @@ import Update.Pathfinder.Network as Network
 update : WorkflowNextTxContext -> WorkflowNextTxByTimeMsg -> Model -> ( Model, List Effect )
 update ctx msg model =
     case msg of
-        BrowserGotBlockHeight blockAtDate ->
-            ( model
-            , BrowserGotRecentTx
-                >> WorkflowNextTxByTime ctx
-                |> Api.GetAddressTxsEffect
-                    { currency = Id.network ctx.addressId
-                    , address = Id.id ctx.addressId
-                    , direction = Just ctx.direction
-                    , pagesize = 1
-                    , nextpage = Nothing
-                    , order =
-                        Just
-                            (case ctx.direction of
-                                Outgoing ->
-                                    Order_Asc
-
-                                Incoming ->
-                                    Order_Desc
-                            )
-                    , minHeight =
-                        case ctx.direction of
-                            Outgoing ->
-                                blockAtDate.beforeBlock
-
-                            Incoming ->
-                                Nothing
-                    , maxHeight =
-                        case ctx.direction of
-                            Outgoing ->
-                                Nothing
-
-                            Incoming ->
-                                blockAtDate.beforeBlock
-                    }
-                |> ApiEffect
-                |> List.singleton
-            )
-
+        -- BrowserGotBlockHeight blockAtDate ->
+        --     ( model
+        --     , BrowserGotRecentTx
+        --         >> WorkflowNextTxByTime ctx
+        --         |> Api.GetAddressTxsEffect
+        --             { currency = Id.network ctx.addressId
+        --             , address = Id.id ctx.addressId
+        --             , direction = Just ctx.direction
+        --             , pagesize = 1
+        --             , nextpage = Nothing
+        --             , order =
+        --                 Just
+        --                     (case ctx.direction of
+        --                         Outgoing ->
+        --                             Order_Asc
+        --                         Incoming ->
+        --                             Order_Desc
+        --                     )
+        --             , minHeight =
+        --                 case ctx.direction of
+        --                     Outgoing ->
+        --                         blockAtDate.beforeBlock
+        --                     Incoming ->
+        --                         Nothing
+        --             , maxHeight =
+        --                 case ctx.direction of
+        --                     Outgoing ->
+        --                         Nothing
+        --                     Incoming ->
+        --                         blockAtDate.beforeBlock
+        --             }
+        --         |> ApiEffect
+        --         |> List.singleton
+        --     )
         BrowserGotRecentTx data ->
             let
                 getTxId tx =

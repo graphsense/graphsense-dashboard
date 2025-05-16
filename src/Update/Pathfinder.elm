@@ -2,6 +2,7 @@ module Update.Pathfinder exposing (deserialize, fromDeserialized, removeAddress,
 
 import Animation as A
 import Api.Data
+import Api.Request.Addresses exposing (Order_(..))
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Config.Pathfinder exposing (nodeXOffset)
@@ -80,7 +81,7 @@ import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
 import Util exposing (and, n)
 import Util.Annotations as Annotations
-import Util.Data as Data exposing (timestampToPosix)
+import Util.Data as Data
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
@@ -1511,13 +1512,37 @@ getNextTxEffects model addressId direction =
             (\tx ->
                 case tx.type_ of
                     Tx.Account t ->
-                        BrowserGotBlockHeight
+                        BrowserGotRecentTx
                             >> WorkflowNextTxByTime context
-                            |> Api.GetBlockByDateEffect
-                                { currency = t.raw.network
-                                , datetime =
-                                    t.raw.timestamp
-                                        |> timestampToPosix
+                            |> Api.GetAddressTxsEffect
+                                { currency = Id.network context.addressId
+                                , address = Id.id context.addressId
+                                , direction = Just context.direction
+                                , pagesize = 1
+                                , nextpage = Nothing
+                                , order =
+                                    Just
+                                        (case context.direction of
+                                            Outgoing ->
+                                                Order_Asc
+
+                                            Incoming ->
+                                                Order_Desc
+                                        )
+                                , minHeight =
+                                    case context.direction of
+                                        Outgoing ->
+                                            Just t.raw.height
+
+                                        Incoming ->
+                                            Nothing
+                                , maxHeight =
+                                    case context.direction of
+                                        Outgoing ->
+                                            Nothing
+
+                                        Incoming ->
+                                            Just t.raw.height
                                 }
                             |> ApiEffect
 

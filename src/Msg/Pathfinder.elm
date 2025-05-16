@@ -139,5 +139,4 @@ type WorkflowNextUtxoTxMsg
 
 
 type WorkflowNextTxByTimeMsg
-    = BrowserGotBlockHeight Api.Data.BlockAtDate
-    | BrowserGotRecentTx Api.Data.AddressTxs
+    = BrowserGotRecentTx Api.Data.AddressTxs
