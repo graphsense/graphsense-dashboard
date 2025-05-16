@@ -80,7 +80,7 @@ import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
 import Util exposing (and, n)
 import Util.Annotations as Annotations
-import Util.Data as Data exposing (timestampToPosix)
+import Util.Data as Data
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
@@ -1724,8 +1724,7 @@ getNextTxEffects network addressId direction neighborId =
             (\tx ->
                 case tx.type_ of
                     Tx.Account t ->
-                        timestampToPosix t.raw.timestamp
-                            |> WorkflowNextTxByTime.startByTime t.raw.network
+                        WorkflowNextTxByTime.startByHeight config t.raw.height
                             |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
                             |> Workflow.next
                             |> List.map ApiEffect

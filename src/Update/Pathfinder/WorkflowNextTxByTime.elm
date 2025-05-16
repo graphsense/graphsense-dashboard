@@ -1,4 +1,4 @@
-module Update.Pathfinder.WorkflowNextTxByTime exposing (Config, Error(..), Msg, Workflow, start, startBetween, startByTime, update)
+module Update.Pathfinder.WorkflowNextTxByTime exposing (Config, Error(..), Msg, Workflow, start, startBetween, startByHeight, startByTime, update)
 
 import Api.Data
 import Api.Request.Addresses exposing (Order_(..))
@@ -39,6 +39,11 @@ startByTime network timestamp =
             }
         |> List.singleton
         |> Workflow.Next
+
+
+startByHeight : Config -> Int -> Workflow
+startByHeight config height =
+    workflowByHeight (Just height) config
 
 
 start : Config -> Workflow
@@ -88,39 +93,7 @@ update : Config -> Msg -> Workflow
 update config msg =
     case msg of
         BrowserGotBlockHeight blockAtDate ->
-            BrowserGotRecentTx
-                |> Api.GetAddressTxsEffect
-                    { currency = Id.network config.addressId
-                    , address = Id.id config.addressId
-                    , direction = Just config.direction
-                    , pagesize = 1
-                    , nextpage = Nothing
-                    , order =
-                        Just
-                            (case config.direction of
-                                Outgoing ->
-                                    Order_Asc
-
-                                Incoming ->
-                                    Order_Desc
-                            )
-                    , minHeight =
-                        case config.direction of
-                            Outgoing ->
-                                blockAtDate.beforeBlock
-
-                            Incoming ->
-                                Nothing
-                    , maxHeight =
-                        case config.direction of
-                            Outgoing ->
-                                Nothing
-
-                            Incoming ->
-                                blockAtDate.beforeBlock
-                    }
-                |> List.singleton
-                |> Workflow.Next
+            workflowByHeight blockAtDate.beforeBlock config
 
         BrowserGotRecentTx data ->
             data.addressTxs
@@ -170,3 +143,40 @@ update config msg =
 
         BrowserGotTx tx ->
             Workflow.Ok tx
+
+
+workflowByHeight : Maybe Int -> Config -> Workflow
+workflowByHeight height config =
+    BrowserGotRecentTx
+        |> Api.GetAddressTxsEffect
+            { currency = Id.network config.addressId
+            , address = Id.id config.addressId
+            , direction = Just config.direction
+            , pagesize = 1
+            , nextpage = Nothing
+            , order =
+                Just
+                    (case config.direction of
+                        Outgoing ->
+                            Order_Asc
+
+                        Incoming ->
+                            Order_Desc
+                    )
+            , minHeight =
+                case config.direction of
+                    Outgoing ->
+                        height
+
+                    Incoming ->
+                        Nothing
+            , maxHeight =
+                case config.direction of
+                    Outgoing ->
+                        Nothing
+
+                    Incoming ->
+                        height
+            }
+        |> List.singleton
+        |> Workflow.Next
