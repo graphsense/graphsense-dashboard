@@ -319,3 +319,9 @@ shallPushHistory plugins msg _ =
 
         BrowserGotTagSummaries _ _ ->
             False
+
+        BrowserGotRelationsToVisibleNeighbors _ _ _ ->
+            False
+
+        BrowserGotTxForVisibleNeighbor _ _ _ _ ->
+            False

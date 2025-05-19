@@ -80,8 +80,7 @@ update context msg model =
             else
                 Api.Data.TxTxUtxo tx
                     |> Task.succeed
-                    |> Task.perform
-                        (BrowserGotTxForAddress context.addressId context.direction)
+                    |> Task.perform context.resultMsg
                     |> CmdEffect
                     |> List.singleton
                     |> pair model

@@ -81,7 +81,7 @@ update ctx msg model =
                 |> Maybe.map getTxId
                 |> Maybe.map
                     (\txId ->
-                        BrowserGotTxForAddress ctx.addressId ctx.direction
+                        ctx.resultMsg
                             |> Api.GetTxEffect
                                 { currency = Id.network ctx.addressId
                                 , txHash = txId

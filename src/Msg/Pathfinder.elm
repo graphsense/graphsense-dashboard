@@ -95,6 +95,8 @@ type Msg
     | UserGotDataForTagsListDialog Id Api.Data.AddressTags
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
+    | BrowserGotRelationsToVisibleNeighbors Id Direction Api.Data.NeighborAddresses
+    | BrowserGotTxForVisibleNeighbor Id Direction Id Api.Data.Tx
 
 
 type alias TextTooltipConfig =
@@ -130,6 +132,7 @@ type alias WorkflowNextTxContext =
     { addressId : Id
     , direction : Direction
     , hops : Int
+    , resultMsg : Api.Data.Tx -> Msg
     }
 
 

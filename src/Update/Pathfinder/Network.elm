@@ -8,6 +8,7 @@ module Update.Pathfinder.Network exposing
     , clearSelection
     , deleteAddress
     , deleteTx
+    , findAddressCoords
     , getYForPathAfterX
     , ingestAddresses
     , ingestTxs
@@ -98,22 +99,24 @@ addAddressWithPosition plugins position id model =
                     |> List.map Tuple.second
 
             coords =
-                avoidOverlappingEdges things <|
-                    case position of
-                        Auto ->
-                            findAddressCoords id model
+                (case position of
+                    Auto ->
+                        findAddressCoords id model
 
-                        NextTo ( direction, id_ ) ->
-                            Dict.get id_ model.txs
-                                |> Maybe.andThen
-                                    (findAddressCoordsNextToTx model direction)
-                                |> Maybe.Extra.withDefaultLazy
-                                    (\_ ->
-                                        findAddressCoords id model
-                                    )
+                    NextTo ( direction, id_ ) ->
+                        Dict.get id_ model.txs
+                            |> Maybe.andThen
+                                (findAddressCoordsNextToTx model direction)
+                            |> Maybe.Extra.orElseLazy
+                                (\_ ->
+                                    findAddressCoords id model
+                                )
 
-                        Fixed x y ->
-                            { x = x, y = y }
+                    Fixed x y ->
+                        Just { x = x, y = y }
+                )
+                    |> Maybe.withDefault (findFreeCoords model)
+                    |> avoidOverlappingEdges things
         in
         Address.init plugins id coords
             |> s_isStartingPoint (isEmpty model)
@@ -435,7 +438,7 @@ getMinY =
         >> List.minimum
 
 
-findAddressCoords : Id -> Network -> Coords
+findAddressCoords : Id -> Network -> Maybe Coords
 findAddressCoords id network =
     listTxsForAddress network id
         |> NList.fromList
@@ -457,7 +460,6 @@ findAddressCoords id network =
                         |> NList.fromList
                         |> Maybe.map Coords.avg
             )
-        |> Maybe.withDefault (findFreeCoords network)
 
 
 addTx : Api.Data.Tx -> Network -> ( Tx, Network )
