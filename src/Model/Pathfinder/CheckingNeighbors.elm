@@ -1,4 +1,4 @@
-module Model.Pathfinder.CheckingNeighbors exposing (Model, getData, init, initAddress, insert, isEmpty, remove)
+module Model.Pathfinder.CheckingNeighbors exposing (Model, getData, init, initAddress, insert, isEmpty, member, remove)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -40,6 +40,11 @@ initAddress data (CheckingNeighbors model) =
     }
         |> flip (Dict.insert id) model
         |> CheckingNeighbors
+
+
+member : Id -> Model -> Bool
+member addressId (CheckingNeighbors cn) =
+    Dict.member addressId cn
 
 
 insert : Direction -> Id -> List Id -> Model -> Model

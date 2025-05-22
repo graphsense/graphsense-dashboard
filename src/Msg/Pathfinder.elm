@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
+module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -16,6 +16,8 @@ import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
 import Table
 import Time
+import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
+import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
 
 
@@ -52,14 +54,13 @@ type Msg
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
     | NoOp
-    | BrowserGotTxForAddress Id Direction Api.Data.Tx
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx FindPosition Bool Api.Data.Tx
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
     | UserClickedAddressCheckboxInTable Id
-    | WorkflowNextUtxoTx WorkflowNextTxContext WorkflowNextUtxoTxMsg
-    | WorkflowNextTxByTime WorkflowNextTxContext WorkflowNextTxByTimeMsg
+    | WorkflowNextUtxoTx WorkflowNextUtxoTx.Config (Maybe Id) WorkflowNextUtxoTx.Msg
+    | WorkflowNextTxByTime WorkflowNextTxByTime.Config (Maybe Id) WorkflowNextTxByTime.Msg
     | UserPushesLeftMouseButtonOnUtxoTx Id Coords
     | UserClickedRemoveAddressFromGraph Id
     | UserReleasedDeleteKey
@@ -96,7 +97,6 @@ type Msg
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
     | BrowserGotRelationsToVisibleNeighbors Id Direction Api.Data.NeighborAddresses
-    | BrowserGotTxForVisibleNeighbor Id Direction Id Api.Data.Tx
 
 
 type alias TextTooltipConfig =
@@ -126,21 +126,3 @@ type TxDetailsMsg
 type IoDirection
     = Inputs
     | Outputs
-
-
-type alias WorkflowNextTxContext =
-    { addressId : Id
-    , direction : Direction
-    , hops : Int
-    , resultMsg : Api.Data.Tx -> Msg
-    }
-
-
-type WorkflowNextUtxoTxMsg
-    = BrowserGotReferencedTxs (List Api.Data.TxRef)
-    | BrowserGotTxForReferencedTx Api.Data.Tx
-
-
-type WorkflowNextTxByTimeMsg
-    = BrowserGotBlockHeight Api.Data.BlockAtDate
-    | BrowserGotRecentTx Api.Data.AddressTxs

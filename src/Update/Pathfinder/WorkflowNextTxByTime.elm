@@ -1,35 +1,103 @@
-module Update.Pathfinder.WorkflowNextTxByTime exposing (update)
+module Update.Pathfinder.WorkflowNextTxByTime exposing (Config, Error(..), Msg, Workflow, start, startBetween, startByTime, update)
 
 import Api.Data
 import Api.Request.Addresses exposing (Order_(..))
 import Effect.Api as Api
-import Effect.Pathfinder exposing (Effect(..))
 import Model.Direction exposing (Direction(..))
-import Model.Pathfinder exposing (Model)
-import Model.Pathfinder.Address as Address
-import Model.Pathfinder.Id as Id
-import Msg.Pathfinder exposing (Msg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext)
-import RecordSetter as Rs
-import Set
-import Update.Pathfinder.Network as Network
+import Model.Pathfinder.Id as Id exposing (Id)
+import Time
+import Workflow
 
 
-update : WorkflowNextTxContext -> WorkflowNextTxByTimeMsg -> Model -> ( Model, List Effect )
-update ctx msg model =
+type alias Config =
+    { addressId : Id
+    , direction : Direction
+    }
+
+
+type Msg
+    = BrowserGotBlockHeight Api.Data.BlockAtDate
+    | BrowserGotRecentTx Api.Data.AddressTxs
+    | BrowserGotTx Api.Data.Tx
+    | BrowserGotRecentLink Api.Data.Links
+
+
+type Error
+    = NoTxFound
+
+
+type alias Workflow =
+    Workflow.Workflow Api.Data.Tx Msg Error
+
+
+startByTime : String -> Time.Posix -> Workflow
+startByTime network timestamp =
+    BrowserGotBlockHeight
+        |> Api.GetBlockByDateEffect
+            { currency = network
+            , datetime = timestamp
+            }
+        |> List.singleton
+        |> Workflow.Next
+
+
+start : Config -> Workflow
+start config =
+    BrowserGotRecentTx
+        |> Api.GetAddressTxsEffect
+            { currency = Id.network config.addressId
+            , address = Id.id config.addressId
+            , direction = Just config.direction
+            , pagesize = 1
+            , nextpage = Nothing
+            , order = Just Api.Request.Addresses.Order_Desc
+            , minHeight = Nothing
+            , maxHeight = Nothing
+            }
+        |> List.singleton
+        |> Workflow.Next
+
+
+startBetween : Config -> Id -> Workflow
+startBetween config neighbor =
+    let
+        ( source, target ) =
+            case config.direction of
+                Incoming ->
+                    ( neighbor, config.addressId )
+
+                Outgoing ->
+                    ( config.addressId, neighbor )
+    in
+    BrowserGotRecentLink
+        |> Api.GetAddresslinkTxsEffect
+            { currency = Id.network config.addressId
+            , source = Id.id source
+            , target = Id.id target
+            , pagesize = 1
+            , nextpage = Nothing
+            , order = Just Api.Request.Addresses.Order_Desc
+            , minHeight = Nothing
+            , maxHeight = Nothing
+            }
+        |> List.singleton
+        |> Workflow.Next
+
+
+update : Config -> Msg -> Workflow
+update config msg =
     case msg of
         BrowserGotBlockHeight blockAtDate ->
-            ( model
-            , BrowserGotRecentTx
-                >> WorkflowNextTxByTime ctx
+            BrowserGotRecentTx
                 |> Api.GetAddressTxsEffect
-                    { currency = Id.network ctx.addressId
-                    , address = Id.id ctx.addressId
-                    , direction = Just ctx.direction
+                    { currency = Id.network config.addressId
+                    , address = Id.id config.addressId
+                    , direction = Just config.direction
                     , pagesize = 1
                     , nextpage = Nothing
                     , order =
                         Just
-                            (case ctx.direction of
+                            (case config.direction of
                                 Outgoing ->
                                     Order_Asc
 
@@ -37,59 +105,71 @@ update ctx msg model =
                                     Order_Desc
                             )
                     , minHeight =
-                        case ctx.direction of
+                        case config.direction of
                             Outgoing ->
                                 blockAtDate.beforeBlock
 
                             Incoming ->
                                 Nothing
                     , maxHeight =
-                        case ctx.direction of
+                        case config.direction of
                             Outgoing ->
                                 Nothing
 
                             Incoming ->
                                 blockAtDate.beforeBlock
                     }
-                |> ApiEffect
                 |> List.singleton
-            )
+                |> Workflow.Next
 
         BrowserGotRecentTx data ->
-            let
-                getTxId tx =
-                    case tx of
-                        Api.Data.AddressTxAddressTxUtxo t ->
-                            t.txHash
-
-                        Api.Data.AddressTxTxAccount t ->
-                            t.identifier
-
-                noResults =
-                    List.isEmpty data.addressTxs
-
-                net =
-                    if noResults then
-                        Network.updateAddress ctx.addressId (Address.txsSetter ctx.direction (Address.Txs Set.empty)) model.network
-
-                    else
-                        model.network
-            in
-            ( model |> Rs.s_network net
-            , data.addressTxs
+            data.addressTxs
                 |> List.head
-                |> Maybe.map getTxId
                 |> Maybe.map
-                    (\txId ->
-                        ctx.resultMsg
+                    (\tx ->
+                        let
+                            id =
+                                case tx of
+                                    Api.Data.AddressTxAddressTxUtxo t ->
+                                        t.txHash
+
+                                    Api.Data.AddressTxTxAccount t ->
+                                        t.identifier
+                        in
+                        BrowserGotTx
                             |> Api.GetTxEffect
-                                { currency = Id.network ctx.addressId
-                                , txHash = txId
+                                { currency = Id.network config.addressId
+                                , txHash = id
                                 , includeIo = True
                                 , tokenTxId = Nothing
                                 }
-                            |> ApiEffect
                             |> List.singleton
+                            |> Workflow.Next
                     )
-                |> Maybe.withDefault []
-            )
+                |> Maybe.withDefault (Workflow.Err NoTxFound)
+
+        BrowserGotRecentLink data ->
+            data.links
+                |> List.head
+                |> Maybe.map
+                    (\tx ->
+                        case tx of
+                            Api.Data.LinkLinkUtxo t ->
+                                BrowserGotTx
+                                    |> Api.GetTxEffect
+                                        { currency = Id.network config.addressId
+                                        , txHash = t.txHash
+                                        , includeIo = True
+                                        , tokenTxId = Nothing
+                                        }
+                                    |> List.singleton
+                                    |> Workflow.Next
+
+                            Api.Data.LinkTxAccount t ->
+                                Api.Data.TxTxAccount t
+                                    |> Workflow.Ok
+                    )
+                |> Maybe.withDefault (Workflow.Err NoTxFound)
+
+        BrowserGotTx tx ->
+            Workflow.Ok tx
