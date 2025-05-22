@@ -127,24 +127,21 @@ update config msg =
                 |> List.head
                 |> Maybe.map
                     (\tx ->
-                        let
-                            id =
-                                case tx of
-                                    Api.Data.AddressTxAddressTxUtxo t ->
-                                        t.txHash
+                        case tx of
+                            Api.Data.AddressTxAddressTxUtxo t ->
+                                BrowserGotTx
+                                    |> Api.GetTxEffect
+                                        { currency = Id.network config.addressId
+                                        , txHash = t.txHash
+                                        , includeIo = True
+                                        , tokenTxId = Nothing
+                                        }
+                                    |> List.singleton
+                                    |> Workflow.Next
 
-                                    Api.Data.AddressTxTxAccount t ->
-                                        t.identifier
-                        in
-                        BrowserGotTx
-                            |> Api.GetTxEffect
-                                { currency = Id.network config.addressId
-                                , txHash = id
-                                , includeIo = True
-                                , tokenTxId = Nothing
-                                }
-                            |> List.singleton
-                            |> Workflow.Next
+                            Api.Data.AddressTxTxAccount t ->
+                                Api.Data.TxTxAccount t
+                                    |> Workflow.Ok
                     )
                 |> Maybe.withDefault (Workflow.Err NoTxFound)
 
