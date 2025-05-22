@@ -7,6 +7,7 @@ module Update.Pathfinder.Network exposing
     , animateTxs
     , clearSelection
     , deleteAddress
+    , deleteDanglingAddresses
     , deleteTx
     , findAddressCoords
     , getYForPathAfterX
@@ -897,3 +898,15 @@ ingestAddresses plugins network =
                 |> insertAddress nw
         )
         network
+
+
+deleteDanglingAddresses : Network -> List Address -> Network
+deleteDanglingAddresses =
+    List.foldl
+        (\address nw ->
+            if Set.isEmpty (txsToSet address.incomingTxs) && Set.isEmpty (txsToSet address.outgoingTxs) then
+                deleteAddress address.id nw
+
+            else
+                nw
+        )

@@ -398,13 +398,23 @@ updateByMsg plugins uc msg model =
                 AddressDetails.UserClickedTxCheckboxInTable tx ->
                     let
                         addOrRemoveTx txId =
-                            if Dict.member txId model.network.txs then
-                                Network.deleteTx txId model.network
-                                    |> flip s_network model
-                                    |> n
-
-                            else
-                                loadTx True plugins txId model
+                            Dict.get txId model.network.txs
+                                |> Maybe.map
+                                    (\t ->
+                                        let
+                                            delNw =
+                                                Network.deleteTx txId model.network
+                                        in
+                                        Tx.listAddressesForTx delNw.addresses t
+                                            |> List.filter
+                                                (second >> .id >> (/=) addressId)
+                                            |> List.map second
+                                            |> Network.deleteDanglingAddresses delNw
+                                            |> flip s_network model
+                                            |> n
+                                    )
+                                |> Maybe.Extra.withDefaultLazy
+                                    (\_ -> loadTx True plugins txId model)
                     in
                     case tx of
                         Api.Data.AddressTxTxAccount _ ->
