@@ -116,6 +116,11 @@ getTotalSpent a =
     RemoteData.unwrap Nothing (.totalSpent >> Just) a.data
 
 
+isSmartContract : Address -> Bool
+isSmartContract a =
+    RemoteData.unwrap Nothing .isContract a.data |> Maybe.withDefault False
+
+
 getActivityRange : Api.Data.Address -> ( Posix, Posix )
 getActivityRange x =
     ( timestampToPosix x.firstTx.timestamp
@@ -145,4 +150,4 @@ txsSetter direction =
 
 expandAllowed : Address -> Bool
 expandAllowed address =
-    address.exchange == Nothing
+    address.exchange == Nothing && (address |> isSmartContract |> not)

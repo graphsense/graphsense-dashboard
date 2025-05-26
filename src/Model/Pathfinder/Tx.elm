@@ -1,4 +1,30 @@
-module Model.Pathfinder.Tx exposing (AccountTx, Io, Tx, TxType(..), UtxoTx, addressToCoords, avg, calcCoords, getAccountTx, getCoords, getInputAddressIds, getInputs, getOutputAddressIds, getOutputs, getRawTimestamp, getTxId, getTxIdForAddressTx, getUtxoTx, hasAddress, hasInput, hasOutput, ioToId, isRawInFlow, isRawOutFlow, listAddressesForTx)
+module Model.Pathfinder.Tx exposing
+    ( AccountTx
+    , Io
+    , Tx
+    , TxType(..)
+    , UtxoTx
+    , addressToCoords
+    , avg
+    , calcCoords
+    , getAccountTx
+    , getCoords
+    , getInputAddressIds
+    , getInputs
+    , getOutputAddressIds
+    , getOutputs
+    , getRawTimestamp
+    , getTxId
+    , getTxIdForAddressTx
+    , getUtxoTx
+    , hasAddress
+    , hasInput
+    , hasOutput
+    , ioToId
+    , isRawInFlow
+    , isRawOutFlow
+    , listAddressesForTx
+    )
 
 import Animation exposing (Animation, Clock)
 import Api.Data
