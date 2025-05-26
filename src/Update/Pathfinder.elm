@@ -1724,7 +1724,7 @@ getNextTxEffects network addressId direction neighborId =
             (\tx ->
                 case tx.type_ of
                     Tx.Account t ->
-                        WorkflowNextTxByTime.startByHeight config t.raw.height
+                        WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
                             |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
                             |> Workflow.next
                             |> List.map ApiEffect

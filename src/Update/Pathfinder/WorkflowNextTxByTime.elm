@@ -41,9 +41,9 @@ startByTime network timestamp =
         |> Workflow.Next
 
 
-startByHeight : Config -> Int -> Workflow
-startByHeight config height =
-    workflowByHeight (Just height) config
+startByHeight : Config -> Int -> String -> Workflow
+startByHeight config height currency =
+    workflowByHeight config (Just height) (Just currency)
 
 
 start : Config -> Workflow
@@ -56,6 +56,7 @@ start config =
             , pagesize = 1
             , nextpage = Nothing
             , order = Just Api.Request.Addresses.Order_Desc
+            , tokenCurrency = Nothing
             , minHeight = Nothing
             , maxHeight = Nothing
             }
@@ -93,7 +94,7 @@ update : Config -> Msg -> Workflow
 update config msg =
     case msg of
         BrowserGotBlockHeight blockAtDate ->
-            workflowByHeight blockAtDate.beforeBlock config
+            workflowByHeight config blockAtDate.beforeBlock Nothing
 
         BrowserGotRecentTx data ->
             data.addressTxs
@@ -145,8 +146,8 @@ update config msg =
             Workflow.Ok tx
 
 
-workflowByHeight : Maybe Int -> Config -> Workflow
-workflowByHeight height config =
+workflowByHeight : Config -> Maybe Int -> Maybe String -> Workflow
+workflowByHeight config height tokenCurrency =
     BrowserGotRecentTx
         |> Api.GetAddressTxsEffect
             { currency = Id.network config.addressId
@@ -177,6 +178,7 @@ workflowByHeight height config =
 
                     Incoming ->
                         height
+            , tokenCurrency = tokenCurrency
             }
         |> List.singleton
         |> Workflow.Next
