@@ -8,6 +8,7 @@ import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
+import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.History.Entry as Entry
@@ -48,6 +49,7 @@ type alias Model =
     , toolbarHovercard : Maybe ToolbarHovercardModel
     , contextMenu : Maybe ContextMenu
     , name : String
+    , checkingNeighbors : CheckingNeighbors.Model
     }
 
 

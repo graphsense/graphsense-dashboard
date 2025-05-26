@@ -7,7 +7,7 @@ import Model.Notification as Notify
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..), InternalError(..))
 import Model.Pathfinder.Id as Id
 import RecordSetter as Rs
-import Util.View exposing (truncateLongIdentifierWithLengths)
+import Util.View exposing (truncateLongIdentifier)
 
 
 notificationsFromEffects : Model key -> List Model.Effect -> ( Model key, List Model.Effect )
@@ -58,7 +58,19 @@ pathFinderErrorToNotifications err =
         InfoError (NoAdjaccentTxForAddressFound tid) ->
             Notify.infoDefault "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent."
                 |> Notify.map (Rs.s_title (Just "Transaction tracing not possible"))
-                |> Notify.map (Rs.s_variables (Id.id tid |> List.singleton))
+                |> Notify.map (Rs.s_variables (Id.id tid |> truncateLongIdentifier |> List.singleton))
+                |> List.singleton
+
+        InfoError (NoAdjacentTxForAddressAndNeighborFound aid nid) ->
+            Notify.infoDefault "Could not find a suitable adjacent transaction between address {0} and {1}."
+                |> Notify.map (Rs.s_title (Just "Could not link neighbor address"))
+                |> Notify.map (Rs.s_variables [ Id.id aid |> truncateLongIdentifier, Id.id nid |> truncateLongIdentifier ])
+                |> List.singleton
+
+        InfoError (MaxChangeHopsLimitReached max tid) ->
+            Notify.infoDefault "Could not find a adjacent transaction for address {0} which is not just change for {1} hops. Please try again to look further."
+                |> Notify.map (Rs.s_title (Just "Transaction tracing across change"))
+                |> Notify.map (Rs.s_variables [ Id.id tid |> truncateLongIdentifier, String.fromInt max ])
                 |> List.singleton
 
         InfoError (TxTracingThroughService id exchangeLabel) ->
@@ -66,7 +78,7 @@ pathFinderErrorToNotifications err =
                 |> Notify.map (Rs.s_title (Just "Auto trace limit"))
                 |> Notify.map
                     (Rs.s_variables
-                        ((Id.id id |> truncateLongIdentifierWithLengths 8 4)
+                        ((Id.id id |> truncateLongIdentifier)
                             :: (exchangeLabel
                                     |> Maybe.map List.singleton
                                     |> Maybe.withDefault []

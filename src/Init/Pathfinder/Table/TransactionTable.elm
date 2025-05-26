@@ -91,6 +91,7 @@ initWithoutFilter addressId data =
             , pagesize = itemsPerPage
             , nextpage = Nothing
             , order = Nothing
+            , tokenCurrency = Nothing
             , minHeight = Nothing
             , maxHeight = Nothing
             }

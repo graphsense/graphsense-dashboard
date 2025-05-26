@@ -2347,6 +2347,7 @@ getAddressTxsEffect { currency, address } nextpage =
         , nextpage = nextpage
         , pagesize = 100
         , order = Nothing
+        , tokenCurrency = Nothing
         , minHeight = Nothing
         , maxHeight = Nothing
         }

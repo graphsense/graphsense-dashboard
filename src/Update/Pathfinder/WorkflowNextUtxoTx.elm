@@ -1,58 +1,65 @@
-module Update.Pathfinder.WorkflowNextUtxoTx exposing (loadReferencedTx, update)
+module Update.Pathfinder.WorkflowNextUtxoTx exposing (Config, Error(..), Msg, Workflow, start, update)
 
 import Api.Data
 import Effect.Api as Api
-import Effect.Pathfinder exposing (Effect(..))
 import Init.Pathfinder.Id as Id
 import List.Extra
 import Model.Direction exposing (Direction(..))
-import Model.Pathfinder exposing (Model)
-import Model.Pathfinder.Address exposing (Txs(..), txsSetter)
-import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
-import Model.Pathfinder.Id as Id
-import Msg.Pathfinder exposing (Msg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
-import RecordSetter exposing (s_network)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Set
-import Task
-import Tuple exposing (pair)
-import Update.Pathfinder.Network as Network
-import Util exposing (n)
+import Workflow
 
 
-update : WorkflowNextTxContext -> WorkflowNextUtxoTxMsg -> Model -> ( Model, List Effect )
-update context msg model =
+maxHops : Int
+maxHops =
+    50
+
+
+type alias Config =
+    { addressId : Id
+    , direction : Direction
+    }
+
+
+type Msg
+    = BrowserGotReferencedTxs Int (List Api.Data.TxRef)
+    | BrowserGotTxForReferencedTx Int Api.Data.Tx
+
+
+type Error
+    = NoTxFound
+    | MaxChangeHopsLimit Int Api.Data.TxUtxo
+
+
+type alias Workflow =
+    Workflow.Workflow Api.Data.TxUtxo Msg Error
+
+
+update : Config -> Msg -> Workflow
+update config msg =
     case msg of
-        BrowserGotReferencedTxs refs ->
+        BrowserGotReferencedTxs hops refs ->
             if List.isEmpty refs then
-                ( model
-                    |> s_network (Network.updateAddress context.addressId (Txs Set.empty |> txsSetter context.direction) model.network)
-                , NoAdjaccentTxForAddressFound context.addressId
-                    |> InfoError
-                    |> ErrorEffect
-                    |> List.singleton
-                )
+                Workflow.Err NoTxFound
 
             else
-                ( model
-                , refs
+                refs
                     |> List.map
                         (\ref ->
-                            BrowserGotTxForReferencedTx
-                                >> WorkflowNextUtxoTx context
+                            BrowserGotTxForReferencedTx hops
                                 |> Api.GetTxEffect
-                                    { currency = Id.network context.addressId
+                                    { currency = Id.network config.addressId
                                     , txHash = ref.txHash
                                     , includeIo = True
                                     , tokenTxId = Nothing
                                     }
-                                |> ApiEffect
                         )
-                )
+                    |> Workflow.Next
 
-        BrowserGotTxForReferencedTx (Api.Data.TxTxUtxo tx) ->
+        BrowserGotTxForReferencedTx hops (Api.Data.TxTxUtxo tx) ->
             let
                 io =
-                    (case context.direction of
+                    (case config.direction of
                         Incoming ->
                             tx.inputs
 
@@ -64,37 +71,30 @@ update context msg model =
                         |> List.map (Id.init tx.currency)
                         |> Set.fromList
             in
-            if Set.singleton context.addressId == io then
-                if context.hops > 50 then
-                    model
-                        |> s_network
-                            (Network.updateAddress context.addressId (TxsLastCheckedChangeTx tx |> txsSetter context.direction) model.network)
-                        |> n
+            if Set.singleton config.addressId == io then
+                if hops > maxHops then
+                    Workflow.Err (MaxChangeHopsLimit maxHops tx)
 
                 else
-                    ( model
-                    , loadReferencedTx { context | hops = context.hops + 1 } tx
-                        |> List.singleton
-                    )
+                    continueWorkflow hops config tx
 
             else
-                Api.Data.TxTxUtxo tx
-                    |> Task.succeed
-                    |> Task.perform
-                        (BrowserGotTxForAddress context.addressId context.direction)
-                    |> CmdEffect
-                    |> List.singleton
-                    |> pair model
+                Workflow.Ok tx
 
-        _ ->
-            n model
+        BrowserGotTxForReferencedTx _ (Api.Data.TxTxAccount _) ->
+            Workflow.Err NoTxFound
 
 
-loadReferencedTx : WorkflowNextTxContext -> Api.Data.TxUtxo -> Effect
-loadReferencedTx context tx =
+start : Config -> Api.Data.TxUtxo -> Workflow
+start =
+    continueWorkflow 0
+
+
+continueWorkflow : Int -> Config -> Api.Data.TxUtxo -> Workflow
+continueWorkflow hops config tx =
     let
         ( listLinkedTxRefs, getIo ) =
-            case context.direction of
+            case config.direction of
                 Incoming ->
                     ( Api.ListSpendingTxRefsEffect, .inputs )
 
@@ -105,14 +105,14 @@ loadReferencedTx context tx =
             getIo tx
                 |> Maybe.andThen
                     (List.Extra.findIndex
-                        (.address >> List.member (Id.id context.addressId))
+                        (.address >> List.member (Id.id config.addressId))
                     )
     in
-    BrowserGotReferencedTxs
-        >> WorkflowNextUtxoTx context
+    BrowserGotReferencedTxs (hops + 1)
         |> listLinkedTxRefs
             { currency = tx.currency
             , txHash = tx.txHash
             , index = index
             }
-        |> ApiEffect
+        |> List.singleton
+        |> Workflow.Next
