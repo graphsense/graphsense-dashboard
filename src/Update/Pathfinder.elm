@@ -1272,16 +1272,8 @@ handleTx plugins uc config neighborId tx model =
             if GTx.hasAddress config.direction (Id.id nid) tx then
                 addTx plugins uc config.addressId config.direction (Just nid) tx newModel
 
-            else if CheckingNeighbors.isEmpty nid newModel.checkingNeighbors then
-                CheckingNeighbors.getData nid model.checkingNeighbors
-                    |> Maybe.map
-                        (\data ->
-                            browserGotAddressData uc plugins nid (NextTo ( config.direction, config.addressId )) data newModel
-                        )
-                    |> Maybe.withDefault (n newModel)
-
             else
-                n newModel
+                placeNeighborIfError plugins uc config nid model
 
         Nothing ->
             addTx plugins uc config.addressId config.direction Nothing tx model
