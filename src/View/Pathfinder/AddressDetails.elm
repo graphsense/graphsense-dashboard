@@ -26,8 +26,10 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (getTable)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
+import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import PagedTable
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
@@ -390,10 +392,16 @@ transactionTableView vc addressId txOnGraphFn model =
         styles =
             Css.Table.styles
 
+        allChecked =
+            model.table
+                |> PagedTable.getPage
+                |> List.map Tx.getTxIdForAddressTx
+                |> List.all txOnGraphFn
+
         table =
             PagedTable.pagedTableView vc
                 []
-                (TransactionTable.config styles vc addressId txOnGraphFn)
+                (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
                 model.table
                 AddressDetails.TransactionsTablePagedTableMsg
     in

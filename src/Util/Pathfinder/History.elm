@@ -74,6 +74,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedTxCheckboxInTable _ ->
                     True
 
+                AddressDetails.UserClickedAllTxCheckboxInTable ->
+                    True
+
                 AddressDetails.UserClickedToggleNeighborsTable ->
                     False
 

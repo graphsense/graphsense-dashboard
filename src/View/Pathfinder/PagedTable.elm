@@ -1,4 +1,4 @@
-module View.Pathfinder.PagedTable exposing (ColumnAlign(..), alignColumnHeader, customizations, pagedTableView)
+module View.Pathfinder.PagedTable exposing (ColumnAlign(..), addTHeadOverwrite, alignColumnHeader, customizations, pagedTableView)
 
 import Config.View as View
 import Css
@@ -57,6 +57,24 @@ alignColumnHeader styles_ vc columns tc =
             )
     in
     tc |> Rs.s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles_ vc)
+
+
+addTHeadOverwrite : String -> (( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg) -> (List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg) -> List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg
+addTHeadOverwrite key alternative default l =
+    let
+        merge acc i =
+            { attributes = acc.attributes ++ i.attributes, children = acc.children ++ i.children }
+    in
+    l
+        |> List.map
+            (\( n, s, a ) ->
+                if n == key then
+                    alternative ( n, s, a )
+
+                else
+                    default [ ( n, s, a ) ]
+            )
+        |> List.foldr merge { attributes = [], children = [] }
 
 
 customizations : View.Config -> Table.Customizations data msg

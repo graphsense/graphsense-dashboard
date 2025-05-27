@@ -1496,6 +1496,17 @@ update plugins uc msg model =
         NotificationMsg ms ->
             n { model | notifications = Notification.update ms model.notifications }
 
+        ShowNotification nt ->
+            let
+                ( notifications, notificationEffects ) =
+                    Notification.add nt model.notifications
+            in
+            ( { model
+                | notifications = notifications
+              }
+            , List.map NotificationEffect notificationEffects
+            )
+
         BrowserGotUncaughtError value ->
             value
                 |> Json.Decode.decodeValue
