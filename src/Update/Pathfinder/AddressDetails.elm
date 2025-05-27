@@ -281,6 +281,9 @@ update uc msg model =
         UserClickedTx _ ->
             n model
 
+        UserClickedAllTxCheckboxInTable ->
+            n model
+
         UserClickedTxCheckboxInTable _ ->
             n model
 

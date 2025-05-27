@@ -4,8 +4,11 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
+import Css.Pathfinder as PCSS
 import Css.Table exposing (Styles)
 import Dict
+import Html.Styled exposing (td, th)
+import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -13,8 +16,9 @@ import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
-import View.Pathfinder.PagedTable as PT exposing (alignColumnHeader, customizations)
+import View.Pathfinder.PagedTable as PT exposing (addTHeadOverwrite, alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
 
 
@@ -44,8 +48,8 @@ getId { network, id } =
     Id.init network id
 
 
-config : Styles -> View.Config -> Id -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
-config styles vc addressId isCheckedFn =
+config : Styles -> View.Config -> Id -> (Id -> Bool) -> Bool -> Table.Config Api.Data.AddressTx Msg
+config styles vc addressId isCheckedFn allChecked =
     let
         network =
             Id.network addressId
@@ -63,6 +67,38 @@ config styles vc addressId isCheckedFn =
                                 ++ [ Css.display Css.tableCell ]
                             )
                     )
+
+        c =
+            customizations vc
+                |> alignColumnHeader styles_ vc rightAlignedColumns
+
+        addAllCheckbox =
+            Util.Checkbox.checkbox
+                { state = Util.Checkbox.stateFromBool allChecked
+                , size = Util.Checkbox.smallSize
+                , msg = UserClickedAllTxCheckboxInTable
+                }
+                ([ Css.paddingLeft <| Css.px 5 ]
+                    |> css
+                    |> List.singleton
+                )
+
+        newTheadWithCheckbox =
+            addTHeadOverwrite ""
+                (\( _, _, a ) ->
+                    Table.HtmlDetails
+                        [ a
+                        , [ PCSS.mGap |> Css.padding
+                          , Css.width <| Css.px 50
+                          ]
+                            |> css
+                        ]
+                        [ th [] [ td [] [ addAllCheckbox ] ] ]
+                )
+                c.thead
+
+        cc =
+            c |> Rs.s_thead newTheadWithCheckbox
     in
     Table.customConfig
         { toId = toGerneric addressId >> getId >> Id.toString
@@ -88,9 +124,7 @@ config styles vc addressId isCheckedFn =
                 "Value"
                 (toGerneric addressId >> .value)
             ]
-        , customizations =
-            customizations vc
-                |> alignColumnHeader styles_ vc rightAlignedColumns
+        , customizations = cc
         }
 
 

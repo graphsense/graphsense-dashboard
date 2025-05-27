@@ -46,6 +46,7 @@ init network clusters locale addressId data =
       , totalReceivedDetailsOpen = False
       , balanceDetailsOpen = False
       , totalSentDetailsOpen = False
+      , copyIconChevronOpen = False
       }
     , eff
         ++ (related

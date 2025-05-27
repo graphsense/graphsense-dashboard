@@ -2,7 +2,6 @@ module Update.Pathfinder exposing (deserialize, fromDeserialized, removeAddress,
 
 import Animation as A
 import Api.Data
-import Api.Request.Addresses exposing (Order_(..))
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Config.Pathfinder exposing (nodeXOffset)
@@ -30,6 +29,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
+import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
@@ -55,6 +55,7 @@ import Msg.Pathfinder
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
+import PagedTable
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -396,6 +397,63 @@ updateByMsg plugins uc msg model =
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
                     userClickedAddressCheckboxInTable plugins id model
 
+                AddressDetails.UserClickedAllTxCheckboxInTable ->
+                    case model.details of
+                        Just (AddressDetails _ (Success data)) ->
+                            let
+                                txIdsTable =
+                                    data.txs.table
+                                        |> PagedTable.getPage
+                                        |> List.map Tx.getTxIdForAddressTx
+
+                                allChecked =
+                                    txIdsTable
+                                        |> List.all (flip Dict.member model.network.txs)
+
+                                deleteAcc txId ( m, eff ) =
+                                    ( Network.deleteTx txId m.network
+                                        |> flip s_network m
+                                    , eff
+                                    )
+
+                                addAcc txId ( m, eff ) =
+                                    loadTx True plugins txId m |> Tuple.mapSecond ((++) eff)
+                            in
+                            if allChecked then
+                                let
+                                    toRemove =
+                                        txIdsTable
+                                            |> List.filter (flip Dict.member model.network.txs)
+                                in
+                                toRemove
+                                    |> List.foldl deleteAcc
+                                        ( model
+                                        , Notification.infoDefault (Locale.interpolated uc.locale "Removed {0} transactions" [ toRemove |> List.length |> String.fromInt ])
+                                            |> Notification.map (s_isEphemeral True)
+                                            |> Notification.map (s_showClose False)
+                                            |> ShowNotificationEffect
+                                            |> List.singleton
+                                        )
+
+                            else
+                                let
+                                    toAdd =
+                                        txIdsTable
+                                            |> List.filter (flip Dict.member model.network.txs >> not)
+                                in
+                                toAdd
+                                    |> List.foldl addAcc
+                                        ( model
+                                        , Notification.infoDefault (Locale.interpolated uc.locale "Added {0} transactions" [ toAdd |> List.length |> String.fromInt ])
+                                            |> Notification.map (s_isEphemeral True)
+                                            |> Notification.map (s_showClose False)
+                                            |> ShowNotificationEffect
+                                            |> List.singleton
+                                        )
+
+                        _ ->
+                            n model
+
                 AddressDetails.UserClickedTxCheckboxInTable tx ->
                     let
                         addOrRemoveTx txId =
@@ -417,12 +475,7 @@ updateByMsg plugins uc msg model =
                                 |> Maybe.Extra.withDefaultLazy
                                     (\_ -> loadTx True plugins txId model)
                     in
-                    case tx of
-                        Api.Data.AddressTxTxAccount _ ->
-                            addOrRemoveTx (Tx.getTxIdForAddressTx tx)
-
-                        Api.Data.AddressTxAddressTxUtxo _ ->
-                            addOrRemoveTx (Tx.getTxIdForAddressTx tx)
+                    addOrRemoveTx (Tx.getTxIdForAddressTx tx)
 
                 AddressDetails.UserClickedTx id ->
                     userClickedTx id model
@@ -1189,6 +1242,12 @@ updateByMsg plugins uc msg model =
                 ContextMenu.TransactionContextMenu id ->
                     removeTx id model
 
+                ContextMenu.AddressIdChevronActions _ ->
+                    n model
+
+                ContextMenu.TransactionIdChevronActions _ ->
+                    n model
+
         BrowserGotBulkAddresses addresses ->
             addresses
                 |> List.foldl
@@ -1213,8 +1272,23 @@ updateByMsg plugins uc msg model =
         UserSelectsAnnotationColor id clr ->
             n { model | annotations = Annotations.setColor id clr model.annotations }
 
-        UserOpensContextMenu coords cmtype ->
-            n { model | contextMenu = Just ( coords, cmtype ) }
+        UserOpensContextMenu coordsNew cmtype ->
+            case model.contextMenu of
+                Nothing ->
+                    n { model | contextMenu = Just ( coordsNew, cmtype ) }
+
+                Just ( coords, type_ ) ->
+                    let
+                        distance =
+                            sqrt
+                                ((coords.x - coordsNew.x) ^ 2 + (coords.y - coordsNew.y) ^ 2)
+                    in
+                    if ContextMenu.isContextMenuTypeEqual type_ cmtype && distance < 50.0 then
+                        n { model | contextMenu = Nothing }
+                        -- close on second click
+
+                    else
+                        n { model | contextMenu = Just ( coordsNew, cmtype ) }
 
         UserClosesContextMenu ->
             n { model | contextMenu = Nothing }
@@ -1227,6 +1301,12 @@ updateByMsg plugins uc msg model =
 
                 ContextMenu.TransactionContextMenu id ->
                     Route.Network (Id.network id) (Route.Tx (Id.id id))
+
+                ContextMenu.TransactionIdChevronActions id ->
+                    Route.Network (Id.network id) (Route.Tx (Id.id id))
+
+                ContextMenu.AddressIdChevronActions id ->
+                    Route.Network (Id.network id) (Route.Address (Id.id id))
               )
                 |> GlobalRoute.pathfinderRoute
                 |> GlobalRoute.toUrl
@@ -1254,6 +1334,23 @@ updateByMsg plugins uc msg model =
 
                         Just (GTx.Token hash _) ->
                             hash
+
+                ContextMenu.TransactionIdChevronActions id ->
+                    case Id.id id |> parseTxIdentifier of
+                        Nothing ->
+                            Id.id id
+
+                        Just (GTx.External hash) ->
+                            hash
+
+                        Just (GTx.Internal hash _) ->
+                            hash
+
+                        Just (GTx.Token hash _) ->
+                            hash
+
+                ContextMenu.AddressIdChevronActions id ->
+                    Id.id id
               )
                 |> Ports.toClipboard
                 |> CmdEffect

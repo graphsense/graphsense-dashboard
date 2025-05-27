@@ -461,3 +461,5 @@ cluster information: Cluster Info
 "Request limit exceeded": "Abfrage-Limit erreicht"
 "The request limit of your API key of {0} per {1} has been exceeded.": "Begrenzung der API Abfragen von {0} pro {1} erreicht."
 "The request limit of your API key has been exceeded.": "Begrenzung der API Abfragen erreicht."
+"Removed {0} transactions": "{0} Transaktionen entfernt"
+"Added {0} transactions": "{0} Transaktionen hinzugefügt"
