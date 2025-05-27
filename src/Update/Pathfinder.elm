@@ -1240,6 +1240,12 @@ updateByMsg plugins uc msg model =
                 ContextMenu.TransactionContextMenu id ->
                     removeTx id model
 
+                ContextMenu.AddressIdChevronActions _ ->
+                    n model
+
+                ContextMenu.TransactionIdChevronActions _ ->
+                    n model
+
         BrowserGotBulkAddresses addresses ->
             addresses
                 |> List.foldl
@@ -1264,8 +1270,23 @@ updateByMsg plugins uc msg model =
         UserSelectsAnnotationColor id clr ->
             n { model | annotations = Annotations.setColor id clr model.annotations }
 
-        UserOpensContextMenu coords cmtype ->
-            n { model | contextMenu = Just ( coords, cmtype ) }
+        UserOpensContextMenu coordsNew cmtype ->
+            case model.contextMenu of
+                Nothing ->
+                    n { model | contextMenu = Just ( coordsNew, cmtype ) }
+
+                Just ( coords, type_ ) ->
+                    let
+                        distance =
+                            sqrt
+                                ((coords.x - coordsNew.x) ^ 2 + (coords.y - coordsNew.y) ^ 2)
+                    in
+                    if ContextMenu.isContextMenuTypeEqual type_ cmtype && distance < 50.0 then
+                        n { model | contextMenu = Nothing }
+                        -- close on second click
+
+                    else
+                        n { model | contextMenu = Just ( coordsNew, cmtype ) }
 
         UserClosesContextMenu ->
             n { model | contextMenu = Nothing }
@@ -1278,6 +1299,12 @@ updateByMsg plugins uc msg model =
 
                 ContextMenu.TransactionContextMenu id ->
                     Route.Network (Id.network id) (Route.Tx (Id.id id))
+
+                ContextMenu.TransactionIdChevronActions id ->
+                    Route.Network (Id.network id) (Route.Tx (Id.id id))
+
+                ContextMenu.AddressIdChevronActions id ->
+                    Route.Network (Id.network id) (Route.Address (Id.id id))
               )
                 |> GlobalRoute.pathfinderRoute
                 |> GlobalRoute.toUrl
@@ -1305,6 +1332,23 @@ updateByMsg plugins uc msg model =
 
                         Just (GTx.Token hash _) ->
                             hash
+
+                ContextMenu.TransactionIdChevronActions id ->
+                    case Id.id id |> parseTxIdentifier of
+                        Nothing ->
+                            Id.id id
+
+                        Just (GTx.External hash) ->
+                            hash
+
+                        Just (GTx.Internal hash _) ->
+                            hash
+
+                        Just (GTx.Token hash _) ->
+                            hash
+
+                ContextMenu.AddressIdChevronActions id ->
+                    Id.id id
               )
                 |> Ports.toClipboard
                 |> CmdEffect

@@ -13,15 +13,18 @@ import Dict exposing (Dict)
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div, img)
 import Html.Styled.Attributes as HA exposing (src)
-import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
+import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
+import Json.Decode
 import Model.Currency exposing (asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
+import Model.Graph.Coords as Coords
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (getTable)
@@ -42,6 +45,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css exposing (spread)
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
+import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
@@ -1005,9 +1009,21 @@ setTags vc gc model id =
             labelOfActor
 
 
-sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html msg, chevronInstance : Html a }
+sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html Pathfinder.Msg, chevronInstance : Html Pathfinder.Msg }
 sidePanelAddressCopyIcon vc id =
     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
     , copyIconInstance = Id.id id |> copyIconPathfinder vc
-    , chevronInstance = none
+    , chevronInstance =
+        div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
+            [ HIcons.iconsChevronDownThinWithAttributes
+                (HIcons.iconsChevronDownThinAttributes
+                    |> Rs.s_root
+                        [ Util.View.pointer
+                        , decodeCoords Coords.Coords
+                            |> Json.Decode.map (\c -> ( Pathfinder.UserOpensContextMenu c (ContextMenu.AddressIdChevronActions id), True ))
+                            |> preventDefaultOn "click"
+                        ]
+                )
+                {}
+            ]
     }

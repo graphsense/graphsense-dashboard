@@ -1,4 +1,4 @@
-module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, parseTxIdentifier, txTypeToLabel)
+module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, getTxHash, parseTxIdentifier, txTypeToLabel)
 
 import Parser exposing ((|.), (|=), Parser, backtrackable, end, int, keyword, oneOf, run, succeed, symbol, variable)
 import Set
@@ -49,6 +49,19 @@ parseTxIdentifier_ =
 parseTxIdentifier : String -> Maybe AccountTxType
 parseTxIdentifier =
     run parseTxIdentifier_ >> Result.toMaybe
+
+
+getTxHash : AccountTxType -> String
+getTxHash ac =
+    case ac of
+        Internal x _ ->
+            x
+
+        External x ->
+            x
+
+        Token x _ ->
+            x
 
 
 txTypeToLabel : AccountTxType -> String
