@@ -17,4 +17,6 @@ nodeYOffset =
 
 
 type alias Config =
-    { isClusterDetailsOpen : Bool, displayAllTagsInDetails : Bool, snapToGrid : Bool }
+    { snapToGrid : Bool
+    , highlightClusterFriends : Bool
+    }

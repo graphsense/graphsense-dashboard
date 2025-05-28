@@ -1036,7 +1036,7 @@ updateByMsg plugins uc msg model =
             case submsg of
                 UserClickedToggleSnapToGrid ->
                     -- handled Upstream
-                    n (model |> s_config (model.config |> s_snapToGrid (not model.config.snapToGrid)))
+                    n model
 
                 UserClickedToggleShowTxTimestamp ->
                     -- handled Upstream
@@ -1146,12 +1146,6 @@ updateByMsg plugins uc msg model =
                             )
             in
             ( resultModel, effn ++ eff ++ [ Task.attempt (\_ -> NoOp) (Dom.focus "annotation-label-textbox") |> CmdEffect ] )
-
-        UserClickedToggleClusterDetailsOpen ->
-            n (model |> s_config (model.config |> s_isClusterDetailsOpen (not model.config.isClusterDetailsOpen)))
-
-        UserClickedToggleDisplayAllTagsInDetails ->
-            n (model |> s_config (model.config |> s_displayAllTagsInDetails (not model.config.displayAllTagsInDetails)))
 
         WorkflowNextUtxoTx config neighborId wm ->
             WorkflowNextUtxoTx.update config wm
@@ -2817,8 +2811,8 @@ deserializeByVersion version =
         Json.Decode.fail ("unknown version " ++ version)
 
 
-fromDeserialized : Plugins -> Update.Config -> Deserialized -> Model -> ( Model, List Effect )
-fromDeserialized plugins uc deserialized model =
+fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized plugins deserialized model =
     let
         groupByNetwork =
             List.map .id
@@ -2856,7 +2850,10 @@ fromDeserialized plugins uc deserialized model =
                     )
 
         ( newAndEmptyPathfinder, _ ) =
-            Pathfinder.init { snapToGrid = Just uc.snapToGrid }
+            Pathfinder.init
+                { snapToGrid = Just model.config.snapToGrid
+                , highlightClusterFriends = Just model.config.highlightClusterFriends
+                }
     in
     ( { newAndEmptyPathfinder
         | network = ingestAddresses plugins Network.init deserialized.addresses

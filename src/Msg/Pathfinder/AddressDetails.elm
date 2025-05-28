@@ -17,6 +17,8 @@ type Msg
     | UserClickedToggleBalanceDetails
     | UserClickedToggleTotalReceivedDetails
     | UserClickedToggleTotalSpentDetails
+    | UserClickedToggleClusterDetailsOpen
+    | UserClickedToggleDisplayAllTagsInDetails
     | TransactionsTablePagedTableMsg PagedTable.Msg
     | NeighborsTablePagedTableMsg Direction PagedTable.Msg
     | GotTxsForAddressDetails ( Maybe Int, Maybe Int ) Api.Data.AddressTxs

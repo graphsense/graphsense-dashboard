@@ -3,6 +3,7 @@ module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 import Animation as A
 import Api.Data
 import Color
+import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Html.Styled.Attributes as Html
@@ -34,8 +35,8 @@ import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe (WebData Api.Data.Entity)) -> Maybe Annotations.AnnotationItem -> Svg Msg
-view plugins vc colors address getCluster annotation =
+view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe (WebData Api.Data.Entity)) -> Maybe Annotations.AnnotationItem -> Svg Msg
+view plugins vc pc colors address getCluster annotation =
     let
         data =
             RemoteData.toMaybe address.data
@@ -186,7 +187,7 @@ view plugins vc colors address getCluster annotation =
                     ]
                 |> Rs.s_nodeFrame annAttr
                 |> Rs.s_clusterColor
-                    (case ( clusterColorLight, vc.highlightClusterFriends ) of
+                    (case ( clusterColorLight, pc.highlightClusterFriends ) of
                         ( Just c, True ) ->
                             [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
 
@@ -202,7 +203,7 @@ view plugins vc colors address getCluster annotation =
                         |> Id.id
                         |> truncateLongIdentifierWithLengths 8 4
                 , highlightVisible = address.selected
-                , clusterVisible = (clusterColor /= Nothing) && vc.highlightClusterFriends
+                , clusterVisible = (clusterColor /= Nothing) && pc.highlightClusterFriends
                 , expandLeftVisible = expandVisible Incoming
                 , expandRightVisible = expandVisible Outgoing
                 , iconInstance = toNodeIcon address cluster

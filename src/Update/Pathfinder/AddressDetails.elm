@@ -330,6 +330,16 @@ update uc msg model =
         TooltipMsg _ ->
             n model
 
+        UserClickedToggleClusterDetailsOpen ->
+            not model.isClusterDetailsOpen
+                |> flip s_isClusterDetailsOpen model
+                |> n
+
+        UserClickedToggleDisplayAllTagsInDetails ->
+            not model.displayAllTagsInDetails
+                |> flip s_displayAllTagsInDetails model
+                |> n
+
 
 updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )
 updateRelatedAddressesTable model upd =

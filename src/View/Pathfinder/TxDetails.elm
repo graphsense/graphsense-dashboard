@@ -2,7 +2,6 @@ module View.Pathfinder.TxDetails exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -35,8 +34,8 @@ import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 
 
-view : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
-view vc _ model id viewState =
+view : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
+view vc model id viewState =
     case viewState.tx.type_ of
         Tx.Utxo tx ->
             utxo vc model id viewState tx
