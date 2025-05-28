@@ -97,6 +97,7 @@ type Effect msg
         , direction : Maybe Direction
         , minHeight : Maybe Int
         , maxHeight : Maybe Int
+        , tokenCurrency : Maybe String
         , order : Maybe Api.Request.Addresses.Order_
         , pagesize : Int
         , nextpage : Maybe String
@@ -596,7 +597,7 @@ perform apiKey wrapMsg effect =
             Api.Request.Addresses.getAddressEntity currency address Nothing
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
+        GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, order, tokenCurrency, pagesize, nextpage } toMsg ->
             let
                 dir =
                     case direction of
@@ -610,7 +611,7 @@ perform apiKey wrapMsg effect =
                             Just Api.Request.Addresses.DirectionOut
             in
             -- currency_path address_path neighbor_query minHeight_query maxHeight_query order_query page_query pagesize_query
-            Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight order Nothing nextpage (Just pagesize)
+            Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight order tokenCurrency nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         ListSpendingTxRefsEffect { currency, txHash, index } toMsg ->

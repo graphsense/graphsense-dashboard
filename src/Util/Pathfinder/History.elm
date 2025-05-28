@@ -188,9 +188,6 @@ shallPushHistory plugins msg _ =
         NoOp ->
             False
 
-        BrowserGotTxForAddress _ _ _ ->
-            False
-
         BrowserGotActor _ _ ->
             False
 
@@ -206,10 +203,10 @@ shallPushHistory plugins msg _ =
         UserClickedAddressCheckboxInTable _ ->
             True
 
-        WorkflowNextUtxoTx _ _ ->
+        WorkflowNextUtxoTx _ _ _ ->
             False
 
-        WorkflowNextTxByTime _ _ ->
+        WorkflowNextTxByTime _ _ _ ->
             False
 
         UserPushesLeftMouseButtonOnUtxoTx _ _ ->
@@ -318,4 +315,7 @@ shallPushHistory plugins msg _ =
             False
 
         BrowserGotTagSummaries _ _ ->
+            False
+
+        BrowserGotRelationsToVisibleNeighbors _ _ _ ->
             False

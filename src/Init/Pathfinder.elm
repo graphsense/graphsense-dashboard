@@ -7,6 +7,7 @@ import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
+import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg)
@@ -40,6 +41,7 @@ init us =
       , contextMenu = Nothing
       , name = "graph"
       , selectAfterLoad = Nothing
+      , checkingNeighbors = CheckingNeighbors.init
       }
     , Cmd.none
     )
