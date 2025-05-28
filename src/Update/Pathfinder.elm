@@ -1285,10 +1285,13 @@ updateByMsg plugins uc msg model =
                         n { model | contextMenu = Just ( coordsNew, cmtype ) }
 
         UserClosesContextMenu ->
-            n { model | contextMenu = Nothing }
+            n { model | contextMenu = Nothing, helpDropdownOpen = False }
 
         UserClickedShowLegend ->
             n model
+
+        UserClickedToggleHelpDropdown ->
+            n (model |> s_helpDropdownOpen (model.helpDropdownOpen |> not))
 
         UserClickedContextMenuOpenInNewTab cm ->
             ( model

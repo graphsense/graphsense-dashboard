@@ -56,6 +56,8 @@ type alias LinkCellConfig =
 
 type TagIcon
     = Exchange
+    | DirectTag
+    | IndirectTag
     | None
 
 
@@ -145,6 +147,24 @@ cell _ c =
                             }
                         }
 
+                DirectTag ->
+                    none
+
+                IndirectTag ->
+                    none
+
+                -- TagsComponents.tagRowIconCellWithAttributes
+                --     (TagsComponents.tagRowIconCellAttributes
+                --     |> Rs.s_root
+                --         [ css
+                --             [ Css.verticalAlign Css.top
+                --             ]
+                --         ]
+                -- )
+                -- { root =
+                --     { iconInstance = Icons.iconsTagS {}
+                --     }
+                -- }
                 None ->
                     none
 
@@ -266,9 +286,15 @@ iconColumn vc =
                     conceptss =
                         Set.fromList concepts
 
+                    inheritedFromCluster =
+                        data.inheritedFrom == Just Api.Data.AddressTagInheritedFromCluster
+
                     icon =
                         if Set.member exchangeCategory conceptss then
                             Exchange
+
+                        else if inheritedFromCluster then
+                            IndirectTag
 
                         else
                             None
@@ -301,9 +327,15 @@ labelColumn vc =
                     conceptss =
                         Set.fromList concepts
 
+                    inheritedFromCluster =
+                        data.inheritedFrom == Just Api.Data.AddressTagInheritedFromCluster
+
                     icon =
                         if Set.member exchangeCategory conceptss then
                             Exchange
+
+                        else if inheritedFromCluster then
+                            IndirectTag
 
                         else
                             None
