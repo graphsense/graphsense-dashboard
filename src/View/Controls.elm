@@ -55,7 +55,7 @@ toggleWithText { selectedA, titleA, titleB, msg } =
             { variant =
                 toggleCell
                     { title = titleB
-                    , selected = selectedA
+                    , selected = not selectedA
                     , msg = msg
                     }
             }
@@ -63,7 +63,7 @@ toggleWithText { selectedA, titleA, titleB, msg } =
             { variant =
                 toggleCell
                     { title = titleA
-                    , selected = not selectedA
+                    , selected = selectedA
                     , msg = msg
                     }
             }
