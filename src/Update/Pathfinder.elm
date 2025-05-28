@@ -1287,6 +1287,9 @@ updateByMsg plugins uc msg model =
         UserClosesContextMenu ->
             n { model | contextMenu = Nothing }
 
+        UserClickedShowLegend ->
+            n model
+
         UserClickedContextMenuOpenInNewTab cm ->
             ( model
             , (case cm of

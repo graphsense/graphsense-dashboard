@@ -504,3 +504,19 @@ pathfinderUpperLeftPanel plugins states vc =
     ]
         |> List.filterMap identity
         |> List.map (Html.map Pathfinder.PluginMsg)
+
+
+getLegendIconItems: Plugins ->  View.Config -> List ({ description : String, icon : Html Model.Msg, label : String })
+getLegendIconItems plugins vc =
+    let
+        mapItem wMsg {description, icon, label} = {description=description, icon = icon |> Html.map wMsg, label = label}
+    in
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin -> plugin.getLegendIconItems |> Maybe.map (\f -> f vc |> List.map (mapItem Plugin.Msg.{{package}}Msg))
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ] 
+    |> List.filterMap identity
+    |> List.concat
+    |> List.map (mapItem Model.PluginMsg)

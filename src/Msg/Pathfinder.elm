@@ -31,6 +31,7 @@ type Msg
     | UserToggleAnnotationSettings
     | UserOpensAddressAnnotationDialog Id
     | UserClickedRestart
+    | UserClickedShowLegend
     | UserClickedRestartYes
     | UserClickedUndo
     | UserClickedRedo
