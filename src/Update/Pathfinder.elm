@@ -1000,6 +1000,48 @@ updateByMsg plugins uc msg model =
         UserClickedAddressCheckboxInTable id ->
             userClickedAddressCheckboxInTable plugins id model
 
+        UserClickedAllAddressCheckboxInTable dir ->
+            case model.details of
+                Just (TxDetails _ data) ->
+                    let
+                        t =
+                            case dir of
+                                Incoming ->
+                                    data.outputsTable
+
+                                Outgoing ->
+                                    data.inputsTable
+
+                        network =
+                            data.tx |> Tx.getNetwork
+
+                        idsTable =
+                            t.data
+                                |> List.filterMap (Tx.ioToId network)
+
+                        allChecked =
+                            idsTable
+                                |> List.all (flip Dict.member model.network.addresses)
+
+                        deleteAcc aId ( m, eff ) =
+                            removeAddress aId m |> Tuple.mapSecond ((++) eff)
+
+                        addAcc aId ( m, eff ) =
+                            loadAddress plugins aId m |> Tuple.mapSecond ((++) eff)
+                    in
+                    if allChecked then
+                        idsTable
+                            |> List.filter (flip Dict.member model.network.addresses)
+                            |> List.foldl deleteAcc (n model)
+
+                    else
+                        idsTable
+                            |> List.filter (flip Dict.member model.network.addresses >> not)
+                            |> List.foldl addAcc (n model)
+
+                _ ->
+                    n model
+
         UserClickedTx id ->
             userClickedTx id model
 

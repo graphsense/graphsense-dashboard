@@ -212,6 +212,9 @@ shallPushHistory plugins msg _ =
         UserClickedAddressCheckboxInTable _ ->
             True
 
+        UserClickedAllAddressCheckboxInTable _ ->
+            True
+
         WorkflowNextUtxoTx _ _ _ ->
             False
 

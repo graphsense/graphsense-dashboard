@@ -11,6 +11,7 @@ module Model.Pathfinder.Tx exposing
     , getCoords
     , getInputAddressIds
     , getInputs
+    , getNetwork
     , getOutputAddressIds
     , getOutputs
     , getRawTimestamp
@@ -81,6 +82,16 @@ type alias Io =
     , address : Maybe Address
     , aggregatesN : Int
     }
+
+
+getNetwork : Tx -> String
+getNetwork tx =
+    case tx.type_ of
+        Account { raw } ->
+            raw.currency
+
+        Utxo { raw } ->
+            raw.currency
 
 
 hasAddress : Id -> Tx -> Bool

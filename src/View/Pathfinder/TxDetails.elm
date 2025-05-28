@@ -18,7 +18,7 @@ import Model.Pathfinder as Pathfinder exposing (getHavingTags)
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
-import Model.Pathfinder.Tx as Tx
+import Model.Pathfinder.Tx as Tx exposing (ioToId)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Tx as Tx
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
@@ -253,11 +253,16 @@ ioTableView vc dir network table ioColumnConfig =
                             , Css.width (Css.pct 100)
                             ]
                     )
+
+        allChecked =
+            table.data
+                |> List.map (ioToId ioColumnConfig.network >> Maybe.withDefault ( "", "" ))
+                |> List.all isCheckedFn
     in
     View.Graph.Table.table
         styles
         vc
         [ css [ Css.overflowY Css.auto, Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 500) * 0.5)) ] ]
         noTools
-        (IoTable.config styles vc dir isCheckedFn ioColumnConfig)
+        (IoTable.config styles vc dir isCheckedFn allChecked ioColumnConfig)
         table
