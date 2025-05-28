@@ -14,7 +14,7 @@ import Msg.Pathfinder exposing (Msg)
 import Util.Annotations as Annotations
 
 
-init : { x | snapToGrid : Maybe Bool } -> ( Model, Cmd Msg )
+init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool } -> ( Model, Cmd Msg )
 init us =
     ( { network = Network.init
       , actors = Dict.empty
@@ -30,9 +30,8 @@ init us =
       , history = History.init
       , details = Nothing
       , config =
-            { isClusterDetailsOpen = False
-            , displayAllTagsInDetails = False
-            , snapToGrid = us.snapToGrid |> Maybe.withDefault False
+            { snapToGrid = us.snapToGrid |> Maybe.withDefault False
+            , highlightClusterFriends = us.highlightClusterFriends |> Maybe.withDefault True
             }
       , pointerTool = Drag
       , modPressed = False

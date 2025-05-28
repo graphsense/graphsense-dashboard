@@ -79,8 +79,6 @@ type Msg
     | UserSelectsAnnotationColor Id (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsImage String
-    | UserClickedToggleClusterDetailsOpen
-    | UserClickedToggleDisplayAllTagsInDetails
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
     | UserClickedSelectionTool

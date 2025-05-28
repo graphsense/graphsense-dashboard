@@ -101,6 +101,12 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleTotalSpentDetails ->
                     False
 
+                AddressDetails.UserClickedToggleClusterDetailsOpen ->
+                    False
+
+                AddressDetails.UserClickedToggleDisplayAllTagsInDetails ->
+                    False
+
                 AddressDetails.TransactionsTablePagedTableMsg _ ->
                     False
 
@@ -264,12 +270,6 @@ shallPushHistory plugins msg _ =
             False
 
         UserClickedExportGraphAsImage _ ->
-            False
-
-        UserClickedToggleClusterDetailsOpen ->
-            False
-
-        UserClickedToggleDisplayAllTagsInDetails ->
             False
 
         UserClickedToolbarDeleteIcon ->

@@ -2,6 +2,7 @@ module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 
 import Api
 import Api.Data
+import Basics.Extra exposing (flip)
 import Browser
 import Browser.Dom
 import Config
@@ -2127,7 +2128,7 @@ clearSearch plugins model =
 
 
 deserialize : Plugins -> Config -> String -> Value -> Model key -> ( Model key, List Effect )
-deserialize plugins uc filename data model =
+deserialize plugins _ filename data model =
     Graph.deserialize data
         |> Result.map
             (\deser ->
@@ -2149,7 +2150,7 @@ deserialize plugins uc filename data model =
                         (\deser ->
                             let
                                 ( pathfinder, pathfinderEffects ) =
-                                    Pathfinder.fromDeserialized plugins uc deser model.pathfinder
+                                    Pathfinder.fromDeserialized plugins deser model.pathfinder
                             in
                             ( { model
                                 | pathfinder = pathfinder
@@ -2258,7 +2259,10 @@ toggleSnapToGrid : Model key -> ( Model key, List Effect )
 toggleSnapToGrid m =
     let
         nm =
-            m |> s_config (m.config |> s_snapToGrid (not m.config.snapToGrid))
+            not m.pathfinder.config.snapToGrid
+                |> flip s_snapToGrid m.pathfinder.config
+                |> flip s_config m.pathfinder
+                |> flip s_pathfinder m
     in
     ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
 
@@ -2276,7 +2280,10 @@ toggleHighlightClusterFriends : Model key -> ( Model key, List Effect )
 toggleHighlightClusterFriends m =
     let
         nm =
-            m |> s_config (m.config |> s_highlightClusterFriends (not m.config.highlightClusterFriends))
+            not m.pathfinder.config.highlightClusterFriends
+                |> flip s_highlightClusterFriends m.pathfinder.config
+                |> flip s_config m.pathfinder
+                |> flip s_pathfinder m
     in
     ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
 
