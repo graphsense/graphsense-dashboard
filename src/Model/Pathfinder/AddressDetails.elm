@@ -24,4 +24,5 @@ type alias Model =
     , totalSentDetailsOpen : Bool
     , outgoingNeighborsTableOpen : Bool
     , incomingNeighborsTableOpen : Bool
+    , copyIconChevronOpen : Bool
     }

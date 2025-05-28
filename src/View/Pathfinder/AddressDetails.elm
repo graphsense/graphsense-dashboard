@@ -13,22 +13,27 @@ import Dict exposing (Dict)
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div, img)
 import Html.Styled.Attributes as HA exposing (src)
-import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave)
+import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
+import Json.Decode
 import Model.Currency exposing (asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
+import Model.Graph.Coords as Coords
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder exposing (TracingMode(..), getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
+import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import PagedTable
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
@@ -41,6 +46,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css exposing (spread)
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
+import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
@@ -457,10 +463,16 @@ transactionTableView vc addressId txOnGraphFn model =
         styles =
             Css.Table.styles
 
+        allChecked =
+            model.table
+                |> PagedTable.getPage
+                |> List.map Tx.getTxIdForAddressTx
+                |> List.all txOnGraphFn
+
         table =
             PagedTable.pagedTableView vc
                 []
-                (TransactionTable.config styles vc addressId txOnGraphFn)
+                (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
                 model.table
                 AddressDetails.TransactionsTablePagedTableMsg
     in
@@ -1076,9 +1088,21 @@ setTags vc gc model id =
             labelOfActor
 
 
-sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html msg, chevronInstance : Html a }
+sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html Pathfinder.Msg, chevronInstance : Html Pathfinder.Msg }
 sidePanelAddressCopyIcon vc id =
     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
     , copyIconInstance = Id.id id |> copyIconPathfinder vc
-    , chevronInstance = none
+    , chevronInstance =
+        div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
+            [ HIcons.iconsChevronDownThinWithAttributes
+                (HIcons.iconsChevronDownThinAttributes
+                    |> Rs.s_root
+                        [ Util.View.pointer
+                        , decodeCoords Coords.Coords
+                            |> Json.Decode.map (\c -> ( Pathfinder.UserOpensContextMenu c (ContextMenu.AddressIdChevronActions id), True ))
+                            |> preventDefaultOn "click"
+                        ]
+                )
+                {}
+            ]
     }

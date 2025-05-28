@@ -113,6 +113,9 @@ perform plugins key statusbarToken apiKey effect =
                 Pathfinder.RepositionTooltipEffect ->
                     Task.perform (always RepositionTooltip) (Task.succeed ())
 
+                Pathfinder.ShowNotificationEffect n ->
+                    Task.perform (always (ShowNotification n)) (Task.succeed ())
+
         GraphEffect eff ->
             case eff of
                 Graph.ApiEffect apiEff ->

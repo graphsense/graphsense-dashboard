@@ -2,6 +2,7 @@ module Effect.Pathfinder exposing (Effect(..), perform)
 
 import Effect.Api as Api
 import Effect.Search as Search
+import Model.Notification exposing (Notification)
 import Model.Pathfinder.Error exposing (Error)
 import Model.Pathfinder.Tooltip exposing (TooltipType)
 import Msg.Pathfinder exposing (Msg(..))
@@ -22,6 +23,7 @@ type Effect
     | RepositionTooltipEffect
     | CloseTooltipEffect (Maybe { context : String, domId : String }) Bool
     | PostponeUpdateByRouteEffect Route
+    | ShowNotificationEffect Notification
 
 
 perform : Effect -> Cmd Msg
@@ -29,6 +31,9 @@ perform eff =
     case eff of
         -- managed in Effect.elm
         NavPushRouteEffect _ ->
+            Cmd.none
+
+        ShowNotificationEffect _ ->
             Cmd.none
 
         PluginEffect cmd ->

@@ -1,4 +1,4 @@
-module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, hasAddress, parseTxIdentifier, txTypeToLabel)
+module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, getTxHash, hasAddress, parseTxIdentifier, txTypeToLabel)
 
 import Api.Data
 import Model.Direction exposing (Direction(..))
@@ -51,6 +51,19 @@ parseTxIdentifier_ =
 parseTxIdentifier : String -> Maybe AccountTxType
 parseTxIdentifier =
     run parseTxIdentifier_ >> Result.toMaybe
+
+
+getTxHash : AccountTxType -> String
+getTxHash ac =
+    case ac of
+        Internal x _ ->
+            x
+
+        External x ->
+            x
+
+        Token x _ ->
+            x
 
 
 txTypeToLabel : AccountTxType -> String

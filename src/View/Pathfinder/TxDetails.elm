@@ -7,11 +7,15 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
-import Html.Styled exposing (Html)
+import Html.Styled exposing (Html, div)
+import Html.Styled.Events exposing (preventDefaultOn, stopPropagationOn)
+import Json.Decode
 import List.Extra
 import Model.Currency exposing (asset, assetFromBase)
+import Model.Graph.Coords as Coords
 import Model.Graph.Table
 import Model.Pathfinder as Pathfinder exposing (getHavingTags)
+import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tx as Tx
@@ -20,8 +24,10 @@ import Model.Tx as Tx
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
 import Svg.Styled.Attributes exposing (css)
+import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css exposing (spread)
+import Util.Graph exposing (decodeCoords)
 import Util.View exposing (copyIconPathfinder, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Locale as Locale
@@ -41,6 +47,21 @@ view vc _ model id viewState =
 
 account : View.Config -> Id -> Tx.AccountTx -> Html Msg
 account vc id tx =
+    let
+        chevronActions =
+            div [ stopPropagationOn "click" (Json.Decode.succeed ( Msg.Pathfinder.NoOp, True )) ]
+                [ HIcons.iconsChevronDownThinWithAttributes
+                    (HIcons.iconsChevronDownThinAttributes
+                        |> Rs.s_root
+                            [ Util.View.pointer
+                            , decodeCoords Coords.Coords
+                                |> Json.Decode.map (\c -> ( Msg.Pathfinder.UserOpensContextMenu c (ContextMenu.TransactionIdChevronActions id), True ))
+                                |> preventDefaultOn "click"
+                            ]
+                    )
+                    {}
+                ]
+    in
     SidePanelComponents.sidePanelEthTransactionWithAttributes
         (SidePanelComponents.sidePanelEthTransactionAttributes
             |> Rs.s_root
@@ -53,7 +74,7 @@ account vc id tx =
         { identifierWithCopyIcon =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
-            , chevronInstance = none
+            , chevronInstance = chevronActions
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -103,6 +124,21 @@ account vc id tx =
 
 utxo : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Tx.UtxoTx -> Html Msg
 utxo vc model id viewState tx =
+    let
+        chevronActions =
+            div [ stopPropagationOn "click" (Json.Decode.succeed ( Msg.Pathfinder.NoOp, True )) ]
+                [ HIcons.iconsChevronDownThinWithAttributes
+                    (HIcons.iconsChevronDownThinAttributes
+                        |> Rs.s_root
+                            [ Util.View.pointer
+                            , decodeCoords Coords.Coords
+                                |> Json.Decode.map (\c -> ( Msg.Pathfinder.UserOpensContextMenu c (ContextMenu.TransactionIdChevronActions id), True ))
+                                |> preventDefaultOn "click"
+                            ]
+                    )
+                    {}
+                ]
+    in
     SidePanelComponents.sidePanelTransactionWithAttributes
         (SidePanelComponents.sidePanelTransactionAttributes
             |> Rs.s_root
@@ -116,7 +152,7 @@ utxo vc model id viewState tx =
         { identifierWithCopyIcon =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
-            , chevronInstance = none
+            , chevronInstance = chevronActions
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }

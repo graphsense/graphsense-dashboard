@@ -18,7 +18,7 @@ import Model.Graph.Transform exposing (Transition(..))
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
 import Number.Bounded exposing (value)
@@ -41,6 +41,7 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Update.Graph.Transform as Transform
 import Util.Annotations as Annotations
 import Util.Css as Css
+import Util.ExternalLinks
 import Util.Graph
 import Util.View exposing (hovercard, none)
 import View.Controls as Controls
@@ -90,9 +91,23 @@ graph plugins pluginStates vc gc model =
 
 contextMenuView : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
 contextMenuView plugins pluginStates vc model ( coords, menu ) =
+    let
+        contextMenuWidth =
+            180
+
+        xposend =
+            coords.x + contextMenuWidth
+
+        xpos =
+            if xposend > (vc.size |> Maybe.map .width |> Maybe.withDefault 0) then
+                coords.x - contextMenuWidth - 80
+
+            else
+                coords.x - (contextMenuWidth / 2)
+    in
     div
         [ [ Css.top (Css.px coords.y)
-          , Css.left (Css.px (coords.x - (HGraphComponents.rightClickItemStateNeutralTypeWithIcon_details.renderedWidth / 2)))
+          , Css.left (Css.px xpos)
           , Css.position Css.absolute
           , Css.zIndex (Css.int 100)
           ]
@@ -100,6 +115,54 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
         , onClick UserClosesContextMenu
         ]
         [ case menu of
+            ContextMenu.AddressIdChevronActions id ->
+                HGraphComponents.rightClickMenuWithAttributes
+                    (HGraphComponents.rightClickMenuAttributes
+                        |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> Rs.s_shortcutList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
+                    )
+                    { shortcutList =
+                        Util.ExternalLinks.getBlockExplorerLinks (Id.network id) (Id.id id)
+                            |> List.map
+                                (\( url, name ) ->
+                                    { icon = HIcons.iconsGoToS {}
+                                    , text1 = name
+                                    , text2 = Nothing
+                                    , link = url
+                                    , blank = True
+                                    }
+                                        |> ContextMenuItem.initLink2
+                                        |> ContextMenuItem.view vc
+                                )
+                    , pluginsList = []
+                    }
+                    {}
+
+            ContextMenu.TransactionIdChevronActions id ->
+                HGraphComponents.rightClickMenuWithAttributes
+                    (HGraphComponents.rightClickMenuAttributes
+                        |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> Rs.s_shortcutList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
+                    )
+                    { shortcutList =
+                        Util.ExternalLinks.getBlockExplorerTransactionLinks (Id.network id) (Id.id id)
+                            |> List.map
+                                (\( url, name ) ->
+                                    { icon = HIcons.iconsGoToS {}
+                                    , text1 = name
+                                    , text2 = Nothing
+                                    , link = url
+                                    , blank = True
+                                    }
+                                        |> ContextMenuItem.initLink2
+                                        |> ContextMenuItem.view vc
+                                )
+                    , pluginsList = []
+                    }
+                    {}
+
             ContextMenu.AddressContextMenu id ->
                 let
                     pluginsList =
@@ -113,6 +176,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                 HGraphComponents.rightClickMenuWithAttributes
                     (HGraphComponents.rightClickMenuAttributes
                         |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> Rs.s_shortcutList [ [ Css.width (Css.pct 100) ] |> css ]
                         |> (if List.isEmpty pluginsList then
                                 Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
 
@@ -154,6 +218,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                 HGraphComponents.rightClickMenuWithAttributes
                     (HGraphComponents.rightClickMenuAttributes
                         |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> Rs.s_shortcutList [ [ Css.width (Css.pct 100) ] |> css ]
                     )
                     { shortcutList =
                         [ { msg = UserClickedContextMenuIdToClipboard menu

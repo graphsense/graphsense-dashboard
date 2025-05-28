@@ -36,6 +36,7 @@ type Msg
     | RelatedAddressesTablePagedTableMsg PagedTable.Msg
     | UserClickedAddressCheckboxInTable Id
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
+    | UserClickedAllTxCheckboxInTable
     | UserClickedTx Id
     | NoOp
     | BrowserGotAddressesForTags (Maybe String) (List Api.Data.Address)

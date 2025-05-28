@@ -128,6 +128,7 @@ type Msg
     | UserClickedNavBack
     | UserClickedNavHome
     | NotificationMsg Model.Notification.Msg
+    | ShowNotification Model.Notification.Notification
     | RuntimePostponedUpdateByUrl Url
     | OpenTooltip { context : String, domId : String } (TooltipType Msg)
     | ClosingTooltip (Maybe { context : String, domId : String }) Bool
