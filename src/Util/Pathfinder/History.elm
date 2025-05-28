@@ -69,6 +69,9 @@ shallPushHistory plugins msg _ =
         UserReleasedNormalKey _ ->
             False
 
+        UserClickedShowLegend ->
+            False
+
         AddressDetailsMsg _ am ->
             case am of
                 AddressDetails.UserClickedTxCheckboxInTable _ ->

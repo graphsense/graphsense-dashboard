@@ -674,7 +674,7 @@ account plugins pluginStates vc gc model id viewState address =
                             Locale.string vc.locale "Smart Contract"
 
                         else
-                            Locale.string vc.locale "address"
+                            Locale.string vc.locale "Address"
                        )
             }
 

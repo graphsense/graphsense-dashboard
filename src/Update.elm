@@ -4,6 +4,7 @@ import Api
 import Api.Data
 import Browser
 import Browser.Dom
+import Config
 import Config.Update exposing (Config)
 import DateFormat
 import Dict exposing (Dict)
@@ -44,6 +45,7 @@ import Msg.Graph as Graph
 import Msg.Locale as LocaleMsg
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
+import Plugin
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -73,6 +75,7 @@ import Util exposing (n)
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale
+import View.Pathfinder.Legend exposing (legendView)
 import Yaml.Decode
 
 
@@ -409,7 +412,7 @@ update plugins uc msg model =
                     n { model | dialog = Nothing, tooltip = Nothing, navbarSubMenu = Nothing }
 
                 _ ->
-                    n model
+                    n { model | dialog = Nothing }
 
         TagsListDialogTableUpdateMsg tableState ->
             case model.dialog of
@@ -915,6 +918,25 @@ update plugins uc msg model =
                     ( { model | search = search }
                     , List.map SearchEffect searchEffects
                     )
+
+        PathfinderMsg Pathfinder.UserClickedShowLegend ->
+            let
+                closemsg =
+                    UserClosesDialog
+
+                viewPlugins =
+                    Plugin.viewPlugins Config.plugins
+            in
+            n
+                { model
+                    | dialog =
+                        Just
+                            ({ html = legendView viewPlugins model.config closemsg
+                             , defaultMsg = closemsg
+                             }
+                                |> Dialog.Custom
+                            )
+                }
 
         PathfinderMsg Pathfinder.UserClickedRestart ->
             if model.pathfinder.isDirty then

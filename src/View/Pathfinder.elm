@@ -10,7 +10,7 @@ import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
-import Html.Styled.Events exposing (onClick, onInput, preventDefaultOn)
+import Html.Styled.Events exposing (onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (BBox, Coords)
@@ -399,8 +399,8 @@ settingsHovercardView vc _ hc =
         , gridSwitch = { variant = switchWithText True "Snap to Grid" vc.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
         , highlightSwitch = { variant = switchWithText True "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
         , settingsLabelOfClustersSettings = { settingsLabel = Locale.string vc.locale "Clusters" }
-        , settingsLabelOfGeneralSettings = { settingsLabel = Locale.string vc.locale "General" }
-        , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "Values" }
+        , settingsLabelOfGeneralSettings = { settingsLabel = Locale.string vc.locale "Graph" }
+        , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "Asset flows" }
         , timestampSwitch = { variant = switchWithText True "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) }
         , timezoneSwitch = { variant = switchWithText False "with zone code" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) }
         , utcSwitch = { variant = switchWithText False "in UTC" (not vc.showDatesInUserLocale) (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) }
@@ -419,8 +419,11 @@ topRightPanel plugins pluginStates vc gc model =
 
 graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 graphActionsView vc _ _ =
-    div [ Css.graphActionsViewStyle vc |> css ]
-        []
+    div [ Css.graphActionsViewStyle vc |> css, stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True )) ]
+        [ div [ Util.View.pointer, onClick UserClickedShowLegend ]
+            [ HIcons.framedIcon { root = { iconInstance = HIcons.iconsHelpOutlined {} } }
+            ]
+        ]
 
 
 searchBoxView : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg

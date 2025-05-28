@@ -72,8 +72,8 @@ account vc id tx =
             |> Rs.s_iconsCloseBlack closeAttrs
         )
         { identifierWithCopyIcon =
-            { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
-            , copyIconInstance = Id.id id |> copyIconPathfinder vc
+            { identifier = ("0x" ++ Id.id id) |> truncateLongIdentifierWithLengths 8 4
+            , copyIconInstance = ("0x" ++ Id.id id) |> String.split "_" |> List.head |> Maybe.withDefault "" |> copyIconPathfinder vc
             , chevronInstance = chevronActions
             }
         , leftTab = { variant = none }

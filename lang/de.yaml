@@ -463,3 +463,4 @@ cluster information: Cluster Info
 "The request limit of your API key has been exceeded.": "Begrenzung der API Abfragen erreicht."
 "Removed {0} transactions": "{0} Transaktionen entfernt"
 "Added {0} transactions": "{0} Transaktionen hinzugefügt"
+Asset flows: Zahlungsflüsse
