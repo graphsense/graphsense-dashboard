@@ -7,7 +7,9 @@ module Update.Pathfinder.Network exposing
     , animateTxs
     , clearSelection
     , deleteAddress
+    , deleteDanglingAddresses
     , deleteTx
+    , findAddressCoords
     , getYForPathAfterX
     , ingestAddresses
     , ingestTxs
@@ -81,43 +83,63 @@ snapToGrid n =
     mn |> s_txs (mn.txs |> Dict.map updateIosAddresses)
 
 
-addAddress : Plugins -> Id -> Network -> Network
+addAddress : Plugins -> Id -> Network -> ( Address, Network )
 addAddress plugins =
     addAddressWithPosition plugins Auto
 
 
-addAddressWithPosition : Plugins -> FindPosition -> Id -> Network -> Network
+addAddressWithPosition : Plugins -> FindPosition -> Id -> Network -> ( Address, Network )
 addAddressWithPosition plugins position id model =
-    if Dict.member id model.addresses then
-        model
+    Dict.get id model.addresses
+        |> Maybe.map (pairTo model)
+        |> Maybe.withDefault
+            (let
+                things =
+                    listTxsForAddressByRaw model id
+                        |> List.map Tuple.second
 
-    else
-        let
-            things =
-                listTxsForAddressByRaw model id
-                    |> List.map Tuple.second
-
-            coords =
-                avoidOverlappingEdges things <|
-                    case position of
+                coords =
+                    (case position of
                         Auto ->
                             findAddressCoords id model
 
                         NextTo ( direction, id_ ) ->
                             Dict.get id_ model.txs
-                                |> Maybe.andThen
+                                |> Maybe.map
                                     (findAddressCoordsNextToTx model direction)
-                                |> Maybe.Extra.withDefaultLazy
+                                |> Maybe.Extra.orElseLazy
+                                    (\_ ->
+                                        Dict.get id_ model.addresses
+                                            |> Maybe.map
+                                                (findAddressCoordsNextToAddress direction)
+                                    )
+                                |> Maybe.Extra.orElseLazy
                                     (\_ ->
                                         findAddressCoords id model
                                     )
 
                         Fixed x y ->
-                            { x = x, y = y }
-        in
-        Address.init plugins id coords
-            |> s_isStartingPoint (isEmpty model)
-            |> insertAddress (freeSpaceAroundCoords coords model)
+                            Just { x = x, y = y }
+                    )
+                        |> Maybe.withDefault (findFreeCoords model)
+                        |> avoidOverlappingEdges things
+
+                newAddress =
+                    Address.init plugins id coords
+                        |> s_isStartingPoint (isEmpty model)
+             in
+             ( newAddress
+             , newAddress
+                |> insertAddress (freeSpaceAroundCoords coords model)
+             )
+            )
+
+
+findAddressCoordsNextToAddress : Direction -> Address -> Coords
+findAddressCoordsNextToAddress direction address =
+    { x = address.x + Direction.signOffsetByDirection direction (nodeXOffset * 2)
+    , y = A.getTo address.y
+    }
 
 
 avoidOverlappingEdges : List { a | x : Float, y : Animation } -> Coords -> Coords
@@ -144,53 +166,45 @@ toAddresses model io =
         |> List.filterMap (\a -> Dict.get a model.addresses)
 
 
-findAddressCoordsNextToTx : Network -> Direction -> Tx -> Maybe Coords
+findAddressCoordsNextToTx : Network -> Direction -> Tx -> Coords
 findAddressCoordsNextToTx model direction tx =
     let
-        siblings =
+        ( sibs, x, y ) =
             case ( direction, tx.type_ ) of
                 ( Outgoing, Tx.Utxo t ) ->
-                    Just
-                        ( t.outputs
-                            |> Dict.keys
-                        , tx.x
-                        , A.getTo tx.y
-                        )
+                    ( t.outputs
+                        |> Dict.keys
+                    , tx.x
+                    , A.getTo tx.y
+                    )
 
                 ( Incoming, Tx.Utxo t ) ->
-                    Just
-                        ( t.inputs
-                            |> Dict.keys
-                        , tx.x
-                        , A.getTo tx.y
-                        )
+                    ( t.inputs
+                        |> Dict.keys
+                    , tx.x
+                    , A.getTo tx.y
+                    )
 
                 ( Outgoing, Tx.Account _ ) ->
                     ( []
                     , tx.x
                     , A.getTo tx.y
                     )
-                        |> Just
 
                 ( Incoming, Tx.Account _ ) ->
                     ( []
                     , tx.x
                     , A.getTo tx.y
                     )
-                        |> Just
     in
-    siblings
-        |> Maybe.map
-            (\( sibs, x, y ) ->
-                { x = x + Direction.signOffsetByDirection direction nodeXOffset
-                , y =
-                    sibs
-                        |> toAddresses model
-                        |> getMaxY
-                        |> Maybe.map ((+) nodeYOffset)
-                        |> Maybe.withDefault y
-                }
-            )
+    { x = x + Direction.signOffsetByDirection direction nodeXOffset
+    , y =
+        sibs
+            |> toAddresses model
+            |> getMaxY
+            |> Maybe.map ((+) nodeYOffset)
+            |> Maybe.withDefault y
+    }
 
 
 freeSpaceAroundCoords : Coords -> Network -> Network
@@ -435,7 +449,7 @@ getMinY =
         >> List.minimum
 
 
-findAddressCoords : Id -> Network -> Coords
+findAddressCoords : Id -> Network -> Maybe Coords
 findAddressCoords id network =
     listTxsForAddress network id
         |> NList.fromList
@@ -444,6 +458,7 @@ findAddressCoords id network =
                 if NList.length list == 1 then
                     NList.head list
                         |> uncurry (findAddressCoordsNextToTx network)
+                        |> Just
 
                 else
                     list
@@ -457,7 +472,6 @@ findAddressCoords id network =
                         |> NList.fromList
                         |> Maybe.map Coords.avg
             )
-        |> Maybe.withDefault (findFreeCoords network)
 
 
 addTx : Api.Data.Tx -> Network -> ( Tx, Network )
@@ -884,3 +898,15 @@ ingestAddresses plugins network =
                 |> insertAddress nw
         )
         network
+
+
+deleteDanglingAddresses : Network -> List Address -> Network
+deleteDanglingAddresses =
+    List.foldl
+        (\address nw ->
+            if Set.isEmpty (txsToSet address.incomingTxs) && Set.isEmpty (txsToSet address.outgoingTxs) then
+                deleteAddress address.id nw
+
+            else
+                nw
+        )

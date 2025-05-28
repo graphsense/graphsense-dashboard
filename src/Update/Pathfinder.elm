@@ -2,7 +2,6 @@ module Update.Pathfinder exposing (deserialize, fromDeserialized, removeAddress,
 
 import Animation as A
 import Api.Data
-import Api.Request.Addresses exposing (Order_(..))
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Config.Pathfinder exposing (nodeXOffset)
@@ -34,13 +33,14 @@ import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
+import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Network as Network exposing (FindPosition(..))
+import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -51,7 +51,6 @@ import Msg.Pathfinder
         ( DisplaySettingsMsg(..)
         , Msg(..)
         , OverlayWindows(..)
-        , WorkflowNextTxByTimeMsg(..)
         )
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
@@ -88,6 +87,7 @@ import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
 import View.Locale as Locale
+import Workflow
 
 
 getTagsummary : HavingTags -> Maybe Api.Data.TagSummary
@@ -224,80 +224,73 @@ updateByMsg plugins uc msg model =
             n model
 
         BrowserGotAddressData id position data ->
-            let
-                net =
-                    Network.addAddressWithPosition plugins position id model.network
-                        |> Network.updateAddress id (s_data (Success data))
+            if (not <| Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
+                let
+                    onlyIds =
+                        model.network.addresses
+                            |> Dict.values
+                            |> List.map (.id >> Id.id)
+                            |> List.filter ((/=) (Id.id id))
+                in
+                if List.isEmpty onlyIds then
+                    browserGotAddressData uc plugins id position data model
 
-                ( details, eff ) =
-                    case model.details of
-                        Just (AddressDetails i ad) ->
-                            if i == id then
-                                case ad of
-                                    Success a ->
-                                        { a | data = data }
-                                            |> Success
-                                            |> AddressDetails id
-                                            |> Just
-                                            |> n
-
-                                    _ ->
-                                        Dict.get id net.addresses
-                                            |> Maybe.map
-                                                (\address -> AddressDetails.init net clusters uc.locale address.id data)
-                                            |> Maybe.map (mapFirst Success)
-                                            |> Maybe.map (mapFirst (AddressDetails id))
-                                            |> Maybe.map (mapFirst Just)
-                                            |> Maybe.withDefault (n model.details)
-
-                            else
-                                model.details
-                                    |> n
-
-                        _ ->
-                            model.details
-                                |> n
-
-                clusterId =
-                    Id.initClusterId data.currency data.entity
-
-                isSecondAddressFromSameCluster =
-                    Network.isClusterFriendAlreadyOnGraph clusterId
-                        model.network
-                        && not (Network.hasLoadedAddress id model.network)
-
-                ncolors =
-                    if isSecondAddressFromSameCluster then
-                        Colors.assignNextColor Colors.Clusters clusterId model.colors
-
-                    else
-                        model.colors
-
-                ( clusters, effCluster ) =
-                    if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
-                        ( model.clusters, [] )
-
-                    else
-                        ( Dict.insert clusterId RemoteData.Loading model.clusters
-                        , [ BrowserGotClusterData id
-                                |> Api.GetEntityEffectWithDetails
+                else
+                    let
+                        getRelations dir =
+                            BrowserGotRelationsToVisibleNeighbors id dir
+                                |> Api.GetAddressNeighborsEffect
                                     { currency = Id.network id
-                                    , entity = data.entity
+                                    , address = Id.id id
+                                    , isOutgoing = dir == Outgoing
+                                    , onlyIds =
+                                        onlyIds
+                                            |> Just
+                                    , includeLabels = False
                                     , includeActors = False
-                                    , includeBestTag = False
+                                    , pagesize = Dict.size model.network.addresses
+                                    , nextpage = Nothing
                                     }
                                 |> ApiEffect
-                          ]
-                        )
+                    in
+                    ( CheckingNeighbors.initAddress data model.checkingNeighbors
+                        |> flip s_checkingNeighbors model
+                    , [ getRelations Outgoing
+                      , getRelations Incoming
+                      ]
+                    )
+
+            else
+                browserGotAddressData uc plugins id position data model
+
+        BrowserGotRelationsToVisibleNeighbors id dir relations ->
+            let
+                neighborIds =
+                    relations.neighbors
+                        |> List.map (\{ address } -> Id.init address.currency address.address)
+
+                newModel =
+                    CheckingNeighbors.insert dir id neighborIds model.checkingNeighbors
+                        |> flip s_checkingNeighbors model
             in
-            model
-                |> s_network net
-                |> updateTagDataOnAddress id
-                |> s_details details
-                |> s_colors ncolors
-                |> s_clusters clusters
-                |> pairTo (fetchTagSummaryForId True model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
-                |> and (checkSelection uc)
+            if CheckingNeighbors.isEmpty id newModel.checkingNeighbors then
+                CheckingNeighbors.getData id model.checkingNeighbors
+                    |> Maybe.map
+                        (\data ->
+                            browserGotAddressData uc plugins id Auto data newModel
+                        )
+                    |> Maybe.withDefault (n newModel)
+
+            else
+                neighborIds
+                    |> List.concatMap
+                        (\addressId ->
+                            getNextTxEffects model.network
+                                addressId
+                                (Direction.flip dir)
+                                (Just id)
+                        )
+                    |> pair newModel
 
         BrowserGotClusterData addressId data ->
             let
@@ -312,9 +305,6 @@ updateByMsg plugins uc msg model =
                     (AddressDetails.browserGotClusterData addressId data
                         |> updateAddressDetails addressId
                     )
-
-        BrowserGotTxForAddress addressId direction data ->
-            addTx plugins uc addressId direction data model
 
         SearchMsg m ->
             case m of
@@ -467,13 +457,23 @@ updateByMsg plugins uc msg model =
                 AddressDetails.UserClickedTxCheckboxInTable tx ->
                     let
                         addOrRemoveTx txId =
-                            if Dict.member txId model.network.txs then
-                                Network.deleteTx txId model.network
-                                    |> flip s_network model
-                                    |> n
-
-                            else
-                                loadTx True plugins txId model
+                            Dict.get txId model.network.txs
+                                |> Maybe.map
+                                    (\t ->
+                                        let
+                                            delNw =
+                                                Network.deleteTx txId model.network
+                                        in
+                                        Tx.listAddressesForTx delNw.addresses t
+                                            |> List.filter
+                                                (second >> .id >> (/=) addressId)
+                                            |> List.map second
+                                            |> Network.deleteDanglingAddresses delNw
+                                            |> flip s_network model
+                                            |> n
+                                    )
+                                |> Maybe.Extra.withDefaultLazy
+                                    (\_ -> loadTx True plugins txId model)
                     in
                     addOrRemoveTx (Tx.getTxIdForAddressTx tx)
 
@@ -1153,11 +1153,13 @@ updateByMsg plugins uc msg model =
         UserClickedToggleDisplayAllTagsInDetails ->
             n (model |> s_config (model.config |> s_displayAllTagsInDetails (not model.config.displayAllTagsInDetails)))
 
-        WorkflowNextUtxoTx context wm ->
-            WorkflowNextUtxoTx.update context wm model
+        WorkflowNextUtxoTx config neighborId wm ->
+            WorkflowNextUtxoTx.update config wm
+                |> flip (handleWorkflowNextUtxo plugins uc config neighborId) model
 
-        WorkflowNextTxByTime context wm ->
-            WorkflowNextTxByTime.update context wm model
+        WorkflowNextTxByTime config neighborId wm ->
+            WorkflowNextTxByTime.update config wm
+                |> flip (handleWorkflowNextTxByTime plugins uc config neighborId) model
 
         BrowserGotTagSummaries includesBestClusterTag data ->
             let
@@ -1250,7 +1252,7 @@ updateByMsg plugins uc msg model =
             addresses
                 |> List.foldl
                     (\address mod ->
-                        and (updateByMsg plugins uc (BrowserGotAddressData (Id.init address.currency address.address) Auto address)) mod
+                        and (browserGotAddressData uc plugins (Id.init address.currency address.address) Auto address) mod
                     )
                     (n model)
 
@@ -1357,6 +1359,205 @@ updateByMsg plugins uc msg model =
                 |> CmdEffect
                 |> List.singleton
             )
+
+
+handleTx : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
+handleTx plugins uc config neighborId tx model =
+    case neighborId of
+        Just nid ->
+            let
+                newModel =
+                    CheckingNeighbors.remove nid config.addressId model.checkingNeighbors
+                        |> flip s_checkingNeighbors model
+            in
+            if GTx.hasAddress config.direction (Id.id nid) tx then
+                addTx plugins uc config.addressId config.direction (Just nid) tx newModel
+
+            else
+                placeNeighborIfError plugins uc config nid model
+
+        Nothing ->
+            addTx plugins uc config.addressId config.direction Nothing tx model
+
+
+placeNeighborIfError : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
+placeNeighborIfError plugins uc config nid model =
+    let
+        newModel =
+            CheckingNeighbors.remove nid config.addressId model.checkingNeighbors
+                |> flip s_checkingNeighbors model
+    in
+    if CheckingNeighbors.isEmpty nid newModel.checkingNeighbors then
+        CheckingNeighbors.getData nid model.checkingNeighbors
+            |> Maybe.map
+                (\data ->
+                    browserGotAddressData uc plugins nid (NextTo ( config.direction, config.addressId )) data newModel
+                        |> mapSecond
+                            ((::)
+                                (NoAdjacentTxForAddressAndNeighborFound config.addressId nid
+                                    |> InfoError
+                                    |> ErrorEffect
+                                )
+                            )
+                )
+            |> Maybe.withDefault (n newModel)
+
+    else
+        n newModel
+
+
+handleWorkflowNextUtxo : Plugins -> Update.Config -> WorkflowNextUtxoTx.Config -> Maybe Id -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
+handleWorkflowNextUtxo plugins uc config neighborId wf model =
+    case wf of
+        Workflow.Ok tx ->
+            Api.Data.TxTxUtxo tx
+                |> flip (handleTx plugins uc config neighborId) model
+
+        Workflow.Next eff ->
+            eff
+                |> List.map (Api.map (WorkflowNextUtxoTx config neighborId))
+                |> List.map ApiEffect
+                |> pair model
+
+        Workflow.Err err ->
+            case neighborId of
+                Just nid ->
+                    placeNeighborIfError plugins uc config nid model
+
+                Nothing ->
+                    case err of
+                        WorkflowNextUtxoTx.NoTxFound ->
+                            ( model
+                                |> s_network (Network.updateAddress config.addressId (Txs Set.empty |> txsSetter config.direction) model.network)
+                            , NoAdjaccentTxForAddressFound config.addressId
+                                |> InfoError
+                                |> ErrorEffect
+                                |> List.singleton
+                            )
+
+                        WorkflowNextUtxoTx.MaxChangeHopsLimit maxHops lastTx ->
+                            ( model
+                                |> s_network
+                                    (Network.updateAddress config.addressId (TxsLastCheckedChangeTx lastTx |> txsSetter config.direction) model.network)
+                            , MaxChangeHopsLimitReached maxHops config.addressId
+                                |> InfoError
+                                |> ErrorEffect
+                                |> List.singleton
+                            )
+
+
+handleWorkflowNextTxByTime : Plugins -> Update.Config -> WorkflowNextTxByTime.Config -> Maybe Id -> WorkflowNextTxByTime.Workflow -> Model -> ( Model, List Effect )
+handleWorkflowNextTxByTime plugins uc config neighborId wf model =
+    case wf of
+        Workflow.Ok tx ->
+            handleTx plugins uc config neighborId tx model
+
+        Workflow.Next eff ->
+            eff
+                |> List.map (Api.map (WorkflowNextTxByTime config neighborId))
+                |> List.map ApiEffect
+                |> pair model
+
+        Workflow.Err WorkflowNextTxByTime.NoTxFound ->
+            case neighborId of
+                Just nid ->
+                    placeNeighborIfError plugins uc config nid model
+
+                Nothing ->
+                    ( model
+                        |> s_network (Network.updateAddress config.addressId (Txs Set.empty |> txsSetter config.direction) model.network)
+                    , NoAdjaccentTxForAddressFound config.addressId
+                        |> InfoError
+                        |> ErrorEffect
+                        |> List.singleton
+                    )
+
+
+browserGotAddressData : Update.Config -> Plugins -> Id -> FindPosition -> Api.Data.Address -> Model -> ( Model, List Effect )
+browserGotAddressData uc plugins id position data model =
+    let
+        ( newAddress, net ) =
+            Network.addAddressWithPosition plugins position id model.network
+                |> mapSecond (Network.updateAddress id (s_data (Success data)))
+
+        ( details, eff ) =
+            case model.details of
+                Just (AddressDetails i ad) ->
+                    if i == id then
+                        case ad of
+                            Success a ->
+                                { a | data = data }
+                                    |> Success
+                                    |> AddressDetails id
+                                    |> Just
+                                    |> n
+
+                            _ ->
+                                Dict.get id net.addresses
+                                    |> Maybe.map
+                                        (\address -> AddressDetails.init net clusters uc.locale address.id data)
+                                    |> Maybe.map (mapFirst Success)
+                                    |> Maybe.map (mapFirst (AddressDetails id))
+                                    |> Maybe.map (mapFirst Just)
+                                    |> Maybe.withDefault (n model.details)
+
+                    else
+                        model.details
+                            |> n
+
+                _ ->
+                    model.details
+                        |> n
+
+        clusterId =
+            Id.initClusterId data.currency data.entity
+
+        isSecondAddressFromSameCluster =
+            Network.isClusterFriendAlreadyOnGraph clusterId
+                model.network
+                && not (Network.hasLoadedAddress id model.network)
+
+        ncolors =
+            if isSecondAddressFromSameCluster then
+                Colors.assignNextColor Colors.Clusters clusterId model.colors
+
+            else
+                model.colors
+
+        ( clusters, effCluster ) =
+            if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
+                ( model.clusters, [] )
+
+            else
+                ( Dict.insert clusterId RemoteData.Loading model.clusters
+                , [ BrowserGotClusterData id
+                        |> Api.GetEntityEffectWithDetails
+                            { currency = Id.network id
+                            , entity = data.entity
+                            , includeActors = False
+                            , includeBestTag = False
+                            }
+                        |> ApiEffect
+                  ]
+                )
+
+        transform =
+            Transform.move
+                { x = newAddress.x * unit
+                , y = A.getTo newAddress.y * unit
+                , z = Transform.initZ
+                }
+                model.transform
+    in
+    model
+        |> s_network net
+        |> s_transform transform
+        |> updateTagDataOnAddress id
+        |> s_details details
+        |> s_colors ncolors
+        |> s_clusters clusters
+        |> pairTo (fetchTagSummaryForId True model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
+        |> and (checkSelection uc)
 
 
 handleTooltipMsg : Tag.Msg -> Model -> ( Model, List Effect )
@@ -1503,19 +1704,23 @@ expandAddress uc address direction model =
         TxsLastCheckedChangeTx tx ->
             ( newmodel
                 |> setLoading
-            , WorkflowNextUtxoTx.loadReferencedTx
-                { addressId = id
-                , direction = direction
-                , hops = 0
-                }
-                tx
-                |> List.singleton
+            , let
+                config =
+                    { addressId = id
+                    , direction = direction
+                    }
+              in
+              WorkflowNextUtxoTx.start config tx
+                |> Workflow.mapEffect (WorkflowNextUtxoTx config Nothing)
+                |> Workflow.next
+                |> List.map ApiEffect
             )
 
         TxsNotFetched ->
             ( newmodel |> setLoading
-            , getNextTxEffects newmodel id direction
-                ++ eff
+            , Nothing
+                |> getNextTxEffects newmodel.network id direction
+                |> (++) eff
             )
 
 
@@ -1599,73 +1804,39 @@ updateTagDataOnAddress addressId m =
     tag |> Maybe.map (\n -> { m | network = net n }) |> Maybe.withDefault m
 
 
-getNextTxEffects : Model -> Id -> Direction -> List Effect
-getNextTxEffects model addressId direction =
+getNextTxEffects : Network -> Id -> Direction -> Maybe Id -> List Effect
+getNextTxEffects network addressId direction neighborId =
     let
-        context =
+        config =
             { addressId = addressId
             , direction = direction
-            , hops = 0
             }
     in
-    Network.getRecentTxForAddress model.network (Direction.flip direction) addressId
+    Network.getRecentTxForAddress network (Direction.flip direction) addressId
         |> Maybe.map
             (\tx ->
                 case tx.type_ of
                     Tx.Account t ->
-                        BrowserGotRecentTx
-                            >> WorkflowNextTxByTime context
-                            |> Api.GetAddressTxsEffect
-                                { currency = Id.network context.addressId
-                                , address = Id.id context.addressId
-                                , direction = Just context.direction
-                                , pagesize = 1
-                                , nextpage = Nothing
-                                , order =
-                                    Just
-                                        (case context.direction of
-                                            Outgoing ->
-                                                Order_Asc
-
-                                            Incoming ->
-                                                Order_Desc
-                                        )
-                                , minHeight =
-                                    case context.direction of
-                                        Outgoing ->
-                                            Just t.raw.height
-
-                                        Incoming ->
-                                            Nothing
-                                , maxHeight =
-                                    case context.direction of
-                                        Outgoing ->
-                                            Nothing
-
-                                        Incoming ->
-                                            Just t.raw.height
-                                }
-                            |> ApiEffect
+                        WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
+                            |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
+                            |> Workflow.next
+                            |> List.map ApiEffect
 
                     Tx.Utxo t ->
-                        WorkflowNextUtxoTx.loadReferencedTx context t.raw
+                        WorkflowNextUtxoTx.start config t.raw
+                            |> Workflow.mapEffect (WorkflowNextUtxoTx config neighborId)
+                            |> Workflow.next
+                            |> List.map ApiEffect
             )
-        |> Maybe.withDefault
-            (BrowserGotRecentTx
-                >> WorkflowNextTxByTime context
-                |> Api.GetAddressTxsEffect
-                    { currency = Id.network addressId
-                    , address = Id.id addressId
-                    , direction = Just direction
-                    , pagesize = 1
-                    , nextpage = Nothing
-                    , order = Nothing
-                    , minHeight = Nothing
-                    , maxHeight = Nothing
-                    }
-                |> ApiEffect
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                neighborId
+                    |> Maybe.map (WorkflowNextTxByTime.startBetween config)
+                    |> Maybe.withDefault (WorkflowNextTxByTime.start config)
+                    |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
+                    |> Workflow.next
+                    |> List.map ApiEffect
             )
-        |> List.singleton
 
 
 updateByRoute : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
@@ -1998,12 +2169,14 @@ loadAddress plugins =
 
 
 loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition plugins position id model =
+loadAddressWithPosition _ position id model =
     if Dict.member id model.network.addresses then
         n model
 
     else
-        ( { model | network = Network.addAddressWithPosition plugins position id model.network }
+        ( -- don't add the address here because it is not loaded yet
+          --{ model | network = Network.addAddressWithPosition plugins position id model.network }
+          model
         , [ BrowserGotAddressData id position
                 |> Api.GetAddressEffect
                     { currency = Id.network id
@@ -2322,7 +2495,7 @@ fetchTagSummaryForIds includeBestClusterTag existing ids =
         [] ->
             CmdEffect Cmd.none
 
-        x :: rest ->
+        x :: _ ->
             BrowserGotTagSummaries includeBestClusterTag
                 |> Api.BulkGetAddressTagSummaryEffect { currency = Id.network x, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
                 |> ApiEffect
@@ -2419,11 +2592,11 @@ getAddressForDirection tx direction exceptAddress =
                 |> Just
 
 
-addTx : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
-addTx plugins _ addressId direction tx model =
+addTx : Plugins -> Update.Config -> Id -> Direction -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
+addTx plugins _ anchorAddressId direction addressId tx model =
     let
         ( newTx, network ) =
-            Network.addTxWithPosition (Network.NextTo ( direction, addressId )) tx model.network
+            Network.addTxWithPosition (Network.NextTo ( direction, anchorAddressId )) tx model.network
 
         transform =
             Transform.move
@@ -2440,11 +2613,13 @@ addTx plugins _ addressId direction tx model =
             }
 
         address =
-            Id.id addressId
+            Id.id anchorAddressId
 
         -- TODO what if multisig?
         firstAddress =
-            getAddressForDirection newTx direction (Set.singleton address) |> Maybe.map Id.id
+            addressId
+                |> Maybe.Extra.orElse
+                    (getAddressForDirection newTx direction (Set.singleton address))
     in
     firstAddress
         |> Maybe.map
@@ -2453,7 +2628,7 @@ addTx plugins _ addressId direction tx model =
                     position =
                         NextTo ( direction, newTx.id )
                 in
-                loadAddressWithPosition plugins position (Id.init (Id.network addressId) a) newmodel
+                loadAddressWithPosition plugins position a newmodel
             )
         |> Maybe.withDefault (n newmodel)
 
@@ -2781,7 +2956,7 @@ upsertTagSummary id newTagSummary dict =
                         ( NoTagsWithoutCluster, NoTags ) ->
                             NoTags
 
-                        ( HasTags withExchangeTag, new ) ->
+                        ( HasTags _, new ) ->
                             new
 
                         ( LoadingTags, new ) ->

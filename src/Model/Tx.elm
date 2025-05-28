@@ -1,5 +1,7 @@
-module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, getTxHash, parseTxIdentifier, txTypeToLabel)
+module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, getTxHash, hasAddress, parseTxIdentifier, txTypeToLabel)
 
+import Api.Data
+import Model.Direction exposing (Direction(..))
 import Parser exposing ((|.), (|=), Parser, backtrackable, end, int, keyword, oneOf, run, succeed, symbol, variable)
 import Set
 
@@ -75,3 +77,30 @@ txTypeToLabel x =
 
         Token _ _ ->
             "Token-Transaction"
+
+
+hasAddress : Direction -> String -> Api.Data.Tx -> Bool
+hasAddress direction id tx =
+    case tx of
+        Api.Data.TxTxUtxo t ->
+            let
+                findIn =
+                    Maybe.map (List.any (.address >> List.member id))
+                        >> Maybe.withDefault False
+            in
+            case direction of
+                Incoming ->
+                    findIn t.inputs
+
+                Outgoing ->
+                    findIn t.outputs
+
+        Api.Data.TxTxAccount t ->
+            direction
+                == Incoming
+                && t.fromAddress
+                == id
+                || direction
+                == Outgoing
+                && t.toAddress
+                == id

@@ -69,6 +69,7 @@ transactionTableConfigWithMsg msg txs addressId =
                         , pagesize = pagesize
                         , nextpage = nextpage
                         , order = txs.order
+                        , tokenCurrency = Nothing
                         , minHeight = txs.txMinBlock
                         , maxHeight = txs.txMaxBlock
                         }
