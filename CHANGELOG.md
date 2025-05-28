@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.05.3] - 2025-05-28
+
+### Changed
+
+- 4c9f7b06 auto remove dangling addresses on unchecking txs in table
+- 174896dc auto place neighbors in graph, fix #464, fix #478
+
+### Fixed
+
+- bc6e4a09 correct auto-expand for following assets of token transactions, fix #475
+
 ## [25.05.2] - 2025-05-15
 
 ### Fixed
