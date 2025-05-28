@@ -1,7 +1,9 @@
 module View.Pathfinder.Legend exposing (ItemType, legendItem, legendView)
 
 import Config.View as View
+import Css
 import Html.Styled exposing (Html)
+import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model exposing (Msg)
 import Plugin.View as Plugin exposing (Plugins)
@@ -27,13 +29,24 @@ legendItem vc itemt { description, icon, label } =
                 , label = Locale.string vc.locale label
                 }
             }
+
+        attrDesc =
+            [ [ Css.whiteSpace Css.normal, Css.textAlign Css.left ] |> css ]
     in
     case itemt of
         Node ->
-            Theme.Html.Dialogs.legendItemNode data
+            Theme.Html.Dialogs.legendItemNodeWithAttributes
+                (Theme.Html.Dialogs.legendItemNodeAttributes
+                    |> Rs.s_description attrDesc
+                )
+                data
 
         IconItem ->
-            Theme.Html.Dialogs.legendItemIcon data
+            Theme.Html.Dialogs.legendItemIconWithAttributes
+                (Theme.Html.Dialogs.legendItemIconAttributes
+                    |> Rs.s_description attrDesc
+                )
+                data
 
 
 legendView : Plugins -> View.Config -> Msg -> Html Msg
@@ -89,7 +102,7 @@ legendView plugins vc closeMsg =
                 }
             , legendItem vc
                 Node
-                { description = "Likely a service (e.g. high activity, but not confirmed)"
+                { description = "Likely a service (e.g. high activity), but not confirmed."
                 , icon = Icons.iconsUnknownServiceSnoPadding {}
                 , label = "Possible Service"
                 }

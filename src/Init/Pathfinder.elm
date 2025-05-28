@@ -37,6 +37,7 @@ init us =
       , pointerTool = Drag
       , modPressed = False
       , isDirty = False
+      , helpDropdownOpen = False
       , toolbarHovercard = Nothing
       , contextMenu = Nothing
       , name = "graph"
