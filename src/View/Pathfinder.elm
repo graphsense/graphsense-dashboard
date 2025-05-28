@@ -42,7 +42,7 @@ import Util.Annotations as Annotations
 import Util.Css as Css
 import Util.ExternalLinks
 import Util.Graph
-import Util.View exposing (hovercard, none)
+import Util.View exposing (fixFillRule, hovercard, none)
 import View.Controls as Vc
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -438,7 +438,7 @@ graphActionsView vc _ model =
                             |> Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
                         )
                         { shortcutList =
-                            [ { icon = HIcons.iconsInfoS {}
+                            [ { icon = HIcons.iconsInfoSWithAttributes (HIcons.iconsInfoSAttributes |> Rs.s_root [ fixFillRule ]) {}
                               , text1 = "Legend"
                               , text2 = Nothing
                               , msg = UserClickedShowLegend
@@ -446,7 +446,7 @@ graphActionsView vc _ model =
                                 |> ContextMenuItem.init2
                                 |> ContextMenuItem.view vc
                             , { link = "https://www.iknaio.com/learning#pathfinder20"
-                              , icon = HIcons.iconsVideoS {}
+                              , icon = HIcons.iconsVideoSWithAttributes (HIcons.iconsVideoSAttributes |> Rs.s_root [ fixFillRule ]) {}
                               , text1 = "Watch tutorials"
                               , text2 = Nothing
                               , blank = True
