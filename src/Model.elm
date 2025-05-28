@@ -238,4 +238,5 @@ userSettingsFromMainModel model =
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
     , highlightClusterFriends = Just model.pathfinder.config.highlightClusterFriends
     , snapToGrid = Just model.pathfinder.config.snapToGrid
+    , tracingMode = Just model.pathfinder.config.tracingMode
     }

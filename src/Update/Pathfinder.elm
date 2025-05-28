@@ -2862,6 +2862,7 @@ fromDeserialized plugins deserialized model =
             Pathfinder.init
                 { snapToGrid = Just model.config.snapToGrid
                 , highlightClusterFriends = Just model.config.highlightClusterFriends
+                , tracingMode = Just model.config.tracingMode
                 }
     in
     ( { newAndEmptyPathfinder

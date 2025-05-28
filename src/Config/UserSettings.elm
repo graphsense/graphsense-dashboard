@@ -3,6 +3,7 @@ module Config.UserSettings exposing (UserSettings, decoder, default, encoder)
 -- import Model.Currency exposing (Currency(..))
 
 import Config.Graph exposing (AddressLabelType, TxLabelType(..), addressLabelToString, stringToAddressLabel)
+import Config.Pathfinder exposing (TracingMode(..))
 import Json.Decode as Decode exposing (Decoder, bool, nullable, string)
 import Json.Decode.Extra
 import Json.Decode.Pipeline exposing (optional, required)
@@ -26,6 +27,7 @@ type alias UserSettings =
     , highlightClusterFriends : Maybe Bool
     , showTimestampOnTxEdge : Maybe Bool
     , snapToGrid : Maybe Bool
+    , tracingMode : Maybe TracingMode
 
     -- , showLabelsInTaggingOverview : Maybe Bool
     }
@@ -105,6 +107,20 @@ decoder =
         |> optional "highlightClusterFriends" (nullable bool |> fromString) Nothing
         |> optional "showTimestampOnTxEdge" (nullable bool |> fromString) Nothing
         |> optional "snapToGrid" (nullable bool |> fromString) Nothing
+        |> optional "tracingMode" (Decode.string |> Decode.map stringToTracingMode |> nullable) Nothing
+
+
+stringToTracingMode : String -> TracingMode
+stringToTracingMode arg1 =
+    case arg1 of
+        "transaction" ->
+            TransactionTracingMode
+
+        "aggregate" ->
+            AggregateTracingMode
+
+        _ ->
+            TransactionTracingMode
 
 
 
@@ -129,9 +145,20 @@ encoder settings =
         , ( "highlightClusterFriends", settings.highlightClusterFriends |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showTimestampOnTxEdge", settings.showTimestampOnTxEdge |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "snapToGrid", settings.snapToGrid |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "tracingMode", settings.tracingMode |> Maybe.map tracingModeToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
 
         -- , ( "showLabelsInTaggingOverview", settings.showLabelsInTaggingOverview |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
+
+
+tracingModeToString : TracingMode -> String
+tracingModeToString arg1 =
+    case arg1 of
+        TransactionTracingMode ->
+            "transaction"
+
+        AggregateTracingMode ->
+            "aggregate"
 
 
 default : UserSettings
@@ -151,6 +178,7 @@ default =
     , highlightClusterFriends = Nothing
     , showTimestampOnTxEdge = Nothing
     , snapToGrid = Nothing
+    , tracingMode = Nothing
 
     -- , showLabelsInTaggingOverview = Nothing
     }
