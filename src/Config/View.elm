@@ -14,9 +14,7 @@ type alias Config =
     , size : Maybe BBox -- position and size of the main pane
     , showDatesInUserLocale : Bool
     , showTimeZoneOffset : Bool
-    , highlightClusterFriends : Bool
     , showTimestampOnTxEdge : Bool
-    , snapToGrid : Bool
     , preferredFiatCurrency : String
     , showValuesInFiat : Bool
     , showLabelsInTaggingOverview : Bool

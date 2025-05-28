@@ -45,7 +45,6 @@ main =
             , size = Nothing
             , abuseConcepts = []
             , allConcepts = []
-            , snapToGrid = False
             }
 
         updPlug =
@@ -72,7 +71,6 @@ main =
                         , size = model.config.size
                         , abuseConcepts = model.config.abuseConcepts
                         , allConcepts = model.config.allConcepts
-                        , snapToGrid = model.config.snapToGrid
                     }
                     msg
                     model

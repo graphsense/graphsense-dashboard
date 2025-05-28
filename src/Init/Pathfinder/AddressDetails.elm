@@ -49,6 +49,8 @@ init network clusters locale addressId data =
       , outgoingNeighborsTableOpen = False
       , incomingNeighborsTableOpen = False
       , copyIconChevronOpen = False
+      , isClusterDetailsOpen = False
+      , displayAllTagsInDetails = False
       }
     , eff
         ++ (related

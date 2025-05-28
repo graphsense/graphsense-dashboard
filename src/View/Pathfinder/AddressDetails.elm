@@ -2,7 +2,7 @@ module View.Pathfinder.AddressDetails exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Config.Pathfinder as Pathfinder
+import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
 import Css.DateTimePicker as DateTimePicker
@@ -21,7 +21,7 @@ import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Locale as Locale
-import Model.Pathfinder as Pathfinder exposing (TracingMode(..), getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
+import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
@@ -60,23 +60,23 @@ import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 
 
-view : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
-view plugins pluginStates vc gc model id viewState =
+view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
+view plugins pluginStates vc model id viewState =
     model.network.addresses
         |> Dict.get id
         |> Maybe.map
             (\address ->
                 if Data.isAccountLike (Id.network id) then
-                    account plugins pluginStates vc gc model id viewState address
+                    account plugins pluginStates vc model id viewState address
 
                 else
-                    utxo plugins pluginStates vc gc model id viewState address
+                    utxo plugins pluginStates vc model id viewState address
             )
         |> Maybe.withDefault none
 
 
-utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
-utxo plugins pluginStates vc gc model id viewState address =
+utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
+utxo plugins pluginStates vc model id viewState address =
     let
         pluginTagsVisible =
             List.length pluginTagsList > 0
@@ -127,7 +127,9 @@ utxo plugins pluginStates vc gc model id viewState address =
                 cluster
                     |> Maybe.withDefault RemoteData.NotAsked
                     |> RemoteData.unpack (\_ -> loadingSpinner vc Css.View.loadingSpinner)
-                        (clusterInfoView vc model.config.isClusterDetailsOpen model.colors)
+                        (clusterInfoView vc viewState.isClusterDetailsOpen model.colors
+                            >> Html.map (Pathfinder.AddressDetailsMsg id)
+                        )
             }
 
         assetId =
@@ -160,7 +162,7 @@ utxo plugins pluginStates vc gc model id viewState address =
                 )
         )
         (SidePanelComponents.sidePanelAddressInstances
-            |> setTags vc gc model id
+            |> setTags vc viewState model id
             |> Rs.s_learnMore (Just none)
          -- |> Rs.s_iconsBinanceL
          --     (Just sidePanelData.actorIconInstance)
@@ -333,7 +335,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
         }
 
 
-clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html Pathfinder.Msg
+clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html AddressDetails.Msg
 clusterInfoView vc open colors clstr =
     if clstr.noAddresses <= 1 then
         none
@@ -357,7 +359,7 @@ clusterInfoView vc open colors clstr =
                 [ Css.cursor Css.pointer
                     :: fullWidth
                     |> css
-                , onClick Pathfinder.UserClickedToggleClusterDetailsOpen
+                , onClick AddressDetails.UserClickedToggleClusterDetailsOpen
                 ]
 
             label =
@@ -716,8 +718,8 @@ accountValuesRundown vc viewState =
     }
 
 
-account : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
-account plugins pluginStates vc gc model id viewState address =
+account : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
+account plugins pluginStates vc model id viewState address =
     let
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
@@ -781,7 +783,7 @@ account plugins pluginStates vc gc model id viewState address =
                 )
         )
         (SidePanelComponents.sidePanelEthAddressInstances
-            |> setTags vc gc model id
+            |> setTags vc viewState model id
             |> Rs.s_learnMore (Just none)
             |> Rs.s_totalReceivedRow (Just accountValuesRundownHtml.totalReceived)
             |> Rs.s_totalSentRow (Just accountValuesRundownHtml.totalSpent)
@@ -817,7 +819,7 @@ account plugins pluginStates vc gc model id viewState address =
 
 transactionsOrNeighborsDataTabs : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> List (Html AddressDetails.Msg)
 transactionsOrNeighborsDataTabs vc model id viewState =
-    case model.tracingMode of
+    case model.config.tracingMode of
         TransactionTracingMode ->
             [ transactionsDataTab vc model id viewState
             ]
@@ -828,8 +830,8 @@ transactionsOrNeighborsDataTabs vc model id viewState =
             ]
 
 
-viewLabelOfTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> Html Pathfinder.Msg
-viewLabelOfTags vc gc model id =
+viewLabelOfTags : View.Config -> AddressDetails.Model -> Pathfinder.Model -> Id -> Html Pathfinder.Msg
+viewLabelOfTags vc viewState model id =
     let
         ts =
             getTagSummary model id
@@ -877,7 +879,7 @@ viewLabelOfTags vc gc model id =
                 List.length tagLabels
 
             nTagsToShow =
-                if gc.displayAllTagsInDetails then
+                if viewState.displayAllTagsInDetails then
                     lenTagLabels
 
                 else
@@ -885,12 +887,24 @@ viewLabelOfTags vc gc model id =
 
             tagsControl =
                 if lenTagLabels > nMaxTags then
-                    if gc.displayAllTagsInDetails then
-                        Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), Svg.onClick Pathfinder.UserClickedToggleDisplayAllTagsInDetails ]
+                    if viewState.displayAllTagsInDetails then
+                        Html.span
+                            [ Css.tagLinkButtonStyle vc |> css
+                            , HA.title (Locale.string vc.locale "show less...")
+                            , AddressDetails.UserClickedToggleDisplayAllTagsInDetails
+                                |> Pathfinder.AddressDetailsMsg id
+                                |> Svg.onClick
+                            ]
                             [ Html.text (Locale.string vc.locale "less...") ]
 
                     else
-                        Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), Svg.onClick Pathfinder.UserClickedToggleDisplayAllTagsInDetails ]
+                        Html.span
+                            [ Css.tagLinkButtonStyle vc |> css
+                            , HA.title (Locale.string vc.locale "show more...")
+                            , AddressDetails.UserClickedToggleDisplayAllTagsInDetails
+                                |> Pathfinder.AddressDetailsMsg id
+                                |> Svg.onClick
+                            ]
                             [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
 
                 else
@@ -1030,8 +1044,8 @@ makeSidePanelData model id pluginTagsVisible =
     }
 
 
-setTags : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Id -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) } -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) }
-setTags vc gc model id =
+setTags : View.Config -> AddressDetails.Model -> Pathfinder.Model -> Id -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) } -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) }
+setTags vc viewState model id =
     let
         ts =
             getTagSummary model id
@@ -1048,7 +1062,7 @@ setTags vc gc model id =
                 |> Maybe.map .label
 
         labelOfTags =
-            viewLabelOfTags vc gc model id
+            viewLabelOfTags vc viewState model id
 
         labelOfActor =
             actor_id

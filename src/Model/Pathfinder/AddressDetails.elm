@@ -25,4 +25,6 @@ type alias Model =
     , outgoingNeighborsTableOpen : Bool
     , incomingNeighborsTableOpen : Bool
     , copyIconChevronOpen : Bool
+    , isClusterDetailsOpen : Bool
+    , displayAllTagsInDetails : Bool
     }
