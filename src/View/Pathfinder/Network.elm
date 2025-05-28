@@ -21,13 +21,13 @@ import View.Pathfinder.Address as Address
 import View.Pathfinder.Tx as Tx
 
 
-addresses : Plugins -> View.Config -> Colors.ScopedColorAssignment -> Dict Id (WebData Api.Data.Entity) -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses plugins vc colors clusters annotations =
+addresses : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Dict Id (WebData Api.Data.Entity) -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses plugins vc pc colors clusters annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
             , Annotations.getAnnotation id annotations
-                |> Svg.lazy6 Address.view plugins vc colors address (flip Dict.get clusters)
+                |> Svg.lazy7 Address.view plugins vc pc colors address (flip Dict.get clusters)
             )
                 :: svg
         )

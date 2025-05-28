@@ -73,7 +73,7 @@ graph plugins pluginStates vc gc model =
         |> Maybe.withDefault none
     , topLeftPanel plugins pluginStates vc
     , topCenterPanel plugins pluginStates vc gc model
-    , topRightPanel plugins pluginStates vc gc model
+    , topRightPanel plugins pluginStates vc model
     ]
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)
@@ -369,7 +369,7 @@ annotationHovercardView vc id annotation hc =
 
 
 settingsHovercardView : View.Config -> Pathfinder.Model -> Hovercard.Model -> Html Msg
-settingsHovercardView vc _ hc =
+settingsHovercardView vc pm hc =
     let
         switchWithText primary text enabled msg =
             let
@@ -396,8 +396,8 @@ settingsHovercardView vc _ hc =
     Sc.displayProperties
         { exactValueSwitch = { variant = switchWithText True "Show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
         , amountInFiatSwitch = { variant = switchWithText True "Amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
-        , gridSwitch = { variant = switchWithText True "Snap to Grid" vc.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
-        , highlightSwitch = { variant = switchWithText True "Highlight on graph" vc.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
+        , gridSwitch = { variant = switchWithText True "Snap to Grid" pm.config.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
+        , highlightSwitch = { variant = switchWithText True "Highlight on graph" pm.config.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
         , settingsLabelOfClustersSettings = { settingsLabel = Locale.string vc.locale "Clusters" }
         , settingsLabelOfGeneralSettings = { settingsLabel = Locale.string vc.locale "General" }
         , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "Values" }
@@ -410,10 +410,10 @@ settingsHovercardView vc _ hc =
         |> hovercard vc hc (Css.zIndexMainValue + 1)
 
 
-topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-topRightPanel plugins pluginStates vc gc model =
+topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Html Msg
+topRightPanel plugins pluginStates vc model =
     div [ Css.topRightPanelStyle vc |> css ]
-        [ detailsView plugins pluginStates vc gc model
+        [ detailsView plugins pluginStates vc model
         ]
 
 
@@ -474,19 +474,19 @@ searchBoxView plugins vc _ model =
         {}
 
 
-detailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-detailsView plugin pluginStates vc gc model =
+detailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Html Msg
+detailsView plugin pluginStates vc model =
     case model.details of
         Just details ->
             case details of
                 Pathfinder.AddressDetails id state ->
                     RemoteData.unwrap
                         (Util.View.loadingSpinner vc Css.View.loadingSpinner)
-                        (AddressDetails.view plugin pluginStates vc gc model id)
+                        (AddressDetails.view plugin pluginStates vc model id)
                         state
 
                 Pathfinder.TxDetails id state ->
-                    TxDetails.view vc gc model id state
+                    TxDetails.view vc model id state
 
         Nothing ->
             none
@@ -624,7 +624,7 @@ graphSvg plugins vc gc model bbox =
             , gradient "account" { outgoing = True, reverse = True }
             , gradient "account" { outgoing = False, reverse = True }
             ]
-        , Svg.lazy6 Network.addresses plugins vc model.colors model.clusters model.annotations model.network.addresses
+        , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
         , Svg.lazy5 Network.txs plugins vc gc model.annotations model.network.txs
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         , drawDragSelector vc model

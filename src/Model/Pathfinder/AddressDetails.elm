@@ -23,4 +23,6 @@ type alias Model =
     , balanceDetailsOpen : Bool
     , totalSentDetailsOpen : Bool
     , copyIconChevronOpen : Bool
+    , isClusterDetailsOpen : Bool
+    , displayAllTagsInDetails : Bool
     }

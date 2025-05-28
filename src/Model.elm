@@ -236,6 +236,6 @@ userSettingsFromMainModel model =
     , showZeroValueTxs = Just model.graph.config.showZeroTransactions
     , showTimeZoneOffset = Just model.config.showTimeZoneOffset
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
-    , highlightClusterFriends = Just model.config.highlightClusterFriends
-    , snapToGrid = Just model.config.snapToGrid
+    , highlightClusterFriends = Just model.pathfinder.config.highlightClusterFriends
+    , snapToGrid = Just model.pathfinder.config.snapToGrid
     }
