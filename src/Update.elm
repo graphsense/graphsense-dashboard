@@ -588,7 +588,7 @@ update plugins uc msg model =
                         model.user
                             |> s_hovercard Nothing
                     , plugins = new
-                    , pathfinder = model.pathfinder |> s_contextMenu Nothing
+                    , pathfinder = model.pathfinder |> s_contextMenu Nothing |> s_helpDropdownOpen False
                     , navbarSubMenu = Nothing
                 }
                 |> Tuple.mapSecond ((::) (PluginEffect cmd))

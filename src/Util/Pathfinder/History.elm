@@ -72,6 +72,9 @@ shallPushHistory plugins msg _ =
         UserClickedShowLegend ->
             False
 
+        UserClickedToggleHelpDropdown ->
+            False
+
         AddressDetailsMsg _ am ->
             case am of
                 AddressDetails.UserClickedTxCheckboxInTable _ ->

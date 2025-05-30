@@ -46,6 +46,7 @@ type alias Model =
     , pointerTool : PointerTool
     , modPressed : Bool
     , isDirty : Bool
+    , helpDropdownOpen : Bool
     , toolbarHovercard : Maybe ToolbarHovercardModel
     , contextMenu : Maybe ContextMenu
     , name : String

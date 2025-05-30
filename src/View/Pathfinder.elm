@@ -445,12 +445,57 @@ topRightPanel plugins pluginStates vc model =
 
 
 graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-graphActionsView vc _ _ =
+graphActionsView vc _ model =
+    let
+        dropdown =
+            if model.helpDropdownOpen then
+                [ div
+                    [ [ Css.position Css.fixed
+                      , Css.top (Css.px 42)
+                      , Css.zIndex (Css.int 100)
+                      ]
+                        |> css
+                    , onClick UserClosesContextMenu
+                    , stopPropagationOn "click" (Json.Decode.succeed ( UserClosesContextMenu, True ))
+                    ]
+                    [ HGraphComponents.rightClickMenuWithAttributes
+                        (HGraphComponents.rightClickMenuAttributes
+                            |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
+                            |> Rs.s_shortcutList [ [ Css.width (Css.pct 100) ] |> css ]
+                            |> Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
+                        )
+                        { shortcutList =
+                            [ { icon = HIcons.iconsInfoS {}
+                              , text1 = "Legend"
+                              , text2 = Nothing
+                              , msg = UserClickedShowLegend
+                              }
+                                |> ContextMenuItem.init2
+                                |> ContextMenuItem.view vc
+                            , { link = "https://www.iknaio.com/learning#pathfinder20"
+                              , icon = HIcons.iconsVideoS {}
+                              , text1 = "Watch tutorials"
+                              , text2 = Nothing
+                              , blank = True
+                              }
+                                |> ContextMenuItem.initLink2
+                                |> ContextMenuItem.view vc
+                            ]
+                        , pluginsList = []
+                        }
+                        {}
+                    ]
+                ]
+
+            else
+                []
+    in
     div [ Css.graphActionsViewStyle vc |> css, stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True )) ]
-        [ div [ Util.View.pointer, onClick UserClickedShowLegend ]
+        (div [ Util.View.pointer, onClick UserClickedToggleHelpDropdown ]
             [ HIcons.framedIcon { root = { iconInstance = HIcons.iconsHelpOutlined {} } }
             ]
-        ]
+            :: dropdown
+        )
 
 
 searchBoxView : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
