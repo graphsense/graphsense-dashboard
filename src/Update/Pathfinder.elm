@@ -2933,7 +2933,9 @@ autoLoadAddresses plugins tx model =
                 Nothing
 
             else
-                (tx |> Tx.getInputAddressIds)
+                tx
+                    |> Tx.getInputAddressIds
+                    |> List.map Id.id
                     |> Set.fromList
                     |> getAddressForDirection tx Outgoing
     in

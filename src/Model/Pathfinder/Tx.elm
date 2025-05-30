@@ -172,24 +172,30 @@ listAddressesForTx tx =
                    )
 
 
-getInputAddressIds : Tx -> List String
+getInputAddressIds : Tx -> List Id
 getInputAddressIds tx =
     case tx.type_ of
         Account { from } ->
-            [ from |> Id.id ]
+            [ from ]
 
         Utxo { raw } ->
-            raw.inputs |> Maybe.withDefault [] |> List.concatMap .address
+            raw.inputs
+                |> Maybe.withDefault []
+                |> List.concatMap .address
+                |> List.map (Id.init raw.currency)
 
 
-getOutputAddressIds : Tx -> List String
+getOutputAddressIds : Tx -> List Id
 getOutputAddressIds tx =
     case tx.type_ of
         Account { to } ->
-            [ to |> Id.id ]
+            [ to ]
 
         Utxo { raw } ->
-            raw.outputs |> Maybe.withDefault [] |> List.concatMap .address
+            raw.outputs
+                |> Maybe.withDefault []
+                |> List.concatMap .address
+                |> List.map (Id.init raw.currency)
 
 
 calcCoords : NList.Nonempty Address -> Coords

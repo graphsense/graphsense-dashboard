@@ -60,27 +60,22 @@ nearestMultiple n multi =
 
 coordsToInt : { t | x : Float, y : A.Animation, dx : Float, dy : Float } -> { t | x : Float, y : A.Animation, dx : Float, dy : Float }
 coordsToInt item =
-    { item | x = nearestMultiple (item.x + item.dx) nodeXOffset, y = A.static (nearestMultiple (A.getTo item.y + item.dy) nodeYOffset), dx = 0, dy = 0 }
+    { item
+        | x = nearestMultiple (item.x + item.dx) nodeXOffset
+        , y = A.static (nearestMultiple (A.getTo item.y + item.dy) nodeYOffset)
+        , dx = 0
+        , dy = 0
+    }
 
 
 snapToGrid : Network -> Network
 snapToGrid n =
-    let
-        mn =
-            { n | txs = Dict.map (\_ v -> coordsToInt v) n.txs, addresses = Dict.map (\_ v -> coordsToInt v) n.addresses }
-
-        -- for all Utxos reset addresses.
-        updateIoAddresses utxo =
-            let
-                u a =
-                    Dict.get a.id mn.addresses |> Maybe.withDefault a
-            in
-            { utxo | inputs = utxo.inputs |> Dict.map (\_ -> Tx.updateAddress u), outputs = utxo.outputs |> Dict.map (\_ -> Tx.updateAddress u) }
-
-        updateIosAddresses _ =
-            Tx.updateUtxo updateIoAddresses
-    in
-    mn |> s_txs (mn.txs |> Dict.map updateIosAddresses)
+    n.addresses
+        |> Dict.keys
+        |> List.foldl (flip updateAddress coordsToInt)
+            { n
+                | txs = Dict.map (\_ v -> coordsToInt v) n.txs
+            }
 
 
 addAddress : Plugins -> Id -> Network -> ( Address, Network )
@@ -264,10 +259,6 @@ freeSpaceAroundCoords coords model =
                         |> moveThings -1 below
                    )
 
-        newAddresses =
-            movedAddresses
-                |> List.foldl (\a -> Dict.insert a.id a) model.addresses
-
         ( txsAbove, txsBelow ) =
             model.txs
                 |> Dict.values
@@ -285,39 +276,26 @@ freeSpaceAroundCoords coords model =
         movedTxs =
             (getMaxY txsAbove |> moveThings 1 txsAbove)
                 ++ (getMinY txsBelow |> moveThings -1 txsBelow)
-
-        updateUtxo movedTx tx =
-            movedAddresses
-                |> List.foldl
-                    (\a ->
-                        Tx.updateUtxo (Tx.updateUtxoIo Incoming a.id (Tx.setIoAddress a))
-                            >> Tx.updateUtxo (Tx.updateUtxoIo Outgoing a.id (Tx.setIoAddress a))
-                    )
-                    (tx |> s_y movedTx.y |> s_clock movedTx.clock)
-
-        newTxs =
-            movedTxs
-                |> List.foldl
-                    (\t ->
-                        Dict.update t.id
-                            (Maybe.map (updateUtxo t))
-                    )
-                    model.txs
     in
-    { model
-        | addresses = newAddresses
-        , txs = newTxs
-        , animatedAddresses =
-            movedAddresses
-                |> List.map .id
-                |> Set.fromList
-                |> Set.union model.animatedAddresses
-        , animatedTxs =
-            movedTxs
-                |> List.map .id
-                |> Set.fromList
-                |> Set.union model.animatedTxs
-    }
+    movedAddresses
+        |> List.foldl
+            (\a -> updateAddress a.id (always a))
+            (movedTxs
+                |> List.foldl
+                    (\t -> updateTx t.id (s_y t.y >> s_clock t.clock))
+                    { model
+                        | animatedAddresses =
+                            movedAddresses
+                                |> List.map .id
+                                |> Set.fromList
+                                |> Set.union model.animatedAddresses
+                        , animatedTxs =
+                            movedTxs
+                                |> List.map .id
+                                |> Set.fromList
+                                |> Set.union model.animatedTxs
+                    }
+            )
 
 
 insertAddress : Network -> Address -> Network
@@ -338,11 +316,7 @@ insertAddress model newAddress =
                                     | incomingTxs = txsInsertId tx.id addr.incomingTxs
                                 }
                         , Dict.update tx.id
-                            (Maybe.map
-                                (Tx.updateUtxo
-                                    (Tx.updateUtxoIo direction newAddress.id (Tx.setIoAddress newAddress))
-                                )
-                            )
+                            (Maybe.map (Tx.setAddressInTx direction newAddress))
                             txs
                         )
                     )
@@ -378,7 +352,13 @@ updateAddress id update model =
         |> List.foldl
             (\( direction, tx ) ->
                 updateTx tx.id
-                    (Tx.updateUtxo (Tx.updateUtxoIo direction id (Tx.updateAddress update)))
+                    (case tx.type_ of
+                        Tx.Utxo _ ->
+                            Tx.updateUtxo (Tx.updateUtxoIo direction id (Tx.updateAddress update))
+
+                        Tx.Account _ ->
+                            Tx.updateAccount (Tx.updateAccountAddress direction id update)
+                    )
             )
             { model
                 | addresses = Dict.update id (Maybe.map update) model.addresses
@@ -526,7 +506,7 @@ addTxWithPosition position tx network =
                             newNetwork =
                                 freeSpaceAroundCoords coords network
                         in
-                        Tx.fromTxAccountData newNetwork t coords
+                        Tx.fromTxAccountData t coords
                             |> s_isStartingPoint (isEmpty network)
                             |> insertTx
                                 { newNetwork
@@ -561,7 +541,7 @@ addTxWithPosition position tx network =
                             newNetwork =
                                 freeSpaceAroundCoords coords network
                         in
-                        Tx.fromTxUtxoData newNetwork t coords
+                        Tx.fromTxUtxoData t coords
                             |> (\tx_i ->
                                     if hasAnimations newNetwork then
                                         tx_i
@@ -583,6 +563,16 @@ addTxWithPosition position tx network =
 insertTx : Network -> Tx -> ( Tx, Network )
 insertTx network tx =
     let
+        newTx =
+            -- set from/to address objects
+            Tx.getOutputAddressIds tx
+                |> List.filterMap (flip Dict.get network.addresses)
+                |> List.foldl (Tx.setAddressInTx Outgoing)
+                    (Tx.getInputAddressIds tx
+                        |> List.filterMap (flip Dict.get network.addresses)
+                        |> List.foldl (Tx.setAddressInTx Incoming) tx
+                    )
+
         upd dir addr =
             let
                 ( get, set ) =
@@ -598,36 +588,14 @@ insertTx network tx =
 
             else
                 set (get addr |> txsInsertId tx.id) addr
-
-        updTx dir a t =
-            case t.type_ of
-                Tx.Utxo _ ->
-                    Tx.setIoAddress a
-                        |> Tx.updateUtxoIo dir a.id
-                        |> flip Tx.updateUtxo t
-
-                Tx.Account _ ->
-                    (case dir of
-                        Outgoing ->
-                            Tx.setToAddress a
-
-                        Incoming ->
-                            Tx.setFromAddress a
-                    )
-                        |> flip Tx.updateAccount t
     in
-    listAddressesForTx tx
+    listAddressesForTx newTx
         |> List.foldl
-            (\( dir, a ) nw ->
-                { nw
-                    | addresses = Dict.update a.id (Maybe.map (upd dir)) nw.addresses
-                    , txs = Dict.update tx.id (Maybe.map (updTx dir a)) nw.txs
-                }
-            )
+            (\( dir, a ) -> updateAddress a.id (upd dir))
             { network
-                | txs = Dict.insert tx.id tx network.txs
+                | txs = Dict.insert tx.id newTx network.txs
             }
-        |> pair tx
+        |> pair newTx
 
 
 listInOutputsOfApiTxUtxo : Network -> Api.Data.TxUtxo -> List ( Direction, Address )
@@ -794,8 +762,15 @@ animateTxs delta model =
                                     tx.clock + delta
                             in
                             { network
-                                | txs =
-                                    Dict.insert id
+                                | animatedTxs =
+                                    if A.isDone clock tx.y && A.isDone clock tx.opacity then
+                                        Set.remove id network.animatedTxs
+
+                                    else
+                                        network.animatedTxs
+                            }
+                                |> updateTx id
+                                    (always
                                         { tx
                                             | clock = clock
                                             , opacity =
@@ -805,14 +780,7 @@ animateTxs delta model =
                                                 else
                                                     tx.opacity
                                         }
-                                        network.txs
-                                , animatedTxs =
-                                    if A.isDone clock tx.y && A.isDone clock tx.opacity then
-                                        Set.remove id network.animatedTxs
-
-                                    else
-                                        network.animatedTxs
-                            }
+                                    )
                         )
                     |> Maybe.withDefault network
             )
@@ -849,16 +817,12 @@ deleteTx id network =
     Dict.get id network.txs
         |> Maybe.map
             (\tx ->
-                { network
-                    | addresses =
-                        Tx.listAddressesForTx tx
-                            |> List.foldl
-                                (\( _, address ) ->
-                                    Dict.insert address.id (Address.removeTx tx.id address)
-                                )
-                                network.addresses
-                    , txs = Dict.remove id network.txs
-                }
+                Tx.listAddressesForTx tx
+                    |> List.foldl
+                        (\( _, a ) -> updateAddress a.id (Address.removeTx tx.id))
+                        { network
+                            | txs = Dict.remove id network.txs
+                        }
             )
         |> Maybe.withDefault network
 
@@ -871,8 +835,8 @@ ingestTxs network things txs =
                 |> List.map (\th -> ( th.id, th ))
                 |> Dict.fromList
 
-        toUtxo nw tx th =
-            Tx.fromTxUtxoData nw
+        toUtxo tx th =
+            Tx.fromTxUtxoData
                 tx
                 { x = th.x
                 , y = th.y
@@ -880,7 +844,7 @@ ingestTxs network things txs =
                 |> s_isStartingPoint th.isStartingPoint
 
         toAccount tx th =
-            Tx.fromTxAccountData network
+            Tx.fromTxAccountData
                 tx
                 { x = th.x
                 , y = th.y
@@ -893,7 +857,7 @@ ingestTxs network things txs =
                 (case tx of
                     Api.Data.TxTxUtxo t ->
                         Dict.get (Id.init t.currency t.txHash) thingsDict
-                            |> Maybe.map (toUtxo nw t)
+                            |> Maybe.map (toUtxo t)
 
                     Api.Data.TxTxAccount t ->
                         Dict.get (Id.init t.network t.identifier) thingsDict

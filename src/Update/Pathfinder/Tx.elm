@@ -1,4 +1,4 @@
-module Update.Pathfinder.Tx exposing (setFromAddress, setIoAddress, setToAddress, unsetAccountAddress, unsetAddress, updateAccount, updateAddress, updateUtxo, updateUtxoIo)
+module Update.Pathfinder.Tx exposing (setAddressInTx, setFromAddress, setIoAddress, setToAddress, unsetAccountAddress, unsetAddress, updateAccount, updateAccountAddress, updateAddress, updateAddressInTx, updateIoAddress, updateUtxo, updateUtxoIo)
 
 import Basics.Extra exposing (flip)
 import Dict
@@ -29,12 +29,7 @@ updateUtxoIo dir addressId upd t =
                     ( t.outputs, s_outputs )
     in
     ios
-        |> Dict.get addressId
-        |> Maybe.map
-            (upd
-                >> flip (Dict.insert addressId) ios
-            )
-        |> Maybe.withDefault ios
+        |> Dict.update addressId (Maybe.map upd)
         |> flip set t
 
 
@@ -47,6 +42,13 @@ setIoAddress : Address -> Io -> Io
 setIoAddress address io =
     { io
         | address = Just address
+    }
+
+
+updateIoAddress : (Address -> Address) -> Io -> Io
+updateIoAddress upd io =
+    { io
+        | address = Maybe.map upd io.address
     }
 
 
@@ -86,3 +88,61 @@ unsetAccountAddress dir =
             s_fromAddress
     )
         Nothing
+
+
+updateAccountAddress : Direction -> Id -> (Address -> Address) -> AccountTx -> AccountTx
+updateAccountAddress dir id upd tx =
+    case dir of
+        Outgoing ->
+            if tx.to == id then
+                tx.toAddress |> Maybe.map upd |> flip s_toAddress tx
+
+            else
+                tx
+
+        Incoming ->
+            if tx.from == id then
+                tx.fromAddress |> Maybe.map upd |> flip s_fromAddress tx
+
+            else
+                tx
+
+
+setAddressInTx : Direction -> Address -> Tx -> Tx
+setAddressInTx dir a t =
+    case t.type_ of
+        Utxo _ ->
+            setIoAddress a
+                |> updateUtxoIo dir a.id
+                |> flip updateUtxo t
+
+        Account { to, from } ->
+            (case dir of
+                Outgoing ->
+                    if to == a.id then
+                        setToAddress a
+
+                    else
+                        identity
+
+                Incoming ->
+                    if from == a.id then
+                        setFromAddress a
+
+                    else
+                        identity
+            )
+                |> flip updateAccount t
+
+
+updateAddressInTx : Direction -> Id -> (Address -> Address) -> Tx -> Tx
+updateAddressInTx dir id upd t =
+    case t.type_ of
+        Utxo _ ->
+            updateIoAddress upd
+                |> updateUtxoIo dir id
+                |> flip updateUtxo t
+
+        Account _ ->
+            updateAccountAddress dir id upd
+                |> flip updateAccount t
