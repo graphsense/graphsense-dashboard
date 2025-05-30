@@ -226,9 +226,9 @@ updateByMsg plugins uc msg model =
                 let
                     onlyIds =
                         model.network.addresses
-                            |> Dict.values
-                            |> List.map (.id >> Id.id)
-                            |> List.filter ((/=) (Id.id id))
+                            |> Dict.keys
+                            |> List.filter (\aId -> aId /= id && Id.network aId == Id.network id)
+                            |> List.map Id.id
                 in
                 if List.isEmpty onlyIds then
                     browserGotAddressData uc plugins id position data model
