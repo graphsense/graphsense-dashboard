@@ -33,6 +33,8 @@ fromTxAccountData network tx coords =
         Account
             { from = Id.init tx.network tx.fromAddress
             , to = Id.init tx.network tx.toAddress
+            , fromAddress = Nothing
+            , toAddress = Nothing
             , value = tx.value
             , raw = tx
             }

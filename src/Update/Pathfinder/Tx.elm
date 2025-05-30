@@ -1,23 +1,19 @@
-module Update.Pathfinder.Tx exposing (setAddress, unsetAddress, updateAddress, updateUtxo, updateUtxoIo)
+module Update.Pathfinder.Tx exposing (setFromAddress, setIoAddress, setToAddress, unsetAccountAddress, unsetAddress, updateAccount, updateAddress, updateUtxo, updateUtxoIo)
 
 import Basics.Extra exposing (flip)
 import Dict
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..), UtxoTx, getUtxoTx)
-import RecordSetter exposing (s_address, s_inputs, s_outputs)
+import Model.Pathfinder.Tx exposing (AccountTx, Io, Tx, TxType(..), UtxoTx, getAccountTx, getUtxoTx)
+import RecordSetter exposing (s_address, s_fromAddress, s_inputs, s_outputs, s_toAddress, s_type_)
 
 
 updateUtxo : (UtxoTx -> UtxoTx) -> Tx -> Tx
 updateUtxo upd tx =
     getUtxoTx tx
         |> Maybe.map
-            (\t ->
-                { tx
-                    | type_ = upd t |> Utxo
-                }
-            )
+            (upd >> Utxo >> flip s_type_ tx)
         |> Maybe.withDefault tx
 
 
@@ -47,13 +43,46 @@ updateAddress update io =
     { io | address = Maybe.map update io.address }
 
 
-setAddress : Address -> Io -> Io
-setAddress address io =
+setIoAddress : Address -> Io -> Io
+setIoAddress address io =
     { io
         | address = Just address
+    }
+
+
+setFromAddress : Address -> AccountTx -> AccountTx
+setFromAddress address tx =
+    { tx
+        | fromAddress = Just address
+    }
+
+
+setToAddress : Address -> AccountTx -> AccountTx
+setToAddress address tx =
+    { tx
+        | toAddress = Just address
     }
 
 
 unsetAddress : Io -> Io
 unsetAddress =
     s_address Nothing
+
+
+updateAccount : (AccountTx -> AccountTx) -> Tx -> Tx
+updateAccount upd tx =
+    getAccountTx tx
+        |> Maybe.map (upd >> Account >> flip s_type_ tx)
+        |> Maybe.withDefault tx
+
+
+unsetAccountAddress : Direction -> AccountTx -> AccountTx
+unsetAccountAddress dir =
+    (case dir of
+        Outgoing ->
+            s_toAddress
+
+        Incoming ->
+            s_fromAddress
+    )
+        Nothing

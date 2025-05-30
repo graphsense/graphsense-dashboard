@@ -464,7 +464,7 @@ updateByMsg plugins uc msg model =
                                             delNw =
                                                 Network.deleteTx txId model.network
                                         in
-                                        Tx.listAddressesForTx delNw.addresses t
+                                        Tx.listAddressesForTx t
                                             |> List.filter
                                                 (second >> .id >> (/=) addressId)
                                             |> List.map second
@@ -2915,7 +2915,7 @@ autoLoadAddresses : Plugins -> Tx -> Model -> ( Model, List Effect )
 autoLoadAddresses plugins tx model =
     let
         addresses =
-            Tx.listAddressesForTx model.network.addresses tx
+            Tx.listAddressesForTx tx
                 |> List.map first
 
         aggAddressAdd addressId =

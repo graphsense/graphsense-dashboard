@@ -290,8 +290,8 @@ freeSpaceAroundCoords coords model =
             movedAddresses
                 |> List.foldl
                     (\a ->
-                        Tx.updateUtxo (Tx.updateUtxoIo Incoming a.id (Tx.setAddress a))
-                            >> Tx.updateUtxo (Tx.updateUtxoIo Outgoing a.id (Tx.setAddress a))
+                        Tx.updateUtxo (Tx.updateUtxoIo Incoming a.id (Tx.setIoAddress a))
+                            >> Tx.updateUtxo (Tx.updateUtxoIo Outgoing a.id (Tx.setIoAddress a))
                     )
                     (tx |> s_y movedTx.y |> s_clock movedTx.clock)
 
@@ -340,7 +340,7 @@ insertAddress model newAddress =
                         , Dict.update tx.id
                             (Maybe.map
                                 (Tx.updateUtxo
-                                    (Tx.updateUtxoIo direction newAddress.id (Tx.setAddress newAddress))
+                                    (Tx.updateUtxoIo direction newAddress.id (Tx.setIoAddress newAddress))
                                 )
                             )
                             txs
@@ -599,11 +599,24 @@ insertTx network tx =
             else
                 set (get addr |> txsInsertId tx.id) addr
 
-        updTx dir a =
-            Tx.updateUtxo
-                (Tx.updateUtxoIo dir a.id (Tx.setAddress a))
+        updTx dir a t =
+            case t.type_ of
+                Tx.Utxo _ ->
+                    Tx.setIoAddress a
+                        |> Tx.updateUtxoIo dir a.id
+                        |> flip Tx.updateUtxo t
+
+                Tx.Account _ ->
+                    (case dir of
+                        Outgoing ->
+                            Tx.setToAddress a
+
+                        Incoming ->
+                            Tx.setFromAddress a
+                    )
+                        |> flip Tx.updateAccount t
     in
-    listAddressesForTx network.addresses tx
+    listAddressesForTx tx
         |> List.foldl
             (\( dir, a ) nw ->
                 { nw
@@ -815,7 +828,14 @@ deleteAddress id network =
                     |> List.foldl
                         (\( direction, tx ) ->
                             updateTx tx.id
-                                (Tx.updateUtxo (Tx.updateUtxoIo direction id Tx.unsetAddress))
+                                (case tx.type_ of
+                                    Tx.Utxo _ ->
+                                        Tx.updateUtxo (Tx.updateUtxoIo direction id Tx.unsetAddress)
+
+                                    Tx.Account _ ->
+                                        Tx.unsetAccountAddress direction
+                                            |> Tx.updateAccount
+                                )
                         )
                         { network
                             | addresses = Dict.remove id network.addresses
@@ -831,7 +851,7 @@ deleteTx id network =
             (\tx ->
                 { network
                     | addresses =
-                        Tx.listAddressesForTx network.addresses tx
+                        Tx.listAddressesForTx tx
                             |> List.foldl
                                 (\( _, address ) ->
                                     Dict.insert address.id (Address.removeTx tx.id address)
