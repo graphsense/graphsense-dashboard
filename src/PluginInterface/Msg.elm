@@ -10,7 +10,6 @@ import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Notification exposing (Notification)
 import Model.Pathfinder.Address as Pathfinder
-import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (TooltipMessages, mapMsgTooltipMsg)
 import Route.Pathfinder exposing (PathHopType)
 import Update.Dialog
@@ -83,8 +82,10 @@ type InMsg
     = -- User clicked to e.g. the graph or anything outside things with a handler attached (roughly corresponds to UserClickedLayout)
       ClickedOnNeutralGround
     | CoreGotStatsUpdate Api.Data.Stats
+      -- when addresses are added to the model
     | AddressesAdded (List Address)
-    | AddressesAddedPathfinder (List ( Address, Api.Data.Entity ))
+      -- when entities are added to the model
+    | EntitiesAdded (List Entity)
     | InMsgsPathfinder InMsgPathfinder
     | ClosedTooltip (Maybe { context : String, domId : String })
     | Reset

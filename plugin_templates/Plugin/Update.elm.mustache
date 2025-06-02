@@ -155,43 +155,6 @@ updateEntity plugins msg entity =
                 |> Maybe.withDefault entity{{/plugins}}{{/plugins.length}}
 
 
-entitiesAdded : Plugins -> Plugin.Model.ModelState -> Set Id.EntityId -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-entitiesAdded plugins state ids =
-    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
-{{#plugins}}
-        {{name}} =
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\fun model ->
-                                fun ids model
-                                    |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
-                                    |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
-                            )
-                            plugin.entitiesAdded
-                            state.{{name}}
-                    )
-                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
-{{/plugins}} 
-    in
-    ( { state
-        | {{#plugins}}{{name}} = Maybe.map T3.first {{name}}
-        {{^last}}, {{/last}}{{/plugins}}
-      }
-    , [ {{#plugins}}Maybe.map T3.second {{name}} 
-        |> Maybe.withDefault [] 
-        {{^last}}, {{/last}}{{/plugins}}
-      ]
-        |> List.concat
-    , [ {{#plugins}}Maybe.map T3.third {{name}} |> Maybe.withDefault Cmd.none
-        {{^last}}, {{/last}}{{/plugins}}
-      ]
-        |> Cmd.batch
-    )
-{{/plugins.length}}
-
-
 updateByUrl : Plugin.Model.PluginType -> Plugins -> Update.Config -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 updateByUrl ns plugins uc url state =
     {{^plugins}}n state{{/plugins}}{{#plugins.length}}case ns of{{#plugins}} 
