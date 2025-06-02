@@ -10,13 +10,14 @@ import Css.Table
 import Css.View
 import Dict exposing (Dict)
 import DurationDatePicker as DatePicker
-import Html.Styled as Html exposing (Html, div, img)
+import Html.Styled as Html exposing (Html, div, img, text)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency exposing (asset, assetFromBase)
 import Model.DateRangePicker as DateRangePicker
+import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
@@ -41,6 +42,7 @@ import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.Checkbox
 import Util.Css exposing (spread)
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
@@ -391,6 +393,29 @@ dateRangePickerSelectionView vc model =
         }
 
 
+directionFilterStateBox : View.Config -> TransactionTable.Model -> Html AddressDetails.Msg
+directionFilterStateBox vc model =
+    (case model.direction of
+        Just Outgoing ->
+            div [] [ text (Locale.string vc.locale "Outgoing") ]
+
+        Just Incoming ->
+            div [] [ text (Locale.string vc.locale "Incoming") ]
+
+        Nothing ->
+            div [] [ text (Locale.string vc.locale "Incoming & Outgoing") ]
+    )
+        |> List.singleton
+        |> div
+            [ [ Css.displayFlex
+              , Css.flexDirection Css.row
+              , Css.justifyContent Css.spaceAround
+              , Css.alignItems Css.center
+              ]
+                |> css
+            ]
+
+
 transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html AddressDetails.Msg
 transactionTableView vc addressId txOnGraphFn model =
     let
@@ -409,6 +434,31 @@ transactionTableView vc addressId txOnGraphFn model =
                 (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
                 model.table
                 AddressDetails.TransactionsTablePagedTableMsg
+
+        checkboxesIO =
+            div
+                [ [ Css.displayFlex
+                  , Css.flexDirection Css.row
+                  , Css.justifyContent Css.spaceBetween
+                  , Css.alignItems Css.center
+                  ]
+                    |> css
+                ]
+                [ text (Locale.string vc.locale "Incoming")
+                , Util.Checkbox.checkbox
+                    { state = Util.Checkbox.stateFromBool (model.direction == Just Incoming || model.direction == Nothing)
+                    , size = Util.Checkbox.smallSize
+                    , msg = AddressDetails.ToggleTxTableIncoming
+                    }
+                    []
+                , text (Locale.string vc.locale "Outgoing")
+                , Util.Checkbox.checkbox
+                    { state = Util.Checkbox.stateFromBool (model.direction == Just Outgoing || model.direction == Nothing)
+                    , size = Util.Checkbox.smallSize
+                    , msg = AddressDetails.ToggleTxTableOutgoing
+                    }
+                    []
+                ]
     in
     (case model.dateRangePicker of
         Just drp ->
@@ -437,16 +487,19 @@ transactionTableView vc addressId txOnGraphFn model =
                             |> Rs.s_onClick (Just AddressDetails.CloseDateRangePicker)
                         )
                     ]
+                , checkboxesIO
                 ]
 
             else
                 [ Just drp
                     |> dateRangePickerSelectionView vc
+                , directionFilterStateBox vc model
                 , table
                 ]
 
         Nothing ->
             [ dateRangePickerSelectionView vc Nothing
+            , directionFilterStateBox vc model
             , table
             ]
     )

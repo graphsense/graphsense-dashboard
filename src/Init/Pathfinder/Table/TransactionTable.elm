@@ -57,16 +57,17 @@ init network locale addressId data =
                             |> Just
                   , txMinBlock = Just data.firstTx.height
                   , txMaxBlock = Just data.lastTx.height
+                  , direction = Nothing
                   }
                 , loadTxs addressId mn mx
                 )
             )
         |> Maybe.withDefault
-            (initWithoutFilter addressId data)
+            (initWithoutFilter addressId data Nothing)
 
 
-initWithoutFilter : Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
-initWithoutFilter addressId data =
+initWithoutFilter : Id -> Api.Data.Address -> Maybe Direction -> ( TransactionTable.Model, List Effect )
+initWithoutFilter addressId data direction =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -82,12 +83,13 @@ initWithoutFilter addressId data =
       , dateRangePicker = Nothing
       , txMinBlock = Nothing
       , txMaxBlock = Nothing
+      , direction = direction
       }
     , (GotTxsForAddressDetails ( Nothing, Nothing ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsEffect
             { currency = Id.network addressId
             , address = Id.id addressId
-            , direction = Nothing
+            , direction = direction
             , pagesize = itemsPerPage
             , nextpage = Nothing
             , order = Nothing

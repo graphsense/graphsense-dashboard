@@ -28,6 +28,8 @@ type Msg
     | OpenDateRangePicker
     | CloseDateRangePicker
     | ResetDateRangePicker
+    | ToggleTxTableOutgoing
+    | ToggleTxTableIncoming
     | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
     | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
     | TableMsg Table.State

@@ -65,7 +65,7 @@ transactionTableConfigWithMsg msg txs addressId =
                     |> Api.GetAddressTxsEffect
                         { currency = Id.network addressId
                         , address = Id.id addressId
-                        , direction = Nothing
+                        , direction = txs.direction
                         , pagesize = pagesize
                         , nextpage = nextpage
                         , order = txs.order
@@ -247,8 +247,38 @@ update uc msg model =
                 |> flip s_txs model
                 |> n
 
+        ToggleTxTableOutgoing ->
+            let
+                newDirection =
+                    case model.txs.direction of
+                        Just Incoming ->
+                            Nothing
+
+                        Just Outgoing ->
+                            Just Incoming
+
+                        Nothing ->
+                            Just Incoming
+            in
+            updateDirectionFilter uc model newDirection
+
+        ToggleTxTableIncoming ->
+            let
+                newDirection =
+                    case model.txs.direction of
+                        Just Incoming ->
+                            Just Outgoing
+
+                        Just Outgoing ->
+                            Nothing
+
+                        Nothing ->
+                            Just Outgoing
+            in
+            updateDirectionFilter uc model newDirection
+
         ResetDateRangePicker ->
-            TransactionTable.initWithoutFilter model.addressId model.data
+            TransactionTable.initWithoutFilter model.addressId model.data Nothing
                 |> mapFirst (flip s_txs model)
 
         BrowserGotFromDateBlock _ blockAt ->
@@ -353,6 +383,30 @@ type SetOrNoSet x
     = Set x
     | NoSet
     | Reset
+
+
+updateDirectionFilter : Update.Config -> Model -> Maybe Direction -> ( Model, List Effect )
+updateDirectionFilter _ model dir =
+    let
+        nt =
+            model.txs |> s_direction dir
+
+        ( tableNew, eff ) =
+            nt.table
+                |> PagedTable.goToFirstPage
+                |> PagedTable.loadFirstPage
+                    (transactionTableConfigWithMsg
+                        (GotTxsForAddressDetails ( nt.txMinBlock, nt.txMaxBlock ))
+                        nt
+                        model.addressId
+                    )
+    in
+    ( { model
+        | txs =
+            { nt | table = tableNew }
+      }
+    , Maybe.Extra.toList eff
+    )
 
 
 updateDatePickerRangeBlockRange : Update.Config -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )

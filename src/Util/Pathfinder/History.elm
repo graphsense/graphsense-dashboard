@@ -131,6 +131,12 @@ shallPushHistory plugins msg _ =
                 AddressDetails.CloseDateRangePicker ->
                     False
 
+                AddressDetails.ToggleTxTableIncoming ->
+                    False
+
+                AddressDetails.ToggleTxTableOutgoing ->
+                    False
+
                 AddressDetails.ResetDateRangePicker ->
                     False
 
