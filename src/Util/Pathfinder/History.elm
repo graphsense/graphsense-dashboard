@@ -331,3 +331,6 @@ shallPushHistory plugins msg _ =
 
         BrowserGotRelationsToVisibleNeighbors _ _ _ ->
             False
+
+        InternalPathfinderAddedAddress _ ->
+            False

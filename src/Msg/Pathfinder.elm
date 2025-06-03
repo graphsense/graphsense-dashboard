@@ -98,6 +98,7 @@ type Msg
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
     | BrowserGotRelationsToVisibleNeighbors Id Direction Api.Data.NeighborAddresses
+    | InternalPathfinderAddedAddress Id
 
 
 type alias TextTooltipConfig =
