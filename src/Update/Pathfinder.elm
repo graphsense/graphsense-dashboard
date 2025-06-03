@@ -228,9 +228,9 @@ updateByMsg plugins uc msg model =
                 let
                     onlyIds =
                         model.network.addresses
-                            |> Dict.values
-                            |> List.map (.id >> Id.id)
-                            |> List.filter ((/=) (Id.id id))
+                            |> Dict.keys
+                            |> List.filter (\aId -> aId /= id && Id.network aId == Id.network id)
+                            |> List.map Id.id
                 in
                 if List.isEmpty onlyIds then
                     browserGotAddressData uc plugins id position data model
@@ -464,7 +464,7 @@ updateByMsg plugins uc msg model =
                                             delNw =
                                                 Network.deleteTx txId model.network
                                         in
-                                        Tx.listAddressesForTx delNw.addresses t
+                                        Tx.listAddressesForTx t
                                             |> List.filter
                                                 (second >> .id >> (/=) addressId)
                                             |> List.map second
@@ -1399,6 +1399,10 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        InternalPathfinderAddedAddress _ ->
+            -- handled upstream
+            n model
+
 
 handleTx : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
 handleTx plugins uc config neighborId tx model =
@@ -1595,7 +1599,13 @@ browserGotAddressData uc plugins id position data model =
         |> s_details details
         |> s_colors ncolors
         |> s_clusters clusters
-        |> pairTo (fetchTagSummaryForId True model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
+        |> pairTo
+            (fetchTagSummaryForId True model.tagSummaries id
+                :: fetchActorsForAddress data model.actors
+                ++ eff
+                ++ effCluster
+                ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
+            )
         |> and (checkSelection uc)
 
 
@@ -2915,7 +2925,7 @@ autoLoadAddresses : Plugins -> Tx -> Model -> ( Model, List Effect )
 autoLoadAddresses plugins tx model =
     let
         addresses =
-            Tx.listAddressesForTx model.network.addresses tx
+            Tx.listAddressesForTx tx
                 |> List.map first
 
         aggAddressAdd addressId =
@@ -2933,7 +2943,9 @@ autoLoadAddresses plugins tx model =
                 Nothing
 
             else
-                (tx |> Tx.getInputAddressIds)
+                tx
+                    |> Tx.getInputAddressIds
+                    |> List.map Id.id
                     |> Set.fromList
                     |> getAddressForDirection tx Outgoing
     in

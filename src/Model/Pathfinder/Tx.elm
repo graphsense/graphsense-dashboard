@@ -39,7 +39,6 @@ import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Tuple exposing (pair)
-import Util.Pathfinder exposing (getAddress)
 
 
 type alias Tx =
@@ -65,6 +64,8 @@ type TxType
 type alias AccountTx =
     { from : Id
     , to : Id
+    , fromAddress : Maybe Address -- the address present on the graph
+    , toAddress : Maybe Address -- the address present on the graph
     , value : Api.Data.Values
     , raw : Api.Data.TxAccount
     }
@@ -79,7 +80,7 @@ type alias UtxoTx =
 
 type alias Io =
     { values : Api.Data.Values
-    , address : Maybe Address
+    , address : Maybe Address -- the address present on the graph
     , aggregatesN : Int
     }
 
@@ -149,46 +150,52 @@ hasInput id tx =
             Dict.get id inputs /= Nothing
 
 
-listAddressesForTx : Dict Id Address -> Tx -> List ( Direction, Address )
-listAddressesForTx addresses tx =
-    (case tx.type_ of
-        Account { from, to } ->
-            [ ( Incoming, from ), ( Outgoing, to ) ]
+listAddressesForTx : Tx -> List ( Direction, Address )
+listAddressesForTx tx =
+    case tx.type_ of
+        Account { fromAddress, toAddress } ->
+            [ fromAddress
+                |> Maybe.map (pair Incoming)
+            , toAddress
+                |> Maybe.map (pair Outgoing)
+            ]
+                |> List.filterMap identity
 
         Utxo { inputs, outputs } ->
-            (Dict.keys inputs
+            (Dict.values inputs
+                |> List.filterMap .address
                 |> List.map (pair Incoming)
             )
-                ++ (Dict.keys outputs
+                ++ (Dict.values outputs
+                        |> List.filterMap .address
                         |> List.map (pair Outgoing)
                    )
-    )
-        |> List.filterMap
-            (\( dir, a ) ->
-                getAddress addresses a
-                    |> Result.toMaybe
-                    |> Maybe.map (pair dir)
-            )
 
 
-getInputAddressIds : Tx -> List String
+getInputAddressIds : Tx -> List Id
 getInputAddressIds tx =
     case tx.type_ of
         Account { from } ->
-            [ from |> Id.id ]
+            [ from ]
 
         Utxo { raw } ->
-            raw.inputs |> Maybe.withDefault [] |> List.concatMap .address
+            raw.inputs
+                |> Maybe.withDefault []
+                |> List.concatMap .address
+                |> List.map (Id.init raw.currency)
 
 
-getOutputAddressIds : Tx -> List String
+getOutputAddressIds : Tx -> List Id
 getOutputAddressIds tx =
     case tx.type_ of
         Account { to } ->
-            [ to |> Id.id ]
+            [ to ]
 
         Utxo { raw } ->
-            raw.outputs |> Maybe.withDefault [] |> List.concatMap .address
+            raw.outputs
+                |> Maybe.withDefault []
+                |> List.concatMap .address
+                |> List.map (Id.init raw.currency)
 
 
 calcCoords : NList.Nonempty Address -> Coords

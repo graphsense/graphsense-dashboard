@@ -33,6 +33,7 @@ import Model exposing (..)
 import Model.Address as Address
 import Model.Currency
 import Model.Dialog as Dialog
+import Model.Entity as Entity
 import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
@@ -156,7 +157,7 @@ tooltipCloseIfNotAborted ( model, eff ) =
 
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
-    case Log.truncate "msg" msg of
+    case Log.log "msg" msg of
         NoOp ->
             n model
 
@@ -1094,13 +1095,8 @@ update plugins uc msg model =
                             let
                                 ( new, outMsg, cmd ) =
                                     addresses
-                                        |> List.filterMap
-                                            (\a ->
-                                                Dict.get (a |> Id.initClusterIdFromRecord) model.pathfinder.clusters
-                                                    |> Maybe.andThen (RD.toMaybe >> Maybe.map (Tuple.pair a))
-                                            )
-                                        |> List.map (\( x, e ) -> ( { address = x.address, currency = x.currency }, e ))
-                                        |> PluginInterface.AddressesAddedPathfinder
+                                        |> List.map (\x -> { address = x.address, currency = x.currency })
+                                        |> PluginInterface.AddressesAdded
                                         |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                                 ( pathfinder, pathfinderEffects ) =
@@ -1115,18 +1111,13 @@ update plugins uc msg model =
                             )
                                 |> updateByPluginOutMsg plugins uc outMsg
 
-                        Pathfinder.BrowserGotAddressData _ _ address ->
+                        Pathfinder.InternalPathfinderAddedAddress addressId ->
                             let
                                 ( new, outMsg, cmd ) =
-                                    address
+                                    addressId
+                                        |> Address.fromPathfinderId
                                         |> List.singleton
-                                        |> List.filterMap
-                                            (\a ->
-                                                Dict.get (a |> Id.initClusterIdFromRecord) model.pathfinder.clusters
-                                                    |> Maybe.andThen (RD.toMaybe >> Maybe.map (Tuple.pair a))
-                                            )
-                                        |> List.map (\( x, e ) -> ( { address = x.address, currency = x.currency }, e ))
-                                        |> PluginInterface.AddressesAddedPathfinder
+                                        |> PluginInterface.AddressesAdded
                                         |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                                 ( pathfinder, pathfinderEffects ) =
@@ -1141,12 +1132,12 @@ update plugins uc msg model =
                             )
                                 |> updateByPluginOutMsg plugins uc outMsg
 
-                        Pathfinder.BrowserGotClusterData id data ->
+                        Pathfinder.BrowserGotClusterData _ data ->
                             let
                                 ( new, outMsg, cmd ) =
-                                    ( id |> Address.fromPathfinderId, data )
+                                    { currency = data.currency, entity = data.entity }
                                         |> List.singleton
-                                        |> PluginInterface.AddressesAddedPathfinder
+                                        |> PluginInterface.EntitiesAdded
                                         |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                                 ( pathfinder, pathfinderEffects ) =
@@ -1231,7 +1222,11 @@ update plugins uc msg model =
                 Graph.InternalGraphAddedEntities ids ->
                     let
                         ( new, outMsg, cmd ) =
-                            Plugin.entitiesAdded plugins model.plugins ids
+                            ids
+                                |> Set.toList
+                                |> List.map Entity.fromId
+                                |> PluginInterface.EntitiesAdded
+                                |> Plugin.updateByCoreMsg plugins uc model.plugins
 
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
@@ -1556,6 +1551,9 @@ update plugins uc msg model =
                         )
                     )
 
+        DebouncePluginOutMsg outMsg ->
+            updateByPluginOutMsg plugins uc [ outMsg ] ( model, [] )
+
 
 apiRateExceededError : Locale.Model -> Auth -> Notification
 apiRateExceededError locale auth =
@@ -1641,7 +1639,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
     outMsgs
         |> List.foldl
             (\msg ( model, eff ) ->
-                case Log.log "outMsg" msg of
+                case Log.truncate "outMsg" msg of
                     PluginInterface.ShowBrowser ->
                         updateGraphByPluginOutMsg model eff msg
 
@@ -1688,21 +1686,67 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         )
 
                     PluginInterface.GetEntitiesForAddresses addresses toMsg ->
+                        let
+                            -- separate loaded clusters from loading ones
+                            ( ready, loading ) =
+                                addresses
+                                    |> List.foldl
+                                        (\address ( ready_, loading_ ) ->
+                                            let
+                                                addr =
+                                                    Dict.get (Id.initFromRecord address) model.pathfinder.network.addresses
+                                                        |> Maybe.andThen (.data >> RD.toMaybe)
+                                                        |> Maybe.andThen
+                                                            (\a ->
+                                                                Dict.get (Id.initClusterId a.currency a.entity) model.pathfinder.clusters
+                                                            )
+                                            in
+                                            case addr of
+                                                Just RD.Loading ->
+                                                    ( ready_, address :: loading_ )
+
+                                                Just (RD.Success c) ->
+                                                    ( ( address, c ) :: ready_, loading_ )
+
+                                                _ ->
+                                                    ( ready_, loading_ )
+                                        )
+                                        ( [], [] )
+                        in
                         addresses
                             |> List.filterMap
                                 (\address ->
                                     Layer.getEntityForAddress address model.graph.layers
                                         |> Maybe.map (pair address)
                                 )
+                            |> (++) ready
                             |> (\entities ->
                                     let
                                         ( new, outMsg, cmd ) =
                                             Plugin.update plugins uc (toMsg entities) model.plugins
+
+                                        tryAgain =
+                                            if List.isEmpty loading then
+                                                []
+
+                                            else
+                                                Process.sleep 100
+                                                    |> Task.perform
+                                                        (\_ ->
+                                                            PluginInterface.GetEntitiesForAddresses
+                                                                loading
+                                                                toMsg
+                                                                |> DebouncePluginOutMsg
+                                                        )
+                                                    |> CmdEffect
+                                                    |> List.singleton
                                     in
                                     ( { model
                                         | plugins = new
                                       }
-                                    , PluginEffect cmd :: eff
+                                    , PluginEffect cmd
+                                        :: eff
+                                        ++ tryAgain
                                     )
                                         |> updateByPluginOutMsg plugins uc outMsg
                                )
@@ -1712,6 +1756,10 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                             |> List.concatMap
                                 (\entity -> Layer.getEntities entity.currency entity.entity model.graph.layers)
                             |> List.map .entity
+                            |> (++)
+                                (Dict.values model.pathfinder.clusters
+                                    |> List.filterMap RD.toMaybe
+                                )
                             |> (\ents ->
                                     let
                                         ( new, outMsg, cmd ) =

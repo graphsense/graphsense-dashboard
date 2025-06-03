@@ -187,7 +187,7 @@ utxo plugins pluginStates vc model id viewState address =
         , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
 
         -- , learnMoreButton = { variant = none }
-        , categoryTags = { tagLabel = "" }
+        , categoryTags = { tagLabel = "", closeVisible = False }
         }
 
 
@@ -796,7 +796,7 @@ account plugins pluginStates vc model id viewState address =
         , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
         , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
-        , categoryTags = { tagLabel = "" }
+        , categoryTags = { tagLabel = "", closeVisible = False }
         , balanceRow = { iconInstance = none, title = "", value = "" }
         , totalSentRow = { iconInstance = none, title = "", value = "" }
         , sidePanelRowChevronOpen = { iconInstance = none, title = "", value = "" }
@@ -1075,10 +1075,11 @@ setTags vc viewState model id =
             labelOfActor
 
 
-sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html Pathfinder.Msg, chevronInstance : Html Pathfinder.Msg }
+sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html Pathfinder.Msg, addTagIconInstance : Html Pathfinder.Msg, chevronInstance : Html Pathfinder.Msg }
 sidePanelAddressCopyIcon vc id =
     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
     , copyIconInstance = Id.id id |> copyIconPathfinder vc
+    , addTagIconInstance = none
     , chevronInstance =
         div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
             [ HIcons.iconsChevronDownThinWithAttributes
