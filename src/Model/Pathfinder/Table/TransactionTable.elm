@@ -16,6 +16,7 @@ type alias Model =
     , txMinBlock : Maybe Int
     , txMaxBlock : Maybe Int
     , direction : Maybe Direction
+    , isTxFilterViewOpen : Bool
     }
 
 

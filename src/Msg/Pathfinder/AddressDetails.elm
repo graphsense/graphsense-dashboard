@@ -25,11 +25,16 @@ type Msg
     | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
     | UpdateDateRangePicker DurationDatePicker.Msg
+    | ToggleTxFilterView
+    | CloseTxFilterView
     | OpenDateRangePicker
     | CloseDateRangePicker
     | ResetDateRangePicker
-    | ToggleTxTableOutgoing
-    | ToggleTxTableIncoming
+    | ResetAllTxFilters
+    | ResetTxDirectionFilter
+    | TxTableFilterShowAllTxs
+    | TxTableFilterShowIncomingTxOnly
+    | TxTableFilterShowOutgoingTxOnly
     | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
     | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
     | TableMsg Table.State

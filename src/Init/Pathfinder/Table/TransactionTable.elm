@@ -1,4 +1,4 @@
-module Init.Pathfinder.Table.TransactionTable exposing (init, initWithoutFilter, loadFromDateBlock, loadToDateBlock)
+module Init.Pathfinder.Table.TransactionTable exposing (emptyDateFilter, init, initWithFilter, loadFromDateBlock, loadToDateBlock)
 
 import Api.Data
 import Api.Request.Addresses
@@ -8,6 +8,7 @@ import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
 import Init.Graph.Table
+import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
 import Model.Pathfinder.Address as Address
@@ -24,6 +25,11 @@ import Util.Data exposing (timestampToPosix)
 itemsPerPage : Int
 itemsPerPage =
     5
+
+
+emptyDateFilter : { txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) }
+emptyDateFilter =
+    { txMinBlock = Nothing, txMaxBlock = Nothing, dateRangePicker = Nothing }
 
 
 init : Network -> Locale.Model -> Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
@@ -58,16 +64,17 @@ init network locale addressId data =
                   , txMinBlock = Just data.firstTx.height
                   , txMaxBlock = Just data.lastTx.height
                   , direction = Nothing
+                  , isTxFilterViewOpen = False
                   }
                 , loadTxs addressId mn mx
                 )
             )
         |> Maybe.withDefault
-            (initWithoutFilter addressId data Nothing)
+            (initWithFilter addressId data emptyDateFilter Nothing)
 
 
-initWithoutFilter : Id -> Api.Data.Address -> Maybe Direction -> ( TransactionTable.Model, List Effect )
-initWithoutFilter addressId data direction =
+initWithFilter : Id -> Api.Data.Address -> { x | txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) } -> Maybe Direction -> ( TransactionTable.Model, List Effect )
+initWithFilter addressId data dateFilter direction =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -80,12 +87,13 @@ initWithoutFilter addressId data direction =
     in
     ( { table = table True
       , order = Nothing
-      , dateRangePicker = Nothing
-      , txMinBlock = Nothing
-      , txMaxBlock = Nothing
+      , dateRangePicker = dateFilter.dateRangePicker
+      , txMinBlock = dateFilter.txMinBlock
+      , txMaxBlock = dateFilter.txMaxBlock
       , direction = direction
+      , isTxFilterViewOpen = False
       }
-    , (GotTxsForAddressDetails ( Nothing, Nothing ) >> AddressDetailsMsg addressId)
+    , (GotTxsForAddressDetails ( dateFilter.txMinBlock, dateFilter.txMaxBlock ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsEffect
             { currency = Id.network addressId
             , address = Id.id addressId
@@ -94,8 +102,8 @@ initWithoutFilter addressId data direction =
             , nextpage = Nothing
             , order = Nothing
             , tokenCurrency = Nothing
-            , minHeight = Nothing
-            , maxHeight = Nothing
+            , minHeight = dateFilter.txMinBlock
+            , maxHeight = dateFilter.txMaxBlock
             }
         |> ApiEffect
         |> List.singleton

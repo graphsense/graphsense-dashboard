@@ -215,14 +215,31 @@ update uc msg model =
 
                                 else
                                     ( model.txs.txMaxBlock, [] )
+
+                            eff =
+                                startEff ++ endEff
+
+                            np =
+                                if List.length eff > 0 then
+                                    newPicker |> DateRangePicker.closePicker
+
+                                else
+                                    newPicker
                         in
                         ( { model
-                            | txs = s_dateRangePicker (Just newPicker) model.txs |> s_txMinBlock txMinBlock |> s_txMaxBlock txMaxBlock
+                            | txs = s_dateRangePicker (Just np) model.txs |> s_txMinBlock txMinBlock |> s_txMaxBlock txMaxBlock
                           }
-                        , startEff ++ endEff
+                        , eff
                         )
                     )
                 |> Maybe.withDefault (n model)
+
+        ToggleTxFilterView ->
+            model.txs.dateRangePicker
+                |> flip s_dateRangePicker model.txs
+                |> s_isTxFilterViewOpen (not model.txs.isTxFilterViewOpen)
+                |> flip s_txs model
+                |> n
 
         OpenDateRangePicker ->
             let
@@ -244,41 +261,32 @@ update uc msg model =
             model.txs.dateRangePicker
                 |> Maybe.map DateRangePicker.closePicker
                 |> flip s_dateRangePicker model.txs
+                |> s_isTxFilterViewOpen False
                 |> flip s_txs model
                 |> n
 
-        ToggleTxTableOutgoing ->
-            let
-                newDirection =
-                    case model.txs.direction of
-                        Just Incoming ->
-                            Nothing
+        CloseTxFilterView ->
+            model.txs |> s_isTxFilterViewOpen False |> flip s_txs model |> n
 
-                        Just Outgoing ->
-                            Just Incoming
+        TxTableFilterShowAllTxs ->
+            updateDirectionFilter uc model Nothing
 
-                        Nothing ->
-                            Just Incoming
-            in
-            updateDirectionFilter uc model newDirection
+        TxTableFilterShowIncomingTxOnly ->
+            updateDirectionFilter uc model (Just Incoming)
 
-        ToggleTxTableIncoming ->
-            let
-                newDirection =
-                    case model.txs.direction of
-                        Just Incoming ->
-                            Just Outgoing
+        TxTableFilterShowOutgoingTxOnly ->
+            updateDirectionFilter uc model (Just Outgoing)
 
-                        Just Outgoing ->
-                            Nothing
-
-                        Nothing ->
-                            Just Outgoing
-            in
-            updateDirectionFilter uc model newDirection
+        ResetAllTxFilters ->
+            TransactionTable.initWithFilter model.addressId model.data TransactionTable.emptyDateFilter Nothing
+                |> mapFirst (flip s_txs model)
 
         ResetDateRangePicker ->
-            TransactionTable.initWithoutFilter model.addressId model.data Nothing
+            TransactionTable.initWithFilter model.addressId model.data TransactionTable.emptyDateFilter model.txs.direction
+                |> mapFirst (flip s_txs model)
+
+        ResetTxDirectionFilter ->
+            TransactionTable.initWithFilter model.addressId model.data model.txs Nothing
                 |> mapFirst (flip s_txs model)
 
         BrowserGotFromDateBlock _ blockAt ->
@@ -389,7 +397,7 @@ updateDirectionFilter : Update.Config -> Model -> Maybe Direction -> ( Model, Li
 updateDirectionFilter _ model dir =
     let
         nt =
-            model.txs |> s_direction dir
+            model.txs |> s_direction dir |> s_isTxFilterViewOpen False
 
         ( tableNew, eff ) =
             nt.table
@@ -439,6 +447,7 @@ updateDatePickerRangeBlockRange _ model txMinBlock txMaxBlock =
 
         txsNew =
             model.txs
+                |> s_isTxFilterViewOpen False
                 |> s_txMinBlock txmin
                 |> s_txMaxBlock txmax
 
