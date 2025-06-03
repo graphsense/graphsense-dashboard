@@ -1087,12 +1087,11 @@ update plugins uc msg model =
                             )
                                 |> updateByPluginOutMsg plugins uc outMsg
 
-                        Pathfinder.BrowserGotAddressData _ _ address ->
+                        Pathfinder.InternalPathfinderAddedAddress addressId ->
                             let
                                 ( new, outMsg, cmd ) =
-                                    { address = address.address
-                                    , currency = address.currency
-                                    }
+                                    addressId
+                                        |> Address.fromPathfinderId
                                         |> List.singleton
                                         |> PluginInterface.AddressesAdded
                                         |> Plugin.updateByCoreMsg plugins uc model.plugins
@@ -1605,7 +1604,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
     outMsgs
         |> List.foldl
             (\msg ( model, eff ) ->
-                case Log.log "outMsg" msg of
+                case Log.truncate "outMsg" msg of
                     PluginInterface.ShowBrowser ->
                         updateGraphByPluginOutMsg model eff msg
 

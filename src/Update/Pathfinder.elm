@@ -1259,6 +1259,10 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        InternalPathfinderAddedAddress _ ->
+            -- handled upstream
+            n model
+
 
 handleTx : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
 handleTx plugins uc config neighborId tx model =
@@ -1455,7 +1459,13 @@ browserGotAddressData uc plugins id position data model =
         |> s_details details
         |> s_colors ncolors
         |> s_clusters clusters
-        |> pairTo (fetchTagSummaryForId True model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
+        |> pairTo
+            (fetchTagSummaryForId True model.tagSummaries id
+                :: fetchActorsForAddress data model.actors
+                ++ eff
+                ++ effCluster
+                ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
+            )
         |> and (checkSelection uc)
 
 

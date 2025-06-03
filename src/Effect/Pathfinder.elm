@@ -22,6 +22,7 @@ type Effect
     | RepositionTooltipEffect
     | CloseTooltipEffect (Maybe { context : String, domId : String }) Bool
     | PostponeUpdateByRouteEffect Route
+    | InternalEffect Msg
 
 
 perform : Effect -> Cmd Msg
@@ -63,3 +64,7 @@ perform eff =
         PostponeUpdateByRouteEffect route ->
             Process.sleep 10
                 |> Task.perform (\_ -> RuntimePostponedUpdateByRoute route)
+
+        -- managed in Effect.elm
+        InternalEffect msg ->
+            Cmd.none
