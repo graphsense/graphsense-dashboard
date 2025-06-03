@@ -74,6 +74,7 @@ account vc id tx =
             { identifier = ("0x" ++ Id.id id) |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = ("0x" ++ Id.id id) |> String.split "_" |> List.head |> Maybe.withDefault "" |> copyIconPathfinder vc
             , chevronInstance = chevronActions
+            , addTagIconInstance = none
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -152,6 +153,7 @@ utxo vc model id viewState tx =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
             , chevronInstance = chevronActions
+            , addTagIconInstance = none
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
