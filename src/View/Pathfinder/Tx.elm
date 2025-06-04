@@ -2,9 +2,7 @@ module View.Pathfinder.Tx exposing (edge, view)
 
 import Config.Pathfinder as Pathfinder
 import Config.View as View
-import Dict exposing (Dict)
-import Model.Pathfinder.Address exposing (Address)
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (Tx, TxType(..))
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
@@ -27,13 +25,13 @@ view plugins vc gc tx annotation =
                 |> AccountTx.view plugins vc gc tx t
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Tx -> ( String, Svg Msg )
-edge plugins vc gc addresses tx =
+edge : Plugins -> View.Config -> Pathfinder.Config -> Tx -> ( String, Svg Msg )
+edge plugins vc gc tx =
     ( Id.toString tx.id
     , case tx.type_ of
         Utxo t ->
             Svg.lazy6 Utxo.edge plugins vc gc (tx.selected || tx.hovered) t tx
 
         Account t ->
-            Svg.lazy7 AccountTx.edge plugins vc gc (tx.selected || tx.hovered) addresses t tx
+            Svg.lazy6 AccountTx.edge plugins vc gc (tx.selected || tx.hovered) t tx
     )

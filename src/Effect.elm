@@ -116,6 +116,10 @@ perform plugins key statusbarToken apiKey effect =
                 Pathfinder.ShowNotificationEffect n ->
                     Task.perform (always (ShowNotification n)) (Task.succeed ())
 
+                Pathfinder.InternalEffect msg ->
+                    Task.succeed (msg |> PathfinderMsg)
+                        |> Task.perform identity
+
         GraphEffect eff ->
             case eff of
                 Graph.ApiEffect apiEff ->

@@ -4,26 +4,29 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
+import Css.Pathfinder as PCSS
 import Css.Table exposing (Styles)
 import Css.View
 import Dict
-import Html.Styled exposing (span)
+import Html.Styled exposing (span, td, th)
 import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
+import Model.Direction
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx exposing (ioToId)
-import Msg.Pathfinder exposing (IoDirection, Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
 import Table
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.Checkbox
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (alignColumnHeader)
+import View.Pathfinder.PagedTable exposing (addTHeadOverwrite, alignColumnHeader)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
 
 
@@ -34,8 +37,8 @@ type alias IoColumnConfig =
     }
 
 
-config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> IoColumnConfig -> Table.Config Api.Data.TxValue Msg
-config styles vc ioDirection isCheckedFn ioColumnConfig =
+config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> Bool -> IoColumnConfig -> Table.Config Api.Data.TxValue Msg
+config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
     let
         rightAlignedColumns =
             Dict.fromList [ ( "Value", View.Pathfinder.PagedTable.RightAligned ) ]
@@ -56,6 +59,45 @@ config styles vc ioDirection isCheckedFn ioColumnConfig =
                                 ++ [ Css.display Css.tableCell ]
                             )
                     )
+
+        c =
+            customizations styles_ vc |> alignColumnHeader styles_ vc rightAlignedColumns
+
+        addAllCheckbox =
+            Util.Checkbox.checkbox
+                { state = Util.Checkbox.stateFromBool allChecked
+                , size = Util.Checkbox.smallSize
+                , msg =
+                    UserClickedAllAddressCheckboxInTable
+                        (case ioDirection of
+                            Inputs ->
+                                Model.Direction.Outgoing
+
+                            Outputs ->
+                                Model.Direction.Incoming
+                        )
+                }
+                ([ Css.paddingLeft <| Css.px 5 ]
+                    |> css
+                    |> List.singleton
+                )
+
+        newTheadWithCheckbox =
+            addTHeadOverwrite ""
+                (\( _, _, a ) ->
+                    Table.HtmlDetails
+                        [ a
+                        , [ PCSS.mGap |> Css.padding
+                          , Css.width <| Css.px 50
+                          ]
+                            |> css
+                        ]
+                        [ th [] [ td [] [ addAllCheckbox ] ] ]
+                )
+                c.thead
+
+        cc =
+            c |> Rs.s_thead newTheadWithCheckbox
 
         network =
             ioColumnConfig.network
@@ -86,7 +128,7 @@ config styles vc ioDirection isCheckedFn ioColumnConfig =
                 "Value"
                 .value
             ]
-        , customizations = customizations styles_ vc |> alignColumnHeader styles_ vc rightAlignedColumns
+        , customizations = cc
         }
 
 

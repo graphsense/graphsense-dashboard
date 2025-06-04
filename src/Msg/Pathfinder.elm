@@ -61,6 +61,7 @@ type Msg
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
     | UserClickedAddressCheckboxInTable Id
+    | UserClickedAllAddressCheckboxInTable Direction
     | WorkflowNextUtxoTx WorkflowNextUtxoTx.Config (Maybe Id) WorkflowNextUtxoTx.Msg
     | WorkflowNextTxByTime WorkflowNextTxByTime.Config (Maybe Id) WorkflowNextTxByTime.Msg
     | UserPushesLeftMouseButtonOnUtxoTx Id Coords
@@ -98,6 +99,7 @@ type Msg
     | CloseTextTooltip TextTooltipConfig
     | UserClickedToggleTracingMode
     | BrowserGotRelationsToVisibleNeighbors Id Direction Api.Data.NeighborAddresses
+    | InternalPathfinderAddedAddress Id
 
 
 type alias TextTooltipConfig =

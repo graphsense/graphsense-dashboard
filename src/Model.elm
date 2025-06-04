@@ -138,6 +138,7 @@ type Msg
     | UserToggledNavbarSubMenu NavbarSubMenuType
     | UserClosesNavbarSubMenu
     | BrowserGotUncaughtError Json.Encode.Value
+    | DebouncePluginOutMsg Plugin.OutMsg
 
 
 type SettingsMsg

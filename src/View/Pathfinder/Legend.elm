@@ -62,13 +62,13 @@ legendView plugins vc closeMsg =
         { additionalIconsItemsList =
             [ legendItem vc
                 IconItem
-                { description = "Confirmed tag on this address."
+                { description = "Attribution tag on this address."
                 , icon = Icons.iconsTagL { root = { type_ = Icons.IconsTagLTypeDirect } }
                 , label = "Direct Tag"
                 }
             , legendItem vc
                 IconItem
-                { description = "Tag inferred via cluster association."
+                { description = "Attribution tag inferred via clustering."
                 , icon = Icons.iconsTagL { root = { type_ = Icons.IconsTagLTypeIndirect } }
                 , label = "Indirect Tag"
                 }
@@ -96,13 +96,13 @@ legendView plugins vc closeMsg =
                 }
             , legendItem vc
                 Node
-                { description = "Verified cryptoasset exchange."
+                { description = "Known cryptoasset exchange."
                 , icon = Icons.iconsExchangeSnoPadding {}
                 , label = "Exchange"
                 }
             , legendItem vc
                 Node
-                { description = "Likely a service (e.g. high activity), but not confirmed."
+                { description = "Might be a service (e.g. high activity), but not confirmed."
                 , icon = Icons.iconsUnknownServiceSnoPadding {}
                 , label = "Possible Service"
                 }
@@ -121,7 +121,7 @@ legendView plugins vc closeMsg =
             ]
         }
         { root =
-            { header = Locale.string vc.locale "Visualization Legend"
+            { header = Locale.string vc.locale "Symbol Guide"
             , header2 = Locale.string vc.locale "Graph Nodes"
             , header3 = Locale.string vc.locale "Additional Icons"
             }

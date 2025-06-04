@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.05.5] - 2025-06-03
+
+### Fixed
+
+- 6b691bd1 refactor addressesAdded/entitiesAdded hooks
+
+## [25.05.4] - 2025-05-30
+
+### Fixed
+
+- 64460e2b only check addresses of same network for relations
+
 ## [25.05.3] - 2025-05-28
 
 ### Changed

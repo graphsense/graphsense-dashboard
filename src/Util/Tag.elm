@@ -40,6 +40,7 @@ conceptItem vc id k =
             { root =
                 { tagLabel =
                     View.getConceptName vc k |> Maybe.withDefault k
+                , closeVisible = False
                 }
             }
         ]

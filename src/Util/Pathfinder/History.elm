@@ -218,6 +218,9 @@ shallPushHistory plugins msg _ =
         UserClickedAddressCheckboxInTable _ ->
             True
 
+        UserClickedAllAddressCheckboxInTable _ ->
+            True
+
         WorkflowNextUtxoTx _ _ _ ->
             False
 
@@ -330,4 +333,7 @@ shallPushHistory plugins msg _ =
             False
 
         BrowserGotRelationsToVisibleNeighbors _ _ _ ->
+            False
+
+        InternalPathfinderAddedAddress _ ->
             False

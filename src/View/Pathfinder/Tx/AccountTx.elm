@@ -4,16 +4,14 @@ import Animation as A
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
-import Dict exposing (Dict)
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency exposing (asset)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
-import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.ContextMenu as ContextMenu
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
@@ -26,7 +24,6 @@ import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeEthAttribute
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
-import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
@@ -118,8 +115,8 @@ view _ vc _ tx accTx annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Dict Id Address -> AccountTx -> AnimatedPosTrait x -> Svg Msg
-edge _ vc _ hovered addresses tx aTxPos =
+edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> AccountTx -> AnimatedPosTrait x -> Svg Msg
+edge _ vc _ hovered tx aTxPos =
     let
         radTx =
             GraphComponents.txNodeEthNodeEllipse_details.width / 2
@@ -197,12 +194,6 @@ edge _ vc _ hovered addresses tx aTxPos =
                         |> onClickWithStop
                     ]
         )
-        (tx.from
-            |> getAddress addresses
-            |> Result.toMaybe
-        )
-        (tx.to
-            |> getAddress addresses
-            |> Result.toMaybe
-        )
+        tx.fromAddress
+        tx.toAddress
         |> Maybe.withDefault (text "")

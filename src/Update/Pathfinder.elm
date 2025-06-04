@@ -228,9 +228,9 @@ updateByMsg plugins uc msg model =
                 let
                     onlyIds =
                         model.network.addresses
-                            |> Dict.values
-                            |> List.map (.id >> Id.id)
-                            |> List.filter ((/=) (Id.id id))
+                            |> Dict.keys
+                            |> List.filter (\aId -> aId /= id && Id.network aId == Id.network id)
+                            |> List.map Id.id
                 in
                 if List.isEmpty onlyIds then
                     browserGotAddressData uc plugins id position data model
@@ -464,7 +464,7 @@ updateByMsg plugins uc msg model =
                                             delNw =
                                                 Network.deleteTx txId model.network
                                         in
-                                        Tx.listAddressesForTx delNw.addresses t
+                                        Tx.listAddressesForTx t
                                             |> List.filter
                                                 (second >> .id >> (/=) addressId)
                                             |> List.map second
@@ -1000,6 +1000,48 @@ updateByMsg plugins uc msg model =
         UserClickedAddressCheckboxInTable id ->
             userClickedAddressCheckboxInTable plugins id model
 
+        UserClickedAllAddressCheckboxInTable dir ->
+            case model.details of
+                Just (TxDetails _ data) ->
+                    let
+                        t =
+                            case dir of
+                                Incoming ->
+                                    data.outputsTable
+
+                                Outgoing ->
+                                    data.inputsTable
+
+                        network =
+                            data.tx |> Tx.getNetwork
+
+                        idsTable =
+                            t.data
+                                |> List.filterMap (Tx.ioToId network)
+
+                        allChecked =
+                            idsTable
+                                |> List.all (flip Dict.member model.network.addresses)
+
+                        deleteAcc aId ( m, eff ) =
+                            removeAddress aId m |> Tuple.mapSecond ((++) eff)
+
+                        addAcc aId ( m, eff ) =
+                            loadAddress plugins aId m |> Tuple.mapSecond ((++) eff)
+                    in
+                    if allChecked then
+                        idsTable
+                            |> List.filter (flip Dict.member model.network.addresses)
+                            |> List.foldl deleteAcc (n model)
+
+                    else
+                        idsTable
+                            |> List.filter (flip Dict.member model.network.addresses >> not)
+                            |> List.foldl addAcc (n model)
+
+                _ ->
+                    n model
+
         UserClickedTx id ->
             userClickedTx id model
 
@@ -1369,6 +1411,10 @@ updateByMsg plugins uc msg model =
                 |> flip s_config model
                 |> n
 
+        InternalPathfinderAddedAddress _ ->
+            -- handled upstream
+            n model
+
 
 handleTx : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
 handleTx plugins uc config neighborId tx model =
@@ -1565,7 +1611,13 @@ browserGotAddressData uc plugins id position data model =
         |> s_details details
         |> s_colors ncolors
         |> s_clusters clusters
-        |> pairTo (fetchTagSummaryForId True model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff ++ effCluster)
+        |> pairTo
+            (fetchTagSummaryForId True model.tagSummaries id
+                :: fetchActorsForAddress data model.actors
+                ++ eff
+                ++ effCluster
+                ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
+            )
         |> and (checkSelection uc)
 
 
@@ -2886,7 +2938,7 @@ autoLoadAddresses : Plugins -> Tx -> Model -> ( Model, List Effect )
 autoLoadAddresses plugins tx model =
     let
         addresses =
-            Tx.listAddressesForTx model.network.addresses tx
+            Tx.listAddressesForTx tx
                 |> List.map first
 
         aggAddressAdd addressId =
@@ -2904,7 +2956,9 @@ autoLoadAddresses plugins tx model =
                 Nothing
 
             else
-                (tx |> Tx.getInputAddressIds)
+                tx
+                    |> Tx.getInputAddressIds
+                    |> List.map Id.id
                     |> Set.fromList
                     |> getAddressForDirection tx Outgoing
     in

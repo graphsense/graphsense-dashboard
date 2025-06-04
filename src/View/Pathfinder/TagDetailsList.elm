@@ -34,6 +34,7 @@ view vc closeMsg id tags =
                     { chevronInstance = none
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc
                     , identifier = Id.id id
+                    , addTagIconInstance = none
                     }
                 }
     in
