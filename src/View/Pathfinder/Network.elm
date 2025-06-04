@@ -1,13 +1,15 @@
-module View.Pathfinder.Network exposing (addresses, edges, txs)
+module View.Pathfinder.Network exposing (addresses, relations, txs)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict exposing (Dict)
+import IntDict
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Relation exposing (Relations)
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
@@ -18,6 +20,7 @@ import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
+import View.Pathfinder.Relation as Relation
 import View.Pathfinder.Tx as Tx
 
 
@@ -35,25 +38,27 @@ addresses plugins vc pc colors clusters annotations =
         >> Keyed.node "g" []
 
 
-txs : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Svg Msg
-txs plugins vc gc annotations =
-    Dict.foldl
-        (\id tx svg ->
-            ( Id.toString id
-            , Annotations.getAnnotation id annotations
-                |> Svg.lazy5 Tx.view plugins vc gc tx
+relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Relations -> Svg Msg
+relations plugins vc gc annotations =
+    .relations
+        >> IntDict.foldl
+            (\_ rel svg ->
+                Relation.view plugins vc gc annotations rel
+                    ++ svg
             )
-                :: svg
-        )
-        []
+            []
         >> Keyed.node "g" []
 
 
-edges : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Tx -> Svg Msg
-edges plugins vc gc =
-    Dict.foldl
-        (\_ tx svg ->
-            Tx.edge plugins vc gc tx :: svg
+txs : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> List Tx -> Svg Msg
+txs plugins vc gc annotations =
+    List.foldl
+        (\tx svg ->
+            ( Id.toString tx.id
+            , Annotations.getAnnotation tx.id annotations
+                |> Svg.lazy5 Tx.view plugins vc gc tx
+            )
+                :: svg
         )
         []
         >> Keyed.node "g" []

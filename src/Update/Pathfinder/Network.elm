@@ -42,6 +42,7 @@ import Set
 import Tuple exposing (pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
+import Update.Pathfinder.Relation as Relation
 import Update.Pathfinder.Tx as Tx
 
 
@@ -381,7 +382,19 @@ updateAddressesByClusterId id update model =
 
 updateTx : Id -> (Tx -> Tx) -> Network -> Network
 updateTx id update model =
-    { model | txs = Dict.update id (Maybe.map update) model.txs }
+    Dict.get id model.txs
+        |> Maybe.map
+            (\tx ->
+                let
+                    newTx =
+                        update tx
+                in
+                { model
+                    | txs = Dict.insert id newTx model.txs
+                    , relations = Relation.insertTx newTx model.relations
+                }
+            )
+        |> Maybe.withDefault model
 
 
 getYForPathAfterX : Network -> Float -> Float -> Float
@@ -594,6 +607,7 @@ insertTx network tx =
             (\( dir, a ) -> updateAddress a.id (upd dir))
             { network
                 | txs = Dict.insert tx.id newTx network.txs
+                , relations = Relation.insertTx newTx network.relations
             }
         |> pair newTx
 
@@ -822,6 +836,7 @@ deleteTx id network =
                         (\( _, a ) -> updateAddress a.id (Address.removeTx tx.id))
                         { network
                             | txs = Dict.remove id network.txs
+                            , relations = Relation.deleteTx id network.relations
                         }
             )
         |> Maybe.withDefault network
