@@ -96,26 +96,35 @@ update msg model =
             ( close model, NoSelection )
 
 
-defaultConfig : (a -> String) -> Config a
+defaultConfig : (a -> String) -> Config a b
 defaultConfig optionToLabel =
-    { optionToLabel = optionToLabel }
+    { optionToLabel = optionToLabel, width = Nothing }
 
 
-type alias Config a =
+type alias Config a b =
     { optionToLabel : a -> String
+    , width : Maybe (Css.ExplicitLength b)
     }
 
 
-viewWithLabel : Config a -> Model a -> a -> String -> Html (Msg a)
+viewWithLabel : Config a b -> Model a -> a -> String -> Html (Msg a)
 viewWithLabel config m selected label =
     F.dropDownLabel { dropDown = { variant = view config m selected }, root = { label = label } }
 
 
-view : Config a -> Model a -> a -> Html (Msg a)
+view : Config a b -> Model a -> a -> Html (Msg a)
 view config (SelectBox sBox) selected =
     let
         selectedItem =
             List.Extra.find ((==) selected) sBox.options
+
+        widthAttr =
+            case config.width of
+                Just w ->
+                    [ Css.width w |> Css.important ] |> css
+
+                _ ->
+                    [ Css.width (Css.px Sc.dropDownClosed_details.width) |> Css.important ] |> css
 
         createRow sItem hoverEffect x =
             let
@@ -130,6 +139,7 @@ view config (SelectBox sBox) selected =
                            )
                         |> css
                     , Util.View.onClickWithStop (Select x)
+                    , widthAttr
                     ]
             in
             Sc.dropDownLabelsWithAttributes
@@ -159,7 +169,6 @@ view config (SelectBox sBox) selected =
                 [ Css.position Css.absolute
                 , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1))
                 , Css.top (Css.px Sc.dropDownClosed_details.height)
-                , Css.width (Css.px Sc.dropDownClosed_details.width)
                 , Css.property "user-select" "none"
                 , Css.height Css.auto
                 ]
@@ -180,8 +189,10 @@ view config (SelectBox sBox) selected =
                             |> Css.height
                             |> Css.important
                         ]
+                    , widthAttr
                     ]
-                |> Rs.s_dropDownList [ css dropdownOverlayCss ]
+                |> Rs.s_dropDownList [ css dropdownOverlayCss, widthAttr ]
+                |> Rs.s_dropDownHeaderOpen [ widthAttr ]
             )
             { dropDownList = dropDownList
             }
@@ -196,6 +207,7 @@ view config (SelectBox sBox) selected =
                 |> Rs.s_root
                     [ Util.View.onClickWithStop Open
                     , Util.View.pointer
+                    , widthAttr
                     ]
             )
             { root = { text = selectedLabel } }

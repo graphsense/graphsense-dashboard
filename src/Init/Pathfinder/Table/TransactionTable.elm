@@ -1,4 +1,4 @@
-module Init.Pathfinder.Table.TransactionTable exposing (allAssetsName, emptyDateFilter, init, initWithFilter, loadFromDateBlock, loadToDateBlock)
+module Init.Pathfinder.Table.TransactionTable exposing (emptyDateFilter, init, initWithFilter, loadFromDateBlock, loadToDateBlock)
 
 import Api.Data
 import Api.Request.Addresses
@@ -33,14 +33,9 @@ emptyDateFilter =
     { txMinBlock = Nothing, txMaxBlock = Nothing, dateRangePicker = Nothing }
 
 
-allAssetsName : String
-allAssetsName =
-    "all assets"
-
-
-getCompleteAssetList : List String -> List String
+getCompleteAssetList : List String -> List (Maybe String)
 getCompleteAssetList l =
-    allAssetsName :: l
+    Nothing :: (l |> List.map Just)
 
 
 init : Network -> Locale.Model -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
@@ -83,11 +78,11 @@ init network locale addressId data assets =
                 )
             )
         |> Maybe.withDefault
-            (initWithFilter addressId data emptyDateFilter Nothing assets)
+            (initWithFilter addressId data emptyDateFilter Nothing Nothing assets)
 
 
-initWithFilter : Id -> Api.Data.Address -> { x | txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) } -> Maybe Direction -> List String -> ( TransactionTable.Model, List Effect )
-initWithFilter addressId data dateFilter direction assets =
+initWithFilter : Id -> Api.Data.Address -> { x | txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) } -> Maybe Direction -> Maybe String -> List String -> ( TransactionTable.Model, List Effect )
+initWithFilter addressId data dateFilter direction selectedAsset assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -106,7 +101,7 @@ initWithFilter addressId data dateFilter direction assets =
       , direction = direction
       , isTxFilterViewOpen = False
       , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
-      , selectedAsset = Nothing
+      , selectedAsset = selectedAsset
       }
     , (GotTxsForAddressDetails ( dateFilter.txMinBlock, dateFilter.txMaxBlock ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsEffect
@@ -116,7 +111,7 @@ initWithFilter addressId data dateFilter direction assets =
             , pagesize = itemsPerPage
             , nextpage = Nothing
             , order = Nothing
-            , tokenCurrency = Nothing
+            , tokenCurrency = selectedAsset
             , minHeight = dateFilter.txMinBlock
             , maxHeight = dateFilter.txMaxBlock
             }

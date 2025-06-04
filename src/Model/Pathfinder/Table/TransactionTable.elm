@@ -18,7 +18,7 @@ type alias Model =
     , txMaxBlock : Maybe Int
     , direction : Maybe Direction
     , isTxFilterViewOpen : Bool
-    , assetSelectBox : ThemedSelectBox.Model String
+    , assetSelectBox : ThemedSelectBox.Model (Maybe String)
     , selectedAsset : Maybe String
     }
 

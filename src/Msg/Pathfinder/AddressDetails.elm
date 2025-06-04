@@ -33,10 +33,11 @@ type Msg
     | ResetDateRangePicker
     | ResetAllTxFilters
     | ResetTxDirectionFilter
+    | ResetTxAssetFilter
     | TxTableFilterShowAllTxs
     | TxTableFilterShowIncomingTxOnly
     | TxTableFilterShowOutgoingTxOnly
-    | TxTableAssetSelectBoxMsg (ThemedSelectBox.Msg String)
+    | TxTableAssetSelectBoxMsg (ThemedSelectBox.Msg (Maybe String))
     | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
     | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
     | TableMsg Table.State

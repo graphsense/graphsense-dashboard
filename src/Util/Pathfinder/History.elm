@@ -152,6 +152,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.ResetAllTxFilters ->
                     False
 
+                AddressDetails.ResetTxAssetFilter ->
+                    False
+
                 AddressDetails.ResetTxDirectionFilter ->
                     False
 
