@@ -1,4 +1,4 @@
-module Init.Pathfinder.Table.TransactionTable exposing (init, initWithoutFilter, loadFromDateBlock, loadToDateBlock)
+module Init.Pathfinder.Table.TransactionTable exposing (emptyDateFilter, init, initWithFilter, loadFromDateBlock, loadToDateBlock)
 
 import Api.Data
 import Api.Request.Addresses
@@ -8,6 +8,7 @@ import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
 import Init.Graph.Table
+import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
 import Model.Pathfinder.Address as Address
@@ -19,6 +20,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import PagedTable
 import Util.Data exposing (timestampToPosix)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 itemsPerPage : Int
@@ -26,8 +28,18 @@ itemsPerPage =
     5
 
 
-init : Network -> Locale.Model -> Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
-init network locale addressId data =
+emptyDateFilter : { txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) }
+emptyDateFilter =
+    { txMinBlock = Nothing, txMaxBlock = Nothing, dateRangePicker = Nothing }
+
+
+getCompleteAssetList : List String -> List (Maybe String)
+getCompleteAssetList l =
+    Nothing :: (l |> List.map Just)
+
+
+init : Network -> Locale.Model -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
+init network locale addressId data assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -57,16 +69,20 @@ init network locale addressId data =
                             |> Just
                   , txMinBlock = Just data.firstTx.height
                   , txMaxBlock = Just data.lastTx.height
+                  , direction = Nothing
+                  , isTxFilterViewOpen = False
+                  , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
+                  , selectedAsset = Nothing
                   }
                 , loadTxs addressId mn mx
                 )
             )
         |> Maybe.withDefault
-            (initWithoutFilter addressId data)
+            (initWithFilter addressId data emptyDateFilter Nothing Nothing assets)
 
 
-initWithoutFilter : Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
-initWithoutFilter addressId data =
+initWithFilter : Id -> Api.Data.Address -> { x | txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) } -> Maybe Direction -> Maybe String -> List String -> ( TransactionTable.Model, List Effect )
+initWithFilter addressId data dateFilter direction selectedAsset assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -79,21 +95,25 @@ initWithoutFilter addressId data =
     in
     ( { table = table True
       , order = Nothing
-      , dateRangePicker = Nothing
-      , txMinBlock = Nothing
-      , txMaxBlock = Nothing
+      , dateRangePicker = dateFilter.dateRangePicker
+      , txMinBlock = dateFilter.txMinBlock
+      , txMaxBlock = dateFilter.txMaxBlock
+      , direction = direction
+      , isTxFilterViewOpen = False
+      , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
+      , selectedAsset = selectedAsset
       }
-    , (GotTxsForAddressDetails ( Nothing, Nothing ) >> AddressDetailsMsg addressId)
+    , (GotTxsForAddressDetails ( dateFilter.txMinBlock, dateFilter.txMaxBlock ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsEffect
             { currency = Id.network addressId
             , address = Id.id addressId
-            , direction = Nothing
+            , direction = direction
             , pagesize = itemsPerPage
             , nextpage = Nothing
             , order = Nothing
-            , tokenCurrency = Nothing
-            , minHeight = Nothing
-            , maxHeight = Nothing
+            , tokenCurrency = selectedAsset
+            , minHeight = dateFilter.txMinBlock
+            , maxHeight = dateFilter.txMaxBlock
             }
         |> ApiEffect
         |> List.singleton

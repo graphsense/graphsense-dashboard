@@ -1,4 +1,4 @@
-module Model.Locale exposing (Flags, Model, State(..), ValueDetail(..), getFiatValue, isEmpty, locales)
+module Model.Locale exposing (Flags, Model, State(..), ValueDetail(..), getFiatValue, getTokenTickers, isEmpty, locales)
 
 import Api.Data
 import DateFormat.Language
@@ -67,3 +67,10 @@ isEmpty { mapping } =
 
         _ ->
             True
+
+
+getTokenTickers : Model -> String -> List String
+getTokenTickers m net =
+    Dict.get net m.supportedTokens
+        |> Maybe.map (.tokenConfigs >> List.map (.ticker >> String.toUpper))
+        |> Maybe.withDefault []
