@@ -29,6 +29,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
+import Model.Locale as Locale
 import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
@@ -1538,7 +1539,13 @@ browserGotAddressData uc plugins id position data model =
                             _ ->
                                 Dict.get id net.addresses
                                     |> Maybe.map
-                                        (\address -> AddressDetails.init net clusters uc.locale address.id data)
+                                        (\address ->
+                                            let
+                                                assets =
+                                                    Locale.getTokenTickers uc.locale (Id.network address.id)
+                                            in
+                                            AddressDetails.init net clusters uc.locale address.id assets data
+                                        )
                                     |> Maybe.map (mapFirst Success)
                                     |> Maybe.map (mapFirst (AddressDetails id))
                                     |> Maybe.map (mapFirst Just)
@@ -2298,9 +2305,12 @@ selectAddress uc id model =
     case Dict.get id model.network.addresses of
         Just address ->
             let
+                assets =
+                    Locale.getTokenTickers uc.locale (Id.network id)
+
                 newDetails =
                     address.data
-                        |> RemoteData.map (AddressDetails.init model.network model.clusters uc.locale address.id)
+                        |> RemoteData.map (AddressDetails.init model.network model.clusters uc.locale address.id assets)
 
                 details =
                     case model.details of

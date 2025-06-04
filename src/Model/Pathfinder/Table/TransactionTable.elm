@@ -7,6 +7,7 @@ import Model.Direction exposing (Direction)
 import Model.Graph.Table as Table
 import Msg.Pathfinder.AddressDetails exposing (Msg)
 import PagedTable
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type alias Model =
@@ -17,6 +18,8 @@ type alias Model =
     , txMaxBlock : Maybe Int
     , direction : Maybe Direction
     , isTxFilterViewOpen : Bool
+    , assetSelectBox : ThemedSelectBox.Model String
+    , selectedAsset : Maybe String
     }
 
 

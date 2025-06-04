@@ -10,6 +10,7 @@ import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
+import Model.Locale as Locale
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -26,6 +27,7 @@ import Tuple exposing (mapFirst, mapSecond)
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (n)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 neighborsTableConfig : Id -> Direction -> PagedTable.Config Effect
@@ -278,15 +280,15 @@ update uc msg model =
             updateDirectionFilter uc model (Just Outgoing)
 
         ResetAllTxFilters ->
-            TransactionTable.initWithFilter model.addressId model.data TransactionTable.emptyDateFilter Nothing
+            TransactionTable.initWithFilter model.addressId model.data TransactionTable.emptyDateFilter Nothing (Locale.getTokenTickers uc.locale (Id.network model.addressId))
                 |> mapFirst (flip s_txs model)
 
         ResetDateRangePicker ->
-            TransactionTable.initWithFilter model.addressId model.data TransactionTable.emptyDateFilter model.txs.direction
+            TransactionTable.initWithFilter model.addressId model.data TransactionTable.emptyDateFilter model.txs.direction (Locale.getTokenTickers uc.locale (Id.network model.addressId))
                 |> mapFirst (flip s_txs model)
 
         ResetTxDirectionFilter ->
-            TransactionTable.initWithFilter model.addressId model.data model.txs Nothing
+            TransactionTable.initWithFilter model.addressId model.data model.txs Nothing (Locale.getTokenTickers uc.locale (Id.network model.addressId))
                 |> mapFirst (flip s_txs model)
 
         BrowserGotFromDateBlock _ blockAt ->
@@ -377,6 +379,28 @@ update uc msg model =
             not model.displayAllTagsInDetails
                 |> flip s_displayAllTagsInDetails model
                 |> n
+
+        TxTableAssetSelectBoxMsg ms ->
+            let
+                oldTxs =
+                    model.txs
+
+                ( newSelect, outMsg ) =
+                    ThemedSelectBox.update ms oldTxs.assetSelectBox
+
+                newTxs =
+                    oldTxs
+                        |> s_assetSelectBox newSelect
+                        |> s_selectedAsset
+                            (case outMsg of
+                                ThemedSelectBox.Selected sel ->
+                                    Just sel
+
+                                _ ->
+                                    oldTxs.selectedAsset
+                            )
+            in
+            n { model | txs = newTxs }
 
 
 updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )

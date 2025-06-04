@@ -49,6 +49,7 @@ import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
+import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
@@ -368,7 +369,7 @@ transactionTableView vc addressId txOnGraphFn model =
               ]
                 |> css
             ]
-            [ filterView vc model.dateRangePicker model.direction ]
+            [ filterView vc (Id.network addressId) model ]
 
       else
         none
@@ -422,10 +423,10 @@ directionFilterHeader vc dir =
                 Locale.string vc.locale
                     (case dir of
                         Incoming ->
-                            "Incoming"
+                            "Incoming only"
 
                         Outgoing ->
-                            "Outgoing"
+                            "Outgoing only"
                     )
             , dateRangeVisible = False
             }
@@ -476,8 +477,8 @@ filterHeader vc datepicker direction =
         ]
 
 
-filterView : View.Config -> Maybe (DateRangePicker.Model AddressDetails.Msg) -> Maybe Direction -> Html AddressDetails.Msg
-filterView vc model direction =
+filterView : View.Config -> String -> TransactionTable.Model -> Html AddressDetails.Msg
+filterView vc _ model =
     let
         toRadio name selected msg =
             SC.radioLabelWithAttributes
@@ -494,16 +495,27 @@ filterView vc model direction =
                     }
                 , root = { radioLabel = Locale.string vc.locale name }
                 }
+
+        isAssetFilterVisible =
+            False
+
+        -- Data.isAccountLike net
     in
     SidePanelComponents.filterTransactionsPopupWithAttributes
         (SidePanelComponents.filterTransactionsPopupAttributes
-            |> Rs.s_assetType ([ Css.display Css.none ] |> css |> List.singleton)
+            |> Rs.s_assetType
+                (if isAssetFilterVisible then
+                    []
+
+                 else
+                    [ Css.display Css.none ] |> css |> List.singleton
+                )
             |> Rs.s_iconsCloseBlack [ [ Css.cursor Css.pointer ] |> css, onClick AddressDetails.CloseTxFilterView ]
         )
         { radioItemsList =
-            [ toRadio "All transactions" (direction == Nothing) AddressDetails.TxTableFilterShowAllTxs
-            , toRadio "Incoming only" (direction == Just Incoming) AddressDetails.TxTableFilterShowIncomingTxOnly
-            , toRadio "Outgoing only" (direction == Just Outgoing) AddressDetails.TxTableFilterShowOutgoingTxOnly
+            [ toRadio "All transactions" (model.direction == Nothing) AddressDetails.TxTableFilterShowAllTxs
+            , toRadio "Incoming only" (model.direction == Just Incoming) AddressDetails.TxTableFilterShowIncomingTxOnly
+            , toRadio "Outgoing only" (model.direction == Just Outgoing) AddressDetails.TxTableFilterShowOutgoingTxOnly
             ]
         }
         { assetType = { label = "" }
@@ -522,10 +534,18 @@ filterView vc model direction =
             -- |> Rs.s_onClick (Just AddressDetails.CloseDateRangePicker)
             -- |> Button.secondaryButton vc
             }
-        , dropDown = { variant = div [] [] }
+        , dropDown =
+            { variant =
+                if isAssetFilterVisible then
+                    ThemedSelectBox.viewWithLabel { optionToLabel = identity } model.assetSelectBox (model.selectedAsset |> Maybe.withDefault "") (Locale.string vc.locale "Asset Type")
+                        |> Html.map AddressDetails.TxTableAssetSelectBoxMsg
+
+                else
+                    none
+            }
         , root =
             { dateInstance =
-                case model of
+                case model.dateRangePicker of
                     Just dmodel ->
                         let
                             startP =

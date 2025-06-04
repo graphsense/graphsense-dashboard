@@ -194,6 +194,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.TooltipMsg _ ->
                     False
 
+                AddressDetails.TxTableAssetSelectBoxMsg _ ->
+                    False
+
         TxDetailsMsg _ ->
             False
 

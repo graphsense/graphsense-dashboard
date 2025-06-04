@@ -8,6 +8,7 @@ import PagedTable
 import Table
 import Time exposing (Posix)
 import Util.Tag as Tag
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type Msg
@@ -35,6 +36,7 @@ type Msg
     | TxTableFilterShowAllTxs
     | TxTableFilterShowIncomingTxOnly
     | TxTableFilterShowOutgoingTxOnly
+    | TxTableAssetSelectBoxMsg (ThemedSelectBox.Msg String)
     | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
     | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
     | TableMsg Table.State

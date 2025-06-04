@@ -1,4 +1,4 @@
-module Init.Pathfinder.Table.TransactionTable exposing (emptyDateFilter, init, initWithFilter, loadFromDateBlock, loadToDateBlock)
+module Init.Pathfinder.Table.TransactionTable exposing (allAssetsName, emptyDateFilter, init, initWithFilter, loadFromDateBlock, loadToDateBlock)
 
 import Api.Data
 import Api.Request.Addresses
@@ -20,6 +20,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import PagedTable
 import Util.Data exposing (timestampToPosix)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 itemsPerPage : Int
@@ -32,8 +33,18 @@ emptyDateFilter =
     { txMinBlock = Nothing, txMaxBlock = Nothing, dateRangePicker = Nothing }
 
 
-init : Network -> Locale.Model -> Id -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
-init network locale addressId data =
+allAssetsName : String
+allAssetsName =
+    "all assets"
+
+
+getCompleteAssetList : List String -> List String
+getCompleteAssetList l =
+    allAssetsName :: l
+
+
+init : Network -> Locale.Model -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
+init network locale addressId data assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -65,16 +76,18 @@ init network locale addressId data =
                   , txMaxBlock = Just data.lastTx.height
                   , direction = Nothing
                   , isTxFilterViewOpen = False
+                  , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
+                  , selectedAsset = Nothing
                   }
                 , loadTxs addressId mn mx
                 )
             )
         |> Maybe.withDefault
-            (initWithFilter addressId data emptyDateFilter Nothing)
+            (initWithFilter addressId data emptyDateFilter Nothing assets)
 
 
-initWithFilter : Id -> Api.Data.Address -> { x | txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) } -> Maybe Direction -> ( TransactionTable.Model, List Effect )
-initWithFilter addressId data dateFilter direction =
+initWithFilter : Id -> Api.Data.Address -> { x | txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) } -> Maybe Direction -> List String -> ( TransactionTable.Model, List Effect )
+initWithFilter addressId data dateFilter direction assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -92,6 +105,8 @@ initWithFilter addressId data dateFilter direction =
       , txMaxBlock = dateFilter.txMaxBlock
       , direction = direction
       , isTxFilterViewOpen = False
+      , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
+      , selectedAsset = Nothing
       }
     , (GotTxsForAddressDetails ( dateFilter.txMinBlock, dateFilter.txMaxBlock ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsEffect

@@ -4,11 +4,13 @@ module Util.ThemedSelectBox exposing
     , Msg(..)
     , OutMsg(..)
     , close
+    , defaultConfig
     , empty
     , getOptions
     , init
     , update
     , view
+    , viewWithLabel
     )
 
 import Css
@@ -17,6 +19,7 @@ import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onMouseLeave)
 import List.Extra
 import RecordSetter as Rs
+import Theme.Html.Fields as F
 import Theme.Html.SelectionControls as Sc
 import Util.Css
 import Util.View
@@ -93,9 +96,19 @@ update msg model =
             ( close model, NoSelection )
 
 
+defaultConfig : (a -> String) -> Config a
+defaultConfig optionToLabel =
+    { optionToLabel = optionToLabel }
+
+
 type alias Config a =
     { optionToLabel : a -> String
     }
+
+
+viewWithLabel : Config a -> Model a -> a -> String -> Html (Msg a)
+viewWithLabel config m selected label =
+    F.dropDownLabel { dropDown = { variant = view config m selected }, root = { label = label } }
 
 
 view : Config a -> Model a -> a -> Html (Msg a)
