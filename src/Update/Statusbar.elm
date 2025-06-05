@@ -67,13 +67,13 @@ messageFromEffect model effect =
         Model.LocaleEffect (Locale.GetTimezoneEffect _) ->
             Nothing
 
-        Model.SearchEffect (Search.SearchEffect _) ->
+        Model.SearchEffect _ (Search.SearchEffect _) ->
             Nothing
 
-        Model.SearchEffect Search.CancelEffect ->
+        Model.SearchEffect _ Search.CancelEffect ->
             Nothing
 
-        Model.SearchEffect (Search.CmdEffect _) ->
+        Model.SearchEffect _ (Search.CmdEffect _) ->
             Nothing
 
         Model.PluginEffect _ ->

@@ -145,6 +145,11 @@ searchWithMoreCss plugins vc sc model =
                                 [ Locale.string vc.locale "Label"
                                     |> placeholder
                                 ]
+
+                            SearchActorsOnly ->
+                                [ Locale.string vc.locale "Actor"
+                                    |> placeholder
+                                ]
                        )
                 )
                 []
@@ -289,6 +294,10 @@ resultList _ vc sc { autocomplete, searchType } =
     case searchType of
         SearchTagsOnly ->
             [ labelBadge ]
+                |> List.filterMap badgeToResult
+
+        SearchActorsOnly ->
+            [ actorBadge ]
                 |> List.filterMap badgeToResult
 
         SearchAddressAndTx _ ->

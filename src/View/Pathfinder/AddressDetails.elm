@@ -1183,8 +1183,8 @@ sidePanelAddressCopyIcon vc id =
     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
     , copyIconInstance = Id.id id |> copyIconPathfinder vc
     , addTagIconInstance =
-        HIcons.iconsAddTagOutlinedWithAttributes
-            (HIcons.iconsAddTagOutlinedAttributes
+        HIcons.iconsAddTagOutlinedSWithAttributes
+            (HIcons.iconsAddTagOutlinedSAttributes
                 |> Rs.s_root [ onClick (Pathfinder.UserOpensDialogWindow (Pathfinder.AddTags id)), Util.View.pointer ]
             )
             {}

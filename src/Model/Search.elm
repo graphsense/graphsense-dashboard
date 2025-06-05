@@ -27,6 +27,7 @@ type SearchType
         }
     | SearchAddressAndTx { currencies_filter : Maybe (List String) }
     | SearchTagsOnly
+    | SearchActorsOnly
 
 
 type ResultLine
@@ -98,4 +99,7 @@ setIsPickingCurrency model =
 
                 SearchTagsOnly ->
                     SearchTagsOnly
+
+                SearchActorsOnly ->
+                    SearchActorsOnly
     }

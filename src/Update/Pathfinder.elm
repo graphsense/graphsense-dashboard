@@ -150,7 +150,8 @@ updateByMsg plugins uc msg model =
                         |> List.singleton
                     )
 
-                AddTags id ->
+                AddTags _ ->
+                    -- Managed Upstream
                     n model
 
         UserGotDataForTagsListDialog _ _ ->

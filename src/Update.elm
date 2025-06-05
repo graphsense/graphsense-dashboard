@@ -70,6 +70,7 @@ import Update.Graph as Graph
 import Update.Locale as Locale
 import Update.Notification as Notification
 import Update.Pathfinder as Pathfinder
+import Update.Pathfinder.AddTagDialog as AddTagDialog
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
@@ -649,7 +650,7 @@ update plugins uc msg model =
                 |> mapFirst (s_search search)
                 |> mapSecond
                     ((++)
-                        (eff |> List.map SearchEffect)
+                        (eff |> List.map (SearchEffect SearchMsg))
                     )
 
         UserClickedLogout ->
@@ -745,6 +746,20 @@ update plugins uc msg model =
                     }
             in
             ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+
+        AddTagDialog smsg ->
+            case model.dialog of
+                Just (Dialog.AddTag conf) ->
+                    let
+                        ( nm, eff ) =
+                            AddTagDialog.update uc smsg conf
+                    in
+                    ( { model | dialog = Just (Dialog.AddTag nm) }
+                    , eff
+                    )
+
+                _ ->
+                    n model
 
         SearchMsg m ->
             case m of
@@ -910,7 +925,7 @@ update plugins uc msg model =
                     clearSearch plugins { model | graph = graph, search = search, dialog = Nothing }
                         |> mapSecond ((++) graphEffects)
                         |> mapSecond ((++) pathfinderEffects)
-                        |> mapSecond ((++) (List.map SearchEffect searchEffects))
+                        |> mapSecond ((++) (List.map (SearchEffect SearchMsg) searchEffects))
 
                 _ ->
                     let
@@ -918,7 +933,7 @@ update plugins uc msg model =
                             Search.update m model.search
                     in
                     ( { model | search = search }
-                    , List.map SearchEffect searchEffects
+                    , List.map (SearchEffect SearchMsg) searchEffects
                     )
 
         PathfinderMsg Pathfinder.UserClickedShowLegend ->
@@ -1064,6 +1079,21 @@ update plugins uc msg model =
               }
             , List.map PathfinderEffect eff
             )
+
+        PathfinderMsg (Pathfinder.UserOpensDialogWindow (Pathfinder.AddTags id)) ->
+            n
+                { model
+                    | dialog =
+                        Just
+                            (Dialog.AddTag
+                                { id = id
+                                , closeMsg = UserClosesDialog
+                                , search = Search.init Search.SearchActorsOnly
+                                , selectedActor = Nothing
+                                , description = ""
+                                }
+                            )
+                }
 
         PathfinderMsg m ->
             let
