@@ -26,8 +26,11 @@ txs plugins vc gc annotations =
     Dict.values
         >> List.map
             (\tx ->
-                ( Id.toString tx.id
-                , Annotations.getAnnotation tx.id annotations
-                    |> Svg.lazy5 Tx.view plugins vc gc tx
-                )
+                [ ( Id.toString tx.id
+                  , Annotations.getAnnotation tx.id annotations
+                        |> Svg.lazy5 Tx.view plugins vc gc tx
+                  )
+                , Tx.edge plugins vc gc tx
+                ]
             )
+        >> List.concat
