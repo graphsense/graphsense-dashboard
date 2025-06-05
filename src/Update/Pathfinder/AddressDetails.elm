@@ -10,6 +10,7 @@ import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
+import Model.Locale as Locale
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -26,6 +27,7 @@ import Tuple exposing (mapFirst, mapSecond)
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (n)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 neighborsTableConfig : Id -> Direction -> PagedTable.Config Effect
@@ -65,11 +67,11 @@ transactionTableConfigWithMsg msg txs addressId =
                     |> Api.GetAddressTxsEffect
                         { currency = Id.network addressId
                         , address = Id.id addressId
-                        , direction = Nothing
+                        , direction = txs.direction
                         , pagesize = pagesize
                         , nextpage = nextpage
                         , order = txs.order
-                        , tokenCurrency = Nothing
+                        , tokenCurrency = txs.selectedAsset
                         , minHeight = txs.txMinBlock
                         , maxHeight = txs.txMaxBlock
                         }
@@ -223,14 +225,31 @@ update uc msg model =
 
                                 else
                                     ( model.txs.txMaxBlock, [] )
+
+                            eff =
+                                startEff ++ endEff
+
+                            np =
+                                if List.length eff > 0 then
+                                    newPicker |> DateRangePicker.closePicker
+
+                                else
+                                    newPicker
                         in
                         ( { model
-                            | txs = s_dateRangePicker (Just newPicker) model.txs |> s_txMinBlock txMinBlock |> s_txMaxBlock txMaxBlock
+                            | txs = s_dateRangePicker (Just np) model.txs |> s_txMinBlock txMinBlock |> s_txMaxBlock txMaxBlock
                           }
-                        , startEff ++ endEff
+                        , eff
                         )
                     )
                 |> Maybe.withDefault (n model)
+
+        ToggleTxFilterView ->
+            model.txs.dateRangePicker
+                |> flip s_dateRangePicker model.txs
+                |> s_isTxFilterViewOpen (not model.txs.isTxFilterViewOpen)
+                |> flip s_txs model
+                |> n
 
         OpenDateRangePicker ->
             let
@@ -252,11 +271,60 @@ update uc msg model =
             model.txs.dateRangePicker
                 |> Maybe.map DateRangePicker.closePicker
                 |> flip s_dateRangePicker model.txs
+                -- |> s_isTxFilterViewOpen False
                 |> flip s_txs model
                 |> n
 
+        CloseTxFilterView ->
+            model.txs |> s_isTxFilterViewOpen False |> flip s_txs model |> n
+
+        TxTableFilterShowAllTxs ->
+            updateDirectionFilter uc model Nothing
+
+        TxTableFilterShowIncomingTxOnly ->
+            updateDirectionFilter uc model (Just Incoming)
+
+        TxTableFilterShowOutgoingTxOnly ->
+            updateDirectionFilter uc model (Just Outgoing)
+
+        ResetAllTxFilters ->
+            TransactionTable.initWithFilter
+                model.addressId
+                model.data
+                TransactionTable.emptyDateFilter
+                Nothing
+                Nothing
+                (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                |> mapFirst (flip s_txs model)
+
         ResetDateRangePicker ->
-            TransactionTable.initWithoutFilter model.addressId model.data
+            TransactionTable.initWithFilter
+                model.addressId
+                model.data
+                TransactionTable.emptyDateFilter
+                model.txs.direction
+                model.txs.selectedAsset
+                (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                |> mapFirst (flip s_txs model)
+
+        ResetTxDirectionFilter ->
+            TransactionTable.initWithFilter
+                model.addressId
+                model.data
+                model.txs
+                Nothing
+                model.txs.selectedAsset
+                (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                |> mapFirst (flip s_txs model)
+
+        ResetTxAssetFilter ->
+            TransactionTable.initWithFilter
+                model.addressId
+                model.data
+                model.txs
+                model.txs.direction
+                Nothing
+                (Locale.getTokenTickers uc.locale (Id.network model.addressId))
                 |> mapFirst (flip s_txs model)
 
         BrowserGotFromDateBlock _ blockAt ->
@@ -348,6 +416,32 @@ update uc msg model =
                 |> flip s_displayAllTagsInDetails model
                 |> n
 
+        TxTableAssetSelectBoxMsg ms ->
+            let
+                oldTxs =
+                    model.txs
+
+                ( newSelect, outMsg ) =
+                    ThemedSelectBox.update ms oldTxs.assetSelectBox
+
+                newTxs =
+                    oldTxs
+                        |> s_assetSelectBox newSelect
+                        |> s_selectedAsset
+                            (case outMsg of
+                                ThemedSelectBox.Selected sel ->
+                                    sel
+
+                                _ ->
+                                    oldTxs.selectedAsset
+                            )
+            in
+            if oldTxs == newTxs then
+                n { model | txs = newTxs }
+
+            else
+                updateTable uc model newTxs
+
 
 updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )
 updateRelatedAddressesTable model upd =
@@ -363,12 +457,39 @@ type SetOrNoSet x
     | Reset
 
 
-updateDatePickerRangeBlockRange : Update.Config -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
-updateDatePickerRangeBlockRange _ model txMinBlock txMaxBlock =
+updateTable : Update.Config -> Model -> TransactionTable.Model -> ( Model, List Effect )
+updateTable _ model nt =
     let
-        id =
-            model.addressId
+        ( tableNew, eff ) =
+            nt.table
+                |> PagedTable.goToFirstPage
+                |> PagedTable.loadFirstPage
+                    (transactionTableConfigWithMsg
+                        (GotTxsForAddressDetails ( nt.txMinBlock, nt.txMaxBlock ))
+                        nt
+                        model.addressId
+                    )
+    in
+    ( { model
+        | txs =
+            { nt | table = tableNew }
+      }
+    , Maybe.Extra.toList eff
+    )
 
+
+updateDirectionFilter : Update.Config -> Model -> Maybe Direction -> ( Model, List Effect )
+updateDirectionFilter uc model dir =
+    updateTable uc model (model.txs |> s_direction dir)
+
+
+
+-- |> s_isTxFilterViewOpen False
+
+
+updateDatePickerRangeBlockRange : Update.Config -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
+updateDatePickerRangeBlockRange uc model txMinBlock txMaxBlock =
+    let
         txmin =
             case txMinBlock of
                 Reset ->
@@ -393,24 +514,11 @@ updateDatePickerRangeBlockRange _ model txMinBlock txMaxBlock =
 
         txsNew =
             model.txs
+                -- |> s_isTxFilterViewOpen False
                 |> s_txMinBlock txmin
                 |> s_txMaxBlock txmax
-
-        ( tableNew, eff ) =
-            model.txs.table
-                |> PagedTable.loadFirstPage
-                    (transactionTableConfigWithMsg
-                        (GotTxsForAddressDetails ( txmin, txmax ))
-                        txsNew
-                        id
-                    )
     in
-    ( { model
-        | txs =
-            { txsNew | table = tableNew }
-      }
-    , Maybe.Extra.toList eff
-    )
+    updateTable uc model txsNew
 
 
 showTransactionsTable : Model -> Bool -> ( Model, List Effect )

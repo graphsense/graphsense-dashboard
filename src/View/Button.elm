@@ -106,6 +106,15 @@ buttonWithAttributes attr vc btn =
             else
                 btn.state
 
+        icon =
+            if btn.disabled then
+                -- note overwriting black did not work since icon ins already overwrites it as primary
+                -- important does not prevent the overwrite of lower items
+                div [ [ Util.Css.overwritePrimary Theme.Colors.greyBlue100 |> Css.important ] |> css ] [ btn.icon |> Maybe.withDefault none ]
+
+            else
+                btn.icon |> Maybe.withDefault none
+
         style =
             ((Css.paddingTop <| Css.px 2)
                 :: (if btn.disabled then
@@ -152,7 +161,7 @@ buttonWithAttributes attr vc btn =
             , style = btn.style
             , size = btn.size
             , buttonText = Locale.string vc.locale btn.text
-            , iconInstance = btn.icon |> Maybe.withDefault none
+            , iconInstance = icon
             , iconVisible = btn.icon /= Nothing
             }
         }

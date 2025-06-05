@@ -94,13 +94,13 @@ generalSettings plugins vc m =
                 }
 
         conf =
-            { optionToLabel =
-                \a ->
+            TSelectBox.defaultConfig
+                (\a ->
                     Locale.locales
                         |> List.Extra.find (first >> (==) a)
                         |> Maybe.map (second >> Locale.string vc.locale)
                         |> Maybe.withDefault ""
-            }
+                )
 
         languageSb =
             TSelectBox.view conf m.localeSelectBox vc.locale.locale

@@ -15,11 +15,11 @@ import Tuple exposing (first, second)
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 
 
-init : Network -> Dict Id (WebData Api.Data.Entity) -> Locale.Model -> Id -> Api.Data.Address -> ( AddressDetails.Model, List Effect )
-init network clusters locale addressId data =
+init : Network -> Dict Id (WebData Api.Data.Entity) -> Locale.Model -> Id -> List String -> Api.Data.Address -> ( AddressDetails.Model, List Effect )
+init network clusters locale addressId assets data =
     let
         ( txs, eff ) =
-            TransactionTable.init network locale addressId data
+            TransactionTable.init network locale addressId data assets
 
         clusterId =
             Id.initClusterId data.currency data.entity

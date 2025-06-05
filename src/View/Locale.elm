@@ -605,9 +605,7 @@ durationToStringWithPrecision { unitToString } prec dur =
 
 tokenCurrencies : String -> Model -> List String
 tokenCurrencies network model =
-    Dict.get network model.supportedTokens
-        |> Maybe.map (.tokenConfigs >> List.map .ticker)
-        |> Maybe.withDefault []
+    getTokenTickers model network
 
 
 httpErrorToString : Model -> Http.Error -> String

@@ -41,7 +41,9 @@ import RemoteData exposing (WebData)
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
+import Theme.Colors
 import Theme.Html.Icons as HIcons
+import Theme.Html.SelectionControls as SC
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css exposing (spread)
 import Util.Data as Data
@@ -49,7 +51,8 @@ import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
-import Util.View exposing (copyIconPathfinder, loadingSpinner, none, onClickWithStop, timeToCell, truncateLongIdentifierWithLengths)
+import Util.ThemedSelectBox as ThemedSelectBox
+import Util.View exposing (copyIconPathfinder, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -62,17 +65,33 @@ import View.Pathfinder.Table.TransactionTable as TransactionTable
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
 view plugins pluginStates vc model id viewState =
-    model.network.addresses
-        |> Dict.get id
-        |> Maybe.map
-            (\address ->
-                if Data.isAccountLike (Id.network id) then
-                    account plugins pluginStates vc model id viewState address
+    div []
+        [ model.network.addresses
+            |> Dict.get id
+            |> Maybe.map
+                (\address ->
+                    if Data.isAccountLike (Id.network id) then
+                        account plugins pluginStates vc model id viewState address
 
-                else
-                    utxo plugins pluginStates vc model id viewState address
-            )
-        |> Maybe.withDefault none
+                    else
+                        utxo plugins pluginStates vc model id viewState address
+                )
+            |> Maybe.withDefault none
+        , if viewState.txs.isTxFilterViewOpen then
+            div
+                [ [ Css.position Css.fixed
+                  , Css.right (Css.px 42)
+                  , Css.top (Css.pct 50)
+                  , Css.property "transform" "translate(0%, -50%)"
+                  , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
+                  ]
+                    |> css
+                ]
+                [ txFilterView vc (Id.network id) viewState.txs |> Html.map (Pathfinder.AddressDetailsMsg viewState.addressId) ]
+
+          else
+            none
+        ]
 
 
 utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
@@ -406,59 +425,6 @@ clusterInfoView vc open colors clstr =
                 }
 
 
-dateRangePickerSelectionView : View.Config -> Maybe (DateRangePicker.Model AddressDetails.Msg) -> Html AddressDetails.Msg
-dateRangePickerSelectionView vc model =
-    let
-        startP =
-            Maybe.map .fromDate model
-                |> Maybe.map
-                    (Locale.posixToTimestampSeconds
-                        >> Locale.timestampDateUniform vc.locale
-                    )
-                |> Maybe.withDefault ""
-
-        endP =
-            Maybe.map .toDate model
-                |> Maybe.map
-                    (Locale.posixToTimestampSeconds
-                        >> Locale.timestampDateUniform vc.locale
-                    )
-                |> Maybe.withDefault ""
-
-        open =
-            [ onClick AddressDetails.OpenDateRangePicker
-            , css [ Css.cursor Css.pointer ]
-            ]
-    in
-    SidePanelComponents.sidePanelListFilterRowWithInstances
-        (SidePanelComponents.sidePanelListFilterRowAttributes
-            |> Rs.s_root [ css fullWidth ]
-            |> Rs.s_iconsCloseBlack
-                [ onClickWithStop AddressDetails.ResetDateRangePicker
-                , css [ Css.cursor Css.pointer ]
-                ]
-            |> Rs.s_framedIcon open
-            |> Rs.s_timePicker open
-        )
-        (SidePanelComponents.sidePanelListFilterRowInstances
-            |> Rs.s_timePicker
-                (model
-                    |> Maybe.map (\_ -> Nothing)
-                    |> Maybe.withDefault (Just none)
-                )
-        )
-        { framedIcon =
-            { iconInstance =
-                HIcons.iconsFilter {}
-            }
-        , timePicker =
-            { from = startP
-            , to = endP
-            , pronoun = Locale.string vc.locale "to"
-            }
-        }
-
-
 transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html AddressDetails.Msg
 transactionTableView vc addressId txOnGraphFn model =
     let
@@ -478,47 +444,236 @@ transactionTableView vc addressId txOnGraphFn model =
                 model.table
                 AddressDetails.TransactionsTablePagedTableMsg
     in
-    (case model.dateRangePicker of
-        Just drp ->
-            if DatePicker.isOpen drp.dateRangePicker then
-                [ DateTimePicker.stylesheet
-                , div [ css [ Css.fontSize (Css.px 12) ] ]
-                    [ DatePicker.view drp.settings drp.dateRangePicker
-                        |> Html.fromUnstyled
-                    ]
-                , div
-                    [ SidePanelComponents.sidePanelListFilterRow_details.styles
-                        ++ [ Css.justifyContent Css.flexEnd
-                           , Css.property "gap" "10px"
-                           ]
-                        ++ fullWidth
-                        |> css
-                    ]
-                    [ Button.secondaryButton vc
-                        (Button.defaultConfig
-                            |> Rs.s_text "Reset"
-                            |> Rs.s_onClick (Just AddressDetails.ResetDateRangePicker)
-                        )
-                    , Button.primaryButton vc
-                        (Button.defaultConfig
-                            |> Rs.s_text "Apply filter"
-                            |> Rs.s_onClick (Just AddressDetails.CloseDateRangePicker)
-                        )
-                    ]
-                ]
-
-            else
-                [ Just drp
-                    |> dateRangePickerSelectionView vc
-                , table
-                ]
-
-        Nothing ->
-            [ dateRangePickerSelectionView vc Nothing
-            , table
-            ]
-    )
+    [ filterHeader vc model
+    , table
+    ]
         |> div [ css [ Css.width (Css.pct 100) ] ]
+
+
+closeButtonGrey : AddressDetails.Msg -> Html AddressDetails.Msg
+closeButtonGrey msg =
+    HIcons.iconsCloseBlackWithAttributes
+        (HIcons.iconsCloseBlackAttributes
+            |> Rs.s_root
+                [ [ Util.Css.overrideBlack Theme.Colors.greyBlue500 ] |> css
+                , Util.View.pointer
+                , onClick msg
+                ]
+        )
+        {}
+
+
+dateTimeFilterHeader : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html AddressDetails.Msg
+dateTimeFilterHeader vc dmodel =
+    let
+        startP =
+            dmodel.fromDate
+                |> Locale.posixToTimestampSeconds
+                |> Locale.timestampDateUniform vc.locale
+
+        endP =
+            dmodel.toDate
+                |> Locale.posixToTimestampSeconds
+                |> Locale.timestampDateUniform vc.locale
+    in
+    SidePanelComponents.filterLabel
+        { root =
+            { iconInstance =
+                closeButtonGrey AddressDetails.ResetDateRangePicker
+            , text1 = endP
+            , text2 = Locale.string vc.locale "to"
+            , text3 = startP
+            , dateRangeVisible = True
+            }
+        }
+
+
+directionFilterHeader : View.Config -> Direction -> Html AddressDetails.Msg
+directionFilterHeader vc dir =
+    stringFilterHeader vc
+        (case dir of
+            Incoming ->
+                "Incoming only"
+
+            Outgoing ->
+                "Outgoing only"
+        )
+        AddressDetails.ResetTxDirectionFilter
+
+
+stringFilterHeader : View.Config -> String -> AddressDetails.Msg -> Html AddressDetails.Msg
+stringFilterHeader vc str msg =
+    SidePanelComponents.filterLabel
+        { root =
+            { iconInstance =
+                closeButtonGrey msg
+            , text3 = ""
+            , text2 = ""
+            , text1 =
+                Locale.string vc.locale str
+            , dateRangeVisible = False
+            }
+        }
+
+
+assetFilterHeader : View.Config -> String -> Html AddressDetails.Msg
+assetFilterHeader vc asset =
+    stringFilterHeader vc asset AddressDetails.ResetTxAssetFilter
+
+
+filterHeader : View.Config -> TransactionTable.Model -> Html AddressDetails.Msg
+filterHeader vc model =
+    div
+        [ [ Css.displayFlex
+          , Css.justifyContent Css.spaceBetween
+          , Css.padding (Css.px 10)
+          , Css.property "gap" "5px"
+          ]
+            |> css
+        ]
+        [ div
+            [ [ Css.displayFlex
+              , Css.flexDirection Css.row
+              , Css.property "gap" "5px"
+              , Css.flexWrap Css.wrap
+              , Css.width (Css.px 320)
+              ]
+                |> css
+            ]
+            [ model.dateRangePicker |> Maybe.map (dateTimeFilterHeader vc) |> Maybe.withDefault none
+            , model.direction |> Maybe.map (directionFilterHeader vc) |> Maybe.withDefault none
+            , model.selectedAsset |> Maybe.map (assetFilterHeader vc) |> Maybe.withDefault none
+            ]
+        , div []
+            [ HIcons.framedIconWithAttributes
+                (HIcons.framedIconAttributes
+                    |> Rs.s_root
+                        [ onClick AddressDetails.ToggleTxFilterView
+                        , Util.View.pointer
+                        ]
+                )
+                { root = { iconInstance = HIcons.iconsFilter {} } }
+            ]
+        ]
+
+
+txFilterView : View.Config -> String -> TransactionTable.Model -> Html AddressDetails.Msg
+txFilterView vc net model =
+    let
+        toRadio name selected msg =
+            SC.radioLabelWithAttributes
+                (SC.radioLabelAttributes
+                    |> Rs.s_root [ onClick msg, [ Css.cursor Css.pointer ] |> css ]
+                )
+                { radio =
+                    { variant =
+                        if selected then
+                            SC.radioStateOnSizeSmall {}
+
+                        else
+                            SC.radioStateOffSizeSmall {}
+                    }
+                , root = { radioLabel = Locale.string vc.locale name }
+                }
+
+        isAssetFilterVisible =
+            Data.isAccountLike net
+    in
+    SidePanelComponents.filterTransactionsPopupWithAttributes
+        (SidePanelComponents.filterTransactionsPopupAttributes
+            |> Rs.s_assetType
+                (if isAssetFilterVisible then
+                    []
+
+                 else
+                    [ Css.display Css.none ] |> css |> List.singleton
+                )
+            |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick AddressDetails.CloseTxFilterView ]
+        )
+        { radioItemsList =
+            [ toRadio "All transactions" (model.direction == Nothing) AddressDetails.TxTableFilterShowAllTxs
+            , toRadio "Incoming only" (model.direction == Just Incoming) AddressDetails.TxTableFilterShowIncomingTxOnly
+            , toRadio "Outgoing only" (model.direction == Just Outgoing) AddressDetails.TxTableFilterShowOutgoingTxOnly
+            ]
+        }
+        { assetType = { label = "" }
+        , cancelButton =
+            { variant =
+                Button.defaultConfig
+                    |> Rs.s_text "Reset"
+                    |> Rs.s_onClick (Just AddressDetails.ResetAllTxFilters)
+                    |> Button.secondaryButton vc
+            }
+        , confirmButton =
+            { variant =
+                Button.defaultConfig
+                    |> Rs.s_text "Done"
+                    |> Rs.s_onClick (Just AddressDetails.CloseTxFilterView)
+                    |> Button.primaryButton vc
+            }
+        , dropDown =
+            { variant =
+                if isAssetFilterVisible then
+                    ThemedSelectBox.viewWithLabel (ThemedSelectBox.defaultConfig (Maybe.withDefault "All assets") |> Rs.s_width (Just (Css.px 200))) model.assetSelectBox model.selectedAsset (Locale.string vc.locale "Asset Type")
+                        |> Html.map AddressDetails.TxTableAssetSelectBoxMsg
+
+                else
+                    none
+            }
+        , root =
+            { dateInstance =
+                case model.dateRangePicker of
+                    Just dmodel ->
+                        let
+                            startP =
+                                dmodel.fromDate
+                                    |> Locale.posixToTimestampSeconds
+                                    |> Locale.timestampDateUniform vc.locale
+
+                            endP =
+                                dmodel.toDate
+                                    |> Locale.posixToTimestampSeconds
+                                    |> Locale.timestampDateUniform vc.locale
+                        in
+                        if DatePicker.isOpen dmodel.dateRangePicker then
+                            div []
+                                [ DateTimePicker.stylesheet
+                                , div [ css [ Css.fontSize (Css.px 12) ] ]
+                                    [ DatePicker.view dmodel.settings dmodel.dateRangePicker
+                                        |> Html.fromUnstyled
+                                    ]
+                                ]
+
+                        else
+                            SidePanelComponents.datePickerFilledWithAttributes
+                                (SidePanelComponents.datePickerFilledAttributes
+                                    |> Rs.s_root
+                                        [ onClick AddressDetails.OpenDateRangePicker
+                                        , Util.View.pointer
+                                        , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
+                                        ]
+                                )
+                                { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to", state = SidePanelComponents.DatePickerFilledStateDefault } }
+
+                    _ ->
+                        SidePanelComponents.datePickerCtaWithAttributes
+                            (SidePanelComponents.datePickerCtaAttributes
+                                |> Rs.s_root
+                                    [ onClick AddressDetails.OpenDateRangePicker
+                                    , Util.View.pointer
+                                    , [ Css.hover SidePanelComponents.datePickerCtaStateHover_details.styles ] |> css
+                                    ]
+                            )
+                            { root =
+                                { placeholder = Locale.string vc.locale "Select date range"
+                                , state = SidePanelComponents.DatePickerCtaStateDefault
+                                }
+                            }
+            , dateLabel = Locale.string vc.locale "Date Range"
+            , headerTitle = Locale.string vc.locale "Transaction Filter"
+            , txDirection = Locale.string vc.locale "Transaction Direction"
+            }
+        }
 
 
 transactionsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html AddressDetails.Msg

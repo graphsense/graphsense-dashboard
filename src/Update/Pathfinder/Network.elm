@@ -47,11 +47,9 @@ import Update.Pathfinder.Tx as Tx
 
 
 clearSelection : Network -> Network
-clearSelection n =
-    { n
-        | addresses = Dict.map (\_ v -> v |> s_selected False) n.addresses
-        , txs = Dict.map (\_ v -> v |> s_selected False) n.txs
-    }
+clearSelection =
+    updateAllAddresses (s_selected False)
+        >> updateAllTxs (s_selected False)
 
 
 nearestMultiple : Float -> Float -> Float
@@ -70,13 +68,9 @@ coordsToInt item =
 
 
 snapToGrid : Network -> Network
-snapToGrid n =
-    n.addresses
-        |> Dict.keys
-        |> List.foldl (flip updateAddress coordsToInt)
-            { n
-                | txs = Dict.map (\_ v -> coordsToInt v) n.txs
-            }
+snapToGrid =
+    updateAllAddresses coordsToInt
+        >> updateAllTxs coordsToInt
 
 
 addAddress : Plugins -> Id -> Network -> ( Address, Network )
@@ -302,10 +296,10 @@ freeSpaceAroundCoords coords model =
 insertAddress : Network -> Address -> Network
 insertAddress model newAddress =
     let
-        ( address, newTxs ) =
+        ( address, newNetwork ) =
             listTxsForAddress model newAddress.id
                 |> List.foldl
-                    (\( direction, tx ) ( addr, txs ) ->
+                    (\( direction, tx ) ( addr, nw ) ->
                         ( case direction of
                             Incoming ->
                                 { addr
@@ -316,13 +310,13 @@ insertAddress model newAddress =
                                 { addr
                                     | incomingTxs = txsInsertId tx.id addr.incomingTxs
                                 }
-                        , Dict.update tx.id
-                            (Maybe.map (Tx.setAddressInTx direction newAddress))
-                            txs
+                        , updateTx tx.id
+                            (Tx.setAddressInTx direction newAddress)
+                            nw
                         )
                     )
                     ( newAddress
-                    , model.txs
+                    , model
                     )
 
         animAddress =
@@ -332,9 +326,8 @@ insertAddress model newAddress =
             else
                 address
     in
-    { model
+    { newNetwork
         | addresses = Dict.insert newAddress.id animAddress model.addresses
-        , txs = newTxs
         , animatedAddresses = Set.insert newAddress.id model.animatedAddresses
     }
 
@@ -366,6 +359,11 @@ updateAddress id update model =
             }
 
 
+updateAllAddresses : (Address -> Address) -> Network -> Network
+updateAllAddresses upd model =
+    model.addresses |> Dict.foldl (\id _ -> updateAddress id upd) model
+
+
 updateAddressesByClusterId : Id -> (Address -> Address) -> Network -> Network
 updateAddressesByClusterId id update model =
     let
@@ -395,6 +393,11 @@ updateTx id update model =
                 }
             )
         |> Maybe.withDefault model
+
+
+updateAllTxs : (Tx -> Tx) -> Network -> Network
+updateAllTxs upd model =
+    model.txs |> Dict.foldl (\id _ -> updateTx id upd) model
 
 
 getYForPathAfterX : Network -> Float -> Float -> Float

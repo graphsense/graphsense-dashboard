@@ -17,7 +17,7 @@ stylesheet =
             , ( "edtp-font-size-xs", "0.75rem" )
             , ( "edtp-font-size-xxs", "0.625rem" )
             , ( "edtp-icon-button-size", "24px" )
-            , ( "edtp-duration-calendars-gap", "1rem" )
+            , ( "edtp-duration-calendars-gap", "0rem" )
             , ( "edtp-transition", "all cubic-bezier(0.4, 0, 0.2, 1) 150ms" )
             , ( "edtp-container-color", Colors.black0 )
             , ( "edtp-container-background-color", "transparent" )
@@ -27,7 +27,7 @@ stylesheet =
             , ( "edtp-header-chevron-hover-color", Colors.black0 )
             , ( "edtp-header-chevron-hover-background-color", Colors.grey50 )
             , ( "edtp-header-week-color", Colors.grey200 )
-            , ( "edtp-day-size", "42px" )
+            , ( "edtp-day-size", "32px" )
             , ( "edtp-day-color", Colors.black0 )
             , ( "edtp-day-background-color", "transparent" )
             , ( "edtp-day-hover-color", Colors.black0 )
@@ -61,9 +61,13 @@ stylesheet =
     in
     """
     :root {{{ }}}
+    .elm-datetimepicker--calendar-container {
+        padding: 0rem;
+    }
     .elm-datetimepicker--picker-container { 
         display: flex;
         flex-flow: column-reverse;
+        padding: 0rem;
     }
     """
         |> String.Format.value vars

@@ -116,6 +116,12 @@ shallPushHistory plugins msg _ =
                 AddressDetails.GotTxsForAddressDetails _ _ ->
                     False
 
+                AddressDetails.ToggleTxFilterView ->
+                    False
+
+                AddressDetails.CloseTxFilterView ->
+                    False
+
                 AddressDetails.GotNextPageTxsForAddressDetails _ ->
                     False
 
@@ -131,7 +137,25 @@ shallPushHistory plugins msg _ =
                 AddressDetails.CloseDateRangePicker ->
                     False
 
+                AddressDetails.TxTableFilterShowAllTxs ->
+                    False
+
+                AddressDetails.TxTableFilterShowIncomingTxOnly ->
+                    False
+
+                AddressDetails.TxTableFilterShowOutgoingTxOnly ->
+                    False
+
                 AddressDetails.ResetDateRangePicker ->
+                    False
+
+                AddressDetails.ResetAllTxFilters ->
+                    False
+
+                AddressDetails.ResetTxAssetFilter ->
+                    False
+
+                AddressDetails.ResetTxDirectionFilter ->
                     False
 
                 AddressDetails.BrowserGotFromDateBlock _ _ ->
@@ -171,6 +195,9 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.TooltipMsg _ ->
+                    False
+
+                AddressDetails.TxTableAssetSelectBoxMsg _ ->
                     False
 
         TxDetailsMsg _ ->
