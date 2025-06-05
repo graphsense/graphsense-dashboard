@@ -5,6 +5,7 @@ import Data.Pathfinder.Id as Id
 import Data.Pathfinder.Tx as Tx
 import Dict
 import Init.Pathfinder.Network as Init
+import Init.Pathfinder.Relation as Relation
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Network exposing (Network)
@@ -40,6 +41,7 @@ oneAddress =
         Dict.fromList
             [ ( Id.address1, Address.address1 ) ]
     , txs = Dict.empty
+    , relations = Relation.init
     , animatedAddresses = Set.empty
     , animatedTxs = Set.empty
     }
