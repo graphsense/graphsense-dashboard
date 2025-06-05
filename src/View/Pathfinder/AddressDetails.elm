@@ -378,24 +378,6 @@ transactionTableView vc addressId txOnGraphFn model =
                 AddressDetails.TransactionsTablePagedTableMsg
     in
     [ filterHeader vc model
-
-    -- , if model.isTxFilterViewOpen then
-    --     div [[ Css.position Css.relative
-    --           ]
-    --             |> css]
-    --     [
-    --     div
-    --         [ [ Css.position Css.absolute
-    --           , Css.right (Css.px (32))
-    --           , Css.top (Css.px -250)
-    --           , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
-    --           ]
-    --             |> css
-    --         ]
-    --         [ filterView vc (Id.network addressId) model ]
-    --     ]
-    --   else
-    --     none
     , table
     ]
         |> div [ css [ Css.width (Css.pct 100) ] ]
@@ -598,16 +580,28 @@ txFilterView vc net model =
                         else
                             SidePanelComponents.datePickerFilledWithAttributes
                                 (SidePanelComponents.datePickerFilledAttributes
-                                    |> Rs.s_root [ onClick AddressDetails.OpenDateRangePicker, Util.View.pointer ]
+                                    |> Rs.s_root
+                                        [ onClick AddressDetails.OpenDateRangePicker
+                                        , Util.View.pointer
+                                        , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
+                                        ]
                                 )
-                                { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to" } }
+                                { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to", state = SidePanelComponents.DatePickerFilledStateDefault } }
 
                     _ ->
                         SidePanelComponents.datePickerCtaWithAttributes
                             (SidePanelComponents.datePickerCtaAttributes
-                                |> Rs.s_root [ onClick AddressDetails.OpenDateRangePicker, Util.View.pointer ]
+                                |> Rs.s_root
+                                    [ onClick AddressDetails.OpenDateRangePicker
+                                    , Util.View.pointer
+                                    , [ Css.hover SidePanelComponents.datePickerCtaStateHover_details.styles ] |> css
+                                    ]
                             )
-                            { root = { placeholder = Locale.string vc.locale "Select date range" } }
+                            { root =
+                                { placeholder = Locale.string vc.locale "Select date range"
+                                , state = SidePanelComponents.DatePickerCtaStateDefault
+                                }
+                            }
             , dateLabel = Locale.string vc.locale "Date Range"
             , headerTitle = Locale.string vc.locale "Transaction Filter"
             , txDirection = Locale.string vc.locale "Transaction Direction"
