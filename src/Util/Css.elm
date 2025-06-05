@@ -1,4 +1,4 @@
-module Util.Css exposing (alignItemsStretch, overrideBlack, spread, zIndexMain, zIndexMainValue)
+module Util.Css exposing (alignItemsStretch, overrideBlack, overwritePrimary, spread, zIndexMain, zIndexMainValue)
 
 import Css exposing (Style, int, zIndex)
 import Html.Styled exposing (Attribute)
@@ -20,6 +20,12 @@ overrideBlack : String -> Style
 overrideBlack =
     -- that's a hacky workaround to apply color overrides
     Css.property Theme.Colors.sidebarNeutral_name
+
+
+overwritePrimary : String -> Style
+overwritePrimary =
+    -- that's a hacky workaround to apply color overrides
+    Css.property Theme.Colors.brandPrimary_name
 
 
 alignItemsStretch : Attribute msg
