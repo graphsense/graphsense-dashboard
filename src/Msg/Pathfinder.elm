@@ -107,6 +107,7 @@ type alias TextTooltipConfig =
 
 type OverlayWindows
     = TagsList Id
+    | AddTags Id
 
 
 type DisplaySettingsMsg

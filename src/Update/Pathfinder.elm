@@ -150,6 +150,9 @@ updateByMsg plugins uc msg model =
                         |> List.singleton
                     )
 
+                AddTags id ->
+                    n model
+
         UserGotDataForTagsListDialog _ _ ->
             -- handled in src/Update.elm
             n model

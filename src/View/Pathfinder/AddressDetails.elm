@@ -1188,7 +1188,12 @@ sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconI
 sidePanelAddressCopyIcon vc id =
     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
     , copyIconInstance = Id.id id |> copyIconPathfinder vc
-    , addTagIconInstance = none
+    , addTagIconInstance =
+        HIcons.iconsAddTagOutlinedWithAttributes
+            (HIcons.iconsAddTagOutlinedAttributes
+                |> Rs.s_root [ onClick (Pathfinder.UserOpensDialogWindow (Pathfinder.AddTags id)), Util.View.pointer ]
+            )
+            {}
     , chevronInstance =
         div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
             [ HIcons.iconsChevronDownThinWithAttributes
