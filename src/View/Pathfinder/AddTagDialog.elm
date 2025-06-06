@@ -3,7 +3,7 @@ module View.Pathfinder.AddTagDialog exposing (view)
 import Config.View as View
 import Css
 import Html.Styled as Html exposing (Html, textarea)
-import Html.Styled.Attributes exposing (css, value)
+import Html.Styled.Attributes exposing (css, placeholder, value)
 import Html.Styled.Events exposing (onClick, onInput)
 import Model exposing (AddTagDialogMsgs(..), Msg(..))
 import Model.Dialog as Dialog
@@ -12,6 +12,7 @@ import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.Dialogs as Dialogs
 import Theme.Html.Fields as F
+import Theme.Html.SettingsComponents as Sc
 import Util.View
 import View.Button as Button
 import View.Locale as Locale
@@ -21,54 +22,84 @@ import View.Search
 view : Plugins -> View.Config -> Dialog.AddTagConfig Msg -> Html Msg
 view plugins vc model =
     let
-        searchInput =
-            View.Search.searchWithMoreCss plugins
-                vc
-                (View.Search.default
-                    |> Rs.s_css
-                        (\_ ->
-                            Css.outline Css.none
-                                -- :: Css.pseudoClass "placeholder" Sc.searchBarFieldStatePlaceholderSearchInputField_details.styles
-                                :: (Css.width <| Css.pct 100)
-                                :: Util.View.inputFieldStyles False
+        actorField =
+            case model.selectedActor of
+                Just ( _, name ) ->
+                    Dialogs.actorTagWithAttributes
+                        (Dialogs.actorTagAttributes
+                            |> Rs.s_iconsCloseSnoPadding
+                                [ Util.View.pointer
+                                , onClick (RemoveActorTag |> AddTagDialog)
+                                ]
                         )
-                    |> Rs.s_formCss
-                        [ Css.flexGrow <| Css.num 1
-                        , Css.height Css.auto |> Css.important
-                        ]
-                    |> Rs.s_frameCss
-                        [ Css.height <| Css.pct 100
-                        , Css.marginRight Css.zero |> Css.important
-                        ]
-                    |> Rs.s_resultLine
-                        [ Css.property "background-color" Colors.white
-                        , Css.hover
-                            [ Css.property "background-color" Colors.greyBlue50
-                                |> Css.important
-                            ]
-                        ]
-                    |> Rs.s_resultLineHighlighted
-                        [ Css.property "background-color" Colors.greyBlue50
-                        ]
-                    |> Rs.s_resultsAsLink True
-                    |> Rs.s_dropdownResult
-                        [ Css.property "background-color" Colors.white
-                        ]
-                    |> Rs.s_dropdownFrame
-                        [ Css.property "background-color" Colors.white
-                        ]
-                )
-                model.search
-                |> Html.map (SearchMsgAddTagDialog >> AddTagDialog)
+                        { root = { closeVisible = True, label = name } }
+
+                _ ->
+                    View.Search.searchWithMoreCss plugins
+                        vc
+                        (View.Search.default
+                            |> Rs.s_showIcon False
+                            |> Rs.s_resultGroupTitle [ Css.display Css.none ]
+                            |> Rs.s_resultLineIcon [ Css.display Css.none ]
+                            |> Rs.s_css
+                                (\_ ->
+                                    Css.outline Css.none
+                                        :: Css.pseudoClass "placeholder" Sc.searchBarFieldStatePlaceholderSearchInputField_details.styles
+                                        :: (Css.width <| Css.pct 100)
+                                        :: Util.View.inputFieldStyles False
+                                )
+                            |> Rs.s_formCss
+                                [ Css.flexGrow <| Css.num 1
+                                , Css.height Css.auto |> Css.important
+                                ]
+                            |> Rs.s_frameCss
+                                [ Css.height <| Css.pct 100
+                                , Css.marginRight Css.zero |> Css.important
+                                ]
+                            |> Rs.s_resultLine
+                                [ Css.property "background-color" Colors.white
+                                , Css.height (Css.px 20)
+                                , Css.displayFlex |> Css.important
+                                , Css.width Css.auto
+                                , Css.alignItems Css.center
+                                , Css.paddingLeft (Css.px 5)
+                                , Css.hover
+                                    [ Css.property "background-color" Colors.greyBlue50
+                                        |> Css.important
+                                    , Css.borderRadius (Css.px 5)
+                                    ]
+                                ]
+                            |> Rs.s_resultLineHighlighted
+                                [ Css.property "background-color" Colors.greyBlue50
+                                , Css.borderRadius (Css.px 5)
+                                ]
+                            |> Rs.s_resultsAsLink True
+                            |> Rs.s_dropdownResult
+                                [ Css.property "background-color" Colors.white
+                                ]
+                            |> Rs.s_dropdownFrame
+                                [ Css.property "background-color" Colors.white
+                                ]
+                            |> Rs.s_inputAttributes [ placeholder (Locale.string vc.locale "e.g. Binance") ]
+                        )
+                        model.search
+                        |> Html.map (SearchMsgAddTagDialog >> AddTagDialog)
 
         actorText =
-            F.textFieldWithHelp
+            F.textFieldWithHelpWithAttributes
+                (F.textFieldWithHelpAttributes
+                    |> Rs.s_helperText
+                        ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ]
+                            |> css
+                            |> List.singleton
+                        )
+                )
                 { root =
                     { helpText = Locale.string vc.locale "Start typing to search existing labels."
                     , state = F.TextFieldWithHelpStateDefault
                     , title = Locale.string vc.locale "Actor Label *"
                     }
-                , textField = { variant = searchInput }
+                , textField = { variant = actorField }
                 }
 
         additionalInfo =
@@ -78,7 +109,21 @@ view plugins vc model =
                     , state = F.TextFieldWithHelpStateDefault
                     , title = Locale.string vc.locale "Additional Information (optional)"
                     }
-                , textField = { variant = textarea [ Util.View.inputFieldStyles False |> css, value model.description, onInput (UserInputsDescription >> AddTagDialog) ] [] }
+                , textField =
+                    { variant =
+                        textarea
+                            [ Util.View.inputFieldStyles False |> css
+                            , [ Css.resize Css.none
+                              , Css.height (Css.em 5) |> Css.important
+                              , Css.focus [ Css.height (Css.em 5) |> Css.important ]
+                              ]
+                                |> css
+                            , value model.description
+                            , placeholder (Locale.string vc.locale "e.g. Linked to scam report on xyz.com")
+                            , onInput (UserInputsDescription >> AddTagDialog)
+                            ]
+                            []
+                    }
                 }
     in
     Dialogs.dialogAddTagWithAttributes
@@ -99,6 +144,7 @@ view plugins vc model =
             { variant =
                 (Button.defaultConfig
                     |> Rs.s_text "Add Tag"
+                    |> Rs.s_disabled (model.selectedActor == Nothing)
                     |> Rs.s_onClick (Just model.closeMsg)
                 )
                     |> Button.primaryButton vc

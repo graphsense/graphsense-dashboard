@@ -30,7 +30,7 @@ type alias SearchConfig =
     }
 
 
-type alias SearchConfigWithMoreCss =
+type alias SearchConfigWithMoreCss msg =
     { css : String -> List Style
     , formCss : List Style
     , frameCss : List Style
@@ -46,10 +46,11 @@ type alias SearchConfigWithMoreCss =
     , dropdownResult : List Style
     , multiline : Bool
     , showIcon : Bool
+    , inputAttributes : List (Html.Styled.Attribute msg)
     }
 
 
-default : SearchConfigWithMoreCss
+default : SearchConfigWithMoreCss msg
 default =
     { css = \_ -> []
     , resultsAsLink = False
@@ -66,6 +67,7 @@ default =
     , resultTextEmphasized = []
     , dropdownFrame = []
     , dropdownResult = []
+    , inputAttributes = []
     }
 
 
@@ -88,11 +90,12 @@ search plugins vc sc model =
         , resultTextEmphasized = []
         , dropdownFrame = []
         , dropdownResult = []
+        , inputAttributes = []
         }
         model
 
 
-searchWithMoreCss : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> Html Msg
+searchWithMoreCss : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
 searchWithMoreCss plugins vc sc model =
     let
         { inputEvents } =
@@ -151,6 +154,7 @@ searchWithMoreCss plugins vc sc model =
                                     |> placeholder
                                 ]
                        )
+                    ++ sc.inputAttributes
                 )
                 []
             , searchResult plugins vc sc model
@@ -174,7 +178,7 @@ searchWithMoreCss plugins vc sc model =
         ]
 
 
-searchResult : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> Html Msg
+searchResult : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
 searchResult plugins vc sc model =
     let
         viewState =
@@ -197,7 +201,7 @@ searchResult plugins vc sc model =
         text ""
 
 
-resultList : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> List (Html Msg)
+resultList : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
 resultList _ vc sc { autocomplete, searchType } =
     let
         choices =
@@ -315,7 +319,7 @@ resultList _ vc sc { autocomplete, searchType } =
 --++ Plugin.searchResultList plugins pluginStates vc
 
 
-resultLineToHtml : Config -> String -> SearchConfigWithMoreCss -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
+resultLineToHtml : Config -> String -> SearchConfigWithMoreCss Msg -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
 resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
     let
         ( icon, label, highlight_suffix ) =

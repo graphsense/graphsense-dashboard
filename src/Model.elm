@@ -145,6 +145,7 @@ type Msg
 type AddTagDialogMsgs
     = SearchMsgAddTagDialog Msg.Search.Msg
     | UserInputsDescription String
+    | RemoveActorTag
 
 
 type SettingsMsg

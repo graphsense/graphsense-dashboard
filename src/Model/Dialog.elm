@@ -75,7 +75,7 @@ type alias AddTagConfig msg =
     { id : Id
     , closeMsg : msg
     , search : Search.Model
-    , selectedActor : Maybe String
+    , selectedActor : Maybe ( String, String )
     , description : String
     }
 

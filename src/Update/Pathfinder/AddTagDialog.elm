@@ -1,12 +1,11 @@
 module Update.Pathfinder.AddTagDialog exposing (update)
 
--- import Maybe.Extra
--- import Model.Search as Search
--- import Msg.Search as Search
-
 import Config.Update as Update
+import Maybe.Extra
 import Model exposing (AddTagDialogMsgs(..), Effect(..), Msg(..))
 import Model.Dialog exposing (AddTagConfig)
+import Model.Search as Search
+import Msg.Search as Search
 import RecordSetter as Rs
 import Update.Search as Search
 
@@ -22,21 +21,27 @@ update _ msg model =
                 ( searchNew, searchEffects ) =
                     Search.update m searchm
 
-                -- a =
-                --     case m of
-                --         Search.UserClicksResultLine ->
-                --             let
-                --                 query =
-                --                     Search.query model.search
-                --                 selectedValue =
-                --                     Search.selectedValue model.search
-                --                         |> Maybe.Extra.orElse (Search.firstResult model.search)
-                --             in
-                --             True
-                --         _ ->
-                --             False
+                selected =
+                    case m of
+                        Search.UserClicksResultLine ->
+                            let
+                                -- query =
+                                --     Search.query model.search
+                                selectedValue =
+                                    Search.selectedValue model.search
+                                        |> Maybe.Extra.orElse (Search.firstResult model.search)
+                            in
+                            case selectedValue of
+                                Just (Search.Actor ref) ->
+                                    Just ref
+
+                                _ ->
+                                    model.selectedActor
+
+                        _ ->
+                            model.selectedActor
             in
-            ( model |> Rs.s_search searchNew
+            ( model |> Rs.s_search searchNew |> Rs.s_selectedActor selected
             , List.map (SearchEffect (SearchMsgAddTagDialog >> AddTagDialog)) searchEffects
             )
 
@@ -44,3 +49,6 @@ update _ msg model =
             ( model |> Rs.s_description ns
             , []
             )
+
+        RemoveActorTag ->
+            ( model |> Rs.s_selectedActor Nothing, [] )
