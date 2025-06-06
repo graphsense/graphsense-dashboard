@@ -7,6 +7,7 @@ import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder.Address exposing (Address, getCoords, txsGetSet)
+import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Relation exposing (Relations)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -17,8 +18,9 @@ import Set exposing (Set)
 type alias Network =
     { addresses : Dict Id Address
     , txs : Dict Id Tx
-
-    --, neighbors : Dict ( Id, Id ) Neighborship
+    , aggEdges : Dict ( Id, Id ) AggEdge
+    , fromAggEdgeMap : Dict Id ( Id, Id )
+    , toAggEdgeMap : Dict Id ( Id, Id )
     , relations : Relations -- the actual currently visible relations (txs/agg/...)
     , animatedAddresses : Set Id
     , animatedTxs : Set Id

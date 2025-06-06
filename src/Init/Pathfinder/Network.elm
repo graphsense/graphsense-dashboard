@@ -10,6 +10,9 @@ init : Network
 init =
     { addresses = Dict.empty
     , txs = Dict.empty
+    , aggEdges = Dict.empty
+    , fromAggEdgeMap = Dict.empty
+    , toAggEdgeMap = Dict.empty
     , relations = Relation.init
     , animatedAddresses = Set.empty
     , animatedTxs = Set.empty

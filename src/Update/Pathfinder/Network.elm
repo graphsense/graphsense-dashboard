@@ -13,6 +13,7 @@ module Update.Pathfinder.Network exposing
     , getYForPathAfterX
     , ingestAddresses
     , ingestTxs
+    , insertAggEdge
     , snapToGrid
     , updateAddress
     , updateAddressesByClusterId
@@ -22,7 +23,7 @@ module Update.Pathfinder.Network exposing
 import Animation as A exposing (Animation)
 import Api.Data
 import Basics.Extra exposing (flip, uncurry)
-import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
+import Config.Pathfinder exposing (Config, TracingMode(..), nodeXOffset, nodeYOffset)
 import Dict
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
@@ -32,6 +33,7 @@ import Maybe.Extra
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address, txsToSet)
+import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Deserialize exposing (DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
@@ -42,6 +44,7 @@ import Set
 import Tuple exposing (pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
+import Update.Pathfinder.AggEdge as AggEdge
 import Update.Pathfinder.Relation as Relation
 import Update.Pathfinder.Tx as Tx
 
@@ -316,7 +319,7 @@ insertAddress model newAddress =
                         )
                     )
                     ( newAddress
-                    , model
+                    , setAddressInAggEdges newAddress model
                     )
 
         animAddress =
@@ -330,6 +333,41 @@ insertAddress model newAddress =
         | addresses = Dict.insert newAddress.id animAddress model.addresses
         , animatedAddresses = Set.insert newAddress.id model.animatedAddresses
     }
+
+
+setAddressInAggEdges : Address -> Network -> Network
+setAddressInAggEdges address network =
+    Dict.get address.id network.fromAggEdgeMap
+        |> Maybe.map (\id -> updateAggEdge id (AggEdge.setFromAddress address) network)
+        |> Maybe.Extra.orElseLazy
+            (\_ ->
+                Dict.get address.id network.toAggEdgeMap
+                    |> Maybe.map (\id -> updateAggEdge id (AggEdge.setToAddress address) network)
+            )
+        |> Maybe.withDefault network
+
+
+updateAggEdge : ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
+updateAggEdge id upd network =
+    { network
+        | aggEdges = Dict.update id (Maybe.map upd) network.aggEdges
+        , relations = Relation.updateAggEdge id upd network.relations
+    }
+
+
+
+{-
+   getAggEdgeByFrom : Id -> Network -> Maybe AggEdge
+   getAggEdgeByFrom id network =
+       Dict.get id network.fromAggEdgeMap
+           |> Maybe.andThen (flip Dict.get network.aggEdges)
+
+
+   getAggEdgeByTo : Id -> Network -> Maybe AggEdge
+   getAggEdgeByTo id network =
+       Dict.get id network.toAggEdgeMap
+           |> Maybe.andThen (flip Dict.get network.aggEdges)
+-}
 
 
 opacityAnimation : Animation
@@ -912,3 +950,41 @@ deleteDanglingAddresses =
             else
                 nw
         )
+
+
+insertAggEdge : Config -> Id -> Direction -> Api.Data.NeighborAddress -> Network -> Network
+insertAggEdge config id dir neighbor model =
+    let
+        nid =
+            Id.init neighbor.address.currency neighbor.address.address
+
+        ( from, to ) =
+            case dir of
+                Outgoing ->
+                    ( id, nid )
+
+                Incoming ->
+                    ( nid, id )
+
+        aggEdge =
+            { id = ( from, to )
+            , fromAddress = Dict.get from model.addresses
+            , toAddress = Dict.get to model.addresses
+            , data = neighbor
+            }
+    in
+    { model
+        | aggEdges =
+            Dict.insert ( from, to )
+                aggEdge
+                model.aggEdges
+        , fromAggEdgeMap = Dict.insert from ( from, to ) model.fromAggEdgeMap
+        , toAggEdgeMap = Dict.insert to ( from, to ) model.toAggEdgeMap
+        , relations =
+            case config.tracingMode of
+                AggregateTracingMode ->
+                    Relation.insertAggEdge aggEdge model.relations
+
+                TransactionTracingMode ->
+                    model.relations
+    }

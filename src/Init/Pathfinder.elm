@@ -33,7 +33,7 @@ init us =
       , config =
             { snapToGrid = us.snapToGrid |> Maybe.withDefault False
             , highlightClusterFriends = us.highlightClusterFriends |> Maybe.withDefault True
-            , tracingMode = us.tracingMode |> Maybe.withDefault TransactionTracingMode
+            , tracingMode = us.tracingMode |> Maybe.withDefault AggregateTracingMode
             }
       , pointerTool = Drag
       , modPressed = False

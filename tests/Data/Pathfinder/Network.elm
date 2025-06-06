@@ -42,6 +42,7 @@ oneAddress =
             [ ( Id.address1, Address.address1 ) ]
     , txs = Dict.empty
     , relations = Relation.init
+    , aggEdges = Dict.empty
     , animatedAddresses = Set.empty
     , animatedTxs = Set.empty
     }

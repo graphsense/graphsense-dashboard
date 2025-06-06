@@ -701,8 +701,6 @@ graphSvg plugins vc gc model bbox =
             ]
         , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
         , Svg.lazy5 Network.relations plugins vc gc model.annotations model.network.relations
-
-        --, Svg.lazy4 Network.edges plugins vc gc model.network.txs
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

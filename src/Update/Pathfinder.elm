@@ -271,8 +271,16 @@ updateByMsg plugins uc msg model =
                         |> List.map (\{ address } -> Id.init address.currency address.address)
 
                 newModel =
-                    CheckingNeighbors.insert dir id neighborIds model.checkingNeighbors
-                        |> flip s_checkingNeighbors model
+                    relations.neighbors
+                        |> List.foldl
+                            (\neighbor mo ->
+                                mo.network
+                                    |> Network.insertAggEdge model.config id dir neighbor
+                                    |> flip s_network mo
+                            )
+                            (CheckingNeighbors.insert dir id neighborIds model.checkingNeighbors
+                                |> flip s_checkingNeighbors model
+                            )
             in
             if CheckingNeighbors.isEmpty id newModel.checkingNeighbors then
                 CheckingNeighbors.getData id model.checkingNeighbors

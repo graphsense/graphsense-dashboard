@@ -1,12 +1,13 @@
-module Update.Pathfinder.Relation exposing (deleteTx, insertTx, updateTx)
+module Update.Pathfinder.Relation exposing (deleteTx, insertAggEdge, insertTx, updateAggEdge, updateTx)
 
 import Basics.Extra exposing (flip)
 import Dict
 import Init.Pathfinder.Relation exposing (initRelation)
 import IntDict
+import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
-import Model.Pathfinder.Relation exposing (RelationType(..), Relations, getRelationForTx)
+import Model.Pathfinder.Relation exposing (RelationType(..), Relations, getRelationForAggEdge, getRelationForTx)
 import Model.Pathfinder.Tx exposing (Tx)
 import RecordSetter exposing (..)
 
@@ -17,6 +18,9 @@ insertTx tx relations =
         |> Maybe.map
             (\relation ->
                 case relation.type_ of
+                    Agg _ ->
+                        relations
+
                     Txs txs ->
                         Dict.insert tx.id tx txs
                             |> Txs
@@ -42,6 +46,9 @@ updateTx id upd relations =
         |> Maybe.map
             (\relation ->
                 case relation.type_ of
+                    Agg _ ->
+                        relations
+
                     Txs txs ->
                         Dict.update id (Maybe.map upd) txs
                             |> Txs
@@ -58,6 +65,9 @@ deleteTx id relations =
         |> Maybe.map
             (\relation ->
                 case relation.type_ of
+                    Agg _ ->
+                        relations
+
                     Txs txs ->
                         let
                             newDict =
@@ -78,5 +88,51 @@ deleteTx id relations =
                                 |> flip s_type_ relation
                                 |> flip (IntDict.insert relation.id) relations.relations
                                 |> flip s_relations newRelations
+            )
+        |> Maybe.withDefault relations
+
+
+insertAggEdge : AggEdge -> Relations -> Relations
+insertAggEdge aggEdge relations =
+    getRelationForAggEdge aggEdge.id relations
+        |> Maybe.map
+            (\relation ->
+                case relation.type_ of
+                    Agg _ ->
+                        Agg aggEdge
+                            |> flip s_type_ relation
+                            |> flip (IntDict.insert relation.id) relations.relations
+                            |> flip s_relations relations
+
+                    Txs _ ->
+                        relations
+            )
+        |> Maybe.withDefault
+            { relations
+                | relations =
+                    aggEdge
+                        |> Agg
+                        |> initRelation relations.nextInt
+                        |> flip (IntDict.insert relations.nextInt) relations.relations
+                , aggEdgeRelationMap = Dict.insert aggEdge.id relations.nextInt relations.aggEdgeRelationMap
+                , nextInt = relations.nextInt + 1
+            }
+
+
+updateAggEdge : ( Id, Id ) -> (AggEdge -> AggEdge) -> Relations -> Relations
+updateAggEdge id upd relations =
+    getRelationForAggEdge id relations
+        |> Maybe.map
+            (\relation ->
+                case relation.type_ of
+                    Agg agg ->
+                        upd agg
+                            |> Agg
+                            |> flip s_type_ relation
+                            |> flip (IntDict.insert relation.id) relations.relations
+                            |> flip s_relations relations
+
+                    Txs _ ->
+                        relations
             )
         |> Maybe.withDefault relations

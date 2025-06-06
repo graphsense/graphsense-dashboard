@@ -9,6 +9,7 @@ init : Relations
 init =
     { relations = IntDict.empty
     , txRelationMap = Dict.empty
+    , aggEdgeRelationMap = Dict.empty
     , nextInt = 0
     }
 
