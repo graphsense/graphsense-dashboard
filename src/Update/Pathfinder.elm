@@ -470,9 +470,15 @@ updateByMsg plugins uc msg model =
                                                 Network.deleteTx txId model.network
                                         in
                                         Tx.listAddressesForTx t
-                                            |> List.filter
-                                                (second >> .id >> (/=) addressId)
                                             |> List.map second
+                                            |> List.filterMap
+                                                (\a ->
+                                                    if a.id == addressId then
+                                                        Nothing
+
+                                                    else
+                                                        Dict.get a.id delNw.addresses
+                                                )
                                             |> Network.deleteDanglingAddresses delNw
                                             |> flip s_network model
                                             |> n
