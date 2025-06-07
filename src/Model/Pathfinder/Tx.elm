@@ -25,6 +25,7 @@ module Model.Pathfinder.Tx exposing
     , isRawInFlow
     , isRawOutFlow
     , listAddressesForTx
+    , listSeparatedAddressesForTx
     )
 
 import Animation exposing (Animation, Clock)
@@ -170,6 +171,26 @@ listAddressesForTx tx =
                         |> List.filterMap .address
                         |> List.map (pair Outgoing)
                    )
+
+
+listSeparatedAddressesForTx : Tx -> ( List Address, List Address )
+listSeparatedAddressesForTx tx =
+    case tx.type_ of
+        Account { fromAddress, toAddress } ->
+            ( fromAddress
+                |> Maybe.map List.singleton
+                |> Maybe.withDefault []
+            , toAddress
+                |> Maybe.map List.singleton
+                |> Maybe.withDefault []
+            )
+
+        Utxo { inputs, outputs } ->
+            ( Dict.values inputs
+                |> List.filterMap .address
+            , Dict.values outputs
+                |> List.filterMap .address
+            )
 
 
 getInputAddressIds : Tx -> List Id

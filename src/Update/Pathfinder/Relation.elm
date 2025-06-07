@@ -14,7 +14,7 @@ import RecordSetter exposing (..)
 
 insertTx : Tx -> Relations -> Relations
 insertTx tx relations =
-    getRelationForTx tx.id relations
+    getRelationForTx tx relations
         |> Maybe.map
             (\relation ->
                 case relation.type_ of
@@ -35,7 +35,11 @@ insertTx tx relations =
                         |> Txs
                         |> initRelation relations.nextInt
                         |> flip (IntDict.insert relations.nextInt) relations.relations
-                , txRelationMap = Dict.insert tx.id relations.nextInt relations.txRelationMap
+                , relationsMap = 
+                    listSeparatedAddressesForTx tx
+                    |> (\(inputs, outputs) ->
+                    )
+                    |> Dict.insert tx.id relations.nextInt relations.txRelationMap
                 , nextInt = relations.nextInt + 1
             }
 

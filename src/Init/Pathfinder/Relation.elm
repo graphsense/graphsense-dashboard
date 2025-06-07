@@ -8,8 +8,7 @@ import Model.Pathfinder.Relation exposing (Relation, RelationType, Relations)
 init : Relations
 init =
     { relations = IntDict.empty
-    , txRelationMap = Dict.empty
-    , aggEdgeRelationMap = Dict.empty
+    , relationsMap = Dict.empty
     , nextInt = 0
     }
 
