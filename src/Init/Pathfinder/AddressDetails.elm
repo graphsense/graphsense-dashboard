@@ -6,6 +6,7 @@ import Effect.Pathfinder exposing (Effect)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import Model.DateFilter exposing (DateFilterRaw)
 import Model.Locale as Locale
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Id exposing (Id)
@@ -15,11 +16,11 @@ import Tuple exposing (first, second)
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 
 
-init : Network -> Dict Id (WebData Api.Data.Entity) -> Locale.Model -> Id -> List String -> Api.Data.Address -> ( AddressDetails.Model, List Effect )
-init network clusters locale addressId assets data =
+init : Network -> Dict Id (WebData Api.Data.Entity) -> Locale.Model -> DateFilterRaw -> Id -> List String -> Api.Data.Address -> ( AddressDetails.Model, List Effect )
+init network clusters locale dateFilterPreset addressId assets data =
     let
         ( txs, eff ) =
-            TransactionTable.init network locale addressId data assets
+            TransactionTable.init network locale dateFilterPreset addressId data assets
 
         clusterId =
             Id.initClusterId data.currency data.entity

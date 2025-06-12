@@ -399,15 +399,21 @@ closeButtonGrey msg =
 dateTimeFilterHeader : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html AddressDetails.Msg
 dateTimeFilterHeader vc dmodel =
     let
-        startP =
-            dmodel.fromDate
+        renderDate showTimeFn date =
+            date
                 |> Locale.posixToTimestampSeconds
-                |> Locale.timestampDateUniform vc.locale
+                |> (if showTimeFn date then
+                        Locale.timestampDateUniform vc.locale
+
+                    else
+                        Locale.timestampDateTimeUniform vc.locale False
+                   )
+
+        startP =
+            dmodel.fromDate |> renderDate (Locale.isFirstSecondOfTheDay vc.locale)
 
         endP =
-            dmodel.toDate
-                |> Locale.posixToTimestampSeconds
-                |> Locale.timestampDateUniform vc.locale
+            dmodel.toDate |> renderDate (Locale.isLastSecondOfTheDay vc.locale)
     in
     SidePanelComponents.filterLabel
         { root =

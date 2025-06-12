@@ -8,6 +8,7 @@ import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
 import Init.Graph.Table
+import Model.DateFilter exposing (DateFilterRaw)
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
@@ -38,8 +39,8 @@ getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
-init : Network -> Locale.Model -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
-init network locale addressId data assets =
+init : Network -> Locale.Model -> DateFilterRaw -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
+init network locale dateFilter addressId data assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -79,6 +80,14 @@ init network locale addressId data assets =
             )
         |> Maybe.withDefault
             (initWithFilter addressId data emptyDateFilter Nothing Nothing assets)
+        |> Tuple.mapSecond
+            ((++)
+                ([ dateFilter.fromDate |> Maybe.map (loadFromDateBlock addressId)
+                 , dateFilter.toDate |> Maybe.map (loadToDateBlock addressId)
+                 ]
+                    |> List.filterMap identity
+                )
+            )
 
 
 initWithFilter : Id -> Api.Data.Address -> { x | txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) } -> Maybe Direction -> Maybe String -> List String -> ( TransactionTable.Model, List Effect )

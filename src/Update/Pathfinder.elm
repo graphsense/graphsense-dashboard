@@ -24,6 +24,7 @@ import Json.Decode
 import List.Extra
 import Log
 import Maybe.Extra
+import Model.DateFilter as DateFilter
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
@@ -228,7 +229,7 @@ updateByMsg plugins uc msg model =
         UserReleasedNormalKey _ ->
             n model
 
-        BrowserGotAddressData id position data ->
+        BrowserGotAddressData id position dateFilterPreset data ->
             if (not <| Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
                 let
                     onlyIds =
@@ -238,7 +239,7 @@ updateByMsg plugins uc msg model =
                             |> List.map Id.id
                 in
                 if List.isEmpty onlyIds then
-                    browserGotAddressData uc plugins id position data model
+                    browserGotAddressData uc plugins dateFilterPreset id position data model
 
                 else
                     let
@@ -266,7 +267,7 @@ updateByMsg plugins uc msg model =
                     )
 
             else
-                browserGotAddressData uc plugins id position data model
+                browserGotAddressData uc plugins dateFilterPreset id position data model
 
         BrowserGotRelationsToVisibleNeighbors id dir relations ->
             let
@@ -282,7 +283,7 @@ updateByMsg plugins uc msg model =
                 CheckingNeighbors.getData id model.checkingNeighbors
                     |> Maybe.map
                         (\data ->
-                            browserGotAddressData uc plugins id Auto data newModel
+                            browserGotAddressData uc plugins DateFilter.emptyDateFilterRaw id Auto data newModel
                         )
                     |> Maybe.withDefault (n newModel)
 
@@ -1038,7 +1039,7 @@ updateByMsg plugins uc msg model =
                             removeAddress aId m |> Tuple.mapSecond ((++) eff)
 
                         addAcc aId ( m, eff ) =
-                            loadAddress plugins aId m |> Tuple.mapSecond ((++) eff)
+                            loadAddress plugins DateFilter.emptyDateFilterRaw aId m |> Tuple.mapSecond ((++) eff)
                     in
                     if allChecked then
                         idsTable
@@ -1299,7 +1300,7 @@ updateByMsg plugins uc msg model =
             addresses
                 |> List.foldl
                     (\address mod ->
-                        and (browserGotAddressData uc plugins (Id.init address.currency address.address) Auto address) mod
+                        and (browserGotAddressData uc plugins DateFilter.emptyDateFilterRaw (Id.init address.currency address.address) Auto address) mod
                     )
                     (n model)
 
@@ -1445,7 +1446,7 @@ placeNeighborIfError plugins uc config nid model =
         CheckingNeighbors.getData nid model.checkingNeighbors
             |> Maybe.map
                 (\data ->
-                    browserGotAddressData uc plugins nid (NextTo ( config.direction, config.addressId )) data newModel
+                    browserGotAddressData uc plugins DateFilter.emptyDateFilterRaw nid (NextTo ( config.direction, config.addressId )) data newModel
                         |> mapSecond
                             ((::)
                                 (NoAdjacentTxForAddressAndNeighborFound config.addressId nid
@@ -1527,8 +1528,8 @@ handleWorkflowNextTxByTime plugins uc config neighborId wf model =
                     )
 
 
-browserGotAddressData : Update.Config -> Plugins -> Id -> FindPosition -> Api.Data.Address -> Model -> ( Model, List Effect )
-browserGotAddressData uc plugins id position data model =
+browserGotAddressData : Update.Config -> Plugins -> DateFilter.DateFilterRaw -> Id -> FindPosition -> Api.Data.Address -> Model -> ( Model, List Effect )
+browserGotAddressData uc plugins dateFilterPreset id position data model =
     let
         ( newAddress, net ) =
             Network.addAddressWithPosition plugins position id model.network
@@ -1554,7 +1555,7 @@ browserGotAddressData uc plugins id position data model =
                                                 assets =
                                                     Locale.getTokenTickers uc.locale (Id.network address.id)
                                             in
-                                            AddressDetails.init net clusters uc.locale address.id assets data
+                                            AddressDetails.init net clusters uc.locale dateFilterPreset address.id assets data
                                         )
                                     |> Maybe.map (mapFirst Success)
                                     |> Maybe.map (mapFirst (AddressDetails id))
@@ -1690,7 +1691,7 @@ userClickedAddressCheckboxInTable plugins id model =
         removeAddress id model
 
     else
-        loadAddress plugins id model
+        loadAddress plugins DateFilter.emptyDateFilterRaw id model
 
 
 userClickedTx : Id -> Model -> ( Model, List Effect )
@@ -2037,7 +2038,7 @@ addPathToGraph plugins uc model net list =
                 action =
                     case a of
                         Route.AddressHop _ adr ->
-                            loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
+                            loadAddressWithPosition plugins DateFilter.emptyDateFilterRaw (Fixed x_ y_) ( net, adr )
 
                         Route.TxHop h ->
                             loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
@@ -2097,8 +2098,17 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins id
+                |> loadAddress plugins DateFilter.emptyDateFilterRaw id
                 |> and (selectAddress uc id)
+
+        Route.Network network (Route.AddressWithTxDateRange a dateFilter) ->
+            let
+                id =
+                    Id.init network a
+            in
+            { model | network = Network.clearSelection model.network }
+                |> loadAddress plugins dateFilter id
+                |> and (selectAddressWithDateFilter uc id dateFilter)
 
         Route.Network network (Route.Tx a) ->
             let
@@ -2229,13 +2239,13 @@ updateByPluginOutMsg plugins uc outMsgs model =
             ( model, [] )
 
 
-loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
-loadAddress plugins =
-    loadAddressWithPosition plugins Auto
+loadAddress : Plugins -> DateFilter.DateFilterRaw -> Id -> Model -> ( Model, List Effect )
+loadAddress plugins dateFilterPreset =
+    loadAddressWithPosition plugins dateFilterPreset Auto
 
 
-loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition _ position id model =
+loadAddressWithPosition : Plugins -> DateFilter.DateFilterRaw -> FindPosition -> Id -> Model -> ( Model, List Effect )
+loadAddressWithPosition _ dateFilterPreset position id model =
     if Dict.member id model.network.addresses then
         n model
 
@@ -2243,7 +2253,7 @@ loadAddressWithPosition _ position id model =
         ( -- don't add the address here because it is not loaded yet
           --{ model | network = Network.addAddressWithPosition plugins position id model.network }
           model
-        , [ BrowserGotAddressData id position
+        , [ BrowserGotAddressData id position dateFilterPreset
                 |> Api.GetAddressEffect
                     { currency = Id.network id
                     , address = Id.id id
@@ -2310,8 +2320,8 @@ selectTx id model =
                 |> n
 
 
-selectAddress : Update.Config -> Id -> Model -> ( Model, List Effect )
-selectAddress uc id model =
+selectAddressWithDateFilter : Update.Config -> Id -> DateFilter.DateFilterRaw -> Model -> ( Model, List Effect )
+selectAddressWithDateFilter uc id dateFilterPreset model =
     case Dict.get id model.network.addresses of
         Just address ->
             let
@@ -2320,7 +2330,7 @@ selectAddress uc id model =
 
                 newDetails =
                     address.data
-                        |> RemoteData.map (AddressDetails.init model.network model.clusters uc.locale address.id assets)
+                        |> RemoteData.map (AddressDetails.init model.network model.clusters uc.locale dateFilterPreset address.id assets)
 
                 details =
                     case model.details of
@@ -2358,8 +2368,13 @@ selectAddress uc id model =
                 |> pairTo eff2
 
         Nothing ->
-            s_selection (WillSelectAddress id) model
+            s_selection (WillSelectAddressWithFilter id dateFilterPreset) model
                 |> n
+
+
+selectAddress : Update.Config -> Id -> Model -> ( Model, List Effect )
+selectAddress uc id model =
+    selectAddressWithDateFilter uc id DateFilter.emptyDateFilterRaw model
 
 
 unselect : ( Model, List Effect ) -> ( Model, List Effect )
@@ -2396,6 +2411,9 @@ unselect ( model, eff ) =
                     model.network
 
                 WillSelectAddress _ ->
+                    model.network
+
+                WillSelectAddressWithFilter _ _ ->
                     model.network
 
                 NoSelection ->
@@ -2697,7 +2715,7 @@ addTx plugins _ anchorAddressId direction addressId tx model =
                     position =
                         NextTo ( direction, newTx.id )
                 in
-                loadAddressWithPosition plugins position a newmodel
+                loadAddressWithPosition plugins DateFilter.emptyDateFilterRaw position a newmodel
             )
         |> Maybe.withDefault (n newmodel)
 
@@ -2710,6 +2728,15 @@ checkSelection uc model =
 
         WillSelectAddress id ->
             selectAddress uc id model
+
+        WillSelectAddressWithFilter id dateFilterPreset ->
+            let
+                openTxTable ad =
+                    n { ad | transactionsTableOpen = DateFilter.isEmpty dateFilterPreset |> not }
+            in
+            -- AddressDetails.
+            selectAddressWithDateFilter uc id dateFilterPreset model
+                |> and (updateAddressDetails id openTxTable)
 
         MultiSelect selections ->
             -- not using selectAddress/tx here since they deselect other stuff
@@ -2949,7 +2976,7 @@ autoLoadAddresses plugins tx model =
                 |> List.map first
 
         aggAddressAdd addressId =
-            and (loadAddress plugins addressId)
+            and (loadAddress plugins DateFilter.emptyDateFilterRaw addressId)
 
         src =
             if List.member Incoming addresses then

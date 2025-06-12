@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.06.0] - 2025-06-06
+
+### Added
+- Legend/help to pathfinder 2
+- advanced filtering of transaction table (in, out, asset type in account model currencies)
+- Add multiple txs (page) to graph for input/output table and tx table
+
 ## [25.05.5] - 2025-06-03
 
 ### Fixed
