@@ -13,6 +13,7 @@ import Theme.Colors as Colors
 import Theme.Html.Dialogs as Dialogs
 import Theme.Html.Fields as F
 import Theme.Html.SettingsComponents as Sc
+import Util.Css exposing (alignItemsStretch)
 import Util.View
 import View.Button as Button
 import View.Locale as Locale
@@ -85,15 +86,21 @@ view plugins vc model =
                         model.search
                         |> Html.map (SearchMsgAddTagDialog >> AddTagDialog)
 
+        textFieldAttributes =
+            F.textFieldWithHelpAttributes
+                |> Rs.s_root
+                    [ [ Css.width <| Css.pct 90 ] |> css
+                    , alignItemsStretch
+                    ]
+                |> Rs.s_helperText
+                    [ [ Css.property "white-space" "wrap" |> Css.important
+                      ]
+                        |> css
+                    ]
+
         actorText =
             F.textFieldWithHelpWithAttributes
-                (F.textFieldWithHelpAttributes
-                    |> Rs.s_helperText
-                        ([ Css.whiteSpace Css.normal |> Css.important, Css.overflowWrap Css.breakWord ]
-                            |> css
-                            |> List.singleton
-                        )
-                )
+                textFieldAttributes
                 { root =
                     { helpText = Locale.string vc.locale "Start typing to search existing labels."
                     , state = F.TextFieldWithHelpStateDefault
@@ -103,7 +110,8 @@ view plugins vc model =
                 }
 
         additionalInfo =
-            F.textFieldWithHelp
+            F.textFieldWithHelpWithAttributes
+                textFieldAttributes
                 { root =
                     { helpText = Locale.string vc.locale "Add context, notes, or links to supporting evidence."
                     , state = F.TextFieldWithHelpStateDefault
@@ -116,6 +124,7 @@ view plugins vc model =
                             , [ Css.resize Css.none
                               , Css.height (Css.em 5) |> Css.important
                               , Css.focus [ Css.height (Css.em 5) |> Css.important ]
+                              , Css.whiteSpace Css.preLine
                               ]
                                 |> css
                             , value model.description
