@@ -18,10 +18,10 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Tuple exposing (first, mapSecond, second)
+import Tuple exposing (mapSecond)
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
-import View.Pathfinder.AggEdge as AggEdge exposing (edge)
+import View.Pathfinder.AggEdge as AggEdge
 import View.Pathfinder.Tx as Tx
 
 
@@ -84,8 +84,8 @@ relations plugins vc gc annotations txs =
                             |> List.filterMap
                                 (\edge ->
                                     Maybe.map2 (aggEdge plugins vc gc edge)
-                                        edge.fromAddress
-                                        edge.toAddress
+                                        edge.aAddress
+                                        edge.bAddress
                                 )
                         )
            )
@@ -93,11 +93,11 @@ relations plugins vc gc annotations txs =
 
 
 aggEdge : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdge _ vc _ edge fromAddress toAddress =
-    ( Id.toString (first edge.id) ++ Id.toString (second edge.id)
+aggEdge _ vc _ edge aAddress bAddress =
+    ( Id.toString edge.a ++ Id.toString edge.b
     , Svg.g
         []
-        [ Svg.lazy4 AggEdge.view vc edge fromAddress toAddress
+        [ Svg.lazy4 AggEdge.view vc edge aAddress bAddress
         ]
     )
 
@@ -108,7 +108,7 @@ aggEdge _ vc _ edge fromAddress toAddress =
    txs plugins vc gc annotations =
        List.foldl
            (\tx svg ->
-               ( Id.toString tx.id
+               ( Id.bString tx.id
                , Annotations.getAnnotation tx.id annotations
                    |> Svg.lazy5 Tx.view plugins vc gc tx
                )

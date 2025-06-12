@@ -41,8 +41,9 @@ oneAddress =
         Dict.fromList
             [ ( Id.address1, Address.address1 ) ]
     , txs = Dict.empty
-    , relations = Relation.init
     , aggEdges = Dict.empty
+    , relations = Relation.init
+    , addressAggEdgeMap = Dict.empty
     , animatedAddresses = Set.empty
     , animatedTxs = Set.empty
     }

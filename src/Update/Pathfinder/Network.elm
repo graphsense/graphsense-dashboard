@@ -3,6 +3,7 @@ module Update.Pathfinder.Network exposing
     , addAddressWithPosition
     , addTx
     , addTxWithPosition
+    , aggEdgeNeedsData
     , animateAddresses
     , animateTxs
     , clearSelection
@@ -13,19 +14,21 @@ module Update.Pathfinder.Network exposing
     , getYForPathAfterX
     , ingestAddresses
     , ingestTxs
-    , insertAggEdge
     , snapToGrid
     , updateAddress
     , updateAddressesByClusterId
+    , updateAggEdge
     , updateTx
+    , upsertAggEdgeData
     )
 
 import Animation as A exposing (Animation)
 import Api.Data
 import Basics.Extra exposing (flip, uncurry)
-import Config.Pathfinder exposing (Config, TracingMode(..), nodeXOffset, nodeYOffset)
+import Config.Pathfinder exposing (TracingMode(..), nodeXOffset, nodeYOffset)
 import Dict
 import Init.Pathfinder.Address as Address
+import Init.Pathfinder.AggEdge as AggEdge
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Tx as Tx
 import List.Nonempty as NList
@@ -37,14 +40,15 @@ import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Deserialize exposing (DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
-import Model.Pathfinder.Tx as Tx exposing (Tx, listAddressesForTx, listSeparatedAddressesForTx)
+import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Plugin.Update exposing (Plugins)
 import RecordSetter exposing (..)
-import Set
-import Tuple exposing (pair, second)
+import RemoteData exposing (RemoteData(..))
+import Set exposing (Set)
+import Tuple exposing (first, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
-import Update.Pathfinder.AggEdge as AggEdge
+import Update.Pathfinder.AggEdge as AggEdge exposing (updateAddress)
 import Update.Pathfinder.Tx as Tx
 
 
@@ -334,13 +338,18 @@ insertAddress model newAddress =
 
 setAddressInAggEdges : Address -> Network -> Network
 setAddressInAggEdges address network =
-    Dict.get address.id network.fromAggEdgeMap
-        |> Maybe.map (\id -> updateAggEdge id (AggEdge.setFromAddress address) network)
-        |> Maybe.Extra.orElseLazy
-            (\_ ->
-                Dict.get address.id network.toAggEdgeMap
-                    |> Maybe.map (\id -> updateAggEdge id (AggEdge.setToAddress address) network)
+    updateAggEdgesById address.id (AggEdge.setAddress (Just address)) network
+
+
+updateAggEdgesById : Id -> (AggEdge -> AggEdge) -> Network -> Network
+updateAggEdgesById id update network =
+    Dict.get id network.addressAggEdgeMap
+        |> Maybe.map
+            (Set.foldl
+                (\edgeId -> Dict.update edgeId (Maybe.map update))
+                network.aggEdges
             )
+        |> Maybe.map (flip s_aggEdges network)
         |> Maybe.withDefault network
 
 
@@ -349,21 +358,6 @@ updateAggEdge id upd network =
     { network
         | aggEdges = Dict.update id (Maybe.map upd) network.aggEdges
     }
-
-
-
-{-
-   getAggEdgeByFrom : Id -> Network -> Maybe AggEdge
-   getAggEdgeByFrom id network =
-       Dict.get id network.fromAggEdgeMap
-           |> Maybe.andThen (flip Dict.get network.aggEdges)
-
-
-   getAggEdgeByTo : Id -> Network -> Maybe AggEdge
-   getAggEdgeByTo id network =
-       Dict.get id network.toAggEdgeMap
-           |> Maybe.andThen (flip Dict.get network.aggEdges)
--}
 
 
 opacityAnimation : Animation
@@ -391,6 +385,7 @@ updateAddress id update model =
             { model
                 | addresses = Dict.update id (Maybe.map update) model.addresses
             }
+        |> updateAggEdgesById id (AggEdge.updateAddress id update)
 
 
 updateAllAddresses : (Address -> Address) -> Network -> Network
@@ -643,7 +638,7 @@ insertTx network tx =
     Dict.get tx.id nw.txs
         |> Maybe.map
             (\newTx ->
-                listAddressesForTx newTx
+                Tx.listAddressesForTx newTx
                     |> List.foldl
                         (\( dir, a ) -> updateAddress a.id (upd dir))
                         nw
@@ -662,46 +657,49 @@ setAddressInTx txId dir address network =
     in
     Dict.get txId nw.txs
         |> Maybe.map
-            (\newTx ->
+            (\newTx -> insertTxInAggEdges newTx nw)
+        |> Maybe.withDefault nw
+
+
+makeTxAddressesCrossproduct : ( List Address, List Address ) -> List ( Address, Address )
+makeTxAddressesCrossproduct ( inputs, outputs ) =
+    List.foldl (\input cp -> List.map (pair input) outputs ++ cp) [] inputs
+
+
+insertTxInAggEdges : Tx -> Network -> Network
+insertTxInAggEdges tx network =
+    Tx.listSeparatedAddressesForTx tx
+        |> makeTxAddressesCrossproduct
+        |> List.foldl
+            (\( input, output ) nw ->
+                let
+                    edgeId =
+                        AggEdge.initId input.id output.id
+                in
                 { nw
-                    | aggEdges = insertTxInAggEdges newTx network.aggEdges
+                    | aggEdges =
+                        Dict.update edgeId
+                            (Maybe.map
+                                (\a ->
+                                    { a
+                                        | txs = Set.insert tx.id a.txs
+                                    }
+                                )
+                                >> Maybe.withDefault
+                                    (AggEdge.init input.id output.id
+                                        |> AggEdge.setAddress (Just input)
+                                        |> AggEdge.setAddress (Just output)
+                                        |> s_txs (Set.singleton tx.id)
+                                    )
+                                >> Just
+                            )
+                            nw.aggEdges
+                    , addressAggEdgeMap =
+                        updateAddressAggEdgeMap edgeId nw.addressAggEdgeMap
+                            |> updateAddressAggEdgeMap edgeId
                 }
             )
-        |> Maybe.withDefault network
-
-
-insertTxInAggEdges : Tx -> Dict.Dict ( Id, Id ) AggEdge -> Dict.Dict ( Id, Id ) AggEdge
-insertTxInAggEdges tx aggEdges =
-    let
-        ( inputs, outputs ) =
-            listSeparatedAddressesForTx tx
-
-        crossproduct =
-            List.foldl (\input cp -> List.map (pair input) outputs ++ cp) [] inputs
-    in
-    crossproduct
-        |> Debug.log "cp"
-        |> List.foldl
-            (\( input, output ) ->
-                Dict.update ( input.id, output.id )
-                    (Maybe.map
-                        (\a ->
-                            { a
-                                | txs = Set.insert tx.id a.txs
-                            }
-                        )
-                        >> Maybe.withDefault
-                            { id = ( input.id, output.id )
-                            , fromAddress = Just input
-                            , toAddress = Just output
-                            , fromNeighborData = Nothing
-                            , toNeighborData = Nothing
-                            , txs = Set.singleton tx.id
-                            }
-                        >> Just
-                    )
-            )
-            aggEdges
+            network
 
 
 listInOutputsOfApiTxUtxo : Network -> Api.Data.TxUtxo -> List ( Direction, Address )
@@ -911,24 +909,23 @@ deleteAddress id network =
                                             |> Tx.updateAccount
                                 )
                                 >> (\nw ->
-                                        let
-                                            map =
-                                                case direction of
-                                                    Incoming ->
-                                                        nw.fromAggEdgeMap
-
-                                                    Outgoing ->
-                                                        nw.toAggEdgeMap
-                                        in
-                                        Dict.get id map
-                                            |> Maybe.andThen (flip Dict.get nw.aggEdges)
+                                        Dict.get id nw.addressAggEdgeMap
                                             |> Maybe.map
-                                                (\edge ->
-                                                    edge.txs
-                                                        |> Set.foldl deleteTx
-                                                            { nw
-                                                                | aggEdges = Dict.remove edge.id nw.aggEdges
-                                                            }
+                                                (Set.foldl
+                                                    (\aggEdgeId nw_ ->
+                                                        Dict.get aggEdgeId nw_.aggEdges
+                                                            |> Maybe.map
+                                                                (\edge ->
+                                                                    edge.txs
+                                                                        |> Set.foldl deleteTx
+                                                                            { nw_
+                                                                                | aggEdges = Dict.remove aggEdgeId nw_.aggEdges
+                                                                                , addressAggEdgeMap = Dict.remove id nw_.addressAggEdgeMap
+                                                                            }
+                                                                )
+                                                            |> Maybe.withDefault nw_
+                                                    )
+                                                    nw
                                                 )
                                             |> Maybe.withDefault nw
                                    )
@@ -945,37 +942,38 @@ deleteTx id network =
     Dict.get id network.txs
         |> Maybe.map
             (\tx ->
-                Tx.listAddressesForTx tx
-                    |> List.foldl
-                        (\( direction, a ) -> 
-                            updateAddress a.id (Address.removeTx tx.id)
-                            >> (\nw ->
-                                        let
-                                            map =
-                                                case direction of
-                                                    Incoming ->
-                                                        nw.fromAggEdgeMap
+                let
+                    ( inputs, outputs ) =
+                        Tx.listSeparatedAddressesForTx tx
 
-                                                    Outgoing ->
-                                                        nw.toAggEdgeMap
-                                        in
-                                        Dict.get id map
-                                        |> Maybe.map
-                                            (\edgeId ->
-                                                updateAggEdge edgeId
-                                                    (\edge ->
-                                                        { edge 
-                                                            | txs = Set.remove id edge.txs
-                                                        }
-                                                    )
-                                                    nw
-                                            )
-                                        |> Maybe.withDefault nw
+                    cp =
+                        makeTxAddressesCrossproduct ( inputs, outputs )
+
+                    network2 =
+                        inputs
+                            ++ outputs
+                            |> List.foldl
+                                (\a ->
+                                    updateAddress a.id (Address.removeTx tx.id)
                                 )
-
+                                network
+                in
+                cp
+                    |> List.foldl
+                        (\( input, output ) ->
+                            let
+                                edgeId =
+                                    AggEdge.initId input.id output.id
+                            in
+                            updateAggEdge edgeId
+                                (\edge ->
+                                    { edge
+                                        | txs = Set.remove id edge.txs
+                                    }
+                                )
                         )
-                        { network
-                            | txs = Dict.remove id network.txs
+                        { network2
+                            | txs = Dict.remove id network2.txs
                         }
             )
         |> Maybe.withDefault network
@@ -1050,34 +1048,68 @@ deleteDanglingAddresses =
         )
 
 
-insertAggEdge : Config -> Id -> Direction -> Api.Data.NeighborAddress -> Network -> Network
-insertAggEdge config id dir neighbor model =
+upsertAggEdgeData : Id -> Direction -> Api.Data.NeighborAddress -> Network -> Network
+upsertAggEdgeData id dir neighbor model =
     let
         nid =
             Id.init neighbor.address.currency neighbor.address.address
 
-        ( ( from, fromNeighborData ), ( to, toNeighborData ) ) =
-            case dir of
-                Outgoing ->
-                    ( ( id, Just neighbor ), ( nid, Nothing ) )
-
-                Incoming ->
-                    ( ( nid, Nothing ), ( id, Just neighbor ) )
+        aggEdgeId =
+            AggEdge.initId id nid
 
         aggEdge =
-            { id = ( from, to )
-            , fromAddress = Dict.get from model.addresses
-            , toAddress = Dict.get to model.addresses
-            , fromNeighborData = fromNeighborData
-            , toNeighborData = toNeighborData
-            , txs = Set.empty
-            }
+            Dict.get aggEdgeId model.aggEdges
+                |> Maybe.withDefault
+                    (AggEdge.init id nid
+                        |> AggEdge.setAddress (Dict.get id model.addresses)
+                        |> AggEdge.setAddress (Dict.get nid model.addresses)
+                    )
+                |> AggEdge.setRelationData id dir (Success neighbor)
     in
     { model
-        | aggEdges =
-            Dict.insert ( from, to )
-                aggEdge
-                model.aggEdges
-        , fromAggEdgeMap = Dict.insert from ( from, to ) model.fromAggEdgeMap
-        , toAggEdgeMap = Dict.insert to ( from, to ) model.toAggEdgeMap
+        | aggEdges = Dict.insert aggEdgeId aggEdge model.aggEdges
+        , addressAggEdgeMap = updateAddressAggEdgeMap aggEdgeId model.addressAggEdgeMap
     }
+
+
+updateAddressAggEdgeMap : ( Id, Id ) -> Dict.Dict Id (Set ( Id, Id )) -> Dict.Dict Id (Set ( Id, Id ))
+updateAddressAggEdgeMap id =
+    let
+        updMap =
+            Maybe.map (Set.insert id)
+                >> Maybe.withDefault (Set.singleton id)
+                >> Just
+    in
+    Dict.update (first id) updMap
+        >> Dict.update (second id) updMap
+
+
+{-|
+
+    Returns the ids and their missing relation data direction
+    Nothing if the edge does not exist
+
+-}
+aggEdgeNeedsData : ( Id, Id ) -> Network -> Maybe (List ( Id, Direction ))
+aggEdgeNeedsData id network =
+    let
+        isOk a =
+            RemoteData.isSuccess a
+                || RemoteData.isLoading a
+    in
+    Dict.get id network.aggEdges
+        |> Maybe.map
+            (\a ->
+                (if isOk a.a2b then
+                    []
+
+                 else
+                    [ ( a.a, Outgoing ), ( a.b, Incoming ) ]
+                )
+                    ++ (if isOk a.b2a then
+                            []
+
+                        else
+                            [ ( a.a, Incoming ), ( a.b, Outgoing ) ]
+                       )
+            )

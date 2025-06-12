@@ -7,6 +7,10 @@ type alias Id =
     ( String, String )
 
 
+type alias AggEdgeId =
+    String
+
+
 network : Id -> String
 network =
     first

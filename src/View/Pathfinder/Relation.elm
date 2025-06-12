@@ -12,7 +12,6 @@ import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
 import Svg.Styled as Svg exposing (Svg)
 import Svg.Styled.Lazy as Svg
-import Tuple exposing (first, second)
 import Util.Annotations as Annotations
 import View.Pathfinder.AggEdge as AggEdge
 import View.Pathfinder.Tx as Tx
@@ -52,7 +51,7 @@ txs plugins vc gc annotations =
 
 aggEdge : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
 aggEdge plugins vc gc edge fromAddress toAddress =
-    ( Id.toString (first edge.id) ++ Id.toString (second edge.id)
+    ( Id.toString edge.from ++ Id.toString edge.to
     , Svg.g
         []
         [ Svg.lazy6 AggEdge.view plugins vc gc edge fromAddress toAddress

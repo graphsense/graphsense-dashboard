@@ -1,6 +1,7 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, hasLoadedAddress, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBackRelationData, getBoundingBox, getForthRelationData, getRecentTxForAddress, hasAddress, hasAnimations, hasLoadedAddress, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
+import Api.Data
 import Dict exposing (Dict)
 import Init.Pathfinder.Id as Id
 import List.Extra
@@ -19,8 +20,7 @@ type alias Network =
     { addresses : Dict Id Address
     , txs : Dict Id Tx
     , aggEdges : Dict ( Id, Id ) AggEdge
-    , fromAggEdgeMap : Dict Id ( Id, Id )
-    , toAggEdgeMap : Dict Id ( Id, Id )
+    , addressAggEdgeMap : Dict Id (Set ( Id, Id ))
     , relations : Relations -- the actual currently visible relations (txs/agg/...)
     , animatedAddresses : Set Id
     , animatedTxs : Set Id
@@ -178,3 +178,15 @@ getRecentTxForAddress network direction addressId =
 isEmpty : Network -> Bool
 isEmpty { addresses, txs } =
     Dict.isEmpty addresses && Dict.isEmpty txs
+
+
+getBackRelationData : ( Id, Id ) -> Network -> Maybe Api.Data.NeighborAddress
+getBackRelationData id network =
+    Dict.get id network.aggEdges
+        |> Maybe.andThen (.b2a >> RemoteData.toMaybe)
+
+
+getForthRelationData : ( Id, Id ) -> Network -> Maybe Api.Data.NeighborAddress
+getForthRelationData id network =
+    Dict.get id network.aggEdges
+        |> Maybe.andThen (.a2b >> RemoteData.toMaybe)
