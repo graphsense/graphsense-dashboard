@@ -108,9 +108,9 @@ thingToUrl t =
             ( [ "address", a ], [] )
 
         AddressWithTxDateRange a dateFilter ->
-            ( [ "address", a ]
-            , [ dateFilter.fromDate |> Maybe.map (Iso8601.fromTime >> string "txs-from")
-              , dateFilter.toDate |> Maybe.map (Iso8601.fromTime >> string "txs-to")
+            ( [ "address", a, "transactions" ]
+            , [ dateFilter.fromDate |> Maybe.map (Iso8601.fromTime >> string "from")
+              , dateFilter.toDate |> Maybe.map (Iso8601.fromTime >> string "to")
               ]
                 |> List.filterMap identity
             )
@@ -163,13 +163,14 @@ thing =
     oneOf
         [ s addressSegment
             |> P.slash P.string
-            |> P.questionMark (Q.string "txs-from" |> Q.map (Maybe.andThen (Iso8601.toTime >> Result.toMaybe)))
-            |> P.questionMark (Q.string "txs-to" |> Q.map (Maybe.andThen (Iso8601.toTime >> Result.toMaybe)))
-            |> map (\a f t -> AddressWithTxDateRange a (DateFilter.init f t))
-        , s addressSegment
-            |> P.slash P.string
             --|> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddressTable))
             |> map Address
+        , s addressSegment
+            |> P.slash P.string
+            |> P.slash (s "transactions")
+            |> P.questionMark (Q.string "from" |> Q.map (Maybe.andThen (Iso8601.toTime >> Result.toMaybe)))
+            |> P.questionMark (Q.string "to" |> Q.map (Maybe.andThen (Iso8601.toTime >> Result.toMaybe)))
+            |> map (\a f t -> AddressWithTxDateRange a (DateFilter.init f t))
         , s txSegment |> P.slash P.string |> map Tx
         , s blockSegment |> P.slash P.int |> map Block
         ]

@@ -2728,7 +2728,7 @@ checkSelection uc model =
         WillSelectAddressWithFilter id dateFilterPreset ->
             let
                 openTxTable ad =
-                    n { ad | transactionsTableOpen = True }
+                    n { ad | transactionsTableOpen = DateFilter.isEmpty dateFilterPreset |> not }
             in
             -- AddressDetails.
             selectAddressWithDateFilter uc id dateFilterPreset model
