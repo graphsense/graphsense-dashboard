@@ -17,6 +17,7 @@ import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import String.Extra
+import Theme.Colors as TColor
 import Util.View exposing (loadingSpinner)
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
@@ -236,6 +237,9 @@ resultList _ vc sc { autocomplete, searchType } =
                                 Actor _ ->
                                     True
 
+                                Custom _ ->
+                                    True
+
                                 _ ->
                                     False
                         )
@@ -322,31 +326,40 @@ resultList _ vc sc { autocomplete, searchType } =
 resultLineToHtml : Config -> String -> SearchConfigWithMoreCss Msg -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
 resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
     let
-        ( icon, label, highlight_suffix ) =
+        ( icon, label, ( highlight_suffix, resultLineStyles ) ) =
             case resultLine of
                 Address _ a ->
                     ( FontAwesome.at
                     , Util.View.truncate 50 a
-                    , True
+                    , ( True
+                      , []
+                      )
                     )
 
                 Tx _ a ->
                     ( FontAwesome.exchangeAlt
                     , Util.View.truncate 70 a
-                    , True
+                    , ( True
+                      , []
+                      )
                     )
 
                 Block _ a ->
                     ( FontAwesome.cube
                     , String.fromInt a
-                    , True
+                    , ( True
+                      , []
+                      )
                     )
 
                 Label a ->
-                    ( FontAwesome.tag, a, False )
+                    ( FontAwesome.tag, a, ( False, [] ) )
 
                 Actor ( _, lbl ) ->
-                    ( FontAwesome.user, lbl, False )
+                    ( FontAwesome.user, lbl, ( True, [] ) )
+
+                Custom x ->
+                    ( FontAwesome.plus, x.label, ( False, [ Css.color (TColor.blue300_color |> Util.View.toCssColor) |> Css.important ] ) )
     in
     span
         ((Css.resultLine vc
@@ -360,6 +373,7 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
             |> css
          )
             :: css sc.resultLine
+            :: css resultLineStyles
             :: choiceEvents
         )
         [ FontAwesome.icon icon
@@ -405,4 +419,7 @@ resultLineCurrency rl =
             Nothing
 
         Actor _ ->
+            Nothing
+
+        Custom _ ->
             Nothing

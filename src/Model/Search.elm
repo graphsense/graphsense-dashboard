@@ -1,7 +1,8 @@
-module Model.Search exposing (Model, ResultLine(..), SearchType(..), firstResult, getLatestBlocks, getMulti, isLikelyPathSearchInput, minSearchInputLength, query, selectedValue, setIsPickingCurrency, setQuery)
+module Model.Search exposing (Model, ResultLine(..), SearchType(..), addToAutoComplete, firstResult, getLatestBlocks, getMulti, isLikelyPathSearchInput, lastResult, minSearchInputLength, query, selectedValue, setIsPickingCurrency, setQuery)
 
 import Api.Data
 import Autocomplete exposing (Autocomplete)
+import RecordSetter as Rs
 
 
 
@@ -36,6 +37,7 @@ type ResultLine
     | Block String Int
     | Label String
     | Actor ( String, String )
+    | Custom { id : String, label : String }
 
 
 getMulti : String -> List String
@@ -77,6 +79,23 @@ selectedValue { autocomplete } =
 firstResult : Model -> Maybe ResultLine
 firstResult { autocomplete } =
     Autocomplete.choices autocomplete |> List.head
+
+
+lastResult : Model -> Maybe ResultLine
+lastResult { autocomplete } =
+    Autocomplete.choices autocomplete |> List.reverse |> List.head
+
+
+addToAutoComplete : ResultLine -> Model -> Model
+addToAutoComplete rl m =
+    let
+        c =
+            Autocomplete.choices m.autocomplete
+
+        nc =
+            c ++ [ rl ]
+    in
+    m |> Rs.s_autocomplete (m.autocomplete |> Autocomplete.setChoices nc)
 
 
 getLatestBlocks : Api.Data.Stats -> List ( String, Int )

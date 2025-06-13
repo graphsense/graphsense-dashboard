@@ -137,6 +137,9 @@ resultLineToRoute search =
         Search.Actor ( id, _ ) ->
             Route.Actor id
 
+        Search.Custom _ ->
+            Route.Root
+
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
