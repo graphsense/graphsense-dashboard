@@ -5,6 +5,7 @@ module Model.Pathfinder.Address exposing
     , getActivityRange
     , getBalance
     , getCoords
+    , getExposedAssets
     , getInDegree
     , getNrTxs
     , getOutDegree
@@ -18,9 +19,10 @@ module Model.Pathfinder.Address exposing
 
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
+import Dict
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords exposing (Coords)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Plugin.Model as Plugin
 import RecordSetter exposing (s_incomingTxs, s_outgoingTxs)
 import RemoteData exposing (RemoteData(..), WebData)
@@ -81,6 +83,26 @@ getNrTxs a =
     case a.data of
         Success x ->
             Just (x.noOutgoingTxs + x.noIncomingTxs)
+
+        _ ->
+            Nothing
+
+
+getExposedAssets : Address -> Maybe (List String)
+getExposedAssets a =
+    case a.data of
+        Success x ->
+            Just
+                ((Id.network a.id |> String.toUpper)
+                    :: ((x.tokenBalances |> Maybe.map Dict.keys |> Maybe.withDefault [])
+                            ++ (x.totalTokensReceived |> Maybe.map Dict.keys |> Maybe.withDefault [])
+                            ++ (x.totalTokensSpent |> Maybe.map Dict.keys |> Maybe.withDefault [])
+                            |> Set.fromList
+                            |> Set.toList
+                            |> List.map String.toUpper
+                            |> List.sort
+                       )
+                )
 
         _ ->
             Nothing
