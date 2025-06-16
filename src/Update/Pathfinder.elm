@@ -1549,7 +1549,7 @@ browserGotAddressData uc plugins dateFilterPreset id position data model =
                                         (\address ->
                                             let
                                                 assets =
-                                                    Locale.getTokenTickers uc.locale (Id.network address.id)
+                                                    getExposedAssetsForAddress uc id address
                                             in
                                             AddressDetails.init net clusters uc.locale dateFilterPreset address.id assets data
                                         )
@@ -2316,13 +2316,24 @@ selectTx id model =
                 |> n
 
 
+getExposedAssetsForAddress : Update.Config -> Id -> Addr.Address -> List String
+getExposedAssetsForAddress uc id address =
+    let
+        allAssets =
+            (Id.network id |> String.toUpper) :: Locale.getTokenTickers uc.locale (Id.network id)
+    in
+    address
+        |> Addr.getExposedAssets
+        |> Maybe.withDefault allAssets
+
+
 selectAddressWithDateFilter : Update.Config -> Id -> DateFilter.DateFilterRaw -> Model -> ( Model, List Effect )
 selectAddressWithDateFilter uc id dateFilterPreset model =
     case Dict.get id model.network.addresses of
         Just address ->
             let
                 assets =
-                    Locale.getTokenTickers uc.locale (Id.network id)
+                    getExposedAssetsForAddress uc id address
 
                 newDetails =
                     address.data
