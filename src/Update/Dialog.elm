@@ -117,6 +117,7 @@ mapMsg map model =
 
         AddTag conf ->
             { closeMsg = map conf.closeMsg
+            , addTagMsg = map conf.addTagMsg
             , id = conf.id
             , search = conf.search
             , selectedActor = conf.selectedActor

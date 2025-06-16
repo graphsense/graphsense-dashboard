@@ -88,3 +88,16 @@ listTaxonomies =
         Nothing
         (Json.Decode.list Api.Data.taxonomyDecoder)
 
+
+
+reportTag : (Api.Data.UserReportedTag) -> Api.Request ()
+reportTag userReportedTag_body =
+    Api.request
+        "POST"
+        "/tags/report-tag"
+        []
+        []
+        []
+        (Just (Api.Data.encodeUserReportedTag userReportedTag_body))
+        (Json.Decode.succeed ())
+

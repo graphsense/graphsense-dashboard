@@ -754,9 +754,14 @@ update plugins uc msg model =
                         ( nm, eff ) =
                             AddTagDialog.update uc smsg conf
                     in
-                    ( { model | dialog = Just (Dialog.AddTag nm) }
-                    , eff
-                    )
+                    case smsg of
+                        BrowserAddedTag _ ->
+                            ( model |> s_dialog Nothing, eff )
+
+                        _ ->
+                            ( model |> s_dialog (Just (Dialog.AddTag nm))
+                            , eff
+                            )
 
                 _ ->
                     n model
@@ -1088,6 +1093,7 @@ update plugins uc msg model =
                             (Dialog.AddTag
                                 { id = id
                                 , closeMsg = UserClosesDialog
+                                , addTagMsg = AddTagDialog (UserClickedAddTag id)
                                 , search = Search.init Search.SearchActorsOnly
                                 , selectedActor = Nothing
                                 , description = ""

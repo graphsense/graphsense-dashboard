@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fromDeserialized, removeAddress, unselect, update, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, unselect, update, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data

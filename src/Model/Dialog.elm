@@ -74,6 +74,7 @@ type alias TagListConfig msg =
 type alias AddTagConfig msg =
     { id : Id
     , closeMsg : msg
+    , addTagMsg : msg
     , search : Search.Model
     , selectedActor : Maybe ( String, String )
     , description : String

@@ -233,6 +233,9 @@ add model key values error =
 messageFromApiEffect : Model.Model key -> Api.Effect msg -> Maybe ( String, List String )
 messageFromApiEffect model effect =
     case effect of
+        Api.AddUserReportedTag t _ ->
+            ( "adding user reported tag for {0} {1}", [ t.address, t.network ] ) |> Just
+
         Api.GetConceptsEffect taxonomy _ ->
             ( "loading concepts for taxonomy {0}"
             , [ taxonomy ]

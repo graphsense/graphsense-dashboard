@@ -18,6 +18,7 @@ import Model.Dialog
 import Model.Graph
 import Model.Notification
 import Model.Pathfinder
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType)
 import Model.Search
 import Model.Statusbar
@@ -145,6 +146,8 @@ type Msg
 type AddTagDialogMsgs
     = SearchMsgAddTagDialog Msg.Search.Msg
     | UserInputsDescription String
+    | UserClickedAddTag Id
+    | BrowserAddedTag Id
     | RemoveActorTag
 
 

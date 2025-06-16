@@ -154,7 +154,7 @@ view plugins vc model =
                 (Button.defaultConfig
                     |> Rs.s_text "Add Tag"
                     |> Rs.s_disabled (model.selectedActor == Nothing)
-                    |> Rs.s_onClick (Just model.closeMsg)
+                    |> Rs.s_onClick (Just model.addTagMsg)
                 )
                     |> Button.primaryButton vc
             }

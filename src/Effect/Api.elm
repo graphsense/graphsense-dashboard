@@ -267,6 +267,7 @@ type Effect msg
         , includeBestClusterTag : Bool
         }
         (List ( Id, Api.Data.TagSummary ) -> msg)
+    | AddUserReportedTag Api.Data.UserReportedTag (() -> msg)
 
 
 getEntityEgonet :
@@ -334,6 +335,11 @@ getAddressEgonet id msg layers =
 map : (msgA -> msgB) -> Effect msgA -> Effect msgB
 map mapMsg effect =
     case effect of
+        AddUserReportedTag eff m ->
+            m
+                >> mapMsg
+                |> AddUserReportedTag eff
+
         GetAddressTagSummaryEffect eff m ->
             m
                 >> mapMsg
@@ -528,6 +534,9 @@ map mapMsg effect =
 perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
     case effect of
+        AddUserReportedTag data toMsg ->
+            Api.Request.Tags.reportTag data |> send apiKey wrapMsg effect toMsg
+
         GetAddressTagSummaryEffect { currency, address, includeBestClusterTag } toMsg ->
             Api.Request.Experimental.getTagSummaryByAddress currency address (Just includeBestClusterTag)
                 |> send apiKey wrapMsg effect toMsg
