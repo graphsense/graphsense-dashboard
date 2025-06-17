@@ -3,6 +3,7 @@ module View.Pathfinder.AggEdge exposing (view)
 import Config.View as View
 import Css
 import Init.Pathfinder.AggEdge as AggEdge
+import Maybe.Extra
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
@@ -52,20 +53,19 @@ view vc edge aAddress bAddress =
                 }
 
         leftValue =
-            leftRelation
-                |> RemoteData.map
+            relationToValue leftRelation
+
+        relationToValue =
+            RemoteData.toMaybe
+                >> Maybe.Extra.join
+                >> Maybe.map
                     (\data ->
                         Locale.currencyWithoutCode vc.locale [ ( asset data, data.value ) ]
                     )
-                |> RemoteData.withDefault "0"
+                >> Maybe.withDefault ""
 
         rightValue =
-            rightRelation
-                |> RemoteData.map
-                    (\data ->
-                        Locale.currencyWithoutCode vc.locale [ ( asset data, data.value ) ]
-                    )
-                |> RemoteData.withDefault "0"
+            relationToValue rightRelation
 
         charWidth =
             8

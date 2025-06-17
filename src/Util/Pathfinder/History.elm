@@ -383,7 +383,7 @@ shallPushHistory plugins msg _ =
         UserClickedToggleTracingMode ->
             False
 
-        BrowserGotRelationsToVisibleNeighbors _ _ _ ->
+        BrowserGotRelationsToVisibleNeighbors _ _ _ _ ->
             False
 
         InternalPathfinderAddedAddress _ ->

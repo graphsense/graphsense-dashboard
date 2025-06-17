@@ -6,6 +6,7 @@ import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Html.Styled exposing (Html, div)
+import Maybe.Extra
 import Model.Currency exposing (asset, assetFromBase)
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
@@ -18,7 +19,7 @@ import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import PagedTable
 import RecordSetter as Rs
-import RemoteData
+import RemoteData exposing (RemoteData(..))
 import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -60,7 +61,7 @@ view vc model id viewState =
         )
         (SidePanelComponents.sidePanelRelationshipInstances
             |> Rs.s_leftValue
-                (if RemoteData.isLoading viewState.aggEdge.a2b then
+                (if RemoteData.isLoading viewState.aggEdge.b2a then
                     loadingSpinner vc Css.View.loadingSpinner
                         |> Just
 
@@ -68,7 +69,7 @@ view vc model id viewState =
                     Nothing
                 )
             |> Rs.s_rightValue
-                (if RemoteData.isLoading viewState.aggEdge.b2a then
+                (if RemoteData.isLoading viewState.aggEdge.a2b then
                     loadingSpinner vc Css.View.loadingSpinner
                         |> Just
 
@@ -99,24 +100,32 @@ view vc model id viewState =
             }
         , leftValue =
             { firstRowText =
-                viewState.aggEdge.a2b
-                    |> RemoteData.map cryptoValue
-                    |> RemoteData.withDefault ""
+                viewState.aggEdge.b2a
+                    |> RemoteData.toMaybe
+                    |> Maybe.Extra.join
+                    |> Maybe.map cryptoValue
+                    |> Maybe.withDefault "0"
             , secondRowText =
-                viewState.aggEdge.a2b
-                    |> RemoteData.map fiatValue
-                    |> RemoteData.withDefault ""
+                viewState.aggEdge.b2a
+                    |> RemoteData.toMaybe
+                    |> Maybe.Extra.join
+                    |> Maybe.map fiatValue
+                    |> Maybe.withDefault "0"
             , secondRowVisible = True
             }
         , rightValue =
             { firstRowText =
-                viewState.aggEdge.b2a
-                    |> RemoteData.map cryptoValue
-                    |> RemoteData.withDefault ""
+                viewState.aggEdge.a2b
+                    |> RemoteData.toMaybe
+                    |> Maybe.Extra.join
+                    |> Maybe.map cryptoValue
+                    |> Maybe.withDefault "0"
             , secondRowText =
-                viewState.aggEdge.b2a
-                    |> RemoteData.map fiatValue
-                    |> RemoteData.withDefault ""
+                viewState.aggEdge.a2b
+                    |> RemoteData.toMaybe
+                    |> Maybe.Extra.join
+                    |> Maybe.map fiatValue
+                    |> Maybe.withDefault "0"
             , secondRowVisible = True
             }
         }
@@ -143,6 +152,7 @@ tableTab vc network edgeId viewState isA2b =
         noAddresses =
             address
                 |> RemoteData.toMaybe
+                |> Maybe.Extra.join
                 |> Maybe.map .noTxs
     in
     dataTab
@@ -152,10 +162,12 @@ tableTab vc network edgeId viewState isA2b =
                     |> Rs.s_root [ spread ]
                 )
                 (SidePanelComponents.sidePanelListHeaderTitleRelationInstances
-                    |> Rs.s_valueFrame
-                        (address
-                            |> RemoteData.map (\_ -> Nothing)
-                            |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                    |> Rs.s_totalNumber
+                        (if RemoteData.isLoading address then
+                            loadingSpinner vc Css.View.loadingSpinner |> Just
+
+                         else
+                            Nothing
                         )
                 )
                 { root =
@@ -168,9 +180,20 @@ tableTab vc network edgeId viewState isA2b =
                         else
                             Icons.iconsArrowLeftThin {}
                     , number =
-                        noAddresses
-                            |> Maybe.map (Locale.int vc.locale)
-                            |> Maybe.withDefault ""
+                        case address of
+                            Loading ->
+                                ""
+
+                            NotAsked ->
+                                ""
+
+                            Failure _ ->
+                                "error"
+
+                            Success no ->
+                                no
+                                    |> Maybe.map (.noTxs >> Locale.int vc.locale)
+                                    |> Maybe.withDefault "0"
                     }
                 }
         , content =

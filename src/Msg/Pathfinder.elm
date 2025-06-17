@@ -100,7 +100,7 @@ type Msg
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
     | UserClickedToggleTracingMode
-    | BrowserGotRelationsToVisibleNeighbors Id Direction Api.Data.NeighborAddresses
+    | BrowserGotRelationsToVisibleNeighbors Id Direction (List Id) Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id
     | UserClickedAggEdge ( Id, Id )
 

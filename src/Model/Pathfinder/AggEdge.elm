@@ -12,12 +12,8 @@ type alias AggEdge =
     , b : Id
     , aAddress : Maybe Address
     , bAddress : Maybe Address
-
-    -- the relation data of the fromAddress to the toAddress
-    , a2b : WebData Api.Data.NeighborAddress
-
-    -- the relation data of the toAddress to the fromAddress
-    , b2a : WebData Api.Data.NeighborAddress
+    , a2b : WebData (Maybe Api.Data.NeighborAddress)
+    , b2a : WebData (Maybe Api.Data.NeighborAddress)
     , txs : Set Id
     , selected : Bool
     }

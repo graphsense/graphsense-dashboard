@@ -237,11 +237,41 @@ updateByMsg plugins uc msg model =
             else
                 browserGotAddressData uc plugins id position data model
 
-        BrowserGotRelationsToVisibleNeighbors id dir relations ->
+        BrowserGotRelationsToVisibleNeighbors id dir requestIds relations ->
             let
                 neighborIds =
                     relations.neighbors
                         |> List.map (\{ address } -> Id.init address.currency address.address)
+
+                nset =
+                    Set.fromList neighborIds
+
+                upd nid edge =
+                    if edge.a == nid && dir == Outgoing then
+                        { edge | b2a = Success Nothing }
+
+                    else if edge.a == nid && dir == Incoming then
+                        { edge | a2b = Success Nothing }
+
+                    else if edge.b == nid && dir == Outgoing then
+                        { edge | a2b = Success Nothing }
+
+                    else if edge.b == nid && dir == Incoming then
+                        { edge | b2a = Success Nothing }
+
+                    else
+                        edge
+
+                newNetwork =
+                    requestIds
+                        |> List.filter (flip Set.member nset >> not)
+                        -- the ids of nodes where no relation was found
+                        |> Debug.log "filtered"
+                        |> List.foldl
+                            (\nid ->
+                                Network.updateAggEdge (AggEdge.initId id nid) (upd nid)
+                            )
+                            model.network
 
                 newModel =
                     relations.neighbors
@@ -252,11 +282,11 @@ updateByMsg plugins uc msg model =
                                     |> flip s_network mo
                             )
                             (CheckingNeighbors.insert dir id neighborIds model.checkingNeighbors
-                                |> flip s_checkingNeighbors model
+                                |> flip s_checkingNeighbors { model | network = newNetwork }
                             )
             in
             if CheckingNeighbors.isEmpty id newModel.checkingNeighbors then
-                CheckingNeighbors.getData id model.checkingNeighbors
+                CheckingNeighbors.getData id newModel.checkingNeighbors
                     |> Maybe.map
                         (\data ->
                             browserGotAddressData uc plugins id Auto data newModel
@@ -274,7 +304,7 @@ updateByMsg plugins uc msg model =
                                         |> Maybe.withDefault Set.empty
                             in
                             if Set.isEmpty txs then
-                                getNextTxEffects model.network
+                                getNextTxEffects newModel.network
                                     addressId
                                     (Direction.flip dir)
                                     (Just id)
@@ -1547,7 +1577,7 @@ fetchEgonet uc plugins id data model =
     else
         let
             getRelations dir onlyIds =
-                BrowserGotRelationsToVisibleNeighbors id dir
+                BrowserGotRelationsToVisibleNeighbors id dir onlyIds
                     |> Api.GetAddressNeighborsEffect
                         { currency = Id.network id
                         , address = Id.id id

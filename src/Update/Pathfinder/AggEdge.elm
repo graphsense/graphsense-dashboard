@@ -41,7 +41,7 @@ setAddress ma edge =
         |> Maybe.withDefault edge
 
 
-setRelationData : Id -> Direction -> WebData Api.Data.NeighborAddress -> AggEdge -> AggEdge
+setRelationData : Id -> Direction -> WebData (Maybe Api.Data.NeighborAddress) -> AggEdge -> AggEdge
 setRelationData id direction data edge =
     case ( id == edge.a, id == edge.b, direction ) of
         ( True, False, Outgoing ) ->

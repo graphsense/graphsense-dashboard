@@ -169,6 +169,8 @@ utxo vc model id viewState tx =
                         SidePanelComponents.sidePanelListHeaderTitleInputsWithAttributes
                             (SidePanelComponents.sidePanelListHeaderTitleInputsAttributes
                                 |> Rs.s_root [ spread ]
+                                |> Rs.s_totalNumber
+                                    [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
                                 { title = Locale.string vc.locale "Sending addresses"
@@ -199,6 +201,8 @@ utxo vc model id viewState tx =
                         SidePanelComponents.sidePanelListHeaderTitleOutputsWithAttributes
                             (SidePanelComponents.sidePanelListHeaderTitleOutputsAttributes
                                 |> Rs.s_root [ spread ]
+                                |> Rs.s_totalNumber
+                                    [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
                                 { title = Locale.string vc.locale "Receiving addresses"

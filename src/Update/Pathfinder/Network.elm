@@ -1064,7 +1064,7 @@ upsertAggEdgeData id dir neighbor model =
                         |> AggEdge.setAddress (Dict.get id model.addresses)
                         |> AggEdge.setAddress (Dict.get nid model.addresses)
                     )
-                |> AggEdge.setRelationData id dir (Success neighbor)
+                |> AggEdge.setRelationData id dir (Success (Just neighbor))
     in
     { model
         | aggEdges = Dict.insert aggEdgeId aggEdge model.aggEdges
