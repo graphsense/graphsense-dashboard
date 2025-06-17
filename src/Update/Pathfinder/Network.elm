@@ -25,8 +25,8 @@ module Update.Pathfinder.Network exposing
 import Animation as A exposing (Animation)
 import Api.Data
 import Basics.Extra exposing (flip, uncurry)
-import Config.Pathfinder exposing (TracingMode(..), nodeXOffset, nodeYOffset)
-import Dict
+import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
+import Dict exposing (Dict)
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.AggEdge as AggEdge
 import Init.Pathfinder.Id as Id
@@ -48,7 +48,7 @@ import Set exposing (Set)
 import Tuple exposing (first, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
-import Update.Pathfinder.AggEdge as AggEdge exposing (updateAddress)
+import Update.Pathfinder.AggEdge as AggEdge
 import Update.Pathfinder.Tx as Tx
 
 
@@ -1072,7 +1072,7 @@ upsertAggEdgeData id dir neighbor model =
     }
 
 
-updateAddressAggEdgeMap : ( Id, Id ) -> Dict.Dict Id (Set ( Id, Id )) -> Dict.Dict Id (Set ( Id, Id ))
+updateAddressAggEdgeMap : ( Id, Id ) -> Dict Id (Set ( Id, Id )) -> Dict Id (Set ( Id, Id ))
 updateAddressAggEdgeMap id =
     let
         updMap =

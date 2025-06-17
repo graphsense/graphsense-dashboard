@@ -265,8 +265,6 @@ updateByMsg plugins uc msg model =
                 newNetwork =
                     requestIds
                         |> List.filter (flip Set.member nset >> not)
-                        -- the ids of nodes where no relation was found
-                        |> Debug.log "filtered"
                         |> List.foldl
                             (\nid ->
                                 Network.updateAggEdge (AggEdge.initId id nid) (upd nid)

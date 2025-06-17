@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.RelationTxsTable exposing (config)
+module View.Pathfinder.Table.RelationTxsTable exposing (RelationTxsTableConfig, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)

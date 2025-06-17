@@ -3,7 +3,6 @@ module Model.Pathfinder.Table.RelationTxsTable exposing (Model, filter, titleHas
 import Api.Data
 import Api.Request.Addresses
 import Model.DateRangePicker as DateRangePicker
-import Model.Direction exposing (Direction)
 import Model.Graph.Table as Table
 import Msg.Pathfinder.AddressDetails exposing (Msg)
 import PagedTable
@@ -44,6 +43,7 @@ filter =
             case a of
                 Api.Data.LinkLinkUtxo tx ->
                     String.contains term tx.txHash
+
                 Api.Data.LinkTxAccount tx ->
                     String.contains term tx.txHash
     , filter = always True

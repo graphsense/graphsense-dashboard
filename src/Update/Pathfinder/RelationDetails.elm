@@ -4,7 +4,6 @@ import Api.Request.Addresses
 import Basics.Extra exposing (flip)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
-import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Maybe.Extra
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.RelationDetails exposing (Model)

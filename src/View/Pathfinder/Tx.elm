@@ -2,7 +2,6 @@ module View.Pathfinder.Tx exposing (edge, view)
 
 import Config.Pathfinder as Pathfinder
 import Config.View as View
-import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (Tx, TxType(..))
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)

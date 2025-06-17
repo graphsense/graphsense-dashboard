@@ -7,15 +7,14 @@ import Css.Table
 import Css.View
 import Html.Styled exposing (Html, div)
 import Maybe.Extra
-import Model.Currency exposing (asset, assetFromBase)
+import Model.Currency exposing (assetFromBase)
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tx as Tx
-import Model.Tx as Tx
-import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import PagedTable
 import RecordSetter as Rs

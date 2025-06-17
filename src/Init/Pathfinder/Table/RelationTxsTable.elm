@@ -1,15 +1,10 @@
 module Init.Pathfinder.Table.RelationTxsTable exposing (emptyDateFilter, init)
 
 import Api.Request.Addresses
-import Effect.Pathfinder exposing (Effect(..))
-import Init.DateRangePicker as DateRangePicker
 import Init.Graph.Table
 import Model.DateRangePicker as DateRangePicker
-import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import Msg.Pathfinder exposing (Msg(..))
-import Msg.Pathfinder.AddressDetails exposing (Msg(..))
-import Msg.Pathfinder.RelationDetails exposing (Msg(..))
+import Msg.Pathfinder.RelationDetails exposing (Msg)
 import PagedTable
 import Util.ThemedSelectBox as ThemedSelectBox
 

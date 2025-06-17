@@ -7,7 +7,6 @@ import Maybe.Extra
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
-import Model.Pathfinder.Tx exposing (TxType(..))
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (s_dividerLine, s_leftArrow, s_leftArrowGroup, s_leftValue, s_rectangleOfAggregatedLabel, s_rightArrow, s_rightArrowGroup, s_rightValue, s_root)
 import RemoteData
