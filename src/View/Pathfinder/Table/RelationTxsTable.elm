@@ -91,7 +91,7 @@ config styles vc { isA2b, addressId, isChecked, allChecked } =
             Util.Checkbox.checkbox
                 { state = Util.Checkbox.stateFromBool allChecked
                 , size = Util.Checkbox.smallSize
-                , msg = UserClickedAllTxCheckboxInTable
+                , msg = UserClickedAllTxCheckboxInTable isA2b
                 }
                 ([ Css.paddingLeft <| Css.px 5 ]
                     |> css

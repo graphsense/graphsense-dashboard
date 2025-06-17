@@ -1,4 +1,4 @@
-module Update.Pathfinder.RelationDetails exposing (update)
+module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, update)
 
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
@@ -130,7 +130,7 @@ update id msg model =
         RelationDetails.NoOp ->
             n model
 
-        UserClickedAllTxCheckboxInTable ->
+        UserClickedAllTxCheckboxInTable _ ->
             -- handled upstream
             n model
 

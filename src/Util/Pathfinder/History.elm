@@ -206,7 +206,7 @@ shallPushHistory plugins msg _ =
 
         RelationDetailsMsg _ ms ->
             case ms of
-                RelationDetails.UserClickedAllTxCheckboxInTable ->
+                RelationDetails.UserClickedAllTxCheckboxInTable _ ->
                     True
 
                 RelationDetails.UserClickedTxCheckboxInTable _ ->

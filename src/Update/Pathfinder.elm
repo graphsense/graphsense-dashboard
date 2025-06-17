@@ -44,6 +44,7 @@ import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
+import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -353,6 +354,7 @@ updateByMsg plugins uc msg model =
             (case submsg of
                 RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkLinkUtxo tx) ->
                     loadTx False plugins (Id.init tx.currency tx.txHash) model
+                        |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkTxAccount tx) ->
                     let
@@ -363,12 +365,28 @@ updateByMsg plugins uc msg model =
                             Id.init tx.currency tx.toAddress
                     in
                     addTx plugins uc from Outgoing (Just to) (Api.Data.TxTxAccount tx) model
+                        |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTx txId ->
                     userClickedTx txId model
+                        |> and (setTracingMode TransactionTracingMode)
 
-                RelationDetails.UserClickedAllTxCheckboxInTable ->
-                    Debug.todo "is this really needed?"
+                RelationDetails.UserClickedAllTxCheckboxInTable isA2b ->
+                    getRelationDetails model id
+                        |> Maybe.map
+                            (\rdModel ->
+                                let
+                                    gs =
+                                        RelationDetails.gettersAndSetters isA2b
+                                in
+                                gs.getTable rdModel
+                                    |> .table
+                                    |> PagedTable.getPage
+                                    |> List.map Tx.getTxIdForRelationTx
+                                    |> flip (checkAllTxs plugins uc) model
+                                    |> and (setTracingMode TransactionTracingMode)
+                            )
+                        |> Maybe.withDefault (n model)
 
                 _ ->
                     n model
@@ -417,56 +435,10 @@ updateByMsg plugins uc msg model =
                 AddressDetails.UserClickedAllTxCheckboxInTable ->
                     case model.details of
                         Just (AddressDetails _ (Success data)) ->
-                            let
-                                txIdsTable =
-                                    data.txs.table
-                                        |> PagedTable.getPage
-                                        |> List.map Tx.getTxIdForAddressTx
-
-                                allChecked =
-                                    txIdsTable
-                                        |> List.all (flip Dict.member model.network.txs)
-
-                                deleteAcc txId ( m, eff ) =
-                                    ( Network.deleteTx txId m.network
-                                        |> flip s_network m
-                                    , eff
-                                    )
-
-                                addAcc txId ( m, eff ) =
-                                    loadTx True plugins txId m |> Tuple.mapSecond ((++) eff)
-                            in
-                            if allChecked then
-                                let
-                                    toRemove =
-                                        txIdsTable
-                                            |> List.filter (flip Dict.member model.network.txs)
-                                in
-                                toRemove
-                                    |> List.foldl deleteAcc
-                                        ( model
-                                        , Notification.infoDefault (Locale.interpolated uc.locale "Removed {0} transactions" [ toRemove |> List.length |> String.fromInt ])
-                                            |> Notification.map (s_isEphemeral True)
-                                            |> Notification.map (s_showClose False)
-                                            |> ShowNotificationEffect
-                                            |> List.singleton
-                                        )
-
-                            else
-                                let
-                                    toAdd =
-                                        txIdsTable
-                                            |> List.filter (flip Dict.member model.network.txs >> not)
-                                in
-                                toAdd
-                                    |> List.foldl addAcc
-                                        ( model
-                                        , Notification.infoDefault (Locale.interpolated uc.locale "Added {0} transactions" [ toAdd |> List.length |> String.fromInt ])
-                                            |> Notification.map (s_isEphemeral True)
-                                            |> Notification.map (s_showClose False)
-                                            |> ShowNotificationEffect
-                                            |> List.singleton
-                                        )
+                            data.txs.table
+                                |> PagedTable.getPage
+                                |> List.map Tx.getTxIdForAddressTx
+                                |> flip (checkAllTxs plugins uc) model
 
                         _ ->
                             n model
@@ -1434,9 +1406,7 @@ updateByMsg plugins uc msg model =
                 AggregateTracingMode ->
                     TransactionTracingMode
             )
-                |> flip s_tracingMode model.config
-                |> flip s_config model
-                |> n
+                |> flip setTracingMode model
 
         InternalPathfinderAddedAddress _ ->
             -- handled upstream
@@ -1454,22 +1424,88 @@ updateByMsg plugins uc msg model =
             )
 
 
+checkAllTxs : Plugins -> Update.Config -> List Id -> Model -> ( Model, List Effect )
+checkAllTxs plugins uc txIds model =
+    let
+        allChecked =
+            txIds
+                |> List.all (flip Dict.member model.network.txs)
+
+        deleteAcc txId ( m, eff ) =
+            ( Network.deleteTx txId m.network
+                |> flip s_network m
+            , eff
+            )
+
+        addAcc txId ( m, eff ) =
+            loadTx True plugins txId m |> Tuple.mapSecond ((++) eff)
+    in
+    if allChecked then
+        let
+            toRemove =
+                txIds
+                    |> List.filter (flip Dict.member model.network.txs)
+        in
+        toRemove
+            |> List.foldl deleteAcc
+                ( model
+                , Notification.infoDefault (Locale.interpolated uc.locale "Removed {0} transactions" [ toRemove |> List.length |> String.fromInt ])
+                    |> Notification.map (s_isEphemeral True)
+                    |> Notification.map (s_showClose False)
+                    |> ShowNotificationEffect
+                    |> List.singleton
+                )
+
+    else
+        let
+            toAdd =
+                txIds
+                    |> List.filter (flip Dict.member model.network.txs >> not)
+        in
+        toAdd
+            |> List.foldl addAcc
+                ( model
+                , Notification.infoDefault (Locale.interpolated uc.locale "Added {0} transactions" [ toAdd |> List.length |> String.fromInt ])
+                    |> Notification.map (s_isEphemeral True)
+                    |> Notification.map (s_showClose False)
+                    |> ShowNotificationEffect
+                    |> List.singleton
+                )
+
+
+setTracingMode : TracingMode -> Model -> ( Model, List Effect )
+setTracingMode tm model =
+    s_tracingMode tm model.config
+        |> flip s_config model
+        |> n
+
+
 updateRelationDetails : ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
 updateRelationDetails id msg model =
-    case model.details of
-        Just (RelationDetails rId txViewState) ->
-            if rId /= id then
-                n model
-
-            else
+    getRelationDetails model id
+        |> Maybe.map
+            (\rdModel ->
                 let
                     ( nVs, eff ) =
-                        RelationDetails.update id msg txViewState
+                        RelationDetails.update id msg rdModel
                 in
                 ( { model | details = Just (RelationDetails id nVs) }, eff )
+            )
+        |> Maybe.withDefault (n model)
+
+
+getRelationDetails : Model -> ( Id, Id ) -> Maybe RelationDetails.Model
+getRelationDetails model id =
+    case model.details of
+        Just (RelationDetails rId rdModel) ->
+            if rId /= id then
+                Nothing
+
+            else
+                Just rdModel
 
         _ ->
-            n model
+            Nothing
 
 
 fetchEgonet : Update.Config -> Plugins -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )

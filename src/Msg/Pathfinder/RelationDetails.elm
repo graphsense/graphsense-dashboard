@@ -9,7 +9,7 @@ type Msg
     = UserClickedToggleTable Bool
     | TableMsg Bool PagedTable.Msg
     | BrowserGotLinks Bool Api.Data.Links
-    | UserClickedAllTxCheckboxInTable
+    | UserClickedAllTxCheckboxInTable Bool
     | UserClickedTxCheckboxInTable Api.Data.Link
     | UserClickedTx Id
     | NoOp
