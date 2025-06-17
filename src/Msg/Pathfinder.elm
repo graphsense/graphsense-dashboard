@@ -11,6 +11,7 @@ import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
@@ -44,6 +45,7 @@ type Msg
     | UserReleasedNormalKey String
     | AddressDetailsMsg Id AddressDetails.Msg
     | TxDetailsMsg TxDetailsMsg
+    | RelationDetailsMsg ( Id, Id ) RelationDetails.Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
     | BrowserGotAddressData Id FindPosition Api.Data.Address
@@ -100,6 +102,7 @@ type Msg
     | UserClickedToggleTracingMode
     | BrowserGotRelationsToVisibleNeighbors Id Direction Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id
+    | UserClickedAggEdge ( Id, Id )
 
 
 type alias TextTooltipConfig =

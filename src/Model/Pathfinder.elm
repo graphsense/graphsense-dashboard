@@ -14,6 +14,7 @@ import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
+import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
@@ -69,9 +70,11 @@ type HavingTags
 type Selection
     = SelectedAddress Id
     | SelectedTx Id
+    | SelectedAggEdge ( Id, Id )
     | MultiSelect (List MultiSelectOptions)
     | WillSelectTx Id
     | WillSelectAddress Id
+    | WillSelectAggEdge ( Id, Id )
     | NoSelection
 
 
@@ -89,6 +92,7 @@ type MultiSelectOptions
 type Details
     = AddressDetails Id (WebData AddressDetails.Model)
     | TxDetails Id TxDetails.Model
+    | RelationDetails ( Id, Id ) RelationDetails.Model
 
 
 getLoadedAddress : Model -> Id -> Maybe Address

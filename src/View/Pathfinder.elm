@@ -50,6 +50,7 @@ import View.Locale as Locale
 import View.Pathfinder.AddressDetails as AddressDetails
 import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.Network as Network
+import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.TxDetails as TxDetails
 import View.Search
@@ -562,6 +563,9 @@ detailsView plugin pluginStates vc model =
 
                 Pathfinder.TxDetails id state ->
                     TxDetails.view vc model id state
+
+                Pathfinder.RelationDetails id state ->
+                    RelationDetails.view vc model id state
 
         Nothing ->
             none

@@ -1,0 +1,211 @@
+module View.Pathfinder.RelationDetails exposing (view)
+
+import Basics.Extra exposing (flip)
+import Config.View as View
+import Css.Pathfinder exposing (fullWidth, sidePanelCss)
+import Css.Table
+import Css.View
+import Html.Styled exposing (Html, div)
+import Model.Currency exposing (asset, assetFromBase)
+import Model.Locale as Locale
+import Model.Pathfinder as Pathfinder
+import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Network as Network exposing (Network)
+import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.Tx as Tx
+import Model.Tx as Tx
+import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder.RelationDetails as RelationDetails
+import PagedTable
+import RecordSetter as Rs
+import RemoteData
+import Svg.Styled.Attributes exposing (css)
+import Theme.Html.Icons as Icons
+import Theme.Html.SidePanelComponents as SidePanelComponents
+import Tuple exposing (first, second)
+import Util.Css exposing (spread)
+import Util.View exposing (loadingSpinner, none, truncateLongIdentifier)
+import View.Locale as Locale
+import View.Pathfinder.Details exposing (closeAttrs, dataTab)
+import View.Pathfinder.PagedTable as PagedTable
+import View.Pathfinder.Table.RelationTxsTable as RelationTxsTable
+
+
+view : View.Config -> Pathfinder.Model -> ( Id, Id ) -> RelationDetails.Model -> Html Msg
+view vc model id viewState =
+    let
+        fiatValue v =
+            v.value
+                |> Locale.getFiatValue vc.preferredFiatCurrency
+                |> Maybe.map (Locale.fiat vc.locale vc.preferredFiatCurrency)
+                |> Maybe.withDefault ""
+
+        asset =
+            id
+                |> first
+                |> Id.network
+                |> assetFromBase
+
+        cryptoValue v =
+            v.value.value
+                |> Locale.coin vc.locale asset
+    in
+    SidePanelComponents.sidePanelRelationshipWithInstances
+        (SidePanelComponents.sidePanelRelationshipAttributes
+            |> Rs.s_root
+                [ sidePanelCss
+                    |> css
+                ]
+            |> Rs.s_iconsCloseBlack closeAttrs
+        )
+        (SidePanelComponents.sidePanelRelationshipInstances
+            |> Rs.s_leftValue
+                (if RemoteData.isLoading viewState.aggEdge.a2b then
+                    loadingSpinner vc Css.View.loadingSpinner
+                        |> Just
+
+                 else
+                    Nothing
+                )
+            |> Rs.s_rightValue
+                (if RemoteData.isLoading viewState.aggEdge.b2a then
+                    loadingSpinner vc Css.View.loadingSpinner
+                        |> Just
+
+                 else
+                    Nothing
+                )
+        )
+        { tabsList =
+            [ tableTab vc model.network id viewState True
+            , tableTab vc model.network id viewState False
+            ]
+                |> List.map (Html.Styled.map (RelationDetailsMsg id))
+        }
+        { leftTab = { variant = none }
+        , rightTab = { variant = none }
+        , title = { infoLabel = Locale.string vc.locale "Total received" }
+        , root =
+            { tabsVisible = False
+            , address1 =
+                viewState.aggEdge.a
+                    |> Id.id
+                    |> truncateLongIdentifier
+            , address2 =
+                viewState.aggEdge.b
+                    |> Id.id
+                    |> truncateLongIdentifier
+            , title = Locale.string vc.locale "Transfers between"
+            }
+        , leftValue =
+            { firstRowText =
+                viewState.aggEdge.a2b
+                    |> RemoteData.map cryptoValue
+                    |> RemoteData.withDefault ""
+            , secondRowText =
+                viewState.aggEdge.a2b
+                    |> RemoteData.map fiatValue
+                    |> RemoteData.withDefault ""
+            , secondRowVisible = True
+            }
+        , rightValue =
+            { firstRowText =
+                viewState.aggEdge.b2a
+                    |> RemoteData.map cryptoValue
+                    |> RemoteData.withDefault ""
+            , secondRowText =
+                viewState.aggEdge.b2a
+                    |> RemoteData.map fiatValue
+                    |> RemoteData.withDefault ""
+            , secondRowVisible = True
+            }
+        }
+
+
+tableTab : View.Config -> Network -> ( Id, Id ) -> RelationDetails.Model -> Bool -> Html RelationDetails.Msg
+tableTab vc network edgeId viewState isA2b =
+    let
+        { open, table, id, address } =
+            if isA2b then
+                { open = viewState.a2bTableOpen
+                , table = viewState.a2bTable
+                , id = first edgeId
+                , address = viewState.aggEdge.a2b
+                }
+
+            else
+                { open = viewState.b2aTableOpen
+                , table = viewState.b2aTable
+                , id = second edgeId
+                , address = viewState.aggEdge.b2a
+                }
+
+        noAddresses =
+            address
+                |> RemoteData.toMaybe
+                |> Maybe.map .noTxs
+    in
+    dataTab
+        { title =
+            SidePanelComponents.sidePanelListHeaderTitleRelationWithInstances
+                (SidePanelComponents.sidePanelListHeaderTitleRelationAttributes
+                    |> Rs.s_root [ spread ]
+                )
+                (SidePanelComponents.sidePanelListHeaderTitleRelationInstances
+                    |> Rs.s_valueFrame
+                        (address
+                            |> RemoteData.map (\_ -> Nothing)
+                            |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                        )
+                )
+                { root =
+                    { fromText = Locale.string vc.locale "From"
+                    , address = Id.id id |> truncateLongIdentifier
+                    , iconInstance =
+                        if isA2b then
+                            Icons.iconsArrowRightThin {}
+
+                        else
+                            Icons.iconsArrowLeftThin {}
+                    , number =
+                        noAddresses
+                            |> Maybe.map (Locale.int vc.locale)
+                            |> Maybe.withDefault ""
+                    }
+                }
+        , content =
+            if not open || noAddresses == Nothing || noAddresses == Just 0 then
+                Nothing
+
+            else
+                let
+                    allChecked =
+                        table.table
+                            |> PagedTable.getPage
+                            |> List.map Tx.getTxIdForRelationTx
+                            |> List.all isChecked
+
+                    isChecked =
+                        flip Network.hasTx network
+
+                    conf =
+                        { isChecked = isChecked
+                        , allChecked = allChecked
+                        , addressId = id
+                        , isA2b = isA2b
+                        }
+                in
+                div
+                    [ css <|
+                        SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                            ++ fullWidth
+                    ]
+                    [ PagedTable.pagedTableView vc
+                        [ css fullWidth ]
+                        (RelationTxsTable.config Css.Table.styles vc conf)
+                        table.table
+                        (RelationDetails.TableMsg isA2b)
+                    ]
+                    |> Just
+        , onClick = RelationDetails.UserClickedToggleTable isA2b
+        }

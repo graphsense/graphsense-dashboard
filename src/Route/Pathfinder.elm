@@ -1,4 +1,4 @@
-module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, parser, pathRoute, toUrl, txRoute)
+module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, aggEdgeRoute, parser, pathRoute, toUrl, txRoute)
 
 import List.Extra
 import Url.Builder exposing (QueryParameter, absolute)
@@ -67,6 +67,7 @@ type Thing
     = Address String
     | Tx String
     | Block Int
+    | Relation String String
 
 
 toUrl : Route -> String
@@ -109,6 +110,9 @@ thingToUrl t =
         Block nr ->
             ( [ "block", String.fromInt nr ], [] )
 
+        Relation a b ->
+            ( [ "relation", a, b ], [] )
+
 
 parser : Config -> Parser (Route -> a) a
 parser c =
@@ -136,6 +140,11 @@ txSegment =
     "tx"
 
 
+relationSegment : String
+relationSegment =
+    "relation"
+
+
 pathSegment : String
 pathSegment =
     "path"
@@ -155,6 +164,10 @@ thing =
             |> map Address
         , s txSegment |> P.slash P.string |> map Tx
         , s blockSegment |> P.slash P.int |> map Block
+        , s relationSegment
+            |> P.slash P.string
+            |> P.slash P.string
+            |> map Relation
         ]
 
 
@@ -185,3 +198,9 @@ parseCurrency c =
 pathRoute : String -> List PathHopType -> Route
 pathRoute network path =
     Path network path
+
+
+aggEdgeRoute : { network : String, a : String, b : String } -> Route
+aggEdgeRoute { network, a, b } =
+    Relation a b
+        |> Network network

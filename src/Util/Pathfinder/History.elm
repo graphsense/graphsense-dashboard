@@ -3,6 +3,7 @@ module Util.Pathfinder.History exposing (shallPushHistory)
 import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import Msg.Pathfinder.RelationDetails as RelationDetails
 import Plugin.Update as Plugin exposing (Plugins)
 
 
@@ -203,6 +204,29 @@ shallPushHistory plugins msg _ =
         TxDetailsMsg _ ->
             False
 
+        RelationDetailsMsg _ ms ->
+            case ms of
+                RelationDetails.UserClickedAllTxCheckboxInTable ->
+                    True
+
+                RelationDetails.UserClickedTxCheckboxInTable _ ->
+                    True
+
+                RelationDetails.UserClickedToggleTable _ ->
+                    False
+
+                RelationDetails.TableMsg _ _ ->
+                    False
+
+                RelationDetails.BrowserGotLinks _ _ ->
+                    False
+
+                RelationDetails.UserClickedTx _ ->
+                    False
+
+                RelationDetails.NoOp ->
+                    False
+
         AnimationFrameDeltaForTransform _ ->
             False
 
@@ -363,4 +387,7 @@ shallPushHistory plugins msg _ =
             False
 
         InternalPathfinderAddedAddress _ ->
+            False
+
+        UserClickedAggEdge _ ->
             False

@@ -680,7 +680,7 @@ transactionsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Mo
 transactionsDataTab vc model id viewState =
     let
         txOnGraphFn =
-            \txId -> Dict.member txId model.network.txs
+            flip Network.hasTx model.network
     in
     dataTab
         { title =

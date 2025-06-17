@@ -20,6 +20,7 @@ init a b =
     , a2b = NotAsked
     , b2a = NotAsked
     , txs = Set.empty
+    , selected = False
     }
 
 

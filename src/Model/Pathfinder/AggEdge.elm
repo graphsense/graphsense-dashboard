@@ -19,4 +19,5 @@ type alias AggEdge =
     -- the relation data of the toAddress to the fromAddress
     , b2a : WebData Api.Data.NeighborAddress
     , txs : Set Id
+    , selected : Bool
     }

@@ -20,6 +20,7 @@ import Init.Pathfinder.AddressDetails as AddressDetails
 import Init.Pathfinder.AggEdge as AggEdge
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
+import Init.Pathfinder.RelationDetails as RelationDetails
 import Init.Pathfinder.TxDetails as TxDetails
 import Json.Decode
 import List.Extra
@@ -55,6 +56,7 @@ import Msg.Pathfinder
         , OverlayWindows(..)
         )
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
 import PagedTable
@@ -79,6 +81,7 @@ import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.AggEdge as AggEdge
 import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestTxs)
 import Update.Pathfinder.Node as Node
+import Update.Pathfinder.RelationDetails as RelationDetails
 import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
@@ -345,6 +348,32 @@ updateByMsg plugins uc msg model =
 
                 _ ->
                     n model
+
+        RelationDetailsMsg id submsg ->
+            (case submsg of
+                RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkLinkUtxo tx) ->
+                    loadTx False plugins (Id.init tx.currency tx.txHash) model
+
+                RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkTxAccount tx) ->
+                    let
+                        from =
+                            Id.init tx.currency tx.fromAddress
+
+                        to =
+                            Id.init tx.currency tx.toAddress
+                    in
+                    addTx plugins uc from Outgoing (Just to) (Api.Data.TxTxAccount tx) model
+
+                RelationDetails.UserClickedTx txId ->
+                    userClickedTx txId model
+
+                RelationDetails.UserClickedAllTxCheckboxInTable ->
+                    Debug.todo "is this really needed?"
+
+                _ ->
+                    n model
+            )
+                |> and (updateRelationDetails id submsg)
 
         AddressDetailsMsg addressId subm ->
             case subm of
@@ -1413,6 +1442,35 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
+        UserClickedAggEdge id ->
+            ( model
+            , Route.aggEdgeRoute
+                { network = Id.network <| first id
+                , a = Id.id <| first id
+                , b = Id.id <| second id
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
+
+
+updateRelationDetails : ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
+updateRelationDetails id msg model =
+    case model.details of
+        Just (RelationDetails rId txViewState) ->
+            if rId /= id then
+                n model
+
+            else
+                let
+                    ( nVs, eff ) =
+                        RelationDetails.update id msg txViewState
+                in
+                ( { model | details = Just (RelationDetails id nVs) }, eff )
+
+        _ ->
+            n model
+
 
 fetchEgonet : Update.Config -> Plugins -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )
 fetchEgonet uc plugins id data model =
@@ -2190,12 +2248,23 @@ updateByRoute_ plugins uc route model =
             let
                 id =
                     Id.init network a
-
-                m1 =
-                    { model | network = Network.clearSelection model.network }
             in
-            loadTx True plugins id m1
+            { model | network = Network.clearSelection model.network }
+                |> loadTx True plugins id
                 |> and (selectTx id)
+
+        Route.Network network (Route.Relation a b) ->
+            let
+                aId =
+                    Id.init network a
+
+                bId =
+                    Id.init network b
+            in
+            { model | network = Network.clearSelection model.network }
+                |> loadAddress plugins aId
+                |> and (loadAddress plugins bId)
+                |> and (selectAggEdge (AggEdge.initId aId bId))
 
         Route.Path net list ->
             addPathToGraph plugins uc model net list
@@ -2392,6 +2461,38 @@ selectTx id model =
                 |> n
 
 
+selectAggEdge : ( Id, Id ) -> Model -> ( Model, List Effect )
+selectAggEdge id model =
+    case Dict.get id model.network.aggEdges of
+        Just edge ->
+            let
+                selectedEdge =
+                    case model.selection of
+                        SelectedAggEdge a ->
+                            Just a
+
+                        _ ->
+                            Nothing
+
+                ( m1, eff ) =
+                    unselect (n model)
+                        |> Tuple.mapFirst
+                            (s_details (RelationDetails.init edge |> RelationDetails id |> Just))
+            in
+            selectedEdge
+                |> Maybe.map (\a -> Network.updateAggEdge a (s_selected False) m1.network)
+                |> Maybe.withDefault m1.network
+                |> Network.updateAggEdge id (s_selected True)
+                |> flip s_network m1
+                |> s_selection (SelectedAggEdge id)
+                |> n
+                |> Tuple.mapSecond ((++) eff)
+
+        Nothing ->
+            s_selection (WillSelectAggEdge id) model
+                |> n
+
+
 selectAddress : Update.Config -> Id -> Model -> ( Model, List Effect )
 selectAddress uc id model =
     case Dict.get id model.network.addresses of
@@ -2453,6 +2554,9 @@ unselect ( model, eff ) =
         unselectTx a nw =
             Network.updateTx a (s_selected False) nw
 
+        unselectAggEdge a nw =
+            Network.updateAggEdge a (s_selected False) nw
+
         network =
             case model.selection of
                 SelectedAddress a ->
@@ -2460,6 +2564,9 @@ unselect ( model, eff ) =
 
                 SelectedTx a ->
                     unselectTx a model.network
+
+                SelectedAggEdge a ->
+                    unselectAggEdge a model.network
 
                 MultiSelect aa ->
                     aa
@@ -2478,6 +2585,9 @@ unselect ( model, eff ) =
                     model.network
 
                 WillSelectAddress _ ->
+                    model.network
+
+                WillSelectAggEdge _ ->
                     model.network
 
                 NoSelection ->

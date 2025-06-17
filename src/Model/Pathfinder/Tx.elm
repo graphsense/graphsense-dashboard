@@ -17,6 +17,7 @@ module Model.Pathfinder.Tx exposing
     , getRawTimestamp
     , getTxId
     , getTxIdForAddressTx
+    , getTxIdForRelationTx
     , getUtxoTx
     , hasAddress
     , hasInput
@@ -301,6 +302,16 @@ getTxIdForAddressTx tx =
             Id.init t.network t.identifier
 
         Api.Data.AddressTxAddressTxUtxo t ->
+            Id.init t.currency t.txHash
+
+
+getTxIdForRelationTx : Api.Data.Link -> Id
+getTxIdForRelationTx tx =
+    case tx of
+        Api.Data.LinkTxAccount t ->
+            Id.init t.network t.identifier
+
+        Api.Data.LinkLinkUtxo t ->
             Id.init t.currency t.txHash
 
 

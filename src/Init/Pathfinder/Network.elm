@@ -1,7 +1,6 @@
 module Init.Pathfinder.Network exposing (init)
 
 import Dict
-import Init.Pathfinder.Relation as Relation
 import Model.Pathfinder.Network exposing (Network)
 import Set
 
@@ -12,7 +11,6 @@ init =
     , txs = Dict.empty
     , aggEdges = Dict.empty
     , addressAggEdgeMap = Dict.empty
-    , relations = Relation.init
     , animatedAddresses = Set.empty
     , animatedTxs = Set.empty
     }
