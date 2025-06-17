@@ -14,16 +14,17 @@ else
   echo "Copying from $openapi"
   cp "$openapi" $temp
 fi
-temp2=`mktemp`
+mkdir -p "$dir/../tmp"
+temp2="$dir/../tmp/spec.yaml"
 echo "Generating"
 python3 $dir/mangle-openapi.py $temp $resturl > $temp2
 
 docker run --rm \
     -v "${dir}/../openapi:/build:Z"  \
-    -v "${temp2}:/spec.yaml:Z" \
+    -v "${dir}/../tmp:/input:Z" \
     -v "${dir}/../templates:/templates:Z" \
     openapitools/openapi-generator-cli:v7.10.0 generate \
-    -i /spec.yaml \
+    -i /input/spec.yaml \
     -g elm \
     -o /build \
     --additional-properties=generateAliasAsModel=false \

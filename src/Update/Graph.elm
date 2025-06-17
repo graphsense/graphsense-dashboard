@@ -1956,7 +1956,7 @@ updateByMsg plugins uc msg model =
                                                             |> Maybe.withDefault []
                                                         )
                                             )
-                                            acc.layers
+                                            (IntDict.union acc.layers model.layers)
                                     )
                     }
                 |> insertEntityShadowLinks acc.newEntityIds
@@ -3503,11 +3503,40 @@ fromDeserialized deserialized model =
                 |> Set.toList
                 |> List.Extra.gatherEqualsBy first
                 |> List.map (\( fst, more ) -> ( first fst, second fst :: List.map second more ))
+
+        -- Create a layer offset for each currency to prevent layer conflicts
+        currencyOffsets =
+            unique
+                |> List.indexedMap (\index ( currency, _ ) -> ( currency, index * 1000 ))
+                |> Dict.fromList
+
+        -- Apply offsets to make layer numbers globally unique across currencies
+        offsetDeserialized currency deserializedData =
+            let
+                offset =
+                    Dict.get currency currencyOffsets |> Maybe.withDefault 0
+            in
+            { deserializedData
+                | addresses =
+                    deserializedData.addresses
+                        |> List.filter (\addr -> Id.currency addr.id == currency)
+                        |> List.map
+                            (\addr ->
+                                { addr | id = ( Id.layer addr.id + offset, Id.currency addr.id, Id.addressId addr.id ) }
+                            )
+                , entities =
+                    deserializedData.entities
+                        |> List.filter (\ent -> Id.currency ent.id == currency)
+                        |> List.map
+                            (\ent ->
+                                { ent | id = ( Id.layer ent.id + offset, Id.currency ent.id, Id.entityId ent.id ) }
+                            )
+            }
     in
     unique
         |> List.map
             (\( currency, addrs ) ->
-                { deserialized = deserialized
+                { deserialized = offsetDeserialized currency deserialized
                 , addresses = []
                 , entities = []
                 }
