@@ -79,7 +79,7 @@ view plugins pluginStates vc model id viewState =
             div
                 [ [ Css.position Css.fixed
                   , Css.right (Css.px 42)
-                  , Css.top (Css.pct 50)
+                  , Css.top (Css.px 350)
                   , Css.property "transform" "translate(0%, -50%)"
                   , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
                   ]
