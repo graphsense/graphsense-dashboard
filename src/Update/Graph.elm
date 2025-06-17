@@ -1,4 +1,4 @@
-module Update.Graph exposing (At(..), More(..), SearchResult, addAddress, addAddressLinks, addAddressNeighborsWithEntity, addAddressesAtEntity, addEntity, addEntityEgonet, addEntityLinks, addEntityNeighbors, addUserTag, cleanHistory, decodeYamlTag, deleteUserTag, deselect, deselectHighlighter, deselectLayers, deserialize, deserializeByVersion, draggingToClick, extendTransformWithBoundingBox, forcePushHistory, fromDeserialized, getToolElement, handleAddressNeighbor, handleEntityNeighbors, handleEntitySearchResult, handleNotFound, hideContextmenu, importTagPack, insertAddressShadowLinks, insertEntityShadowLinks, layerDelta, loadAddress, loadAddressPath, loadEntity, loadEntityPath, loadNextAddress, loadNextEntity, makeHistoryEntry, makeLegend, makeTagPack, normalizeDeserializedEntityTag, prepareSearchResult, pushHistory, refreshBrowserAddress, refreshBrowserEntity, refreshBrowserEntityIf, repositionHovercardCmd, repositionHovercards, selectAddress, selectAddressLink, selectAddressLinkIfLoaded, selectEntity, selectEntityLink, selectEntityLinkIfLoaded, storeUserTag, syncBrowser, syncLinks, syncSelection, tagId, tagInputToUserTag, toolElementResultToTool, toolVisible, undoRedo, update, updateAddresses, updateByMsg, updateByPluginOutMsg, updateByRoute, updateByRoute_, updateEntitiesIf, updateLegend, updateSearch, updateTransformByBoundingBox)
+module Update.Graph exposing (At(..), More(..), SearchResult, addAddress, addAddressLinks, addAddressNeighborsWithEntity, addAddressesAtEntity, addEntity, addEntityEgonet, addEntityLinks, addEntityNeighbors, addUserTag, checkTagsCanBeApplied, cleanHistory, decodeYamlTag, deleteUserTag, deselect, deselectHighlighter, deselectLayers, deserialize, deserializeByVersion, draggingToClick, extendTransformWithBoundingBox, forcePushHistory, fromDeserialized, getToolElement, handleAddressNeighbor, handleEntityNeighbors, handleEntitySearchResult, handleNotFound, hideContextmenu, importTagPack, insertAddressShadowLinks, insertEntityShadowLinks, layerDelta, loadAddress, loadAddressPath, loadEntity, loadEntityPath, loadNextAddress, loadNextEntity, makeHistoryEntry, makeLegend, makeTagPack, normalizeDeserializedEntityTag, prepareSearchResult, pushHistory, refreshBrowserAddress, refreshBrowserEntity, refreshBrowserEntityIf, repositionHovercardCmd, repositionHovercards, selectAddress, selectAddressLink, selectAddressLinkIfLoaded, selectEntity, selectEntityLink, selectEntityLinkIfLoaded, storeUserTag, syncBrowser, syncLinks, syncSelection, tagId, tagInputToUserTag, toolElementResultToTool, toolVisible, undoRedo, update, updateAddresses, updateByMsg, updateByPluginOutMsg, updateByRoute, updateByRoute_, updateEntitiesIf, updateLegend, updateSearch, updateTransformByBoundingBox)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -3404,6 +3404,27 @@ importTagPack uc tags model =
         |> List.foldl
             (storeUserTag uc)
             model
+
+
+
+-- Helper function to check which tags can be applied to existing addresses
+
+
+checkTagsCanBeApplied : List Tag.UserTag -> Model -> { totalTags : Int, applicableTags : Int }
+checkTagsCanBeApplied tags model =
+    let
+        applicableCount =
+            tags
+                |> List.filter
+                    (\tag ->
+                        Layer.getFirstAddress { currency = tag.currency, address = tag.address } model.layers
+                            /= Nothing
+                    )
+                |> List.length
+    in
+    { totalTags = List.length tags
+    , applicableTags = applicableCount
+    }
 
 
 decodeYamlTag : Yaml.Decode.Decoder Tag.UserTag

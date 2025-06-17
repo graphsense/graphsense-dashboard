@@ -1415,10 +1415,42 @@ update plugins uc msg model =
                             )
 
                         Ok yaml ->
-                            { model
-                                | graph = Graph.importTagPack uc yaml model.graph
-                            }
-                                |> n
+                            let
+                                -- Check which tags can be applied before importing
+                                tagStats =
+                                    Graph.checkTagsCanBeApplied yaml model.graph
+
+                                updatedModel =
+                                    { model
+                                        | graph = Graph.importTagPack uc yaml model.graph
+                                    }
+
+                                -- Create notification if not all tags were applied
+                                ( notifications, notificationEffects ) =
+                                    if tagStats.applicableTags < tagStats.totalTags then
+                                        let
+                                            skippedCount =
+                                                tagStats.totalTags - tagStats.applicableTags
+
+                                            notification =
+                                                Notification.infoDefault "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder."
+                                                    |> Notification.map (s_title (Just "Tag Import"))
+                                                    |> Notification.map
+                                                        (s_variables
+                                                            [ String.fromInt tagStats.applicableTags
+                                                            , String.fromInt tagStats.totalTags
+                                                            , String.fromInt skippedCount
+                                                            ]
+                                                        )
+                                        in
+                                        Notification.add notification model.notifications
+
+                                    else
+                                        n model.notifications
+                            in
+                            ( { updatedModel | notifications = notifications }
+                            , List.map NotificationEffect notificationEffects
+                            )
 
                 Graph.PortDeserializedGS ( filename, data ) ->
                     pluginNewGraph plugins ( model, [] )
