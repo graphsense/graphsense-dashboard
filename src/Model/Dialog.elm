@@ -1,4 +1,4 @@
-module Model.Dialog exposing (ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg)
+module Model.Dialog exposing (AddTagConfig, ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg)
 
 import Api.Data
 import Config.View exposing (Config)
@@ -6,6 +6,7 @@ import Html.Styled exposing (Html)
 import Http
 import Model.Graph.Table exposing (Table)
 import Model.Pathfinder.Id exposing (Id)
+import Model.Search as Search
 
 
 type Model msg
@@ -14,6 +15,7 @@ type Model msg
     | Error (ErrorConfig msg)
     | Info (InfoConfig msg)
     | TagsList (TagListConfig msg)
+    | AddTag (AddTagConfig msg)
     | Custom (CustomConfig msg)
     | CustomWithVc (CustomConfigWithVc msg)
     | Plugin (PluginConfig msg)
@@ -69,6 +71,16 @@ type alias TagListConfig msg =
     }
 
 
+type alias AddTagConfig msg =
+    { id : Id
+    , closeMsg : msg
+    , addTagMsg : msg
+    , search : Search.Model
+    , selectedActor : Maybe ( String, String )
+    , description : String
+    }
+
+
 type alias PluginConfig msg =
     { defaultMsg : msg
     }
@@ -109,6 +121,9 @@ defaultMsg model =
             c.defaultMsg
 
         TagsList c ->
+            c.closeMsg
+
+        AddTag c ->
             c.closeMsg
 
         Plugin c ->

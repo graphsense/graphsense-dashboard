@@ -17,6 +17,7 @@ import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import String.Extra
+import Theme.Colors as TColor
 import Util.View exposing (loadingSpinner)
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
@@ -30,7 +31,7 @@ type alias SearchConfig =
     }
 
 
-type alias SearchConfigWithMoreCss =
+type alias SearchConfigWithMoreCss msg =
     { css : String -> List Style
     , formCss : List Style
     , frameCss : List Style
@@ -46,10 +47,11 @@ type alias SearchConfigWithMoreCss =
     , dropdownResult : List Style
     , multiline : Bool
     , showIcon : Bool
+    , inputAttributes : List (Html.Styled.Attribute msg)
     }
 
 
-default : SearchConfigWithMoreCss
+default : SearchConfigWithMoreCss msg
 default =
     { css = \_ -> []
     , resultsAsLink = False
@@ -66,6 +68,7 @@ default =
     , resultTextEmphasized = []
     , dropdownFrame = []
     , dropdownResult = []
+    , inputAttributes = []
     }
 
 
@@ -88,11 +91,12 @@ search plugins vc sc model =
         , resultTextEmphasized = []
         , dropdownFrame = []
         , dropdownResult = []
+        , inputAttributes = []
         }
         model
 
 
-searchWithMoreCss : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> Html Msg
+searchWithMoreCss : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
 searchWithMoreCss plugins vc sc model =
     let
         { inputEvents } =
@@ -145,7 +149,13 @@ searchWithMoreCss plugins vc sc model =
                                 [ Locale.string vc.locale "Label"
                                     |> placeholder
                                 ]
+
+                            SearchActorsOnly ->
+                                [ Locale.string vc.locale "Actor"
+                                    |> placeholder
+                                ]
                        )
+                    ++ sc.inputAttributes
                 )
                 []
             , searchResult plugins vc sc model
@@ -169,7 +179,7 @@ searchWithMoreCss plugins vc sc model =
         ]
 
 
-searchResult : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> Html Msg
+searchResult : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
 searchResult plugins vc sc model =
     let
         viewState =
@@ -192,7 +202,7 @@ searchResult plugins vc sc model =
         text ""
 
 
-resultList : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> List (Html Msg)
+resultList : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
 resultList _ vc sc { autocomplete, searchType } =
     let
         choices =
@@ -225,6 +235,9 @@ resultList _ vc sc { autocomplete, searchType } =
                         (\( _, rl ) ->
                             case rl of
                                 Actor _ ->
+                                    True
+
+                                Custom _ ->
                                     True
 
                                 _ ->
@@ -291,6 +304,10 @@ resultList _ vc sc { autocomplete, searchType } =
             [ labelBadge ]
                 |> List.filterMap badgeToResult
 
+        SearchActorsOnly ->
+            [ actorBadge ]
+                |> List.filterMap badgeToResult
+
         SearchAddressAndTx _ ->
             currencyBadges |> List.filterMap badgeToResult
 
@@ -306,34 +323,43 @@ resultList _ vc sc { autocomplete, searchType } =
 --++ Plugin.searchResultList plugins pluginStates vc
 
 
-resultLineToHtml : Config -> String -> SearchConfigWithMoreCss -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
+resultLineToHtml : Config -> String -> SearchConfigWithMoreCss Msg -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
 resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
     let
-        ( icon, label, highlight_suffix ) =
+        ( icon, label, ( highlight_suffix, resultLineStyles ) ) =
             case resultLine of
                 Address _ a ->
                     ( FontAwesome.at
                     , Util.View.truncate 50 a
-                    , True
+                    , ( True
+                      , []
+                      )
                     )
 
                 Tx _ a ->
                     ( FontAwesome.exchangeAlt
                     , Util.View.truncate 70 a
-                    , True
+                    , ( True
+                      , []
+                      )
                     )
 
                 Block _ a ->
                     ( FontAwesome.cube
                     , String.fromInt a
-                    , True
+                    , ( True
+                      , []
+                      )
                     )
 
                 Label a ->
-                    ( FontAwesome.tag, a, False )
+                    ( FontAwesome.tag, a, ( False, [] ) )
 
                 Actor ( _, lbl ) ->
-                    ( FontAwesome.user, lbl, False )
+                    ( FontAwesome.user, lbl, ( True, [] ) )
+
+                Custom x ->
+                    ( FontAwesome.plus, x.label, ( False, [ Css.color (TColor.blue300_color |> Util.View.toCssColor) |> Css.important ] ) )
     in
     span
         ((Css.resultLine vc
@@ -347,6 +373,7 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
             |> css
          )
             :: css sc.resultLine
+            :: css resultLineStyles
             :: choiceEvents
         )
         [ FontAwesome.icon icon
@@ -392,4 +419,7 @@ resultLineCurrency rl =
             Nothing
 
         Actor _ ->
+            Nothing
+
+        Custom _ ->
             Nothing

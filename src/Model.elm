@@ -1,4 +1,4 @@
-module Model exposing (Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), Thing(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (AddTagDialogMsgs(..), Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), Thing(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -18,6 +18,7 @@ import Model.Dialog
 import Model.Graph
 import Model.Notification
 import Model.Pathfinder
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType)
 import Model.Search
 import Model.Statusbar
@@ -117,6 +118,7 @@ type Msg
     | TagsListDialogTableUpdateMsg Table.State
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
+    | AddTagDialog AddTagDialogMsgs
     | GraphMsg Msg.Graph.Msg
     | PathfinderMsg Msg.Pathfinder.Msg
     | PluginMsg Plugin.Msg
@@ -139,6 +141,14 @@ type Msg
     | UserClosesNavbarSubMenu
     | BrowserGotUncaughtError Json.Encode.Value
     | DebouncePluginOutMsg Plugin.OutMsg
+
+
+type AddTagDialogMsgs
+    = SearchMsgAddTagDialog Msg.Search.Msg
+    | UserInputsDescription String
+    | UserClickedAddTag Id
+    | BrowserAddedTag Id
+    | RemoveActorTag
 
 
 type SettingsMsg
@@ -203,7 +213,7 @@ type Effect
     | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
-    | SearchEffect Effect.Search.Effect
+    | SearchEffect (Msg.Search.Msg -> Msg) Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
     | PathfinderEffect Effect.Pathfinder.Effect
     | ApiEffect (Effect.Api.Effect Msg)

@@ -664,3 +664,6 @@ resultLineToRoute resultLine =
 
         Search.Actor ( id, _ ) ->
             actorRoute id Nothing
+
+        Search.Custom _ ->
+            Root

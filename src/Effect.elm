@@ -165,8 +165,8 @@ perform plugins key statusbarToken apiKey effect =
                     Graph.perform eff
                         |> Cmd.map GraphMsg
 
-        SearchEffect e ->
-            handleSearchEffect apiKey (Just plugins) SearchMsg e
+        SearchEffect msgMap e ->
+            handleSearchEffect apiKey (Just plugins) msgMap e
 
         NotificationEffect e ->
             Model.Notification.perform e

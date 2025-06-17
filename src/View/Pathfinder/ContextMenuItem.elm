@@ -3,7 +3,7 @@ module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, i
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
-import Html.Styled as Html exposing (Html)
+import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
@@ -50,6 +50,15 @@ rule _ =
 view : View.Config -> ContextMenuItem msg -> Html msg
 view vc (ContextMenuItem { icon, text1, text2, action, disabled }) =
     let
+        styledIcon =
+            if disabled then
+                -- note overwriting black did not work since icon ins already overwrites it as primary
+                -- important does not prevent the overwrite of lower items
+                div [ Util.Css.overwriteIconWithDisabledColor |> css ] [ icon ]
+
+            else
+                icon
+
         unsetFontStyle =
             if disabled then
                 []
@@ -114,7 +123,7 @@ view vc (ContextMenuItem { icon, text1, text2, action, disabled }) =
             |> Rs.s_iconsDividerNoPadding [ [ Css.position Css.relative ] |> css ]
         )
         { root =
-            { iconInstance = icon
+            { iconInstance = styledIcon
             , text1 = Locale.string vc.locale text1
             , text2 = Locale.string vc.locale (text2 |> Maybe.withDefault "")
             , text2Visible = Maybe.Extra.isJust text2

@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.06.1] - 2025-06-13
+
+### Added
+- route to prefilter tx table (e.g. pathfinder/{network}/address/{address}/transactions?from=2016-03-10T14:00:00Z&to=2016-03-10T16:00:00Z) (closes #499)
+
 ## [25.06.0] - 2025-06-06
 
 ### Added

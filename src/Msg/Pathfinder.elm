@@ -3,6 +3,7 @@ module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..)
 import Api.Data
 import Color exposing (Color)
 import Hovercard
+import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
@@ -48,7 +49,7 @@ type Msg
     | RelationDetailsMsg ( Id, Id ) RelationDetails.Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
-    | BrowserGotAddressData Id FindPosition Api.Data.Address
+    | BrowserGotAddressData Id FindPosition DateFilterRaw Api.Data.Address
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
@@ -111,6 +112,7 @@ type alias TextTooltipConfig =
 
 type OverlayWindows
     = TagsList Id
+    | AddTags Id
 
 
 type DisplaySettingsMsg

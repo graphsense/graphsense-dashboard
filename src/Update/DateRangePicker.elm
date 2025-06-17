@@ -1,7 +1,8 @@
-module Update.DateRangePicker exposing (closePicker, openPicker, update)
+module Update.DateRangePicker exposing (closePicker, openPicker, setFrom, setTo, update)
 
 import DurationDatePicker
 import Model.DateRangePicker exposing (Model)
+import Time exposing (Posix)
 import Tuple exposing (first, second)
 
 
@@ -22,6 +23,16 @@ openPicker model =
                 (Just model.toDate)
                 model.dateRangePicker
     }
+
+
+setFrom : Posix -> Model msg -> Model msg
+setFrom fd m =
+    { m | fromDate = fd }
+
+
+setTo : Posix -> Model msg -> Model msg
+setTo fd m =
+    { m | toDate = fd }
 
 
 update : DurationDatePicker.Msg -> Model msg -> Model msg

@@ -149,6 +149,9 @@ update msg model =
 
                             SearchTagsOnly ->
                                 labelResultLines result
+
+                            SearchActorsOnly ->
+                                actorResultLines result
                     , query = query
                     , ignoreList = []
                     }
@@ -184,6 +187,9 @@ update msg model =
                     hide model
                         |> n
 
+                SearchActorsOnly ->
+                    hide model |> n
+
         UserPicksCurrency _ ->
             -- handled upstream
             n
@@ -199,6 +205,9 @@ update msg model =
 
                             SearchTagsOnly ->
                                 SearchTagsOnly
+
+                            SearchActorsOnly ->
+                                SearchActorsOnly
                 }
 
         UserClickedCloseCurrencyPicker ->
@@ -231,6 +240,9 @@ update msg model =
                             []
 
                         SearchTagsOnly ->
+                            []
+
+                        SearchActorsOnly ->
                             []
 
                 m2 =
@@ -289,6 +301,9 @@ maybeTriggerSearch model =
                     False
 
                 SearchTagsOnly ->
+                    False
+
+                SearchActorsOnly ->
                     False
     in
     if not isPickingCurrency && not (isLikelyPathSearchInput query) then

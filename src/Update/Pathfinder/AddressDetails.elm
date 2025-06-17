@@ -327,11 +327,37 @@ update uc msg model =
                 (Locale.getTokenTickers uc.locale (Id.network model.addressId))
                 |> mapFirst (flip s_txs model)
 
-        BrowserGotFromDateBlock _ blockAt ->
+        BrowserGotFromDateBlock pd blockAt ->
+            let
+                ( _, mx ) =
+                    Address.getActivityRange model.data
+            in
             updateDatePickerRangeBlockRange uc model (blockAt.beforeBlock |> Maybe.map Set |> Maybe.withDefault NoSet) NoSet
+                |> Tuple.mapFirst
+                    (\m ->
+                        m.txs.dateRangePicker
+                            |> Maybe.withDefault (datePickerSettings uc.locale pd mx |> DateRangePicker.init UpdateDateRangePicker pd mx)
+                            |> DateRangePicker.setFrom pd
+                            |> Just
+                            |> flip s_dateRangePicker m.txs
+                            |> flip s_txs m
+                    )
 
-        BrowserGotToDateBlock _ blockAt ->
+        BrowserGotToDateBlock td blockAt ->
+            let
+                ( mn, _ ) =
+                    Address.getActivityRange model.data
+            in
             updateDatePickerRangeBlockRange uc model NoSet (blockAt.afterBlock |> Maybe.map Set |> Maybe.withDefault NoSet)
+                |> Tuple.mapFirst
+                    (\m ->
+                        m.txs.dateRangePicker
+                            |> Maybe.withDefault (datePickerSettings uc.locale mn td |> DateRangePicker.init UpdateDateRangePicker mn td)
+                            |> DateRangePicker.setTo td
+                            |> Just
+                            |> flip s_dateRangePicker m.txs
+                            |> flip s_txs m
+                    )
 
         TableMsg _ ->
             n model

@@ -268,6 +268,7 @@ type Effect msg
         , includeBestClusterTag : Bool
         }
         (List ( Id, Api.Data.TagSummary ) -> msg)
+    | AddUserReportedTag Api.Data.UserReportedTag (() -> msg)
 
 
 getEntityEgonet :
@@ -335,6 +336,11 @@ getAddressEgonet id msg layers =
 map : (msgA -> msgB) -> Effect msgA -> Effect msgB
 map mapMsg effect =
     case effect of
+        AddUserReportedTag eff m ->
+            m
+                >> mapMsg
+                |> AddUserReportedTag eff
+
         GetAddressTagSummaryEffect eff m ->
             m
                 >> mapMsg
@@ -529,6 +535,9 @@ map mapMsg effect =
 perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
     case effect of
+        AddUserReportedTag data toMsg ->
+            Api.Request.Tags.reportTag data |> send apiKey wrapMsg effect toMsg
+
         GetAddressTagSummaryEffect { currency, address, includeBestClusterTag } toMsg ->
             Api.Request.Experimental.getTagSummaryByAddress currency address (Just includeBestClusterTag)
                 |> send apiKey wrapMsg effect toMsg
@@ -612,7 +621,7 @@ perform apiKey wrapMsg effect =
                             Just Api.Request.Addresses.DirectionOut
             in
             -- currency_path address_path neighbor_query minHeight_query maxHeight_query order_query page_query pagesize_query
-            Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight order tokenCurrency nextpage (Just pagesize)
+            Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight Nothing Nothing order tokenCurrency nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         ListSpendingTxRefsEffect { currency, txHash, index } toMsg ->
@@ -624,11 +633,11 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight order nextpage (Just pagesize)
+            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight Nothing Nothing order Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->
-            Api.Request.Entities.listEntityLinks currency source target minHeight maxHeight order nextpage (Just pagesize)
+            Api.Request.Entities.listEntityLinks currency source target minHeight maxHeight Nothing Nothing order Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTagsEffect { currency, address, pagesize, nextpage, includeBestClusterTag } toMsg ->
@@ -648,7 +657,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityTxsEffect { currency, entity, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing Nothing nextpage (Just pagesize)
+            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetBlockTxsEffect { currency, block } toMsg ->

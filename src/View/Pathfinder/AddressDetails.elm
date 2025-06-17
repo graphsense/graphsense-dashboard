@@ -81,7 +81,7 @@ view plugins pluginStates vc model id viewState =
             div
                 [ [ Css.position Css.fixed
                   , Css.right (Css.px 42)
-                  , Css.top (Css.pct 50)
+                  , Css.top (Css.px 350)
                   , Css.property "transform" "translate(0%, -50%)"
                   , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
                   ]
@@ -466,15 +466,21 @@ closeButtonGrey msg =
 dateTimeFilterHeader : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html AddressDetails.Msg
 dateTimeFilterHeader vc dmodel =
     let
-        startP =
-            dmodel.fromDate
+        renderDate showTimeFn date =
+            date
                 |> Locale.posixToTimestampSeconds
-                |> Locale.timestampDateUniform vc.locale
+                |> (if showTimeFn date then
+                        Locale.timestampDateUniform vc.locale
+
+                    else
+                        Locale.timestampDateTimeUniform vc.locale False
+                   )
+
+        startP =
+            dmodel.fromDate |> renderDate (Locale.isFirstSecondOfTheDay vc.locale)
 
         endP =
-            dmodel.toDate
-                |> Locale.posixToTimestampSeconds
-                |> Locale.timestampDateUniform vc.locale
+            dmodel.toDate |> renderDate (Locale.isLastSecondOfTheDay vc.locale)
     in
     SidePanelComponents.filterLabel
         { root =
@@ -1261,7 +1267,12 @@ sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconI
 sidePanelAddressCopyIcon vc id =
     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
     , copyIconInstance = Id.id id |> copyIconPathfinder vc
-    , addTagIconInstance = none
+    , addTagIconInstance =
+        HIcons.iconsAddTagOutlinedSWithAttributes
+            (HIcons.iconsAddTagOutlinedSAttributes
+                |> Rs.s_root [ onClick (Pathfinder.UserOpensDialogWindow (Pathfinder.AddTags id)), Util.View.pointer ]
+            )
+            {}
     , chevronInstance =
         div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
             [ HIcons.iconsChevronDownThinWithAttributes

@@ -115,6 +115,16 @@ mapMsg map model =
             }
                 |> TagsList
 
+        AddTag conf ->
+            { closeMsg = map conf.closeMsg
+            , addTagMsg = map conf.addTagMsg
+            , id = conf.id
+            , search = conf.search
+            , selectedActor = conf.selectedActor
+            , description = conf.description
+            }
+                |> AddTag
+
         Plugin conf ->
             { defaultMsg = map conf.defaultMsg
             }

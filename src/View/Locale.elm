@@ -16,6 +16,8 @@ module View.Locale exposing
     , intWithFormat
     , intWithoutValueDetailFormatting
     , interpolated
+    , isFirstSecondOfTheDay
+    , isLastSecondOfTheDay
     , percentage
     , posixDate
     , posixDateTimeUniform
@@ -215,6 +217,36 @@ intWithFormat model format =
 posixToTimestampSeconds : Posix -> Int
 posixToTimestampSeconds =
     Time.posixToMillis >> flip (//) 1000
+
+
+isFirstSecondOfTheDay : Model -> Posix -> Bool
+isFirstSecondOfTheDay m d =
+    let
+        hour =
+            Time.toHour m.zone d
+
+        min =
+            Time.toMinute m.zone d
+
+        s =
+            Time.toSecond m.zone d
+    in
+    hour == 0 && min == 0 && s == 0
+
+
+isLastSecondOfTheDay : Model -> Posix -> Bool
+isLastSecondOfTheDay m d =
+    let
+        hour =
+            Time.toHour m.zone d
+
+        min =
+            Time.toMinute m.zone d
+
+        s =
+            Time.toSecond m.zone d
+    in
+    hour == 23 && min == 59 && s == 59
 
 
 posixDate : Model -> Posix -> String

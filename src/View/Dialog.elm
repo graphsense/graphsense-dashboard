@@ -29,6 +29,7 @@ import Theme.Html.Icons as Icons
 import Util.View exposing (addDot, none, onClickWithStop)
 import View.Button as Button
 import View.Locale as Locale
+import View.Pathfinder.AddTagDialog as AddTagDialog
 import View.Pathfinder.TagDetailsList as TagsDetailList
 
 
@@ -58,6 +59,9 @@ view plugins pluginStates vc model =
 
             TagsList conf ->
                 TagsDetailList.view vc conf.closeMsg conf.id conf.tagsTable
+
+            AddTag conf ->
+                AddTagDialog.view plugins vc conf
 
             Plugin conf ->
                 plugin plugins pluginStates vc conf

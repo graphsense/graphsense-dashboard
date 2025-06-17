@@ -70,6 +70,7 @@ import Update.Graph as Graph
 import Update.Locale as Locale
 import Update.Notification as Notification
 import Update.Pathfinder as Pathfinder
+import Update.Pathfinder.AddTagDialog as AddTagDialog
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
@@ -649,7 +650,7 @@ update plugins uc msg model =
                 |> mapFirst (s_search search)
                 |> mapSecond
                     ((++)
-                        (eff |> List.map SearchEffect)
+                        (eff |> List.map (SearchEffect SearchMsg))
                     )
 
         UserClickedLogout ->
@@ -745,6 +746,25 @@ update plugins uc msg model =
                     }
             in
             ( newModel, [ saveUserSettings newModel ] )
+
+        AddTagDialog smsg ->
+            case model.dialog of
+                Just (Dialog.AddTag conf) ->
+                    let
+                        ( nm, eff ) =
+                            AddTagDialog.update uc smsg conf
+                    in
+                    case smsg of
+                        BrowserAddedTag _ ->
+                            ( model |> s_dialog Nothing, eff )
+
+                        _ ->
+                            ( model |> s_dialog (Just (Dialog.AddTag nm))
+                            , eff
+                            )
+
+                _ ->
+                    n model
 
         SearchMsg m ->
             case m of
@@ -910,7 +930,7 @@ update plugins uc msg model =
                     clearSearch plugins { model | graph = graph, search = search, dialog = Nothing }
                         |> mapSecond ((++) graphEffects)
                         |> mapSecond ((++) pathfinderEffects)
-                        |> mapSecond ((++) (List.map SearchEffect searchEffects))
+                        |> mapSecond ((++) (List.map (SearchEffect SearchMsg) searchEffects))
 
                 _ ->
                     let
@@ -918,7 +938,7 @@ update plugins uc msg model =
                             Search.update m model.search
                     in
                     ( { model | search = search }
-                    , List.map SearchEffect searchEffects
+                    , List.map (SearchEffect SearchMsg) searchEffects
                     )
 
         PathfinderMsg Pathfinder.UserClickedShowLegend ->
@@ -1076,6 +1096,22 @@ update plugins uc msg model =
               }
             , List.map PathfinderEffect eff
             )
+
+        PathfinderMsg (Pathfinder.UserOpensDialogWindow (Pathfinder.AddTags id)) ->
+            n
+                { model
+                    | dialog =
+                        Just
+                            (Dialog.AddTag
+                                { id = id
+                                , closeMsg = UserClosesDialog
+                                , addTagMsg = AddTagDialog (UserClickedAddTag id)
+                                , search = Search.init Search.SearchActorsOnly
+                                , selectedActor = Nothing
+                                , description = ""
+                                }
+                            )
+                }
 
         PathfinderMsg m ->
             let
@@ -1427,10 +1463,42 @@ update plugins uc msg model =
                             )
 
                         Ok yaml ->
-                            { model
-                                | graph = Graph.importTagPack uc yaml model.graph
-                            }
-                                |> n
+                            let
+                                -- Check which tags can be applied before importing
+                                tagStats =
+                                    Graph.checkTagsCanBeApplied yaml model.graph
+
+                                updatedModel =
+                                    { model
+                                        | graph = Graph.importTagPack uc yaml model.graph
+                                    }
+
+                                -- Create notification if not all tags were applied
+                                ( notifications, notificationEffects ) =
+                                    if tagStats.applicableTags < tagStats.totalTags then
+                                        let
+                                            skippedCount =
+                                                tagStats.totalTags - tagStats.applicableTags
+
+                                            notification =
+                                                Notification.infoDefault "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder."
+                                                    |> Notification.map (s_title (Just "Tag Import"))
+                                                    |> Notification.map
+                                                        (s_variables
+                                                            [ String.fromInt tagStats.applicableTags
+                                                            , String.fromInt tagStats.totalTags
+                                                            , String.fromInt skippedCount
+                                                            ]
+                                                        )
+                                        in
+                                        Notification.add notification model.notifications
+
+                                    else
+                                        n model.notifications
+                            in
+                            ( { updatedModel | notifications = notifications }
+                            , List.map NotificationEffect notificationEffects
+                            )
 
                 Graph.PortDeserializedGS ( filename, data ) ->
                     pluginNewGraph plugins ( model, [] )

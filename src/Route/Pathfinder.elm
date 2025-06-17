@@ -1,8 +1,11 @@
 module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, aggEdgeRoute, parser, pathRoute, toUrl, txRoute)
 
+import Iso8601
 import List.Extra
-import Url.Builder exposing (QueryParameter, absolute)
+import Model.DateFilter as DateFilter exposing (DateFilterRaw)
+import Url.Builder exposing (QueryParameter, absolute, string)
 import Util.Url.Parser as P exposing (Parser, map, oneOf, s)
+import Util.Url.Parser.Query as Q
 
 
 type alias Config =
@@ -65,6 +68,7 @@ stringToHop s =
 
 type Thing
     = Address String
+    | AddressWithTxDateRange String DateFilterRaw
     | Tx String
     | Block Int
     | Relation String String
@@ -103,6 +107,14 @@ thingToUrl t =
     case t of
         Address a ->
             ( [ "address", a ], [] )
+
+        AddressWithTxDateRange a dateFilter ->
+            ( [ "address", a, "transactions" ]
+            , [ dateFilter.fromDate |> Maybe.map (Iso8601.fromTime >> string "from")
+              , dateFilter.toDate |> Maybe.map (Iso8601.fromTime >> string "to")
+              ]
+                |> List.filterMap identity
+            )
 
         Tx h ->
             ( [ "tx", h ], [] )
@@ -162,6 +174,12 @@ thing =
             |> P.slash P.string
             --|> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddressTable))
             |> map Address
+        , s addressSegment
+            |> P.slash P.string
+            |> P.slash (s "transactions")
+            |> P.questionMark (Q.string "from" |> Q.map (Maybe.andThen (Iso8601.toTime >> Result.toMaybe)))
+            |> P.questionMark (Q.string "to" |> Q.map (Maybe.andThen (Iso8601.toTime >> Result.toMaybe)))
+            |> map (\a f t -> AddressWithTxDateRange a (DateFilter.init f t))
         , s txSegment |> P.slash P.string |> map Tx
         , s blockSegment |> P.slash P.int |> map Block
         , s relationSegment
