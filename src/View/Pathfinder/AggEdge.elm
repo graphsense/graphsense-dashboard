@@ -9,7 +9,7 @@ import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Tx exposing (TxType(..))
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_leftArrowGroup, s_rectangleOfAggregatedLabel, s_rightArrowGroup, s_root)
+import RecordSetter exposing (s_dividerLine, s_leftArrow, s_leftArrowGroup, s_leftValue, s_rectangleOfAggregatedLabel, s_rightArrow, s_rightArrowGroup, s_rightValue, s_root)
 import RemoteData
 import Svg.Styled exposing (Svg, g, line)
 import Svg.Styled.Attributes as Svg exposing (css, transform, width)
@@ -55,6 +55,18 @@ view vc edge aAddress bAddress =
         leftValue =
             relationToValue leftRelation
 
+        rawValue =
+            RemoteData.toMaybe
+                >> Maybe.Extra.join
+                >> Maybe.map (.value >> .value)
+                >> Maybe.withDefault 0
+
+        leftValueRaw =
+            rawValue leftRelation
+
+        rightValueRaw =
+            rawValue rightRelation
+
         relationToValue =
             RemoteData.toMaybe
                 >> Maybe.Extra.join
@@ -68,23 +80,21 @@ view vc edge aAddress bAddress =
             relationToValue rightRelation
 
         charWidth =
-            8
+            7.5
+
+        originalWidth =
+            Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
 
         halfOriginalWidth =
-            Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width / 2
-
-        mx =
-            toFloat >> max halfOriginalWidth
+            originalWidth / 2
 
         labelWidthLeft =
-            String.length leftValue
+            (String.length leftValue |> toFloat)
                 * charWidth
-                |> mx
 
         labelWidthRight =
-            String.length rightValue
+            (String.length rightValue |> toFloat)
                 * charWidth
-                |> mx
 
         rectangleWidth =
             labelWidthLeft + labelWidthRight
@@ -94,6 +104,12 @@ view vc edge aAddress bAddress =
 
         rad =
             fd.width / 2
+
+        hidden =
+            css [ Css.opacity Css.zero |> Css.important ]
+
+        corrH =
+            -2.5
     in
     g
         []
@@ -113,7 +129,7 @@ view vc edge aAddress bAddress =
             (Theme.aggregatedLabelAttributes
                 |> s_root
                     [ translate
-                        (x * unit - labelWidthLeft)
+                        (x * unit - rectangleWidth / 2)
                         (y * unit - (Theme.aggregatedLabel_details.height / 2))
                         |> transform
                     , AggEdge.initId edge.a edge.b
@@ -125,16 +141,71 @@ view vc edge aAddress bAddress =
                     ]
                 |> s_rightArrowGroup
                     [ translate
-                        (labelWidthRight - halfOriginalWidth)
+                        (rectangleWidth - originalWidth)
                         0
                         |> transform
                     ]
                 |> s_leftArrowGroup
                     [ translate
-                        -(labelWidthLeft - halfOriginalWidth)
+                        0
                         0
                         |> transform
                     ]
+                |> s_leftArrow
+                    (if leftValueRaw == 0 then
+                        [ hidden ]
+
+                     else
+                        []
+                    )
+                |> s_rightArrow
+                    (if rightValueRaw == 0 then
+                        [ hidden ]
+
+                     else
+                        []
+                    )
+                |> s_dividerLine
+                    (if leftValueRaw /= 0 && rightValueRaw /= 0 then
+                        [ translate
+                            (labelWidthLeft - halfOriginalWidth)
+                            0
+                            |> transform
+                        ]
+
+                     else
+                        [ hidden ]
+                    )
+                |> s_rightValue
+                    (if leftValueRaw == 0 then
+                        [ translate
+                            -halfOriginalWidth
+                            corrH
+                            |> transform
+                        ]
+
+                     else
+                        [ translate
+                            (labelWidthLeft - halfOriginalWidth)
+                            corrH
+                            |> transform
+                        ]
+                    )
+                |> s_leftValue
+                    (if rightValueRaw == 0 then
+                        [ translate
+                            (rectangleWidth - halfOriginalWidth)
+                            corrH
+                            |> transform
+                        ]
+
+                     else
+                        [ translate
+                            (labelWidthLeft - halfOriginalWidth)
+                            corrH
+                            |> transform
+                        ]
+                    )
             )
             { root =
                 { leftValue = leftValue
