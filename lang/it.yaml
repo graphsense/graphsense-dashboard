@@ -466,3 +466,5 @@ Related addresses: Indirizzi correlati
 "Add Tag to Address": "Aggiungi etichetta all'indirizzo"
 "Create new actor": "Creare un nuovo attore"
 "Added Tag": "Tag aggiunto"
+Tag Import: Importazione Tag
+"Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Solo {0} di {1} tag sono stati importati. {2} tag non possono essere applicati perché i loro indirizzi non sono presenti nel pathfinder."
