@@ -20,7 +20,7 @@ import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -204,6 +204,12 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                         , { msg = UserClickedContextMenuOpenInNewTab menu
                           , icon = HIcons.iconsGoToS {}
                           , text = "Open in new tab"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserOpensDialogWindow (AddTags id)
+                          , icon = HIcons.iconsAddTagOutlinedS {}
+                          , text = "Add Tag"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
