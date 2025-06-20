@@ -51,7 +51,7 @@ import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (copyIconPathfinder, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinderAbove, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -1187,7 +1187,7 @@ setTags vc viewState model id =
 sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html Pathfinder.Msg, addTagIconInstance : Html Pathfinder.Msg, chevronInstance : Html Pathfinder.Msg }
 sidePanelAddressCopyIcon vc id =
     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
-    , copyIconInstance = Id.id id |> copyIconPathfinder vc
+    , copyIconInstance = Id.id id |> copyIconPathfinderAbove vc
     , addTagIconInstance =
         HIcons.iconsAddTagOutlinedSWithAttributes
             (HIcons.iconsAddTagOutlinedSAttributes
