@@ -67,38 +67,55 @@ relations plugins vc gc annotations txs =
                 []
             )
         >> (\( agg, txs_ ) ->
-                txs_
+                [ txs_
                     |> List.map
                         (\tx ->
-                            ( Id.toString tx.id
-                            , Svg.g
-                                []
-                                [ Annotations.getAnnotation tx.id annotations
-                                    |> Svg.lazy5 Tx.view plugins vc gc tx
-                                , Tx.edge plugins vc gc tx
-                                ]
+                            ( Id.toString tx.id |> (++) "te"
+                            , Tx.edge plugins vc gc tx
                             )
                         )
-                    |> (++)
-                        (agg
-                            |> List.filterMap
-                                (\edge ->
-                                    Maybe.map2 (aggEdge plugins vc gc edge)
-                                        edge.aAddress
-                                        edge.bAddress
-                                )
+                    |> Keyed.node "g" []
+                , txs_
+                    |> List.map
+                        (\tx ->
+                            ( Id.toString tx.id |> (++) "tn"
+                            , Annotations.getAnnotation tx.id annotations
+                                |> Svg.lazy5 Tx.view plugins vc gc tx
+                            )
                         )
+                    |> Keyed.node "g" []
+                , agg
+                    |> List.filterMap
+                        (\edge ->
+                            Maybe.map2 (aggEdgeEdge plugins vc gc edge)
+                                edge.aAddress
+                                edge.bAddress
+                        )
+                    |> Keyed.node "g" []
+                , agg
+                    |> List.filterMap
+                        (\edge ->
+                            Maybe.map2 (aggEdgeNode plugins vc gc edge)
+                                edge.aAddress
+                                edge.bAddress
+                        )
+                    |> Keyed.node "g" []
+                ]
+                    |> Svg.g []
            )
-        >> Keyed.node "g" []
 
 
-aggEdge : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdge _ vc _ edge aAddress bAddress =
-    ( Id.toString edge.a ++ Id.toString edge.b
-    , Svg.g
-        []
-        [ Svg.lazy4 AggEdge.view vc edge aAddress bAddress
-        ]
+aggEdgeNode : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeNode _ vc _ edge aAddress bAddress =
+    ( Id.toString edge.a ++ Id.toString edge.b |> (++) "en"
+    , Svg.lazy4 AggEdge.view vc edge aAddress bAddress
+    )
+
+
+aggEdgeEdge : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeEdge _ vc _ edge aAddress bAddress =
+    ( Id.toString edge.a ++ Id.toString edge.b |> (++) "ee"
+    , Svg.lazy4 AggEdge.edge vc edge aAddress bAddress
     )
 
 

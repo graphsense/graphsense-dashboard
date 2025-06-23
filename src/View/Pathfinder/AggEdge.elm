@@ -1,4 +1,4 @@
-module View.Pathfinder.AggEdge exposing (view)
+module View.Pathfinder.AggEdge exposing (edge, view)
 
 import Config.View as View
 import Css
@@ -21,7 +21,7 @@ import View.Pathfinder.Tx.Utils exposing (toPosition)
 
 
 view : View.Config -> AggEdge -> Address -> Address -> Svg Msg
-view vc edge aAddress bAddress =
+view vc ed aAddress bAddress =
     let
         asset data =
             { network = data.address.currency, asset = data.address.currency }
@@ -38,16 +38,16 @@ view vc edge aAddress bAddress =
         y =
             (aPos.y + bPos.y) / 2
 
-        { leftRelation, rightRelation, aOffset } =
+        { leftRelation, rightRelation } =
             if aPos.x < bPos.x then
-                { leftRelation = edge.b2a
-                , rightRelation = edge.a2b
+                { leftRelation = ed.b2a
+                , rightRelation = ed.a2b
                 , aOffset = rad
                 }
 
             else
-                { leftRelation = edge.a2b
-                , rightRelation = edge.b2a
+                { leftRelation = ed.a2b
+                , rightRelation = ed.b2a
                 , aOffset = -rad
                 }
 
@@ -112,26 +112,14 @@ view vc edge aAddress bAddress =
     in
     g
         []
-        [ line
-            [ Svg.x1 <| String.fromFloat <| aPos.x * unit + aOffset
-            , Svg.y1 <| String.fromFloat <| aPos.y * unit
-            , Svg.x2 <| String.fromFloat <| bPos.x * unit - aOffset
-            , Svg.y2 <| String.fromFloat <| bPos.y * unit
-            , css Theme.aggregatedLinkMainLine_details.styles
-            , css
-                [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
-                , Css.property "stroke" "black"
-                ]
-            ]
-            []
-        , Theme.aggregatedLabelWithAttributes
+        [ Theme.aggregatedLabelWithAttributes
             (Theme.aggregatedLabelAttributes
                 |> s_root
                     [ translate
                         (x * unit - rectangleWidth / 2)
                         (y * unit - (Theme.aggregatedLabel_details.height / 2))
                         |> transform
-                    , AggEdge.initId edge.a edge.b
+                    , AggEdge.initId ed.a ed.b
                         |> UserClickedAggEdge
                         |> onClickWithStop
                     ]
@@ -212,4 +200,43 @@ view vc edge aAddress bAddress =
                 , showHighlight = False
                 }
             }
+        ]
+
+
+edge : View.Config -> AggEdge -> Address -> Address -> Svg Msg
+edge vc ed aAddress bAddress =
+    let
+        aPos =
+            aAddress |> toPosition
+
+        bPos =
+            bAddress |> toPosition
+
+        aOffset =
+            if aPos.x < bPos.x then
+                rad
+
+            else
+                -rad
+
+        fd =
+            GraphComponents.addressNodeNodeFrame_details
+
+        rad =
+            fd.width / 2
+    in
+    g
+        []
+        [ line
+            [ Svg.x1 <| String.fromFloat <| aPos.x * unit + aOffset
+            , Svg.y1 <| String.fromFloat <| aPos.y * unit
+            , Svg.x2 <| String.fromFloat <| bPos.x * unit - aOffset
+            , Svg.y2 <| String.fromFloat <| bPos.y * unit
+            , css Theme.aggregatedLinkMainLine_details.styles
+            , css
+                [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
+                , Css.property "stroke" "black"
+                ]
+            ]
+            []
         ]
