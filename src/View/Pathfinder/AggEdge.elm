@@ -20,8 +20,21 @@ import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (toPosition)
 
 
-view : View.Config -> AggEdge -> Address -> Address -> Svg Msg
-view vc ed aAddress bAddress =
+type alias Dimensions =
+    { x : Float
+    , y : Float
+    , leftLabelWidth : Float
+    , rightLabelWidth : Float
+    , leftLabel : String
+    , rightLabel : String
+    , leftValueRaw : Int
+    , rightValueRaw : Int
+    , offset : Float
+    }
+
+
+calcDimensions : View.Config -> AggEdge -> Address -> Address -> Dimensions
+calcDimensions vc ed aAddress bAddress =
     let
         asset data =
             { network = data.address.currency, asset = data.address.currency }
@@ -38,7 +51,7 @@ view vc ed aAddress bAddress =
         y =
             (aPos.y + bPos.y) / 2
 
-        { leftRelation, rightRelation } =
+        { leftRelation, rightRelation, aOffset } =
             if aPos.x < bPos.x then
                 { leftRelation = ed.b2a
                 , rightRelation = ed.a2b
@@ -81,12 +94,6 @@ view vc ed aAddress bAddress =
         charWidth =
             7.5
 
-        originalWidth =
-            Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
-
-        halfOriginalWidth =
-            originalWidth / 2
-
         labelWidthLeft =
             (String.length leftValue |> toFloat)
                 * charWidth
@@ -95,14 +102,38 @@ view vc ed aAddress bAddress =
             (String.length rightValue |> toFloat)
                 * charWidth
 
-        rectangleWidth =
-            labelWidthLeft + labelWidthRight
-
         fd =
             GraphComponents.addressNodeNodeFrame_details
 
         rad =
             fd.width / 2
+    in
+    { x = x * unit
+    , y = y * unit
+    , leftLabelWidth = labelWidthLeft
+    , rightLabelWidth = labelWidthRight
+    , leftLabel = leftValue
+    , rightLabel = rightValue
+    , leftValueRaw = leftValueRaw
+    , rightValueRaw = rightValueRaw
+    , offset = aOffset
+    }
+
+
+view : View.Config -> AggEdge -> Address -> Address -> Svg Msg
+view vc ed aAddress bAddress =
+    let
+        originalWidth =
+            Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
+
+        halfOriginalWidth =
+            originalWidth / 2
+
+        { leftLabelWidth, rightLabelWidth, x, y, leftLabel, rightLabel, leftValueRaw, rightValueRaw } =
+            calcDimensions vc ed aAddress bAddress
+
+        rectangleWidth =
+            leftLabelWidth + rightLabelWidth
 
         hidden =
             css [ Css.opacity Css.zero |> Css.important ]
@@ -116,8 +147,8 @@ view vc ed aAddress bAddress =
             (Theme.aggregatedLabelAttributes
                 |> s_root
                     [ translate
-                        (x * unit - rectangleWidth / 2)
-                        (y * unit - (Theme.aggregatedLabel_details.height / 2))
+                        (x - rectangleWidth / 2)
+                        (y - (Theme.aggregatedLabel_details.height / 2))
                         |> transform
                     , AggEdge.initId ed.a ed.b
                         |> UserClickedAggEdge
@@ -155,7 +186,7 @@ view vc ed aAddress bAddress =
                 |> s_dividerLine
                     (if leftValueRaw /= 0 && rightValueRaw /= 0 then
                         [ translate
-                            (labelWidthLeft - halfOriginalWidth)
+                            (leftLabelWidth - halfOriginalWidth)
                             0
                             |> transform
                         ]
@@ -173,7 +204,7 @@ view vc ed aAddress bAddress =
 
                      else
                         [ translate
-                            (labelWidthLeft - halfOriginalWidth)
+                            (rightLabelWidth - halfOriginalWidth)
                             corrH
                             |> transform
                         ]
@@ -188,15 +219,15 @@ view vc ed aAddress bAddress =
 
                      else
                         [ translate
-                            (labelWidthLeft - halfOriginalWidth)
+                            (leftLabelWidth - halfOriginalWidth)
                             corrH
                             |> transform
                         ]
                     )
             )
             { root =
-                { leftValue = leftValue
-                , rightValue = rightValue
+                { leftValue = leftLabel
+                , rightValue = rightLabel
                 , showHighlight = False
                 }
             }
@@ -212,25 +243,18 @@ edge vc ed aAddress bAddress =
         bPos =
             bAddress |> toPosition
 
-        aOffset =
-            if aPos.x < bPos.x then
-                rad
-
-            else
-                -rad
+        { offset } =
+            calcDimensions vc ed aAddress bAddress
 
         fd =
             GraphComponents.addressNodeNodeFrame_details
-
-        rad =
-            fd.width / 2
     in
     g
         []
         [ line
-            [ Svg.x1 <| String.fromFloat <| aPos.x * unit + aOffset
+            [ Svg.x1 <| String.fromFloat <| aPos.x * unit + offset
             , Svg.y1 <| String.fromFloat <| aPos.y * unit
-            , Svg.x2 <| String.fromFloat <| bPos.x * unit - aOffset
+            , Svg.x2 <| String.fromFloat <| bPos.x * unit - offset
             , Svg.y2 <| String.fromFloat <| bPos.y * unit
             , css Theme.aggregatedLinkMainLine_details.styles
             , css
