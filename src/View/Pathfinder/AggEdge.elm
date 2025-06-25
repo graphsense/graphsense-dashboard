@@ -18,7 +18,7 @@ import Theme.Svg.GraphComponentsAggregatedTracing as Theme
 import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
-import View.Pathfinder.Tx.Utils exposing (Pos, signX, toPosition)
+import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
 
 
 type alias Dimensions =
@@ -233,8 +233,8 @@ view vc ed aAddress bAddress =
                     )
             )
             { root =
-                { leftValue = leftLabel |> Debug.log "leftLabel"
-                , rightValue = rightLabel |> Debug.log "rightLabel"
+                { leftValue = leftLabel
+                , rightValue = rightLabel
                 , showHighlight = False
                 }
             }
@@ -246,7 +246,6 @@ edge vc ed aAddress bAddress =
     let
         { left, right, totalWidth, x, y } =
             calcDimensions vc ed aAddress bAddress
-                |> Debug.log "dimensions"
 
         fd =
             GraphComponents.addressNodeNodeFrame_details

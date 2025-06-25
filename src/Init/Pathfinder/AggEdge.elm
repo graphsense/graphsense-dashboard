@@ -1,7 +1,6 @@
 module Init.Pathfinder.AggEdge exposing (init, initId)
 
 import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
-import Css exposing (pc)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..))

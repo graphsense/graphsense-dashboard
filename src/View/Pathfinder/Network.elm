@@ -2,7 +2,7 @@ module View.Pathfinder.Network exposing (addresses, relations)
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
+import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict exposing (Dict)
 import Model.Pathfinder.Address exposing (Address)
