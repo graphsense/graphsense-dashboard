@@ -270,15 +270,6 @@ updateByMsg plugins uc msg model =
                     else
                         edge
 
-                newNetwork =
-                    requestIds
-                        |> List.filter (flip Set.member nset >> not)
-                        |> List.foldl
-                            (\nid ->
-                                Network.updateAggEdge (AggEdge.initId id nid) (upd nid)
-                            )
-                            model.network
-
                 newModel =
                     relations.neighbors
                         |> List.foldl
@@ -288,16 +279,27 @@ updateByMsg plugins uc msg model =
                                     |> flip s_network mo
                             )
                             (CheckingNeighbors.insert dir id neighborIds model.checkingNeighbors
-                                |> flip s_checkingNeighbors { model | network = newNetwork }
+                                |> flip s_checkingNeighbors model
                             )
+
+                newModel2 =
+                    -- set the Success Nothing on non-existing relations
+                    requestIds
+                        |> List.filter (flip Set.member nset >> not)
+                        |> List.foldl
+                            (\nid ->
+                                Network.updateAggEdge (AggEdge.initId id nid) (upd nid)
+                            )
+                            newModel.network
+                        |> flip s_network newModel
             in
-            if CheckingNeighbors.isEmpty id newModel.checkingNeighbors then
-                CheckingNeighbors.getData id newModel.checkingNeighbors
+            if CheckingNeighbors.isEmpty id newModel2.checkingNeighbors then
+                CheckingNeighbors.getData id newModel2.checkingNeighbors
                     |> Maybe.map
                         (\data ->
-                            browserGotAddressData uc plugins DateFilter.emptyDateFilterRaw id Auto data newModel
+                            browserGotAddressData uc plugins DateFilter.emptyDateFilterRaw id Auto data newModel2
                         )
-                    |> Maybe.withDefault (n newModel)
+                    |> Maybe.withDefault (n newModel2)
 
             else
                 neighborIds
@@ -305,12 +307,12 @@ updateByMsg plugins uc msg model =
                         (\addressId ->
                             let
                                 txs =
-                                    Dict.get (AggEdge.initId id addressId) model.network.aggEdges
+                                    Dict.get (AggEdge.initId id addressId) newModel2.network.aggEdges
                                         |> Maybe.map .txs
                                         |> Maybe.withDefault Set.empty
                             in
                             if Set.isEmpty txs then
-                                getNextTxEffects newModel.network
+                                getNextTxEffects newModel2.network
                                     addressId
                                     (Direction.flip dir)
                                     (Just id)
@@ -318,7 +320,7 @@ updateByMsg plugins uc msg model =
                             else
                                 []
                         )
-                    |> pair newModel
+                    |> pair newModel2
 
         BrowserGotClusterData addressId data ->
             let
