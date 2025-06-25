@@ -1,5 +1,7 @@
 module Init.Pathfinder.AggEdge exposing (init, initId)
 
+import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
+import Css exposing (pc)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..))
@@ -7,8 +9,8 @@ import Set
 import Tuple exposing (first, second)
 
 
-init : Id -> Id -> AggEdge
-init a b =
+init : Pathfinder.Config -> Id -> Id -> AggEdge
+init pc a b =
     let
         id =
             initId a b
@@ -21,6 +23,7 @@ init a b =
     , b2a = NotAsked
     , txs = Set.empty
     , selected = False
+    , alwaysShow = pc.tracingMode == AggregateTracingMode
     }
 
 

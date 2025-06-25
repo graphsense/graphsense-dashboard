@@ -16,4 +16,5 @@ type alias AggEdge =
     , b2a : WebData (Maybe Api.Data.NeighborAddress)
     , txs : Set Id
     , selected : Bool
+    , alwaysShow : Bool
     }

@@ -25,7 +25,7 @@ module Update.Pathfinder.Network exposing
 import Animation as A exposing (Animation)
 import Api.Data
 import Basics.Extra exposing (flip, uncurry)
-import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
+import Config.Pathfinder as Pathfinder exposing (TracingMode(..), nodeXOffset, nodeYOffset)
 import Dict exposing (Dict)
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.AggEdge as AggEdge
@@ -79,13 +79,13 @@ snapToGrid =
         >> updateAllTxs coordsToInt
 
 
-addAddress : Plugins -> Id -> Network -> ( Address, Network )
-addAddress plugins =
-    addAddressWithPosition plugins Auto
+addAddress : Plugins -> Pathfinder.Config -> Id -> Network -> ( Address, Network )
+addAddress plugins pc =
+    addAddressWithPosition plugins pc Auto
 
 
-addAddressWithPosition : Plugins -> FindPosition -> Id -> Network -> ( Address, Network )
-addAddressWithPosition plugins position id model =
+addAddressWithPosition : Plugins -> Pathfinder.Config -> FindPosition -> Id -> Network -> ( Address, Network )
+addAddressWithPosition plugins pc position id model =
     Dict.get id model.addresses
         |> Maybe.map (pairTo model)
         |> Maybe.withDefault
@@ -126,7 +126,7 @@ addAddressWithPosition plugins position id model =
              in
              ( newAddress
              , newAddress
-                |> insertAddress (freeSpaceAroundCoords coords model)
+                |> insertAddress pc (freeSpaceAroundCoords coords model)
              )
             )
 
@@ -299,8 +299,8 @@ freeSpaceAroundCoords coords model =
             )
 
 
-insertAddress : Network -> Address -> Network
-insertAddress model newAddress =
+insertAddress : Pathfinder.Config -> Network -> Address -> Network
+insertAddress pc model newAddress =
     let
         ( address, newNetwork ) =
             listTxsForAddress model newAddress.id
@@ -316,7 +316,7 @@ insertAddress model newAddress =
                                 { addr
                                     | incomingTxs = txsInsertId tx.id addr.incomingTxs
                                 }
-                        , setAddressInTx tx.id direction newAddress nw
+                        , setAddressInTx pc tx.id direction newAddress nw
                         )
                     )
                     ( newAddress
@@ -498,13 +498,13 @@ findAddressCoords id network =
             )
 
 
-addTx : Api.Data.Tx -> Network -> ( Tx, Network )
-addTx =
-    addTxWithPosition Auto
+addTx : Pathfinder.Config -> Api.Data.Tx -> Network -> ( Tx, Network )
+addTx pc =
+    addTxWithPosition pc Auto
 
 
-addTxWithPosition : FindPosition -> Api.Data.Tx -> Network -> ( Tx, Network )
-addTxWithPosition position tx network =
+addTxWithPosition : Pathfinder.Config -> FindPosition -> Api.Data.Tx -> Network -> ( Tx, Network )
+addTxWithPosition pc position tx network =
     let
         id =
             Tx.getTxId tx
@@ -552,7 +552,7 @@ addTxWithPosition position tx network =
                         in
                         Tx.fromTxAccountData t coords
                             |> s_isStartingPoint (isEmpty network)
-                            |> insertTx
+                            |> insertTx pc
                                 { newNetwork
                                     | animatedTxs = Set.insert id newNetwork.animatedTxs
                                 }
@@ -597,23 +597,23 @@ addTxWithPosition position tx network =
                                         }
                                )
                             |> s_isStartingPoint (isEmpty network)
-                            |> insertTx
+                            |> insertTx pc
                                 { newNetwork
                                     | animatedTxs = Set.insert id newNetwork.animatedTxs
                                 }
             )
 
 
-insertTx : Network -> Tx -> ( Tx, Network )
-insertTx network tx =
+insertTx : Pathfinder.Config -> Network -> Tx -> ( Tx, Network )
+insertTx pc network tx =
     let
         nw =
             Tx.getOutputAddressIds tx
                 |> List.filterMap (flip Dict.get network.addresses)
-                |> List.foldl (setAddressInTx tx.id Outgoing)
+                |> List.foldl (setAddressInTx pc tx.id Outgoing)
                     (Tx.getInputAddressIds tx
                         |> List.filterMap (flip Dict.get network.addresses)
-                        |> List.foldl (setAddressInTx tx.id Incoming)
+                        |> List.foldl (setAddressInTx pc tx.id Incoming)
                             { network
                                 | txs = Dict.insert tx.id tx network.txs
                             }
@@ -647,8 +647,8 @@ insertTx network tx =
         |> Maybe.withDefault ( tx, network )
 
 
-setAddressInTx : Id -> Direction -> Address -> Network -> Network
-setAddressInTx txId dir address network =
+setAddressInTx : Pathfinder.Config -> Id -> Direction -> Address -> Network -> Network
+setAddressInTx pc txId dir address network =
     let
         nw =
             updateTx txId
@@ -657,7 +657,7 @@ setAddressInTx txId dir address network =
     in
     Dict.get txId nw.txs
         |> Maybe.map
-            (\newTx -> insertTxInAggEdges newTx nw)
+            (\newTx -> insertTxInAggEdges pc newTx nw)
         |> Maybe.withDefault nw
 
 
@@ -666,8 +666,8 @@ makeTxAddressesCrossproduct ( inputs, outputs ) =
     List.foldl (\input cp -> List.map (pair input) outputs ++ cp) [] inputs
 
 
-insertTxInAggEdges : Tx -> Network -> Network
-insertTxInAggEdges tx network =
+insertTxInAggEdges : Pathfinder.Config -> Tx -> Network -> Network
+insertTxInAggEdges pc tx network =
     Tx.listSeparatedAddressesForTx tx
         |> makeTxAddressesCrossproduct
         |> List.foldl
@@ -686,7 +686,7 @@ insertTxInAggEdges tx network =
                                     }
                                 )
                                 >> Maybe.withDefault
-                                    (AggEdge.init input.id output.id
+                                    (AggEdge.init pc input.id output.id
                                         |> AggEdge.setAddress (Just input)
                                         |> AggEdge.setAddress (Just output)
                                         |> s_txs (Set.singleton tx.id)
@@ -979,8 +979,8 @@ deleteTx id network =
         |> Maybe.withDefault network
 
 
-ingestTxs : Network -> List DeserializedThing -> List Api.Data.Tx -> Network
-ingestTxs network things txs =
+ingestTxs : Pathfinder.Config -> Network -> List DeserializedThing -> List Api.Data.Tx -> Network
+ingestTxs pc network things txs =
     let
         thingsDict =
             things
@@ -1015,14 +1015,14 @@ ingestTxs network things txs =
                         Dict.get (Id.init t.network t.identifier) thingsDict
                             |> Maybe.map (toAccount t)
                 )
-                    |> Maybe.map (insertTx nw >> second)
+                    |> Maybe.map (insertTx pc nw >> second)
                     |> Maybe.withDefault nw
             )
             network
 
 
-ingestAddresses : Plugins -> Network -> List DeserializedThing -> Network
-ingestAddresses plugins network =
+ingestAddresses : Plugins -> Pathfinder.Config -> Network -> List DeserializedThing -> Network
+ingestAddresses plugins pc network =
     List.foldl
         (\th nw ->
             Address.init plugins
@@ -1031,7 +1031,7 @@ ingestAddresses plugins network =
                 , y = th.y
                 }
                 |> s_isStartingPoint th.isStartingPoint
-                |> insertAddress nw
+                |> insertAddress { pc | tracingMode = TransactionTracingMode } nw
         )
         network
 
@@ -1048,8 +1048,8 @@ deleteDanglingAddresses =
         )
 
 
-upsertAggEdgeData : Id -> Direction -> Api.Data.NeighborAddress -> Network -> Network
-upsertAggEdgeData id dir neighbor model =
+upsertAggEdgeData : Pathfinder.Config -> Id -> Direction -> Api.Data.NeighborAddress -> Network -> Network
+upsertAggEdgeData pc id dir neighbor model =
     let
         nid =
             Id.init neighbor.address.currency neighbor.address.address
@@ -1060,7 +1060,7 @@ upsertAggEdgeData id dir neighbor model =
         aggEdge =
             Dict.get aggEdgeId model.aggEdges
                 |> Maybe.withDefault
-                    (AggEdge.init id nid
+                    (AggEdge.init pc id nid
                         |> AggEdge.setAddress (Dict.get id model.addresses)
                         |> AggEdge.setAddress (Dict.get nid model.addresses)
                     )

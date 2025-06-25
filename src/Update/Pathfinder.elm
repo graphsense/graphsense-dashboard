@@ -275,7 +275,7 @@ updateByMsg plugins uc msg model =
                         |> List.foldl
                             (\neighbor mo ->
                                 mo.network
-                                    |> Network.upsertAggEdgeData id dir neighbor
+                                    |> Network.upsertAggEdgeData model.config id dir neighbor
                                     |> flip s_network mo
                             )
                             (CheckingNeighbors.insert dir id neighborIds model.checkingNeighbors
@@ -1088,7 +1088,7 @@ updateByMsg plugins uc msg model =
             else
                 let
                     ( newTx, newNetwork ) =
-                        Network.addTxWithPosition pos tx model.network
+                        Network.addTxWithPosition model.config pos tx model.network
                 in
                 (model |> s_network newNetwork)
                     |> checkSelection uc
@@ -1330,7 +1330,7 @@ updateByMsg plugins uc msg model =
                     (n model)
 
         BrowserGotBulkTxs deserializing txs ->
-            n { model | network = ingestTxs model.network deserializing.deserialized.txs txs }
+            n { model | network = ingestTxs model.config model.network deserializing.deserialized.txs txs }
 
         UserClickedOpenGraph ->
             ( model
@@ -1748,7 +1748,7 @@ browserGotAddressData uc plugins dateFilterPreset id position data model =
     else
         let
             ( newAddress, net ) =
-                Network.addAddressWithPosition plugins position id model.network
+                Network.addAddressWithPosition plugins model.config position id model.network
                     |> mapSecond (Network.updateAddress id (s_data (Success data)))
 
             ( details, eff ) =
@@ -2963,7 +2963,7 @@ addTx plugins _ anchorAddressId direction addressId tx model =
     else
         let
             ( newTx, network ) =
-                Network.addTxWithPosition (Network.NextTo ( direction, anchorAddressId )) tx model.network
+                Network.addTxWithPosition model.config (Network.NextTo ( direction, anchorAddressId )) tx model.network
 
             transform =
                 Transform.move
@@ -3239,7 +3239,7 @@ fromDeserialized plugins deserialized model =
                 }
     in
     ( { newAndEmptyPathfinder
-        | network = ingestAddresses plugins Network.init deserialized.addresses
+        | network = ingestAddresses plugins model.config Network.init deserialized.addresses
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
         , name = deserialized.name

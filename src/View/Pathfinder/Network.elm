@@ -2,7 +2,7 @@ module View.Pathfinder.Network exposing (addresses, relations)
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Config.Pathfinder as Pathfinder
+import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Dict exposing (Dict)
 import Model.Pathfinder.Address exposing (Address)
@@ -49,7 +49,11 @@ relations plugins vc gc annotations txs =
 
                 Pathfinder.TransactionTracingMode ->
                     ( if Set.isEmpty rel.txs then
-                        rel :: agg
+                        if rel.alwaysShow then
+                            rel :: agg
+
+                        else
+                            agg
 
                       else
                         agg
