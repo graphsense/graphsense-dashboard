@@ -3,7 +3,7 @@ module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 import Animation as A
 import Api.Data
 import Color
-import Config.Pathfinder as Pathfinder
+import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
 import Html.Styled.Attributes as Html
@@ -74,6 +74,7 @@ view plugins vc pc colors address getCluster annotation =
 
         expandVisible direction =
             nonZero direction
+                && (pc.tracingMode == TransactionTracingMode)
                 && (getTxs address direction
                         |> txsGetSet
                         |> (==) Nothing
