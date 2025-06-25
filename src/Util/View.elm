@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -248,9 +248,19 @@ copyableLongIdentifierPathfinder vc attr identifier =
         ]
 
 
+type CopyHintPosition
+    = Right
+    | Above
+
+
 copyIconPathfinder : View.Config -> String -> Html msg
 copyIconPathfinder =
     copyIconWithAttrPathfinder False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
+
+
+copyIconPathfinderAbove : View.Config -> String -> Html msg
+copyIconPathfinderAbove =
+    copyIconWithAttrPathfinderInternal Above False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
 
 
 copyIconWithoutHint : View.Config -> String -> Html msg
@@ -259,7 +269,30 @@ copyIconWithoutHint =
 
 
 copyIconWithAttrPathfinder : Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
-copyIconWithAttrPathfinder hideHint attr vc value =
+copyIconWithAttrPathfinder =
+    copyIconWithAttrPathfinderInternal Right
+
+
+copyIconWithAttrPathfinderInternal : CopyHintPosition -> Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
+copyIconWithAttrPathfinderInternal hp hideHint attr vc value =
+    let
+        ( component, compAttr, triangleAttr ) =
+            case hp of
+                Right ->
+                    ( Theme.Html.GraphComponents.copyShortcutWithInstances
+                    , Theme.Html.GraphComponents.copyShortcutAttributes
+                    , css
+                        [ Css.px 1 |> Css.left
+                        ]
+                    )
+
+                Above ->
+                    ( Theme.Html.GraphComponents.copyShortcutHintAboveWithInstances
+                    , Theme.Html.GraphComponents.copyShortcutHintAboveAttributes
+                    , css
+                        [ Css.px -5 |> Css.top ]
+                    )
+    in
     Html.Styled.a
         ((Css.copyIcon vc |> css)
             :: attr
@@ -269,8 +302,8 @@ copyIconWithAttrPathfinder hideHint attr vc value =
             , Locale.string vc.locale "Copied!"
                 |> Html.Styled.Attributes.attribute "data-copied-label"
             ]
-            [ Theme.Html.GraphComponents.copyShortcutWithInstances
-                (Theme.Html.GraphComponents.copyShortcutAttributes
+            [ component
+                (compAttr
                     |> s_iconsCopyS
                         [ css
                             [ Css.display Css.inlineBlock
@@ -294,9 +327,7 @@ copyIconWithAttrPathfinder hideHint attr vc value =
                             ]
                         ]
                     |> s_triangle
-                        [ css
-                            [ Css.px 1 |> Css.left
-                            ]
+                        [ triangleAttr
                         ]
                 )
                 (Theme.Html.GraphComponents.copyShortcutInstances
