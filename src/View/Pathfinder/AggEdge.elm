@@ -100,7 +100,7 @@ calcDimensions vc ed aAddress bAddress =
             relationToValue rightRelation
 
         charWidth =
-            7.5
+            8
 
         leftLabelWidth =
             (String.length leftLabel |> toFloat)
@@ -222,7 +222,7 @@ view vc ed aAddress bAddress =
 
                      else
                         [ translate
-                            (rightLabelWidth - halfOriginalWidth)
+                            (leftLabelWidth - halfOriginalWidth)
                             corrH
                             |> transform
                         ]
