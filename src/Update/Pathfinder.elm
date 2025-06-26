@@ -37,6 +37,7 @@ import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
+import Model.Pathfinder.AggEdge as AggEdge
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
@@ -1474,6 +1475,70 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        UserMovesMouseOverAggEdge id ->
+            if model.hovered == HoveredAggEdge id then
+                n model
+
+            else
+                let
+                    domId =
+                        AggEdge.idToString id
+
+                    hovered _ =
+                        ( { model
+                            | network = Network.updateAggEdge id (s_hovered True) model.network
+                            , hovered = HoveredAggEdge id
+                          }
+                        , model.network.aggEdges
+                            |> Dict.get id
+                            |> Maybe.andThen
+                                (\edge ->
+                                    Maybe.map4
+                                        (\a b a2b b2a ->
+                                            if a.x < b.x then
+                                                { leftAddress = a.id
+                                                , left = a2b
+                                                , rightAddress = b.id
+                                                , right = b2a
+                                                }
+
+                                            else
+                                                { leftAddress = b.id
+                                                , left = b2a
+                                                , rightAddress = a.id
+                                                , right = a2b
+                                                }
+                                        )
+                                        edge.aAddress
+                                        edge.bAddress
+                                        (RemoteData.toMaybe edge.a2b)
+                                        (RemoteData.toMaybe edge.b2a)
+                                )
+                            |> Maybe.map Tooltip.AggEdge
+                            |> Maybe.map (OpenTooltipEffect { context = domId, domId = domId })
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                        )
+                in
+                case model.details of
+                    Just (RelationDetails rid _) ->
+                        if id /= rid then
+                            hovered ()
+
+                        else
+                            n model
+
+                    _ ->
+                        hovered ()
+
+        UserMovesMouseOutAggEdge id ->
+            ( unhover model
+            , CloseTooltipEffect
+                (Just { context = AggEdge.idToString id, domId = AggEdge.idToString id })
+                False
+                |> List.singleton
+            )
+
 
 checkAllTxs : Plugins -> Update.Config -> List Id -> Model -> ( Model, List Effect )
 checkAllTxs plugins uc txIds model =
@@ -2731,7 +2796,10 @@ unhover model =
                 HoveredTx a ->
                     Network.updateTx a (s_hovered False) model.network
 
-                _ ->
+                HoveredAggEdge a ->
+                    Network.updateAggEdge a (s_hovered False) model.network
+
+                NoHover ->
                     model.network
     in
     network

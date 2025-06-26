@@ -1,22 +1,25 @@
-module View.Pathfinder.AggEdge exposing (edge, view)
+module View.Pathfinder.AggEdge exposing (edge, highlight, view)
 
 import Config.View as View
 import Css
+import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.AggEdge as AggEdge
 import Maybe.Extra
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
-import Model.Pathfinder.AggEdge exposing (AggEdge)
+import Model.Pathfinder.AggEdge as AggEdge exposing (AggEdge)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_dividerLine, s_leftArrow, s_leftArrowGroup, s_leftValue, s_rectangleOfAggregatedLabel, s_rightArrow, s_rightArrowGroup, s_rightValue, s_root)
+import RecordSetter exposing (s_dividerLine, s_leftArrow, s_leftArrowGroup, s_leftValue, s_rectangleOfAggregatedLabel, s_rectangleOfHighlight, s_rightArrow, s_rightArrowGroup, s_rightEllipseOfHighlight, s_rightValue, s_root)
 import RemoteData
 import Svg.PathD exposing (Segment(..), pathD)
 import Svg.Styled exposing (Svg, g, path)
 import Svg.Styled.Attributes as Svg exposing (css, transform, width)
+import Svg.Styled.Events exposing (onMouseOver)
+import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.GraphComponentsAggregatedTracing as Theme
 import Util.Graph exposing (translate)
-import Util.View exposing (onClickWithStop)
+import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
 
@@ -147,9 +150,13 @@ view vc ed aAddress bAddress =
 
         corrH =
             -2.5
+
+        id =
+            AggEdge.initId ed.a ed.b
     in
     g
-        []
+        [ AggEdge.idToString id |> Svg.id
+        ]
         [ Theme.aggregatedLabelWithAttributes
             (Theme.aggregatedLabelAttributes
                 |> s_root
@@ -157,11 +164,15 @@ view vc ed aAddress bAddress =
                         (x - totalWidth / 2)
                         (y - (Theme.aggregatedLabel_details.height / 2))
                         |> transform
-                    , AggEdge.initId ed.a ed.b
-                        |> UserClickedAggEdge
-                        |> onClickWithStop
+                    , id
+                        |> UserMovesMouseOverAggEdge
+                        |> onMouseOver
+                    , pointer
                     ]
                 |> s_rectangleOfAggregatedLabel
+                    [ width <| String.fromFloat rectangleWidth
+                    ]
+                |> s_rectangleOfHighlight
                     [ width <| String.fromFloat rectangleWidth
                     ]
                 |> s_rightArrowGroup
@@ -170,9 +181,9 @@ view vc ed aAddress bAddress =
                         0
                         |> transform
                     ]
-                |> s_leftArrowGroup
+                |> s_rightEllipseOfHighlight
                     [ translate
-                        0
+                        (rectangleWidth - originalWidth)
                         0
                         |> transform
                     ]
@@ -241,8 +252,76 @@ view vc ed aAddress bAddress =
         ]
 
 
-edge : View.Config -> AggEdge -> Address -> Address -> Svg Msg
-edge vc ed aAddress bAddress =
+highlight : View.Config -> AggEdge -> Address -> Address -> Svg Msg
+highlight vc ed aAddress bAddress =
+    let
+        originalWidth =
+            Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
+
+        { leftLabelWidth, rightLabelWidth, x, y, totalWidth } =
+            calcDimensions vc ed aAddress bAddress
+
+        rectangleWidth =
+            leftLabelWidth + rightLabelWidth
+
+        id =
+            AggEdge.initId ed.a ed.b
+
+        none =
+            [ [ Css.display Css.none ]
+                |> css
+            ]
+    in
+    g
+        [ AggEdge.idToString id |> Svg.id
+        , id
+            |> UserClickedAggEdge
+            |> onClickWithStop
+        , id
+            |> UserMovesMouseOutAggEdge
+            |> onMouseLeave
+        , id
+            |> UserMovesMouseOverAggEdge
+            |> onMouseOver
+        , pointer
+        ]
+        [ Theme.aggregatedLabelWithAttributes
+            (Theme.aggregatedLabelAttributes
+                |> s_root
+                    [ translate
+                        (x - totalWidth / 2)
+                        (y - (Theme.aggregatedLabel_details.height / 2))
+                        |> transform
+                    ]
+                |> s_rectangleOfHighlight
+                    [ width <| String.fromFloat rectangleWidth
+                    ]
+                |> s_rightEllipseOfHighlight
+                    [ translate
+                        (rectangleWidth - originalWidth)
+                        0
+                        |> transform
+                    ]
+                |> s_leftArrowGroup none
+                |> s_rightArrowGroup none
+                |> s_dividerLine none
+                |> s_rightValue none
+                |> s_leftValue none
+                |> s_rectangleOfAggregatedLabel none
+            )
+            { root =
+                { leftValue = ""
+                , rightValue = ""
+                , showHighlight = True
+                }
+            }
+        , edge vc ed aAddress bAddress True
+        , view vc ed aAddress bAddress
+        ]
+
+
+edge : View.Config -> AggEdge -> Address -> Address -> Bool -> Svg Msg
+edge vc ed aAddress bAddress hl =
     let
         { left, right, totalWidth, x, y } =
             calcDimensions vc ed aAddress bAddress
@@ -305,32 +384,54 @@ edge vc ed aAddress bAddress =
         diffrCap =
             diffr
                 |> max (negate maxDiff)
-    in
-    path
-        [ Svg.d <|
+
+        pat =
             pathD
                 [ M ( ax, ay )
                 , C ( ax + (lx - ax) / 3 - diffl, y ) ( lx - difflCap, y ) ( lx, y )
                 , L ( rx, y )
                 , C ( rx - diffrCap, y ) ( rx + (bx - rx) / 3 * 2 - diffr, y ) ( bx, by )
                 ]
-        , css Theme.aggregatedLinkMainLine_details.styles
-        , css
-            [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
-            , Css.property "stroke" "black"
-            , Css.property "fill" "transparent" |> Css.important
-            ]
+
+        id =
+            AggEdge.initId ed.a ed.b
+    in
+    g
+        [ id
+            |> UserClickedAggEdge
+            |> onClickWithStop
+        , id
+            |> UserMovesMouseOutAggEdge
+            |> onMouseLeave
+        , id
+            |> UserMovesMouseOverAggEdge
+            |> onMouseOver
         ]
-        []
+        [ path
+            [ Svg.d pat
+            , css Theme.aggregatedLinkHighlightLine_details.styles
+            , css
+                [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkHighlightLine_details.strokeWidth
+                , Css.property "stroke" <|
+                    if hl then
+                        Colors.pathAggregatedHighlight
 
-
-
-{-
-   line
-   [ Svg.x1 <| String.fromFloat <| aPos.x * unit + offset
-   , Svg.y1 <| String.fromFloat <| aPos.y * unit
-   , Svg.x2 <| String.fromFloat <| bPos.x * unit - offset
-   , Svg.y2 <| String.fromFloat <| bPos.y * unit
-   ]
-   []
--}
+                    else
+                        "transparent"
+                , Css.property "fill" "transparent" |> Css.important
+                , Css.property "stroke-linecap" "square"
+                ]
+            ]
+            []
+        , path
+            [ Svg.d pat
+            , css Theme.aggregatedLinkMainLine_details.styles
+            , css
+                [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
+                , Css.property "stroke" Colors.pathAggregated
+                , Css.property "fill" "transparent" |> Css.important
+                , Css.property "stroke-linecap" "square"
+                ]
+            ]
+            []
+        ]

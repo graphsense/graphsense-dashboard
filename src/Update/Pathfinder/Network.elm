@@ -704,8 +704,8 @@ insertTxInAggEdges pc tx network =
                                     }
                                 )
                                 >> Maybe.withDefault
-                                    (AggEdge.init pc input.id output.id 
-                                        |> AggEdge.setAddress (Just input) 
+                                    (AggEdge.init pc input.id output.id
+                                        |> AggEdge.setAddress (Just input)
                                         |> AggEdge.setAddress (Just output)
                                         |> s_txs (Set.singleton tx.id)
                                     )

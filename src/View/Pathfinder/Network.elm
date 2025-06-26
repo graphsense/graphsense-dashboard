@@ -104,9 +104,25 @@ relations plugins vc gc annotations txs =
                                 edge.bAddress
                         )
                     |> Keyed.node "g" []
+                , agg
+                    |> List.filter (\a -> a.selected || a.hovered)
+                    |> List.filterMap
+                        (\edge ->
+                            Maybe.map2 (aggEdgeNodeHighlight plugins vc gc edge)
+                                edge.aAddress
+                                edge.bAddress
+                        )
+                    |> Keyed.node "g" []
                 ]
                     |> Svg.g []
            )
+
+
+aggEdgeNodeHighlight : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeNodeHighlight _ vc _ edge aAddress bAddress =
+    ( Id.toString edge.a ++ Id.toString edge.b |> (++) "eh"
+    , Svg.lazy4 AggEdge.highlight vc edge aAddress bAddress
+    )
 
 
 aggEdgeNode : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
@@ -119,7 +135,7 @@ aggEdgeNode _ vc _ edge aAddress bAddress =
 aggEdgeEdge : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
 aggEdgeEdge _ vc _ edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "ee"
-    , Svg.lazy4 AggEdge.edge vc edge aAddress bAddress
+    , Svg.lazy5 AggEdge.edge vc edge aAddress bAddress False
     )
 
 

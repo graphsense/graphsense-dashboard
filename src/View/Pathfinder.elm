@@ -709,8 +709,8 @@ graphSvg plugins vc gc model bbox =
             , gradient "account" { outgoing = True, reverse = True }
             , gradient "account" { outgoing = False, reverse = True }
             ]
-        , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
         , Svg.lazy6 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges
+        , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

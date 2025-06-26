@@ -8,12 +8,11 @@ import Dict
 import Html.Styled exposing (Html, div, text, toUnstyled)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
-import Model exposing (Msg)
+import Model exposing (Model, Msg)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder.Address as Addr
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
-import Plugin.Model
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import Set
@@ -23,13 +22,13 @@ import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
-import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 
 
-view : Plugins -> Plugin.Model.ModelState -> View.Config -> Tooltip Msg -> Html Msg
-view plugins pluginStates vc tt =
+view : Plugins -> Model key -> View.Config -> Tooltip Msg -> Html Msg
+view plugins model vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
@@ -38,6 +37,9 @@ view plugins pluginStates vc tt =
 
                 AccountTx t ->
                     ( genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }, [] )
+
+                AggEdge a ->
+                    ( aggEdge vc a, [] )
 
                 Address a ts ->
                     ( address vc ts a, [] )
@@ -55,7 +57,7 @@ view plugins pluginStates vc tt =
                     ( [ div [ [ Css.width (Css.px GraphComponents.tooltipDown_details.width) ] |> css ] [ text t ] ], [] )
 
                 Plugin s msgs ->
-                    ( Plugin.tooltip plugins s pluginStates vc |> Maybe.withDefault [], [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
+                    ( Plugin.tooltip plugins s model.plugins vc |> Maybe.withDefault [], [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
     in
     content
         |> div
@@ -114,7 +116,7 @@ val vc str =
 
 baseRowStyle : List Css.Style
 baseRowStyle =
-    [ Css.width (Css.pct 100), Css.fontSize (Css.px 14) ]
+    [ Css.width (Css.pct 100) ]
 
 
 tooltipRow : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRowText : String, secondRowVisible : Bool, secondRowText : String } } -> Html msg
@@ -417,5 +419,43 @@ genericTx vc tx =
             , secondRowText = time
             , secondRowVisible = True
             }
+        }
+    ]
+
+
+aggEdge : View.Config -> { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress } -> List (Html msg)
+aggEdge vc { leftAddress, left, rightAddress, right } =
+    [ GraphComponents.tooltipRowIcon2ValuesWithAttributes
+        (GraphComponents.tooltipRowIcon2ValuesAttributes
+            |> Rs.s_root [ css [ Css.width (Css.px 250) ] ]
+        )
+        { tooltipRowValue0 =
+            leftAddress
+                |> Id.id
+                |> truncateLongIdentifier
+                |> val vc
+        , tooltipRowValue1 =
+            rightAddress
+                |> Id.id
+                |> truncateLongIdentifier
+                |> val vc
+        }
+    , GraphComponents.tooltipRow2ValuesWithAttributes
+        (GraphComponents.tooltipRow2ValuesAttributes
+            |> Rs.s_root [ css baseRowStyle ]
+        )
+        { tooltipRowValue1 =
+            left
+                |> Maybe.map .noTxs
+                |> Maybe.withDefault 0
+                |> Locale.int vc.locale
+                |> val vc
+        , tooltipRowValue2 =
+            right
+                |> Maybe.map .noTxs
+                |> Maybe.withDefault 0
+                |> Locale.int vc.locale
+                |> val vc
+        , tooltipRowLabel = { title = Locale.string vc.locale "Transactions" }
         }
     ]

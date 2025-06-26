@@ -22,6 +22,7 @@ init pc a b =
     , b2a = NotAsked
     , txs = Set.empty
     , selected = False
+    , hovered = False
     , alwaysShow = pc.tracingMode == AggregateTracingMode
     }
 

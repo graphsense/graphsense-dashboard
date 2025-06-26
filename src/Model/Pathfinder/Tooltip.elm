@@ -24,6 +24,7 @@ type alias TooltipMessages msg =
 type TooltipType msg
     = UtxoTx Tx.UtxoTx
     | AccountTx Tx.AccountTx
+    | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress }
     | Address Address (Maybe TagSummary)
     | TagLabel String TagSummary (TooltipMessages msg)
     | TagConcept Id String TagSummary (TooltipMessages msg)
@@ -58,6 +59,9 @@ mapMsgTooltipType toMap f =
         UtxoTx a ->
             UtxoTx a
 
+        AggEdge a ->
+            AggEdge a
+
         Text a ->
             Text a
 
@@ -87,7 +91,7 @@ isSameTooltip t1 t2 =
             a1.id == a2.id
 
         ( Text tt1, Text tt2 ) ->
-            t1 == t2
+            tt1 == tt2
 
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId

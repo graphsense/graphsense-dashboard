@@ -82,6 +82,7 @@ type Selection
 
 type Hovered
     = HoveredTx Id
+    | HoveredAggEdge ( Id, Id )
     | HoveredAddress Id
     | NoHover
 

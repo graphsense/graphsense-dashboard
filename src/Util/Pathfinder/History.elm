@@ -293,6 +293,12 @@ shallPushHistory plugins msg _ =
         UserMovesMouseOutUtxoTx _ ->
             False
 
+        UserMovesMouseOverAggEdge _ ->
+            False
+
+        UserMovesMouseOutAggEdge _ ->
+            False
+
         UserMovesMouseOverAddress _ ->
             False
 

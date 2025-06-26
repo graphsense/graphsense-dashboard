@@ -104,6 +104,8 @@ type Msg
     | BrowserGotRelationsToVisibleNeighbors Id Direction (List Id) Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id
     | UserClickedAggEdge ( Id, Id )
+    | UserMovesMouseOverAggEdge ( Id, Id )
+    | UserMovesMouseOutAggEdge ( Id, Id )
 
 
 type alias TextTooltipConfig =
