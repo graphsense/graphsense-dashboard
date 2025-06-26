@@ -367,15 +367,14 @@ upsertAggEdge pc (( a, b ) as id) upd network =
         | aggEdges =
             Maybe.map upd
                 >> Maybe.withDefault
-                    (AggEdge.init pc
-                        a
-                        b
-                        (Dict.get a network.addresses)
-                        (Dict.get b network.addresses)
+                    (AggEdge.init pc a b
+                        |> AggEdge.setAddress (Dict.get a network.addresses)
+                        |> AggEdge.setAddress (Dict.get b network.addresses)
                         |> upd
                     )
                 >> Just
                 |> flip (Dict.update id) network.aggEdges
+        , addressAggEdgeMap = updateAddressAggEdgeMap id network.addressAggEdgeMap
     }
 
 
@@ -705,7 +704,9 @@ insertTxInAggEdges pc tx network =
                                     }
                                 )
                                 >> Maybe.withDefault
-                                    (AggEdge.init pc input.id output.id (Just input) (Just output)
+                                    (AggEdge.init pc input.id output.id 
+                                        |> AggEdge.setAddress (Just input) 
+                                        |> AggEdge.setAddress (Just output)
                                         |> s_txs (Set.singleton tx.id)
                                     )
                                 >> Just
@@ -1076,17 +1077,17 @@ upsertAggEdgeData pc id dir neighbor model =
 
         aggEdge =
             Dict.get aggEdgeId model.aggEdges
-                |> Maybe.withDefault
-                    (AggEdge.init pc
-                        id
-                        nid
-                        (Dict.get id model.addresses)
-                        (Dict.get nid model.addresses)
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        AggEdge.init pc id nid
+                            |> AggEdge.setAddress (Dict.get id model.addresses)
+                            |> AggEdge.setAddress (Dict.get nid model.addresses)
                     )
                 |> AggEdge.setRelationData id dir (Success (Just neighbor))
     in
     { model
-        | aggEdges = Dict.insert aggEdgeId aggEdge model.aggEdges
+        | aggEdges =
+            Dict.insert aggEdgeId aggEdge model.aggEdges
         , addressAggEdgeMap = updateAddressAggEdgeMap aggEdgeId model.addressAggEdgeMap
     }
 

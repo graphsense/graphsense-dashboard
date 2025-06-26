@@ -289,7 +289,7 @@ updateByMsg plugins uc msg model =
                         |> List.foldl
                             (\nid ->
                                 upd nid
-                                    |> Network.upsertAggEdge model.config (AggEdge.initId id nid)
+                                    |> Network.updateAggEdge (AggEdge.initId id nid)
                             )
                             newModel.network
                         |> flip s_network newModel
@@ -1618,7 +1618,7 @@ fetchEgonet uc plugins dateFilterPreset id data model =
                 incOnlyIds
                     |> List.foldl
                         (\nid ->
-                            Network.upsertAggEdge model.config
+                            Network.updateAggEdge
                                 (AggEdge.initId id nid)
                                 (AggEdge.setLoading Incoming id)
                         )
@@ -1628,7 +1628,7 @@ fetchEgonet uc plugins dateFilterPreset id data model =
                 outOnlyIds
                     |> List.foldl
                         (\nid ->
-                            Network.upsertAggEdge model.config
+                            Network.updateAggEdge
                                 (AggEdge.initId id nid)
                                 (AggEdge.setLoading Outgoing id)
                         )
