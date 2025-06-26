@@ -294,7 +294,19 @@ updateByMsg plugins uc msg model =
                             newModel.network
                         |> flip s_network newModel
             in
-            if CheckingNeighbors.isEmpty id newModel2.checkingNeighbors then
+            if newModel2.config.tracingMode == AggregateTracingMode then
+                CheckingNeighbors.getData id newModel2.checkingNeighbors
+                    |> Maybe.map2
+                        (\nid data ->
+                            newModel2.checkingNeighbors
+                                |> CheckingNeighbors.removeAll id
+                                |> flip s_checkingNeighbors newModel2
+                                |> browserGotAddressData uc plugins DateFilter.emptyDateFilterRaw id (NextTo ( Direction.flip dir, nid )) data
+                        )
+                        (List.head neighborIds)
+                    |> Maybe.withDefault (n newModel2)
+
+            else if CheckingNeighbors.isEmpty id newModel2.checkingNeighbors then
                 CheckingNeighbors.getData id newModel2.checkingNeighbors
                     |> Maybe.map
                         (\data ->

@@ -1,4 +1,4 @@
-module Model.Pathfinder.CheckingNeighbors exposing (Model, getData, init, initAddress, insert, isEmpty, member, remove)
+module Model.Pathfinder.CheckingNeighbors exposing (Model, getData, init, initAddress, insert, isEmpty, member, remove, removeAll)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -110,3 +110,11 @@ isEmpty addressId (CheckingNeighbors model) =
 getData : Id -> Model -> Maybe Api.Data.Address
 getData id (CheckingNeighbors model) =
     Dict.get id model |> Maybe.map .data
+
+
+removeAll : Id -> Model -> Model
+removeAll id (CheckingNeighbors model) =
+    Dict.get id model
+        |> Maybe.map
+            (.neighbors >> Set.foldl (remove id) (CheckingNeighbors model))
+        |> Maybe.withDefault (CheckingNeighbors model)
