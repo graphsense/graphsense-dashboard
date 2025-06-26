@@ -19,6 +19,7 @@ module Update.Pathfinder.Network exposing
     , updateAddressesByClusterId
     , updateAggEdge
     , updateTx
+    , upsertAggEdge
     , upsertAggEdgeData
     )
 
@@ -360,6 +361,24 @@ updateAggEdge id upd network =
     }
 
 
+upsertAggEdge : Pathfinder.Config -> ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
+upsertAggEdge pc (( a, b ) as id) upd network =
+    { network
+        | aggEdges =
+            Maybe.map upd
+                >> Maybe.withDefault
+                    (AggEdge.init pc
+                        a
+                        b
+                        (Dict.get a network.addresses)
+                        (Dict.get b network.addresses)
+                        |> upd
+                    )
+                >> Just
+                |> flip (Dict.update id) network.aggEdges
+    }
+
+
 opacityAnimation : Animation
 opacityAnimation =
     A.animation 0
@@ -686,9 +705,7 @@ insertTxInAggEdges pc tx network =
                                     }
                                 )
                                 >> Maybe.withDefault
-                                    (AggEdge.init pc input.id output.id
-                                        |> AggEdge.setAddress (Just input)
-                                        |> AggEdge.setAddress (Just output)
+                                    (AggEdge.init pc input.id output.id (Just input) (Just output)
                                         |> s_txs (Set.singleton tx.id)
                                     )
                                 >> Just
@@ -1060,9 +1077,11 @@ upsertAggEdgeData pc id dir neighbor model =
         aggEdge =
             Dict.get aggEdgeId model.aggEdges
                 |> Maybe.withDefault
-                    (AggEdge.init pc id nid
-                        |> AggEdge.setAddress (Dict.get id model.addresses)
-                        |> AggEdge.setAddress (Dict.get nid model.addresses)
+                    (AggEdge.init pc
+                        id
+                        nid
+                        (Dict.get id model.addresses)
+                        (Dict.get nid model.addresses)
                     )
                 |> AggEdge.setRelationData id dir (Success (Just neighbor))
     in

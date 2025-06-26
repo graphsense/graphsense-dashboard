@@ -288,7 +288,8 @@ updateByMsg plugins uc msg model =
                         |> List.filter (flip Set.member nset >> not)
                         |> List.foldl
                             (\nid ->
-                                Network.updateAggEdge (AggEdge.initId id nid) (upd nid)
+                                upd nid
+                                    |> Network.upsertAggEdge model.config (AggEdge.initId id nid)
                             )
                             newModel.network
                         |> flip s_network newModel
@@ -311,7 +312,7 @@ updateByMsg plugins uc msg model =
                                         |> Maybe.map .txs
                                         |> Maybe.withDefault Set.empty
                             in
-                            if Set.isEmpty txs then
+                            if model.config.tracingMode == TransactionTracingMode && Set.isEmpty txs then
                                 getNextTxEffects newModel2.network
                                     addressId
                                     (Direction.flip dir)
@@ -1605,7 +1606,8 @@ fetchEgonet uc plugins dateFilterPreset id data model =
                 incOnlyIds
                     |> List.foldl
                         (\nid ->
-                            Network.updateAggEdge (AggEdge.initId id nid)
+                            Network.upsertAggEdge model.config
+                                (AggEdge.initId id nid)
                                 (AggEdge.setLoading Incoming id)
                         )
                         model.network
@@ -1614,7 +1616,8 @@ fetchEgonet uc plugins dateFilterPreset id data model =
                 outOnlyIds
                     |> List.foldl
                         (\nid ->
-                            Network.updateAggEdge (AggEdge.initId id nid)
+                            Network.upsertAggEdge model.config
+                                (AggEdge.initId id nid)
                                 (AggEdge.setLoading Outgoing id)
                         )
                         nw
@@ -2348,6 +2351,7 @@ updateByRoute_ plugins uc route model =
                 |> loadAddress plugins DateFilter.emptyDateFilterRaw aId
                 |> and (loadAddress plugins DateFilter.emptyDateFilterRaw bId)
                 |> and (selectAggEdge (AggEdge.initId aId bId))
+                |> and (setTracingMode AggregateTracingMode)
 
         Route.Path net list ->
             addPathToGraph plugins uc model net list
