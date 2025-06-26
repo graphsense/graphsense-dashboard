@@ -405,7 +405,7 @@ updateByMsg plugins uc msg model =
         RelationDetailsMsg id submsg ->
             (case submsg of
                 RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkLinkUtxo tx) ->
-                    loadTx False plugins (Id.init tx.currency tx.txHash) model
+                    addOrRemoveTx plugins Nothing (Id.init tx.currency tx.txHash) model
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkTxAccount tx) ->
@@ -496,33 +496,7 @@ updateByMsg plugins uc msg model =
                             n model
 
                 AddressDetails.UserClickedTxCheckboxInTable tx ->
-                    let
-                        addOrRemoveTx txId =
-                            Dict.get txId model.network.txs
-                                |> Maybe.map
-                                    (\t ->
-                                        let
-                                            delNw =
-                                                Network.deleteTx txId model.network
-                                        in
-                                        Tx.listAddressesForTx t
-                                            |> List.map second
-                                            |> List.filterMap
-                                                (\a ->
-                                                    if a.id == addressId then
-                                                        Nothing
-
-                                                    else
-                                                        Dict.get a.id delNw.addresses
-                                                )
-                                            |> Network.deleteDanglingAddresses delNw
-                                            |> flip s_network model
-                                            |> n
-                                    )
-                                |> Maybe.Extra.withDefaultLazy
-                                    (\_ -> loadTx True plugins txId model)
-                    in
-                    addOrRemoveTx (Tx.getTxIdForAddressTx tx)
+                    addOrRemoveTx plugins (Just addressId) (Tx.getTxIdForAddressTx tx) model
 
                 AddressDetails.UserClickedTx id ->
                     userClickedTx id model
@@ -3439,3 +3413,34 @@ upsertTagSummary id newTagSummary dict =
 
     else
         Dict.insert id newTagSummary dict
+
+
+addOrRemoveTx : Plugins -> Maybe Id -> Id -> Model -> ( Model, List Effect )
+addOrRemoveTx plugins addressId txId model =
+    Dict.get txId model.network.txs
+        |> Maybe.map
+            (\t ->
+                let
+                    delNw =
+                        Network.deleteTx txId model.network
+                in
+                if addressId == Nothing then
+                    n { model | network = delNw }
+
+                else
+                    Tx.listAddressesForTx t
+                        |> List.map second
+                        |> List.filterMap
+                            (\a ->
+                                if Just a.id == addressId then
+                                    Nothing
+
+                                else
+                                    Dict.get a.id delNw.addresses
+                            )
+                        |> Network.deleteDanglingAddresses delNw
+                        |> flip s_network model
+                        |> n
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ -> loadTx (addressId /= Nothing) plugins txId model)

@@ -23,6 +23,7 @@ import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple exposing (first, second)
+import Util exposing (allAndNotEmpty)
 import Util.Css exposing (spread)
 import Util.View exposing (loadingSpinner, none, truncateLongIdentifier)
 import View.Locale as Locale
@@ -205,7 +206,7 @@ tableTab vc network edgeId viewState isA2b =
                         table.table
                             |> PagedTable.getPage
                             |> List.map Tx.getTxIdForRelationTx
-                            |> List.all isChecked
+                            |> allAndNotEmpty isChecked
 
                     isChecked =
                         flip Network.hasTx network

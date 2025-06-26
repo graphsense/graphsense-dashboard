@@ -61,6 +61,7 @@ import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
+import Util exposing (allAndNotEmpty)
 
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
@@ -435,7 +436,7 @@ transactionTableView vc addressId txOnGraphFn model =
             model.table
                 |> PagedTable.getPage
                 |> List.map Tx.getTxIdForAddressTx
-                |> List.all txOnGraphFn
+                |> allAndNotEmpty txOnGraphFn
 
         table =
             PagedTable.pagedTableView vc

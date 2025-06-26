@@ -1,4 +1,4 @@
-module Util exposing (and, n)
+module Util exposing (allAndNotEmpty, and, n)
 
 
 n : m -> ( m, List eff )
@@ -15,3 +15,12 @@ and update ( m, eff ) =
     ( m2
     , eff ++ eff2
     )
+
+
+allAndNotEmpty : (a -> Bool) -> List a -> Bool
+allAndNotEmpty pred list =
+    if List.isEmpty list then
+        False
+
+    else
+        List.all pred list
