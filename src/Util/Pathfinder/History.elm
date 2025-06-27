@@ -221,6 +221,9 @@ shallPushHistory plugins msg _ =
                 RelationDetails.BrowserGotLinks _ _ ->
                     False
 
+                RelationDetails.BrowserGotLinksNextPage _ _ ->
+                    False
+
                 RelationDetails.UserClickedTx _ ->
                     False
 

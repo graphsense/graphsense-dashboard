@@ -31,8 +31,15 @@ loadRelationTxs id isA2b nrItems nextpage =
 
             else
                 ( Id.id b, Id.id a )
+
+        msg =
+            if nextpage == Nothing then
+                BrowserGotLinks
+
+            else
+                BrowserGotLinksNextPage
     in
-    BrowserGotLinks isA2b
+    msg isA2b
         >> RelationDetailsMsg id
         |> Api.GetAddresslinkTxsEffect
             { currency = Id.network a
@@ -111,6 +118,22 @@ update id msg model =
                 |> mapSecond Maybe.Extra.toList
 
         BrowserGotLinks isA2b data ->
+            let
+                gs =
+                    gettersAndSetters isA2b
+            in
+            gs.getTable model
+                |> .table
+                |> PagedTable.setData
+                    (tableConfig id isA2b)
+                    RelationTxsTable.filter
+                    data.nextPage
+                    data.links
+                |> mapFirst (flip s_table (gs.getTable model))
+                |> mapFirst (flip gs.setTable model)
+                |> mapSecond Maybe.Extra.toList
+
+        BrowserGotLinksNextPage isA2b data ->
             let
                 gs =
                     gettersAndSetters isA2b

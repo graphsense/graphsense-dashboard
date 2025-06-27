@@ -13,3 +13,4 @@ type Msg
     | UserClickedTxCheckboxInTable Api.Data.Link
     | UserClickedTx Id
     | NoOp
+    | BrowserGotLinksNextPage Bool Api.Data.Links
