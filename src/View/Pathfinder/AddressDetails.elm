@@ -45,6 +45,7 @@ import Theme.Colors
 import Theme.Html.Icons as HIcons
 import Theme.Html.SelectionControls as SC
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util exposing (allAndNotEmpty)
 import Util.Css exposing (spread)
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
@@ -61,7 +62,6 @@ import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
-import Util exposing (allAndNotEmpty)
 
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg

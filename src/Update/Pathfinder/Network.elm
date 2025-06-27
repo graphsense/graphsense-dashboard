@@ -926,31 +926,24 @@ deleteAddress id network =
                                         Tx.unsetAccountAddress direction
                                             |> Tx.updateAccount
                                 )
-                                >> (\nw ->
-                                        Dict.get id nw.addressAggEdgeMap
-                                            |> Maybe.map
-                                                (Set.foldl
-                                                    (\aggEdgeId nw_ ->
-                                                        Dict.get aggEdgeId nw_.aggEdges
-                                                            |> Maybe.map
-                                                                (\edge ->
-                                                                    edge.txs
-                                                                        |> Set.foldl deleteTx
-                                                                            { nw_
-                                                                                | aggEdges = Dict.remove aggEdgeId nw_.aggEdges
-                                                                                , addressAggEdgeMap = Dict.remove id nw_.addressAggEdgeMap
-                                                                            }
-                                                                )
-                                                            |> Maybe.withDefault nw_
-                                                    )
-                                                    nw
-                                                )
-                                            |> Maybe.withDefault nw
-                                   )
                         )
                         { network
                             | addresses = Dict.remove id network.addresses
                         }
+                    |> (\nw ->
+                            Dict.get id nw.addressAggEdgeMap
+                                |> Maybe.map
+                                    (Set.foldl
+                                        (\aggEdgeId nw_ ->
+                                            { nw_
+                                                | aggEdges = Dict.remove aggEdgeId nw_.aggEdges
+                                                , addressAggEdgeMap = Dict.remove id nw_.addressAggEdgeMap
+                                            }
+                                        )
+                                        nw
+                                    )
+                                |> Maybe.withDefault nw
+                       )
             )
         |> Maybe.withDefault network
 
