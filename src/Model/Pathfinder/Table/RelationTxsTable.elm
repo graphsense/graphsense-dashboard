@@ -3,8 +3,9 @@ module Model.Pathfinder.Table.RelationTxsTable exposing (Model, filter, titleHas
 import Api.Data
 import Api.Request.Addresses
 import Model.DateRangePicker as DateRangePicker
+import Model.Direction exposing (Direction)
 import Model.Graph.Table as Table
-import Msg.Pathfinder.AddressDetails exposing (Msg)
+import Msg.Pathfinder.RelationDetails exposing (Msg)
 import PagedTable
 import Util.ThemedSelectBox as ThemedSelectBox
 
@@ -15,6 +16,7 @@ type alias Model =
     , dateRangePicker : Maybe (DateRangePicker.Model Msg)
     , txMinBlock : Maybe Int
     , txMaxBlock : Maybe Int
+    , direction : Maybe Direction
     , isTxFilterViewOpen : Bool
     , assetSelectBox : ThemedSelectBox.Model (Maybe String)
     , selectedAsset : Maybe String

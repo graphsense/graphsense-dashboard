@@ -43,6 +43,9 @@ sed -i 's/AddressTaginheritedFrom/AddressTagInheritedFrom/' "${dir}/../openapi/s
 sed -i 's/addressTaginheritedFromVariants/addressTagInheritedFromVariants/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/labelSummaryinheritedFromVariants/labelSummaryInheritedFromVariants/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/taginheritedFromVariants/tagInheritedFromVariants/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/ExternalConversionsconversionType/ExternalConversionsConversionType/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/externalConversionsconversionTypeVariants/externalConversionsConversionTypeVariants/' "${dir}/../openapi/src/Api/Data.elm"
+
 
 
 # remove duplicate Direction and order types

@@ -3,6 +3,7 @@ module Model.Pathfinder.Address exposing
     , Txs(..)
     , expandAllowed
     , getActivityRange
+    , getActivityRangeAddress
     , getBalance
     , getCoords
     , getExposedAssets
@@ -141,6 +142,11 @@ getTotalSpent a =
 isSmartContract : Address -> Bool
 isSmartContract a =
     RemoteData.unwrap Nothing .isContract a.data |> Maybe.withDefault False
+
+
+getActivityRangeAddress : Address -> Maybe ( Posix, Posix )
+getActivityRangeAddress a =
+    RemoteData.unwrap Nothing (getActivityRange >> Just) a.data
 
 
 getActivityRange : Api.Data.Address -> ( Posix, Posix )

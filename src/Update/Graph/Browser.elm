@@ -2366,6 +2366,7 @@ getAddresslinkTxsEffect id nextpage =
         , order = Nothing
         , minHeight = Nothing
         , maxHeight = Nothing
+        , tokenCurrency = Nothing
         }
         (BrowserGotAddresslinkTxs id)
         |> ApiEffect

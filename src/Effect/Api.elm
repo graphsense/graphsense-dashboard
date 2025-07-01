@@ -200,6 +200,7 @@ type Effect msg
         , target : String
         , minHeight : Maybe Int
         , maxHeight : Maybe Int
+        , tokenCurrency : Maybe String
         , order : Maybe Api.Request.Addresses.Order_
         , nextpage : Maybe String
         , pagesize : Int
@@ -632,8 +633,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Txs.getSpentInTxs currency txHash index
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight Nothing Nothing order Nothing nextpage (Just pagesize)
+        GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, tokenCurrency, order, pagesize, nextpage } toMsg ->
+            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight Nothing Nothing order tokenCurrency nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->

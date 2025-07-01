@@ -2,6 +2,7 @@ module View.Pathfinder.RelationDetails exposing (view)
 
 import Basics.Extra exposing (flip)
 import Config.View as View
+import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
@@ -14,7 +15,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tx as Tx
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder as Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import PagedTable
 import RecordSetter as Rs
@@ -30,6 +31,7 @@ import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab)
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.RelationTxsTable as RelationTxsTable
+import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 view : View.Config -> Pathfinder.Model -> ( Id, Id ) -> RelationDetails.Model -> Html Msg
@@ -47,88 +49,123 @@ view vc model id viewState =
                 |> Id.network
                 |> assetFromBase
 
+        network =
+            id |> first |> Id.network
+
         cryptoValue v =
             v.value.value
                 |> Locale.coin vc.locale asset
     in
-    SidePanelComponents.sidePanelRelationshipWithInstances
-        (SidePanelComponents.sidePanelRelationshipAttributes
-            |> Rs.s_root
-                [ sidePanelCss
-                    |> css
+    div []
+        (SidePanelComponents.sidePanelRelationshipWithInstances
+            (SidePanelComponents.sidePanelRelationshipAttributes
+                |> Rs.s_root
+                    [ sidePanelCss
+                        |> css
+                    ]
+                |> Rs.s_iconsCloseBlack closeAttrs
+            )
+            (SidePanelComponents.sidePanelRelationshipInstances
+                |> Rs.s_leftValue
+                    (if RemoteData.isLoading viewState.aggEdge.b2a then
+                        loadingSpinner vc Css.View.loadingSpinner
+                            |> Just
+
+                     else
+                        Nothing
+                    )
+                |> Rs.s_rightValue
+                    (if RemoteData.isLoading viewState.aggEdge.a2b then
+                        loadingSpinner vc Css.View.loadingSpinner
+                            |> Just
+
+                     else
+                        Nothing
+                    )
+            )
+            { tabsList =
+                [ tableTab vc model.network id viewState True
+                , tableTab vc model.network id viewState False
                 ]
-            |> Rs.s_iconsCloseBlack closeAttrs
-        )
-        (SidePanelComponents.sidePanelRelationshipInstances
-            |> Rs.s_leftValue
-                (if RemoteData.isLoading viewState.aggEdge.b2a then
-                    loadingSpinner vc Css.View.loadingSpinner
-                        |> Just
+                    |> List.map (Html.Styled.map (RelationDetailsMsg id))
+            }
+            { leftTab = { variant = none }
+            , rightTab = { variant = none }
+            , title = { infoLabel = Locale.string vc.locale "Total received" }
+            , root =
+                { tabsVisible = False
+                , address1 =
+                    viewState.aggEdge.a
+                        |> Id.id
+                        |> truncateLongIdentifier
+                , address2 =
+                    viewState.aggEdge.b
+                        |> Id.id
+                        |> truncateLongIdentifier
+                , title = Locale.string vc.locale "Transfers between"
+                }
+            , leftValue =
+                { firstRowText =
+                    viewState.aggEdge.b2a
+                        |> RemoteData.toMaybe
+                        |> Maybe.Extra.join
+                        |> Maybe.map cryptoValue
+                        |> Maybe.withDefault "0"
+                , secondRowText =
+                    viewState.aggEdge.b2a
+                        |> RemoteData.toMaybe
+                        |> Maybe.Extra.join
+                        |> Maybe.map fiatValue
+                        |> Maybe.withDefault "0"
+                , secondRowVisible = True
+                }
+            , rightValue =
+                { firstRowText =
+                    viewState.aggEdge.a2b
+                        |> RemoteData.toMaybe
+                        |> Maybe.Extra.join
+                        |> Maybe.map cryptoValue
+                        |> Maybe.withDefault "0"
+                , secondRowText =
+                    viewState.aggEdge.a2b
+                        |> RemoteData.toMaybe
+                        |> Maybe.Extra.join
+                        |> Maybe.map fiatValue
+                        |> Maybe.withDefault "0"
+                , secondRowVisible = True
+                }
+            }
+            :: ([ ( True, viewState.a2bTable ), ( False, viewState.b2aTable ) ]
+                    |> List.map
+                        (\( isA2b, ts ) ->
+                            if ts.isTxFilterViewOpen then
+                                let
+                                    filterDialogMsgs =
+                                        { closeTxFilterViewMsg = RelationDetails.CloseTxFilterView isA2b
+                                        , txTableFilterShowAllTxsMsg = Nothing
+                                        , txTableFilterShowIncomingTxOnlyMsg = Nothing
+                                        , txTableFilterShowOutgoingTxOnlyMsg = Nothing
+                                        , resetAllTxFiltersMsg = RelationDetails.ResetAllTxFilters isA2b
+                                        , txTableAssetSelectBoxMsg = RelationDetails.TxTableAssetSelectBoxMsg isA2b
+                                        , openDateRangePickerMsg = RelationDetails.OpenDateRangePicker isA2b
+                                        }
+                                in
+                                div
+                                    [ [ Css.position Css.fixed
+                                      , Css.right (Css.px 42)
+                                      , Css.top (Css.px 350)
+                                      , Css.property "transform" "translate(0%, -50%)"
+                                      , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
+                                      ]
+                                        |> css
+                                    ]
+                                    [ TransactionFilter.txFilterDialogView vc network filterDialogMsgs ts |> Html.Styled.map (Pathfinder.RelationDetailsMsg id) ]
 
-                 else
-                    Nothing
-                )
-            |> Rs.s_rightValue
-                (if RemoteData.isLoading viewState.aggEdge.a2b then
-                    loadingSpinner vc Css.View.loadingSpinner
-                        |> Just
-
-                 else
-                    Nothing
-                )
+                            else
+                                none
+                        )
+               )
         )
-        { tabsList =
-            [ tableTab vc model.network id viewState True
-            , tableTab vc model.network id viewState False
-            ]
-                |> List.map (Html.Styled.map (RelationDetailsMsg id))
-        }
-        { leftTab = { variant = none }
-        , rightTab = { variant = none }
-        , title = { infoLabel = Locale.string vc.locale "Total received" }
-        , root =
-            { tabsVisible = False
-            , address1 =
-                viewState.aggEdge.a
-                    |> Id.id
-                    |> truncateLongIdentifier
-            , address2 =
-                viewState.aggEdge.b
-                    |> Id.id
-                    |> truncateLongIdentifier
-            , title = Locale.string vc.locale "Transfers between"
-            }
-        , leftValue =
-            { firstRowText =
-                viewState.aggEdge.b2a
-                    |> RemoteData.toMaybe
-                    |> Maybe.Extra.join
-                    |> Maybe.map cryptoValue
-                    |> Maybe.withDefault "0"
-            , secondRowText =
-                viewState.aggEdge.b2a
-                    |> RemoteData.toMaybe
-                    |> Maybe.Extra.join
-                    |> Maybe.map fiatValue
-                    |> Maybe.withDefault "0"
-            , secondRowVisible = True
-            }
-        , rightValue =
-            { firstRowText =
-                viewState.aggEdge.a2b
-                    |> RemoteData.toMaybe
-                    |> Maybe.Extra.join
-                    |> Maybe.map cryptoValue
-                    |> Maybe.withDefault "0"
-            , secondRowText =
-                viewState.aggEdge.a2b
-                    |> RemoteData.toMaybe
-                    |> Maybe.Extra.join
-                    |> Maybe.map fiatValue
-                    |> Maybe.withDefault "0"
-            , secondRowVisible = True
-            }
-        }
 
 
 tableTab : View.Config -> Network -> ( Id, Id ) -> RelationDetails.Model -> Bool -> Html RelationDetails.Msg
@@ -217,17 +254,27 @@ tableTab vc network edgeId viewState isA2b =
                         , addressId = id
                         , isA2b = isA2b
                         }
+
+                    tableView =
+                        PagedTable.pagedTableView vc
+                            [ css fullWidth ]
+                            (RelationTxsTable.config Css.Table.styles vc conf)
+                            table.table
+                            (RelationDetails.TableMsg isA2b)
                 in
                 div
                     [ css <|
                         SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                             ++ fullWidth
                     ]
-                    [ PagedTable.pagedTableView vc
-                        [ css fullWidth ]
-                        (RelationTxsTable.config Css.Table.styles vc conf)
-                        table.table
-                        (RelationDetails.TableMsg isA2b)
+                    [ TransactionFilter.filterHeader vc
+                        table
+                        { resetDateFilterMsg = RelationDetails.ResetDateRangePicker isA2b
+                        , resetAssetsFilterMsg = RelationDetails.ResetTxAssetFilter isA2b
+                        , resetDirectionFilterMsg = Nothing
+                        , toggleFilterView = RelationDetails.ToggleTxFilterView isA2b
+                        }
+                    , tableView
                     ]
                     |> Just
         , onClick = RelationDetails.UserClickedToggleTable isA2b

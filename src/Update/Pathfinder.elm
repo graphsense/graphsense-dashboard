@@ -35,7 +35,7 @@ import Model.Graph.Transform as Transform
 import Model.Locale as Locale
 import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.Address as Addr exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
+import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.AggEdge as AggEdge
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
@@ -74,6 +74,7 @@ import Route as GlobalRoute
 import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType(..), Route)
 import Set exposing (..)
 import Task
+import Time
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
 import Tuple3
@@ -403,6 +404,28 @@ updateByMsg plugins uc msg model =
                     n model
 
         RelationDetailsMsg id submsg ->
+            let
+                addrA =
+                    Dict.get (Tuple.first id) model.network.addresses
+
+                addrB =
+                    Dict.get (Tuple.second id) model.network.addresses
+
+                ar1 =
+                    addrA
+                        |> Maybe.andThen Address.getActivityRangeAddress
+                        |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
+                        |> Maybe.withDefault ( 0, 0 )
+
+                ar2 =
+                    addrB
+                        |> Maybe.andThen Address.getActivityRangeAddress
+                        |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
+                        |> Maybe.withDefault ( 0, 0 )
+
+                ar =
+                    ( Time.millisToPosix (min (Tuple.first ar1) (Tuple.first ar2)), Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2)) )
+            in
             (case submsg of
                 RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkLinkUtxo tx) ->
                     addOrRemoveTx plugins Nothing (Id.init tx.currency tx.txHash) model
@@ -443,7 +466,7 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
             )
-                |> and (updateRelationDetails id submsg)
+                |> and (updateRelationDetails uc id ar submsg)
 
         AddressDetailsMsg addressId subm ->
             case subm of
@@ -601,7 +624,7 @@ updateByMsg plugins uc msg model =
                                     tx |> Tx.getCoords |> Maybe.map isinRect |> Maybe.withDefault False
 
                                 isinRectAddr adr =
-                                    adr |> Addr.getCoords |> isinRect
+                                    adr |> Address.getCoords |> isinRect
 
                                 selectedTxs =
                                     List.filter isinRectTx (Dict.values model.network.txs) |> List.map (.id >> MSelectedTx)
@@ -1570,14 +1593,14 @@ setTracingMode tm model =
         |> n
 
 
-updateRelationDetails : ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
-updateRelationDetails id msg model =
+updateRelationDetails : Update.Config -> ( Id, Id ) -> ( Time.Posix, Time.Posix ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
+updateRelationDetails uc id activityRange msg model =
     getRelationDetails model id
         |> Maybe.map
             (\rdModel ->
                 let
                     ( nVs, eff ) =
-                        RelationDetails.update id msg rdModel
+                        RelationDetails.update uc id activityRange msg rdModel
                 in
                 ( { model | details = Just (RelationDetails id nVs) }, eff )
             )
@@ -2631,14 +2654,14 @@ selectAggEdge id model =
                 |> n
 
 
-getExposedAssetsForAddress : Update.Config -> Id -> Addr.Address -> List String
+getExposedAssetsForAddress : Update.Config -> Id -> Address -> List String
 getExposedAssetsForAddress uc id address =
     let
         allAssets =
             (Id.network id |> String.toUpper) :: Locale.getTokenTickers uc.locale (Id.network id)
     in
     address
-        |> Addr.getExposedAssets
+        |> Address.getExposedAssets
         |> Maybe.withDefault allAssets
 
 

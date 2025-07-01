@@ -230,6 +230,33 @@ shallPushHistory plugins msg _ =
                 RelationDetails.NoOp ->
                     False
 
+                RelationDetails.ToggleTxFilterView _ ->
+                    False
+
+                RelationDetails.CloseTxFilterView _ ->
+                    False
+
+                RelationDetails.OpenDateRangePicker _ ->
+                    False
+
+                RelationDetails.CloseDateRangePicker _ ->
+                    False
+
+                RelationDetails.ResetDateRangePicker _ ->
+                    False
+
+                RelationDetails.ResetAllTxFilters _ ->
+                    False
+
+                RelationDetails.ResetTxAssetFilter _ ->
+                    False
+
+                RelationDetails.TxTableAssetSelectBoxMsg _ _ ->
+                    False
+
+                RelationDetails.UpdateDateRangePicker _ _ ->
+                    False
+
         AnimationFrameDeltaForTransform _ ->
             False
 
