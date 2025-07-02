@@ -430,8 +430,8 @@ Remove from Graph: Vom Graphen entfernen
 victim: Opfer
 perpetrator: Täter
 "Auto trace limit": "Beschränkung der Auto-Nachverfolgung"
-"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Wahrscheinlich würden der Betrag noch nicht weiter verwendet."
-is an exchange: ist eine Handelbörse
+"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Wahrscheinlich wurde der Betrag noch nicht weiter verwendet."
+is an exchange: ist eine Handelsbörse
 has tags: hat Tags
 "Tag label": "Beschriftung"
 copy: kopieren
@@ -495,13 +495,13 @@ Asset flows: Zahlungsflüsse
 "Done": "Anwenden"
 "Asset Type": "Asset Typ"
 "e.g. Binance": "z.B. Binance"
-"Start typing to search existing labels.": "Beginnen Sie mit der Eingabe, um nach vorhandenen Akreuren zu suchen."
-"Actor Label *": "Akreur *"
+"Start typing to search existing labels.": "Beginnen Sie mit der Eingabe, um nach vorhandenen Akteuren zu suchen."
+"Actor Label *": "Akteur *"
 "Add context, notes, or links to supporting evidence.": "Fügen Sie Kontext, Notizen oder Links zu unterstützenden Beweisen hinzu."
 "Additional Information (optional)": "Zusätzliche Informationen (optional)"
 "e.g. Linked to scam report on xyz.com": "z.B. Verknüpft mit einem Betrugsbericht auf xyz.com"
 "Add Tag": "Tag hinzufügen"
-"Add Tag to Address": "Tag zu Addresse hinzufügen"
+"Add Tag to Address": "Tag zu Adresse hinzufügen"
 "Create new actor": "Neuen Akteur erstellen"
 "Added Tag": "Tag hinzugefügt"
 Tag Import: Tag-Import
