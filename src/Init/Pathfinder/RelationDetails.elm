@@ -6,11 +6,11 @@ import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.RelationDetails as RelationDetails
 
 
-init : AggEdge -> RelationDetails.Model
-init edge =
+init : AggEdge -> List String -> RelationDetails.Model
+init edge assets =
     { a2bTableOpen = False
     , b2aTableOpen = False
-    , a2bTable = RelationTxsTable.init Incoming []
-    , b2aTable = RelationTxsTable.init Outgoing []
+    , a2bTable = RelationTxsTable.init Incoming assets
+    , b2aTable = RelationTxsTable.init Outgoing assets
     , aggEdge = edge
     }

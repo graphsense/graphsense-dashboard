@@ -2424,7 +2424,7 @@ updateByRoute_ plugins uc route model =
             { model | network = Network.clearSelection model.network }
                 |> loadAddress plugins DateFilter.emptyDateFilterRaw aId
                 |> and (loadAddress plugins DateFilter.emptyDateFilterRaw bId)
-                |> and (selectAggEdge (AggEdge.initId aId bId))
+                |> and (selectAggEdge uc (AggEdge.initId aId bId))
                 |> and (setTracingMode AggregateTracingMode)
 
         Route.Path net list ->
@@ -2622,8 +2622,8 @@ selectTx id model =
                 |> n
 
 
-selectAggEdge : ( Id, Id ) -> Model -> ( Model, List Effect )
-selectAggEdge id model =
+selectAggEdge : Update.Config -> ( Id, Id ) -> Model -> ( Model, List Effect )
+selectAggEdge uc id model =
     case Dict.get id model.network.aggEdges of
         Just edge ->
             let
@@ -2635,10 +2635,13 @@ selectAggEdge id model =
                         _ ->
                             Nothing
 
+                assets =
+                    Locale.getTokenTickers uc.locale (Id.network (id |> Tuple.first))
+
                 ( m1, eff ) =
                     unselect (n model)
                         |> Tuple.mapFirst
-                            (s_details (RelationDetails.init edge |> RelationDetails id |> Just))
+                            (s_details (RelationDetails.init edge assets |> RelationDetails id |> Just))
             in
             selectedEdge
                 |> Maybe.map (\a -> Network.updateAggEdge a (s_selected False) m1.network)

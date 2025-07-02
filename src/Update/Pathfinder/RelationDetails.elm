@@ -2,23 +2,27 @@ module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, update)
 
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
-import Config.DateRangePicker exposing (datePickerSettingsWithoutRange)
+import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
+import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Maybe.Extra
+import Model.Direction exposing (Direction(..))
+import Model.Locale as Locale
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.RelationDetails exposing (Model)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
 import PagedTable
-import RecordSetter exposing (s_a2bTable, s_a2bTableOpen, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_isTxFilterViewOpen, s_table)
+import RecordSetter exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_isTxFilterViewOpen, s_selectedAsset, s_table)
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Update.DateRangePicker as DateRangePicker
 import Util exposing (n)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 loadRelationTxs : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Int -> Maybe String -> Effect
@@ -43,6 +47,12 @@ loadRelationTxs id isA2b txTable nrItems nextpage =
 
             else
                 BrowserGotLinksNextPage
+
+        fromD =
+            txTable.dateRangePicker |> Maybe.map .fromDate
+
+        toD =
+            txTable.dateRangePicker |> Maybe.map .toDate
     in
     msg isA2b
         >> RelationDetailsMsg id
@@ -50,8 +60,10 @@ loadRelationTxs id isA2b txTable nrItems nextpage =
             { currency = Id.network a
             , source = source
             , target = target
-            , minHeight = txTable.txMinBlock
-            , maxHeight = txTable.txMaxBlock
+            , minHeight = Nothing
+            , maxHeight = Nothing
+            , minDate = fromD
+            , maxDate = toD
             , tokenCurrency = txTable.selectedAsset
             , order = Just Api.Request.Addresses.Order_Desc
             , nextpage = nextpage
@@ -92,6 +104,17 @@ gettersAndSetters isA2b =
 
 update : Update.Config -> ( Id, Id ) -> ( Time.Posix, Time.Posix ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
 update uc id ( rangeFrom, rangeTo ) msg model =
+    let
+        net =
+            id |> Tuple.first |> Id.network
+
+        dir isA2b =
+            if isA2b then
+                Incoming
+
+            else
+                Outgoing
+    in
     case msg of
         UserClickedToggleTable isA2b ->
             let
@@ -219,7 +242,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             in
             tbl.dateRangePicker
                 |> Maybe.withDefault
-                    (datePickerSettingsWithoutRange uc.locale
+                    (datePickerSettings uc.locale rangeFrom rangeTo
                         |> DateRangePicker.init (UpdateDateRangePicker isA2b) rangeFrom rangeTo
                     )
                 |> DateRangePicker.openPicker
@@ -229,7 +252,50 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 |> n
 
         UpdateDateRangePicker isA2b subMsg ->
-            n model
+            let
+                gs =
+                    gettersAndSetters isA2b
+
+                tbl =
+                    gs.getTable model
+            in
+            tbl.dateRangePicker
+                |> Maybe.map
+                    (\dateRangePicker ->
+                        let
+                            newPicker =
+                                DateRangePicker.update subMsg dateRangePicker
+
+                            dateRangeChanged =
+                                (newPicker.toDate /= dateRangePicker.toDate) || (newPicker.fromDate /= dateRangePicker.fromDate)
+
+                            --&& ((newPicker.toDate |> Maybe.Extra.isJust) && (newPicker.fromDate |> Maybe.Extra.isJust))
+                            picker =
+                                if dateRangeChanged then
+                                    newPicker |> DateRangePicker.closePicker
+
+                                else
+                                    newPicker
+
+                            udateTbl =
+                                tbl |> s_dateRangePicker (Just picker)
+
+                            ( ntbl, eff ) =
+                                udateTbl
+                                    |> .table
+                                    |> PagedTable.loadFirstPage
+                                        (tableConfig id isA2b udateTbl)
+                        in
+                        ( model |> gs.setTable (udateTbl |> s_table ntbl)
+                        , if dateRangeChanged then
+                            eff
+
+                          else
+                            Nothing
+                        )
+                            |> mapSecond Maybe.Extra.toList
+                    )
+                |> Maybe.withDefault (n model)
 
         CloseDateRangePicker isA2b ->
             let
@@ -246,13 +312,103 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 |> n
 
         ResetDateRangePicker isA2b ->
-            n model
+            let
+                gs =
+                    gettersAndSetters isA2b
+
+                oldTable =
+                    gs.getTable model
+
+                tbl =
+                    RelationTxsTable.init (dir isA2b) (Locale.getTokenTickers uc.locale net)
+                        |> s_selectedAsset oldTable.selectedAsset
+                        |> s_assetSelectBox oldTable.assetSelectBox
+
+                ( table, eff ) =
+                    tbl
+                        |> .table
+                        |> PagedTable.loadFirstPage
+                            (tableConfig id isA2b tbl)
+                        |> mapSecond Maybe.Extra.toList
+            in
+            ( model |> gs.setTable (tbl |> s_table table)
+            , eff
+            )
 
         ResetAllTxFilters isA2b ->
-            n model
+            let
+                gs =
+                    gettersAndSetters isA2b
+
+                tbl =
+                    RelationTxsTable.init (dir isA2b) (Locale.getTokenTickers uc.locale net)
+
+                ( table, eff ) =
+                    tbl
+                        |> .table
+                        |> PagedTable.loadFirstPage
+                            (tableConfig id isA2b tbl)
+                        |> mapSecond Maybe.Extra.toList
+            in
+            ( model |> gs.setTable (tbl |> s_table table)
+            , eff
+            )
 
         ResetTxAssetFilter isA2b ->
-            n model
+            let
+                gs =
+                    gettersAndSetters isA2b
 
-        TxTableAssetSelectBoxMsg isA2b _ ->
-            n model
+                oldTable =
+                    gs.getTable model
+
+                tbl =
+                    RelationTxsTable.init (dir isA2b) (Locale.getTokenTickers uc.locale net)
+                        |> s_dateRangePicker oldTable.dateRangePicker
+
+                ( table, eff ) =
+                    tbl
+                        |> .table
+                        |> PagedTable.loadFirstPage
+                            (tableConfig id isA2b tbl)
+                        |> mapSecond Maybe.Extra.toList
+            in
+            ( model |> gs.setTable (tbl |> s_table table)
+            , eff
+            )
+
+        TxTableAssetSelectBoxMsg isA2b ms ->
+            let
+                gs =
+                    gettersAndSetters isA2b
+
+                tbl =
+                    gs.getTable model
+
+                ( newSelect, outMsg ) =
+                    ThemedSelectBox.update ms tbl.assetSelectBox
+
+                newTxs =
+                    tbl
+                        |> s_assetSelectBox newSelect
+                        |> s_selectedAsset
+                            (case outMsg of
+                                ThemedSelectBox.Selected sel ->
+                                    sel
+
+                                _ ->
+                                    tbl.selectedAsset
+                            )
+            in
+            if tbl == newTxs then
+                n model
+
+            else
+                let
+                    ( ntbl, eff ) =
+                        newTxs
+                            |> .table
+                            |> PagedTable.loadFirstPage
+                                (tableConfig id isA2b newTxs)
+                in
+                ( model |> gs.setTable (newTxs |> s_table ntbl), eff ) |> mapSecond Maybe.Extra.toList
