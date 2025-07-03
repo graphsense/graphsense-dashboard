@@ -177,6 +177,7 @@ utxo vc model id viewState tx =
                                 , totalNumber = Locale.int vc.locale tx.raw.noInputs
                                 }
                             }
+                    , disabled = tx.raw.noInputs == 0
                     , content =
                         let
                             ioTableConfig =
@@ -209,6 +210,7 @@ utxo vc model id viewState tx =
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs
                                 }
                             }
+                    , disabled = tx.raw.noOutputs == 0
                     , content =
                         let
                             ioTableConfig =

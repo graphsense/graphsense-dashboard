@@ -27,8 +27,8 @@ import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
 import String.Format
-import Svg.Styled exposing (Svg, defs, linearGradient, stop, svg)
-import Svg.Styled.Attributes exposing (css, height, id, offset, preserveAspectRatio, stopColor, transform, viewBox, width)
+import Svg.Styled exposing (Svg, defs, feBlend, feGaussianBlur, feOffset, filter, linearGradient, stop, svg)
+import Svg.Styled.Attributes exposing (css, dx, dy, height, id, in2, in_, offset, preserveAspectRatio, stdDeviation, stopColor, transform, viewBox, width)
 import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
@@ -708,6 +708,7 @@ graphSvg plugins vc gc model bbox =
             , gradient "account" { outgoing = False, reverse = False }
             , gradient "account" { outgoing = True, reverse = True }
             , gradient "account" { outgoing = False, reverse = True }
+            , dropShadowAggEdgeHighlight
             ]
         , Svg.lazy6 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges
         , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
@@ -715,6 +716,30 @@ graphSvg plugins vc gc model bbox =
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system
         -- , showBoundingBox model
+        ]
+
+
+dropShadowAggEdgeHighlight : Svg Msg
+dropShadowAggEdgeHighlight =
+    filter
+        [ id "dropShadowAggEdgeHighlight"
+        , height "20"
+        ]
+        [ feOffset
+            [ in_ "SourceGraphic"
+            , dx "0"
+            , dy "4"
+            ]
+            []
+        , feGaussianBlur
+            [ stdDeviation "10"
+            ]
+            []
+        , feBlend
+            [ in_ "SourceGraphic"
+            , in2 "blurOut"
+            ]
+            []
         ]
 
 

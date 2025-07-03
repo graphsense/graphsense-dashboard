@@ -38,6 +38,7 @@ closeAttrs =
 
 type alias DataTabConfig msg =
     { title : Html msg
+    , disabled : Bool
     , content : Maybe (Html msg)
     , onClick : msg
     }
@@ -51,6 +52,17 @@ dataTab config =
             , onClick config.onClick
             , css [ Css.zIndex <| Css.int 2 ]
             ]
+
+        dis =
+            if config.disabled then
+                [ Css.num 0.5 |> Css.opacity
+                , Css.cursor Css.notAllowed |> Css.important
+                ]
+                    |> css
+                    |> List.singleton
+
+            else
+                []
     in
     config.content
         |> Maybe.map
@@ -74,7 +86,7 @@ dataTab config =
         |> Maybe.withDefault
             (SidePanelComponents.sidePanelDataTabClosedWithAttributes
                 (SidePanelComponents.sidePanelDataTabClosedAttributes
-                    |> Rs.s_root (css fullWidth :: attr)
+                    |> Rs.s_root (css fullWidth :: dis ++ attr)
                 )
                 { root =
                     { titleInstance = config.title

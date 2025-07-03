@@ -102,7 +102,7 @@ view vc model id viewState =
                     viewState.aggEdge.b
                         |> Id.id
                         |> truncateLongIdentifier
-                , title = Locale.string vc.locale "Transfers between"
+                , title = Locale.string vc.locale "Payments between"
                 }
             , leftValue =
                 { firstRowText =
@@ -233,6 +233,7 @@ tableTab vc network edgeId viewState isA2b =
                                     |> Maybe.withDefault "0"
                     }
                 }
+        , disabled = noAddresses == Nothing || noAddresses == Just 0
         , content =
             if not open || noAddresses == Nothing || noAddresses == Just 0 then
                 Nothing

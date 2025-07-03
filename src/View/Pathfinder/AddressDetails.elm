@@ -226,14 +226,14 @@ neighborsDataTab vc model _ viewState direction =
         { lbl, noAddresses, getTableOpen, getTable } =
             case direction of
                 Outgoing ->
-                    { lbl = "Receiving addresses"
+                    { lbl = "Outgoing addresses"
                     , noAddresses = viewState.data.outDegree
                     , getTableOpen = .outgoingNeighborsTableOpen
                     , getTable = .neighborsOutgoing
                     }
 
                 Incoming ->
-                    { lbl = "Sending addresses"
+                    { lbl = "Incoming addresses"
                     , noAddresses = viewState.data.inDegree
                     , getTableOpen = .incomingNeighborsTableOpen
                     , getTable = .neighborsIncoming
@@ -254,6 +254,7 @@ neighborsDataTab vc model _ viewState direction =
                     , number = Locale.int vc.locale noAddresses
                     }
                 }
+        , disabled = noAddresses == 0
         , content =
             if not (getTableOpen viewState) then
                 Nothing
@@ -287,7 +288,7 @@ relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetail
 relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
-            Locale.string vc.locale "Related addresses"
+            Locale.string vc.locale "Cluster addresses"
                 |> Locale.titleCase vc.locale
 
         noRelatedAddresses =
@@ -320,6 +321,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 }
                             }
                     )
+        , disabled = noRelatedAddresses == 0
         , content =
             if not viewState.relatedAddressesTableOpen || noRelatedAddresses == 0 then
                 Nothing
@@ -468,6 +470,9 @@ transactionsDataTab vc model id viewState =
     let
         txOnGraphFn =
             flip Network.hasTx model.network
+
+        totalNumber =
+            viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs
     in
     dataTab
         { title =
@@ -477,7 +482,7 @@ transactionsDataTab vc model id viewState =
                 )
                 { root =
                     { totalNumber =
-                        (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs)
+                        totalNumber
                             |> Locale.int vc.locale
                     , incomingNumber =
                         viewState.data.noIncomingTxs
@@ -488,6 +493,7 @@ transactionsDataTab vc model id viewState =
                     , title = Locale.string vc.locale "Transactions"
                     }
                 }
+        , disabled = totalNumber == 0
         , content =
             if viewState.transactionsTableOpen then
                 transactionTableView vc id txOnGraphFn viewState.txs

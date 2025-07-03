@@ -453,6 +453,7 @@ eventTagDescriptionId: Ein Ereignis-Tag ist eine Aussage über ein Ereignis, das
 "High confidence": "Hohe Zuversicht"
 More: Mehr
 related addresses: verwandte Adressen
+cluster addresses: Cluster-Adressen
 tagged cluster addresses: Cluster-Adressen mit Schlagwort
 all cluster addresses: Alle Cluster-Adressen
 type: Typ
@@ -506,4 +507,4 @@ Asset flows: Zahlungsflüsse
 "Added Tag": "Tag hinzugefügt"
 Tag Import: Tag-Import
 "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Nur {0} von {1} Tags wurden importiert. {2} Tags konnten nicht angewendet werden, da ihre Adressen nicht im Pathfinder vorhanden sind."
-
+payments between: Zahlungen zwischen

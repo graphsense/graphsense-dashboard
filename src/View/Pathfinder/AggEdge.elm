@@ -22,6 +22,7 @@ import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
+import Svg.Styled.Attributes exposing (filter)
 
 
 type alias Dimensions =
@@ -284,6 +285,7 @@ highlight vc ed aAddress bAddress =
             |> UserMovesMouseOverAggEdge
             |> onMouseOver
         , pointer
+        , filter "url(#dropShadowAggEdgeHighlight)"
         ]
         [ Theme.aggregatedLabelWithAttributes
             (Theme.aggregatedLabelAttributes
