@@ -13,7 +13,7 @@ import RecordSetter exposing (s_dividerLine, s_leftArrow, s_leftArrowGroup, s_le
 import RemoteData
 import Svg.PathD exposing (Segment(..), pathD)
 import Svg.Styled exposing (Svg, g, path)
-import Svg.Styled.Attributes as Svg exposing (css, transform, width)
+import Svg.Styled.Attributes as Svg exposing (css, filter, transform, width)
 import Svg.Styled.Events exposing (onMouseOver)
 import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
@@ -22,7 +22,6 @@ import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
-import Svg.Styled.Attributes exposing (filter)
 
 
 type alias Dimensions =
