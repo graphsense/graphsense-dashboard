@@ -25,6 +25,7 @@ type Msg
     | GotTxsForAddressDetails ( Maybe Int, Maybe Int ) Api.Data.AddressTxs
     | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
+    | GotNeighborsNextPageForAddressDetails Direction Api.Data.NeighborAddresses
     | UpdateDateRangePicker DurationDatePicker.Msg
     | ToggleTxFilterView
     | CloseTxFilterView

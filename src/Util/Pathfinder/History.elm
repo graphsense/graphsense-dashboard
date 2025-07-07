@@ -129,6 +129,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.GotNeighborsForAddressDetails _ _ ->
                     False
 
+                AddressDetails.GotNeighborsNextPageForAddressDetails _ _ ->
+                    False
+
                 AddressDetails.UpdateDateRangePicker _ ->
                     False
 

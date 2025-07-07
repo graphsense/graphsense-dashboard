@@ -30,12 +30,12 @@ import Util exposing (n)
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
-neighborsTableConfig : Id -> Direction -> PagedTable.Config Effect
-neighborsTableConfig addressId dir =
+neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> PagedTable.Config Effect
+neighborsTableConfigWithMsg msg addressId dir =
     { fetch =
         Just
             (\pagesize nextpage ->
-                GotNeighborsForAddressDetails dir
+                msg dir
                     >> Pathfinder.AddressDetailsMsg addressId
                     |> Api.GetAddressNeighborsEffect
                         { currency = Id.network addressId
@@ -50,6 +50,11 @@ neighborsTableConfig addressId dir =
                     |> ApiEffect
             )
     }
+
+
+neighborsTableConfig : Id -> Direction -> PagedTable.Config Effect
+neighborsTableConfig =
+    neighborsTableConfigWithMsg GotNeighborsForAddressDetails
 
 
 transactionTableConfig : TransactionTable.Model -> Id -> PagedTable.Config Effect
@@ -99,7 +104,7 @@ update uc msg model =
             let
                 ( neighborsOutgoing, eff2 ) =
                     PagedTable.loadFirstPage
-                        (neighborsTableConfig model.addressId Outgoing)
+                        (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.addressId Outgoing)
                         model.neighborsOutgoing
             in
             ( { model
@@ -113,7 +118,7 @@ update uc msg model =
             let
                 ( neighborsIncoming, eff1 ) =
                     PagedTable.loadFirstPage
-                        (neighborsTableConfig model.addressId Incoming)
+                        (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.addressId Incoming)
                         model.neighborsIncoming
             in
             ( { model
@@ -141,6 +146,28 @@ update uc msg model =
             )
 
         GotNeighborsForAddressDetails dir neighbors ->
+            let
+                ( tbl, setter ) =
+                    case dir of
+                        Incoming ->
+                            ( model.neighborsIncoming, s_neighborsIncoming )
+
+                        Outgoing ->
+                            ( model.neighborsOutgoing, s_neighborsOutgoing )
+
+                ( pt, eff ) =
+                    PagedTable.setData
+                        (neighborsTableConfig model.addressId dir)
+                        NeighborsTable.filter
+                        neighbors.nextPage
+                        neighbors.neighbors
+                        tbl
+            in
+            ( setter pt model
+            , Maybe.Extra.toList eff
+            )
+
+        GotNeighborsNextPageForAddressDetails dir neighbors ->
             let
                 ( tbl, setter ) =
                     case dir of
