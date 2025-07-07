@@ -1,6 +1,7 @@
-module Model.Currency exposing (AssetIdentifier, Currency(..), asset, assetFromBase, tokensToValue)
+module Model.Currency exposing (AssetIdentifier, Currency(..), allZero, asset, assetFromBase, tokensToValue)
 
 import Api.Data
+import Tuple exposing (second)
 
 
 type Currency
@@ -25,3 +26,8 @@ asset network assetName =
 tokensToValue : String -> List ( String, Api.Data.Values ) -> List ( AssetIdentifier, Api.Data.Values )
 tokensToValue curr tokens =
     tokens |> List.map (\( x, v ) -> ( asset curr x, v ))
+
+
+allZero : List ( AssetIdentifier, Api.Data.Values ) -> Bool
+allZero =
+    List.all (second >> .value >> (==) 0)

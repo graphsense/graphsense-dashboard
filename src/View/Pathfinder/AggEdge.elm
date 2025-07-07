@@ -95,13 +95,21 @@ calcDimensions vc ed aAddress bAddress =
                 >> Maybe.Extra.join
                 >> Maybe.map
                     (\data ->
-                        ( asset data, data.value )
-                            :: (data.tokenValues
-                                    |> Maybe.map Dict.toList
-                                    |> Maybe.withDefault []
-                                    |> List.map (mapFirst (Currency.asset data.address.currency))
-                               )
-                            |> Locale.currency vc.locale
+                        let
+                            values =
+                                ( asset data, data.value )
+                                    :: (data.tokenValues
+                                            |> Maybe.map Dict.toList
+                                            |> Maybe.withDefault []
+                                            |> List.map (mapFirst (Currency.asset data.address.currency))
+                                       )
+                        in
+                        if Currency.allZero values then
+                            ""
+
+                        else
+                            values
+                                |> Locale.currency vc.locale
                     )
                 >> Maybe.withDefault ""
 

@@ -456,7 +456,7 @@ currencyWithOptions : CodeVisibility -> Model -> List ( AssetIdentifier, Api.Dat
 currencyWithOptions vis model values =
     case model.currency of
         Coin ->
-            if List.all (second >> .value >> (==) 0) values then
+            if allZero values then
                 "0"
 
             else
@@ -483,7 +483,7 @@ currencyWithOptions2 : CodeVisibility -> Model -> List ( AssetIdentifier, Api.Da
 currencyWithOptions2 vis model values =
     case model.currency of
         Coin ->
-            if List.all (second >> .value >> (==) 0) values then
+            if allZero values then
                 "0"
 
             else

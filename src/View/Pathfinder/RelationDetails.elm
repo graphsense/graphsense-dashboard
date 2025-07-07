@@ -9,7 +9,6 @@ import Css.Table
 import Css.View
 import Dict
 import Html.Styled exposing (Html, div)
-import Maybe.Extra
 import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
@@ -175,8 +174,9 @@ tableTab vc network edgeId viewState isA2b =
         noAddresses =
             address
                 |> RemoteData.toMaybe
-                |> Maybe.Extra.join
+                |> Maybe.withDefault Nothing
                 |> Maybe.map .noTxs
+                |> Maybe.withDefault 0
     in
     dataTab
         { title =
@@ -219,9 +219,9 @@ tableTab vc network edgeId viewState isA2b =
                                     |> Maybe.withDefault "0"
                     }
                 }
-        , disabled = noAddresses == Nothing || noAddresses == Just 0
+        , disabled = noAddresses == 0
         , content =
-            if not open || noAddresses == Nothing || noAddresses == Just 0 then
+            if not open || noAddresses == 0 then
                 Nothing
 
             else
