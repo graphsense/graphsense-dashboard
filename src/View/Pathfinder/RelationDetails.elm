@@ -1,4 +1,4 @@
-module View.Pathfinder.RelationDetails exposing (makeValuesList, view)
+module View.Pathfinder.RelationDetails exposing (ValuesFormatted, ValuesRow, makeValuesList, view)
 
 import Api.Data
 import Basics.Extra exposing (flip)

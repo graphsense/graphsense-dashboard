@@ -2,9 +2,11 @@ module View.Pathfinder.AggEdge exposing (edge, highlight, view)
 
 import Config.View as View
 import Css
+import Dict
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.AggEdge as AggEdge
 import Maybe.Extra
+import Model.Currency as Currency
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge as AggEdge exposing (AggEdge)
@@ -18,6 +20,7 @@ import Svg.Styled.Events exposing (onMouseOver)
 import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.GraphComponentsAggregatedTracing as Theme
+import Tuple exposing (mapFirst)
 import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
@@ -92,7 +95,13 @@ calcDimensions vc ed aAddress bAddress =
                 >> Maybe.Extra.join
                 >> Maybe.map
                     (\data ->
-                        Locale.currencyWithoutCode vc.locale [ ( asset data, data.value ) ]
+                        ( asset data, data.value )
+                            :: (data.tokenValues
+                                    |> Maybe.map Dict.toList
+                                    |> Maybe.withDefault []
+                                    |> List.map (mapFirst (Currency.asset data.address.currency))
+                               )
+                            |> Locale.currency vc.locale
                     )
                 >> Maybe.withDefault ""
 
