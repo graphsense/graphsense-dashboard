@@ -1,14 +1,16 @@
-module View.Pathfinder.RelationDetails exposing (view)
+module View.Pathfinder.RelationDetails exposing (makeValuesList, view)
 
+import Api.Data
 import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
+import Dict
 import Html.Styled exposing (Html, div)
 import Maybe.Extra
-import Model.Currency exposing (assetFromBase)
+import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -23,7 +25,7 @@ import RemoteData exposing (RemoteData(..))
 import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Tuple exposing (first, second)
+import Tuple exposing (first, pair, second)
 import Util exposing (allAndNotEmpty)
 import Util.Css exposing (spread)
 import Util.View exposing (loadingSpinner, none, truncateLongIdentifier)
@@ -37,61 +39,72 @@ import View.Pathfinder.TransactionFilter as TransactionFilter
 view : View.Config -> Pathfinder.Model -> ( Id, Id ) -> RelationDetails.Model -> Html Msg
 view vc model id viewState =
     let
-        fiatValue v =
-            v.value
-                |> Locale.getFiatValue vc.preferredFiatCurrency
-                |> Maybe.map (Locale.fiat vc.locale vc.preferredFiatCurrency)
-                |> Maybe.withDefault ""
-
-        asset =
-            id
-                |> first
-                |> Id.network
-                |> assetFromBase
-
         network =
             id |> first |> Id.network
 
-        cryptoValue v =
-            v.value.value
-                |> Locale.coin vc.locale asset
+        valuesList =
+            makeValuesList vc
+                network
+                (RemoteData.withDefault Nothing viewState.aggEdge.a2b)
+                (RemoteData.withDefault Nothing viewState.aggEdge.b2a)
+
+        valuesToValuesRow { leftValue, rightValue } =
+            SidePanelComponents.sidePanelRelationshipValuesRowWithInstances
+                (SidePanelComponents.sidePanelRelationshipValuesRowAttributes
+                    |> Rs.s_root [ spread ]
+                )
+                (SidePanelComponents.sidePanelRelationshipValuesRowInstances
+                    |> Rs.s_leftValue
+                        (if RemoteData.isLoading viewState.aggEdge.b2a then
+                            loadingSpinner vc Css.View.loadingSpinner
+                                |> Just
+
+                         else
+                            Nothing
+                        )
+                    |> Rs.s_rightValue
+                        (if RemoteData.isLoading viewState.aggEdge.a2b then
+                            loadingSpinner vc Css.View.loadingSpinner
+                                |> Just
+
+                         else
+                            Nothing
+                        )
+                )
+                { leftValue =
+                    { firstRowText = leftValue.coin
+                    , secondRowText = leftValue.fiat
+                    , secondRowVisible = True
+                    }
+                , rightValue =
+                    { firstRowText = rightValue.coin
+                    , secondRowText = rightValue.fiat
+                    , secondRowVisible = True
+                    }
+                }
     in
     div []
-        (SidePanelComponents.sidePanelRelationshipWithInstances
+        (SidePanelComponents.sidePanelRelationshipWithAttributes
             (SidePanelComponents.sidePanelRelationshipAttributes
                 |> Rs.s_root
                     [ sidePanelCss
                         |> css
                     ]
                 |> Rs.s_iconsCloseBlack closeAttrs
-            )
-            (SidePanelComponents.sidePanelRelationshipInstances
-                |> Rs.s_leftValue
-                    (if RemoteData.isLoading viewState.aggEdge.b2a then
-                        loadingSpinner vc Css.View.loadingSpinner
-                            |> Just
-
-                     else
-                        Nothing
-                    )
-                |> Rs.s_rightValue
-                    (if RemoteData.isLoading viewState.aggEdge.a2b then
-                        loadingSpinner vc Css.View.loadingSpinner
-                            |> Just
-
-                     else
-                        Nothing
-                    )
+                |> Rs.s_valuesList
+                    [ css [ Css.overflowY Css.auto ] ]
             )
             { tabsList =
                 [ tableTab vc model.network id viewState True
                 , tableTab vc model.network id viewState False
                 ]
                     |> List.map (Html.Styled.map (RelationDetailsMsg id))
+            , valuesList =
+                valuesList
+                    |> List.map valuesToValuesRow
             }
             { leftTab = { variant = none }
             , rightTab = { variant = none }
-            , title = { infoLabel = Locale.string vc.locale "Total received" }
             , root =
                 { tabsVisible = False
                 , address1 =
@@ -102,37 +115,10 @@ view vc model id viewState =
                     viewState.aggEdge.b
                         |> Id.id
                         |> truncateLongIdentifier
-                , title = Locale.string vc.locale "Asset transfers between"
-                }
-            , leftValue =
-                { firstRowText =
-                    viewState.aggEdge.b2a
-                        |> RemoteData.toMaybe
-                        |> Maybe.Extra.join
-                        |> Maybe.map cryptoValue
-                        |> Maybe.withDefault "0"
-                , secondRowText =
-                    viewState.aggEdge.b2a
-                        |> RemoteData.toMaybe
-                        |> Maybe.Extra.join
-                        |> Maybe.map fiatValue
-                        |> Maybe.withDefault "0"
-                , secondRowVisible = True
-                }
-            , rightValue =
-                { firstRowText =
-                    viewState.aggEdge.a2b
-                        |> RemoteData.toMaybe
-                        |> Maybe.Extra.join
-                        |> Maybe.map cryptoValue
-                        |> Maybe.withDefault "0"
-                , secondRowText =
-                    viewState.aggEdge.a2b
-                        |> RemoteData.toMaybe
-                        |> Maybe.Extra.join
-                        |> Maybe.map fiatValue
-                        |> Maybe.withDefault "0"
-                , secondRowVisible = True
+                , title =
+                    Locale.string vc.locale "Asset transfers between"
+                        |> Locale.titleCase vc.locale
+                , totalReceivedLabel = Locale.string vc.locale "Total transferred"
                 }
             }
             :: ([ ( True, viewState.a2bTable ), ( False, viewState.b2aTable ) ]
@@ -280,3 +266,112 @@ tableTab vc network edgeId viewState isA2b =
                     |> Just
         , onClick = RelationDetails.UserClickedToggleTable isA2b
         }
+
+
+type alias ValuesRow =
+    { leftValue : ValuesFormatted
+    , rightValue : ValuesFormatted
+    }
+
+
+type alias ValuesFormatted =
+    { fiat : String
+    , fiatFloat : Float
+    , coin : String
+    , value : Int
+    , asset : AssetIdentifier
+    }
+
+
+makeValuesList : View.Config -> String -> Maybe Api.Data.NeighborAddress -> Maybe Api.Data.NeighborAddress -> List ValuesRow
+makeValuesList vc network a2b b2a =
+    let
+        leftValues =
+            b2a
+                |> relationToValues
+
+        rightValues =
+            a2b
+                |> relationToValues
+
+        getValue ( asset, values ) =
+            let
+                fiatCurr =
+                    vc.preferredFiatCurrency
+
+                ass =
+                    Currency.asset network asset
+
+                coin =
+                    Locale.coin vc.locale ass values.value
+
+                fvalue =
+                    Locale.getFiatValue fiatCurr values
+                        |> Maybe.withDefault 0
+            in
+            { fiat =
+                fvalue
+                    |> Locale.fiat vc.locale fiatCurr
+            , fiatFloat = fvalue
+            , coin = coin
+            , value = values.value
+            , asset = ass
+            }
+                |> pair asset
+
+        emptyValues asset =
+            { fiat = Locale.fiat vc.locale vc.preferredFiatCurrency 0
+            , fiatFloat = 0
+            , coin = Locale.coin vc.locale (Currency.asset network asset) 0
+            , value = 0
+            , asset = Currency.asset network asset
+            }
+
+        relationToValues =
+            Maybe.map
+                (\{ value, tokenValues } ->
+                    getValue ( network, value )
+                        |> flip (::)
+                            (tokenValues
+                                |> Maybe.withDefault Dict.empty
+                                |> Dict.toList
+                                |> List.map getValue
+                            )
+                        |> Dict.fromList
+                )
+                >> Maybe.withDefault Dict.empty
+
+        sort { rightValue, leftValue } =
+            rightValue.fiatFloat + leftValue.fiatFloat
+
+        leftStep asset values =
+            Dict.insert
+                asset
+                { leftValue = values
+                , rightValue = emptyValues asset
+                }
+
+        rightStep asset values =
+            Dict.insert
+                asset
+                { leftValue = emptyValues asset
+                , rightValue = values
+                }
+
+        bothStep asset lv rv =
+            Dict.insert
+                asset
+                { leftValue = lv
+                , rightValue = rv
+                }
+    in
+    Dict.merge
+        leftStep
+        bothStep
+        rightStep
+        leftValues
+        rightValues
+        Dict.empty
+        |> Dict.values
+        |> List.sortBy sort
+        |> List.reverse

@@ -188,7 +188,7 @@ remove tag: Schlagwort löschen
 estimated value: geschätzter Wert
 "estimated value {0}": geschätzter Wert {0}
 estimated total transferred: ungef. transferierter Wert
-total transferred: transferierter Wert
+total transferred: transferierter Gesamtwert
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
@@ -508,3 +508,5 @@ Asset flows: Zahlungsflüsse
 Tag Import: Tag-Import
 "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Nur {0} von {1} Tags wurden importiert. {2} Tags konnten nicht angewendet werden, da ihre Adressen nicht im Pathfinder vorhanden sind."
 asset transfers between: Werte-Transfer zwischen
+one more asset: ein weiterer Vermögenswert
+"{0} more assets": "{0} weitere Vermögenswerte"

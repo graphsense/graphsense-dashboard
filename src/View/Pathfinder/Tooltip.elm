@@ -1,6 +1,7 @@
 module View.Pathfinder.Tooltip exposing (linkRow, tooltipRow, tooltipRowCustomValue, view)
 
 import Api.Data exposing (Actor, TagSummary)
+import Basics.Extra exposing (flip)
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder as Css
@@ -25,6 +26,7 @@ import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
+import View.Pathfinder.RelationDetails exposing (makeValuesList)
 
 
 view : Plugins -> Model key -> View.Config -> Tooltip Msg -> Html Msg
@@ -459,3 +461,69 @@ aggEdge vc { leftAddress, left, rightAddress, right } =
         , tooltipRowLabel = { title = Locale.string vc.locale "Transactions" }
         }
     ]
+        ++ (let
+                valuesList =
+                    makeValuesList vc (Id.network leftAddress) right left
+
+                maxLen =
+                    4
+
+                more =
+                    List.length valuesList - maxLen
+            in
+            valuesList
+                |> List.take maxLen
+                |> List.map
+                    (\{ leftValue, rightValue } ->
+                        GraphComponents.tooltipRow2ValuesWithAttributes
+                            (GraphComponents.tooltipRow2ValuesAttributes
+                                |> Rs.s_root [ css baseRowStyle ]
+                            )
+                            { tooltipRowValue1 =
+                                (if not vc.showValuesInFiat then
+                                    leftValue.value
+                                        |> Locale.coinWithoutCode vc.locale leftValue.asset
+
+                                 else
+                                    leftValue.fiat
+                                )
+                                    |> val vc
+                            , tooltipRowValue2 =
+                                (if not vc.showValuesInFiat then
+                                    rightValue.value
+                                        |> Locale.coinWithoutCode vc.locale rightValue.asset
+
+                                 else
+                                    rightValue.fiat
+                                )
+                                    |> val vc
+                            , tooltipRowLabel = { title = String.toUpper leftValue.asset.asset }
+                            }
+                    )
+                |> flip (++)
+                    (if more > 0 then
+                        [ GraphComponents.tooltipRow2ValuesWithAttributes
+                            (GraphComponents.tooltipRow2ValuesAttributes
+                                |> Rs.s_root [ css baseRowStyle ]
+                            )
+                            { tooltipRowValue1 = val vc ""
+                            , tooltipRowValue2 = val vc ""
+                            , tooltipRowLabel =
+                                { title =
+                                    "+ "
+                                        ++ Locale.interpolated vc.locale
+                                            (if more > 1 then
+                                                "{0} more assets"
+
+                                             else
+                                                "one more asset"
+                                            )
+                                            [ String.fromInt more ]
+                                }
+                            }
+                        ]
+
+                     else
+                        []
+                    )
+           )
