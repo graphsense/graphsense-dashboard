@@ -102,7 +102,7 @@ view vc model id viewState =
                     viewState.aggEdge.b
                         |> Id.id
                         |> truncateLongIdentifier
-                , title = Locale.string vc.locale "Payments between"
+                , title = Locale.string vc.locale "Asset transfers between"
                 }
             , leftValue =
                 { firstRowText =
