@@ -505,8 +505,18 @@ transactionsDataTab vc model id viewState =
         }
 
 
-accountValuesRundown : View.Config -> AddressDetails.Model -> { totalReceived : Html Pathfinder.Msg, totalSpent : Html Pathfinder.Msg, balance : Html Pathfinder.Msg }
-accountValuesRundown vc viewState =
+type alias AccountValueRundownConfig =
+    { network : String
+    , open : Bool
+    , onClick : Pathfinder.Msg
+    , values : Api.Data.Values
+    , tokenValues : Maybe (Dict String Api.Data.Values)
+    , title : String
+    }
+
+
+accountValueRundown : View.Config -> AccountValueRundownConfig -> Html Pathfinder.Msg
+accountValueRundown vc conf =
     let
         fiatCurr =
             vc.preferredFiatCurrency
@@ -514,7 +524,7 @@ accountValuesRundown vc viewState =
         getValue ( symbol, values ) =
             let
                 ass =
-                    asset viewState.data.currency symbol
+                    asset conf.network symbol
 
                 value =
                     Locale.coinWithoutCode vc.locale ass values.value
@@ -531,139 +541,108 @@ accountValuesRundown vc viewState =
             , asset = ass
             }
 
-        compute ( open, msg ) title values valueToken =
+        fiatSumTotalTokens =
+            conf.tokenValues
+                |> Maybe.withDefault Dict.empty
+                |> Dict.toList
+                |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr)
+                |> List.sum
+
+        fiatSumTotal =
+            fiatSumTotalTokens
+                + (conf.values
+                    |> Locale.getFiatValue fiatCurr
+                    |> Maybe.withDefault 0.0
+                  )
+
+        nativeValue =
+            getValue ( conf.network, conf.values )
+
+        row inpt =
             let
-                fiatSumTotalTokens =
-                    valueToken
-                        |> Maybe.withDefault Dict.empty
-                        |> Dict.toList
-                        |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr)
-                        |> List.sum
-
-                fiatSumTotal =
-                    fiatSumTotalTokens
-                        + (values
-                            |> Locale.getFiatValue fiatCurr
-                            |> Maybe.withDefault 0.0
-                          )
-
-                nativeValue =
-                    getValue ( viewState.data.currency, values )
-
-                row inpt =
-                    let
-                        dotsLAttr =
-                            [ [ Css.flexGrow (Css.int 1)
-                              , Css.borderBottomStyle Css.dotted
-                              ]
-                                |> css
-                            ]
-                    in
-                    SidePanelComponents.sidePanelRowChevronSubRowWithInstances
-                        (SidePanelComponents.sidePanelRowChevronSubRowAttributes
-                            |> Rs.s_root
-                                [ [ Css.justifyContent Css.stretch
-                                  , Css.width (Css.pct 100)
-                                  ]
-                                    |> css
-                                ]
-                            |> Rs.s_dotsLine dotsLAttr
-                        )
-                        SidePanelComponents.sidePanelRowChevronSubRowInstances
-                        { root =
-                            { coinLabel = inpt.asset.asset |> String.toUpper
-                            , coinValue = inpt.native
-                            , fiatValue = inpt.fiat
-                            }
-                        }
-
-                fixedleftAttr =
-                    [ [ Css.left (Css.px (SidePanelComponents.sidePanelRowChevronClosedIconGroup_details.x * 2))
-                      , Css.alignItems Css.center |> Css.important
+                dotsLAttr =
+                    [ [ Css.flexGrow (Css.int 1)
+                      , Css.borderBottomStyle Css.dotted
                       ]
                         |> css
                     ]
-
-                fw =
-                    [ Css.width (Css.pct 100) ]
-                        |> css
-
-                clickAttr =
-                    [ onClick msg, fw, Util.View.pointer ]
             in
-            if open then
-                SidePanelComponents.sidePanelRowOpenWithAttributes
-                    (SidePanelComponents.sidePanelRowOpenAttributes
-                        |> Rs.s_root clickAttr
-                        |> Rs.s_sidePanelRowChevronOpen [ fw ]
-                        |> Rs.s_iconGroup fixedleftAttr
-                        |> Rs.s_tokensList
-                            [ css [ Css.overflowY Css.auto ] ]
-                    )
-                    { tokensList =
-                        (nativeValue
-                            :: (valueToken
-                                    |> Maybe.withDefault Dict.empty
-                                    |> Dict.toList
-                                    |> List.map getValue
-                               )
-                        )
-                            |> List.sortBy
-                                (.fiatFloat
-                                    >> Maybe.withDefault 0.0
-                                )
-                            |> List.reverse
-                            |> List.map row
+            SidePanelComponents.sidePanelRowChevronSubRowWithInstances
+                (SidePanelComponents.sidePanelRowChevronSubRowAttributes
+                    |> Rs.s_root
+                        [ [ Css.justifyContent Css.stretch
+                          , Css.width (Css.pct 100)
+                          ]
+                            |> css
+                        ]
+                    |> Rs.s_dotsLine dotsLAttr
+                )
+                SidePanelComponents.sidePanelRowChevronSubRowInstances
+                { root =
+                    { coinLabel = inpt.asset.asset |> String.toUpper
+                    , coinValue = inpt.native
+                    , fiatValue = inpt.fiat
                     }
-                    { sidePanelRowChevronOpen =
-                        { iconInstance = HIcons.iconsChevronDownThin {}
-                        , title = Locale.string vc.locale title
-                        , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
-                        }
-                    }
+                }
 
-            else
-                SidePanelComponents.sidePanelRowChevronClosedWithAttributes
-                    (SidePanelComponents.sidePanelRowChevronClosedAttributes
-                        |> Rs.s_root
-                            clickAttr
-                        |> Rs.s_iconGroup fixedleftAttr
-                    )
-                    { root =
-                        { iconInstance = HIcons.iconsChevronRightThin { root = { state = HIcons.IconsChevronRightThinStateDefault } }
-                        , title = Locale.string vc.locale title
-                        , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
-                        }
-                    }
+        fixedleftAttr =
+            [ [ Css.left (Css.px (SidePanelComponents.sidePanelRowChevronClosedIconGroup_details.x * 2))
+              , Css.alignItems Css.center |> Css.important
+              ]
+                |> css
+            ]
+
+        fw =
+            [ Css.width (Css.pct 100) ]
+                |> css
+
+        clickAttr =
+            [ onClick conf.onClick, fw, Util.View.pointer ]
     in
-    { totalReceived =
-        compute
-            ( viewState.totalReceivedDetailsOpen
-            , AddressDetails.UserClickedToggleTotalReceivedDetails
-                |> Pathfinder.AddressDetailsMsg viewState.addressId
+    if conf.open then
+        SidePanelComponents.sidePanelRowOpenWithAttributes
+            (SidePanelComponents.sidePanelRowOpenAttributes
+                |> Rs.s_root clickAttr
+                |> Rs.s_sidePanelRowChevronOpen [ fw ]
+                |> Rs.s_iconGroup fixedleftAttr
+                |> Rs.s_tokensList
+                    [ css [ Css.overflowY Css.auto ] ]
             )
-            "Total received"
-            viewState.data.totalReceived
-            viewState.data.totalTokensReceived
-    , totalSpent =
-        compute
-            ( viewState.totalSentDetailsOpen
-            , AddressDetails.UserClickedToggleTotalSpentDetails
-                |> Pathfinder.AddressDetailsMsg viewState.addressId
+            { tokensList =
+                (nativeValue
+                    :: (conf.tokenValues
+                            |> Maybe.withDefault Dict.empty
+                            |> Dict.toList
+                            |> List.map getValue
+                       )
+                )
+                    |> List.sortBy
+                        (.fiatFloat
+                            >> Maybe.withDefault 0.0
+                        )
+                    |> List.reverse
+                    |> List.map row
+            }
+            { sidePanelRowChevronOpen =
+                { iconInstance = HIcons.iconsChevronDownThin {}
+                , title = Locale.string vc.locale conf.title
+                , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
+                }
+            }
+
+    else
+        SidePanelComponents.sidePanelRowChevronClosedWithAttributes
+            (SidePanelComponents.sidePanelRowChevronClosedAttributes
+                |> Rs.s_root
+                    clickAttr
+                |> Rs.s_iconGroup fixedleftAttr
             )
-            "Total sent"
-            viewState.data.totalSpent
-            viewState.data.totalTokensSpent
-    , balance =
-        compute
-            ( viewState.balanceDetailsOpen
-            , AddressDetails.UserClickedToggleBalanceDetails
-                |> Pathfinder.AddressDetailsMsg viewState.addressId
-            )
-            "Balance"
-            viewState.data.balance
-            viewState.data.tokenBalances
-    }
+            { root =
+                { iconInstance = HIcons.iconsChevronRightThin { root = { state = HIcons.IconsChevronRightThinStateDefault } }
+                , title = Locale.string vc.locale conf.title
+                , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
+                }
+            }
 
 
 account : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
@@ -695,8 +674,41 @@ account plugins pluginStates vc model id viewState address =
                        )
             }
 
-        accountValuesRundownHtml =
-            accountValuesRundown vc viewState
+        totalReceivedRundown =
+            accountValueRundown vc
+                { network = viewState.data.currency
+                , open = viewState.totalReceivedDetailsOpen
+                , onClick =
+                    AddressDetails.UserClickedToggleTotalReceivedDetails
+                        |> Pathfinder.AddressDetailsMsg viewState.addressId
+                , title = "Total received"
+                , values = viewState.data.totalReceived
+                , tokenValues = viewState.data.totalTokensReceived
+                }
+
+        totalSentRundown =
+            accountValueRundown vc
+                { network = viewState.data.currency
+                , open = viewState.totalSentDetailsOpen
+                , onClick =
+                    AddressDetails.UserClickedToggleTotalSpentDetails
+                        |> Pathfinder.AddressDetailsMsg viewState.addressId
+                , title = "Total sent"
+                , values = viewState.data.totalSpent
+                , tokenValues = viewState.data.totalTokensSpent
+                }
+
+        balanceRundown =
+            accountValueRundown vc
+                { network = viewState.data.currency
+                , open = viewState.balanceDetailsOpen
+                , onClick =
+                    AddressDetails.UserClickedToggleBalanceDetails
+                        |> Pathfinder.AddressDetailsMsg viewState.addressId
+                , title = "Balance"
+                , values = viewState.data.balance
+                , tokenValues = viewState.data.tokenBalances
+                }
     in
     SidePanelComponents.sidePanelEthAddressWithInstances
         (SidePanelComponents.sidePanelEthAddressAttributes
@@ -733,9 +745,9 @@ account plugins pluginStates vc model id viewState address =
         (SidePanelComponents.sidePanelEthAddressInstances
             |> setTags vc viewState model id
             |> Rs.s_learnMore (Just none)
-            |> Rs.s_totalReceivedRow (Just accountValuesRundownHtml.totalReceived)
-            |> Rs.s_totalSentRow (Just accountValuesRundownHtml.totalSpent)
-            |> Rs.s_balanceRow (Just accountValuesRundownHtml.balance)
+            |> Rs.s_totalReceivedRow (Just totalReceivedRundown)
+            |> Rs.s_totalSentRow (Just totalSentRundown)
+            |> Rs.s_balanceRow (Just balanceRundown)
         )
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
