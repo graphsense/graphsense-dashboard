@@ -3117,7 +3117,19 @@ checkSelection uc model =
                     )
                     ( model, [] )
 
-        _ ->
+        WillSelectAggEdge id ->
+            selectAggEdge uc id model
+
+        SelectedAddress _ ->
+            n model
+
+        SelectedTx _ ->
+            n model
+
+        SelectedAggEdge _ ->
+            n model
+
+        NoSelection ->
             n model
 
 
