@@ -264,8 +264,8 @@ bottomCenterPanel vc model =
                 |> Rs.s_toggleSwitchText
                     (Controls.toggleWithText
                         { selectedA = model.config.tracingMode == TransactionTracingMode
-                        , titleA = Locale.string vc.locale "Transaction"
-                        , titleB = Locale.string vc.locale "Address"
+                        , titleA = Locale.string vc.locale "Track funds"
+                        , titleB = Locale.string vc.locale "View network"
                         , msg = UserClickedToggleTracingMode
                         }
                         |> Just
@@ -273,7 +273,7 @@ bottomCenterPanel vc model =
             )
             { leftCell = { variant = none }
             , rightCell = { variant = none }
-            , root = { toggleLabel = Locale.string vc.locale "Tracing mode" }
+            , root = { toggleLabel = "" }
             }
         ]
 
