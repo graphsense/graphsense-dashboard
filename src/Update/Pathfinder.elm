@@ -295,8 +295,11 @@ updateByMsg plugins uc msg model =
                             )
                             newModel.network
                         |> flip s_network newModel
+
+                isEmpty =
+                    CheckingNeighbors.isEmpty id newModel2.checkingNeighbors
             in
-            if newModel2.config.tracingMode == AggregateTracingMode then
+            if newModel2.config.tracingMode == AggregateTracingMode && not isEmpty then
                 CheckingNeighbors.getData id newModel2.checkingNeighbors
                     |> Maybe.map2
                         (\nid data ->
@@ -308,8 +311,9 @@ updateByMsg plugins uc msg model =
                         (List.head neighborIds)
                     |> Maybe.withDefault (n newModel2)
 
-            else if CheckingNeighbors.isEmpty id newModel2.checkingNeighbors then
-                CheckingNeighbors.getData id newModel2.checkingNeighbors
+            else if isEmpty then
+                CheckingNeighbors.getData id model.checkingNeighbors
+                    -- in newModel2 it's already empty
                     |> Maybe.map
                         (\data ->
                             browserGotAddressData uc plugins DateFilter.emptyDateFilterRaw id Auto data newModel2
