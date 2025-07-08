@@ -221,14 +221,30 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     }
                     {}
 
-            ContextMenu.TransactionContextMenu _ ->
+            ContextMenu.TransactionContextMenu id ->
+                let
+                    pluginsList =
+                        []
+                in
                 HGraphComponents.rightClickMenuWithAttributes
                     (HGraphComponents.rightClickMenuAttributes
                         |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
                         |> Rs.s_shortcutList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> (if List.isEmpty pluginsList then
+                                Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
+
+                            else
+                                identity
+                           )
                     )
                     { shortcutList =
-                        [ { msg = UserClickedContextMenuIdToClipboard menu
+                        [ { msg = UserOpensTxAnnotationDialog id
+                          , icon = HIcons.iconsAnnotateS {}
+                          , text = "Annotate transaction"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
                           , text = "Copy transaction ID"
                           }
@@ -247,7 +263,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         ]
-                    , pluginsList = []
+                    , pluginsList = pluginsList
                     }
                     {}
         ]

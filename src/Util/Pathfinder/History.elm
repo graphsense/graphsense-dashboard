@@ -40,6 +40,9 @@ shallPushHistory plugins msg _ =
         UserOpensAddressAnnotationDialog _ ->
             False
 
+        UserOpensTxAnnotationDialog _ ->
+            False
+
         UserClickedRestart ->
             False
 

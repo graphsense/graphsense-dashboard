@@ -32,6 +32,7 @@ type Msg
     | UserReleasesMouseButton
     | UserToggleAnnotationSettings
     | UserOpensAddressAnnotationDialog Id
+    | UserOpensTxAnnotationDialog Id
     | UserClickedRestart
     | UserClickedShowLegend
     | UserClickedToggleHelpDropdown

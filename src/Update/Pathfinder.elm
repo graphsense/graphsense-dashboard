@@ -1223,6 +1223,24 @@ updateByMsg plugins uc msg model =
                 _ ->
                     nhcm
 
+        UserOpensTxAnnotationDialog id ->
+            let
+                ( mn, effn ) =
+                    selectTx id model
+
+                ( resultModel, eff ) =
+                    toolbarHovercardTypeToId Annotation
+                        |> Hovercard.init
+                        |> mapFirst (\hcm -> mn |> s_toolbarHovercard (Just ( Annotation, hcm )))
+                        |> mapSecond
+                            (Cmd.map
+                                ToolbarHovercardMsg
+                                >> CmdEffect
+                                >> List.singleton
+                            )
+            in
+            ( resultModel, effn ++ eff ++ [ Task.attempt (\_ -> NoOp) (Dom.focus "annotation-label-textbox") |> CmdEffect ] )
+
         UserOpensAddressAnnotationDialog id ->
             let
                 ( mn, effn ) =
