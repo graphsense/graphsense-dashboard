@@ -415,6 +415,14 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.GetAddressTxsByDateEffect e _ ->
+            ( "{1}: loading transactions of address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
         Api.GetEntityTxsEffect e _ ->
             ( "{1}: loading transactions of entity {0}"
             , [ String.fromInt e.entity

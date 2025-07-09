@@ -1,4 +1,4 @@
-module Init.Pathfinder.Table.TransactionTable exposing (emptyDateFilter, init, initWithFilter, loadFromDateBlock, loadToDateBlock)
+module Init.Pathfinder.Table.TransactionTable exposing (init, initWithFilter, loadTxs)
 
 import Api.Data
 import Api.Request.Addresses
@@ -29,18 +29,13 @@ itemsPerPage =
     5
 
 
-emptyDateFilter : { txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) }
-emptyDateFilter =
-    { txMinBlock = Nothing, txMaxBlock = Nothing, dateRangePicker = Nothing }
-
-
 getCompleteAssetList : List String -> List (Maybe String)
 getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
 init : Network -> Locale.Model -> DateFilterRaw -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
-init network locale dateFilter addressId data assets =
+init network locale _ addressId data assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -68,29 +63,19 @@ init network locale dateFilter addressId data assets =
                         datePickerSettings locale mn mx
                             |> DateRangePicker.init UpdateDateRangePicker mn mx
                             |> Just
-                  , txMinBlock = Just data.firstTx.height
-                  , txMaxBlock = Just data.lastTx.height
                   , direction = Nothing
                   , isTxFilterViewOpen = False
                   , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
                   , selectedAsset = Nothing
                   }
-                , loadTxs addressId mn mx
+                , loadTxs addressId Nothing (Just mn) (Just mx) Nothing
                 )
             )
         |> Maybe.withDefault
-            (initWithFilter addressId data emptyDateFilter Nothing Nothing assets)
-        |> Tuple.mapSecond
-            ((++)
-                ([ dateFilter.fromDate |> Maybe.map (loadFromDateBlock addressId)
-                 , dateFilter.toDate |> Maybe.map (loadToDateBlock addressId)
-                 ]
-                    |> List.filterMap identity
-                )
-            )
+            (initWithFilter addressId data Nothing Nothing Nothing assets)
 
 
-initWithFilter : Id -> Api.Data.Address -> { x | txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) } -> Maybe Direction -> Maybe String -> List String -> ( TransactionTable.Model, List Effect )
+initWithFilter : Id -> Api.Data.Address -> Maybe (DateRangePicker.Model Msg) -> Maybe Direction -> Maybe String -> List String -> ( TransactionTable.Model, List Effect )
 initWithFilter addressId data dateFilter direction selectedAsset assets =
     let
         nrItems =
@@ -101,19 +86,29 @@ initWithFilter addressId data dateFilter direction selectedAsset assets =
                 |> PagedTable.init
                 |> PagedTable.setNrItems nrItems
                 |> PagedTable.setItemsPerPage itemsPerPage
+
+        fromDate =
+            dateFilter |> Maybe.map .fromDate
+
+        toDate =
+            dateFilter |> Maybe.map .toDate
     in
     ( { table = table True
       , order = Nothing
-      , dateRangePicker = dateFilter.dateRangePicker
-      , txMinBlock = dateFilter.txMinBlock
-      , txMaxBlock = dateFilter.txMaxBlock
+      , dateRangePicker = dateFilter
       , direction = direction
       , isTxFilterViewOpen = False
       , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
       , selectedAsset = selectedAsset
       }
-    , (GotTxsForAddressDetails ( dateFilter.txMinBlock, dateFilter.txMaxBlock ) >> AddressDetailsMsg addressId)
-        |> Api.GetAddressTxsEffect
+    , loadTxs addressId direction fromDate toDate selectedAsset
+    )
+
+
+loadTxs : Id -> Maybe Direction -> Maybe Posix -> Maybe Posix -> Maybe String -> List Effect
+loadTxs addressId direction fromDate toDate selectedAsset =
+    (GotTxsForAddressDetails ( fromDate, toDate ) >> AddressDetailsMsg addressId)
+        |> Api.GetAddressTxsByDateEffect
             { currency = Id.network addressId
             , address = Id.id addressId
             , direction = direction
@@ -121,38 +116,8 @@ initWithFilter addressId data dateFilter direction selectedAsset assets =
             , nextpage = Nothing
             , order = Nothing
             , tokenCurrency = selectedAsset
-            , minHeight = dateFilter.txMinBlock
-            , maxHeight = dateFilter.txMaxBlock
+            , minDate = fromDate
+            , maxDate = toDate
             }
         |> ApiEffect
         |> List.singleton
-    )
-
-
-loadTxs : Id -> Posix -> Posix -> List Effect
-loadTxs id mn mx =
-    [ loadToDateBlock id mx
-    , loadFromDateBlock id mn
-    ]
-
-
-loadFromDateBlock : Id -> Posix -> Effect
-loadFromDateBlock id mx =
-    BrowserGotFromDateBlock mx
-        >> AddressDetailsMsg id
-        |> Api.GetBlockByDateEffect
-            { currency = Id.network id
-            , datetime = mx
-            }
-        |> ApiEffect
-
-
-loadToDateBlock : Id -> Posix -> Effect
-loadToDateBlock id mn =
-    BrowserGotToDateBlock mn
-        >> AddressDetailsMsg id
-        |> Api.GetBlockByDateEffect
-            { currency = Id.network id
-            , datetime = mn
-            }
-        |> ApiEffect
