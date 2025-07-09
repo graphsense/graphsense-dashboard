@@ -70,7 +70,8 @@ type OutMsg msg addressMsg entityMsg
 type OutMsgPathfinder msg
     = -- retrieve a serialized state of the pathfinder grapn
       GetPathfinderGraphJson (Json.Encode.Value -> msg)
-    | ShowPathsInPathfinder String (List (List PathHopType))
+    | ShowPathsInPathfinder String (List (List PathHopType)) --legacy for backwards compatibility
+    | ShowPathsInPathfinderWithConfig String { outgoing : Bool } (List (List PathHopType))
     | GetAddressesShown (List Pathfinder.Address -> msg)
 
 
@@ -148,6 +149,9 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         OutMsgsPathfinder (ShowPathsInPathfinder s p) ->
             ShowPathsInPathfinder s p |> OutMsgsPathfinder
+
+        OutMsgsPathfinder (ShowPathsInPathfinderWithConfig s c p) ->
+            ShowPathsInPathfinderWithConfig s c p |> OutMsgsPathfinder
 
         Deserialize filename json ->
             Deserialize filename json

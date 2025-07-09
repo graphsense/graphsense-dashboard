@@ -2239,23 +2239,23 @@ updateByRoute plugins uc route model =
             |> updateByRoute_ plugins uc route
 
 
-addPathsToGraph : Plugins -> Update.Config -> Model -> String -> List (List PathHopType) -> ( Model, List Effect )
-addPathsToGraph plugins uc model net listOfPaths =
+addPathsToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool } -> List (List PathHopType) -> ( Model, List Effect )
+addPathsToGraph plugins uc model net config listOfPaths =
     let
         baseModelUnselected =
             ( model, [] ) |> unselect
     in
     List.foldl
         (\paths ( m, eff ) ->
-            addPathToGraph plugins uc m net paths
+            addPathToGraph plugins uc m net config paths
                 |> Tuple.mapSecond ((++) eff)
         )
         baseModelUnselected
         listOfPaths
 
 
-addPathToGraph : Plugins -> Update.Config -> Model -> String -> List PathHopType -> ( Model, List Effect )
-addPathToGraph plugins uc model net list =
+addPathToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool } -> List PathHopType -> ( Model, List Effect )
+addPathToGraph plugins uc model net config list =
     let
         getAddress adr =
             case adr of
@@ -2342,6 +2342,12 @@ addPathToGraph plugins uc model net list =
 
                           else
                             nodeXOffset
+                                * (if config.outgoing then
+                                    1
+
+                                   else
+                                    -1
+                                  )
                         , 0
                         )
 
@@ -2450,7 +2456,7 @@ updateByRoute_ plugins uc route model =
                 |> and (setTracingMode AggregateTracingMode)
 
         Route.Path net list ->
-            addPathToGraph plugins uc model net list
+            addPathToGraph plugins uc model net { outgoing = True } list
 
         _ ->
             n model
@@ -2466,7 +2472,11 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         ( mo, eff )
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder net paths) ->
-                        addPathsToGraph plugins uc mo net paths
+                        addPathsToGraph plugins uc mo net { outgoing = True } paths
+                            |> Tuple.mapSecond ((++) eff)
+
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinderWithConfig net c paths) ->
+                        addPathsToGraph plugins uc mo net c paths
                             |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.UpdateAddresses { currency, address } pmsg ->
