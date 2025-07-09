@@ -473,26 +473,29 @@ updateByMsg plugins uc msg model =
                 |> and (updateRelationDetails uc id ar submsg)
 
         AddressDetailsMsg addressId subm ->
+            let
+                fetchTagSummariesForNeigbors neighbors =
+                    let
+                        network =
+                            Id.network addressId
+                    in
+                    neighbors
+                        |> List.map (.address >> .address >> Id.init network)
+                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.singleton
+                        |> pair model
+                        |> and
+                            (AddressDetails.update uc subm
+                                |> updateAddressDetails addressId
+                            )
+            in
             case subm of
-                {-
-                           -- we can omit querying tags here because the
-                           -- entity addresses are only retrieved after
-                           -- checking all tagged addresses of the entity
-                   AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable addresses ->
-                       let
-                           network =
-                               Id.network addressId
-                       in
-                       addresses.addresses
-                           |> List.map (.address >> Id.init network)
-                           |> fetchTagSummaryForIds False model.tagSummaries
-                           |> List.singleton
-                           |> pair model
-                           |> and
-                               (AddressDetails.update uc subm
-                                   |> updateAddressDetails addressId
-                               )
-                -}
+                AddressDetails.GotNeighborsForAddressDetails _ { neighbors } ->
+                    fetchTagSummariesForNeigbors neighbors
+
+                AddressDetails.GotNeighborsNextPageForAddressDetails _ { neighbors } ->
+                    fetchTagSummariesForNeigbors neighbors
+
                 AddressDetails.BrowserGotAddressesForTags _ addresses ->
                     let
                         network =

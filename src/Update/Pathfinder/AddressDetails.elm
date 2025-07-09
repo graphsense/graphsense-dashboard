@@ -54,7 +54,7 @@ neighborsTableConfigWithMsg msg addressId dir =
 
 neighborsTableConfig : Id -> Direction -> PagedTable.Config Effect
 neighborsTableConfig =
-    neighborsTableConfigWithMsg GotNeighborsForAddressDetails
+    neighborsTableConfigWithMsg GotNeighborsNextPageForAddressDetails
 
 
 transactionTableConfig : TransactionTable.Model -> Id -> PagedTable.Config Effect
