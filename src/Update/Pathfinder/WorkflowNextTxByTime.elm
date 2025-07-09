@@ -2,9 +2,11 @@ module Update.Pathfinder.WorkflowNextTxByTime exposing (Config, Error(..), Msg, 
 
 import Api.Data
 import Api.Request.Addresses exposing (Order_(..))
+import Basics.Extra exposing (flip)
 import Effect.Api as Api
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Id as Id exposing (Id)
+import RecordSetter exposing (s_value)
 import Time
 import Workflow
 
@@ -114,7 +116,9 @@ update config msg =
                                     |> Workflow.Next
 
                             Api.Data.AddressTxTxAccount t ->
-                                Api.Data.TxTxAccount t
+                                absValues t.value
+                                    |> flip s_value t
+                                    |> Api.Data.TxTxAccount
                                     |> Workflow.Ok
                     )
                 |> Maybe.withDefault (Workflow.Err NoTxFound)
@@ -137,13 +141,23 @@ update config msg =
                                     |> Workflow.Next
 
                             Api.Data.LinkTxAccount t ->
-                                Api.Data.TxTxAccount t
+                                absValues t.value
+                                    |> flip s_value t
+                                    |> Api.Data.TxTxAccount
                                     |> Workflow.Ok
                     )
                 |> Maybe.withDefault (Workflow.Err NoTxFound)
 
         BrowserGotTx tx ->
             Workflow.Ok tx
+
+
+absValues : Api.Data.Values -> Api.Data.Values
+absValues v =
+    { v
+        | value = abs v.value
+        , fiatValues = List.map (\f -> { f | value = abs f.value }) v.fiatValues
+    }
 
 
 workflowByHeight : Config -> Maybe Int -> Maybe String -> Workflow
