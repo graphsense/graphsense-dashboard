@@ -135,13 +135,16 @@ view plugins vc model =
                     }
                 }
     in
-    Dialogs.dialogAddTagWithAttributes
-        (Dialogs.dialogAddTagAttributes
+    Dialogs.dialogGenericWithAttributes
+        (Dialogs.dialogGenericAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick model.closeMsg ]
         )
-        { actorLabel = { variant = actorText }
-        , additionalInfo = { variant = additionalInfo }
-        , cancelButton =
+        { inputList =
+            [ actorText
+            , additionalInfo
+            ]
+        }
+        { cancelButton =
             { variant =
                 (Button.defaultConfig
                     |> Rs.s_text "Cancel"
@@ -158,5 +161,8 @@ view plugins vc model =
                 )
                     |> Button.primaryButton vc
             }
-        , root = { header = Locale.string vc.locale "Add Tag to Address" }
+        , root =
+            { header = Locale.string vc.locale "Add Tag to Address"
+            , description = Locale.string vc.locale "Add_Tag_description"
+            }
         }

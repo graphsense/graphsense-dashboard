@@ -1,6 +1,7 @@
 module View.Pathfinder.Tx.Utxo exposing (edge, view)
 
 import Animation as A
+import Color
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -19,7 +20,6 @@ import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
-import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeUtxoAttributes)
 import Theme.Svg.Icons as Icons
 import Tuple exposing (pair, second)
@@ -27,7 +27,7 @@ import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
-import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
+import View.Pathfinder.Tx.Path exposing (pickPathFunction)
 import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
 
 
@@ -123,8 +123,8 @@ view _ vc _ tx utxo annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> AnimatedPosTrait x -> Svg Msg
-edge _ vc _ hovered tx pos =
+edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge _ vc _ hovered tx pos annotation =
     let
         toValues =
             Dict.toList
@@ -168,6 +168,11 @@ edge _ vc _ hovered tx pos =
 
         txId =
             Id.init tx.raw.currency tx.raw.txHash
+
+        color =
+            annotation
+                |> Maybe.andThen .color
+                |> Maybe.map Color.toCssString
     in
     (inputValues
         |> List.map
@@ -180,14 +185,9 @@ edge _ vc _ hovered tx pos =
                         signX fromPos txPos
                 in
                 ( Id.toString address.id
-                , Svg.lazy7
-                    (if hovered then
-                        inPathHovered
-
-                     else
-                        inPath
-                    )
-                    vc
+                , pickPathFunction False
+                    hovered
+                    color
                     values
                     (fromPos.x * unit + (rad * sign))
                     (fromPos.y * unit)
@@ -208,14 +208,9 @@ edge _ vc _ hovered tx pos =
                                 signX txPos toPos
                         in
                         ( Id.toString address.id
-                        , Svg.lazy7
-                            (if hovered then
-                                outPathHovered
-
-                             else
-                                outPath
-                            )
-                            vc
+                        , pickPathFunction True
+                            hovered
+                            color
                             values
                             (txPos.x * unit + (txRad * sign))
                             (txPos.y * unit)

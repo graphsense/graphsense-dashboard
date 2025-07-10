@@ -75,7 +75,8 @@ relations plugins vc gc annotations txs =
                     |> List.map
                         (\tx ->
                             ( Id.toString tx.id |> (++) "te"
-                            , Tx.edge plugins vc gc tx
+                            , Annotations.getAnnotation tx.id annotations
+                                |> Tx.edge plugins vc gc tx
                             )
                         )
                     |> Keyed.node "g" []

@@ -24,11 +24,11 @@ view plugins vc gc tx annotation =
                 |> AccountTx.view plugins vc gc tx t
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Svg Msg
-edge plugins vc gc tx =
+edge : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge plugins vc gc tx annotation =
     case tx.type_ of
         Utxo t ->
-            Svg.lazy6 Utxo.edge plugins vc gc (tx.selected || tx.hovered) t tx
+            Svg.lazy7 Utxo.edge plugins vc gc (tx.selected || tx.hovered) t tx annotation
 
         Account t ->
-            Svg.lazy6 AccountTx.edge plugins vc gc (tx.selected || tx.hovered) t tx
+            Svg.lazy7 AccountTx.edge plugins vc gc (tx.selected || tx.hovered) t tx annotation
