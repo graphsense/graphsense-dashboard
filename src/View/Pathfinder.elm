@@ -27,8 +27,8 @@ import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData
 import String.Format
-import Svg.Styled exposing (Svg, defs, feBlend, feGaussianBlur, feOffset, filter, linearGradient, stop, svg)
-import Svg.Styled.Attributes exposing (css, dx, dy, height, id, in2, in_, offset, preserveAspectRatio, stdDeviation, stopColor, transform, viewBox, width)
+import Svg.Styled exposing (Svg, defs, feComposite, feFlood, feGaussianBlur, feMerge, feMergeNode, feOffset, filter, linearGradient, stop, svg)
+import Svg.Styled.Attributes exposing (css, dx, dy, floodColor, height, id, in2, in_, offset, operator, preserveAspectRatio, result, stdDeviation, stopColor, transform, viewBox, width, x, y)
 import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
@@ -739,23 +739,41 @@ dropShadowAggEdgeHighlight : Svg Msg
 dropShadowAggEdgeHighlight =
     filter
         [ id "dropShadowAggEdgeHighlight"
-        , height "20"
+        , x "-100%"
+        , y "-200%"
+        , width "300%"
+        , height "500%"
         ]
-        [ feOffset
-            [ in_ "SourceGraphic"
-            , dx "0"
-            , dy "4"
+        [ feGaussianBlur
+            [ in_ "SourceAlpha"
+            , stdDeviation "10"
             ]
             []
-        , feGaussianBlur
-            [ stdDeviation "10"
+        , feOffset
+            [ dx "0"
+            , dy "2"
+            , result "offsetblur"
             ]
             []
-        , feBlend
-            [ in_ "SourceGraphic"
-            , in2 "blurOut"
+        , feFlood
+            [ floodColor "rgba(0, 0, 0, 0.25)"
             ]
             []
+        , feComposite
+            [ in2 "offsetblur"
+            , operator "in"
+            ]
+            []
+        , feMerge
+            []
+            [ feMergeNode
+                []
+                []
+            , feMergeNode
+                [ in_ "SourceGraphic"
+                ]
+                []
+            ]
         ]
 
 
