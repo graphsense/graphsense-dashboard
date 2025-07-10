@@ -14,6 +14,7 @@ import Model.Locale as Locale
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.RelationDetails exposing (Model)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
+import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
 import PagedTable
@@ -49,10 +50,10 @@ loadRelationTxs id isA2b txTable nrItems nextpage =
                 BrowserGotLinksNextPage
 
         fromD =
-            txTable.dateRangePicker |> Maybe.map .fromDate
+            txTable.dateRangePicker |> Maybe.andThen .fromDate
 
         toD =
-            txTable.dateRangePicker |> Maybe.map .toDate
+            txTable.dateRangePicker |> Maybe.andThen .toDate
     in
     msg isA2b
         >> RelationDetailsMsg id
@@ -239,11 +240,20 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                 tbl =
                     gs.getTable model
+
+                focusDate =
+                    PagedTable.getTable tbl.table
+                        |> .data
+                        -- this is only try if data is sorted desc
+                        |> List.head
+                        |> Maybe.map getRawTimestampForRelationTx
+                        |> Maybe.map ((*) 1000 >> Time.millisToPosix)
+                        |> Maybe.withDefault rangeTo
             in
             tbl.dateRangePicker
                 |> Maybe.withDefault
-                    (datePickerSettings uc.locale rangeFrom rangeTo
-                        |> DateRangePicker.init (UpdateDateRangePicker isA2b) rangeFrom rangeTo
+                    (datePickerSettings uc.locale rangeFrom focusDate
+                        |> DateRangePicker.init (UpdateDateRangePicker isA2b) focusDate Nothing Nothing
                     )
                 |> DateRangePicker.openPicker
                 |> Just
@@ -267,7 +277,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                 DateRangePicker.update subMsg dateRangePicker
 
                             dateRangeChanged =
-                                (newPicker.toDate /= dateRangePicker.toDate) || (newPicker.fromDate /= dateRangePicker.fromDate)
+                                (newPicker.toDate /= Nothing && newPicker.toDate /= dateRangePicker.toDate) || (newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate)
 
                             --&& ((newPicker.toDate |> Maybe.Extra.isJust) && (newPicker.fromDate |> Maybe.Extra.isJust))
                             picker =
@@ -281,10 +291,14 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                 tbl |> s_dateRangePicker (Just picker)
 
                             ( ntbl, eff ) =
-                                udateTbl
-                                    |> .table
-                                    |> PagedTable.loadFirstPage
-                                        (tableConfig id isA2b udateTbl)
+                                if dateRangeChanged then
+                                    udateTbl
+                                        |> .table
+                                        |> PagedTable.loadFirstPage
+                                            (tableConfig id isA2b udateTbl)
+
+                                else
+                                    ( udateTbl.table, Nothing )
                         in
                         ( model |> gs.setTable (udateTbl |> s_table ntbl)
                         , if dateRangeChanged then

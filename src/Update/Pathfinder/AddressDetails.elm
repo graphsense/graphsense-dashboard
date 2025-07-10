@@ -77,8 +77,8 @@ transactionTableConfigWithMsg msg txs addressId =
                         , nextpage = nextpage
                         , order = txs.order
                         , tokenCurrency = txs.selectedAsset
-                        , minDate = txs.dateRangePicker |> Maybe.map .fromDate
-                        , maxDate = txs.dateRangePicker |> Maybe.map .toDate
+                        , minDate = txs.dateRangePicker |> Maybe.andThen .fromDate
+                        , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate
                         }
                     |> ApiEffect
             )
@@ -215,7 +215,7 @@ update uc msg model =
                 drp =
                     model.txs.dateRangePicker
             in
-            if Maybe.map .fromDate drp == min && Maybe.map .toDate drp == max then
+            if Maybe.andThen .fromDate drp == min && Maybe.andThen .toDate drp == max then
                 PagedTable.setData
                     (transactionTableConfig model.txs model.addressId)
                     TransactionTable.filter
@@ -238,8 +238,8 @@ update uc msg model =
                                 DateRangePicker.update subMsg dateRangePicker
 
                             eff =
-                                if newPicker.fromDate /= dateRangePicker.fromDate then
-                                    TransactionTable.loadTxs model.addressId Nothing (Just newPicker.fromDate) (Just newPicker.toDate) model.txs.selectedAsset
+                                if newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate then
+                                    TransactionTable.loadTxs model.addressId Nothing newPicker.fromDate newPicker.toDate model.txs.selectedAsset
 
                                 else
                                     []
@@ -274,7 +274,7 @@ update uc msg model =
             model.txs.dateRangePicker
                 |> Maybe.withDefault
                     (datePickerSettings uc.locale mn mx
-                        |> DateRangePicker.init UpdateDateRangePicker mn mx
+                        |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
                     )
                 |> DateRangePicker.openPicker
                 |> Just
@@ -464,10 +464,10 @@ updateTable : Update.Config -> Model -> TransactionTable.Model -> ( Model, List 
 updateTable _ model nt =
     let
         fromDate =
-            Maybe.map .fromDate nt.dateRangePicker
+            Maybe.andThen .fromDate nt.dateRangePicker
 
         toDate =
-            Maybe.map .toDate nt.dateRangePicker
+            Maybe.andThen .toDate nt.dateRangePicker
 
         ( tableNew, eff ) =
             nt.table

@@ -76,22 +76,30 @@ dateTimeFilterHeader vc resetMsg dmodel =
                         Locale.timestampDateTimeUniform vc.locale False
                    )
 
-        startP =
-            dmodel.fromDate |> renderDate (Locale.isFirstSecondOfTheDay vc.locale)
+        startDate =
+            dmodel.fromDate
+                |> Maybe.map (renderDate (Locale.isFirstSecondOfTheDay vc.locale))
 
-        endP =
-            dmodel.toDate |> renderDate (Locale.isLastSecondOfTheDay vc.locale)
+        endDate =
+            dmodel.toDate
+                |> Maybe.map (renderDate (Locale.isLastSecondOfTheDay vc.locale))
     in
-    SidePanelComponents.filterLabel
-        { root =
-            { iconInstance =
-                closeButtonGrey resetMsg
-            , text1 = endP
-            , text2 = Locale.string vc.locale "to"
-            , text3 = startP
-            , dateRangeVisible = True
-            }
-        }
+    Maybe.map2
+        (\startP endP ->
+            SidePanelComponents.filterLabel
+                { root =
+                    { iconInstance =
+                        closeButtonGrey resetMsg
+                    , text1 = endP
+                    , text2 = Locale.string vc.locale "to"
+                    , text3 = startP
+                    , dateRangeVisible = True
+                    }
+                }
+        )
+        startDate
+        endDate
+        |> Maybe.withDefault none
 
 
 directionFilterHeader : View.Config -> msg -> Direction -> Html msg
@@ -233,15 +241,19 @@ txFilterDialogView vc net config model =
                 case model.dateRangePicker of
                     Just dmodel ->
                         let
-                            startP =
-                                dmodel.fromDate
-                                    |> Locale.posixToTimestampSeconds
-                                    |> Locale.timestampDateUniform vc.locale
+                            prepDate =
+                                Maybe.map
+                                    (Locale.posixToTimestampSeconds
+                                        >> Locale.timestampDateUniform vc.locale
+                                    )
 
-                            endP =
+                            startDate =
+                                dmodel.fromDate
+                                    |> prepDate
+
+                            endDate =
                                 dmodel.toDate
-                                    |> Locale.posixToTimestampSeconds
-                                    |> Locale.timestampDateUniform vc.locale
+                                    |> prepDate
                         in
                         if DatePicker.isOpen dmodel.dateRangePicker then
                             div []
@@ -253,15 +265,21 @@ txFilterDialogView vc net config model =
                                 ]
 
                         else
-                            SidePanelComponents.datePickerFilledWithAttributes
-                                (SidePanelComponents.datePickerFilledAttributes
-                                    |> Rs.s_root
-                                        [ onClick config.openDateRangePickerMsg
-                                        , Util.View.pointer
-                                        , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
-                                        ]
+                            Maybe.map2
+                                (\startP endP ->
+                                    SidePanelComponents.datePickerFilledWithAttributes
+                                        (SidePanelComponents.datePickerFilledAttributes
+                                            |> Rs.s_root
+                                                [ onClick config.openDateRangePickerMsg
+                                                , Util.View.pointer
+                                                , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
+                                                ]
+                                        )
+                                        { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to", state = SidePanelComponents.DatePickerFilledStateDefault } }
                                 )
-                                { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to", state = SidePanelComponents.DatePickerFilledStateDefault } }
+                                startDate
+                                endDate
+                                |> Maybe.withDefault none
 
                     _ ->
                         SidePanelComponents.datePickerCtaWithAttributes

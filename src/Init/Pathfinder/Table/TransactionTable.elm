@@ -61,7 +61,7 @@ init network locale _ addressId data assets =
                   , order = Just Api.Request.Addresses.Order_Asc
                   , dateRangePicker =
                         datePickerSettings locale mn mx
-                            |> DateRangePicker.init UpdateDateRangePicker mn mx
+                            |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
                             |> Just
                   , direction = Nothing
                   , isTxFilterViewOpen = False
@@ -88,10 +88,10 @@ initWithFilter addressId data dateFilter direction selectedAsset assets =
                 |> PagedTable.setItemsPerPage itemsPerPage
 
         fromDate =
-            dateFilter |> Maybe.map .fromDate
+            dateFilter |> Maybe.andThen .fromDate
 
         toDate =
-            dateFilter |> Maybe.map .toDate
+            dateFilter |> Maybe.andThen .toDate
     in
     ( { table = table True
       , order = Nothing
