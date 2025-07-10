@@ -2668,8 +2668,11 @@ selectAggEdge uc id model =
                         _ ->
                             Nothing
 
+                network =
+                    id |> Tuple.first |> Id.network
+
                 assets =
-                    Locale.getTokenTickers uc.locale (Id.network (id |> Tuple.first))
+                    String.toUpper network :: Locale.getTokenTickers uc.locale network
 
                 ( m1, eff ) =
                     unselect (n model)
