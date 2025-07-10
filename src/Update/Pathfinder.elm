@@ -441,14 +441,7 @@ updateByMsg plugins uc msg model =
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkTxAccount tx) ->
-                    let
-                        from =
-                            Id.init tx.currency tx.fromAddress
-
-                        to =
-                            Id.init tx.currency tx.toAddress
-                    in
-                    addTx plugins uc from Outgoing (Just to) (Api.Data.TxTxAccount tx) model
+                    addOrRemoveTx plugins Nothing (Id.init tx.currency tx.identifier) model
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTx txId ->
