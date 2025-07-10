@@ -12,13 +12,13 @@ import RecordSetter as Rs
 import Svg.Styled.Attributes exposing (css)
 import Theme.Colors
 import Theme.Html.Icons as HIcons
-import Theme.Html.SelectionControls as SC
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (none)
 import View.Button as Button
+import View.Controls as Controls
 import View.Locale as Locale
 
 
@@ -172,20 +172,7 @@ txFilterDialogView : View.Config -> String -> FilterDialogConfig msg -> FilterMe
 txFilterDialogView vc net config model =
     let
         toRadio name selected msg =
-            SC.radioLabelWithAttributes
-                (SC.radioLabelAttributes
-                    |> Rs.s_root [ onClick msg, [ Css.cursor Css.pointer ] |> css ]
-                )
-                { radio =
-                    { variant =
-                        if selected then
-                            SC.radioStateOnSizeSmall {}
-
-                        else
-                            SC.radioStateOffSizeSmall {}
-                    }
-                , root = { radioLabel = Locale.string vc.locale name }
-                }
+            Controls.radioSmall (Locale.string vc.locale name) selected msg
 
         isAssetFilterVisible =
             Data.isAccountLike net

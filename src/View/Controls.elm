@@ -1,8 +1,9 @@
-module View.Controls exposing (ToggleConfig, lightModeToggle, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
+module View.Controls exposing (ToggleConfig, lightModeToggle, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onClick)
 import RecordSetter as Rs
 import Theme.Html.SelectionControls as Sc
 import Theme.Html.SettingsPage as Sp
@@ -15,6 +16,24 @@ type alias ToggleConfig msg =
     , disabled : Bool
     , msg : msg
     }
+
+
+radioSmall : String -> Bool -> msg -> Html msg
+radioSmall name selected msg =
+    Sc.radioLabelWithAttributes
+        (Sc.radioLabelAttributes
+            |> Rs.s_root [ onClick msg, [ Css.cursor Css.pointer ] |> css ]
+        )
+        { radio =
+            { variant =
+                if selected then
+                    Sc.radioStateOnSizeSmall {}
+
+                else
+                    Sc.radioStateOffSizeSmall {}
+            }
+        , root = { radioLabel = name }
+        }
 
 
 toggle : ToggleConfig msg -> Html msg
