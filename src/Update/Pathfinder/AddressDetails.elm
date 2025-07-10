@@ -64,7 +64,7 @@ transactionTableConfigWithMsg msg txs addressId =
             (\pagesize nextpage ->
                 msg
                     >> Pathfinder.AddressDetailsMsg addressId
-                    |> Api.GetAddressTxsEffect
+                    |> Api.GetAddressTxsByDateEffect
                         { currency = Id.network addressId
                         , address = Id.id addressId
                         , direction = txs.direction
@@ -72,8 +72,8 @@ transactionTableConfigWithMsg msg txs addressId =
                         , nextpage = nextpage
                         , order = txs.order
                         , tokenCurrency = txs.selectedAsset
-                        , minHeight = txs.txMinBlock
-                        , maxHeight = txs.txMaxBlock
+                        , minDate = txs.dateRangePicker |> Maybe.map .fromDate
+                        , maxDate = txs.dateRangePicker |> Maybe.map .toDate
                         }
                     |> ApiEffect
             )
@@ -176,7 +176,11 @@ update uc msg model =
                 |> mapSecond Maybe.Extra.toList
 
         GotTxsForAddressDetails ( min, max ) txs ->
-            if model.txs.txMinBlock == min && model.txs.txMaxBlock == max then
+            let
+                drp =
+                    model.txs.dateRangePicker
+            in
+            if Maybe.map .fromDate drp == min && Maybe.map .toDate drp == max then
                 PagedTable.setData
                     (transactionTableConfig model.txs model.addressId)
                     TransactionTable.filter
@@ -198,28 +202,12 @@ update uc msg model =
                             newPicker =
                                 DateRangePicker.update subMsg dateRangePicker
 
-                            ( txMinBlock, startEff ) =
-                                if newPicker.fromDate /= dateRangePicker.fromDate then
-                                    ( Nothing
-                                    , TransactionTable.loadFromDateBlock model.addressId newPicker.fromDate
-                                        |> List.singleton
-                                    )
-
-                                else
-                                    ( model.txs.txMinBlock, [] )
-
-                            ( txMaxBlock, endEff ) =
-                                if newPicker.toDate /= dateRangePicker.toDate then
-                                    ( Nothing
-                                    , TransactionTable.loadToDateBlock model.addressId newPicker.toDate
-                                        |> List.singleton
-                                    )
-
-                                else
-                                    ( model.txs.txMaxBlock, [] )
-
                             eff =
-                                startEff ++ endEff
+                                if newPicker.fromDate /= dateRangePicker.fromDate then
+                                    TransactionTable.loadTxs model.addressId Nothing (Just newPicker.fromDate) (Just newPicker.toDate) model.txs.selectedAsset
+
+                                else
+                                    []
 
                             np =
                                 if List.length eff > 0 then
@@ -229,7 +217,7 @@ update uc msg model =
                                     newPicker
                         in
                         ( { model
-                            | txs = s_dateRangePicker (Just np) model.txs |> s_txMinBlock txMinBlock |> s_txMaxBlock txMaxBlock
+                            | txs = s_dateRangePicker (Just np) model.txs
                           }
                         , eff
                         )
@@ -283,7 +271,7 @@ update uc msg model =
             TransactionTable.initWithFilter
                 model.addressId
                 model.data
-                TransactionTable.emptyDateFilter
+                Nothing
                 Nothing
                 Nothing
                 (Locale.getTokenTickers uc.locale (Id.network model.addressId))
@@ -293,7 +281,7 @@ update uc msg model =
             TransactionTable.initWithFilter
                 model.addressId
                 model.data
-                TransactionTable.emptyDateFilter
+                Nothing
                 model.txs.direction
                 model.txs.selectedAsset
                 (Locale.getTokenTickers uc.locale (Id.network model.addressId))
@@ -303,7 +291,7 @@ update uc msg model =
             TransactionTable.initWithFilter
                 model.addressId
                 model.data
-                model.txs
+                model.txs.dateRangePicker
                 Nothing
                 model.txs.selectedAsset
                 (Locale.getTokenTickers uc.locale (Id.network model.addressId))
@@ -313,43 +301,11 @@ update uc msg model =
             TransactionTable.initWithFilter
                 model.addressId
                 model.data
-                model.txs
+                model.txs.dateRangePicker
                 model.txs.direction
                 Nothing
                 (Locale.getTokenTickers uc.locale (Id.network model.addressId))
                 |> mapFirst (flip s_txs model)
-
-        BrowserGotFromDateBlock pd blockAt ->
-            let
-                ( _, mx ) =
-                    Address.getActivityRange model.data
-            in
-            updateDatePickerRangeBlockRange uc model (blockAt.beforeBlock |> Maybe.map Set |> Maybe.withDefault NoSet) NoSet
-                |> Tuple.mapFirst
-                    (\m ->
-                        m.txs.dateRangePicker
-                            |> Maybe.withDefault (datePickerSettings uc.locale pd mx |> DateRangePicker.init UpdateDateRangePicker pd mx)
-                            |> DateRangePicker.setFrom pd
-                            |> Just
-                            |> flip s_dateRangePicker m.txs
-                            |> flip s_txs m
-                    )
-
-        BrowserGotToDateBlock td blockAt ->
-            let
-                ( mn, _ ) =
-                    Address.getActivityRange model.data
-            in
-            updateDatePickerRangeBlockRange uc model NoSet (blockAt.afterBlock |> Maybe.map Set |> Maybe.withDefault NoSet)
-                |> Tuple.mapFirst
-                    (\m ->
-                        m.txs.dateRangePicker
-                            |> Maybe.withDefault (datePickerSettings uc.locale mn td |> DateRangePicker.init UpdateDateRangePicker mn td)
-                            |> DateRangePicker.setTo td
-                            |> Just
-                            |> flip s_dateRangePicker m.txs
-                            |> flip s_txs m
-                    )
 
         TableMsg _ ->
             n model
@@ -469,21 +425,21 @@ updateRelatedAddressesTable model upd =
         |> Maybe.withDefault (n model)
 
 
-type SetOrNoSet x
-    = Set x
-    | NoSet
-    | Reset
-
-
 updateTable : Update.Config -> Model -> TransactionTable.Model -> ( Model, List Effect )
 updateTable _ model nt =
     let
+        fromDate =
+            Maybe.map .fromDate nt.dateRangePicker
+
+        toDate =
+            Maybe.map .toDate nt.dateRangePicker
+
         ( tableNew, eff ) =
             nt.table
                 |> PagedTable.goToFirstPage
                 |> PagedTable.loadFirstPage
                     (transactionTableConfigWithMsg
-                        (GotTxsForAddressDetails ( nt.txMinBlock, nt.txMaxBlock ))
+                        (GotTxsForAddressDetails ( fromDate, toDate ))
                         nt
                         model.addressId
                     )
@@ -503,40 +459,6 @@ updateDirectionFilter uc model dir =
 
 
 -- |> s_isTxFilterViewOpen False
-
-
-updateDatePickerRangeBlockRange : Update.Config -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
-updateDatePickerRangeBlockRange uc model txMinBlock txMaxBlock =
-    let
-        txmin =
-            case txMinBlock of
-                Reset ->
-                    Nothing
-
-                NoSet ->
-                    model.txs.txMinBlock
-
-                Set x ->
-                    Just x
-
-        txmax =
-            case txMaxBlock of
-                Reset ->
-                    Nothing
-
-                NoSet ->
-                    model.txs.txMaxBlock
-
-                Set x ->
-                    Just x
-
-        txsNew =
-            model.txs
-                -- |> s_isTxFilterViewOpen False
-                |> s_txMinBlock txmin
-                |> s_txMaxBlock txmax
-    in
-    updateTable uc model txsNew
 
 
 showTransactionsTable : Model -> Bool -> ( Model, List Effect )

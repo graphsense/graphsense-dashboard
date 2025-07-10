@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getAddressDetailStats, getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
+module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Config.Pathfinder exposing (Config)
@@ -7,7 +7,7 @@ import Model.DateFilter exposing (DateFilterRaw)
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
-import Model.Pathfinder.Address as Address exposing (Address)
+import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
@@ -96,34 +96,6 @@ type Details
 getLoadedAddress : Model -> Id -> Maybe Address
 getLoadedAddress m id =
     Dict.get id m.network.addresses
-
-
-getAddressDetailStats : Id -> Model -> Maybe AddressDetails.Model -> { nrTxs : Maybe Int, nrIncomeingNeighbors : Maybe Int, nrOutgoingNeighbors : Maybe Int }
-getAddressDetailStats id model madvs =
-    let
-        maddress =
-            Dict.get id model.network.addresses
-
-        nrTxs =
-            case madvs of
-                Just advs ->
-                    case ( advs.txs.txMinBlock, advs.txs.txMaxBlock ) of
-                        ( Just _, Just _ ) ->
-                            Nothing
-
-                        _ ->
-                            maddress |> Maybe.andThen Address.getNrTxs
-
-                _ ->
-                    Nothing
-
-        indegree =
-            maddress |> Maybe.andThen Address.getInDegree
-
-        outdegree =
-            maddress |> Maybe.andThen Address.getOutDegree
-    in
-    { nrTxs = nrTxs, nrIncomeingNeighbors = indegree, nrOutgoingNeighbors = outdegree }
 
 
 getHavingTags : Model -> Id -> HavingTags

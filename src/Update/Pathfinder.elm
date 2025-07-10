@@ -92,6 +92,11 @@ import View.Locale as Locale
 import Workflow
 
 
+zoomFactor : Float
+zoomFactor =
+    0.5
+
+
 getTagsummary : HavingTags -> Maybe Api.Data.TagSummary
 getTagsummary ht =
     case ht of
@@ -687,7 +692,7 @@ updateByMsg plugins uc msg model =
                                     }
                                     x
                                     y
-                                    z
+                                    (z * zoomFactor)
                                     model.transform
                         }
                     )

@@ -49,11 +49,14 @@ txs plugins vc gc annotations =
         >> Keyed.node "g" []
 
 
-edges : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Tx -> Svg Msg
-edges plugins vc gc =
+edges : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Svg Msg
+edges plugins vc gc annotations =
     Dict.foldl
-        (\_ tx svg ->
-            Tx.edge plugins vc gc tx :: svg
+        (\id tx svg ->
+            (Annotations.getAnnotation id annotations
+                |> Tx.edge plugins vc gc tx
+            )
+                :: svg
         )
         []
         >> Keyed.node "g" []
