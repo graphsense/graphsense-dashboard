@@ -125,13 +125,19 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 tbl =
                     gs.getTable model
 
+                isOpen =
+                    gs.getOpen model
+
                 ( table, eff ) =
-                    tbl
-                        |> .table
-                        |> PagedTable.loadFirstPage
-                            (tableConfig id isA2b tbl)
+                    if isOpen then
+                        ( tbl.table, Nothing )
+
+                    else
+                        tbl.table
+                            |> PagedTable.loadFirstPage
+                                (tableConfig id isA2b tbl)
             in
-            ( gs.getOpen model
+            ( isOpen
                 |> not
                 |> flip gs.setOpen model
                 |> gs.setTable (s_table table tbl)
