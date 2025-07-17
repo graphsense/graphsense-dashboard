@@ -32,19 +32,11 @@ type alias GenericTx =
     }
 
 
-toGerneric : Bool -> Api.Data.Link -> GenericTx
-toGerneric isA2b x =
+toGerneric : Api.Data.Link -> GenericTx
+toGerneric x =
     case x of
         Api.Data.LinkLinkUtxo y ->
-            let
-                value =
-                    if isA2b then
-                        y.outputValue
-
-                    else
-                        y.inputValue
-            in
-            GenericTx y.currency y.txHash y.txHash y.timestamp value y.currency
+            GenericTx y.currency y.txHash y.txHash y.timestamp y.outputValue y.currency
 
         Api.Data.LinkTxAccount y ->
             GenericTx y.network y.txHash y.identifier y.timestamp y.value y.currency
@@ -116,28 +108,28 @@ config styles vc { isA2b, addressId, isChecked, allChecked } =
             c |> Rs.s_thead newTheadWithCheckbox
     in
     Table.customConfig
-        { toId = toGerneric isA2b >> getId >> Id.toString
+        { toId = toGerneric >> getId >> Id.toString
         , toMsg = \_ -> NoOp
         , columns =
             [ PT.checkboxColumn vc
-                { isChecked = toGerneric isA2b >> getId >> isChecked
+                { isChecked = toGerneric >> getId >> isChecked
                 , onClick = UserClickedTxCheckboxInTable
                 , readonly = \_ -> False
                 }
             , PT.timestampDateMultiRowColumn vc
                 "Timestamp"
-                (toGerneric isA2b >> .timestamp)
+                (toGerneric >> .timestamp)
             , txColumn vc
                 { label = "Hash"
-                , accessor = toGerneric isA2b >> .txHash
-                , onClick = Just (toGerneric isA2b >> getId >> UserClickedTx)
+                , accessor = toGerneric >> .txHash
+                , onClick = Just (toGerneric >> getId >> UserClickedTx)
                 }
             , PT.debitCreditColumn
-                (\_ -> True)
+                (\_ -> False)
                 vc
-                (toGerneric isA2b >> .asset >> asset network)
+                (toGerneric >> .asset >> asset network)
                 "Value"
-                (toGerneric isA2b >> .value)
+                (toGerneric >> .value)
             ]
         , customizations = cc
         }
