@@ -35,17 +35,41 @@ import View.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
+isLeftToRight : RelationDetails.Model -> Bool
+isLeftToRight viewState =
+    Maybe.map2
+        (\a b ->
+            a.x < b.x
+        )
+        viewState.aggEdge.aAddress
+        viewState.aggEdge.bAddress
+        |> Maybe.withDefault True
+
+
 view : View.Config -> Pathfinder.Model -> ( Id, Id ) -> RelationDetails.Model -> Html Msg
 view vc model id viewState =
     let
         network =
             id |> first |> Id.network
 
+        ( ( right, left ), ( isA2b, isB2a ), ( leftId, rightId ) ) =
+            if isLeftToRight viewState then
+                ( ( viewState.aggEdge.a2b, viewState.aggEdge.b2a )
+                , ( True, False )
+                , ( viewState.aggEdge.a, viewState.aggEdge.b )
+                )
+
+            else
+                ( ( viewState.aggEdge.b2a, viewState.aggEdge.a2b )
+                , ( False, True )
+                , ( viewState.aggEdge.b, viewState.aggEdge.a )
+                )
+
         valuesList =
             makeValuesList vc
                 network
-                (RemoteData.withDefault Nothing viewState.aggEdge.a2b)
-                (RemoteData.withDefault Nothing viewState.aggEdge.b2a)
+                (RemoteData.withDefault Nothing right)
+                (RemoteData.withDefault Nothing left)
 
         valuesToValuesRow { leftValue, rightValue } =
             SidePanelComponents.sidePanelRelationshipValuesRowWithInstances
@@ -94,8 +118,8 @@ view vc model id viewState =
                     [ css [ Css.overflowY Css.auto ] ]
             )
             { tabsList =
-                [ tableTab vc model.network id viewState True
-                , tableTab vc model.network id viewState False
+                [ tableTab vc model.network id viewState isA2b
+                , tableTab vc model.network id viewState isB2a
                 ]
                     |> List.map (Html.Styled.map (RelationDetailsMsg id))
             , valuesList =
@@ -107,11 +131,11 @@ view vc model id viewState =
             , root =
                 { tabsVisible = False
                 , address1 =
-                    viewState.aggEdge.a
+                    leftId
                         |> Id.id
                         |> truncateLongIdentifier
                 , address2 =
-                    viewState.aggEdge.b
+                    rightId
                         |> Id.id
                         |> truncateLongIdentifier
                 , title =
@@ -122,17 +146,17 @@ view vc model id viewState =
             }
             :: ([ ( True, viewState.a2bTable ), ( False, viewState.b2aTable ) ]
                     |> List.map
-                        (\( isA2b, ts ) ->
+                        (\( isA2b_, ts ) ->
                             if ts.isTxFilterViewOpen then
                                 let
                                     filterDialogMsgs =
-                                        { closeTxFilterViewMsg = RelationDetails.CloseTxFilterView isA2b
+                                        { closeTxFilterViewMsg = RelationDetails.CloseTxFilterView isA2b_
                                         , txTableFilterShowAllTxsMsg = Nothing
                                         , txTableFilterShowIncomingTxOnlyMsg = Nothing
                                         , txTableFilterShowOutgoingTxOnlyMsg = Nothing
-                                        , resetAllTxFiltersMsg = RelationDetails.ResetAllTxFilters isA2b
-                                        , txTableAssetSelectBoxMsg = RelationDetails.TxTableAssetSelectBoxMsg isA2b
-                                        , openDateRangePickerMsg = RelationDetails.OpenDateRangePicker isA2b
+                                        , resetAllTxFiltersMsg = RelationDetails.ResetAllTxFilters isA2b_
+                                        , txTableAssetSelectBoxMsg = RelationDetails.TxTableAssetSelectBoxMsg isA2b_
+                                        , openDateRangePickerMsg = RelationDetails.OpenDateRangePicker isA2b_
                                         }
                                 in
                                 div
@@ -156,27 +180,41 @@ view vc model id viewState =
 tableTab : View.Config -> Network -> ( Id, Id ) -> RelationDetails.Model -> Bool -> Html RelationDetails.Msg
 tableTab vc network edgeId viewState isA2b =
     let
-        { open, table, id, address } =
+        { open, table, id, relation } =
             if isA2b then
                 { open = viewState.a2bTableOpen
                 , table = viewState.a2bTable
                 , id = first edgeId
-                , address = viewState.aggEdge.a2b
+                , relation = viewState.aggEdge.a2b
                 }
 
             else
                 { open = viewState.b2aTableOpen
                 , table = viewState.b2aTable
                 , id = second edgeId
-                , address = viewState.aggEdge.b2a
+                , relation = viewState.aggEdge.b2a
                 }
 
         noAddresses =
-            address
+            relation
                 |> RemoteData.toMaybe
                 |> Maybe.withDefault Nothing
                 |> Maybe.map .noTxs
                 |> Maybe.withDefault 0
+
+        arrow =
+            case ( isLeftToRight viewState, isA2b ) of
+                ( True, True ) ->
+                    Icons.iconsArrowRightThin {}
+
+                ( True, False ) ->
+                    Icons.iconsArrowLeftThin {}
+
+                ( False, True ) ->
+                    Icons.iconsArrowLeftThin {}
+
+                ( False, False ) ->
+                    Icons.iconsArrowRightThin {}
     in
     dataTab
         { title =
@@ -186,7 +224,7 @@ tableTab vc network edgeId viewState isA2b =
                 )
                 (SidePanelComponents.sidePanelListHeaderTitleRelationInstances
                     |> Rs.s_totalNumber
-                        (if RemoteData.isLoading address then
+                        (if RemoteData.isLoading relation then
                             loadingSpinner vc Css.View.loadingSpinner |> Just
 
                          else
@@ -196,14 +234,9 @@ tableTab vc network edgeId viewState isA2b =
                 { root =
                     { fromText = Locale.string vc.locale "From"
                     , address = Id.id id |> truncateLongIdentifier
-                    , iconInstance =
-                        if isA2b then
-                            Icons.iconsArrowRightThin {}
-
-                        else
-                            Icons.iconsArrowLeftThin {}
+                    , iconInstance = arrow
                     , number =
-                        case address of
+                        case relation of
                             Loading ->
                                 ""
 
@@ -284,14 +317,14 @@ type alias ValuesFormatted =
 
 
 makeValuesList : View.Config -> String -> Maybe Api.Data.NeighborAddress -> Maybe Api.Data.NeighborAddress -> List ValuesRow
-makeValuesList vc network a2b b2a =
+makeValuesList vc network right left =
     let
         leftValues =
-            b2a
+            left
                 |> relationToValues
 
         rightValues =
-            a2b
+            right
                 |> relationToValues
 
         getValue ( asset, values ) =
