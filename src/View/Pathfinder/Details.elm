@@ -18,7 +18,7 @@ import View.Locale as Locale
 
 valuesToCell : View.Config -> Currency.AssetIdentifier -> Api.Data.Values -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
 valuesToCell vc asset value =
-    { firstRowText = Locale.currency vc.locale [ ( asset, value ) ]
+    { firstRowText = Locale.currency (View.toCurrency vc) vc.locale [ ( asset, value ) ]
     , secondRowText = ""
     , secondRowVisible = False
     }

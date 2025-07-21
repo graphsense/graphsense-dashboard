@@ -31,7 +31,6 @@ import Log
 import Maybe.Extra
 import Model exposing (..)
 import Model.Address as Address
-import Model.Currency
 import Model.Dialog as Dialog
 import Model.Entity as Entity
 import Model.Graph.Coords exposing (BBox)
@@ -712,14 +711,10 @@ update plugins uc msg model =
 
         SettingsMsg (UserChangedPreferredCurrency currency) ->
             let
-                locale =
-                    Locale.changeCurrency currency model.config.locale
-
                 newModel =
                     { model
                         | config =
                             model.config
-                                |> s_locale locale
                                 |> s_preferredFiatCurrency currency
                     }
             in
@@ -730,18 +725,10 @@ update plugins uc msg model =
                 showInFiat =
                     not model.config.showValuesInFiat
 
-                locale =
-                    if showInFiat then
-                        Locale.changeCurrency model.config.preferredFiatCurrency model.config.locale
-
-                    else
-                        Locale.changeCurrency "coin" model.config.locale
-
                 newModel =
                     { model
                         | config =
                             model.config
-                                |> s_locale locale
                                 |> s_showValuesInFiat showInFiat
                     }
             in
@@ -1292,15 +1279,24 @@ update plugins uc msg model =
 
                 Graph.UserChangesCurrency currency ->
                     let
-                        locale =
-                            Locale.changeCurrency currency model.config.locale
+                        ( preferredCurrency, showFiat ) =
+                            case currency of
+                                "coin" ->
+                                    ( model.config.preferredFiatCurrency
+                                    , False
+                                    )
+
+                                fiat ->
+                                    ( fiat
+                                    , True
+                                    )
 
                         newModel =
                             { model
                                 | config =
                                     model.config
-                                        |> s_locale locale
-                                        |> s_showValuesInFiat (locale.currency /= Model.Currency.Coin)
+                                        |> s_preferredFiatCurrency preferredCurrency
+                                        |> s_showValuesInFiat showFiat
                             }
                     in
                     ( newModel, [ saveUserSettings newModel ] )

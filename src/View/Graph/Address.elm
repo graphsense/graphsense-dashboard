@@ -4,7 +4,7 @@ module View.Graph.Address exposing (address, links, shadowLinks)
 
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), expandHandleWidth)
-import Config.View exposing (Config)
+import Config.View exposing (Config, toCurrency)
 import Css
 import Css.Graph as Css
 import Dict
@@ -162,11 +162,11 @@ getLabel vc gc addr =
 
         Balance ->
             Label.normalizeValues gc (Id.currency addr.id) addr.address.balance addr.address.tokenBalances
-                |> Locale.currency vc.locale
+                |> Locale.currency (toCurrency vc) vc.locale
 
         TotalReceived ->
             Label.normalizeValues gc (Id.currency addr.id) addr.address.totalReceived addr.address.totalTokensReceived
-                |> Locale.currency vc.locale
+                |> Locale.currency (toCurrency vc) vc.locale
 
         Tag ->
             addr.userTag

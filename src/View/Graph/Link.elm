@@ -409,7 +409,7 @@ getLabel vc gc currency link =
 
                 Graph.Value ->
                     Label.normalizeValues gc currency li.value li.tokenValues
-                        |> Locale.currency vc.locale
+                        |> Locale.currency (View.toCurrency vc) vc.locale
                         |> (\str ->
                                 if not (Data.isAccountLike currency) then
                                     "~" ++ str
