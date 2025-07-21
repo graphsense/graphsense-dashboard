@@ -340,6 +340,9 @@ address vc tags adr =
     let
         net =
             Id.network adr.id
+
+        curr =
+            View.toCurrency vc
     in
     [ tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
@@ -348,7 +351,7 @@ address vc tags adr =
                 |> Maybe.map
                     (pair (assetFromBase net)
                         >> List.singleton
-                        >> Locale.currency vc.locale
+                        >> Locale.currency curr vc.locale
                     )
                 |> Maybe.withDefault ""
                 |> val vc
@@ -360,7 +363,7 @@ address vc tags adr =
                 |> Maybe.map
                     (pair (assetFromBase net)
                         >> List.singleton
-                        >> Locale.currency vc.locale
+                        >> Locale.currency curr vc.locale
                     )
                 |> Maybe.withDefault ""
                 |> val vc
@@ -372,7 +375,7 @@ address vc tags adr =
                 |> Maybe.map
                     (pair (assetFromBase net)
                         >> List.singleton
-                        >> Locale.currency vc.locale
+                        >> Locale.currency curr vc.locale
                     )
                 |> Maybe.withDefault ""
                 |> val vc

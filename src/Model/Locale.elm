@@ -5,7 +5,6 @@ import DateFormat.Language
 import DateFormat.Relative
 import Dict exposing (Dict)
 import Locale.Durations
-import Model.Currency exposing (..)
 import Time
 
 
@@ -44,7 +43,6 @@ type alias Model =
     , locale : String
     , zone : Time.Zone
     , timeLang : DateFormat.Language.Language
-    , currency : Currency
     , relativeTimeOptions : DateFormat.Relative.RelativeTimeOptions
     , unitToString : Int -> Locale.Durations.Unit -> String
     , supportedTokens : Dict String Api.Data.TokenConfigs

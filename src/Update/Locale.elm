@@ -1,4 +1,4 @@
-module Update.Locale exposing (changeCurrency, changeTimeZone, changeValueDetail, setSupportedTokens, switch, update)
+module Update.Locale exposing (changeTimeZone, changeValueDetail, setSupportedTokens, switch, update)
 
 import Api.Data
 import DateFormat.Language
@@ -8,7 +8,6 @@ import Effect.Locale exposing (Effect)
 import Languages.German
 import Locale.English
 import Locale.German
-import Model.Currency exposing (..)
 import Model.Locale exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
@@ -114,19 +113,6 @@ switch locale model =
 
                 _ ->
                     Locale.English.unitToString
-    }
-
-
-changeCurrency : String -> Model -> Model
-changeCurrency curr model =
-    { model
-        | currency =
-            case String.toLower curr of
-                "coin" ->
-                    Coin
-
-                fiat ->
-                    Fiat fiat
     }
 
 

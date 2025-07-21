@@ -1,7 +1,8 @@
-module Config.View exposing (Config, getAbuseName, getConceptName)
+module Config.View exposing (Config, getAbuseName, getConceptName, toCurrency)
 
 import Api.Data
 import List.Extra
+import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
 import Theme.Theme exposing (Theme)
@@ -33,3 +34,12 @@ getAbuseName : { t | abuseConcepts : List Api.Data.Concept } -> Maybe String -> 
 getAbuseName gc =
     Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.abuseConcepts)
         >> Maybe.map .label
+
+
+toCurrency : Config -> Currency
+toCurrency { showValuesInFiat, preferredFiatCurrency } =
+    if showValuesInFiat then
+        Fiat preferredFiatCurrency
+
+    else
+        Coin

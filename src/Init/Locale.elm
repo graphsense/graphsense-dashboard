@@ -6,8 +6,7 @@ import DateFormat.Relative
 import Dict
 import Effect.Locale exposing (Effect(..))
 import Locale.English
-import Maybe exposing (withDefault)
-import Model.Currency exposing (..)
+import Maybe
 import Model.Locale exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
@@ -30,12 +29,6 @@ init uc =
       , valueDetail = uc.valueDetail |> Maybe.withDefault Magnitude
       , zone = Time.utc
       , timeLang = DateFormat.Language.english
-      , currency =
-            if uc.showValuesInFiat |> Maybe.withDefault False then
-                Fiat (uc.preferredFiatCurrency |> withDefault "usd")
-
-            else
-                Coin
       , relativeTimeOptions = DateFormat.Relative.defaultRelativeOptions
       , unitToString = Locale.English.unitToString
       , supportedTokens = Dict.empty

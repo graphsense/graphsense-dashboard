@@ -185,6 +185,7 @@ valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
              else
                 Locale.currency
             )
+                (View.toCurrency vc)
                 vc.locale
                 [ ( coinCode, values ) ]
 
@@ -221,7 +222,7 @@ twoValuesCell vc name conf =
         toValue =
             pair conf.coinCode
                 >> List.singleton
-                >> Locale.currencyWithoutCode vc.locale
+                >> Locale.currencyWithoutCode (View.toCurrency vc) vc.locale
     in
     Table.veryCustomColumn
         { name = name
