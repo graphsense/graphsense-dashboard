@@ -109,7 +109,7 @@ calcDimensions vc ed aAddress bAddress =
 
                         else
                             values
-                                |> Locale.currency vc.locale
+                                |> Locale.currency (View.toCurrency vc) vc.locale
                     )
                 >> Maybe.withDefault ""
 
