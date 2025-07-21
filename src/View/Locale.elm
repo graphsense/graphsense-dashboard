@@ -438,7 +438,7 @@ currencyWithOptions : CurrencyOptions -> Model -> List ( AssetIdentifier, Api.Da
 currencyWithOptions options model values =
     case options.currency of
         Coin ->
-            if List.all (second >> .value >> (==) 0) values then
+            if List.length values > 1 && List.all (second >> .value >> (==) 0) values then
                 "0"
 
             else
