@@ -158,12 +158,6 @@ shallPushHistory plugins msg _ =
                 AddressDetails.ResetTxDirectionFilter ->
                     False
 
-                AddressDetails.BrowserGotFromDateBlock _ _ ->
-                    False
-
-                AddressDetails.BrowserGotToDateBlock _ _ ->
-                    False
-
                 AddressDetails.TableMsg _ ->
                     False
 

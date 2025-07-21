@@ -92,6 +92,9 @@ annotationToAttrAndLabel node details offset msg ann =
 
                 _ ->
                     []
+
+        aw =
+            GraphComponents.addressNode_details.width
     in
     ( colorAttributes "fill"
     , (if String.length ann.label > 0 then
@@ -116,12 +119,12 @@ annotationToAttrAndLabel node details offset msg ann =
             |> List.singleton
             |> Svg.foreignObject
                 [ translate
-                    0
+                    ((aw - details.width) / -2)
                     (details.height
                         + offset
                     )
                     |> transform
-                , details.width
+                , aw
                     |> String.fromFloat
                     |> Svg.width
                 , (GraphComponents.annotationLabel_details.height
