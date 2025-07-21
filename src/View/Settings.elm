@@ -68,21 +68,21 @@ view plugins vc m =
 generalSettings : Plugins -> Config -> Model x -> Html Model.Msg
 generalSettings plugins vc m =
     let
-        usdSelected =
-            vc.preferredFiatCurrency == "usd"
+        eurSelected =
+            vc.preferredFiatCurrency == "eur"
 
         currencyToggle =
             Vc.toggleWithText
-                { selectedA = usdSelected
+                { selectedA = eurSelected
                 , titleA = "EUR"
                 , titleB = "USD"
                 , msg =
                     UserChangedPreferredCurrency
-                        (if usdSelected then
-                            "eur"
+                        (if eurSelected then
+                            "usd"
 
                          else
-                            "usd"
+                            "eur"
                         )
                         |> SettingsMsg
                 }
