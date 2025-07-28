@@ -1,12 +1,10 @@
 module Init.Pathfinder.RelationDetails exposing (init)
 
 import Api.Data
-import Config.Update as Update
 import Dict
 import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
-import Model.Locale as Locale
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import RemoteData
@@ -28,14 +26,14 @@ init edge =
             edge.a2b
                 |> RemoteData.toMaybe
                 |> Maybe.Extra.join
-                |> Maybe.map (getExposedAssetsForNeighbor)
+                |> Maybe.map getExposedAssetsForNeighbor
                 |> Maybe.withDefault []
 
         b2aAssets =
             edge.b2a
                 |> RemoteData.toMaybe
                 |> Maybe.Extra.join
-                |> Maybe.map (getExposedAssetsForNeighbor)
+                |> Maybe.map getExposedAssetsForNeighbor
                 |> Maybe.withDefault []
     in
     { a2bTableOpen = False

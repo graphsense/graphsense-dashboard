@@ -19,10 +19,9 @@ module Model.Pathfinder.Address exposing
 
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
-import Dict
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords exposing (Coords)
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id exposing (Id)
 import Plugin.Model as Plugin
 import RecordSetter exposing (s_incomingTxs, s_outgoingTxs)
 import RemoteData exposing (RemoteData(..), WebData)

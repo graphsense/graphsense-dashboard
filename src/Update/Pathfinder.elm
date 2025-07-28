@@ -2682,7 +2682,7 @@ selectTx id model =
 
 
 selectAggEdge : Update.Config -> ( Id, Id ) -> Model -> ( Model, List Effect )
-selectAggEdge uc id model =
+selectAggEdge _ id model =
     case Dict.get id model.network.aggEdges of
         Just edge ->
             let
