@@ -6,7 +6,6 @@ module Model.Pathfinder.Address exposing
     , getActivityRangeAddress
     , getBalance
     , getCoords
-    , getExposedAssets
     , getInDegree
     , getNrTxs
     , getOutDegree
@@ -84,26 +83,6 @@ getNrTxs a =
     case a.data of
         Success x ->
             Just (x.noOutgoingTxs + x.noIncomingTxs)
-
-        _ ->
-            Nothing
-
-
-getExposedAssets : Address -> Maybe (List String)
-getExposedAssets a =
-    case a.data of
-        Success x ->
-            Just
-                ((Id.network a.id |> String.toUpper)
-                    :: ((x.tokenBalances |> Maybe.map Dict.keys |> Maybe.withDefault [])
-                            ++ (x.totalTokensReceived |> Maybe.map Dict.keys |> Maybe.withDefault [])
-                            ++ (x.totalTokensSpent |> Maybe.map Dict.keys |> Maybe.withDefault [])
-                            |> Set.fromList
-                            |> Set.toList
-                            |> List.map String.toUpper
-                            |> List.sort
-                       )
-                )
 
         _ ->
             Nothing

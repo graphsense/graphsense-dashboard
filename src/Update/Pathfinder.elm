@@ -26,6 +26,7 @@ import Json.Decode
 import List.Extra
 import Log
 import Maybe.Extra
+import Model.Address as Address
 import Model.DateFilter as DateFilter
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
@@ -2668,16 +2669,10 @@ selectAggEdge uc id model =
                         _ ->
                             Nothing
 
-                network =
-                    id |> Tuple.first |> Id.network
-
-                assets =
-                    String.toUpper network :: Locale.getTokenTickers uc.locale network
-
                 ( m1, eff ) =
                     unselect (n model)
                         |> Tuple.mapFirst
-                            (s_details (RelationDetails.init edge assets |> RelationDetails id |> Just))
+                            (s_details (RelationDetails.init edge |> RelationDetails id |> Just))
             in
             selectedEdge
                 |> Maybe.map (\a -> Network.updateAggEdge a (s_selected False) m1.network)
@@ -2699,9 +2694,9 @@ getExposedAssetsForAddress uc id address =
         allAssets =
             (Id.network id |> String.toUpper) :: Locale.getTokenTickers uc.locale (Id.network id)
     in
-    address
-        |> Address.getExposedAssets
-        |> Maybe.withDefault allAssets
+    address.data
+        |> RemoteData.map Address.getExposedAssets
+        |> RemoteData.withDefault allAssets
 
 
 selectAddressWithDateFilter : Update.Config -> Id -> DateFilter.DateFilterRaw -> Model -> ( Model, List Effect )
