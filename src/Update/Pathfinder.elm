@@ -131,6 +131,31 @@ update plugins uc msg model =
         |> pushHistory plugins msg
         |> markDirty plugins msg
         |> updateByMsg plugins uc msg
+        |> and syncSidePanel
+
+
+syncSidePanel : Model -> ( Model, List Effect )
+syncSidePanel model =
+    model.details
+        |> Maybe.andThen
+            (\details ->
+                case details of
+                    RelationDetails rid rd ->
+                        Dict.get rid model.network.aggEdges
+                            |> Maybe.map (flip s_aggEdge rd >> RelationDetails rid >> Just)
+                            |> Maybe.withDefault Nothing
+
+                    TxDetails tid td ->
+                        Dict.get tid model.network.txs
+                            |> Maybe.map (flip s_tx td >> TxDetails tid >> Just)
+                            |> Maybe.withDefault Nothing
+
+                    AddressDetails _ _ ->
+                        -- nothing to sync with graph
+                        Just details
+            )
+        |> flip s_details model
+        |> n
 
 
 resultLineToRoute : Search.ResultLine -> Route
@@ -3198,17 +3223,6 @@ removeTx : Id -> Model -> ( Model, List Effect )
 removeTx id model =
     ( { model
         | network = Network.deleteTx id model.network
-        , details =
-            case model.details of
-                Just (TxDetails txId _) ->
-                    if txId == id then
-                        Nothing
-
-                    else
-                        model.details
-
-                _ ->
-                    model.details
         , selection =
             case model.selection of
                 SelectedAddress addressId ->
