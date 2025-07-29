@@ -221,6 +221,7 @@ tableTab vc network edgeId viewState isA2b =
             SidePanelComponents.sidePanelListHeaderTitleRelationWithInstances
                 (SidePanelComponents.sidePanelListHeaderTitleRelationAttributes
                     |> Rs.s_root [ spread ]
+                    |> Rs.s_valueFrame [ [ Css.width Css.auto ] |> css ]
                 )
                 (SidePanelComponents.sidePanelListHeaderTitleRelationInstances
                     |> Rs.s_totalNumber

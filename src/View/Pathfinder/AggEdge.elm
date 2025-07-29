@@ -35,8 +35,8 @@ type alias Dimensions =
     , rightLabelWidth : Float
     , leftLabel : String
     , rightLabel : String
-    , leftValueRaw : Int
-    , rightValueRaw : Int
+    , leftVisible : Bool
+    , rightVisible : Bool
     , left : Pos
     , right : Pos
     }
@@ -78,17 +78,11 @@ calcDimensions vc ed aAddress bAddress =
         leftLabel =
             relationToValue leftRelation
 
-        rawValue =
-            RemoteData.toMaybe
-                >> Maybe.Extra.join
-                >> Maybe.map (.value >> .value)
-                >> Maybe.withDefault 0
+        leftValueVisible =
+            not (String.isEmpty leftLabel)
 
-        leftValueRaw =
-            rawValue leftRelation
-
-        rightValueRaw =
-            rawValue rightRelation
+        rightValueVisible =
+            not (String.isEmpty rightLabel)
 
         relationToValue =
             RemoteData.toMaybe
@@ -104,7 +98,7 @@ calcDimensions vc ed aAddress bAddress =
                                             |> List.map (mapFirst (Currency.asset data.address.currency))
                                        )
                         in
-                        if Currency.allZero values then
+                        if data.noTxs == 0 then
                             ""
 
                         else
@@ -140,8 +134,8 @@ calcDimensions vc ed aAddress bAddress =
     , rightLabelWidth = rightLabelWidth
     , leftLabel = leftLabel
     , rightLabel = rightLabel
-    , leftValueRaw = leftValueRaw
-    , rightValueRaw = rightValueRaw
+    , leftVisible = leftValueVisible
+    , rightVisible = rightValueVisible
     , left = left
     , right = right
     }
@@ -156,7 +150,7 @@ view vc ed aAddress bAddress =
         halfOriginalWidth =
             originalWidth / 2
 
-        { leftLabelWidth, rightLabelWidth, x, y, leftLabel, rightLabel, leftValueRaw, rightValueRaw, totalWidth } =
+        { leftLabelWidth, rightLabelWidth, x, y, leftLabel, rightLabel, leftVisible, rightVisible, totalWidth } =
             calcDimensions vc ed aAddress bAddress
 
         rectangleWidth =
@@ -205,21 +199,21 @@ view vc ed aAddress bAddress =
                         |> transform
                     ]
                 |> s_leftArrow
-                    (if leftValueRaw == 0 then
+                    (if not leftVisible then
                         [ hidden ]
 
                      else
                         []
                     )
                 |> s_rightArrow
-                    (if rightValueRaw == 0 then
+                    (if not rightVisible then
                         [ hidden ]
 
                      else
                         []
                     )
                 |> s_dividerLine
-                    (if leftValueRaw /= 0 && rightValueRaw /= 0 then
+                    (if leftVisible && rightVisible then
                         [ translate
                             (leftLabelWidth - halfOriginalWidth)
                             0
@@ -230,7 +224,7 @@ view vc ed aAddress bAddress =
                         [ hidden ]
                     )
                 |> s_rightValue
-                    (if leftValueRaw == 0 then
+                    (if not leftVisible then
                         [ translate
                             -halfOriginalWidth
                             corrH
@@ -245,7 +239,7 @@ view vc ed aAddress bAddress =
                         ]
                     )
                 |> s_leftValue
-                    (if rightValueRaw == 0 then
+                    (if not rightVisible then
                         [ translate
                             (rectangleWidth - halfOriginalWidth)
                             corrH
