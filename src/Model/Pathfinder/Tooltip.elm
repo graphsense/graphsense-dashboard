@@ -11,6 +11,7 @@ type alias Tooltip msg =
     { hovercard : Hovercard.Model
     , type_ : TooltipType msg
     , closing : Bool
+    , open : Bool
     }
 
 

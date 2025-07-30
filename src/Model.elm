@@ -132,6 +132,7 @@ type Msg
     | NotificationMsg Model.Notification.Msg
     | ShowNotification Model.Notification.Notification
     | RuntimePostponedUpdateByUrl Url
+    | OpeningTooltip { context : String, domId : String } Bool (TooltipType Msg)
     | OpenTooltip { context : String, domId : String } (TooltipType Msg)
     | ClosingTooltip (Maybe { context : String, domId : String }) Bool
     | RepositionTooltip

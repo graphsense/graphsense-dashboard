@@ -104,8 +104,8 @@ perform plugins key statusbarToken apiKey effect =
                     Pathfinder.perform eff
                         |> Cmd.map PathfinderMsg
 
-                Pathfinder.OpenTooltipEffect ctx tttype ->
-                    Task.perform (always (OpenTooltip ctx (Model.Pathfinder.Tooltip.mapMsgTooltipType tttype PathfinderMsg))) (Task.succeed ())
+                Pathfinder.OpenTooltipEffect ctx withDelay tttype ->
+                    Task.perform (always (OpeningTooltip ctx withDelay (Model.Pathfinder.Tooltip.mapMsgTooltipType tttype PathfinderMsg))) (Task.succeed ())
 
                 Pathfinder.CloseTooltipEffect ctx withDelay ->
                     Task.perform (always (ClosingTooltip ctx withDelay)) (Task.succeed ())

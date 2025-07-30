@@ -809,7 +809,7 @@ updateByMsg plugins uc msg model =
                           }
                         , case maybeTT of
                             Just tt ->
-                                OpenTooltipEffect { context = domId, domId = domId } tt |> List.singleton
+                                OpenTooltipEffect { context = domId, domId = domId } True tt |> List.singleton
 
                             _ ->
                                 []
@@ -859,7 +859,7 @@ updateByMsg plugins uc msg model =
                           }
                         , case maybeTT of
                             Just tt ->
-                                OpenTooltipEffect { context = domId, domId = domId } tt |> List.singleton
+                                OpenTooltipEffect { context = domId, domId = domId } True tt |> List.singleton
 
                             _ ->
                                 []
@@ -880,7 +880,7 @@ updateByMsg plugins uc msg model =
             ( unhover model, CloseTooltipEffect (Just { context = Id.toString id, domId = Id.toString id }) False |> List.singleton )
 
         ShowTextTooltip config ->
-            ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } (Tooltip.Text config.text) |> List.singleton )
+            ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
 
         CloseTextTooltip config ->
             ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
@@ -898,7 +898,7 @@ updateByMsg plugins uc msg model =
                                 }
                     in
                     ( model
-                    , OpenTooltipEffect ctx tt |> List.singleton
+                    , OpenTooltipEffect ctx False tt |> List.singleton
                     )
             in
             case model.details of
@@ -931,7 +931,7 @@ updateByMsg plugins uc msg model =
                                 }
                     in
                     ( model
-                    , OpenTooltipEffect ctx tt
+                    , OpenTooltipEffect ctx False tt
                         |> List.singleton
                     )
 
@@ -1561,7 +1561,7 @@ updateByMsg plugins uc msg model =
                                         (RemoteData.toMaybe edge.b2a)
                                 )
                             |> Maybe.map Tooltip.AggEdge
-                            |> Maybe.map (OpenTooltipEffect { context = domId, domId = domId })
+                            |> Maybe.map (OpenTooltipEffect { context = domId, domId = domId } True)
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
                         )
@@ -2009,17 +2009,17 @@ handleTooltipMsg msg model =
                         case Dict.get id model.tagSummaries of
                             Just (HasTagSummaries { withCluster }) ->
                                 ( model
-                                , OpenTooltipEffect ctx (tsToTooltip withCluster) |> List.singleton
+                                , OpenTooltipEffect ctx False (tsToTooltip withCluster) |> List.singleton
                                 )
 
                             Just (HasTagSummaryWithCluster ts) ->
                                 ( model
-                                , OpenTooltipEffect ctx (tsToTooltip ts) |> List.singleton
+                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
                                 )
 
                             Just (HasTagSummaryOnlyWithCluster ts) ->
                                 ( model
-                                , OpenTooltipEffect ctx (tsToTooltip ts) |> List.singleton
+                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
                                 )
 
                             _ ->
@@ -2596,7 +2596,7 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         ( mo, eff )
 
                     PluginInterface.OpenTooltip s msgs ->
-                        ( mo, [ OpenTooltipEffect s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg)) ] )
+                        ( mo, [ OpenTooltipEffect s False (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg)) ] )
 
                     PluginInterface.CloseTooltip s withDelay ->
                         ( mo, [ CloseTooltipEffect (Just s) withDelay ] )

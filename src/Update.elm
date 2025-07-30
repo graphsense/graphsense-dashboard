@@ -208,12 +208,51 @@ update plugins uc msg model =
                         |> Maybe.withDefault True
                     , Just tt
                     )
+
+                closing =
+                    model.tooltip |> Maybe.map .closing |> Maybe.withDefault False
+
+                open =
+                    model.tooltip |> Maybe.map .open |> Maybe.withDefault False
             in
-            if hasToChange then
-                ( { model | tooltip = newTooltip }
+            if not hasToChange && not closing && not open then
+                ( { model | tooltip = newTooltip |> Maybe.map (s_open True) }
                 , Cmd.map HovercardMsg cmd
                     |> CmdEffect
                     |> List.singleton
+                )
+
+            else
+                n model
+
+        OpeningTooltip ctx withDelay tttype ->
+            let
+                ( hc, _ ) =
+                    ctx.domId |> Hovercard.init
+
+                tt =
+                    tttype |> Tooltip.init hc
+
+                ( hasToChange, newTooltip ) =
+                    ( model.tooltip
+                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                        |> Maybe.withDefault True
+                    , Just tt
+                    )
+
+                openDelay =
+                    delay
+                        (if withDelay then
+                            1000.0
+
+                         else
+                            0.0
+                        )
+                        (OpenTooltip ctx tttype)
+            in
+            if hasToChange then
+                ( { model | tooltip = newTooltip }
+                , openDelay |> CmdEffect |> List.singleton
                 )
 
             else
