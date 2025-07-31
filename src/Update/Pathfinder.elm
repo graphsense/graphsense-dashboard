@@ -2836,6 +2836,7 @@ unselect ( model, eff ) =
         |> flip s_network model
         |> s_details Nothing
         |> s_selection NoSelection
+        |> s_modPressed False
     , eff ++ [ CloseTooltipEffect Nothing False ]
     )
 

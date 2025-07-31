@@ -243,7 +243,7 @@ update plugins uc msg model =
                 openDelay =
                     delay
                         (if withDelay then
-                            1000.0
+                            2000.0
 
                          else
                             0.0
