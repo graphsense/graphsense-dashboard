@@ -257,7 +257,7 @@ updateByMsg plugins uc msg model =
         UserReleasedDeleteKey ->
             deleteSelection model
 
-        UserPressedNormalKey key ->
+        UserReleasedNormalKey key ->
             case ( model.modPressed, key ) of
                 ( True, "z" ) ->
                     update plugins uc UserClickedUndo model
@@ -268,7 +268,7 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        UserReleasedNormalKey _ ->
+        UserPressedNormalKey _ ->
             n model
 
         BrowserGotAddressData id position dateFilterPreset data ->
