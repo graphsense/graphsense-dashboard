@@ -18,6 +18,7 @@ type alias Network =
     { addresses : Dict Id Address
     , txs : Dict Id Tx
     , aggEdges : Dict ( Id, Id ) AggEdge
+    , fetchedEdges : Set ( Id, Id )
     , addressAggEdgeMap : Dict Id (Set ( Id, Id ))
     , animatedAddresses : Set Id
     , animatedTxs : Set Id

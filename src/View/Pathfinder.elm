@@ -5,7 +5,6 @@ import Config.View as View
 import Css
 import Css.Graph
 import Css.Pathfinder as Css
-import Css.View
 import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
@@ -25,7 +24,6 @@ import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import RemoteData
 import String.Format
 import Svg.Styled exposing (Svg, defs, feComposite, feFlood, feGaussianBlur, feMerge, feMergeNode, feOffset, filter, linearGradient, stop, svg)
 import Svg.Styled.Attributes exposing (css, dx, dy, floodColor, height, id, in2, in_, offset, operator, preserveAspectRatio, result, stdDeviation, stopColor, transform, viewBox, width, x, y)
@@ -578,10 +576,7 @@ detailsView plugin pluginStates vc model =
         Just details ->
             case details of
                 Pathfinder.AddressDetails id state ->
-                    RemoteData.unwrap
-                        (Util.View.loadingSpinner vc Css.View.loadingSpinner)
-                        (AddressDetails.view plugin pluginStates vc model id)
-                        state
+                    AddressDetails.view plugin pluginStates vc model id state
 
                 Pathfinder.TxDetails id state ->
                     TxDetails.view vc model id state

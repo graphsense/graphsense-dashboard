@@ -4,6 +4,7 @@ import Api.Data
 import Api.Request.Addresses
 import Api.Time exposing (Posix)
 import Config.DateRangePicker exposing (datePickerSettings)
+import Config.Update as Update
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
@@ -11,7 +12,6 @@ import Init.Graph.Table
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
-import Model.Locale as Locale
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
@@ -34,8 +34,8 @@ getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
-init : Network -> Locale.Model -> DateFilterRaw -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
-init network locale datefilterPreset addressId data assets =
+init : Update.Config -> Network -> DateFilterRaw -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
+init uc network datefilterPreset addressId data assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -61,7 +61,7 @@ init network locale datefilterPreset addressId data assets =
                     ( { table = table False
                       , order = Just Api.Request.Addresses.Order_Asc
                       , dateRangePicker =
-                            datePickerSettings locale mn mmax
+                            datePickerSettings uc.locale mn mmax
                                 |> DateRangePicker.init UpdateDateRangePicker mmax Nothing Nothing
                                 |> Just
                       , direction = Nothing
@@ -78,7 +78,7 @@ init network locale datefilterPreset addressId data assets =
     else
         let
             drp =
-                datePickerSettings locale (datefilterPreset.fromDate |> Maybe.withDefault mmin) (datefilterPreset.toDate |> Maybe.withDefault mmax)
+                datePickerSettings uc.locale (datefilterPreset.fromDate |> Maybe.withDefault mmin) (datefilterPreset.toDate |> Maybe.withDefault mmax)
                     |> DateRangePicker.init UpdateDateRangePicker mmax datefilterPreset.fromDate datefilterPreset.toDate
         in
         initWithFilter addressId data (Just drp) Nothing Nothing assets

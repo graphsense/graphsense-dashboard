@@ -24,6 +24,7 @@ import RecordSetter exposing (..)
 import RemoteData
 import Set
 import Tuple exposing (mapFirst, mapSecond)
+import Tuple2 exposing (pairTo)
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (n)
@@ -100,198 +101,233 @@ update uc msg model =
         UserClickedToggleTokenBalancesSelect ->
             ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
 
-        UserClickedToggleNeighborsTable Outgoing ->
-            let
-                ( neighborsOutgoing, eff2 ) =
-                    PagedTable.loadFirstPage
-                        (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.addressId Outgoing)
-                        model.neighborsOutgoing
-            in
-            ( { model
-                | outgoingNeighborsTableOpen = not model.outgoingNeighborsTableOpen
-                , neighborsOutgoing = neighborsOutgoing
-              }
-            , Maybe.Extra.toList eff2
-            )
+        UserClickedToggleNeighborsTable dir ->
+            getNeighborsTableAndSetter model dir
+                |> Maybe.map
+                    (\( tbl, setter ) ->
+                        let
+                            ( tblNew, eff1 ) =
+                                PagedTable.loadFirstPage
+                                    (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.addressId dir)
+                                    tbl
+                        in
+                        ( { model
+                            | incomingNeighborsTableOpen =
+                                if dir == Incoming then
+                                    not model.incomingNeighborsTableOpen
 
-        UserClickedToggleNeighborsTable Incoming ->
-            let
-                ( neighborsIncoming, eff1 ) =
-                    PagedTable.loadFirstPage
-                        (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.addressId Incoming)
-                        model.neighborsIncoming
-            in
-            ( { model
-                | incomingNeighborsTableOpen = not model.incomingNeighborsTableOpen
-                , neighborsIncoming = neighborsIncoming
-              }
-            , Maybe.Extra.toList eff1
-            )
+                                else
+                                    model.incomingNeighborsTableOpen
+                            , outgoingNeighborsTableOpen =
+                                if dir == Outgoing then
+                                    not model.outgoingNeighborsTableOpen
+
+                                else
+                                    model.outgoingNeighborsTableOpen
+                          }
+                            |> setter tblNew
+                        , Maybe.Extra.toList eff1
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         NeighborsTablePagedTableMsg dir pm ->
-            let
-                ( tbl, setter ) =
-                    case dir of
-                        Incoming ->
-                            ( model.neighborsIncoming, s_neighborsIncoming )
-
-                        Outgoing ->
-                            ( model.neighborsOutgoing, s_neighborsOutgoing )
-
-                ( pt, eff ) =
-                    PagedTable.update (neighborsTableConfig model.addressId dir) pm tbl
-            in
-            ( setter pt model
-            , Maybe.Extra.toList eff
-            )
+            getNeighborsTableAndSetter model dir
+                |> Maybe.map
+                    (\( tbl, setter ) ->
+                        let
+                            ( pt, eff ) =
+                                PagedTable.update (neighborsTableConfig model.addressId dir) pm tbl
+                        in
+                        ( setter pt model
+                        , Maybe.Extra.toList eff
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         GotNeighborsForAddressDetails dir neighbors ->
-            let
-                ( tbl, setter ) =
-                    case dir of
-                        Incoming ->
-                            ( model.neighborsIncoming, s_neighborsIncoming )
-
-                        Outgoing ->
-                            ( model.neighborsOutgoing, s_neighborsOutgoing )
-
-                ( pt, eff ) =
-                    PagedTable.setData
-                        (neighborsTableConfig model.addressId dir)
-                        NeighborsTable.filter
-                        neighbors.nextPage
-                        neighbors.neighbors
-                        tbl
-            in
-            ( setter pt model
-            , Maybe.Extra.toList eff
-            )
+            getNeighborsTableAndSetter model dir
+                |> Maybe.map
+                    (\( tbl, setter ) ->
+                        let
+                            ( pt, eff ) =
+                                PagedTable.setData
+                                    (neighborsTableConfig model.addressId dir)
+                                    NeighborsTable.filter
+                                    neighbors.nextPage
+                                    neighbors.neighbors
+                                    tbl
+                        in
+                        ( setter pt model
+                        , Maybe.Extra.toList eff
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         GotNeighborsNextPageForAddressDetails dir neighbors ->
-            let
-                ( tbl, setter ) =
-                    case dir of
-                        Incoming ->
-                            ( model.neighborsIncoming, s_neighborsIncoming )
-
-                        Outgoing ->
-                            ( model.neighborsOutgoing, s_neighborsOutgoing )
-
-                ( pt, eff ) =
-                    PagedTable.appendData
-                        (neighborsTableConfig model.addressId dir)
-                        NeighborsTable.filter
-                        neighbors.nextPage
-                        neighbors.neighbors
-                        tbl
-            in
-            ( setter pt model
-            , Maybe.Extra.toList eff
-            )
+            getNeighborsTableAndSetter model dir
+                |> Maybe.map
+                    (\( tbl, setter ) ->
+                        let
+                            ( pt, eff ) =
+                                PagedTable.appendData
+                                    (neighborsTableConfig model.addressId dir)
+                                    NeighborsTable.filter
+                                    neighbors.nextPage
+                                    neighbors.neighbors
+                                    tbl
+                        in
+                        ( setter pt model
+                        , Maybe.Extra.toList eff
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         TransactionsTablePagedTableMsg pm ->
-            PagedTable.update (transactionTableConfig model.txs model.addressId) pm model.txs.table
-                |> mapFirst (flip s_table model.txs)
-                |> mapFirst (flip s_txs model)
-                |> mapSecond Maybe.Extra.toList
+            model.txs
+                |> RemoteData.map
+                    (\txs ->
+                        PagedTable.update (transactionTableConfig txs model.addressId) pm txs.table
+                            |> mapFirst (flip s_table txs)
+                            |> mapFirst (RemoteData.Success >> flip s_txs model)
+                            |> mapSecond Maybe.Extra.toList
+                    )
+                |> RemoteData.withDefault (n model)
 
         UserClickedToggleTransactionTable ->
             not model.transactionsTableOpen
                 |> showTransactionsTable model
 
         GotNextPageTxsForAddressDetails txs ->
-            PagedTable.appendData
-                (transactionTableConfig model.txs model.addressId)
-                TransactionTable.filter
-                txs.nextPage
-                txs.addressTxs
-                model.txs.table
-                |> mapFirst (flip s_table model.txs)
-                |> mapFirst (flip s_txs model)
-                |> mapSecond Maybe.Extra.toList
+            model.txs
+                |> RemoteData.map
+                    (\txsTable ->
+                        PagedTable.appendData
+                            (transactionTableConfig txsTable model.addressId)
+                            TransactionTable.filter
+                            txs.nextPage
+                            txs.addressTxs
+                            txsTable.table
+                            |> mapFirst (flip s_table txsTable)
+                            |> mapFirst (RemoteData.Success >> flip s_txs model)
+                            |> mapSecond Maybe.Extra.toList
+                    )
+                |> RemoteData.withDefault (n model)
 
         GotTxsForAddressDetails ( min, max ) txs ->
-            let
-                drp =
-                    model.txs.dateRangePicker
-            in
-            if Maybe.andThen .fromDate drp == min && Maybe.andThen .toDate drp == max then
-                PagedTable.setData
-                    (transactionTableConfig model.txs model.addressId)
-                    TransactionTable.filter
-                    txs.nextPage
-                    txs.addressTxs
-                    model.txs.table
-                    |> mapFirst (flip s_table model.txs)
-                    |> mapFirst (flip s_txs model)
-                    |> mapSecond Maybe.Extra.toList
+            model.txs
+                |> RemoteData.map
+                    (\txsTable ->
+                        let
+                            drp =
+                                txsTable.dateRangePicker
+                        in
+                        if Maybe.andThen .fromDate drp == min && Maybe.andThen .toDate drp == max then
+                            PagedTable.setData
+                                (transactionTableConfig txsTable model.addressId)
+                                TransactionTable.filter
+                                txs.nextPage
+                                txs.addressTxs
+                                txsTable.table
+                                |> mapFirst (flip s_table txsTable)
+                                |> mapFirst (RemoteData.Success >> flip s_txs model)
+                                |> mapSecond Maybe.Extra.toList
 
-            else
-                n model
+                        else
+                            n model
+                    )
+                |> RemoteData.withDefault (n model)
 
         UpdateDateRangePicker subMsg ->
-            model.txs.dateRangePicker
-                |> Maybe.map
-                    (\dateRangePicker ->
-                        let
-                            newPicker =
-                                DateRangePicker.update subMsg dateRangePicker
+            model.txs
+                |> RemoteData.map
+                    (\txsTable ->
+                        txsTable.dateRangePicker
+                            |> Maybe.map
+                                (\dateRangePicker ->
+                                    let
+                                        newPicker =
+                                            DateRangePicker.update subMsg dateRangePicker
 
-                            eff =
-                                if newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate then
-                                    TransactionTable.loadTxs model.addressId Nothing newPicker.fromDate newPicker.toDate model.txs.selectedAsset
+                                        eff =
+                                            if newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate then
+                                                TransactionTable.loadTxs model.addressId Nothing newPicker.fromDate newPicker.toDate txsTable.selectedAsset
 
-                                else
-                                    []
+                                            else
+                                                []
 
-                            np =
-                                if List.length eff > 0 then
-                                    newPicker |> DateRangePicker.closePicker
+                                        np =
+                                            if List.length eff > 0 then
+                                                newPicker |> DateRangePicker.closePicker
 
-                                else
-                                    newPicker
-                        in
-                        ( { model
-                            | txs = s_dateRangePicker (Just np) model.txs
-                          }
-                        , eff
-                        )
+                                            else
+                                                newPicker
+                                    in
+                                    ( { model
+                                        | txs = s_dateRangePicker (Just np) txsTable |> RemoteData.Success
+                                      }
+                                    , eff
+                                    )
+                                )
+                            |> Maybe.withDefault (n model)
                     )
-                |> Maybe.withDefault (n model)
+                |> RemoteData.withDefault (n model)
 
         ToggleTxFilterView ->
-            model.txs.dateRangePicker
-                |> flip s_dateRangePicker model.txs
-                |> s_isTxFilterViewOpen (not model.txs.isTxFilterViewOpen)
-                |> flip s_txs model
-                |> n
+            model.txs
+                |> RemoteData.map
+                    (\txsTable ->
+                        txsTable.dateRangePicker
+                            |> flip s_dateRangePicker txsTable
+                            |> s_isTxFilterViewOpen (not txsTable.isTxFilterViewOpen)
+                            |> RemoteData.Success
+                            |> flip s_txs model
+                            |> n
+                    )
+                |> RemoteData.withDefault (n model)
 
         OpenDateRangePicker ->
-            let
-                ( mn, mx ) =
-                    Address.getActivityRange model.data
-            in
-            model.txs.dateRangePicker
-                |> Maybe.withDefault
-                    (datePickerSettings uc.locale mn mx
-                        |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
+            model.txs
+                |> RemoteData.map2
+                    (\data txsTable ->
+                        let
+                            ( mn, mx ) =
+                                Address.getActivityRange data
+                        in
+                        txsTable.dateRangePicker
+                            |> Maybe.withDefault
+                                (datePickerSettings uc.locale mn mx
+                                    |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
+                                )
+                            |> DateRangePicker.openPicker
+                            |> Just
+                            |> flip s_dateRangePicker txsTable
+                            |> RemoteData.Success
+                            |> flip s_txs model
+                            |> n
                     )
-                |> DateRangePicker.openPicker
-                |> Just
-                |> flip s_dateRangePicker model.txs
-                |> flip s_txs model
-                |> n
+                    model.data
+                |> RemoteData.withDefault (n model)
 
         CloseDateRangePicker ->
-            model.txs.dateRangePicker
-                |> Maybe.map DateRangePicker.closePicker
-                |> flip s_dateRangePicker model.txs
-                -- |> s_isTxFilterViewOpen False
-                |> flip s_txs model
-                |> n
+            model.txs
+                |> RemoteData.map
+                    (\txsTable ->
+                        txsTable.dateRangePicker
+                            |> Maybe.map DateRangePicker.closePicker
+                            |> flip s_dateRangePicker txsTable
+                            -- |> s_isTxFilterViewOpen False
+                            |> RemoteData.Success
+                            |> flip s_txs model
+                            |> n
+                    )
+                |> RemoteData.withDefault (n model)
 
         CloseTxFilterView ->
-            model.txs |> s_isTxFilterViewOpen False |> flip s_txs model |> n
+            model.txs
+                |> RemoteData.map (s_isTxFilterViewOpen False >> RemoteData.Success >> flip s_txs model)
+                |> RemoteData.withDefault model
+                |> n
 
         TxTableFilterShowAllTxs ->
             updateDirectionFilter uc model Nothing
@@ -303,44 +339,67 @@ update uc msg model =
             updateDirectionFilter uc model (Just Outgoing)
 
         ResetAllTxFilters ->
-            TransactionTable.initWithFilter
-                model.addressId
-                model.data
-                Nothing
-                Nothing
-                Nothing
-                (Locale.getTokenTickers uc.locale (Id.network model.addressId))
-                |> mapFirst (flip s_txs model)
+            model.data
+                |> RemoteData.map
+                    (\data ->
+                        TransactionTable.initWithFilter
+                            model.addressId
+                            data
+                            Nothing
+                            Nothing
+                            Nothing
+                            (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                            |> mapFirst (RemoteData.Success >> flip s_txs model)
+                    )
+                |> RemoteData.withDefault (n model)
 
         ResetDateRangePicker ->
-            TransactionTable.initWithFilter
-                model.addressId
+            RemoteData.map2
+                (\data txs ->
+                    TransactionTable.initWithFilter
+                        model.addressId
+                        data
+                        Nothing
+                        txs.direction
+                        txs.selectedAsset
+                        (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                        |> mapFirst (RemoteData.Success >> flip s_txs model)
+                )
                 model.data
-                Nothing
-                model.txs.direction
-                model.txs.selectedAsset
-                (Locale.getTokenTickers uc.locale (Id.network model.addressId))
-                |> mapFirst (flip s_txs model)
+                model.txs
+                |> RemoteData.withDefault (n model)
 
         ResetTxDirectionFilter ->
-            TransactionTable.initWithFilter
-                model.addressId
+            RemoteData.map2
+                (\data txs ->
+                    TransactionTable.initWithFilter
+                        model.addressId
+                        data
+                        txs.dateRangePicker
+                        Nothing
+                        txs.selectedAsset
+                        (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                        |> mapFirst (RemoteData.Success >> flip s_txs model)
+                )
                 model.data
-                model.txs.dateRangePicker
-                Nothing
-                model.txs.selectedAsset
-                (Locale.getTokenTickers uc.locale (Id.network model.addressId))
-                |> mapFirst (flip s_txs model)
+                model.txs
+                |> RemoteData.withDefault (n model)
 
         ResetTxAssetFilter ->
-            TransactionTable.initWithFilter
-                model.addressId
+            RemoteData.map2
+                (\data txs ->
+                    TransactionTable.initWithFilter
+                        model.addressId
+                        data
+                        txs.dateRangePicker
+                        txs.direction
+                        Nothing
+                        (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                        |> mapFirst (RemoteData.Success >> flip s_txs model)
+                )
                 model.data
-                model.txs.dateRangePicker
-                model.txs.direction
-                Nothing
-                (Locale.getTokenTickers uc.locale (Id.network model.addressId))
-                |> mapFirst (flip s_txs model)
+                model.txs
+                |> RemoteData.withDefault (n model)
 
         TableMsg _ ->
             n model
@@ -426,30 +485,35 @@ update uc msg model =
                 |> n
 
         TxTableAssetSelectBoxMsg ms ->
-            let
-                oldTxs =
-                    model.txs
+            model.txs
+                |> RemoteData.map
+                    (\txs ->
+                        let
+                            oldTxs =
+                                txs
 
-                ( newSelect, outMsg ) =
-                    ThemedSelectBox.update ms oldTxs.assetSelectBox
+                            ( newSelect, outMsg ) =
+                                ThemedSelectBox.update ms oldTxs.assetSelectBox
 
-                newTxs =
-                    oldTxs
-                        |> s_assetSelectBox newSelect
-                        |> s_selectedAsset
-                            (case outMsg of
-                                ThemedSelectBox.Selected sel ->
-                                    sel
+                            newTxs =
+                                oldTxs
+                                    |> s_assetSelectBox newSelect
+                                    |> s_selectedAsset
+                                        (case outMsg of
+                                            ThemedSelectBox.Selected sel ->
+                                                sel
 
-                                _ ->
-                                    oldTxs.selectedAsset
-                            )
-            in
-            if oldTxs == newTxs then
-                n { model | txs = newTxs }
+                                            _ ->
+                                                oldTxs.selectedAsset
+                                        )
+                        in
+                        if oldTxs == newTxs then
+                            n { model | txs = RemoteData.Success newTxs }
 
-            else
-                updateTable uc model newTxs
+                        else
+                            updateTable uc model newTxs
+                    )
+                |> RemoteData.withDefault (n model)
 
 
 updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )
@@ -481,7 +545,7 @@ updateTable _ model nt =
     in
     ( { model
         | txs =
-            { nt | table = tableNew }
+            RemoteData.Success { nt | table = tableNew }
       }
     , Maybe.Extra.toList eff
     )
@@ -489,7 +553,9 @@ updateTable _ model nt =
 
 updateDirectionFilter : Update.Config -> Model -> Maybe Direction -> ( Model, List Effect )
 updateDirectionFilter uc model dir =
-    updateTable uc model (model.txs |> s_direction dir)
+    model.txs
+        |> RemoteData.map (s_direction dir >> updateTable uc model)
+        |> RemoteData.withDefault (n model)
 
 
 
@@ -512,3 +578,17 @@ browserGotClusterData addressId entity model =
       }
     , eff
     )
+
+
+getNeighborsTableAndSetter : Model -> Direction -> Maybe ( PagedTable.Model Api.Data.NeighborAddress, PagedTable.Model Api.Data.NeighborAddress -> Model -> Model )
+getNeighborsTableAndSetter model dir =
+    case dir of
+        Incoming ->
+            model.neighborsIncoming
+                |> RemoteData.toMaybe
+                |> Maybe.map (pairTo (RemoteData.Success >> s_neighborsIncoming))
+
+        Outgoing ->
+            model.neighborsOutgoing
+                |> RemoteData.toMaybe
+                |> Maybe.map (pairTo (RemoteData.Success >> s_neighborsOutgoing))

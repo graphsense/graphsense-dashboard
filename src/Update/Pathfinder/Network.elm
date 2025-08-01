@@ -14,12 +14,13 @@ module Update.Pathfinder.Network exposing
     , getYForPathAfterX
     , ingestAddresses
     , ingestTxs
+    , insertFetchedEdge
+    , rupsertAggEdge
     , snapToGrid
     , updateAddress
     , updateAddressesByClusterId
     , updateAggEdge
     , updateTx
-    , upsertAggEdge
     , upsertAggEdgeData
     )
 
@@ -47,7 +48,7 @@ import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Set exposing (Set)
 import Tuple exposing (first, pair, second)
-import Tuple2 exposing (pairTo)
+import Tuple2 exposing (pairTo, swap)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
 import Update.Pathfinder.AggEdge as AggEdge
 import Update.Pathfinder.Tx as Tx
@@ -361,18 +362,32 @@ updateAggEdge id upd network =
     }
 
 
-upsertAggEdge : Pathfinder.Config -> ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
-upsertAggEdge pc (( a, b ) as id) upd network =
+rupsertAggEdge : Pathfinder.Config -> ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
+rupsertAggEdge pc (( a, b ) as id) upd network =
     { network
         | aggEdges =
-            Maybe.map upd
+            Maybe.map
+                (\edge ->
+                    let
+                        newEdge =
+                            upd edge
+                    in
+                    if newEdge.a2b == Success Nothing && newEdge.b2a == Success Nothing then
+                        -- delete the edge if both relations are empty
+                        Nothing
+
+                    else
+                        Just newEdge
+                )
                 >> Maybe.withDefault
                     (AggEdge.init pc a b
                         |> AggEdge.setAddress (Dict.get a network.addresses)
                         |> AggEdge.setAddress (Dict.get b network.addresses)
                         |> upd
+                        |> Just
                     )
                 >> Just
+                >> Maybe.Extra.join
                 |> flip (Dict.update id) network.aggEdges
         , addressAggEdgeMap = updateAddressAggEdgeMap id network.addressAggEdgeMap
     }
@@ -937,6 +952,9 @@ deleteAddress id network =
                                         (\aggEdgeId nw_ ->
                                             { nw_
                                                 | aggEdges = Dict.remove aggEdgeId nw_.aggEdges
+                                                , fetchedEdges =
+                                                    Set.remove aggEdgeId nw_.fetchedEdges
+                                                        |> Set.remove (swap aggEdgeId)
                                                 , addressAggEdgeMap = Dict.remove id nw_.addressAggEdgeMap
                                             }
                                         )
@@ -1099,30 +1117,25 @@ updateAddressAggEdgeMap id =
 
 {-|
 
-    Returns the ids and their missing relation data direction
-    Nothing if the edge does not exist
+    Returns the missing directions of the aggedge
 
 -}
-aggEdgeNeedsData : ( Id, Id ) -> Network -> Maybe (List ( Id, Direction ))
-aggEdgeNeedsData id network =
+aggEdgeNeedsData : Id -> Id -> Network -> ( Bool, Bool )
+aggEdgeNeedsData a b network =
+    ( Set.member ( a, b ) network.fetchedEdges |> not
+    , Set.member ( b, a ) network.fetchedEdges |> not
+    )
+
+
+insertFetchedEdge : Direction -> Id -> Id -> Network -> Network
+insertFetchedEdge dir id nid network =
     let
-        isOk a =
-            RemoteData.isSuccess a
-                || RemoteData.isLoading a
+        pairByDir =
+            case dir of
+                Outgoing ->
+                    ( id, nid )
+
+                Incoming ->
+                    ( nid, id )
     in
-    Dict.get id network.aggEdges
-        |> Maybe.map
-            (\a ->
-                (if isOk a.a2b then
-                    []
-
-                 else
-                    [ ( a.a, Outgoing ), ( a.b, Incoming ) ]
-                )
-                    ++ (if isOk a.b2a then
-                            []
-
-                        else
-                            [ ( a.a, Incoming ), ( a.b, Outgoing ) ]
-                       )
-            )
+    { network | fetchedEdges = Set.insert pairByDir network.fetchedEdges }
