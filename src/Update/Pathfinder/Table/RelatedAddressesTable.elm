@@ -1,4 +1,4 @@
-module Update.Pathfinder.Table.RelatedAddressesTable exposing (appendAddresses, appendTaggedAddresses, init, tableConfig, updateTable)
+module Update.Pathfinder.Table.RelatedAddressesTable exposing (appendAddresses, appendTaggedAddresses, init, loadFirstPage, tableConfig, updateTable)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -27,24 +27,22 @@ itemsPerPage =
     5
 
 
-init : Id -> Api.Data.Entity -> ( Model, List Effect )
+init : Id -> Api.Data.Entity -> Model
 init addressId entity =
-    let
-        model =
-            { table =
-                PagedTable.init Init.Graph.Table.initUnsorted
-                    |> PagedTable.setNrItems entity.noAddresses
-                    |> PagedTable.setItemsPerPage itemsPerPage
-            , addressId = addressId
-            , entity = { currency = entity.currency, entity = entity.entity }
-            , existingTaggedAddresses = Set.empty
-            , allTaggedAddressesFetched = False
-            }
-    in
-    ( model
-    , [ loadData model itemsPerPage Nothing
-      ]
-    )
+    { table =
+        PagedTable.init Init.Graph.Table.initUnsorted
+            |> PagedTable.setNrItems entity.noAddresses
+            |> PagedTable.setItemsPerPage itemsPerPage
+    , addressId = addressId
+    , entity = { currency = entity.currency, entity = entity.entity }
+    , existingTaggedAddresses = Set.empty
+    , allTaggedAddressesFetched = False
+    }
+
+
+loadFirstPage : Model -> Effect
+loadFirstPage model =
+    loadData model itemsPerPage Nothing
 
 
 loadData : Model -> Int -> Maybe String -> Effect

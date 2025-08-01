@@ -408,7 +408,23 @@ update uc msg model =
             n model
 
         UserClickedToggleRelatedAddressesTable ->
-            n { model | relatedAddressesTableOpen = not model.relatedAddressesTableOpen }
+            model.relatedAddresses
+                |> RemoteData.map
+                    (\ra ->
+                        let
+                            show =
+                                not model.relatedAddressesTableOpen
+                        in
+                        ( { model | relatedAddressesTableOpen = show }
+                        , if show then
+                            [ RelatedAddressesTable.loadFirstPage ra
+                            ]
+
+                          else
+                            []
+                        )
+                    )
+                |> RemoteData.withDefault (n model)
 
         RelatedAddressesTablePagedTableMsg pm ->
             (\rm ->
@@ -564,19 +580,21 @@ updateDirectionFilter uc model dir =
 
 showTransactionsTable : Model -> Bool -> ( Model, List Effect )
 showTransactionsTable model show =
-    ( { model | transactionsTableOpen = show }, [] )
+    ( { model | transactionsTableOpen = show }
+    , []
+    )
 
 
 browserGotClusterData : Id -> Api.Data.Entity -> Model -> ( Model, List Effect )
 browserGotClusterData addressId entity model =
     let
-        ( relatedAddresses, eff ) =
+        relatedAddresses =
             RelatedAddressesTable.init addressId entity
     in
     ( { model
         | relatedAddresses = RemoteData.Success relatedAddresses
       }
-    , eff
+    , []
     )
 
 

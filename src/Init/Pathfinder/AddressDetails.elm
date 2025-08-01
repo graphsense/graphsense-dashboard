@@ -57,8 +57,7 @@ init uc network clusters dateFilterPreset address =
       , neighborsOutgoing = RemoteData.map (.outDegree >> NeighborsTable.init) address.data
       , neighborsIncoming = RemoteData.map (.inDegree >> NeighborsTable.init) address.data
       , address = address
-      , relatedAddresses =
-            RemoteData.map first related
+      , relatedAddresses = related
       , relatedAddressesTableOpen = False
       , totalReceivedDetailsOpen = False
       , balanceDetailsOpen = False
@@ -69,9 +68,5 @@ init uc network clusters dateFilterPreset address =
       , isClusterDetailsOpen = False
       , displayAllTagsInDetails = False
       }
-    , (txsEff |> RemoteData.map second |> RemoteData.withDefault [])
-        ++ (related
-                |> RemoteData.map second
-                |> RemoteData.withDefault []
-           )
+    , txsEff |> RemoteData.map second |> RemoteData.withDefault []
     )
