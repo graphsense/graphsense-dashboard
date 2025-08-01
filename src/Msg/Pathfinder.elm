@@ -3,7 +3,6 @@ module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..)
 import Api.Data
 import Color exposing (Color)
 import Hovercard
-import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)

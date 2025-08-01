@@ -938,7 +938,7 @@ update plugins uc msg model =
                                                                 |> Route.Pathfinder.Path currency
                                                         )
                                                     |> Maybe.withDefault
-                                                        (Route.Pathfinder.Address fst
+                                                        (Route.Pathfinder.Address fst Nothing
                                                             |> Route.Pathfinder.Network currency
                                                         )
                                             )

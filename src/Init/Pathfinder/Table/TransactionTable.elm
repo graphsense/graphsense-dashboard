@@ -34,7 +34,7 @@ getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
-init : Update.Config -> Network -> DateFilterRaw -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
+init : Update.Config -> Network -> Maybe DateFilterRaw -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
 init uc network datefilterPreset addressId data assets =
     let
         nrItems =
@@ -49,39 +49,42 @@ init uc network datefilterPreset addressId data assets =
         ( mmin, mmax ) =
             Address.getActivityRange data
     in
-    if Model.DateFilter.isEmpty datefilterPreset then
-        Network.getRecentTxForAddress network Incoming addressId
-            |> Maybe.map
-                (\tx ->
-                    let
-                        mn =
-                            Tx.getRawTimestamp tx
-                                |> timestampToPosix
-                    in
-                    ( { table = table False
-                      , order = Just Api.Request.Addresses.Order_Asc
-                      , dateRangePicker =
-                            datePickerSettings uc.locale mn mmax
-                                |> DateRangePicker.init UpdateDateRangePicker mmax Nothing Nothing
-                                |> Just
-                      , direction = Nothing
-                      , isTxFilterViewOpen = False
-                      , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
-                      , selectedAsset = Nothing
-                      }
-                    , loadTxs addressId Nothing (Just mn) (Just mmax) Nothing
+    datefilterPreset
+        |> Maybe.map
+            (\dfp ->
+                let
+                    drp =
+                        datePickerSettings uc.locale (dfp.fromDate |> Maybe.withDefault mmin) (dfp.toDate |> Maybe.withDefault mmax)
+                            |> DateRangePicker.init UpdateDateRangePicker mmax dfp.fromDate dfp.toDate
+                in
+                initWithFilter addressId data (Just drp) Nothing Nothing assets
+            )
+        |> Maybe.withDefault
+            (Network.getRecentTxForAddress network Incoming addressId
+                |> Maybe.map
+                    (\tx ->
+                        let
+                            mn =
+                                Tx.getRawTimestamp tx
+                                    |> timestampToPosix
+                        in
+                        ( { table = table False
+                          , order = Just Api.Request.Addresses.Order_Asc
+                          , dateRangePicker =
+                                datePickerSettings uc.locale mn mmax
+                                    |> DateRangePicker.init UpdateDateRangePicker mmax Nothing Nothing
+                                    |> Just
+                          , direction = Nothing
+                          , isTxFilterViewOpen = False
+                          , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
+                          , selectedAsset = Nothing
+                          }
+                        , loadTxs addressId Nothing (Just mn) (Just mmax) Nothing
+                        )
                     )
-                )
-            |> Maybe.withDefault
-                (initWithFilter addressId data Nothing Nothing Nothing assets)
-
-    else
-        let
-            drp =
-                datePickerSettings uc.locale (datefilterPreset.fromDate |> Maybe.withDefault mmin) (datefilterPreset.toDate |> Maybe.withDefault mmax)
-                    |> DateRangePicker.init UpdateDateRangePicker mmax datefilterPreset.fromDate datefilterPreset.toDate
-        in
-        initWithFilter addressId data (Just drp) Nothing Nothing assets
+                |> Maybe.withDefault
+                    (initWithFilter addressId data Nothing Nothing Nothing assets)
+            )
 
 
 initWithFilter : Id -> Api.Data.Address -> Maybe (DateRangePicker.Model Msg) -> Maybe Direction -> Maybe String -> List String -> ( TransactionTable.Model, List Effect )

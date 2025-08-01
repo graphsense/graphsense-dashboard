@@ -3,7 +3,6 @@ module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Mode
 import Api.Data exposing (Actor, Entity)
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
-import Model.DateFilter exposing (DateFilterRaw)
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
@@ -76,7 +75,6 @@ type Selection
     | WillSelectTx Id
     | WillSelectAddress Id
     | WillSelectAggEdge ( Id, Id )
-    | WillSelectAddressWithFilter Id DateFilterRaw
     | NoSelection
 
 

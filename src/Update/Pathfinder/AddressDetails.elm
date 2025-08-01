@@ -108,7 +108,7 @@ update uc msg model =
                         let
                             ( tblNew, eff1 ) =
                                 PagedTable.loadFirstPage
-                                    (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.addressId dir)
+                                    (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.address.id dir)
                                     tbl
                         in
                         ( { model
@@ -137,7 +137,7 @@ update uc msg model =
                     (\( tbl, setter ) ->
                         let
                             ( pt, eff ) =
-                                PagedTable.update (neighborsTableConfig model.addressId dir) pm tbl
+                                PagedTable.update (neighborsTableConfig model.address.id dir) pm tbl
                         in
                         ( setter pt model
                         , Maybe.Extra.toList eff
@@ -152,7 +152,7 @@ update uc msg model =
                         let
                             ( pt, eff ) =
                                 PagedTable.setData
-                                    (neighborsTableConfig model.addressId dir)
+                                    (neighborsTableConfig model.address.id dir)
                                     NeighborsTable.filter
                                     neighbors.nextPage
                                     neighbors.neighbors
@@ -171,7 +171,7 @@ update uc msg model =
                         let
                             ( pt, eff ) =
                                 PagedTable.appendData
-                                    (neighborsTableConfig model.addressId dir)
+                                    (neighborsTableConfig model.address.id dir)
                                     NeighborsTable.filter
                                     neighbors.nextPage
                                     neighbors.neighbors
@@ -187,7 +187,7 @@ update uc msg model =
             model.txs
                 |> RemoteData.map
                     (\txs ->
-                        PagedTable.update (transactionTableConfig txs model.addressId) pm txs.table
+                        PagedTable.update (transactionTableConfig txs model.address.id) pm txs.table
                             |> mapFirst (flip s_table txs)
                             |> mapFirst (RemoteData.Success >> flip s_txs model)
                             |> mapSecond Maybe.Extra.toList
@@ -203,7 +203,7 @@ update uc msg model =
                 |> RemoteData.map
                     (\txsTable ->
                         PagedTable.appendData
-                            (transactionTableConfig txsTable model.addressId)
+                            (transactionTableConfig txsTable model.address.id)
                             TransactionTable.filter
                             txs.nextPage
                             txs.addressTxs
@@ -224,7 +224,7 @@ update uc msg model =
                         in
                         if Maybe.andThen .fromDate drp == min && Maybe.andThen .toDate drp == max then
                             PagedTable.setData
-                                (transactionTableConfig txsTable model.addressId)
+                                (transactionTableConfig txsTable model.address.id)
                                 TransactionTable.filter
                                 txs.nextPage
                                 txs.addressTxs
@@ -251,7 +251,7 @@ update uc msg model =
 
                                         eff =
                                             if newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate then
-                                                TransactionTable.loadTxs model.addressId Nothing newPicker.fromDate newPicker.toDate txsTable.selectedAsset
+                                                TransactionTable.loadTxs model.address.id Nothing newPicker.fromDate newPicker.toDate txsTable.selectedAsset
 
                                             else
                                                 []
@@ -306,7 +306,7 @@ update uc msg model =
                             |> flip s_txs model
                             |> n
                     )
-                    model.data
+                    model.address.data
                 |> RemoteData.withDefault (n model)
 
         CloseDateRangePicker ->
@@ -339,16 +339,16 @@ update uc msg model =
             updateDirectionFilter uc model (Just Outgoing)
 
         ResetAllTxFilters ->
-            model.data
+            model.address.data
                 |> RemoteData.map
                     (\data ->
                         TransactionTable.initWithFilter
-                            model.addressId
+                            model.address.id
                             data
                             Nothing
                             Nothing
                             Nothing
-                            (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                            (Locale.getTokenTickers uc.locale (Id.network model.address.id))
                             |> mapFirst (RemoteData.Success >> flip s_txs model)
                     )
                 |> RemoteData.withDefault (n model)
@@ -357,15 +357,15 @@ update uc msg model =
             RemoteData.map2
                 (\data txs ->
                     TransactionTable.initWithFilter
-                        model.addressId
+                        model.address.id
                         data
                         Nothing
                         txs.direction
                         txs.selectedAsset
-                        (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                        (Locale.getTokenTickers uc.locale (Id.network model.address.id))
                         |> mapFirst (RemoteData.Success >> flip s_txs model)
                 )
-                model.data
+                model.address.data
                 model.txs
                 |> RemoteData.withDefault (n model)
 
@@ -373,15 +373,15 @@ update uc msg model =
             RemoteData.map2
                 (\data txs ->
                     TransactionTable.initWithFilter
-                        model.addressId
+                        model.address.id
                         data
                         txs.dateRangePicker
                         Nothing
                         txs.selectedAsset
-                        (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                        (Locale.getTokenTickers uc.locale (Id.network model.address.id))
                         |> mapFirst (RemoteData.Success >> flip s_txs model)
                 )
-                model.data
+                model.address.data
                 model.txs
                 |> RemoteData.withDefault (n model)
 
@@ -389,15 +389,15 @@ update uc msg model =
             RemoteData.map2
                 (\data txs ->
                     TransactionTable.initWithFilter
-                        model.addressId
+                        model.address.id
                         data
                         txs.dateRangePicker
                         txs.direction
                         Nothing
-                        (Locale.getTokenTickers uc.locale (Id.network model.addressId))
+                        (Locale.getTokenTickers uc.locale (Id.network model.address.id))
                         |> mapFirst (RemoteData.Success >> flip s_txs model)
                 )
-                model.data
+                model.address.data
                 model.txs
                 |> RemoteData.withDefault (n model)
 
@@ -454,7 +454,7 @@ update uc msg model =
             if not <| List.isEmpty addressesToLoad then
                 ( model
                 , BrowserGotAddressesForTags tags.nextPage
-                    >> Pathfinder.AddressDetailsMsg model.addressId
+                    >> Pathfinder.AddressDetailsMsg model.address.id
                     |> Api.BulkGetAddressEffect
                         { currency = currency
                         , addresses = addressesToLoad
@@ -540,7 +540,7 @@ updateTable _ model nt =
                     (transactionTableConfigWithMsg
                         (GotTxsForAddressDetails ( fromDate, toDate ))
                         nt
-                        model.addressId
+                        model.address.id
                     )
     in
     ( { model
