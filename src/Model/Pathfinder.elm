@@ -93,7 +93,7 @@ type MultiSelectOptions
 
 
 type Details
-    = AddressDetails Id (WebData AddressDetails.Model)
+    = AddressDetails Id AddressDetails.Model
     | TxDetails Id TxDetails.Model
     | RelationDetails ( Id, Id ) RelationDetails.Model
 

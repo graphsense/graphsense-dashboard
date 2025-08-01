@@ -1,13 +1,14 @@
 module Init.Pathfinder.AddressDetails exposing (init)
 
 import Api.Data
+import Basics.Extra exposing (flip)
+import Config.Update as Update
 import Dict exposing (Dict)
 import Effect.Pathfinder exposing (Effect)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.DateFilter exposing (DateFilterRaw)
-import Model.Locale as Locale
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
@@ -16,18 +17,17 @@ import Tuple exposing (first, second)
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 
 
-init : Network -> Dict Id (WebData Api.Data.Entity) -> Locale.Model -> DateFilterRaw -> Id -> List String -> Api.Data.Address -> ( AddressDetails.Model, List Effect )
-init network clusters locale dateFilterPreset addressId assets data =
+init : Update.Config -> Network -> Dict Id (WebData Api.Data.Entity) -> DateFilterRaw -> Id -> List String -> WebData Api.Data.Address -> ( AddressDetails.Model, List Effect )
+init uc network clusters dateFilterPreset addressId assets data =
     let
-        ( txs, eff ) =
-            TransactionTable.init network locale dateFilterPreset addressId data assets
-
-        clusterId =
-            Id.initClusterId data.currency data.entity
+        txsEff =
+            data
+                |> RemoteData.map (\d -> TransactionTable.init uc network dateFilterPreset addressId d assets)
 
         related =
-            Dict.get clusterId clusters
-                |> Maybe.withDefault RemoteData.NotAsked
+            data
+                |> RemoteData.map (\d -> Id.initClusterId d.currency d.entity)
+                |> RemoteData.andThen (flip Dict.get clusters >> Maybe.withDefault RemoteData.NotAsked)
                 |> RemoteData.map
                     (\e ->
                         RelatedAddressesTable.init addressId e
@@ -36,9 +36,9 @@ init network clusters locale dateFilterPreset addressId assets data =
     ( { neighborsTableOpen = False
       , transactionsTableOpen = False
       , tokenBalancesOpen = False
-      , txs = txs
-      , neighborsOutgoing = NeighborsTable.init data.outDegree
-      , neighborsIncoming = NeighborsTable.init data.inDegree
+      , txs = txsEff |> RemoteData.map first
+      , neighborsOutgoing = RemoteData.map (.outDegree >> NeighborsTable.init) data
+      , neighborsIncoming = RemoteData.map (.inDegree >> NeighborsTable.init) data
       , addressId = addressId
       , data = data
       , relatedAddresses =
@@ -53,7 +53,7 @@ init network clusters locale dateFilterPreset addressId assets data =
       , isClusterDetailsOpen = False
       , displayAllTagsInDetails = False
       }
-    , eff
+    , (txsEff |> RemoteData.map second |> RemoteData.withDefault [])
         ++ (related
                 |> RemoteData.map second
                 |> RemoteData.withDefault []

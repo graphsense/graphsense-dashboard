@@ -18,7 +18,7 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Tuple exposing (mapSecond)
+import Tuple exposing (mapFirst, mapSecond)
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
 import View.Pathfinder.AggEdge as AggEdge
@@ -61,6 +61,12 @@ relations plugins vc gc annotations txs =
                     )
         )
         ( [], Set.empty )
+        >> mapFirst
+            (List.filter
+                (\edge ->
+                    RemoteData.isSuccess edge.a2b && RemoteData.isSuccess edge.b2a
+                )
+            )
         >> mapSecond
             (Set.foldl
                 (\txId txs_ ->

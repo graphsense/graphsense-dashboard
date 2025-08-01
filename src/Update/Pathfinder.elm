@@ -150,9 +150,11 @@ syncSidePanel model =
                             |> Maybe.map (flip s_tx td >> TxDetails tid >> Just)
                             |> Maybe.withDefault Nothing
 
-                    AddressDetails _ _ ->
-                        -- nothing to sync with graph
-                        Just details
+                    AddressDetails aid ad ->
+                        Dict.get aid model.network.addresses
+                            |> Maybe.map .data
+                            |> Maybe.map (flip s_data ad >> AddressDetails aid >> Just)
+                            |> Maybe.withDefault Nothing
             )
         |> flip s_details model
         |> n
@@ -273,15 +275,23 @@ updateByMsg plugins uc msg model =
 
         BrowserGotAddressData id position dateFilterPreset data ->
             if (not <| Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
-                fetchEgonet uc plugins dateFilterPreset id data model
+                let
+                    ( newModel, eff ) =
+                        fetchEgonet id data model
+                in
+                if List.isEmpty eff then
+                    browserGotAddressData uc plugins dateFilterPreset id Auto data newModel
+
+                else
+                    ( newModel, eff )
 
             else
                 browserGotAddressData uc plugins dateFilterPreset id position data model
 
-        BrowserGotRelationsToVisibleNeighbors id dir requestIds relations ->
+        BrowserGotRelationsToVisibleNeighbors id dir requestIds { neighbors } ->
             let
                 neighborIds =
-                    relations.neighbors
+                    neighbors
                         |> List.map (\{ address } -> Id.init address.currency address.address)
 
                 nset =
@@ -289,46 +299,74 @@ updateByMsg plugins uc msg model =
 
                 upd nid edge =
                     if edge.a == nid && dir == Outgoing then
-                        { edge | b2a = Success Nothing }
+                        { edge
+                            | b2a =
+                                if RemoteData.isSuccess edge.b2a then
+                                    edge.b2a
+
+                                else
+                                    Success Nothing
+                        }
 
                     else if edge.a == nid && dir == Incoming then
-                        { edge | a2b = Success Nothing }
+                        { edge
+                            | a2b =
+                                if RemoteData.isSuccess edge.a2b then
+                                    edge.a2b
+
+                                else
+                                    Success Nothing
+                        }
 
                     else if edge.b == nid && dir == Outgoing then
-                        { edge | a2b = Success Nothing }
+                        { edge
+                            | a2b =
+                                if RemoteData.isSuccess edge.a2b then
+                                    edge.a2b
+
+                                else
+                                    Success Nothing
+                        }
 
                     else if edge.b == nid && dir == Incoming then
-                        { edge | b2a = Success Nothing }
+                        { edge
+                            | b2a =
+                                if RemoteData.isSuccess edge.b2a then
+                                    edge.b2a
+
+                                else
+                                    Success Nothing
+                        }
 
                     else
                         edge
 
                 newModel =
-                    relations.neighbors
+                    neighbors
                         |> List.foldl
                             (\neighbor mo ->
                                 mo.network
                                     |> Network.upsertAggEdgeData model.config id dir neighbor
                                     |> flip s_network mo
                             )
-                            (CheckingNeighbors.insert dir id neighborIds model.checkingNeighbors
+                            (CheckingNeighbors.insert dir id neighbors model.checkingNeighbors
                                 |> flip s_checkingNeighbors model
                             )
 
+                isEmpty =
+                    -- both directions have been checked and there are no neighbors
+                    CheckingNeighbors.isEmpty id newModel.checkingNeighbors
+
                 newModel2 =
-                    -- set the Success Nothing on non-existing relations
                     requestIds
                         |> List.filter (flip Set.member nset >> not)
                         |> List.foldl
                             (\nid ->
                                 upd nid
-                                    |> Network.updateAggEdge (AggEdge.initId id nid)
+                                    |> Network.rupsertAggEdge model.config (AggEdge.initId id nid)
                             )
                             newModel.network
                         |> flip s_network newModel
-
-                isEmpty =
-                    CheckingNeighbors.isEmpty id newModel2.checkingNeighbors
             in
             if newModel2.config.tracingMode == AggregateTracingMode && not isEmpty then
                 CheckingNeighbors.getData id newModel2.checkingNeighbors
@@ -540,11 +578,15 @@ updateByMsg plugins uc msg model =
 
                 AddressDetails.UserClickedAllTxCheckboxInTable ->
                     case model.details of
-                        Just (AddressDetails _ (Success data)) ->
-                            data.txs.table
-                                |> PagedTable.getPage
-                                |> List.map Tx.getTxIdForAddressTx
-                                |> flip (checkAllTxs plugins uc) model
+                        Just (AddressDetails _ data) ->
+                            data.txs
+                                |> RemoteData.map
+                                    (.table
+                                        >> PagedTable.getPage
+                                        >> List.map Tx.getTxIdForAddressTx
+                                        >> flip (checkAllTxs plugins uc) model
+                                    )
+                                |> RemoteData.withDefault (n model)
 
                         _ ->
                             n model
@@ -1670,60 +1712,67 @@ getRelationDetails model id =
             Nothing
 
 
-fetchEgonet : Update.Config -> Plugins -> DateFilter.DateFilterRaw -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )
-fetchEgonet uc plugins dateFilterPreset id data model =
+fetchEgonet : Id -> Api.Data.Address -> Model -> ( Model, List Effect )
+fetchEgonet id data model =
     let
         ( outOnlyIds, incOnlyIds ) =
             model.network.addresses
                 |> Dict.keys
                 |> List.foldl
                     (\aId ( out, inc ) ->
-                        if (aId /= id) && (Id.network aId == Id.network id) then
-                            Network.aggEdgeNeedsData (AggEdge.initId id aId) model.network
-                                |> Maybe.map
-                                    (List.filter (first >> (==) aId)
-                                        >> List.map (mapSecond Direction.flip)
-                                        >> List.foldl
-                                            (\( id_, dir ) ( o, i ) ->
-                                                if dir == Outgoing then
-                                                    ( id_ :: o, i )
+                        if (aId == id) || (Id.network aId /= Id.network id) then
+                            ( out, inc )
 
-                                                else
-                                                    ( o, id_ :: i )
-                                            )
-                                            ( out, inc )
-                                    )
-                                |> Maybe.withDefault
+                        else
+                            case Network.aggEdgeNeedsData id aId model.network of
+                                ( True, True ) ->
                                     ( aId :: out
                                     , aId :: inc
                                     )
 
-                        else
-                            ( out, inc )
+                                ( True, False ) ->
+                                    ( aId :: out
+                                    , inc
+                                    )
+
+                                ( False, True ) ->
+                                    ( out
+                                    , aId :: inc
+                                    )
+
+                                ( False, False ) ->
+                                    ( out
+                                    , inc
+                                    )
                     )
                     ( [], [] )
     in
     if List.isEmpty outOnlyIds && List.isEmpty incOnlyIds then
-        browserGotAddressData uc plugins dateFilterPreset id Auto data model
+        n model
 
     else
         let
             getRelations dir onlyIds =
-                BrowserGotRelationsToVisibleNeighbors id dir onlyIds
-                    |> Api.GetAddressNeighborsEffect
-                        { currency = Id.network id
-                        , address = Id.id id
-                        , isOutgoing = dir == Outgoing
-                        , onlyIds =
-                            onlyIds
-                                |> List.map Id.id
-                                |> Just
-                        , includeLabels = False
-                        , includeActors = False
-                        , pagesize = Dict.size model.network.addresses
-                        , nextpage = Nothing
-                        }
-                    |> ApiEffect
+                if List.isEmpty onlyIds then
+                    []
+
+                else
+                    BrowserGotRelationsToVisibleNeighbors id dir onlyIds
+                        |> Api.GetAddressNeighborsEffect
+                            { currency = Id.network id
+                            , address = Id.id id
+                            , isOutgoing = dir == Outgoing
+                            , onlyIds =
+                                onlyIds
+                                    |> List.map Id.id
+                                    |> Just
+                            , includeLabels = False
+                            , includeActors = False
+                            , pagesize = Dict.size model.network.addresses
+                            , nextpage = Nothing
+                            }
+                        |> ApiEffect
+                        |> List.singleton
 
             nw =
                 incOnlyIds
@@ -1732,6 +1781,7 @@ fetchEgonet uc plugins dateFilterPreset id data model =
                             Network.updateAggEdge
                                 (AggEdge.initId id nid)
                                 (AggEdge.setLoading Incoming id)
+                                >> Network.insertFetchedEdge Incoming id nid
                         )
                         model.network
 
@@ -1742,15 +1792,15 @@ fetchEgonet uc plugins dateFilterPreset id data model =
                             Network.updateAggEdge
                                 (AggEdge.initId id nid)
                                 (AggEdge.setLoading Outgoing id)
+                                >> Network.insertFetchedEdge Outgoing id nid
                         )
                         nw
         in
-        ( CheckingNeighbors.initAddress data model.checkingNeighbors
+        ( CheckingNeighbors.initAddress data outOnlyIds incOnlyIds model.checkingNeighbors
             |> flip s_checkingNeighbors model
             |> s_network nw2
-        , [ getRelations Outgoing outOnlyIds
-          , getRelations Incoming incOnlyIds
-          ]
+        , getRelations Outgoing outOnlyIds
+            ++ getRelations Incoming incOnlyIds
         )
 
 
@@ -1868,106 +1918,93 @@ handleWorkflowNextTxByTime plugins uc config neighborId wf model =
 
 browserGotAddressData : Update.Config -> Plugins -> DateFilter.DateFilterRaw -> Id -> FindPosition -> Api.Data.Address -> Model -> ( Model, List Effect )
 browserGotAddressData uc plugins dateFilterPreset id position data model =
-    if Dict.member id model.network.addresses then
-        n model
+    let
+        ( newAddress, net ) =
+            Network.addAddressWithPosition plugins model.config position id model.network
+                |> mapSecond (Network.updateAddress id (s_data (Success data)))
 
-    else
-        let
-            ( newAddress, net ) =
-                Network.addAddressWithPosition plugins model.config position id model.network
-                    |> mapSecond (Network.updateAddress id (s_data (Success data)))
+        ( details, eff ) =
+            case model.details of
+                Just (AddressDetails i _) ->
+                    if i == id then
+                        Dict.get id net.addresses
+                            |> Maybe.map
+                                (\address ->
+                                    let
+                                        assets =
+                                            getExposedAssetsForAddress uc id address
+                                    in
+                                    RemoteData.Success data
+                                        |> AddressDetails.init uc net clusters dateFilterPreset address.id assets
+                                )
+                            |> Maybe.map (mapFirst (AddressDetails id))
+                            |> Maybe.map (mapFirst Just)
+                            |> Maybe.withDefault (n model.details)
 
-            ( details, eff ) =
-                case model.details of
-                    Just (AddressDetails i ad) ->
-                        if i == id then
-                            case ad of
-                                Success a ->
-                                    { a | data = data }
-                                        |> Success
-                                        |> AddressDetails id
-                                        |> Just
-                                        |> n
-
-                                _ ->
-                                    Dict.get id net.addresses
-                                        |> Maybe.map
-                                            (\address ->
-                                                let
-                                                    assets =
-                                                        getExposedAssetsForAddress uc id address
-                                                in
-                                                AddressDetails.init net clusters uc.locale dateFilterPreset address.id assets data
-                                            )
-                                        |> Maybe.map (mapFirst Success)
-                                        |> Maybe.map (mapFirst (AddressDetails id))
-                                        |> Maybe.map (mapFirst Just)
-                                        |> Maybe.withDefault (n model.details)
-
-                        else
-                            model.details
-                                |> n
-
-                    _ ->
+                    else
                         model.details
                             |> n
 
-            clusterId =
-                Id.initClusterId data.currency data.entity
+                _ ->
+                    model.details
+                        |> n
 
-            isSecondAddressFromSameCluster =
-                Network.isClusterFriendAlreadyOnGraph clusterId
-                    model.network
-                    && not (Network.hasLoadedAddress id model.network)
+        clusterId =
+            Id.initClusterId data.currency data.entity
 
-            ncolors =
-                if isSecondAddressFromSameCluster then
-                    Colors.assignNextColor Colors.Clusters clusterId model.colors
+        isSecondAddressFromSameCluster =
+            Network.isClusterFriendAlreadyOnGraph clusterId
+                model.network
+                && not (Network.hasLoadedAddress id model.network)
 
-                else
-                    model.colors
+        ncolors =
+            if isSecondAddressFromSameCluster then
+                Colors.assignNextColor Colors.Clusters clusterId model.colors
 
-            ( clusters, effCluster ) =
-                if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
-                    ( model.clusters, [] )
+            else
+                model.colors
 
-                else
-                    ( Dict.insert clusterId RemoteData.Loading model.clusters
-                    , [ BrowserGotClusterData id
-                            |> Api.GetEntityEffectWithDetails
-                                { currency = Id.network id
-                                , entity = data.entity
-                                , includeActors = False
-                                , includeBestTag = False
-                                }
-                            |> ApiEffect
-                      ]
-                    )
+        ( clusters, effCluster ) =
+            if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
+                ( model.clusters, [] )
 
-            transform =
-                Transform.move
-                    { x = newAddress.x * unit
-                    , y = A.getTo newAddress.y * unit
-                    , z = Transform.initZ
-                    }
-                    model.transform
-        in
-        model
-            |> s_network net
-            |> s_transform transform
-            |> updateTagDataOnAddress id
-            |> s_details details
-            |> s_colors ncolors
-            |> s_clusters clusters
-            |> pairTo
-                (fetchTagSummaryForId True model.tagSummaries id
-                    :: fetchActorsForAddress data model.actors
-                    ++ eff
-                    ++ effCluster
-                    ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
+            else
+                ( Dict.insert clusterId RemoteData.Loading model.clusters
+                , [ BrowserGotClusterData id
+                        |> Api.GetEntityEffectWithDetails
+                            { currency = Id.network id
+                            , entity = data.entity
+                            , includeActors = False
+                            , includeBestTag = False
+                            }
+                        |> ApiEffect
+                  ]
                 )
-            |> and (checkSelection uc)
-            |> and (fetchEgonet uc plugins dateFilterPreset id data)
+
+        transform =
+            Transform.move
+                { x = newAddress.x * unit
+                , y = A.getTo newAddress.y * unit
+                , z = Transform.initZ
+                }
+                model.transform
+    in
+    model
+        |> s_network net
+        |> s_transform transform
+        |> updateTagDataOnAddress id
+        |> s_details details
+        |> s_colors ncolors
+        |> s_clusters clusters
+        |> pairTo
+            (fetchTagSummaryForId True model.tagSummaries id
+                :: fetchActorsForAddress data model.actors
+                ++ eff
+                ++ effCluster
+                ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
+            )
+        |> and (checkSelection uc)
+        |> and (fetchEgonet id data)
 
 
 handleTooltipMsg : Tag.Msg -> Model -> ( Model, List Effect )
@@ -2732,17 +2769,17 @@ selectAddressWithDateFilter uc id dateFilterPreset model =
                 assets =
                     getExposedAssetsForAddress uc id address
 
-                newDetails =
-                    address.data
-                        |> RemoteData.map (AddressDetails.init model.network model.clusters uc.locale dateFilterPreset address.id assets)
-
-                details =
+                ( details, eff ) =
+                    let
+                        newDetails =
+                            address.data
+                                |> AddressDetails.init uc model.network model.clusters dateFilterPreset address.id assets
+                    in
                     case model.details of
                         Just (AddressDetails i data) ->
                             if id == i then
                                 -- keep it unchanged
-                                data
-                                    |> RemoteData.map n
+                                n data
 
                             else
                                 newDetails
@@ -2750,17 +2787,11 @@ selectAddressWithDateFilter uc id dateFilterPreset model =
                         _ ->
                             newDetails
 
-                eff =
-                    details
-                        |> RemoteData.toMaybe
-                        |> Maybe.map second
-                        |> Maybe.withDefault []
-
                 ( m1, eff2 ) =
                     unselect ( model, eff )
                         |> Tuple.mapFirst
                             (s_details
-                                (RemoteData.map first details
+                                (details
                                     |> AddressDetails id
                                     |> Just
                                 )
@@ -3427,7 +3458,7 @@ autoLoadAddresses plugins tx model =
 updateAddressDetails : Id -> (AddressDetails.Model -> ( AddressDetails.Model, List Effect )) -> Model -> ( Model, List Effect )
 updateAddressDetails id upd model =
     case model.details of
-        Just (AddressDetails id_ (Success ad)) ->
+        Just (AddressDetails id_ ad) ->
             if id == id_ then
                 let
                     ( addressViewDetails, eff ) =
@@ -3435,7 +3466,7 @@ updateAddressDetails id upd model =
                 in
                 ( { model
                     | details =
-                        Success addressViewDetails
+                        addressViewDetails
                             |> AddressDetails id
                             |> Just
                   }

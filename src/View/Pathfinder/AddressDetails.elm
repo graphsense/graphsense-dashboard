@@ -47,7 +47,7 @@ import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
-import Util.View exposing (copyIconPathfinderAbove, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinderAbove, emptyCell, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -84,20 +84,25 @@ view plugins pluginStates vc model id viewState =
                         utxo plugins pluginStates vc model id viewState address
                 )
             |> Maybe.withDefault none
-        , if viewState.txs.isTxFilterViewOpen then
-            div
-                [ [ Css.position Css.fixed
-                  , Css.right (Css.px 42)
-                  , Css.top (Css.px 350)
-                  , Css.property "transform" "translate(0%, -50%)"
-                  , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
-                  ]
-                    |> css
-                ]
-                [ TransactionFilter.txFilterDialogView vc (Id.network id) filterDialogMsgs viewState.txs |> Html.map (Pathfinder.AddressDetailsMsg viewState.addressId) ]
+        , case viewState.txs of
+            RemoteData.Success txs ->
+                if txs.isTxFilterViewOpen then
+                    div
+                        [ [ Css.position Css.fixed
+                          , Css.right (Css.px 42)
+                          , Css.top (Css.px 350)
+                          , Css.property "transform" "translate(0%, -50%)"
+                          , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
+                          ]
+                            |> css
+                        ]
+                        [ TransactionFilter.txFilterDialogView vc (Id.network id) filterDialogMsgs txs |> Html.map (Pathfinder.AddressDetailsMsg viewState.addressId) ]
 
-          else
-            none
+                else
+                    none
+
+            _ ->
+                none
         ]
 
 
@@ -117,7 +122,11 @@ utxo plugins pluginStates vc model id viewState address =
             Plugin.addressSidePanelHeaderTags plugins pluginStates vc address
 
         cluster =
-            Dict.get clstrId model.clusters
+            viewState.data
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\data -> Id.initClusterId data.currency data.entity)
+                |> Maybe.andThen (flip Dict.get model.clusters)
 
         relatedAddressesTab =
             cluster
@@ -132,9 +141,6 @@ utxo plugins pluginStates vc model id viewState address =
                 ++ relatedAddressesTab
                 |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.addressId))
 
-        clstrId =
-            Id.initClusterId viewState.data.currency viewState.data.entity
-
         sidePanelAddressHeader =
             { iconInstance =
                 cluster
@@ -148,7 +154,7 @@ utxo plugins pluginStates vc model id viewState address =
             }
 
         sidePanelAddressDetails =
-            { clusterInfoVisible = Dict.member clstrId model.clusters
+            { clusterInfoVisible = cluster /= Nothing
             , clusterInfoInstance =
                 cluster
                     |> Maybe.withDefault RemoteData.NotAsked
@@ -159,7 +165,7 @@ utxo plugins pluginStates vc model id viewState address =
             }
 
         assetId =
-            assetFromBase viewState.data.currency
+            assetFromBase <| Id.network viewState.addressId
     in
     SidePanelComponents.sidePanelAddressWithInstances
         (SidePanelComponents.sidePanelAddressAttributes
@@ -190,6 +196,12 @@ utxo plugins pluginStates vc model id viewState address =
         (SidePanelComponents.sidePanelAddressInstances
             |> setTags vc viewState model id
             |> Rs.s_learnMore (Just none)
+            |> Rs.s_sidePanelAddressDetails
+                (viewState.data
+                    |> RemoteData.map
+                        (\_ -> Nothing)
+                    |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                )
          -- |> Rs.s_iconsBinanceL
          --     (Just sidePanelData.actorIconInstance)
         )
@@ -205,15 +217,15 @@ utxo plugins pluginStates vc model id viewState address =
         , sidePanelAddressDetails = sidePanelAddressDetails
         , sidePanelAddressHeader = sidePanelAddressHeader
         , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
-        , valueOfBalance = valuesToCell vc assetId viewState.data.balance
+        , valueOfBalance = viewState.data |> RemoteData.map (.balance >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
         , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
-        , valueOfTotalReceived = valuesToCell vc assetId viewState.data.totalReceived
+        , valueOfTotalReceived = viewState.data |> RemoteData.map (.totalReceived >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
         , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
-        , valueOfTotalSent = valuesToCell vc assetId viewState.data.totalSpent
+        , valueOfTotalSent = viewState.data |> RemoteData.map (.totalSpent >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
+        , valueOfLastUsage = viewState.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+        , valueOfFirstUsage = viewState.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
 
         -- , learnMoreButton = { variant = none }
         , categoryTags = { tagLabel = "", closeVisible = False }
@@ -223,18 +235,18 @@ utxo plugins pluginStates vc model id viewState address =
 neighborsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Direction -> Html AddressDetails.Msg
 neighborsDataTab vc model _ viewState direction =
     let
-        { lbl, noAddresses, getTableOpen, getTable } =
+        { lbl, getNoAddresses, getTableOpen, getTable } =
             case direction of
                 Outgoing ->
                     { lbl = "Outgoing addresses"
-                    , noAddresses = viewState.data.outDegree
+                    , getNoAddresses = .outDegree
                     , getTableOpen = .outgoingNeighborsTableOpen
                     , getTable = .neighborsOutgoing
                     }
 
                 Incoming ->
                     { lbl = "Incoming addresses"
-                    , noAddresses = viewState.data.inDegree
+                    , getNoAddresses = .inDegree
                     , getTableOpen = .incomingNeighborsTableOpen
                     , getTable = .neighborsIncoming
                     }
@@ -251,35 +263,39 @@ neighborsDataTab vc model _ viewState direction =
                 )
                 { root =
                     { label = label
-                    , number = Locale.int vc.locale noAddresses
+                    , number =
+                        viewState.data
+                            |> RemoteData.map (getNoAddresses >> Locale.int vc.locale)
+                            |> RemoteData.withDefault ""
                     }
                 }
-        , disabled = noAddresses == 0
+        , disabled = RemoteData.map (getNoAddresses >> (<) 0) viewState.data /= RemoteData.Success True
         , content =
-            if not (getTableOpen viewState) then
-                Nothing
+            case ( getTableOpen viewState, getTable viewState ) of
+                ( True, RemoteData.Success tbl ) ->
+                    let
+                        conf =
+                            { isChecked = flip Network.hasAddress model.network
+                            , hasTags = getHavingTags model
+                            , coinCode = assetFromBase <| Id.network viewState.addressId
+                            , direction = direction
+                            }
+                    in
+                    div
+                        [ css <|
+                            SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                                ++ fullWidth
+                        ]
+                        [ PagedTable.pagedTableView vc
+                            [ css fullWidth ]
+                            (NeighborAddressesTable.config Css.Table.styles vc conf)
+                            tbl
+                            (AddressDetails.NeighborsTablePagedTableMsg direction)
+                        ]
+                        |> Just
 
-            else
-                let
-                    conf =
-                        { isChecked = flip Network.hasAddress model.network
-                        , hasTags = getHavingTags model
-                        , coinCode = assetFromBase viewState.data.currency
-                        , direction = direction
-                        }
-                in
-                div
-                    [ css <|
-                        SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
-                            ++ fullWidth
-                    ]
-                    [ PagedTable.pagedTableView vc
-                        [ css fullWidth ]
-                        (NeighborAddressesTable.config Css.Table.styles vc conf)
-                        (getTable viewState)
-                        (AddressDetails.NeighborsTablePagedTableMsg direction)
-                    ]
-                    |> Just
+                _ ->
+                    Nothing
         , onClick = AddressDetails.UserClickedToggleNeighborsTable direction
         }
 
@@ -344,7 +360,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                             ratc =
                                 { isChecked = flip Network.hasAddress model.network
                                 , hasTags = getHavingTags model
-                                , coinCode = assetFromBase viewState.data.currency
+                                , coinCode = assetFromBase <| Id.network viewState.addressId
                                 }
                         in
                         div
@@ -471,8 +487,18 @@ transactionsDataTab vc model id viewState =
         txOnGraphFn =
             flip Network.hasTx model.network
 
+        noIncomingTxs =
+            viewState.data
+                |> RemoteData.map .noIncomingTxs
+                |> RemoteData.withDefault 0
+
+        noOutgoingTxs =
+            viewState.data
+                |> RemoteData.map .noOutgoingTxs
+                |> RemoteData.withDefault 0
+
         totalNumber =
-            viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs
+            noIncomingTxs + noOutgoingTxs
     in
     dataTab
         { title =
@@ -485,19 +511,22 @@ transactionsDataTab vc model id viewState =
                         totalNumber
                             |> Locale.int vc.locale
                     , incomingNumber =
-                        viewState.data.noIncomingTxs
-                            |> Locale.int vc.locale
+                        viewState.data
+                            |> RemoteData.map (.noIncomingTxs >> Locale.int vc.locale)
+                            |> RemoteData.withDefault ""
                     , outgoingNumber =
-                        viewState.data.noOutgoingTxs
-                            |> Locale.int vc.locale
+                        viewState.data
+                            |> RemoteData.map (.noOutgoingTxs >> Locale.int vc.locale)
+                            |> RemoteData.withDefault ""
                     , title = Locale.string vc.locale "Transactions"
                     }
                 }
         , disabled = totalNumber == 0
         , content =
             if viewState.transactionsTableOpen then
-                transactionTableView vc id txOnGraphFn viewState.txs
-                    |> Just
+                viewState.txs
+                    |> RemoteData.toMaybe
+                    |> Maybe.map (transactionTableView vc id txOnGraphFn)
 
             else
                 Nothing
@@ -666,7 +695,7 @@ account plugins pluginStates vc model id viewState address =
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "
-                    ++ (if viewState.data.isContract |> Maybe.withDefault False then
+                    ++ (if RemoteData.map .isContract viewState.data == RemoteData.Success (Just True) then
                             Locale.string vc.locale "Smart Contract"
 
                         else
@@ -675,40 +704,55 @@ account plugins pluginStates vc model id viewState address =
             }
 
         totalReceivedRundown =
-            accountValueRundown vc
-                { network = viewState.data.currency
-                , open = viewState.totalReceivedDetailsOpen
-                , onClick =
-                    AddressDetails.UserClickedToggleTotalReceivedDetails
-                        |> Pathfinder.AddressDetailsMsg viewState.addressId
-                , title = "Total received"
-                , values = viewState.data.totalReceived
-                , tokenValues = viewState.data.totalTokensReceived
-                }
+            viewState.data
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\data ->
+                        accountValueRundown vc
+                            { network = data.currency
+                            , open = viewState.totalReceivedDetailsOpen
+                            , onClick =
+                                AddressDetails.UserClickedToggleTotalReceivedDetails
+                                    |> Pathfinder.AddressDetailsMsg viewState.addressId
+                            , title = "Total received"
+                            , values = data.totalReceived
+                            , tokenValues = data.totalTokensReceived
+                            }
+                    )
 
         totalSentRundown =
-            accountValueRundown vc
-                { network = viewState.data.currency
-                , open = viewState.totalSentDetailsOpen
-                , onClick =
-                    AddressDetails.UserClickedToggleTotalSpentDetails
-                        |> Pathfinder.AddressDetailsMsg viewState.addressId
-                , title = "Total sent"
-                , values = viewState.data.totalSpent
-                , tokenValues = viewState.data.totalTokensSpent
-                }
+            viewState.data
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\data ->
+                        accountValueRundown vc
+                            { network = data.currency
+                            , open = viewState.totalSentDetailsOpen
+                            , onClick =
+                                AddressDetails.UserClickedToggleTotalSpentDetails
+                                    |> Pathfinder.AddressDetailsMsg viewState.addressId
+                            , title = "Total sent"
+                            , values = data.totalSpent
+                            , tokenValues = data.totalTokensSpent
+                            }
+                    )
 
         balanceRundown =
-            accountValueRundown vc
-                { network = viewState.data.currency
-                , open = viewState.balanceDetailsOpen
-                , onClick =
-                    AddressDetails.UserClickedToggleBalanceDetails
-                        |> Pathfinder.AddressDetailsMsg viewState.addressId
-                , title = "Balance"
-                , values = viewState.data.balance
-                , tokenValues = viewState.data.tokenBalances
-                }
+            viewState.data
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\data ->
+                        accountValueRundown vc
+                            { network = data.currency
+                            , open = viewState.balanceDetailsOpen
+                            , onClick =
+                                AddressDetails.UserClickedToggleBalanceDetails
+                                    |> Pathfinder.AddressDetailsMsg viewState.addressId
+                            , title = "Balance"
+                            , values = data.balance
+                            , tokenValues = data.tokenBalances
+                            }
+                    )
     in
     SidePanelComponents.sidePanelEthAddressWithInstances
         (SidePanelComponents.sidePanelEthAddressAttributes
@@ -745,9 +789,15 @@ account plugins pluginStates vc model id viewState address =
         (SidePanelComponents.sidePanelEthAddressInstances
             |> setTags vc viewState model id
             |> Rs.s_learnMore (Just none)
-            |> Rs.s_totalReceivedRow (Just totalReceivedRundown)
-            |> Rs.s_totalSentRow (Just totalSentRundown)
-            |> Rs.s_balanceRow (Just balanceRundown)
+            |> Rs.s_totalReceivedRow totalReceivedRundown
+            |> Rs.s_totalSentRow totalSentRundown
+            |> Rs.s_balanceRow balanceRundown
+            |> Rs.s_sidePanelEthAddressDetails
+                (viewState.data
+                    |> RemoteData.map
+                        (\_ -> Nothing)
+                    |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                )
         )
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
@@ -767,9 +817,9 @@ account plugins pluginStates vc model id viewState address =
             , clusterInfoInstance = none
             }
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
+        , valueOfLastUsage = viewState.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+        , valueOfFirstUsage = viewState.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , categoryTags = { tagLabel = "", closeVisible = False }
         , balanceRow = { iconInstance = none, title = "", value = "" }
         , totalSentRow = { iconInstance = none, title = "", value = "" }
