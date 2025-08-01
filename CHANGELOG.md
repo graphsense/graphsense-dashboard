@@ -3,6 +3,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## [25.08.0] - 2025-08-01
+
+### Added
+- Aggregated tracing mode allowing to get a overview of the interactions between addresses (complementing the existing tracking mode)
+
+
+### Fixed
+- Mac shortcut handling (Meta keyup related problems) never leaving ModKey mode
+- Backspace node removal handling in textareas (accidental removal of nodes)
+
+## [25.07.0] - 2025-06-23
+
+### Added
+- tag reporting fearture, users can now submit new tags if something is not annotated correctly.
+
+
 ## [25.06.1] - 2025-06-13
 
 ### Added
