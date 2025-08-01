@@ -38,6 +38,7 @@ import Util.ThemedSelectBox as SelectBox
 
 type alias Flags =
     { localStorage : Json.Encode.Value
+    , characterDimensions : Json.Encode.Value
     , now : Int
     , width : Int
     , height : Int

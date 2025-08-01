@@ -3,6 +3,7 @@ module Init exposing (init)
 import Config exposing (config)
 import Config.Update as Update
 import Config.UserSettings
+import Config.View exposing (characterDimensionsDecoder)
 import Dict
 import Effect.Api
 import Init.Graph as Graph
@@ -30,6 +31,11 @@ init plugins uc flags url key =
                 |> Json.Decode.decodeValue Config.UserSettings.decoder
                 |> Result.withDefault Config.UserSettings.default
 
+        cd =
+            flags.characterDimensions
+                |> Json.Decode.decodeValue characterDimensionsDecoder
+                |> Result.withDefault Dict.empty
+
         ( locale, localeEffect ) =
             Locale.init settings
 
@@ -54,6 +60,7 @@ init plugins uc flags url key =
             , showLabelsInTaggingOverview = False
             , allConcepts = []
             , abuseConcepts = []
+            , characterDimensions = cd
             }
       , page = Home
       , search = Search.init (Search.initSearchAddressAndTxs Nothing)

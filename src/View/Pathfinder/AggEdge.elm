@@ -22,6 +22,7 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.GraphComponentsAggregatedTracing as Theme
 import Tuple exposing (mapFirst)
 import Util.Graph exposing (translate)
+import Util.TextDimensions as TextDimensions
 import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
@@ -45,6 +46,10 @@ type alias Dimensions =
 calcDimensions : View.Config -> AggEdge -> Address -> Address -> Dimensions
 calcDimensions vc ed aAddress bAddress =
     let
+        padding =
+            15
+
+        -- Padding for the labels
         asset data =
             { network = data.address.currency, asset = data.address.currency }
 
@@ -110,16 +115,11 @@ calcDimensions vc ed aAddress bAddress =
         rightLabel =
             relationToValue rightRelation
 
-        charWidth =
-            8
-
         leftLabelWidth =
-            (String.length leftLabel |> toFloat)
-                * charWidth
+            TextDimensions.estimateTextWidth vc.characterDimensions leftLabel + padding
 
         rightLabelWidth =
-            (String.length rightLabel |> toFloat)
-                * charWidth
+            TextDimensions.estimateTextWidth vc.characterDimensions rightLabel + padding
 
         totalWidth =
             Theme.aggregatedLabel_details.width

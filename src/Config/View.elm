@@ -1,6 +1,8 @@
-module Config.View exposing (Config, getAbuseName, getConceptName, toCurrency)
+module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getAbuseName, getConceptName, toCurrency)
 
 import Api.Data
+import Dict exposing (Dict)
+import Json.Decode as Decode exposing (Decoder)
 import List.Extra
 import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords exposing (BBox)
@@ -21,7 +23,38 @@ type alias Config =
     , showLabelsInTaggingOverview : Bool
     , allConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
+    , characterDimensions : Dict String { width : Float, height : Float }
     }
+
+
+
+-- Type alias for character dimensions
+
+
+type alias CharacterDimension =
+    { width : Float
+    , height : Float
+    }
+
+
+
+-- Decoder for a single character dimension
+
+
+characterDimensionDecoder : Decoder CharacterDimension
+characterDimensionDecoder =
+    Decode.map2 CharacterDimension
+        (Decode.field "width" Decode.float)
+        (Decode.field "height" Decode.float)
+
+
+
+-- Decoder for the full dictionary
+
+
+characterDimensionsDecoder : Decoder (Dict String CharacterDimension)
+characterDimensionsDecoder =
+    Decode.dict characterDimensionDecoder
 
 
 getConceptName : { t | allConcepts : List Api.Data.Concept } -> String -> Maybe String
