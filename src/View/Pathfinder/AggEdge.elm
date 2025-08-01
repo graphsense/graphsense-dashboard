@@ -116,10 +116,22 @@ calcDimensions vc ed aAddress bAddress =
             relationToValue rightRelation
 
         leftLabelWidth =
-            TextDimensions.estimateTextWidth vc.characterDimensions leftLabel + padding
+            TextDimensions.estimateTextWidth vc.characterDimensions leftLabel
+                + (if String.isEmpty leftLabel then
+                    0
+
+                   else
+                    padding
+                  )
 
         rightLabelWidth =
-            TextDimensions.estimateTextWidth vc.characterDimensions rightLabel + padding
+            TextDimensions.estimateTextWidth vc.characterDimensions rightLabel
+                + (if String.isEmpty rightLabel then
+                    0
+
+                   else
+                    padding
+                  )
 
         totalWidth =
             Theme.aggregatedLabel_details.width
