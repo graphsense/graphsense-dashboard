@@ -94,8 +94,38 @@ isSameTooltip t1 t2 =
         ( Text tt1, Text tt2 ) ->
             tt1 == tt2
 
+        ( AggEdge tt1, AggEdge tt2 ) ->
+            tt1.leftAddress
+                == tt2.leftAddress
+                && tt1.rightAddress
+                == tt2.rightAddress
+
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
 
-        _ ->
+        ( UtxoTx _, _ ) ->
+            False
+
+        ( AccountTx _, _ ) ->
+            False
+
+        ( Address _ _, _ ) ->
+            False
+
+        ( TagLabel _ _ _, _ ) ->
+            False
+
+        ( TagConcept _ _ _ _, _ ) ->
+            False
+
+        ( ActorDetails _ _, _ ) ->
+            False
+
+        ( Text _, _ ) ->
+            False
+
+        ( AggEdge _, _ ) ->
+            False
+
+        ( Plugin _ _, _ ) ->
             False
