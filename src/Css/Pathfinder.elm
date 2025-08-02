@@ -72,7 +72,6 @@ import Css
         , spaceBetween
         , textAlign
         , top
-        , visible
         , width
         )
 import Theme.Colors as TColors
@@ -266,7 +265,7 @@ bottomCenterPanelStyle =
     , displayFlex
     , justifyContent center
     , width all
-    , pointerEvents visible
+    , pointerEvents none
     ]
 
 

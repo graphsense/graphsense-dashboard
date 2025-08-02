@@ -273,7 +273,9 @@ bottomCenterPanel vc model =
         [ css Css.bottomCenterPanelStyle
         ]
         [ GraphComponentsAggregatedTracing.traceModeToggleWithInstances
-            GraphComponentsAggregatedTracing.traceModeToggleAttributes
+            (GraphComponentsAggregatedTracing.traceModeToggleAttributes
+                |> Rs.s_root [ css [ Css.pointerEvents Css.visible ] ]
+            )
             (GraphComponentsAggregatedTracing.traceModeToggleInstances
                 |> Rs.s_toggleSwitchText
                     (Controls.toggleWithText
