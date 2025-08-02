@@ -4,7 +4,6 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Config.Update as Update
 import Dict exposing (Dict)
-import Effect.Pathfinder exposing (Effect)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
@@ -16,7 +15,6 @@ import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import RemoteData exposing (WebData)
-import Tuple exposing (first, second)
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 
 
@@ -31,13 +29,13 @@ getExposedAssetsForAddress uc address =
         |> RemoteData.withDefault allAssets
 
 
-init : Update.Config -> Network -> Dict Id (WebData Api.Data.Entity) -> Maybe DateFilterRaw -> Address -> ( AddressDetails.Model, List Effect )
+init : Update.Config -> Network -> Dict Id (WebData Api.Data.Entity) -> Maybe DateFilterRaw -> Address -> AddressDetails.Model
 init uc network clusters dateFilterPreset address =
     let
         assets =
             getExposedAssetsForAddress uc address
 
-        txsEff =
+        txs =
             address.data
                 |> RemoteData.map (\d -> TransactionTable.init uc network dateFilterPreset address.id d assets)
 
@@ -50,23 +48,21 @@ init uc network clusters dateFilterPreset address =
                         RelatedAddressesTable.init address.id e
                     )
     in
-    ( { neighborsTableOpen = False
-      , transactionsTableOpen = dateFilterPreset /= Nothing
-      , tokenBalancesOpen = False
-      , txs = txsEff |> RemoteData.map first
-      , neighborsOutgoing = RemoteData.map (.outDegree >> NeighborsTable.init) address.data
-      , neighborsIncoming = RemoteData.map (.inDegree >> NeighborsTable.init) address.data
-      , address = address
-      , relatedAddresses = related
-      , relatedAddressesTableOpen = False
-      , totalReceivedDetailsOpen = False
-      , balanceDetailsOpen = False
-      , totalSentDetailsOpen = False
-      , outgoingNeighborsTableOpen = False
-      , incomingNeighborsTableOpen = False
-      , copyIconChevronOpen = False
-      , isClusterDetailsOpen = False
-      , displayAllTagsInDetails = False
-      }
-    , txsEff |> RemoteData.map second |> RemoteData.withDefault []
-    )
+    { neighborsTableOpen = False
+    , transactionsTableOpen = dateFilterPreset /= Nothing
+    , tokenBalancesOpen = False
+    , txs = txs
+    , neighborsOutgoing = RemoteData.map (.outDegree >> NeighborsTable.init) address.data
+    , neighborsIncoming = RemoteData.map (.inDegree >> NeighborsTable.init) address.data
+    , address = address
+    , relatedAddresses = related
+    , relatedAddressesTableOpen = False
+    , totalReceivedDetailsOpen = False
+    , balanceDetailsOpen = False
+    , totalSentDetailsOpen = False
+    , outgoingNeighborsTableOpen = False
+    , incomingNeighborsTableOpen = False
+    , copyIconChevronOpen = False
+    , isClusterDetailsOpen = False
+    , displayAllTagsInDetails = False
+    }

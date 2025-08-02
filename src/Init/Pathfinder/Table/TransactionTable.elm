@@ -34,7 +34,7 @@ getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
-init : Update.Config -> Network -> Maybe DateFilterRaw -> Id -> Api.Data.Address -> List String -> ( TransactionTable.Model, List Effect )
+init : Update.Config -> Network -> Maybe DateFilterRaw -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
 init uc network datefilterPreset addressId data assets =
     let
         nrItems =
@@ -57,7 +57,7 @@ init uc network datefilterPreset addressId data assets =
                         datePickerSettings uc.locale (dfp.fromDate |> Maybe.withDefault mmin) (dfp.toDate |> Maybe.withDefault mmax)
                             |> DateRangePicker.init UpdateDateRangePicker mmax dfp.fromDate dfp.toDate
                 in
-                initWithFilter addressId data (Just drp) Nothing Nothing assets
+                initWithFilter data (Just drp) Nothing Nothing assets
             )
         |> Maybe.withDefault
             (Network.getRecentTxForAddress network Incoming addressId
@@ -68,27 +68,25 @@ init uc network datefilterPreset addressId data assets =
                                 Tx.getRawTimestamp tx
                                     |> timestampToPosix
                         in
-                        ( { table = table False
-                          , order = Just Api.Request.Addresses.Order_Asc
-                          , dateRangePicker =
-                                datePickerSettings uc.locale mn mmax
-                                    |> DateRangePicker.init UpdateDateRangePicker mmax Nothing Nothing
-                                    |> Just
-                          , direction = Nothing
-                          , isTxFilterViewOpen = False
-                          , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
-                          , selectedAsset = Nothing
-                          }
-                        , loadTxs addressId Nothing (Just mn) (Just mmax) Nothing
-                        )
+                        { table = table False
+                        , order = Just Api.Request.Addresses.Order_Asc
+                        , dateRangePicker =
+                            datePickerSettings uc.locale mn mmax
+                                |> DateRangePicker.init UpdateDateRangePicker mmax Nothing Nothing
+                                |> Just
+                        , direction = Nothing
+                        , isTxFilterViewOpen = False
+                        , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
+                        , selectedAsset = Nothing
+                        }
                     )
                 |> Maybe.withDefault
-                    (initWithFilter addressId data Nothing Nothing Nothing assets)
+                    (initWithFilter data Nothing Nothing Nothing assets)
             )
 
 
-initWithFilter : Id -> Api.Data.Address -> Maybe (DateRangePicker.Model Msg) -> Maybe Direction -> Maybe String -> List String -> ( TransactionTable.Model, List Effect )
-initWithFilter addressId data dateFilter direction selectedAsset assets =
+initWithFilter : Api.Data.Address -> Maybe (DateRangePicker.Model Msg) -> Maybe Direction -> Maybe String -> List String -> TransactionTable.Model
+initWithFilter data dateFilter direction selectedAsset assets =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -98,26 +96,18 @@ initWithFilter addressId data dateFilter direction selectedAsset assets =
                 |> PagedTable.init
                 |> PagedTable.setNrItems nrItems
                 |> PagedTable.setItemsPerPage itemsPerPage
-
-        fromDate =
-            dateFilter |> Maybe.andThen .fromDate
-
-        toDate =
-            dateFilter |> Maybe.andThen .toDate
     in
-    ( { table = table True
-      , order = Nothing
-      , dateRangePicker = dateFilter
-      , direction = direction
-      , isTxFilterViewOpen = False
-      , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
-      , selectedAsset = selectedAsset
-      }
-    , loadTxs addressId direction fromDate toDate selectedAsset
-    )
+    { table = table True
+    , order = Nothing
+    , dateRangePicker = dateFilter
+    , direction = direction
+    , isTxFilterViewOpen = False
+    , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
+    , selectedAsset = selectedAsset
+    }
 
 
-loadTxs : Id -> Maybe Direction -> Maybe Posix -> Maybe Posix -> Maybe String -> List Effect
+loadTxs : Id -> Maybe Direction -> Maybe Posix -> Maybe Posix -> Maybe String -> Effect
 loadTxs addressId direction fromDate toDate selectedAsset =
     (GotTxsForAddressDetails ( fromDate, toDate ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsByDateEffect
@@ -132,4 +122,3 @@ loadTxs addressId direction fromDate toDate selectedAsset =
             , maxDate = toDate
             }
         |> ApiEffect
-        |> List.singleton

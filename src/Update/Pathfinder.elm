@@ -138,21 +138,20 @@ syncSidePanel uc dateFilterPreset model =
         makeAddressDetails aid =
             Dict.get aid model.network.addresses
                 |> Maybe.map (AddressDetails.init uc model.network model.clusters dateFilterPreset)
-                |> Maybe.map (mapFirst (AddressDetails aid))
+                |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
             Dict.get tid model.network.txs
-                |> Maybe.map (TxDetails.init >> TxDetails tid >> n)
+                |> Maybe.map (TxDetails.init >> TxDetails tid)
 
         makeRelationDetails rid =
             Dict.get rid model.network.aggEdges
-                |> Maybe.map (RelationDetails.init >> RelationDetails rid >> n)
+                |> Maybe.map (RelationDetails.init >> RelationDetails rid)
     in
     (case ( model.selection, model.details ) of
         ( SelectedAddress id, Just (AddressDetails aid _) ) ->
             if id == aid then
                 model.details
-                    |> Maybe.map n
 
             else
                 makeAddressDetails id
@@ -163,7 +162,6 @@ syncSidePanel uc dateFilterPreset model =
         ( SelectedTx id, Just (TxDetails tid _) ) ->
             if id == tid then
                 model.details
-                    |> Maybe.map n
 
             else
                 makeTxDetails id
@@ -174,7 +172,6 @@ syncSidePanel uc dateFilterPreset model =
         ( SelectedAggEdge id, Just (RelationDetails tid _) ) ->
             if id == tid then
                 model.details
-                    |> Maybe.map n
 
             else
                 makeRelationDetails id
@@ -187,7 +184,6 @@ syncSidePanel uc dateFilterPreset model =
                 ( Just (MSelectedAddress id), Just (AddressDetails aid _) ) ->
                     if id == aid then
                         model.details
-                            |> Maybe.map n
 
                     else
                         makeAddressDetails id
@@ -198,7 +194,6 @@ syncSidePanel uc dateFilterPreset model =
                 ( Just (MSelectedTx id), Just (TxDetails tid _) ) ->
                     if id == tid then
                         model.details
-                            |> Maybe.map n
 
                     else
                         makeTxDetails id
@@ -213,7 +208,7 @@ syncSidePanel uc dateFilterPreset model =
             Nothing
     )
         |> Maybe.map
-            (\( details, eff ) ->
+            (\details ->
                 (case details of
                     RelationDetails rid rd ->
                         Dict.get rid model.network.aggEdges
@@ -231,7 +226,7 @@ syncSidePanel uc dateFilterPreset model =
                             |> Maybe.withDefault Nothing
                 )
                     |> flip s_details model
-                    |> pairTo eff
+                    |> n
             )
         |> Maybe.withDefault (n { model | details = Nothing })
 
@@ -1160,7 +1155,7 @@ updateByMsg plugins uc msg model =
                 |> Maybe.map
                     (\address ->
                         if expandAllowed address then
-                            expandAddress uc address direction model
+                            expandAddress address direction model
 
                         else
                             ( model
@@ -2171,8 +2166,8 @@ fitGraph uc model =
     }
 
 
-expandAddress : Update.Config -> Address -> Direction -> Model -> ( Model, List Effect )
-expandAddress uc address direction model =
+expandAddress : Address -> Direction -> Model -> ( Model, List Effect )
+expandAddress address direction model =
     let
         id =
             address.id

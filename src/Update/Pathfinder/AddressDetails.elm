@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (browserGotClusterData, showTransactionsTable, update)
+module Update.Pathfinder.AddressDetails exposing (browserGotClusterData, loadFirstPage, update)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -195,8 +195,22 @@ update uc msg model =
                 |> RemoteData.withDefault (n model)
 
         UserClickedToggleTransactionTable ->
-            not model.transactionsTableOpen
-                |> showTransactionsTable model
+            model.txs
+                |> RemoteData.map
+                    (\txs ->
+                        let
+                            show =
+                                not model.transactionsTableOpen
+                        in
+                        ( { model | transactionsTableOpen = show }
+                        , if show then
+                            [ loadFirstPage model txs ]
+
+                          else
+                            []
+                        )
+                    )
+                |> RemoteData.withDefault (n model)
 
         GotNextPageTxsForAddressDetails txs ->
             model.txs
@@ -251,7 +265,8 @@ update uc msg model =
 
                                         eff =
                                             if newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate then
-                                                TransactionTable.loadTxs model.address.id Nothing newPicker.fromDate newPicker.toDate txsTable.selectedAsset
+                                                [ TransactionTable.loadTxs model.address.id Nothing newPicker.fromDate newPicker.toDate txsTable.selectedAsset
+                                                ]
 
                                             else
                                                 []
@@ -342,28 +357,37 @@ update uc msg model =
             model.address.data
                 |> RemoteData.map
                     (\data ->
-                        TransactionTable.initWithFilter
-                            model.address.id
-                            data
-                            Nothing
-                            Nothing
-                            Nothing
-                            (Locale.getTokenTickers uc.locale (Id.network model.address.id))
-                            |> mapFirst (RemoteData.Success >> flip s_txs model)
+                        let
+                            table =
+                                TransactionTable.initWithFilter
+                                    data
+                                    Nothing
+                                    Nothing
+                                    Nothing
+                                    (Locale.getTokenTickers uc.locale (Id.network model.address.id))
+                        in
+                        RemoteData.Success table
+                            |> flip s_txs model
+                            |> pairTo
+                                [ loadFirstPage model table ]
                     )
                 |> RemoteData.withDefault (n model)
 
         ResetDateRangePicker ->
             RemoteData.map2
                 (\data txs ->
-                    TransactionTable.initWithFilter
-                        model.address.id
-                        data
-                        Nothing
-                        txs.direction
-                        txs.selectedAsset
-                        (Locale.getTokenTickers uc.locale (Id.network model.address.id))
-                        |> mapFirst (RemoteData.Success >> flip s_txs model)
+                    let
+                        table =
+                            TransactionTable.initWithFilter
+                                data
+                                Nothing
+                                txs.direction
+                                txs.selectedAsset
+                                (Locale.getTokenTickers uc.locale (Id.network model.address.id))
+                    in
+                    RemoteData.Success table
+                        |> flip s_txs model
+                        |> pairTo [ loadFirstPage model table ]
                 )
                 model.address.data
                 model.txs
@@ -372,14 +396,18 @@ update uc msg model =
         ResetTxDirectionFilter ->
             RemoteData.map2
                 (\data txs ->
-                    TransactionTable.initWithFilter
-                        model.address.id
-                        data
-                        txs.dateRangePicker
-                        Nothing
-                        txs.selectedAsset
-                        (Locale.getTokenTickers uc.locale (Id.network model.address.id))
-                        |> mapFirst (RemoteData.Success >> flip s_txs model)
+                    let
+                        table =
+                            TransactionTable.initWithFilter
+                                data
+                                txs.dateRangePicker
+                                Nothing
+                                txs.selectedAsset
+                                (Locale.getTokenTickers uc.locale (Id.network model.address.id))
+                    in
+                    RemoteData.Success table
+                        |> flip s_txs model
+                        |> pairTo [ loadFirstPage model table ]
                 )
                 model.address.data
                 model.txs
@@ -388,14 +416,18 @@ update uc msg model =
         ResetTxAssetFilter ->
             RemoteData.map2
                 (\data txs ->
-                    TransactionTable.initWithFilter
-                        model.address.id
-                        data
-                        txs.dateRangePicker
-                        txs.direction
-                        Nothing
-                        (Locale.getTokenTickers uc.locale (Id.network model.address.id))
-                        |> mapFirst (RemoteData.Success >> flip s_txs model)
+                    let
+                        table =
+                            TransactionTable.initWithFilter
+                                data
+                                txs.dateRangePicker
+                                txs.direction
+                                Nothing
+                                (Locale.getTokenTickers uc.locale (Id.network model.address.id))
+                    in
+                    RemoteData.Success table
+                        |> flip s_txs model
+                        |> pairTo [ loadFirstPage model table ]
                 )
                 model.address.data
                 model.txs
@@ -578,13 +610,6 @@ updateDirectionFilter uc model dir =
 -- |> s_isTxFilterViewOpen False
 
 
-showTransactionsTable : Model -> Bool -> ( Model, List Effect )
-showTransactionsTable model show =
-    ( { model | transactionsTableOpen = show }
-    , []
-    )
-
-
 browserGotClusterData : Id -> Api.Data.Entity -> Model -> ( Model, List Effect )
 browserGotClusterData addressId entity model =
     let
@@ -610,3 +635,15 @@ getNeighborsTableAndSetter model dir =
             model.neighborsOutgoing
                 |> RemoteData.toMaybe
                 |> Maybe.map (pairTo (RemoteData.Success >> s_neighborsOutgoing))
+
+
+loadFirstPage : Model -> TransactionTable.Model -> Effect
+loadFirstPage model txs =
+    let
+        fromDate =
+            txs.dateRangePicker |> Maybe.andThen .fromDate
+
+        toDate =
+            txs.dateRangePicker |> Maybe.andThen .toDate
+    in
+    TransactionTable.loadTxs model.address.id txs.direction fromDate toDate txs.selectedAsset
