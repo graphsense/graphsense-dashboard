@@ -442,7 +442,7 @@ edge vc ed aAddress bAddress hl =
 
                     else
                         "transparent"
-                , Css.property "fill" "transparent" |> Css.important
+                , Css.property "fill" "none" |> Css.important
                 , Css.property "stroke-linecap" "square"
                 ]
             ]
@@ -453,7 +453,7 @@ edge vc ed aAddress bAddress hl =
             , css
                 [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
                 , Css.property "stroke" Colors.pathAggregated
-                , Css.property "fill" "transparent" |> Css.important
+                , Css.property "fill" "none" |> Css.important
                 , Css.property "stroke-linecap" "square"
                 ]
             ]
