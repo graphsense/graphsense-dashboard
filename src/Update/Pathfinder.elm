@@ -26,7 +26,6 @@ import Json.Decode
 import List.Extra
 import Log
 import Maybe.Extra
-import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
@@ -129,15 +128,23 @@ update plugins uc msg model =
         |> pushHistory plugins msg
         |> markDirty plugins msg
         |> updateByMsg plugins uc msg
-        |> and (syncSidePanel uc Nothing)
+        |> and (syncSidePanel uc)
 
 
-syncSidePanel : Update.Config -> Maybe DateFilterRaw -> Model -> ( Model, List Effect )
-syncSidePanel uc dateFilterPreset model =
+syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
+syncSidePanel uc model =
     let
+        dateFilterPreset =
+            case model.route of
+                Route.Network _ (Route.Address _ dateFilter) ->
+                    dateFilter
+
+                _ ->
+                    Nothing
+
         makeAddressDetails aid =
             Dict.get aid model.network.addresses
-                |> Maybe.map (AddressDetails.init uc model.network model.clusters dateFilterPreset)
+                |> Maybe.map (AddressDetails.init dateFilterPreset)
                 |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
@@ -204,7 +211,16 @@ syncSidePanel uc dateFilterPreset model =
                 _ ->
                     Nothing
 
-        _ ->
+        ( WillSelectTx _, _ ) ->
+            model.details
+
+        ( WillSelectAddress _, _ ) ->
+            model.details
+
+        ( WillSelectAggEdge _, _ ) ->
+            model.details
+
+        ( NoSelection, _ ) ->
             Nothing
     )
         |> Maybe.map
@@ -214,19 +230,23 @@ syncSidePanel uc dateFilterPreset model =
                         Dict.get rid model.network.aggEdges
                             |> Maybe.map (flip s_aggEdge rd >> RelationDetails rid >> Just)
                             |> Maybe.withDefault Nothing
+                            |> n
 
                     TxDetails tid td ->
                         Dict.get tid model.network.txs
                             |> Maybe.map (flip s_tx td >> TxDetails tid >> Just)
                             |> Maybe.withDefault Nothing
+                            |> n
 
                     AddressDetails aid ad ->
                         Dict.get aid model.network.addresses
-                            |> Maybe.map (flip s_address ad >> AddressDetails aid >> Just)
-                            |> Maybe.withDefault Nothing
+                            |> Maybe.map
+                                (AddressDetails.syncByAddress uc model.network model.clusters dateFilterPreset ad
+                                    >> mapFirst (AddressDetails aid >> Just)
+                                )
+                            |> Maybe.withDefault (n Nothing)
                 )
-                    |> flip s_details model
-                    |> n
+                    |> mapFirst (flip s_details model)
             )
         |> Maybe.withDefault (n { model | details = Nothing })
 
@@ -2341,18 +2361,9 @@ updateByRoute plugins uc route model =
         )
 
     else
-        let
-            dateFilterPreset =
-                case route of
-                    Route.Network _ (Route.Address _ dateFilter) ->
-                        dateFilter
-
-                    _ ->
-                        Nothing
-        in
-        forcePushHistory (model |> s_isDirty True)
+        forcePushHistory (model |> s_isDirty True |> s_route route)
             |> updateByRoute_ plugins uc route
-            |> and (syncSidePanel uc dateFilterPreset)
+            |> and (syncSidePanel uc)
 
 
 addPathsToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool } -> List (List PathHopType) -> ( Model, List Effect )

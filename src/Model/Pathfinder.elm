@@ -19,6 +19,7 @@ import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
+import Route.Pathfinder exposing (Route)
 import Theme.Svg.GraphComponents as GraphComponents
 import Tuple
 import Util.Annotations exposing (AnnotationModel)
@@ -30,7 +31,8 @@ unit =
 
 
 type alias Model =
-    { network : Network
+    { route : Route
+    , network : Network
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
     , clusters : Dict Id (WebData Entity)

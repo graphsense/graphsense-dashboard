@@ -12,12 +12,14 @@ import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg)
+import Route.Pathfinder as Route
 import Util.Annotations as Annotations
 
 
 init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool, tracingMode : Maybe TracingMode } -> ( Model, Cmd Msg )
 init us =
-    ( { network = Network.init
+    ( { route = Route.Root
+      , network = Network.init
       , actors = Dict.empty
       , tagSummaries = Dict.empty
       , colors = Colors.init

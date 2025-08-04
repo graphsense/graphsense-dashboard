@@ -1,19 +1,25 @@
-module Update.Pathfinder.AddressDetails exposing (browserGotClusterData, loadFirstPage, update)
+module Update.Pathfinder.AddressDetails exposing (browserGotClusterData, loadFirstPage, syncByAddress, update)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
+import Dict exposing (Dict)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
+import Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress)
+import Init.Pathfinder.Id as Id
+import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Maybe.Extra
+import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
-import Model.Pathfinder.Address as Address
+import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
@@ -21,9 +27,9 @@ import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import PagedTable
 import RecordSetter exposing (..)
-import RemoteData
+import RemoteData exposing (WebData)
 import Set
-import Tuple exposing (mapFirst, mapSecond)
+import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
@@ -647,3 +653,65 @@ loadFirstPage model txs =
             txs.dateRangePicker |> Maybe.andThen .toDate
     in
     TransactionTable.loadTxs model.address.id txs.direction fromDate toDate txs.selectedAsset
+
+
+syncByAddress : Update.Config -> Network -> Dict Id (WebData Api.Data.Entity) -> Maybe DateFilterRaw -> Model -> Address -> ( Model, List Effect )
+syncByAddress uc network clusters dateFilterPreset model address =
+    address.data
+        |> RemoteData.map
+            (\data ->
+                let
+                    assets =
+                        getExposedAssetsForAddress uc address
+
+                    txsEff =
+                        model.txs
+                            |> RemoteData.map (\_ -> ( model.txs, [] ))
+                            |> RemoteData.withDefault
+                                (let
+                                    txs =
+                                        TransactionTable.init uc network dateFilterPreset address.id data assets
+                                 in
+                                 ( RemoteData.Success txs
+                                 , if model.transactionsTableOpen then
+                                    [ loadFirstPage model txs ]
+
+                                   else
+                                    []
+                                 )
+                                )
+
+                    related =
+                        model.relatedAddresses
+                            |> RemoteData.map (\_ -> model.relatedAddresses)
+                            |> RemoteData.withDefault
+                                (Id.initClusterId data.currency data.entity
+                                    |> flip Dict.get clusters
+                                    |> Maybe.map (RemoteData.map (RelatedAddressesTable.init address.id))
+                                    |> Maybe.withDefault RemoteData.NotAsked
+                                )
+
+                    neighborsOutgoing =
+                        model.neighborsOutgoing
+                            |> RemoteData.map (\_ -> model.neighborsOutgoing)
+                            |> RemoteData.withDefault (RemoteData.map (.outDegree >> NeighborsTable.init) address.data)
+
+                    neighborsIncoming =
+                        model.neighborsIncoming
+                            |> RemoteData.map (\_ -> model.neighborsIncoming)
+                            |> RemoteData.withDefault (RemoteData.map (.outDegree >> NeighborsTable.init) address.data)
+
+                    newModel =
+                        { model
+                            | txs = first txsEff
+                            , address = address
+                            , neighborsOutgoing = neighborsOutgoing
+                            , neighborsIncoming = neighborsIncoming
+                            , relatedAddresses = related
+                        }
+                in
+                ( newModel
+                , second txsEff
+                )
+            )
+        |> RemoteData.withDefault (n model)
