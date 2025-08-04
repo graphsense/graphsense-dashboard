@@ -8,9 +8,9 @@ module Update.Pathfinder.Network exposing
     , animateTxs
     , clearSelection
     , deleteAddress
+    , deleteAggEdge
     , deleteDanglingAddresses
     , deleteTx
-    , deleteAggEdge
     , findAddressCoords
     , getYForPathAfterX
     , ingestAddresses

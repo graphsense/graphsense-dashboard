@@ -488,7 +488,7 @@ update uc msg model =
         UserClickedAddressCheckboxInTable _ ->
             n model
 
-        UserClickedAggEdgeCheckboxInTable _ _ ->
+        UserClickedAggEdgeCheckboxInTable _ _ _ ->
             n model
 
         NoOp ->

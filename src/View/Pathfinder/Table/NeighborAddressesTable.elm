@@ -83,7 +83,7 @@ config styles vc conf =
         , columns =
             [ checkboxColumn vc
                 { isChecked = toAggId >> conf.isChecked
-                , onClick = toId >> AddressDetails.UserClickedAggEdgeCheckboxInTable conf.anchorId
+                , onClick = AddressDetails.UserClickedAggEdgeCheckboxInTable conf.direction conf.anchorId
                 , readonly = \_ -> False
                 }
             , htmlColumnWithSorter Table.unsortable

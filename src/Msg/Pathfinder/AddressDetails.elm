@@ -46,7 +46,7 @@ type Msg
     | UserClickedToggleRelatedAddressesTable
     | RelatedAddressesTablePagedTableMsg PagedTable.Msg
     | UserClickedAddressCheckboxInTable Id
-    | UserClickedAggEdgeCheckboxInTable Id Id
+    | UserClickedAggEdgeCheckboxInTable Direction Id Api.Data.NeighborAddress
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedAllTxCheckboxInTable
     | UserClickedTx Id

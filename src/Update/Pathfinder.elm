@@ -365,7 +365,7 @@ updateByMsg plugins uc msg model =
             n model
 
         BrowserGotAddressData id position data ->
-            if (not <| Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
+            if position == Auto && (not <| Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
                 let
                     ( newModel, eff ) =
                         fetchEgonet id data model
@@ -692,8 +692,8 @@ updateByMsg plugins uc msg model =
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
                     userClickedAddressCheckboxInTable plugins id model
 
-                AddressDetails.UserClickedAggEdgeCheckboxInTable _ id ->
-                    userClickedAddressCheckboxInTable plugins id model
+                AddressDetails.UserClickedAggEdgeCheckboxInTable dir anchorId data ->
+                    userClickedAggEdgeCheckboxInTable plugins dir anchorId data model
 
                 AddressDetails.UserClickedAllTxCheckboxInTable ->
                     case model.details of
@@ -2164,6 +2164,53 @@ userClickedAddressCheckboxInTable plugins id model =
         loadAddress plugins id model
 
 
+userClickedAggEdgeCheckboxInTable : Plugins -> Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
+userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
+    let
+        id =
+            Id.init data.address.currency data.address.address
+
+        flippedDir =
+            Direction.flip dir
+
+        aggEdgeId =
+            AggEdge.initId id anchorId
+    in
+    if Network.hasAddress id model.network then
+        if Network.hasAggEdge aggEdgeId model.network then
+            removeAggEdge aggEdgeId model
+                |> and
+                    (\newModel ->
+                        if Dict.member id newModel.network.addressAggEdgeMap then
+                            n newModel
+
+                        else
+                            removeAddress id newModel
+                    )
+
+        else
+            ( model.network
+                |> Network.upsertAggEdgeData model.config anchorId dir data
+                |> flip s_network model
+            , BrowserGotRelationsToVisibleNeighbors anchorId flippedDir [ id ]
+                |> Api.GetAddressNeighborsEffect
+                    { currency = Id.network anchorId
+                    , address = Id.id anchorId
+                    , isOutgoing = flippedDir == Outgoing
+                    , onlyIds = Just [ data.address.address ]
+                    , includeLabels = False
+                    , includeActors = False
+                    , pagesize = 1
+                    , nextpage = Nothing
+                    }
+                |> ApiEffect
+                |> List.singleton
+            )
+
+    else
+        loadAddressWithPosition plugins (NextTo ( dir, anchorId )) id model
+
+
 userClickedTx : Id -> Model -> ( Model, List Effect )
 userClickedTx id model =
     if model.modPressed then
@@ -2749,22 +2796,35 @@ loadAddress plugins =
 
 loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
 loadAddressWithPosition _ position id model =
-    if Dict.member id model.network.addresses then
-        n model
+    let
+        request =
+            ( -- don't add the address here because it is not loaded yet
+              --{ model | network = Network.addAddressWithPosition plugins position id model.network }
+              model
+            , [ BrowserGotAddressData id position
+                    |> Api.GetAddressEffect
+                        { currency = Id.network id
+                        , address = Id.id id
+                        , includeActors = True
+                        }
+                    |> ApiEffect
+              ]
+            )
+    in
+    Dict.get id model.network.addresses
+        |> Maybe.map
+            (\address ->
+                case address.data of
+                    RemoteData.Success _ ->
+                        n model
 
-    else
-        ( -- don't add the address here because it is not loaded yet
-          --{ model | network = Network.addAddressWithPosition plugins position id model.network }
-          model
-        , [ BrowserGotAddressData id position
-                |> Api.GetAddressEffect
-                    { currency = Id.network id
-                    , address = Id.id id
-                    , includeActors = True
-                    }
-                |> ApiEffect
-          ]
-        )
+                    RemoteData.Loading ->
+                        n model
+
+                    _ ->
+                        request
+            )
+        |> Maybe.withDefault request
 
 
 loadTxWithPosition : FindPosition -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )

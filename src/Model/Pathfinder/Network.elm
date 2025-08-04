@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw, hasAggEdge)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAggEdge, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -74,9 +74,11 @@ hasTx id network =
     Dict.member id network.txs
 
 
-hasAggEdge : (Id, Id) -> Network -> Bool
+hasAggEdge : ( Id, Id ) -> Network -> Bool
 hasAggEdge id network =
     Dict.member id network.aggEdges
+
+
 getAddressCoords : Id -> Network -> Maybe { x : Float, y : Float }
 getAddressCoords id n =
     Dict.get id n.addresses |> Maybe.map getCoords
