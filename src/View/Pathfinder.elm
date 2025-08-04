@@ -311,7 +311,7 @@ topCenterPanel plugins _ vc gc model =
             , Toolbar.view vc
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
-                , deleteDisabled = model.selection == Pathfinder.NoSelection || model.config.tracingMode == Pathfinder.AggregateTracingMode
+                , deleteDisabled = model.selection == Pathfinder.NoSelection
                 , newDisabled = not model.isDirty
                 , annotateDisabled =
                     case model.selection of

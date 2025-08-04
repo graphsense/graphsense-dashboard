@@ -10,6 +10,7 @@ module Update.Pathfinder.Network exposing
     , deleteAddress
     , deleteDanglingAddresses
     , deleteTx
+    , deleteAggEdge
     , findAddressCoords
     , getYForPathAfterX
     , ingestAddresses
@@ -360,6 +361,40 @@ updateAggEdge id upd network =
     { network
         | aggEdges = Dict.update id (Maybe.map upd) network.aggEdges
     }
+
+
+deleteAggEdge : ( Id, Id ) -> Network -> Network
+deleteAggEdge aggEdgeId network =
+    { network
+        | aggEdges = Dict.remove aggEdgeId network.aggEdges
+        , fetchedEdges =
+            Set.remove aggEdgeId network.fetchedEdges
+                |> Set.remove (swap aggEdgeId)
+        , addressAggEdgeMap = deleteFromAggEdgeMap aggEdgeId network.addressAggEdgeMap
+    }
+
+
+deleteFromAggEdgeMap : ( Id, Id ) -> Dict Id (Set ( Id, Id )) -> Dict Id (Set ( Id, Id ))
+deleteFromAggEdgeMap ( a, b ) map =
+    [ a, b ]
+        |> List.foldl
+            (\id ->
+                Dict.update id
+                    (Maybe.andThen
+                        (\set ->
+                            let
+                                newSet =
+                                    Set.remove ( a, b ) set
+                            in
+                            if Set.isEmpty newSet then
+                                Nothing
+
+                            else
+                                Just newSet
+                        )
+                    )
+            )
+            map
 
 
 rupsertAggEdge : Pathfinder.Config -> ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
@@ -948,18 +983,7 @@ deleteAddress id network =
                     |> (\nw ->
                             Dict.get id nw.addressAggEdgeMap
                                 |> Maybe.map
-                                    (Set.foldl
-                                        (\aggEdgeId nw_ ->
-                                            { nw_
-                                                | aggEdges = Dict.remove aggEdgeId nw_.aggEdges
-                                                , fetchedEdges =
-                                                    Set.remove aggEdgeId nw_.fetchedEdges
-                                                        |> Set.remove (swap aggEdgeId)
-                                                , addressAggEdgeMap = Dict.remove id nw_.addressAggEdgeMap
-                                            }
-                                        )
-                                        nw
-                                    )
+                                    (Set.foldl deleteAggEdge nw)
                                 |> Maybe.withDefault nw
                        )
             )

@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, unselect, update, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -2280,7 +2280,19 @@ deleteSelection model =
                 ( model, [] )
                 items
 
-        _ ->
+        SelectedAggEdge id ->
+            removeAggEdge id model
+
+        WillSelectTx _ ->
+            n model
+
+        WillSelectAddress _ ->
+            n model
+
+        WillSelectAggEdge _ ->
+            n model
+
+        NoSelection ->
             n model
     )
         |> and unselect
@@ -3263,6 +3275,26 @@ removeTx id model =
             case model.selection of
                 SelectedAddress addressId ->
                     if addressId == id then
+                        NoSelection
+
+                    else
+                        model.selection
+
+                _ ->
+                    model.selection
+      }
+    , [ CloseTooltipEffect Nothing False ]
+    )
+
+
+removeAggEdge : ( Id, Id ) -> Model -> ( Model, List Effect )
+removeAggEdge id model =
+    ( { model
+        | network = Network.deleteAggEdge id model.network
+        , selection =
+            case model.selection of
+                SelectedAggEdge aggId ->
+                    if aggId == id then
                         NoSelection
 
                     else
