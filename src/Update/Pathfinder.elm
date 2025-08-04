@@ -942,7 +942,7 @@ updateByMsg plugins uc msg model =
                           }
                         , case maybeTT of
                             Just tt ->
-                                OpenTooltipEffect { context = domId, domId = domId } True tt |> List.singleton
+                                OpenTooltipEffect { context = domId, domId = domId } False tt |> List.singleton
 
                             _ ->
                                 []
@@ -992,7 +992,7 @@ updateByMsg plugins uc msg model =
                           }
                         , case maybeTT of
                             Just tt ->
-                                OpenTooltipEffect { context = domId, domId = domId } True tt |> List.singleton
+                                OpenTooltipEffect { context = domId, domId = domId } False tt |> List.singleton
 
                             _ ->
                                 []
@@ -1691,7 +1691,7 @@ updateByMsg plugins uc msg model =
                                         (RemoteData.toMaybe edge.b2a)
                                 )
                             |> Maybe.map Tooltip.AggEdge
-                            |> Maybe.map (OpenTooltipEffect { context = domId, domId = domId } True)
+                            |> Maybe.map (OpenTooltipEffect { context = domId, domId = domId } False)
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
                         )
