@@ -399,8 +399,8 @@ deleteFromAggEdgeMap ( a, b ) map =
 
 rupsertAggEdge : Pathfinder.Config -> ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
 rupsertAggEdge pc (( a, b ) as id) upd network =
-    { network
-        | aggEdges =
+    let
+        aggEdges =
             Maybe.map
                 (\edge ->
                     let
@@ -424,7 +424,15 @@ rupsertAggEdge pc (( a, b ) as id) upd network =
                 >> Just
                 >> Maybe.Extra.join
                 |> flip (Dict.update id) network.aggEdges
-        , addressAggEdgeMap = updateAddressAggEdgeMap id network.addressAggEdgeMap
+    in
+    { network
+        | aggEdges = aggEdges
+        , addressAggEdgeMap =
+            if Dict.member id aggEdges then
+                updateAddressAggEdgeMap id network.addressAggEdgeMap
+
+            else
+                deleteFromAggEdgeMap id network.addressAggEdgeMap
     }
 
 
