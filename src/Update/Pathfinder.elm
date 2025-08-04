@@ -481,10 +481,34 @@ updateByMsg plugins uc msg model =
                     |> Maybe.withDefault (n newModel2)
 
             else
-                neighborIds
+                neighbors
                     |> List.concatMap
-                        (\addressId ->
+                        (\nbr ->
                             let
+                                isToLargeToLoadLinks a b =
+                                    let
+                                        maxTxs =
+                                            10000
+
+                                        noTx adr =
+                                            adr.noIncomingTxs + adr.noOutgoingTxs
+                                    in
+                                    noTx a > maxTxs && noTx b > maxTxs
+
+                                addressId =
+                                    Id.init nbr.address.currency nbr.address.address
+
+                                nbrData =
+                                    nbr.address
+
+                                aData =
+                                    CheckingNeighbors.getData id model.checkingNeighbors
+
+                                loadBetweenLinks =
+                                    aData
+                                        |> Maybe.map (flip isToLargeToLoadLinks nbrData >> not)
+                                        |> Maybe.withDefault False
+
                                 txs =
                                     Dict.get (AggEdge.initId id addressId) newModel2.network.aggEdges
                                         |> Maybe.map .txs
@@ -494,6 +518,7 @@ updateByMsg plugins uc msg model =
                                 getNextTxEffects newModel2.network
                                     addressId
                                     (Direction.flip dir)
+                                    { addBetweenLinks = loadBetweenLinks }
                                     (Just id)
 
                             else
@@ -2228,7 +2253,7 @@ expandAddress address direction model =
         TxsNotFetched ->
             ( newmodel |> setLoading
             , Nothing
-                |> getNextTxEffects newmodel.network id direction
+                |> getNextTxEffects newmodel.network id direction { addBetweenLinks = False }
                 |> (++) eff
             )
 
@@ -2313,8 +2338,8 @@ updateTagDataOnAddress addressId m =
     tag |> Maybe.map (\n -> { m | network = net n }) |> Maybe.withDefault m
 
 
-getNextTxEffects : Network -> Id -> Direction -> Maybe Id -> List Effect
-getNextTxEffects network addressId direction neighborId =
+getNextTxEffects : Network -> Id -> Direction -> { addBetweenLinks : Bool } -> Maybe Id -> List Effect
+getNextTxEffects network addressId direction { addBetweenLinks } neighborId =
     let
         config =
             { addressId = addressId
@@ -2339,12 +2364,19 @@ getNextTxEffects network addressId direction neighborId =
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ ->
-                neighborId
-                    |> Maybe.map (WorkflowNextTxByTime.startBetween config)
-                    |> Maybe.withDefault (WorkflowNextTxByTime.start config)
-                    |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
-                    |> Workflow.next
-                    |> List.map ApiEffect
+                if addBetweenLinks then
+                    neighborId
+                        |> Maybe.map (WorkflowNextTxByTime.startBetween config)
+                        |> Maybe.withDefault (WorkflowNextTxByTime.start config)
+                        |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
+                        |> Workflow.next
+                        |> List.map ApiEffect
+
+                else
+                    WorkflowNextTxByTime.start config
+                        |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
+                        |> Workflow.next
+                        |> List.map ApiEffect
             )
 
 
