@@ -186,6 +186,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedAddressCheckboxInTable _ ->
                     True
 
+                AddressDetails.UserClickedAggEdgeCheckboxInTable _ _ ->
+                    True
+
                 AddressDetails.NoOp ->
                     False
 

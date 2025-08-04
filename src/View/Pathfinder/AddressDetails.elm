@@ -233,19 +233,19 @@ utxo plugins pluginStates vc model id viewState address =
 
 
 neighborsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Direction -> Html AddressDetails.Msg
-neighborsDataTab vc model _ viewState direction =
+neighborsDataTab vc model id viewState direction =
     let
         { lbl, getNoAddresses, getTableOpen, getTable } =
             case direction of
                 Outgoing ->
-                    { lbl = "Outgoing addresses"
+                    { lbl = "Outgoing relations"
                     , getNoAddresses = .outDegree
                     , getTableOpen = .outgoingNeighborsTableOpen
                     , getTable = .neighborsOutgoing
                     }
 
                 Incoming ->
-                    { lbl = "Incoming addresses"
+                    { lbl = "Incoming relations"
                     , getNoAddresses = .inDegree
                     , getTableOpen = .incomingNeighborsTableOpen
                     , getTable = .neighborsIncoming
@@ -275,7 +275,8 @@ neighborsDataTab vc model _ viewState direction =
                 ( True, RemoteData.Success tbl ) ->
                     let
                         conf =
-                            { isChecked = flip Network.hasAddress model.network
+                            { anchorId = id
+                            , isChecked = flip Network.hasAggEdge model.network
                             , hasTags = getHavingTags model
                             , coinCode = assetFromBase <| Id.network viewState.address.id
                             , direction = direction

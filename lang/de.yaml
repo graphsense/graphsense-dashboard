@@ -91,6 +91,8 @@ outgoing entity: ausgehender Cluster
 incoming entity: eingehender Cluster
 outgoing addresses: ausgehende Adressen
 incoming addresses: eingehende Adressen
+outgoing relations: ausgehende Relationen
+incoming relations: eingehende Relationen
 outgoing entities: ausgehende Cluster
 incoming entities: eingehende Cluster
 output address: ausgehende Adresse

@@ -692,6 +692,9 @@ updateByMsg plugins uc msg model =
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
                     userClickedAddressCheckboxInTable plugins id model
 
+                AddressDetails.UserClickedAggEdgeCheckboxInTable _ id ->
+                    userClickedAddressCheckboxInTable plugins id model
+
                 AddressDetails.UserClickedAllTxCheckboxInTable ->
                     case model.details of
                         Just (AddressDetails _ data) ->

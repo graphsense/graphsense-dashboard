@@ -9,6 +9,7 @@ import Css.Table exposing (Styles)
 import Css.View
 import Dict
 import Html.Styled as Html
+import Init.Pathfinder.AggEdge as AggEdge
 import Init.Pathfinder.Id as Id
 import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Direction exposing (Direction(..))
@@ -28,8 +29,9 @@ import View.Pathfinder.Table.Columns exposing (checkboxColumn, valueColumn)
 
 
 type alias NeighborAddressesTableConfig =
-    { coinCode : AssetIdentifier
-    , isChecked : Id -> Bool
+    { anchorId : Id
+    , coinCode : AssetIdentifier
+    , isChecked : ( Id, Id ) -> Bool
     , hasTags : Id -> HavingTags
     , direction : Direction
     }
@@ -70,14 +72,18 @@ config styles vc conf =
 
         toId nb =
             Id.init nb.address.currency nb.address.address
+
+        toAggId nb =
+            toId nb
+                |> AggEdge.initId conf.anchorId
     in
     Table.customConfig
         { toId = .address >> .address
         , toMsg = \_ -> AddressDetails.NoOp
         , columns =
             [ checkboxColumn vc
-                { isChecked = toId >> conf.isChecked
-                , onClick = toId >> AddressDetails.UserClickedAddressCheckboxInTable
+                { isChecked = toAggId >> conf.isChecked
+                , onClick = toId >> AddressDetails.UserClickedAggEdgeCheckboxInTable conf.anchorId
                 , readonly = \_ -> False
                 }
             , htmlColumnWithSorter Table.unsortable
