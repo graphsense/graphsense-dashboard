@@ -72,7 +72,7 @@ init uc network datefilterPreset addressId data assets =
                         , order = Just Api.Request.Addresses.Order_Asc
                         , dateRangePicker =
                             datePickerSettings uc.locale mn mmax
-                                |> DateRangePicker.init UpdateDateRangePicker mmax Nothing Nothing
+                                |> DateRangePicker.init UpdateDateRangePicker mmax (Just mn) (Just mmax)
                                 |> Just
                         , direction = Nothing
                         , isTxFilterViewOpen = False
@@ -107,8 +107,8 @@ initWithFilter data dateFilter direction selectedAsset assets =
     }
 
 
-loadTxs : Id -> Maybe Direction -> Maybe Posix -> Maybe Posix -> Maybe String -> Effect
-loadTxs addressId direction fromDate toDate selectedAsset =
+loadTxs : Id -> Maybe Api.Request.Addresses.Order_ -> Maybe Direction -> Maybe Posix -> Maybe Posix -> Maybe String -> Effect
+loadTxs addressId order direction fromDate toDate selectedAsset =
     (GotTxsForAddressDetails ( fromDate, toDate ) >> AddressDetailsMsg addressId)
         |> Api.GetAddressTxsByDateEffect
             { currency = Id.network addressId
@@ -116,7 +116,7 @@ loadTxs addressId direction fromDate toDate selectedAsset =
             , direction = direction
             , pagesize = itemsPerPage
             , nextpage = Nothing
-            , order = Nothing
+            , order = order
             , tokenCurrency = selectedAsset
             , minDate = fromDate
             , maxDate = toDate

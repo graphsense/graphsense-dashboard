@@ -271,7 +271,7 @@ update uc msg model =
 
                                         eff =
                                             if newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate then
-                                                [ TransactionTable.loadTxs model.address.id Nothing newPicker.fromDate newPicker.toDate txsTable.selectedAsset
+                                                [ TransactionTable.loadTxs model.address.id txsTable.order Nothing newPicker.fromDate newPicker.toDate txsTable.selectedAsset
                                                 ]
 
                                             else
@@ -655,7 +655,7 @@ loadFirstPage model txs =
         toDate =
             txs.dateRangePicker |> Maybe.andThen .toDate
     in
-    TransactionTable.loadTxs model.address.id txs.direction fromDate toDate txs.selectedAsset
+    TransactionTable.loadTxs model.address.id txs.order txs.direction fromDate toDate txs.selectedAsset
 
 
 syncByAddress : Update.Config -> Network -> Dict Id (WebData Api.Data.Entity) -> Maybe DateFilterRaw -> Model -> Address -> ( Model, List Effect )
