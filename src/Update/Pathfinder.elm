@@ -81,7 +81,7 @@ import Update.Graph.History as History
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.AggEdge as AggEdge
-import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestTxs)
+import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestAggEdges, ingestTxs)
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.RelationDetails as RelationDetails
 import Update.Pathfinder.TxDetails as TxDetails
@@ -372,12 +372,14 @@ updateByMsg plugins uc msg model =
                 in
                 if List.isEmpty eff then
                     browserGotAddressData uc plugins id Auto data newModel
+                        |> and (fetchEgonet id data)
 
                 else
                     ( newModel, eff )
 
             else
                 browserGotAddressData uc plugins id position data model
+                    |> and (fetchEgonet id data)
 
         BrowserGotRelationsToVisibleNeighbors id dir requestIds { neighbors } ->
             let
@@ -1868,28 +1870,6 @@ fetchEgonet id data model =
 
     else
         let
-            getRelations dir onlyIds =
-                if List.isEmpty onlyIds then
-                    []
-
-                else
-                    BrowserGotRelationsToVisibleNeighbors id dir onlyIds
-                        |> Api.GetAddressNeighborsEffect
-                            { currency = Id.network id
-                            , address = Id.id id
-                            , isOutgoing = dir == Outgoing
-                            , onlyIds =
-                                onlyIds
-                                    |> List.map Id.id
-                                    |> Just
-                            , includeLabels = False
-                            , includeActors = False
-                            , pagesize = Dict.size model.network.addresses
-                            , nextpage = Nothing
-                            }
-                        |> ApiEffect
-                        |> List.singleton
-
             nw =
                 incOnlyIds
                     |> List.foldl
@@ -1915,9 +1895,33 @@ fetchEgonet id data model =
         ( CheckingNeighbors.initAddress data outOnlyIds incOnlyIds model.checkingNeighbors
             |> flip s_checkingNeighbors model
             |> s_network nw2
-        , getRelations Outgoing outOnlyIds
-            ++ getRelations Incoming incOnlyIds
+        , getRelations id Outgoing outOnlyIds
+            ++ getRelations id Incoming incOnlyIds
         )
+
+
+getRelations : Id -> Direction -> List Id -> List Effect
+getRelations id dir onlyIds =
+    if List.isEmpty onlyIds then
+        []
+
+    else
+        BrowserGotRelationsToVisibleNeighbors id dir onlyIds
+            |> Api.GetAddressNeighborsEffect
+                { currency = Id.network id
+                , address = Id.id id
+                , isOutgoing = dir == Outgoing
+                , onlyIds =
+                    onlyIds
+                        |> List.map Id.id
+                        |> Just
+                , includeLabels = False
+                , includeActors = False
+                , pagesize = List.length onlyIds
+                , nextpage = Nothing
+                }
+            |> ApiEffect
+            |> List.singleton
 
 
 handleTx : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
@@ -2094,7 +2098,6 @@ browserGotAddressData uc plugins id position data model =
                 ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
             )
         |> and (checkSelection uc)
-        |> and (fetchEgonet id data)
 
 
 handleTooltipMsg : Tag.Msg -> Model -> ( Model, List Effect )
@@ -3468,10 +3471,13 @@ deserializeByVersion version =
 fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )
 fromDeserialized plugins deserialized model =
     let
-        groupByNetwork =
-            List.map .id
+        groupByNetworkWithField field =
+            List.map field
                 >> List.Extra.gatherEqualsBy first
                 >> List.map (\( fst, more ) -> ( first fst, second fst :: List.map second more ))
+
+        groupByNetwork =
+            groupByNetworkWithField .id
 
         addressesRequests =
             deserialized.addresses
@@ -3503,6 +3509,19 @@ fromDeserialized plugins deserialized model =
                             |> ApiEffect
                     )
 
+        relationRequests =
+            deserialized.aggEdges
+                |> List.Extra.gatherEqualsBy .a
+                |> List.concatMap
+                    (\( parent, children ) ->
+                        let
+                            onlyIds =
+                                parent.b :: List.map .b children
+                        in
+                        getRelations parent.a Outgoing onlyIds
+                            ++ getRelations parent.a Incoming onlyIds
+                    )
+
         ( newAndEmptyPathfinder, _ ) =
             Pathfinder.init
                 { snapToGrid = Just model.config.snapToGrid
@@ -3511,13 +3530,16 @@ fromDeserialized plugins deserialized model =
                 }
     in
     ( { newAndEmptyPathfinder
-        | network = ingestAddresses plugins model.config Network.init deserialized.addresses
+        | network =
+            ingestAddresses plugins model.config Network.init deserialized.addresses
+                |> ingestAggEdges model.config deserialized.aggEdges
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
         , name = deserialized.name
       }
     , txsRequests
         ++ addressesRequests
+        ++ relationRequests
     )
 
 

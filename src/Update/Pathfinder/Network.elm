@@ -14,6 +14,7 @@ module Update.Pathfinder.Network exposing
     , findAddressCoords
     , getYForPathAfterX
     , ingestAddresses
+    , ingestAggEdges
     , ingestTxs
     , insertFetchedEdge
     , rupsertAggEdge
@@ -28,7 +29,7 @@ module Update.Pathfinder.Network exposing
 import Animation as A exposing (Animation)
 import Api.Data
 import Basics.Extra exposing (flip, uncurry)
-import Config.Pathfinder as Pathfinder exposing (TracingMode(..), nodeXOffset, nodeYOffset)
+import Config.Pathfinder as Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict exposing (Dict)
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.AggEdge as AggEdge
@@ -40,7 +41,7 @@ import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address, txsToSet)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
-import Model.Pathfinder.Deserialize exposing (DeserializedThing)
+import Model.Pathfinder.Deserialize exposing (DeserializedAggEdge, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -398,7 +399,7 @@ deleteFromAggEdgeMap ( a, b ) map =
 
 
 rupsertAggEdge : Pathfinder.Config -> ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
-rupsertAggEdge pc (( a, b ) as id) upd network =
+rupsertAggEdge _ (( a, b ) as id) upd network =
     let
         aggEdges =
             Maybe.map
@@ -415,7 +416,7 @@ rupsertAggEdge pc (( a, b ) as id) upd network =
                         Just newEdge
                 )
                 >> Maybe.withDefault
-                    (AggEdge.init pc a b
+                    (AggEdge.init a b
                         |> AggEdge.setAddress (Dict.get a network.addresses)
                         |> AggEdge.setAddress (Dict.get b network.addresses)
                         |> upd
@@ -743,7 +744,7 @@ makeTxAddressesCrossproduct ( inputs, outputs ) =
 
 
 insertTxInAggEdges : Pathfinder.Config -> Tx -> Network -> Network
-insertTxInAggEdges pc tx network =
+insertTxInAggEdges _ tx network =
     Tx.listSeparatedAddressesForTx tx
         |> makeTxAddressesCrossproduct
         |> List.foldl
@@ -762,7 +763,7 @@ insertTxInAggEdges pc tx network =
                                     }
                                 )
                                 >> Maybe.withDefault
-                                    (AggEdge.init pc input.id output.id
+                                    (AggEdge.init input.id output.id
                                         |> AggEdge.setAddress (Just input)
                                         |> AggEdge.setAddress (Just output)
                                         |> s_txs (Set.singleton tx.id)
@@ -1092,9 +1093,20 @@ ingestAddresses plugins pc network =
                 , y = th.y
                 }
                 |> s_isStartingPoint th.isStartingPoint
-                |> insertAddress { pc | tracingMode = TransactionTracingMode } nw
+                |> insertAddress pc nw
         )
         network
+
+
+ingestAggEdges : Pathfinder.Config -> List DeserializedAggEdge -> Network -> Network
+ingestAggEdges pc aggEdges network =
+    aggEdges
+        |> List.foldl
+            (\{ a, b, txs } ->
+                s_txs txs
+                    |> rupsertAggEdge pc (AggEdge.initId a b)
+            )
+            network
 
 
 deleteDanglingAddresses : Network -> List Address -> Network
@@ -1110,7 +1122,7 @@ deleteDanglingAddresses =
 
 
 upsertAggEdgeData : Pathfinder.Config -> Id -> Direction -> Api.Data.NeighborAddress -> Network -> Network
-upsertAggEdgeData pc id dir neighbor model =
+upsertAggEdgeData _ id dir neighbor model =
     let
         nid =
             Id.init neighbor.address.currency neighbor.address.address
@@ -1122,7 +1134,7 @@ upsertAggEdgeData pc id dir neighbor model =
             Dict.get aggEdgeId model.aggEdges
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
-                        AggEdge.init pc id nid
+                        AggEdge.init id nid
                             |> AggEdge.setAddress (Dict.get id model.addresses)
                             |> AggEdge.setAddress (Dict.get nid model.addresses)
                     )

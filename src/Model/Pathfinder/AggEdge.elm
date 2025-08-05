@@ -17,7 +17,6 @@ type alias AggEdge =
     , txs : Set Id
     , selected : Bool
     , hovered : Bool
-    , alwaysShow : Bool
     }
 
 

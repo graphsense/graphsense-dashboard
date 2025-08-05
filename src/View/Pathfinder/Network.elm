@@ -13,12 +13,11 @@ import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
 import RemoteData exposing (WebData)
-import Set
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Tuple exposing (mapFirst, mapSecond)
+import Tuple exposing (mapFirst)
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
 import View.Pathfinder.AggEdge as AggEdge
@@ -40,43 +39,23 @@ addresses plugins vc pc colors clusters annotations =
 
 
 relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
-relations plugins vc gc annotations txs =
-    Dict.foldl
-        (\_ rel ( agg, txs_ ) ->
-            case gc.tracingMode of
-                Pathfinder.AggregateTracingMode ->
-                    ( rel :: agg, txs_ )
+relations plugins vc gc annotations txs agg =
+    (case gc.tracingMode of
+        Pathfinder.AggregateTracingMode ->
+            ( Dict.values agg, [] )
 
-                Pathfinder.TransactionTracingMode ->
-                    ( if Set.isEmpty rel.txs then
-                        if rel.alwaysShow then
-                            rel :: agg
-
-                        else
-                            agg
-
-                      else
-                        agg
-                    , Set.union txs_ rel.txs
-                    )
-        )
-        ( [], Set.empty )
-        >> mapFirst
+        Pathfinder.TransactionTracingMode ->
+            ( []
+            , Dict.values txs
+            )
+    )
+        |> mapFirst
             (List.filter
                 (\edge ->
                     RemoteData.isSuccess edge.a2b && RemoteData.isSuccess edge.b2a
                 )
             )
-        >> mapSecond
-            (Set.foldl
-                (\txId txs_ ->
-                    Dict.get txId txs
-                        |> Maybe.map (flip (::) txs_)
-                        |> Maybe.withDefault txs_
-                )
-                []
-            )
-        >> (\( agg, txs_ ) ->
+        |> (\( agg_, txs_ ) ->
                 [ txs_
                     |> List.map
                         (\tx ->
@@ -95,7 +74,7 @@ relations plugins vc gc annotations txs =
                             )
                         )
                     |> Keyed.node "g" []
-                , agg
+                , agg_
                     |> List.filterMap
                         (\edge ->
                             Maybe.map2 (aggEdgeEdge plugins vc gc edge)
@@ -103,7 +82,7 @@ relations plugins vc gc annotations txs =
                                 edge.bAddress
                         )
                     |> Keyed.node "g" []
-                , agg
+                , agg_
                     |> List.filterMap
                         (\edge ->
                             Maybe.map2 (aggEdgeNode plugins vc gc edge)
@@ -111,7 +90,7 @@ relations plugins vc gc annotations txs =
                                 edge.bAddress
                         )
                     |> Keyed.node "g" []
-                , agg
+                , agg_
                     |> List.filter (\a -> a.selected || a.hovered)
                     |> List.filterMap
                         (\edge ->
