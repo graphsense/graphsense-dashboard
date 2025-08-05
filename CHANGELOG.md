@@ -8,11 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Aggregated tracing mode allowing to get a overview of the interactions between addresses (complementing the existing tracking mode)
+- Automatically find transactions between added addresses in transaction tracing mode
 
 
 ### Fixed
 - Mac shortcut handling (Meta keyup related problems) never leaving ModKey mode
 - Backspace node removal handling in textareas (accidental removal of nodes)
+- Disable side panel tabs if there is no data
+- color whole path in transaction annotation color
+- make values in account address txs absolute, fix #505
+- decrease zoom step by zoomfactor, fix #503
+- make datepicker focus the latest date, on relation txs the latest tx
+- fix fiat currency switch
+- fix path fill with none instead of transparent
 
 ## [25.07.0] - 2025-06-23
 
