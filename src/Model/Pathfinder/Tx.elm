@@ -15,8 +15,10 @@ module Model.Pathfinder.Tx exposing
     , getOutputAddressIds
     , getOutputs
     , getRawTimestamp
+    , getRawTimestampForRelationTx
     , getTxId
     , getTxIdForAddressTx
+    , getTxIdForRelationTx
     , getUtxoTx
     , hasAddress
     , hasInput
@@ -25,6 +27,7 @@ module Model.Pathfinder.Tx exposing
     , isRawInFlow
     , isRawOutFlow
     , listAddressesForTx
+    , listSeparatedAddressesForTx
     )
 
 import Animation exposing (Animation, Clock)
@@ -172,6 +175,26 @@ listAddressesForTx tx =
                    )
 
 
+listSeparatedAddressesForTx : Tx -> ( List Address, List Address )
+listSeparatedAddressesForTx tx =
+    case tx.type_ of
+        Account { fromAddress, toAddress } ->
+            ( fromAddress
+                |> Maybe.map List.singleton
+                |> Maybe.withDefault []
+            , toAddress
+                |> Maybe.map List.singleton
+                |> Maybe.withDefault []
+            )
+
+        Utxo { inputs, outputs } ->
+            ( Dict.values inputs
+                |> List.filterMap .address
+            , Dict.values outputs
+                |> List.filterMap .address
+            )
+
+
 getInputAddressIds : Tx -> List Id
 getInputAddressIds tx =
     case tx.type_ of
@@ -281,6 +304,26 @@ getTxIdForAddressTx tx =
 
         Api.Data.AddressTxAddressTxUtxo t ->
             Id.init t.currency t.txHash
+
+
+getTxIdForRelationTx : Api.Data.Link -> Id
+getTxIdForRelationTx tx =
+    case tx of
+        Api.Data.LinkTxAccount t ->
+            Id.init t.network t.identifier
+
+        Api.Data.LinkLinkUtxo t ->
+            Id.init t.currency t.txHash
+
+
+getRawTimestampForRelationTx : Api.Data.Link -> Int
+getRawTimestampForRelationTx tx =
+    case tx of
+        Api.Data.LinkTxAccount t ->
+            t.timestamp
+
+        Api.Data.LinkLinkUtxo t ->
+            t.timestamp
 
 
 ioToId : String -> Api.Data.TxValue -> Maybe Id

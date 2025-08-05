@@ -58,7 +58,7 @@ view _ vc _ tx accTx annotation =
                         tx
                         GraphComponents.txNodeEth_details
                         offset
-                        UserOpensAddressAnnotationDialog
+                        UserOpensTxAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
     in
@@ -94,7 +94,7 @@ view _ vc _ tx accTx annotation =
                 { highlightVisible = tx.selected
                 , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
                 , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
-                , inputValue = Locale.currency vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
+                , inputValue = Locale.currency (View.toCurrency vc) vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
                 , timestampVisible = vc.showTimestampOnTxEdge
                 , startingPointVisible = tx.isStartingPoint || tx.selected
                 }

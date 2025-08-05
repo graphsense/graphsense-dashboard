@@ -1,4 +1,4 @@
-module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, parser, pathRoute, toUrl, txRoute)
+module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, aggEdgeRoute, parser, pathRoute, toUrl, txRoute)
 
 import Iso8601
 import List.Extra
@@ -67,10 +67,10 @@ stringToHop s =
 
 
 type Thing
-    = Address String
-    | AddressWithTxDateRange String DateFilterRaw
+    = Address String (Maybe DateFilterRaw)
     | Tx String
     | Block Int
+    | Relation String String
 
 
 toUrl : Route -> String
@@ -104,10 +104,10 @@ toUrl r =
 thingToUrl : Thing -> ( List String, List QueryParameter )
 thingToUrl t =
     case t of
-        Address a ->
+        Address a Nothing ->
             ( [ "address", a ], [] )
 
-        AddressWithTxDateRange a dateFilter ->
+        Address a (Just dateFilter) ->
             ( [ "address", a, "transactions" ]
             , [ dateFilter.fromDate |> Maybe.map (Iso8601.fromTime >> string "from")
               , dateFilter.toDate |> Maybe.map (Iso8601.fromTime >> string "to")
@@ -120,6 +120,9 @@ thingToUrl t =
 
         Block nr ->
             ( [ "block", String.fromInt nr ], [] )
+
+        Relation a b ->
+            ( [ "relation", a, b ], [] )
 
 
 parser : Config -> Parser (Route -> a) a
@@ -148,6 +151,11 @@ txSegment =
     "tx"
 
 
+relationSegment : String
+relationSegment =
+    "relation"
+
+
 pathSegment : String
 pathSegment =
     "path"
@@ -164,15 +172,19 @@ thing =
         [ s addressSegment
             |> P.slash P.string
             --|> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddressTable))
-            |> map Address
+            |> map (\a -> Address a Nothing)
         , s addressSegment
             |> P.slash P.string
             |> P.slash (s "transactions")
             |> P.questionMark (Q.string "from" |> Q.map (Maybe.andThen (Iso8601.toTime >> Result.toMaybe)))
             |> P.questionMark (Q.string "to" |> Q.map (Maybe.andThen (Iso8601.toTime >> Result.toMaybe)))
-            |> map (\a f t -> AddressWithTxDateRange a (DateFilter.init f t))
+            |> map (\a f t -> Address a (DateFilter.init f t |> Just))
         , s txSegment |> P.slash P.string |> map Tx
         , s blockSegment |> P.slash P.int |> map Block
+        , s relationSegment
+            |> P.slash P.string
+            |> P.slash P.string
+            |> map Relation
         ]
 
 
@@ -185,7 +197,7 @@ parsePath =
 
 addressRoute : { network : String, address : String } -> Route
 addressRoute { network, address } =
-    Address address |> Network network
+    Address address Nothing |> Network network
 
 
 txRoute : { network : String, txHash : String } -> Route
@@ -203,3 +215,9 @@ parseCurrency c =
 pathRoute : String -> List PathHopType -> Route
 pathRoute network path =
     Path network path
+
+
+aggEdgeRoute : { network : String, a : String, b : String } -> Route
+aggEdgeRoute { network, a, b } =
+    Relation a b
+        |> Network network

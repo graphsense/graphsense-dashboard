@@ -66,7 +66,7 @@ view _ vc _ tx utxo annotation =
                         tx
                         GraphComponents.txNodeUtxo_details
                         offset
-                        UserOpensAddressAnnotationDialog
+                        UserOpensTxAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
     in
@@ -135,13 +135,7 @@ edge _ vc _ hovered tx pos annotation =
                                 (values
                                     |> pair { network = Id.network id, asset = Id.network id }
                                     |> List.singleton
-                                    |> Locale.currency vc.locale
-                                    --|> (\x ->
-                                    --        if aggregatesN > 1 then
-                                    --            x ++ " (" ++ String.fromInt aggregatesN ++ ")"
-                                    --        else
-                                    --            x
-                                    --   )
+                                    |> Locale.currency (View.toCurrency vc) vc.locale
                                     |> pair
                                 )
                     )

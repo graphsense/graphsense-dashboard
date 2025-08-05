@@ -19,7 +19,7 @@ type Effect
     | CmdEffect (Cmd Msg)
     | SearchEffect Search.Effect
     | ErrorEffect Error
-    | OpenTooltipEffect { context : String, domId : String } (TooltipType Msg)
+    | OpenTooltipEffect { context : String, domId : String } Bool (TooltipType Msg)
     | RepositionTooltipEffect
     | CloseTooltipEffect (Maybe { context : String, domId : String }) Bool
     | PostponeUpdateByRouteEffect Route
@@ -56,7 +56,7 @@ perform eff =
             Cmd.none
 
         -- managed in Effect.elm
-        OpenTooltipEffect _ _ ->
+        OpenTooltipEffect _ _ _ ->
             Cmd.none
 
         -- managed in Effect.elm

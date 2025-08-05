@@ -4,7 +4,6 @@ module View.Locale exposing
     , currency
     , currencyAsFloat
     , currencyWithoutCode
-    , currencyWithoutCode2
     , date
     , durationPosix
     , durationToString
@@ -58,11 +57,6 @@ import Time exposing (Posix)
 import Time.Extra exposing (toOffset)
 import Tuple exposing (..)
 import Util.Data exposing (timestampToPosix)
-
-
-type CodeVisibility
-    = Hidden
-    | One
 
 
 fixpointFactor : Maybe Api.Data.TokenConfigs -> Dict String ( Float, String )
@@ -173,34 +167,21 @@ formatWithValueDetail : Model -> String -> String
 formatWithValueDetail model fmtStr =
     case model.valueDetail of
         Exact ->
-            if model.currency == Coin then
-                fmtStr ++ "[00000000000000000]"
-
-            else
-                fmtStr ++ "0"
+            fmtStr
 
         Magnitude ->
-            if String.endsWith fmtStr "a" then
-                fmtStr
+            fmtStr
+                ++ (if model.locale == "de" then
+                        " a"
 
-            else
-                fmtStr ++ "a"
-
-
-float : Model -> Float -> String
-float model value =
-    model.numberFormat (formatWithValueDetail model "1,000.0") value
-
-
-floatWithFormat : Model -> String -> Float -> String
-floatWithFormat model fmtStr value =
-    model.numberFormat (formatWithValueDetail model fmtStr) value
+                    else
+                        "a"
+                   )
 
 
 int : Model -> Int -> String
 int model =
-    toFloat
-        >> floatWithFormat model "1,000"
+    intWithFormat model (formatWithValueDetail model "1,000")
 
 
 intWithoutValueDetailFormatting : Model -> Int -> String
@@ -211,7 +192,7 @@ intWithoutValueDetailFormatting model =
 
 intWithFormat : Model -> String -> Int -> String
 intWithFormat model format =
-    toFloat >> floatWithFormat model format
+    toFloat >> model.numberFormat format
 
 
 posixToTimestampSeconds : Posix -> Int
@@ -416,7 +397,7 @@ relativeTime { relativeTimeOptions } from to =
 
 percentage : Model -> Float -> String
 percentage model =
-    floatWithFormat model "0[.]00%"
+    model.numberFormat "0[.]00%"
 
 
 bestAssetAsInt : Model -> List ( AssetIdentifier, Api.Data.Values ) -> Maybe ( AssetIdentifier, Int )
@@ -440,30 +421,31 @@ sumFiats fiatCode =
         >> List.sum
 
 
-currencyAsFloat : Model -> List ( AssetIdentifier, Api.Data.Values ) -> Float
-currencyAsFloat model values =
-    case model.currency of
+currencyAsFloat : Currency -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> Float
+currencyAsFloat c model values =
+    currencyWithOptions { showCode = False, currency = c } model values
+        |> String.toFloat
+        |> Maybe.withDefault 0
+
+
+type alias CurrencyOptions =
+    { showCode : Bool
+    , currency : Currency
+    }
+
+
+currencyWithOptions : CurrencyOptions -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
+currencyWithOptions options model values =
+    case options.currency of
         Coin ->
-            bestAssetAsInt model values
-                |> Maybe.map (second >> toFloat)
-                |> Maybe.withDefault 0
-
-        Fiat code ->
-            sumFiats code values
-
-
-currencyWithOptions : CodeVisibility -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
-currencyWithOptions vis model values =
-    case model.currency of
-        Coin ->
-            if List.all (second >> .value >> (==) 0) values then
+            if List.length values > 1 && allZero values then
                 "0"
 
             else
                 bestAssetAsInt model values
                     |> Maybe.map
                         (\( asset, value ) ->
-                            coinWithOptions vis model asset value
+                            coinWithOptions options.showCode model asset value
                                 ++ (if List.length values == 1 then
                                         ""
 
@@ -479,106 +461,81 @@ currencyWithOptions vis model values =
                 |> fiat model code
 
 
-currencyWithOptions2 : CodeVisibility -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
-currencyWithOptions2 vis model values =
-    case model.currency of
-        Coin ->
-            if List.all (second >> .value >> (==) 0) values then
-                "0"
-
-            else
-                bestAssetAsInt model values
-                    |> Maybe.map
-                        (\( asset, value ) ->
-                            coinWithOptions vis model asset value
-                                ++ (if List.length values == 1 then
-                                        ""
-
-                                    else
-                                        " +"
-                                            ++ (List.length values - 1 |> String.fromInt)
-                                   )
-                        )
-                    |> Maybe.withDefault "0"
-
-        Fiat code ->
-            sumFiats code values
-                |> fiatWithOptions vis model code
+currency : Currency -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
+currency c =
+    currencyWithOptions { showCode = True, currency = c }
 
 
-currency : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
-currency =
-    currencyWithOptions One
-
-
-currencyWithoutCode : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
-currencyWithoutCode =
-    currencyWithOptions Hidden
-
-
-currencyWithoutCode2 : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
-currencyWithoutCode2 =
-    currencyWithOptions2 Hidden
+currencyWithoutCode : Currency -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
+currencyWithoutCode c =
+    currencyWithOptions { showCode = False, currency = c }
 
 
 fiat : Model -> String -> Float -> String
 fiat =
-    fiatWithOptions One
+    fiatWithOptions True
 
 
 fiatWithoutCode : Model -> String -> Float -> String
 fiatWithoutCode =
-    fiatWithOptions Hidden
+    fiatWithOptions False
 
 
-fiatWithOptions : CodeVisibility -> Model -> String -> Float -> String
-fiatWithOptions vis model code value =
-    float model value
-        ++ (case vis of
-                Hidden ->
-                    ""
+fiatWithOptions : Bool -> Model -> String -> Float -> String
+fiatWithOptions showCode model code value =
+    model.numberFormat (formatWithValueDetail model "1,000.00") value
+        ++ (if not showCode then
+                ""
 
-                One ->
-                    " " ++ String.toUpper code
+            else
+                " " ++ String.toUpper code
            )
 
 
 coin : Model -> AssetIdentifier -> Int -> String
 coin =
-    coinWithOptions One
+    coinWithOptions True
 
 
 coinWithoutCode : Model -> AssetIdentifier -> Int -> String
 coinWithoutCode =
-    coinWithOptions Hidden
+    coinWithOptions False
 
 
-coinWithOptions : CodeVisibility -> Model -> AssetIdentifier -> Int -> String
-coinWithOptions vis model asset v =
+coinWithOptions : Bool -> Model -> AssetIdentifier -> Int -> String
+coinWithOptions showCode model asset v =
     normalizeCoinValue model asset v
         |> Maybe.map
             (\value ->
                 let
                     fmt =
-                        formatWithValueDetail model <|
-                            if value == 0.0 then
-                                "1,000"
+                        (if value == 0.0 then
+                            "1,000"
 
-                            else if abs value > 1.0 then
-                                "1,000.00"
+                         else if abs value > 1.0 then
+                            "1,000.00"
 
-                            else
-                                let
-                                    n =
-                                        List.range 0 14
-                                            |> find
-                                                (\exp -> (abs value * (10 ^ toFloat exp)) > 1)
-                                            |> Maybe.withDefault 2
-                                in
-                                "1,000." ++ String.repeat (n + 1) "0"
+                         else
+                            let
+                                n =
+                                    List.range 0 14
+                                        |> find
+                                            (\exp -> (abs value * (10 ^ toFloat exp)) > 1)
+                                        |> Maybe.withDefault 2
+                            in
+                            "1,000." ++ String.repeat (n + 1) "0"
+                        )
+                            |> (\f ->
+                                    if model.valueDetail == Exact then
+                                        f ++ "[00000000000000000]"
+
+                                    else
+                                        f
+                               )
+                            |> formatWithValueDetail model
                 in
-                floatWithFormat model fmt value
-                    ++ (if vis == Hidden then
+                model.numberFormat fmt value
+                    ++ (if not showCode then
                             ""
 
                         else
@@ -603,9 +560,9 @@ normalizeCoinValue model asset v =
             )
 
 
-valuesToFloat : Model -> AssetIdentifier -> Api.Data.Values -> Maybe Float
-valuesToFloat model asset values =
-    case model.currency of
+valuesToFloat : Currency -> Model -> AssetIdentifier -> Api.Data.Values -> Maybe Float
+valuesToFloat c model asset values =
+    case c of
         Coin ->
             values.value
                 |> normalizeCoinValue model asset

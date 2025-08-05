@@ -1,59 +1,43 @@
-module Init.Pathfinder.AddressDetails exposing (init)
+module Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress, init)
 
-import Api.Data
-import Dict exposing (Dict)
-import Effect.Pathfinder exposing (Effect)
-import Init.Pathfinder.Id as Id
-import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
-import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import Config.Update as Update
+import Model.Address as Address
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Locale as Locale
+import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
-import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Network exposing (Network)
-import RemoteData exposing (WebData)
-import Tuple exposing (first, second)
-import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
+import Model.Pathfinder.Id as Id
+import RemoteData
 
 
-init : Network -> Dict Id (WebData Api.Data.Entity) -> Locale.Model -> DateFilterRaw -> Id -> List String -> Api.Data.Address -> ( AddressDetails.Model, List Effect )
-init network clusters locale dateFilterPreset addressId assets data =
+getExposedAssetsForAddress : Update.Config -> Address -> List String
+getExposedAssetsForAddress uc address =
     let
-        ( txs, eff ) =
-            TransactionTable.init network locale dateFilterPreset addressId data assets
-
-        clusterId =
-            Id.initClusterId data.currency data.entity
-
-        related =
-            Dict.get clusterId clusters
-                |> Maybe.withDefault RemoteData.NotAsked
-                |> RemoteData.map
-                    (\e ->
-                        RelatedAddressesTable.init addressId e
-                    )
+        allAssets =
+            (Id.network address.id |> String.toUpper) :: Locale.getTokenTickers uc.locale (Id.network address.id)
     in
-    ( { neighborsTableOpen = False
-      , transactionsTableOpen = False
-      , tokenBalancesOpen = False
-      , txs = txs
-      , neighborsOutgoing = NeighborsTable.init data.outDegree
-      , neighborsIncoming = NeighborsTable.init data.inDegree
-      , addressId = addressId
-      , data = data
-      , relatedAddresses =
-            RemoteData.map first related
-      , relatedAddressesTableOpen = False
-      , totalReceivedDetailsOpen = False
-      , balanceDetailsOpen = False
-      , totalSentDetailsOpen = False
-      , copyIconChevronOpen = False
-      , isClusterDetailsOpen = False
-      , displayAllTagsInDetails = False
-      }
-    , eff
-        ++ (related
-                |> RemoteData.map second
-                |> RemoteData.withDefault []
-           )
-    )
+    address.data
+        |> RemoteData.map Address.getExposedAssets
+        |> RemoteData.withDefault allAssets
+
+
+init : Maybe DateFilterRaw -> Address -> AddressDetails.Model
+init dateFilterPreset address =
+    { neighborsTableOpen = False
+    , transactionsTableOpen = dateFilterPreset /= Nothing
+    , tokenBalancesOpen = False
+    , txs = RemoteData.NotAsked
+    , neighborsOutgoing = RemoteData.NotAsked
+    , neighborsIncoming = RemoteData.NotAsked
+    , address = address
+    , relatedAddresses = RemoteData.NotAsked
+    , relatedAddressesTableOpen = False
+    , totalReceivedDetailsOpen = False
+    , balanceDetailsOpen = False
+    , totalSentDetailsOpen = False
+    , outgoingNeighborsTableOpen = False
+    , incomingNeighborsTableOpen = False
+    , copyIconChevronOpen = False
+    , isClusterDetailsOpen = False
+    , displayAllTagsInDetails = False
+    }

@@ -3,6 +3,7 @@ module Util.Pathfinder.History exposing (shallPushHistory)
 import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import Msg.Pathfinder.RelationDetails as RelationDetails
 import Plugin.Update as Plugin exposing (Plugins)
 
 
@@ -37,6 +38,9 @@ shallPushHistory plugins msg _ =
             False
 
         UserOpensAddressAnnotationDialog _ ->
+            False
+
+        UserOpensTxAnnotationDialog _ ->
             False
 
         UserClickedRestart ->
@@ -83,7 +87,7 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedAllTxCheckboxInTable ->
                     True
 
-                AddressDetails.UserClickedToggleNeighborsTable ->
+                AddressDetails.UserClickedToggleNeighborsTable _ ->
                     False
 
                 AddressDetails.UserClickedToggleTokenBalancesSelect ->
@@ -126,6 +130,9 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.GotNeighborsForAddressDetails _ _ ->
+                    False
+
+                AddressDetails.GotNeighborsNextPageForAddressDetails _ _ ->
                     False
 
                 AddressDetails.UpdateDateRangePicker _ ->
@@ -179,6 +186,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedAddressCheckboxInTable _ ->
                     True
 
+                AddressDetails.UserClickedAggEdgeCheckboxInTable _ _ _ ->
+                    True
+
                 AddressDetails.NoOp ->
                     False
 
@@ -197,13 +207,66 @@ shallPushHistory plugins msg _ =
         TxDetailsMsg _ ->
             False
 
+        RelationDetailsMsg _ ms ->
+            case ms of
+                RelationDetails.UserClickedAllTxCheckboxInTable _ ->
+                    True
+
+                RelationDetails.UserClickedTxCheckboxInTable _ ->
+                    True
+
+                RelationDetails.UserClickedToggleTable _ ->
+                    False
+
+                RelationDetails.TableMsg _ _ ->
+                    False
+
+                RelationDetails.BrowserGotLinks _ _ ->
+                    False
+
+                RelationDetails.BrowserGotLinksNextPage _ _ ->
+                    False
+
+                RelationDetails.UserClickedTx _ ->
+                    False
+
+                RelationDetails.NoOp ->
+                    False
+
+                RelationDetails.ToggleTxFilterView _ ->
+                    False
+
+                RelationDetails.CloseTxFilterView _ ->
+                    False
+
+                RelationDetails.OpenDateRangePicker _ ->
+                    False
+
+                RelationDetails.CloseDateRangePicker _ ->
+                    False
+
+                RelationDetails.ResetDateRangePicker _ ->
+                    False
+
+                RelationDetails.ResetAllTxFilters _ ->
+                    False
+
+                RelationDetails.ResetTxAssetFilter _ ->
+                    False
+
+                RelationDetails.TxTableAssetSelectBoxMsg _ _ ->
+                    False
+
+                RelationDetails.UpdateDateRangePicker _ _ ->
+                    False
+
         AnimationFrameDeltaForTransform _ ->
             False
 
         AnimationFrameDeltaForMove _ ->
             False
 
-        BrowserGotAddressData _ _ _ _ ->
+        BrowserGotAddressData _ _ _ ->
             False
 
         BrowserGotClusterData _ _ ->
@@ -261,6 +324,12 @@ shallPushHistory plugins msg _ =
             False
 
         UserMovesMouseOutUtxoTx _ ->
+            False
+
+        UserMovesMouseOverAggEdge _ ->
+            False
+
+        UserMovesMouseOutAggEdge _ ->
             False
 
         UserMovesMouseOverAddress _ ->
@@ -350,8 +419,14 @@ shallPushHistory plugins msg _ =
         BrowserGotTagSummaries _ _ ->
             False
 
-        BrowserGotRelationsToVisibleNeighbors _ _ _ ->
+        UserClickedToggleTracingMode ->
+            False
+
+        BrowserGotRelationsToVisibleNeighbors _ _ _ _ ->
             False
 
         InternalPathfinderAddedAddress _ ->
+            False
+
+        UserClickedAggEdge _ ->
             False

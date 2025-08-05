@@ -169,12 +169,15 @@ utxo vc model id viewState tx =
                         SidePanelComponents.sidePanelListHeaderTitleInputsWithAttributes
                             (SidePanelComponents.sidePanelListHeaderTitleInputsAttributes
                                 |> Rs.s_root [ spread ]
+                                |> Rs.s_totalNumber
+                                    [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
                                 { title = Locale.string vc.locale "Sending addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noInputs
                                 }
                             }
+                    , disabled = tx.raw.noInputs == 0
                     , content =
                         let
                             ioTableConfig =
@@ -199,12 +202,15 @@ utxo vc model id viewState tx =
                         SidePanelComponents.sidePanelListHeaderTitleOutputsWithAttributes
                             (SidePanelComponents.sidePanelListHeaderTitleOutputsAttributes
                                 |> Rs.s_root [ spread ]
+                                |> Rs.s_totalNumber
+                                    [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
                                 { title = Locale.string vc.locale "Receiving addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs
                                 }
                             }
+                    , disabled = tx.raw.noOutputs == 0
                     , content =
                         let
                             ioTableConfig =

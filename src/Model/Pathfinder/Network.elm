@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAnimations, hasLoadedAddress, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAggEdge, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -7,6 +7,7 @@ import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder.Address exposing (Address, getCoords, txsGetSet)
+import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData
@@ -16,6 +17,9 @@ import Set exposing (Set)
 type alias Network =
     { addresses : Dict Id Address
     , txs : Dict Id Tx
+    , aggEdges : Dict ( Id, Id ) AggEdge
+    , fetchedEdges : Set ( Id, Id )
+    , addressAggEdgeMap : Dict Id (Set ( Id, Id ))
     , animatedAddresses : Set Id
     , animatedTxs : Set Id
     }
@@ -63,6 +67,16 @@ getBoundingBox net =
 hasAddress : Id -> Network -> Bool
 hasAddress id network =
     Dict.member id network.addresses
+
+
+hasTx : Id -> Network -> Bool
+hasTx id network =
+    Dict.member id network.txs
+
+
+hasAggEdge : ( Id, Id ) -> Network -> Bool
+hasAggEdge id network =
+    Dict.member id network.aggEdges
 
 
 getAddressCoords : Id -> Network -> Maybe { x : Float, y : Float }

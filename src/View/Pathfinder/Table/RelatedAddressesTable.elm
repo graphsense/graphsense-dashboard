@@ -24,7 +24,7 @@ import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdent
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
 import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
-import View.Pathfinder.Table.Columns exposing (checkboxColumn, twoValuesCell)
+import View.Pathfinder.Table.Columns exposing (checkboxColumn, twoValuesColumn)
 
 
 type alias RelatedAddressesTableConfig =
@@ -131,7 +131,7 @@ config styles vc ratc _ =
                         HasExchangeTagOnly ->
                             []
                 )
-            , twoValuesCell vc
+            , twoValuesColumn vc
                 (Locale.string vc.locale "Total received")
                 { coinCode = ratc.coinCode
                 , getValue1 = .totalReceived

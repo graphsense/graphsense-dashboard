@@ -1974,7 +1974,7 @@ updateByMsg plugins uc msg model =
                         { currency = currency
                         , isOutgoing = True
                         , addresses = List.map .address deser.addresses
-                        , onlyIds = True
+                        , onlyIds = Just <| List.map .address deser.addresses
                         }
                     |> ApiEffect
               , InternalGraphAddedAddressesEffect acc.newAddressIds

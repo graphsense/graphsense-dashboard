@@ -160,7 +160,7 @@ messageFromEffect model effect =
         Model.PostponeUpdateByUrlEffect _ ->
             Nothing
 
-        Model.PathfinderEffect (Pathfinder.OpenTooltipEffect _ _) ->
+        Model.PathfinderEffect (Pathfinder.OpenTooltipEffect _ _ _) ->
             Nothing
 
         Model.PathfinderEffect (Pathfinder.CloseTooltipEffect _ _) ->

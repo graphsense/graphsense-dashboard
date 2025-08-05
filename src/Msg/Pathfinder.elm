@@ -3,7 +3,6 @@ module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..)
 import Api.Data
 import Color exposing (Color)
 import Hovercard
-import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
@@ -12,6 +11,7 @@ import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
@@ -31,6 +31,7 @@ type Msg
     | UserReleasesMouseButton
     | UserToggleAnnotationSettings
     | UserOpensAddressAnnotationDialog Id
+    | UserOpensTxAnnotationDialog Id
     | UserClickedRestart
     | UserClickedShowLegend
     | UserClickedToggleHelpDropdown
@@ -45,9 +46,10 @@ type Msg
     | UserReleasedNormalKey String
     | AddressDetailsMsg Id AddressDetails.Msg
     | TxDetailsMsg TxDetailsMsg
+    | RelationDetailsMsg ( Id, Id ) RelationDetails.Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
-    | BrowserGotAddressData Id FindPosition DateFilterRaw Api.Data.Address
+    | BrowserGotAddressData Id FindPosition Api.Data.Address
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
@@ -98,8 +100,12 @@ type Msg
     | UserGotDataForTagsListDialog Id Api.Data.AddressTags
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
-    | BrowserGotRelationsToVisibleNeighbors Id Direction Api.Data.NeighborAddresses
+    | UserClickedToggleTracingMode
+    | BrowserGotRelationsToVisibleNeighbors Id Direction (List Id) Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id
+    | UserClickedAggEdge ( Id, Id )
+    | UserMovesMouseOverAggEdge ( Id, Id )
+    | UserMovesMouseOutAggEdge ( Id, Id )
 
 
 type alias TextTooltipConfig =

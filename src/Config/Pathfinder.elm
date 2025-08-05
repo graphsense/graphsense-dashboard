@@ -1,4 +1,4 @@
-module Config.Pathfinder exposing (Config, addressRadius, nodeXOffset, nodeYOffset)
+module Config.Pathfinder exposing (Config, TracingMode(..), addressRadius, nodeXOffset, nodeYOffset)
 
 
 addressRadius : Float
@@ -16,7 +16,13 @@ nodeYOffset =
     2.5
 
 
+type TracingMode
+    = TransactionTracingMode
+    | AggregateTracingMode
+
+
 type alias Config =
     { snapToGrid : Bool
     , highlightClusterFriends : Bool
+    , tracingMode : TracingMode
     }

@@ -21,6 +21,7 @@ import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Pathfinder.Id exposing (Id)
 import Time
+import Tuple exposing (pair)
 import Util.Http exposing (Headers)
 
 
@@ -212,6 +213,9 @@ type Effect msg
         , target : String
         , minHeight : Maybe Int
         , maxHeight : Maybe Int
+        , minDate : Maybe Posix
+        , maxDate : Maybe Posix
+        , tokenCurrency : Maybe String
         , order : Maybe Api.Request.Addresses.Order_
         , nextpage : Maybe String
         , pagesize : Int
@@ -266,7 +270,7 @@ type Effect msg
         { currency : String
         , isOutgoing : Bool
         , addresses : List String
-        , onlyIds : Bool
+        , onlyIds : Maybe (List String)
         }
         (List ( String, Api.Data.NeighborAddress ) -> msg)
     | BulkGetTxEffect
@@ -665,8 +669,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Txs.getSpentInTxs currency txHash index
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight Nothing Nothing order Nothing nextpage (Just pagesize)
+        GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, minDate, maxDate, tokenCurrency, order, pagesize, nextpage } toMsg ->
+            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight minDate maxDate order tokenCurrency nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->
@@ -847,12 +851,13 @@ perform apiKey wrapMsg effect =
                                         Api.Request.Entities.DirectionIn
                           )
                         ]
-                            ++ (if e.onlyIds then
-                                    [ ( "only_ids", Json.Encode.list Json.Encode.string e.addresses )
-                                    ]
-
-                                else
-                                    []
+                            ++ (e.onlyIds
+                                    |> Maybe.map
+                                        (Json.Encode.list Json.Encode.string
+                                            >> pair "only_ids"
+                                            >> List.singleton
+                                        )
+                                    |> Maybe.withDefault []
                                )
                     )
                 |> send apiKey wrapMsg effect toMsg

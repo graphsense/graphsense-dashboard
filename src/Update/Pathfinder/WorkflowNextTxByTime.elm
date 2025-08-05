@@ -87,6 +87,9 @@ startBetween config neighbor =
             , order = Just Api.Request.Addresses.Order_Desc
             , minHeight = Nothing
             , maxHeight = Nothing
+            , minDate = Nothing
+            , maxDate = Nothing
+            , tokenCurrency = Nothing
             }
         |> List.singleton
         |> Workflow.Next

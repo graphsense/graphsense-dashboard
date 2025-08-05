@@ -51,4 +51,5 @@ spread =
     css
         [ Css.flexGrow <| Css.num 1
         , Css.justifyContent Css.spaceBetween
+        , Css.width <| Css.pct 100
         ]

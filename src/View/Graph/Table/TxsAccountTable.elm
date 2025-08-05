@@ -54,7 +54,7 @@ blockConfig vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , (if vc.locale.currency /= Model.Currency.Coin then
+            , (if vc.showValuesInFiat then
                 T.valueColumn
 
                else
@@ -109,7 +109,7 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , (if vc.locale.currency /= Model.Currency.Coin then
+            , (if vc.showValuesInFiat then
                 T.valueColumn
 
                else

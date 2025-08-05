@@ -47,7 +47,7 @@ update uc msg model =
 
                 Nothing ->
                     ( model
-                    , Notification.infoDefault (Locale.string uc.locale "Tag is invalid")
+                    , Notification.errorDefault (Locale.string uc.locale "Tag is invalid")
                         |> Notification.map (Rs.s_isEphemeral True)
                         |> Notification.map (Rs.s_showClose False)
                         |> PFEffect.ShowNotificationEffect

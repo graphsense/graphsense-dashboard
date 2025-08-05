@@ -12,9 +12,9 @@ import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type Msg
-    = UserClickedToggleNeighborsTable
-    | UserClickedToggleTokenBalancesSelect
+    = UserClickedToggleTokenBalancesSelect
     | UserClickedToggleTransactionTable
+    | UserClickedToggleNeighborsTable Direction
     | UserClickedToggleBalanceDetails
     | UserClickedToggleTotalReceivedDetails
     | UserClickedToggleTotalSpentDetails
@@ -25,6 +25,7 @@ type Msg
     | GotTxsForAddressDetails ( Maybe Time.Posix, Maybe Time.Posix ) Api.Data.AddressTxs
     | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
+    | GotNeighborsNextPageForAddressDetails Direction Api.Data.NeighborAddresses
     | UpdateDateRangePicker DurationDatePicker.Msg
     | ToggleTxFilterView
     | CloseTxFilterView
@@ -45,6 +46,7 @@ type Msg
     | UserClickedToggleRelatedAddressesTable
     | RelatedAddressesTablePagedTableMsg PagedTable.Msg
     | UserClickedAddressCheckboxInTable Id
+    | UserClickedAggEdgeCheckboxInTable Direction Id Api.Data.NeighborAddress
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedAllTxCheckboxInTable
     | UserClickedTx Id

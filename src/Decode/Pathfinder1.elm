@@ -2,18 +2,28 @@ module Decode.Pathfinder1 exposing (decoder)
 
 import Color exposing (Color)
 import Init.Pathfinder.Id as Id
-import Json.Decode exposing (Decoder, bool, float, index, list, map2, map3, map4, maybe, string)
-import Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedAnnotation, DeserializedThing)
+import Json.Decode exposing (Decoder, bool, float, index, list, map, map2, map3, map4, map5, maybe, oneOf, string, succeed)
+import Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedAggEdge, DeserializedAnnotation, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
+import Set
 
 
 decoder : Decoder Deserialized
 decoder =
-    map4 Deserialized
+    map5 Deserialized
         (index 2 string)
         (index 3 (list thingDecoder))
         (index 4 (list thingDecoder))
         (index 5 (list annotationDecoder))
+        (oneOf [ index 6 (list aggEdgeDecoder), succeed [] ])
+
+
+aggEdgeDecoder : Decoder DeserializedAggEdge
+aggEdgeDecoder =
+    map3 DeserializedAggEdge
+        (index 0 idDecoder)
+        (index 1 idDecoder)
+        (index 2 (list idDecoder |> map Set.fromList))
 
 
 annotationDecoder : Decoder DeserializedAnnotation

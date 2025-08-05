@@ -31,7 +31,6 @@ import Log
 import Maybe.Extra
 import Model exposing (..)
 import Model.Address as Address
-import Model.Currency
 import Model.Dialog as Dialog
 import Model.Entity as Entity
 import Model.Graph.Coords exposing (BBox)
@@ -209,12 +208,51 @@ update plugins uc msg model =
                         |> Maybe.withDefault True
                     , Just tt
                     )
+
+                closing =
+                    model.tooltip |> Maybe.map .closing |> Maybe.withDefault False
+
+                open =
+                    model.tooltip |> Maybe.map .open |> Maybe.withDefault False
             in
-            if hasToChange then
-                ( { model | tooltip = newTooltip }
+            if not hasToChange && not closing && not open then
+                ( { model | tooltip = newTooltip |> Maybe.map (s_open True) }
                 , Cmd.map HovercardMsg cmd
                     |> CmdEffect
                     |> List.singleton
+                )
+
+            else
+                n model
+
+        OpeningTooltip ctx withDelay tttype ->
+            let
+                ( hc, _ ) =
+                    ctx.domId |> Hovercard.init
+
+                tt =
+                    tttype |> Tooltip.init hc
+
+                ( hasToChange, newTooltip ) =
+                    ( model.tooltip
+                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
+                        |> Maybe.withDefault True
+                    , Just tt
+                    )
+
+                openDelay =
+                    delay
+                        (if withDelay then
+                            2000.0
+
+                         else
+                            0.0
+                        )
+                        (OpenTooltip ctx tttype)
+            in
+            if hasToChange then
+                ( { model | tooltip = newTooltip }
+                , openDelay |> CmdEffect |> List.singleton
                 )
 
             else
@@ -492,7 +530,7 @@ update plugins uc msg model =
                                 |> s_lightmode (not model.config.lightmode)
                     }
             in
-            ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+            ( newModel, [ saveUserSettings newModel ] )
 
         UserInputsApiKeyForm input ->
             { model
@@ -701,7 +739,7 @@ update plugins uc msg model =
                 eff =
                     case m of
                         LocaleMsg.BrowserSentTimezone _ ->
-                            [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ]
+                            [ saveUserSettings newModel ]
 
                         _ ->
                             []
@@ -712,40 +750,28 @@ update plugins uc msg model =
 
         SettingsMsg (UserChangedPreferredCurrency currency) ->
             let
-                locale =
-                    Locale.changeCurrency currency model.config.locale
-
                 newModel =
                     { model
                         | config =
                             model.config
-                                |> s_locale locale
                                 |> s_preferredFiatCurrency currency
                     }
             in
-            ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+            ( newModel, [ saveUserSettings newModel ] )
 
         SettingsMsg UserToggledValueDisplay ->
             let
                 showInFiat =
                     not model.config.showValuesInFiat
 
-                locale =
-                    if showInFiat then
-                        Locale.changeCurrency model.config.preferredFiatCurrency model.config.locale
-
-                    else
-                        Locale.changeCurrency "coin" model.config.locale
-
                 newModel =
                     { model
                         | config =
                             model.config
-                                |> s_locale locale
                                 |> s_showValuesInFiat showInFiat
                     }
             in
-            ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+            ( newModel, [ saveUserSettings newModel ] )
 
         AddTagDialog smsg ->
             case model.dialog of
@@ -912,7 +938,7 @@ update plugins uc msg model =
                                                                 |> Route.Pathfinder.Path currency
                                                         )
                                                     |> Maybe.withDefault
-                                                        (Route.Pathfinder.Address fst
+                                                        (Route.Pathfinder.Address fst Nothing
                                                             |> Route.Pathfinder.Network currency
                                                         )
                                             )
@@ -999,6 +1025,18 @@ update plugins uc msg model =
                             |> NavPushUrlEffect
                         ]
                     )
+
+        PathfinderMsg Pathfinder.UserClickedToggleTracingMode ->
+            let
+                ( pf, pfeff ) =
+                    Pathfinder.update plugins uc Pathfinder.UserClickedToggleTracingMode model.pathfinder
+
+                nm =
+                    { model | pathfinder = pf }
+            in
+            ( nm
+            , saveUserSettings nm :: List.map PathfinderEffect pfeff
+            )
 
         PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg dsm) ->
             let
@@ -1280,18 +1318,27 @@ update plugins uc msg model =
 
                 Graph.UserChangesCurrency currency ->
                     let
-                        locale =
-                            Locale.changeCurrency currency model.config.locale
+                        ( preferredCurrency, showFiat ) =
+                            case currency of
+                                "coin" ->
+                                    ( model.config.preferredFiatCurrency
+                                    , False
+                                    )
+
+                                fiat ->
+                                    ( fiat
+                                    , True
+                                    )
 
                         newModel =
                             { model
                                 | config =
                                     model.config
-                                        |> s_locale locale
-                                        |> s_showValuesInFiat (locale.currency /= Model.Currency.Coin)
+                                        |> s_preferredFiatCurrency preferredCurrency
+                                        |> s_showValuesInFiat showFiat
                             }
                     in
-                    ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+                    ( newModel, [ saveUserSettings newModel ] )
 
                 Graph.UserChangesValueDetail detail ->
                     let
@@ -1305,7 +1352,7 @@ update plugins uc msg model =
                                         |> s_locale locale
                             }
                     in
-                    ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+                    ( newModel, [ saveUserSettings newModel ] )
 
                 Graph.UserClickedShowEntityShadowLinks ->
                     let
@@ -1315,7 +1362,7 @@ update plugins uc msg model =
                         newModel =
                             { model | graph = graph }
                     in
-                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+                    ( newModel, saveUserSettings newModel :: List.map GraphEffect graphEffects )
 
                 Graph.UserClickedShowAddressShadowLinks ->
                     let
@@ -1325,7 +1372,7 @@ update plugins uc msg model =
                         newModel =
                             { model | graph = graph }
                     in
-                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+                    ( newModel, saveUserSettings newModel :: List.map GraphEffect graphEffects )
 
                 Graph.UserClickedToggleShowZeroTransactions ->
                     let
@@ -1335,7 +1382,7 @@ update plugins uc msg model =
                         newModel =
                             { model | graph = graph }
                     in
-                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+                    ( newModel, saveUserSettings newModel :: List.map GraphEffect graphEffects )
 
                 Graph.UserClickedToggleShowDatesInUserLocale ->
                     let
@@ -1358,7 +1405,7 @@ update plugins uc msg model =
                         newModel =
                             { model | graph = graph }
                     in
-                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+                    ( newModel, saveUserSettings newModel :: List.map GraphEffect graphEffects )
 
                 Graph.UserChangesTxLabelType _ ->
                     let
@@ -1368,7 +1415,7 @@ update plugins uc msg model =
                         newModel =
                             { model | graph = graph }
                     in
-                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+                    ( newModel, saveUserSettings newModel :: List.map GraphEffect graphEffects )
 
                 Graph.UserClickedExportGS time ->
                     ( model
@@ -1679,7 +1726,7 @@ switchLocale loc model =
     ( newModel
     , [ Locale.getTranslationEffect loc
             |> LocaleEffect
-      , SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel)
+      , saveUserSettings newModel
       ]
     )
 
@@ -1733,6 +1780,9 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder _ _) ->
+                        updateGraphByPluginOutMsg model eff msg
+
+                    PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinderWithConfig _ _ _) ->
                         updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.GetAddressDomElement id pmsg ->
@@ -2368,7 +2418,7 @@ toggleShowDatesInUserLocale m =
         ( nm, LocaleEffect (Locale.GetTimezoneEffect LocaleMsg.BrowserSentTimezone) |> List.singleton )
 
     else
-        ( mwUTCtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwUTCtz) |> List.singleton )
+        ( mwUTCtz, saveUserSettings mwUTCtz |> List.singleton )
 
 
 toggleSnapToGrid : Model key -> ( Model key, List Effect )
@@ -2380,7 +2430,7 @@ toggleSnapToGrid m =
                 |> flip s_config m.pathfinder
                 |> flip s_pathfinder m
     in
-    ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
+    ( nm, saveUserSettings nm |> List.singleton )
 
 
 toggleShowTimeZoneOffset : Model key -> ( Model key, List Effect )
@@ -2389,7 +2439,7 @@ toggleShowTimeZoneOffset m =
         nm =
             m |> s_config (m.config |> s_showTimeZoneOffset (not m.config.showTimeZoneOffset))
     in
-    ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
+    ( nm, saveUserSettings nm |> List.singleton )
 
 
 toggleHighlightClusterFriends : Model key -> ( Model key, List Effect )
@@ -2401,7 +2451,7 @@ toggleHighlightClusterFriends m =
                 |> flip s_config m.pathfinder
                 |> flip s_pathfinder m
     in
-    ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
+    ( nm, saveUserSettings nm |> List.singleton )
 
 
 togglShowTimestampOnTxEdge : Model key -> ( Model key, List Effect )
@@ -2410,4 +2460,9 @@ togglShowTimestampOnTxEdge m =
         nm =
             m |> s_config (m.config |> s_showTimestampOnTxEdge (not m.config.showTimestampOnTxEdge))
     in
-    ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
+    ( nm, saveUserSettings nm |> List.singleton )
+
+
+saveUserSettings : Model key -> Effect
+saveUserSettings =
+    SaveUserSettingsEffect << Model.userSettingsFromMainModel

@@ -311,6 +311,7 @@ coloredPath c =
             Svg.path
                 [ p
                 , Css.property "stroke-width" (String.fromFloat det.strokeWidth)
+                    :: (Css.property "fill" "none" |> Css.important)
                     :: det.styles
                     ++ gradientStyles
                     |> css

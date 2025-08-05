@@ -15,6 +15,22 @@ keyDecoder kMap =
     Decode.andThen kMap (Decode.field "key" Decode.string)
 
 
+onlyFireOutsideOfTextInput : Msg -> Decode.Decoder Msg
+onlyFireOutsideOfTextInput msg =
+    Decode.at [ "target", "nodeName" ] Decode.string
+        |> Decode.andThen
+            (\nodeName ->
+                if nodeName == "INPUT" then
+                    Decode.fail "on input"
+
+                else if nodeName == "TEXTAREA" then
+                    Decode.fail "on textarea"
+
+                else
+                    Decode.succeed msg
+            )
+
+
 toKeyDown : String -> Decode.Decoder Msg
 toKeyDown keyValue =
     case keyValue of
@@ -29,32 +45,17 @@ toKeyDown keyValue =
             Decode.succeed UserPressedModKey
 
         "z" ->
-            UserPressedNormalKey keyValue
-                |> Decode.succeed
+            UserPressedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
         "y" ->
-            UserPressedNormalKey keyValue
-                |> Decode.succeed
+            UserPressedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
         _ ->
-            NoOp
-                |> Decode.succeed
+            Decode.fail "not handled"
 
 
 toKeyUp : String -> Decode.Decoder Msg
 toKeyUp keyValue =
-    let
-        decodeDeleteOnInput =
-            Decode.at [ "target", "nodeName" ] Decode.string
-                |> Decode.andThen
-                    (\nodeName ->
-                        if nodeName == "INPUT" then
-                            Decode.fail "on input"
-
-                        else
-                            Decode.succeed UserReleasedDeleteKey
-                    )
-    in
     case keyValue of
         -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
         "Control" ->
@@ -66,30 +67,27 @@ toKeyUp keyValue =
                 |> Decode.succeed
 
         "Shift" ->
-            Decode.succeed UserReleasedModKey
+            UserReleasedModKey |> Decode.succeed
 
         "z" ->
-            UserReleasedNormalKey keyValue
-                |> Decode.succeed
+            UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
         "y" ->
-            UserReleasedNormalKey keyValue
-                |> Decode.succeed
+            UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
         "Backspace" ->
-            decodeDeleteOnInput
+            UserReleasedDeleteKey |> onlyFireOutsideOfTextInput
 
         "Delete" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
-            decodeDeleteOnInput
+            UserReleasedDeleteKey |> onlyFireOutsideOfTextInput
 
         "Escape" ->
             UserReleasedEscape
                 |> Decode.succeed
 
         _ ->
-            NoOp
-                |> Decode.succeed
+            Decode.fail "not handled"
 
 
 subscriptions : Model -> Sub Msg
