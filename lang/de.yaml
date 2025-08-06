@@ -428,7 +428,7 @@ Open: Öffnen
 "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel.": "Die automatische Nachverfolgung endet an Adressen von Diensten, da die Vermögensströme in der Regel nicht über diese Dienste verfolgt werden können. Diese Einschränkung ist darauf zurückzuführen, dass Dienste oft als Blackboxen fungieren und Gelder von Nutzern vermischen. Sie können ausgehende Transaktionen immer noch manuell verfolgen, indem Sie die im Seitenbereich verfügbaren Verfolgungsoptionen verwenden."
 Copy address ID: Adress ID kopieren
 Copy transaction ID: Transaktions ID kopieren
-Remove from Graph: Vom Graphen entfernen
+Remove from graph: Vom Graphen entfernen
 victim: Opfer
 perpetrator: Täter
 "Auto trace limit": "Beschränkung der Auto-Nachverfolgung"
@@ -506,6 +506,8 @@ Asset flows: Zahlungsflüsse
 "Add Tag": "Tag hinzufügen"
 "Add_Tag_description": "Helfen Sie mit, unsere Daten zu verbessern, indem Sie eine Entität melden, die mit dieser Adresse verbunden ist - Ihre Eingaben werden geprüft und gegebenenfalls veröffentlicht." 
 "Add Tag to Address": "Einen Tag melden"
+"Report a tag": "Ein Tag melden"
+"Report tag": "Tag melden"
 "Create new actor": "Neuen Akteur erstellen"
 "Added Tag": "Tag hinzugefügt"
 Tag Import: Tag-Import

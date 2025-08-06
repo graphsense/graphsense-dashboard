@@ -23,4 +23,3 @@ this table is empty: No entries found.
 Tag Import: Tag Import
 "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder."
 "Add_Tag_description": "Help improve our data by reporting an entity linked to this address - it will be reviewed and eventually published." 
-"Add Tag to Address": "Report a Tag"
