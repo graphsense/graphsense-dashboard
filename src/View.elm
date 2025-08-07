@@ -96,7 +96,7 @@ body plugins vc model =
             ++ overlay plugins vc model
             ++ Notification.view vc model.notifications
             :: (model.tooltip
-                    |> Maybe.map (Tooltip.view plugins model.plugins vc)
+                    |> Maybe.map (Tooltip.view plugins model vc)
                     |> Maybe.map List.singleton
                     |> Maybe.withDefault []
                )

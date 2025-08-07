@@ -6,8 +6,10 @@ import Dict
 import Json.Encode exposing (Value, bool, float, list, null, string)
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx)
+import Set
 import Util.Annotations exposing (AnnotationItem, toList)
 
 
@@ -25,6 +27,20 @@ encode model =
     , model.annotations
         |> toList
         |> list encodeAnnotation
+    , model.network.aggEdges
+        |> Dict.values
+        |> list encodeAggEdge
+    ]
+        |> list identity
+
+
+encodeAggEdge : AggEdge -> Value
+encodeAggEdge edge =
+    [ encodeId edge.a
+    , encodeId edge.b
+    , edge.txs
+        |> Set.toList
+        |> list encodeId
     ]
         |> list identity
 

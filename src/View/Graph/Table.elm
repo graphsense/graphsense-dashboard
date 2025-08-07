@@ -319,19 +319,22 @@ valueAndTokensColumnWithOptions styles _ vc getCoinCode name getValues getTokens
         assets data =
             ( assetFromBase (getCoinCode data), getValues data )
                 :: (getTokens data |> Maybe.map (Dict.toList >> List.map (\( k, v ) -> ( asset (getCoinCode data) k, v ))) |> Maybe.withDefault [])
+
+        curr =
+            View.toCurrency vc
     in
     Table.veryCustomColumn
         { name = name
         , viewData =
             \data ->
                 assets data
-                    |> Locale.currency vc.locale
+                    |> Locale.currency curr vc.locale
                     |> text
                     |> List.singleton
                     |> Table.HtmlDetails
                         [ styles.valuesCell vc False |> css
                         ]
-        , sorter = Table.decreasingOrIncreasingBy (assets >> Locale.currencyAsFloat vc.locale)
+        , sorter = Table.decreasingOrIncreasingBy (assets >> Locale.currencyAsFloat curr vc.locale)
         }
 
 
@@ -343,6 +346,7 @@ valuesCell styles vc hideCode coinCode values =
      else
         Locale.currency
     )
+        (View.toCurrency vc)
         vc.locale
         [ ( coinCode, values ) ]
         |> text
@@ -354,7 +358,7 @@ valuesCell styles vc hideCode coinCode values =
 
 valuesCss : Styles -> View.Config -> AssetIdentifier -> Api.Data.Values -> List Css.Style
 valuesCss styles vc asset values =
-    Locale.valuesToFloat vc.locale asset values
+    Locale.valuesToFloat (View.toCurrency vc) vc.locale asset values
         |> Maybe.withDefault 0
         |> (>) 0
         |> styles.valuesCell vc
@@ -362,7 +366,7 @@ valuesCss styles vc asset values =
 
 valuesSorter : View.Config -> AssetIdentifier -> Api.Data.Values -> Float
 valuesSorter vc asset values =
-    Locale.valuesToFloat vc.locale asset values
+    Locale.valuesToFloat (View.toCurrency vc) vc.locale asset values
         |> Maybe.withDefault 0
 
 

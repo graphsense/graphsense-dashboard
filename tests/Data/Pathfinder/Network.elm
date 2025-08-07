@@ -40,6 +40,9 @@ oneAddress =
         Dict.fromList
             [ ( Id.address1, Address.address1 ) ]
     , txs = Dict.empty
+    , aggEdges = Dict.empty
+    , fetchedEdges = Set.empty
+    , addressAggEdgeMap = Dict.empty
     , animatedAddresses = Set.empty
     , animatedTxs = Set.empty
     }

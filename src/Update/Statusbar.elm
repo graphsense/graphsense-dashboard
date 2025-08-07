@@ -160,7 +160,7 @@ messageFromEffect model effect =
         Model.PostponeUpdateByUrlEffect _ ->
             Nothing
 
-        Model.PathfinderEffect (Pathfinder.OpenTooltipEffect _ _) ->
+        Model.PathfinderEffect (Pathfinder.OpenTooltipEffect _ _ _) ->
             Nothing
 
         Model.PathfinderEffect (Pathfinder.CloseTooltipEffect _ _) ->
@@ -408,6 +408,14 @@ messageFromApiEffect model effect =
                 |> Just
 
         Api.GetAddressTxsEffect e _ ->
+            ( "{1}: loading transactions of address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetAddressTxsByDateEffect e _ ->
             ( "{1}: loading transactions of address {0}"
             , [ e.address
               , e.currency |> String.toUpper

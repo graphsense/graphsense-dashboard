@@ -20,6 +20,8 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Pathfinder.Id exposing (Id)
+import Time
+import Tuple exposing (pair)
 import Util.Http exposing (Headers)
 
 
@@ -97,6 +99,18 @@ type Effect msg
         , direction : Maybe Direction
         , minHeight : Maybe Int
         , maxHeight : Maybe Int
+        , tokenCurrency : Maybe String
+        , order : Maybe Api.Request.Addresses.Order_
+        , pagesize : Int
+        , nextpage : Maybe String
+        }
+        (Api.Data.AddressTxs -> msg)
+    | GetAddressTxsByDateEffect
+        { currency : String
+        , address : String
+        , direction : Maybe Direction
+        , minDate : Maybe Time.Posix
+        , maxDate : Maybe Time.Posix
         , tokenCurrency : Maybe String
         , order : Maybe Api.Request.Addresses.Order_
         , pagesize : Int
@@ -199,6 +213,9 @@ type Effect msg
         , target : String
         , minHeight : Maybe Int
         , maxHeight : Maybe Int
+        , minDate : Maybe Posix
+        , maxDate : Maybe Posix
+        , tokenCurrency : Maybe String
         , order : Maybe Api.Request.Addresses.Order_
         , nextpage : Maybe String
         , pagesize : Int
@@ -253,7 +270,7 @@ type Effect msg
         { currency : String
         , isOutgoing : Bool
         , addresses : List String
-        , onlyIds : Bool
+        , onlyIds : Maybe (List String)
         }
         (List ( String, Api.Data.NeighborAddress ) -> msg)
     | BulkGetTxEffect
@@ -419,6 +436,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetAddressTxsEffect eff
+
+        GetAddressTxsByDateEffect eff m ->
+            m
+                >> mapMsg
+                |> GetAddressTxsByDateEffect eff
 
         GetEntityAddressesEffect eff m ->
             m
@@ -623,6 +645,22 @@ perform apiKey wrapMsg effect =
             Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight Nothing Nothing order tokenCurrency nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
+        GetAddressTxsByDateEffect { currency, address, direction, minDate, maxDate, order, tokenCurrency, pagesize, nextpage } toMsg ->
+            let
+                dir =
+                    case direction of
+                        Nothing ->
+                            Nothing
+
+                        Just Incoming ->
+                            Just Api.Request.Addresses.DirectionIn
+
+                        Just Outgoing ->
+                            Just Api.Request.Addresses.DirectionOut
+            in
+            Api.Request.Addresses.listAddressTxs currency address dir Nothing Nothing minDate maxDate order tokenCurrency nextpage (Just pagesize)
+                |> send apiKey wrapMsg effect toMsg
+
         ListSpendingTxRefsEffect { currency, txHash, index } toMsg ->
             Api.Request.Txs.getSpendingTxs currency txHash index
                 |> send apiKey wrapMsg effect toMsg
@@ -631,8 +669,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Txs.getSpentInTxs currency txHash index
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight Nothing Nothing order Nothing nextpage (Just pagesize)
+        GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, minDate, maxDate, tokenCurrency, order, pagesize, nextpage } toMsg ->
+            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight minDate maxDate order tokenCurrency nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->
@@ -813,12 +851,13 @@ perform apiKey wrapMsg effect =
                                         Api.Request.Entities.DirectionIn
                           )
                         ]
-                            ++ (if e.onlyIds then
-                                    [ ( "only_ids", Json.Encode.list Json.Encode.string e.addresses )
-                                    ]
-
-                                else
-                                    []
+                            ++ (e.onlyIds
+                                    |> Maybe.map
+                                        (Json.Encode.list Json.Encode.string
+                                            >> pair "only_ids"
+                                            >> List.singleton
+                                        )
+                                    |> Maybe.withDefault []
                                )
                     )
                 |> send apiKey wrapMsg effect toMsg

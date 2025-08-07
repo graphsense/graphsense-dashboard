@@ -1,6 +1,7 @@
 module View.Pathfinder.Tx.AccountTx exposing (edge, view)
 
 import Animation as A
+import Color
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -19,14 +20,13 @@ import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
-import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeEthAttributes)
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
-import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
+import View.Pathfinder.Tx.Path exposing (pickPathFunction)
 import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
 
 
@@ -58,7 +58,7 @@ view _ vc _ tx accTx annotation =
                         tx
                         GraphComponents.txNodeEth_details
                         offset
-                        UserOpensAddressAnnotationDialog
+                        UserOpensTxAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
     in
@@ -94,7 +94,7 @@ view _ vc _ tx accTx annotation =
                 { highlightVisible = tx.selected
                 , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
                 , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
-                , inputValue = Locale.currency vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
+                , inputValue = Locale.currency (View.toCurrency vc) vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
                 , timestampVisible = vc.showTimestampOnTxEdge
                 , startingPointVisible = tx.isStartingPoint || tx.selected
                 }
@@ -115,14 +115,19 @@ view _ vc _ tx accTx annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> AccountTx -> AnimatedPosTrait x -> Svg Msg
-edge _ vc _ hovered tx aTxPos =
+edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> AccountTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge _ _ _ hovered tx aTxPos annotation =
     let
         radTx =
             GraphComponents.txNodeEthNodeEllipse_details.width / 2
 
         radA =
             GraphComponents.addressNodeNodeFrame_details.width / 2
+
+        color =
+            annotation
+                |> Maybe.andThen .color
+                |> Maybe.map Color.toCssString
     in
     Maybe.map2
         (\fro too ->
@@ -144,14 +149,9 @@ edge _ vc _ hovered tx aTxPos =
 
                 leftLeg =
                     ( Id.toString txId
-                    , Svg.lazy7
-                        (if hovered then
-                            inPathHovered
-
-                         else
-                            inPath
-                        )
-                        vc
+                    , pickPathFunction False
+                        hovered
+                        color
                         ""
                         (fromPos.x * unit + (radA * leftSign))
                         (fromPos.y * unit)
@@ -165,14 +165,9 @@ edge _ vc _ hovered tx aTxPos =
 
                 rightLeg =
                     ( Id.toString txId
-                    , Svg.lazy7
-                        (if hovered then
-                            outPathHovered
-
-                         else
-                            outPath
-                        )
-                        vc
+                    , pickPathFunction True
+                        hovered
+                        color
                         ""
                         (txPos.x * unit + (radTx * rightSign))
                         (txPos.y * unit)

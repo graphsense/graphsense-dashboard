@@ -1,9 +1,12 @@
-module Model.Address exposing (Address, Addresslink, decoder, encoder, equals, fromId, fromPathfinderId)
+module Model.Address exposing (Address, Addresslink, decoder, encoder, equals, fromId, fromPathfinderId, getExposedAssets)
 
+import Api.Data
+import Dict
 import Json.Decode
 import Json.Encode
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Pathfinder.Id as Pathfinder
+import Set
 
 
 type alias Address =
@@ -57,3 +60,16 @@ equals a b =
                 |> String.toLower
     in
     fn a == fn b
+
+
+getExposedAssets : Api.Data.Address -> List String
+getExposedAssets address =
+    (address.currency |> String.toUpper)
+        :: ((address.tokenBalances |> Maybe.map Dict.keys |> Maybe.withDefault [])
+                ++ (address.totalTokensReceived |> Maybe.map Dict.keys |> Maybe.withDefault [])
+                ++ (address.totalTokensSpent |> Maybe.map Dict.keys |> Maybe.withDefault [])
+                |> Set.fromList
+                |> Set.toList
+                |> List.map String.toUpper
+                |> List.sort
+           )

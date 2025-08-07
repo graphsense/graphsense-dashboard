@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -442,6 +442,14 @@ timeToCell vc d =
     { firstRowText = Locale.timestampDateUniform vc.locale d
     , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
     , secondRowVisible = True
+    }
+
+
+emptyCell : { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+emptyCell =
+    { firstRowText = ""
+    , secondRowText = ""
+    , secondRowVisible = False
     }
 
 

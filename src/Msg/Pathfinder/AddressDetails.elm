@@ -6,15 +6,15 @@ import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
 import PagedTable
 import Table
-import Time exposing (Posix)
+import Time
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type Msg
-    = UserClickedToggleNeighborsTable
-    | UserClickedToggleTokenBalancesSelect
+    = UserClickedToggleTokenBalancesSelect
     | UserClickedToggleTransactionTable
+    | UserClickedToggleNeighborsTable Direction
     | UserClickedToggleBalanceDetails
     | UserClickedToggleTotalReceivedDetails
     | UserClickedToggleTotalSpentDetails
@@ -22,9 +22,10 @@ type Msg
     | UserClickedToggleDisplayAllTagsInDetails
     | TransactionsTablePagedTableMsg PagedTable.Msg
     | NeighborsTablePagedTableMsg Direction PagedTable.Msg
-    | GotTxsForAddressDetails ( Maybe Int, Maybe Int ) Api.Data.AddressTxs
+    | GotTxsForAddressDetails ( Maybe Time.Posix, Maybe Time.Posix ) Api.Data.AddressTxs
     | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
+    | GotNeighborsNextPageForAddressDetails Direction Api.Data.NeighborAddresses
     | UpdateDateRangePicker DurationDatePicker.Msg
     | ToggleTxFilterView
     | CloseTxFilterView
@@ -38,8 +39,6 @@ type Msg
     | TxTableFilterShowIncomingTxOnly
     | TxTableFilterShowOutgoingTxOnly
     | TxTableAssetSelectBoxMsg (ThemedSelectBox.Msg (Maybe String))
-    | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
-    | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
     | TableMsg Table.State
     | RelatedAddressesTableMsg Table.State
     | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
@@ -47,6 +46,7 @@ type Msg
     | UserClickedToggleRelatedAddressesTable
     | RelatedAddressesTablePagedTableMsg PagedTable.Msg
     | UserClickedAddressCheckboxInTable Id
+    | UserClickedAggEdgeCheckboxInTable Direction Id Api.Data.NeighborAddress
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedAllTxCheckboxInTable
     | UserClickedTx Id

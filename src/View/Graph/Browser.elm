@@ -620,7 +620,7 @@ browseValue vc value =
         Value coinMap ->
             span
                 []
-                [ Locale.currency vc.locale coinMap
+                [ Locale.currency (View.toCurrency vc) vc.locale coinMap
                     |> text
                 ]
 
@@ -634,13 +634,11 @@ browseValue vc value =
                                 if Data.isAccountLike parentCoin then
                                     coinCode.asset
 
-                                else
-                                    case vc.locale.currency of
-                                        Currency.Coin ->
-                                            parentCoin
+                                else if vc.showValuesInFiat then
+                                    parentCoin
 
-                                        Currency.Fiat fiat ->
-                                            fiat
+                                else
+                                    vc.preferredFiatCurrency
                         in
                         tr []
                             [ String.toUpper cc
@@ -2254,11 +2252,11 @@ browseAddresslinkTable vc gc coinCode table =
 
 multiValue : View.Config -> Currency.AssetIdentifier -> Api.Data.Values -> String
 multiValue vc asset v =
-    if Data.isAccountLike asset.network && vc.locale.currency /= Currency.Coin then
-        Locale.currency vc.locale [ ( asset, v ) ]
+    if Data.isAccountLike asset.network && vc.showValuesInFiat then
+        Locale.currency (View.toCurrency vc) vc.locale [ ( asset, v ) ]
 
     else
-        Locale.currencyWithoutCode vc.locale [ ( asset, v ) ]
+        Locale.currencyWithoutCode (View.toCurrency vc) vc.locale [ ( asset, v ) ]
 
 
 type alias AddressOrEntity a =

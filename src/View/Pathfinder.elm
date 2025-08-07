@@ -1,11 +1,10 @@
 module View.Pathfinder exposing (view)
 
-import Config.Pathfinder as Pathfinder
+import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
 import Css.Graph
 import Css.Pathfinder as Css
-import Css.View
 import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
@@ -25,14 +24,14 @@ import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import RemoteData
 import String.Format
-import Svg.Styled exposing (Svg, defs, linearGradient, stop, svg)
-import Svg.Styled.Attributes exposing (css, height, id, offset, preserveAspectRatio, stopColor, transform, viewBox, width)
+import Svg.Styled exposing (Svg, defs, feComposite, feFlood, feGaussianBlur, feMerge, feMergeNode, feOffset, filter, linearGradient, stop, svg)
+import Svg.Styled.Attributes exposing (css, dx, dy, floodColor, height, id, in2, in_, offset, operator, preserveAspectRatio, result, stdDeviation, stopColor, transform, viewBox, width, x, y)
 import Svg.Styled.Events as Svg
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.GraphComponents as HGraphComponents
+import Theme.Html.GraphComponentsAggregatedTracing as GraphComponentsAggregatedTracing
 import Theme.Html.Icons as HIcons
 import Theme.Html.SelectionControls exposing (SwitchSize(..))
 import Theme.Html.SettingsComponents as Sc
@@ -43,12 +42,13 @@ import Util.Css as Css
 import Util.ExternalLinks
 import Util.Graph
 import Util.View exposing (fixFillRule, hovercard, none)
-import View.Controls as Vc
+import View.Controls as Controls
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.AddressDetails as AddressDetails
 import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.Network as Network
+import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.TxDetails as TxDetails
 import View.Search
@@ -74,6 +74,7 @@ graph plugins pluginStates vc gc model =
     , topLeftPanel plugins pluginStates vc
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc model
+    , bottomCenterPanel vc model
     ]
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)
@@ -197,7 +198,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
                           , icon = HIcons.iconsDeleteS {}
-                          , text = "Remove from Graph"
+                          , text = "Remove from graph"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
@@ -209,7 +210,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserOpensDialogWindow (AddTags id)
                           , icon = HIcons.iconsAddTagOutlinedS {}
-                          , text = "Add Tag"
+                          , text = "Report a tag"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
@@ -218,14 +219,30 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     }
                     {}
 
-            ContextMenu.TransactionContextMenu _ ->
+            ContextMenu.TransactionContextMenu id ->
+                let
+                    pluginsList =
+                        []
+                in
                 HGraphComponents.rightClickMenuWithAttributes
                     (HGraphComponents.rightClickMenuAttributes
                         |> Rs.s_pluginsList [ [ Css.width (Css.pct 100) ] |> css ]
                         |> Rs.s_shortcutList [ [ Css.width (Css.pct 100) ] |> css ]
+                        |> (if List.isEmpty pluginsList then
+                                Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
+
+                            else
+                                identity
+                           )
                     )
                     { shortcutList =
-                        [ { msg = UserClickedContextMenuIdToClipboard menu
+                        [ { msg = UserOpensTxAnnotationDialog id
+                          , icon = HIcons.iconsAnnotateS {}
+                          , text = "Annotate transaction"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
                           , text = "Copy transaction ID"
                           }
@@ -244,9 +261,36 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         ]
-                    , pluginsList = []
+                    , pluginsList = pluginsList
                     }
                     {}
+        ]
+
+
+bottomCenterPanel : View.Config -> Pathfinder.Model -> Html Msg
+bottomCenterPanel vc model =
+    div
+        [ css Css.bottomCenterPanelStyle
+        ]
+        [ GraphComponentsAggregatedTracing.traceModeToggleWithInstances
+            (GraphComponentsAggregatedTracing.traceModeToggleAttributes
+                |> Rs.s_root [ css [ Css.pointerEvents Css.visible ] ]
+            )
+            (GraphComponentsAggregatedTracing.traceModeToggleInstances
+                |> Rs.s_toggleSwitchText
+                    (Controls.toggleWithText
+                        { selectedA = model.config.tracingMode == TransactionTracingMode
+                        , titleA = Locale.string vc.locale "Track funds"
+                        , titleB = Locale.string vc.locale "View network"
+                        , msg = UserClickedToggleTracingMode
+                        }
+                        |> Just
+                    )
+            )
+            { leftCell = { variant = none }
+            , rightCell = { variant = none }
+            , root = { toggleLabel = "" }
+            }
         ]
 
 
@@ -380,7 +424,7 @@ settingsHovercardView vc pm hc =
         switchWithText primary text enabled msg =
             let
                 toggle =
-                    Vc.toggle
+                    Controls.toggle
                         { size = SwitchSizeBig
                         , selected = enabled
                         , disabled = False
@@ -534,13 +578,13 @@ detailsView plugin pluginStates vc model =
         Just details ->
             case details of
                 Pathfinder.AddressDetails id state ->
-                    RemoteData.unwrap
-                        (Util.View.loadingSpinner vc Css.View.loadingSpinner)
-                        (AddressDetails.view plugin pluginStates vc model id)
-                        state
+                    AddressDetails.view plugin pluginStates vc model id state
 
                 Pathfinder.TxDetails id state ->
                     TxDetails.view vc model id state
+
+                Pathfinder.RelationDetails id state ->
+                    RelationDetails.view vc model id state
 
         Nothing ->
             none
@@ -677,14 +721,56 @@ graphSvg plugins vc gc model bbox =
             , gradient "account" { outgoing = False, reverse = False }
             , gradient "account" { outgoing = True, reverse = True }
             , gradient "account" { outgoing = False, reverse = True }
+            , dropShadowAggEdgeHighlight
             ]
+        , Svg.lazy6 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges
         , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
-        , Svg.lazy5 Network.txs plugins vc gc model.annotations model.network.txs
-        , Svg.lazy4 Network.edges plugins vc gc model.network.txs
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system
         -- , showBoundingBox model
+        ]
+
+
+dropShadowAggEdgeHighlight : Svg Msg
+dropShadowAggEdgeHighlight =
+    filter
+        [ id "dropShadowAggEdgeHighlight"
+        , x "-100%"
+        , y "-200%"
+        , width "300%"
+        , height "500%"
+        ]
+        [ feGaussianBlur
+            [ in_ "SourceAlpha"
+            , stdDeviation "10"
+            ]
+            []
+        , feOffset
+            [ dx "0"
+            , dy "2"
+            , result "offsetblur"
+            ]
+            []
+        , feFlood
+            [ floodColor "rgba(0, 0, 0, 0.25)"
+            ]
+            []
+        , feComposite
+            [ in2 "offsetblur"
+            , operator "in"
+            ]
+            []
+        , feMerge
+            []
+            [ feMergeNode
+                []
+                []
+            , feMergeNode
+                [ in_ "SourceGraphic"
+                ]
+                []
+            ]
         ]
 
 

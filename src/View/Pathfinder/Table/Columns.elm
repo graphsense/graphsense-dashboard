@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesCell, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
@@ -185,6 +185,7 @@ valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
              else
                 Locale.currency
             )
+                (View.toCurrency vc)
                 vc.locale
                 [ ( coinCode, values ) ]
 
@@ -215,13 +216,13 @@ type alias TwoValuesCellConfig data =
     }
 
 
-twoValuesCell : View.Config -> String -> TwoValuesCellConfig data -> Table.Column data msg
-twoValuesCell vc name conf =
+twoValuesColumn : View.Config -> String -> TwoValuesCellConfig data -> Table.Column data msg
+twoValuesColumn vc name conf =
     let
         toValue =
             pair conf.coinCode
                 >> List.singleton
-                >> Locale.currencyWithoutCode vc.locale
+                >> Locale.currencyWithoutCode (View.toCurrency vc) vc.locale
     in
     Table.veryCustomColumn
         { name = name

@@ -7,6 +7,40 @@ import plugins from '../generated/plugins/index.js'
 import robotoBase64 from "../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64"
 import robotoBoldBase64 from "../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64"
 
+function measureCharacterDimensions() {
+    // Create a temporary canvas element for text measurement
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+
+    // Set the font to match your SVG text styling
+    // You'll need to adjust this to match your actual font
+    context.font = '12px Roboto'; // Adjust size and family as needed
+
+    // Characters to measure (you can expand this list)
+    const characters = [
+        // Letters
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        // Numbers
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        // Common symbols
+        ' ', '.', ',', ':', ';', '!', '?', '-', '+', '=', '(', ')', '[', ']', '{', '}', '|', '/', '\\',
+        // Currency symbols
+        '$', '€', '£', '¥', '¢'
+    ];
+
+    const measurements = {};
+
+    characters.forEach(char => {
+        const metrics = context.measureText(char);
+        const w = Math.round(metrics.width * 10) / 10 // Round to 1 decimal place
+        const h = Math.round((metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) * 10) / 10 // Round to 1 decimal place
+        measurements[char] = {width: w, height: h};
+    });
+
+    return measurements;
+}
+
 const getTheme = () => {
   const rootStyles = window.getComputedStyle(document.documentElement);
   return Object.fromEntries(
@@ -45,6 +79,8 @@ const now = +(new Date())
 
 const pluginFlags = {}
 
+const characterDimensions = measureCharacterDimensions()
+
 for (const plugin in plugins) {
   pluginFlags[plugin] = plugins[plugin].flags()
 }
@@ -52,6 +88,7 @@ for (const plugin in plugins) {
 const app = Elm.Main.init(
   { flags: 
     { localStorage: {...localStorage}
+    , characterDimensions
     , width
     , height
     , now

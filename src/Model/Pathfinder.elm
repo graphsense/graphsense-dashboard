@@ -1,13 +1,12 @@
-module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getAddressDetailStats, getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
+module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
-import Model.DateFilter exposing (DateFilterRaw)
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
-import Model.Pathfinder.Address as Address exposing (Address)
+import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
@@ -15,10 +14,12 @@ import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
+import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
+import Route.Pathfinder exposing (Route)
 import Theme.Svg.GraphComponents as GraphComponents
 import Tuple
 import Util.Annotations exposing (AnnotationModel)
@@ -30,7 +31,8 @@ unit =
 
 
 type alias Model =
-    { network : Network
+    { route : Route
+    , network : Network
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
     , clusters : Dict Id (WebData Entity)
@@ -70,15 +72,17 @@ type HavingTags
 type Selection
     = SelectedAddress Id
     | SelectedTx Id
+    | SelectedAggEdge ( Id, Id )
     | MultiSelect (List MultiSelectOptions)
     | WillSelectTx Id
     | WillSelectAddress Id
-    | WillSelectAddressWithFilter Id DateFilterRaw
+    | WillSelectAggEdge ( Id, Id )
     | NoSelection
 
 
 type Hovered
     = HoveredTx Id
+    | HoveredAggEdge ( Id, Id )
     | HoveredAddress Id
     | NoHover
 
@@ -89,41 +93,14 @@ type MultiSelectOptions
 
 
 type Details
-    = AddressDetails Id (WebData AddressDetails.Model)
+    = AddressDetails Id AddressDetails.Model
     | TxDetails Id TxDetails.Model
+    | RelationDetails ( Id, Id ) RelationDetails.Model
 
 
 getLoadedAddress : Model -> Id -> Maybe Address
 getLoadedAddress m id =
     Dict.get id m.network.addresses
-
-
-getAddressDetailStats : Id -> Model -> Maybe AddressDetails.Model -> { nrTxs : Maybe Int, nrIncomeingNeighbors : Maybe Int, nrOutgoingNeighbors : Maybe Int }
-getAddressDetailStats id model madvs =
-    let
-        maddress =
-            Dict.get id model.network.addresses
-
-        nrTxs =
-            case madvs of
-                Just advs ->
-                    case ( advs.txs.txMinBlock, advs.txs.txMaxBlock ) of
-                        ( Just _, Just _ ) ->
-                            Nothing
-
-                        _ ->
-                            maddress |> Maybe.andThen Address.getNrTxs
-
-                _ ->
-                    Nothing
-
-        indegree =
-            maddress |> Maybe.andThen Address.getInDegree
-
-        outdegree =
-            maddress |> Maybe.andThen Address.getOutDegree
-    in
-    { nrTxs = nrTxs, nrIncomeingNeighbors = indegree, nrOutgoingNeighbors = outdegree }
 
 
 getHavingTags : Model -> Id -> HavingTags

@@ -91,6 +91,8 @@ outgoing entity: ausgehender Cluster
 incoming entity: eingehender Cluster
 outgoing addresses: ausgehende Adressen
 incoming addresses: eingehende Adressen
+outgoing relations: ausgehende Relationen
+incoming relations: eingehende Relationen
 outgoing entities: ausgehende Cluster
 incoming entities: eingehende Cluster
 output address: ausgehende Adresse
@@ -188,7 +190,7 @@ remove tag: Schlagwort löschen
 estimated value: geschätzter Wert
 "estimated value {0}": geschätzter Wert {0}
 estimated total transferred: ungef. transferierter Wert
-total transferred: transferierter Wert
+total transferred: transferierter Gesamtwert
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
@@ -426,7 +428,7 @@ Open: Öffnen
 "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel.": "Die automatische Nachverfolgung endet an Adressen von Diensten, da die Vermögensströme in der Regel nicht über diese Dienste verfolgt werden können. Diese Einschränkung ist darauf zurückzuführen, dass Dienste oft als Blackboxen fungieren und Gelder von Nutzern vermischen. Sie können ausgehende Transaktionen immer noch manuell verfolgen, indem Sie die im Seitenbereich verfügbaren Verfolgungsoptionen verwenden."
 Copy address ID: Adress ID kopieren
 Copy transaction ID: Transaktions ID kopieren
-Remove from Graph: Vom Graphen entfernen
+Remove from graph: Vom Graphen entfernen
 victim: Opfer
 perpetrator: Täter
 "Auto trace limit": "Beschränkung der Auto-Nachverfolgung"
@@ -453,6 +455,7 @@ eventTagDescriptionId: Ein Ereignis-Tag ist eine Aussage über ein Ereignis, das
 "High confidence": "Hohe Zuversicht"
 More: Mehr
 related addresses: verwandte Adressen
+cluster addresses: Cluster-Adressen
 tagged cluster addresses: Cluster-Adressen mit Schlagwort
 all cluster addresses: Alle Cluster-Adressen
 type: Typ
@@ -501,9 +504,17 @@ Asset flows: Zahlungsflüsse
 "Additional Information (optional)": "Zusätzliche Informationen (optional)"
 "e.g. Linked to scam report on xyz.com": "z.B. Verknüpft mit einem Betrugsbericht auf xyz.com"
 "Add Tag": "Tag hinzufügen"
-"Add Tag to Address": "Tag zu Adresse hinzufügen"
+"Add_Tag_description": "Helfen Sie mit, unsere Daten zu verbessern, indem Sie eine Entität melden, die mit dieser Adresse verbunden ist - Ihre Eingaben werden geprüft und gegebenenfalls veröffentlicht." 
+"Add Tag to Address": "Einen Tag melden"
+"Report a tag": "Ein Tag melden"
+"Report tag": "Tag melden"
 "Create new actor": "Neuen Akteur erstellen"
 "Added Tag": "Tag hinzugefügt"
 Tag Import: Tag-Import
 "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Nur {0} von {1} Tags wurden importiert. {2} Tags konnten nicht angewendet werden, da ihre Adressen nicht im Pathfinder vorhanden sind."
-
+asset transfers between: Werte-Transfer zwischen
+one more asset: ein weiterer Vermögenswert
+"{0} more assets": "{0} weitere Vermögenswerte"
+track funds: Werte verfolgen
+view network: Netzwerk einsehen
+Annotate transaction: Transaktion annotieren

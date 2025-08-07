@@ -27,7 +27,7 @@ import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css exposing (spread)
 import Util.Graph exposing (decodeCoords)
-import Util.View exposing (copyIconPathfinder, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
@@ -85,12 +85,12 @@ account vc id tx =
         , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
         , valueOfSender =
             { firstRowText = Id.id tx.from |> truncateLongIdentifierWithLengths 8 4
-            , copyIconInstance = Id.id tx.from |> copyIconPathfinder vc
+            , copyIconInstance = Id.id tx.from |> copyIconPathfinderAbove vc
             }
         , titleOfReceiver = { infoLabel = Locale.string vc.locale "Receiver" }
         , valueOfReceiver =
             { firstRowText = Id.id tx.to |> truncateLongIdentifierWithLengths 8 4
-            , copyIconInstance = Id.id tx.to |> copyIconPathfinder vc
+            , copyIconInstance = Id.id tx.to |> copyIconPathfinderAbove vc
             }
         , root =
             { tabsVisible = False
@@ -169,12 +169,15 @@ utxo vc model id viewState tx =
                         SidePanelComponents.sidePanelListHeaderTitleInputsWithAttributes
                             (SidePanelComponents.sidePanelListHeaderTitleInputsAttributes
                                 |> Rs.s_root [ spread ]
+                                |> Rs.s_totalNumber
+                                    [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
                                 { title = Locale.string vc.locale "Sending addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noInputs
                                 }
                             }
+                    , disabled = tx.raw.noInputs == 0
                     , content =
                         let
                             ioTableConfig =
@@ -199,12 +202,15 @@ utxo vc model id viewState tx =
                         SidePanelComponents.sidePanelListHeaderTitleOutputsWithAttributes
                             (SidePanelComponents.sidePanelListHeaderTitleOutputsAttributes
                                 |> Rs.s_root [ spread ]
+                                |> Rs.s_totalNumber
+                                    [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
                                 { title = Locale.string vc.locale "Receiving addresses"
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs
                                 }
                             }
+                    , disabled = tx.raw.noOutputs == 0
                     , content =
                         let
                             ioTableConfig =

@@ -2,21 +2,19 @@ module View.Pathfinder.AddressDetails exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
-import Css.DateTimePicker as DateTimePicker
 import Css.Pathfinder as Css exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict exposing (Dict)
-import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div, img)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency exposing (asset, assetFromBase)
-import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Locale as Locale
@@ -27,7 +25,7 @@ import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
-import Model.Pathfinder.Table.RelatedAddressesTable exposing (getTable)
+import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
@@ -40,29 +38,40 @@ import RemoteData exposing (WebData)
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
-import Theme.Colors
 import Theme.Html.Icons as HIcons
-import Theme.Html.SelectionControls as SC
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util exposing (allAndNotEmpty)
 import Util.Css exposing (spread)
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
-import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (copyIconPathfinderAbove, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinderAbove, emptyCell, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.PagedTable as PagedTable
+import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
+import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
 view plugins pluginStates vc model id viewState =
+    let
+        filterDialogMsgs =
+            { closeTxFilterViewMsg = AddressDetails.CloseTxFilterView
+            , txTableFilterShowAllTxsMsg = Just AddressDetails.TxTableFilterShowAllTxs
+            , txTableFilterShowIncomingTxOnlyMsg = Just AddressDetails.TxTableFilterShowIncomingTxOnly
+            , txTableFilterShowOutgoingTxOnlyMsg = Just AddressDetails.TxTableFilterShowOutgoingTxOnly
+            , resetAllTxFiltersMsg = AddressDetails.ResetAllTxFilters
+            , txTableAssetSelectBoxMsg = AddressDetails.TxTableAssetSelectBoxMsg
+            , openDateRangePickerMsg = AddressDetails.OpenDateRangePicker
+            }
+    in
     div []
         [ model.network.addresses
             |> Dict.get id
@@ -75,20 +84,25 @@ view plugins pluginStates vc model id viewState =
                         utxo plugins pluginStates vc model id viewState address
                 )
             |> Maybe.withDefault none
-        , if viewState.txs.isTxFilterViewOpen then
-            div
-                [ [ Css.position Css.fixed
-                  , Css.right (Css.px 42)
-                  , Css.top (Css.px 350)
-                  , Css.property "transform" "translate(0%, -50%)"
-                  , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
-                  ]
-                    |> css
-                ]
-                [ txFilterView vc (Id.network id) viewState.txs |> Html.map (Pathfinder.AddressDetailsMsg viewState.addressId) ]
+        , case viewState.txs of
+            RemoteData.Success txs ->
+                if txs.isTxFilterViewOpen then
+                    div
+                        [ [ Css.position Css.fixed
+                          , Css.right (Css.px 42)
+                          , Css.top (Css.px 350)
+                          , Css.property "transform" "translate(0%, -50%)"
+                          , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
+                          ]
+                            |> css
+                        ]
+                        [ TransactionFilter.txFilterDialogView vc (Id.network id) filterDialogMsgs txs |> Html.map (Pathfinder.AddressDetailsMsg viewState.address.id) ]
 
-          else
-            none
+                else
+                    none
+
+            _ ->
+                none
         ]
 
 
@@ -108,21 +122,24 @@ utxo plugins pluginStates vc model id viewState address =
             Plugin.addressSidePanelHeaderTags plugins pluginStates vc address
 
         cluster =
-            Dict.get clstrId model.clusters
+            viewState.address.data
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\data -> Id.initClusterId data.currency data.entity)
+                |> Maybe.andThen (flip Dict.get model.clusters)
+
+        relatedAddressesTab =
+            cluster
+                |> Maybe.map
+                    (relatedAddressesDataTab vc model id viewState
+                        >> List.singleton
+                    )
+                |> Maybe.withDefault []
 
         relatedDataTabsList =
-            transactionsDataTab vc model id viewState
-                :: (cluster
-                        |> Maybe.map
-                            (relatedAddressesDataTab vc model id viewState
-                                >> List.singleton
-                            )
-                        |> Maybe.withDefault []
-                   )
-                |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.addressId))
-
-        clstrId =
-            Id.initClusterId viewState.data.currency viewState.data.entity
+            transactionsOrNeighborsDataTabs vc model id viewState
+                ++ relatedAddressesTab
+                |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.address.id))
 
         sidePanelAddressHeader =
             { iconInstance =
@@ -137,7 +154,7 @@ utxo plugins pluginStates vc model id viewState address =
             }
 
         sidePanelAddressDetails =
-            { clusterInfoVisible = Dict.member clstrId model.clusters
+            { clusterInfoVisible = cluster /= Nothing
             , clusterInfoInstance =
                 cluster
                     |> Maybe.withDefault RemoteData.NotAsked
@@ -148,7 +165,7 @@ utxo plugins pluginStates vc model id viewState address =
             }
 
         assetId =
-            assetFromBase viewState.data.currency
+            assetFromBase <| Id.network viewState.address.id
     in
     SidePanelComponents.sidePanelAddressWithInstances
         (SidePanelComponents.sidePanelAddressAttributes
@@ -179,6 +196,12 @@ utxo plugins pluginStates vc model id viewState address =
         (SidePanelComponents.sidePanelAddressInstances
             |> setTags vc viewState model id
             |> Rs.s_learnMore (Just none)
+            |> Rs.s_sidePanelAddressDetails
+                (viewState.address.data
+                    |> RemoteData.map
+                        (\_ -> Nothing)
+                    |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                )
          -- |> Rs.s_iconsBinanceL
          --     (Just sidePanelData.actorIconInstance)
         )
@@ -194,18 +217,87 @@ utxo plugins pluginStates vc model id viewState address =
         , sidePanelAddressDetails = sidePanelAddressDetails
         , sidePanelAddressHeader = sidePanelAddressHeader
         , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
-        , valueOfBalance = valuesToCell vc assetId viewState.data.balance
+        , valueOfBalance = viewState.address.data |> RemoteData.map (.balance >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
         , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
-        , valueOfTotalReceived = valuesToCell vc assetId viewState.data.totalReceived
+        , valueOfTotalReceived = viewState.address.data |> RemoteData.map (.totalReceived >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
         , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
-        , valueOfTotalSent = valuesToCell vc assetId viewState.data.totalSpent
+        , valueOfTotalSent = viewState.address.data |> RemoteData.map (.totalSpent >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
+        , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+        , valueOfFirstUsage = viewState.address.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
 
         -- , learnMoreButton = { variant = none }
         , categoryTags = { tagLabel = "", closeVisible = False }
+        }
+
+
+neighborsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Direction -> Html AddressDetails.Msg
+neighborsDataTab vc model id viewState direction =
+    let
+        { lbl, getNoAddresses, getTableOpen, getTable } =
+            case direction of
+                Outgoing ->
+                    { lbl = "Outgoing relations"
+                    , getNoAddresses = .outDegree
+                    , getTableOpen = .outgoingNeighborsTableOpen
+                    , getTable = .neighborsOutgoing
+                    }
+
+                Incoming ->
+                    { lbl = "Incoming relations"
+                    , getNoAddresses = .inDegree
+                    , getTableOpen = .incomingNeighborsTableOpen
+                    , getTable = .neighborsIncoming
+                    }
+
+        label =
+            Locale.string vc.locale lbl
+                |> Locale.titleCase vc.locale
+    in
+    dataTab
+        { title =
+            SidePanelComponents.sidePanelListHeaderTitleWithNumberWithAttributes
+                (SidePanelComponents.sidePanelListHeaderTitleWithNumberAttributes
+                    |> Rs.s_root [ spread ]
+                )
+                { root =
+                    { label = label
+                    , number =
+                        viewState.address.data
+                            |> RemoteData.map (getNoAddresses >> Locale.int vc.locale)
+                            |> RemoteData.withDefault ""
+                    }
+                }
+        , disabled = RemoteData.map (getNoAddresses >> (<) 0) viewState.address.data /= RemoteData.Success True
+        , content =
+            case ( getTableOpen viewState, getTable viewState ) of
+                ( True, RemoteData.Success tbl ) ->
+                    let
+                        conf =
+                            { anchorId = id
+                            , isChecked = flip Network.hasAggEdge model.network
+                            , hasTags = getHavingTags model
+                            , coinCode = assetFromBase <| Id.network viewState.address.id
+                            , direction = direction
+                            }
+                    in
+                    div
+                        [ css <|
+                            SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                                ++ fullWidth
+                        ]
+                        [ PagedTable.pagedTableView vc
+                            [ css fullWidth ]
+                            (NeighborAddressesTable.config Css.Table.styles vc conf)
+                            tbl
+                            (AddressDetails.NeighborsTablePagedTableMsg direction)
+                        ]
+                        |> Just
+
+                _ ->
+                    Nothing
+        , onClick = AddressDetails.UserClickedToggleNeighborsTable direction
         }
 
 
@@ -213,7 +305,7 @@ relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetail
 relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
-            Locale.string vc.locale "Related addresses"
+            Locale.string vc.locale "Cluster addresses"
                 |> Locale.titleCase vc.locale
 
         noRelatedAddresses =
@@ -246,6 +338,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 }
                             }
                     )
+        , disabled = noRelatedAddresses == 0
         , content =
             if not viewState.relatedAddressesTableOpen || noRelatedAddresses == 0 then
                 Nothing
@@ -268,7 +361,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                             ratc =
                                 { isChecked = flip Network.hasAddress model.network
                                 , hasTags = getHavingTags model
-                                , coinCode = assetFromBase viewState.data.currency
+                                , coinCode = assetFromBase <| Id.network viewState.address.id
                                 }
                         in
                         div
@@ -279,7 +372,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                             [ PagedTable.pagedTableView vc
                                 [ css fullWidth ]
                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
-                                (getTable ra)
+                                (RelatedAddressesTable.getTable ra)
                                 AddressDetails.RelatedAddressesTablePagedTableMsg
                             ]
                             |> Just
@@ -368,7 +461,7 @@ transactionTableView vc addressId txOnGraphFn model =
             model.table
                 |> PagedTable.getPage
                 |> List.map Tx.getTxIdForAddressTx
-                |> List.all txOnGraphFn
+                |> allAndNotEmpty txOnGraphFn
 
         table =
             PagedTable.pagedTableView vc
@@ -377,249 +470,36 @@ transactionTableView vc addressId txOnGraphFn model =
                 model.table
                 AddressDetails.TransactionsTablePagedTableMsg
     in
-    [ filterHeader vc model
+    [ TransactionFilter.filterHeader vc
+        model
+        { resetDateFilterMsg = AddressDetails.ResetDateRangePicker
+        , resetAssetsFilterMsg = AddressDetails.ResetTxAssetFilter
+        , resetDirectionFilterMsg = Just AddressDetails.ResetTxDirectionFilter
+        , toggleFilterView = AddressDetails.ToggleTxFilterView
+        }
     , table
     ]
         |> div [ css [ Css.width (Css.pct 100) ] ]
-
-
-closeButtonGrey : AddressDetails.Msg -> Html AddressDetails.Msg
-closeButtonGrey msg =
-    HIcons.iconsCloseBlackWithAttributes
-        (HIcons.iconsCloseBlackAttributes
-            |> Rs.s_root
-                [ [ Util.Css.overrideBlack Theme.Colors.greyBlue500 ] |> css
-                , Util.View.pointer
-                , onClick msg
-                ]
-        )
-        {}
-
-
-dateTimeFilterHeader : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html AddressDetails.Msg
-dateTimeFilterHeader vc dmodel =
-    let
-        renderDate showTimeFn date =
-            date
-                |> Locale.posixToTimestampSeconds
-                |> (if showTimeFn date then
-                        Locale.timestampDateUniform vc.locale
-
-                    else
-                        Locale.timestampDateTimeUniform vc.locale False
-                   )
-
-        startP =
-            dmodel.fromDate |> renderDate (Locale.isFirstSecondOfTheDay vc.locale)
-
-        endP =
-            dmodel.toDate |> renderDate (Locale.isLastSecondOfTheDay vc.locale)
-    in
-    SidePanelComponents.filterLabel
-        { root =
-            { iconInstance =
-                closeButtonGrey AddressDetails.ResetDateRangePicker
-            , text1 = endP
-            , text2 = Locale.string vc.locale "to"
-            , text3 = startP
-            , dateRangeVisible = True
-            }
-        }
-
-
-directionFilterHeader : View.Config -> Direction -> Html AddressDetails.Msg
-directionFilterHeader vc dir =
-    stringFilterHeader vc
-        (case dir of
-            Incoming ->
-                "Incoming only"
-
-            Outgoing ->
-                "Outgoing only"
-        )
-        AddressDetails.ResetTxDirectionFilter
-
-
-stringFilterHeader : View.Config -> String -> AddressDetails.Msg -> Html AddressDetails.Msg
-stringFilterHeader vc str msg =
-    SidePanelComponents.filterLabel
-        { root =
-            { iconInstance =
-                closeButtonGrey msg
-            , text3 = ""
-            , text2 = ""
-            , text1 =
-                Locale.string vc.locale str
-            , dateRangeVisible = False
-            }
-        }
-
-
-assetFilterHeader : View.Config -> String -> Html AddressDetails.Msg
-assetFilterHeader vc asset =
-    stringFilterHeader vc asset AddressDetails.ResetTxAssetFilter
-
-
-filterHeader : View.Config -> TransactionTable.Model -> Html AddressDetails.Msg
-filterHeader vc model =
-    div
-        [ [ Css.displayFlex
-          , Css.justifyContent Css.spaceBetween
-          , Css.padding (Css.px 10)
-          , Css.property "gap" "5px"
-          ]
-            |> css
-        ]
-        [ div
-            [ [ Css.displayFlex
-              , Css.flexDirection Css.row
-              , Css.property "gap" "5px"
-              , Css.flexWrap Css.wrap
-              , Css.width (Css.px 320)
-              ]
-                |> css
-            ]
-            [ model.dateRangePicker |> Maybe.map (dateTimeFilterHeader vc) |> Maybe.withDefault none
-            , model.direction |> Maybe.map (directionFilterHeader vc) |> Maybe.withDefault none
-            , model.selectedAsset |> Maybe.map (assetFilterHeader vc) |> Maybe.withDefault none
-            ]
-        , div []
-            [ HIcons.framedIconWithAttributes
-                (HIcons.framedIconAttributes
-                    |> Rs.s_root
-                        [ onClick AddressDetails.ToggleTxFilterView
-                        , Util.View.pointer
-                        ]
-                )
-                { root = { iconInstance = HIcons.iconsFilter {} } }
-            ]
-        ]
-
-
-txFilterView : View.Config -> String -> TransactionTable.Model -> Html AddressDetails.Msg
-txFilterView vc net model =
-    let
-        toRadio name selected msg =
-            SC.radioLabelWithAttributes
-                (SC.radioLabelAttributes
-                    |> Rs.s_root [ onClick msg, [ Css.cursor Css.pointer ] |> css ]
-                )
-                { radio =
-                    { variant =
-                        if selected then
-                            SC.radioStateOnSizeSmall {}
-
-                        else
-                            SC.radioStateOffSizeSmall {}
-                    }
-                , root = { radioLabel = Locale.string vc.locale name }
-                }
-
-        isAssetFilterVisible =
-            Data.isAccountLike net
-    in
-    SidePanelComponents.filterTransactionsPopupWithAttributes
-        (SidePanelComponents.filterTransactionsPopupAttributes
-            |> Rs.s_assetType
-                (if isAssetFilterVisible then
-                    []
-
-                 else
-                    [ Css.display Css.none ] |> css |> List.singleton
-                )
-            |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick AddressDetails.CloseTxFilterView ]
-        )
-        { radioItemsList =
-            [ toRadio "All transactions" (model.direction == Nothing) AddressDetails.TxTableFilterShowAllTxs
-            , toRadio "Incoming only" (model.direction == Just Incoming) AddressDetails.TxTableFilterShowIncomingTxOnly
-            , toRadio "Outgoing only" (model.direction == Just Outgoing) AddressDetails.TxTableFilterShowOutgoingTxOnly
-            ]
-        }
-        { assetType = { label = "" }
-        , cancelButton =
-            { variant =
-                Button.defaultConfig
-                    |> Rs.s_text "Reset"
-                    |> Rs.s_onClick (Just AddressDetails.ResetAllTxFilters)
-                    |> Button.secondaryButton vc
-            }
-        , confirmButton =
-            { variant =
-                Button.defaultConfig
-                    |> Rs.s_text "Done"
-                    |> Rs.s_onClick (Just AddressDetails.CloseTxFilterView)
-                    |> Button.primaryButton vc
-            }
-        , dropDown =
-            { variant =
-                if isAssetFilterVisible then
-                    ThemedSelectBox.viewWithLabel (ThemedSelectBox.defaultConfig (Maybe.withDefault "All assets") |> Rs.s_width (Just (Css.px 200))) model.assetSelectBox model.selectedAsset (Locale.string vc.locale "Asset Type")
-                        |> Html.map AddressDetails.TxTableAssetSelectBoxMsg
-
-                else
-                    none
-            }
-        , root =
-            { dateInstance =
-                case model.dateRangePicker of
-                    Just dmodel ->
-                        let
-                            startP =
-                                dmodel.fromDate
-                                    |> Locale.posixToTimestampSeconds
-                                    |> Locale.timestampDateUniform vc.locale
-
-                            endP =
-                                dmodel.toDate
-                                    |> Locale.posixToTimestampSeconds
-                                    |> Locale.timestampDateUniform vc.locale
-                        in
-                        if DatePicker.isOpen dmodel.dateRangePicker then
-                            div []
-                                [ DateTimePicker.stylesheet
-                                , div [ css [ Css.fontSize (Css.px 12) ] ]
-                                    [ DatePicker.view dmodel.settings dmodel.dateRangePicker
-                                        |> Html.fromUnstyled
-                                    ]
-                                ]
-
-                        else
-                            SidePanelComponents.datePickerFilledWithAttributes
-                                (SidePanelComponents.datePickerFilledAttributes
-                                    |> Rs.s_root
-                                        [ onClick AddressDetails.OpenDateRangePicker
-                                        , Util.View.pointer
-                                        , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
-                                        ]
-                                )
-                                { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to", state = SidePanelComponents.DatePickerFilledStateDefault } }
-
-                    _ ->
-                        SidePanelComponents.datePickerCtaWithAttributes
-                            (SidePanelComponents.datePickerCtaAttributes
-                                |> Rs.s_root
-                                    [ onClick AddressDetails.OpenDateRangePicker
-                                    , Util.View.pointer
-                                    , [ Css.hover SidePanelComponents.datePickerCtaStateHover_details.styles ] |> css
-                                    ]
-                            )
-                            { root =
-                                { placeholder = Locale.string vc.locale "Select date range"
-                                , state = SidePanelComponents.DatePickerCtaStateDefault
-                                }
-                            }
-            , dateLabel = Locale.string vc.locale "Date Range"
-            , headerTitle = Locale.string vc.locale "Transaction Filter"
-            , txDirection = Locale.string vc.locale "Transaction Direction"
-            }
-        }
 
 
 transactionsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html AddressDetails.Msg
 transactionsDataTab vc model id viewState =
     let
         txOnGraphFn =
-            \txId -> Dict.member txId model.network.txs
+            flip Network.hasTx model.network
+
+        noIncomingTxs =
+            viewState.address.data
+                |> RemoteData.map .noIncomingTxs
+                |> RemoteData.withDefault 0
+
+        noOutgoingTxs =
+            viewState.address.data
+                |> RemoteData.map .noOutgoingTxs
+                |> RemoteData.withDefault 0
+
+        totalNumber =
+            noIncomingTxs + noOutgoingTxs
     in
     dataTab
         { title =
@@ -629,21 +509,25 @@ transactionsDataTab vc model id viewState =
                 )
                 { root =
                     { totalNumber =
-                        (viewState.data.noIncomingTxs + viewState.data.noOutgoingTxs)
+                        totalNumber
                             |> Locale.int vc.locale
                     , incomingNumber =
-                        viewState.data.noIncomingTxs
-                            |> Locale.int vc.locale
+                        viewState.address.data
+                            |> RemoteData.map (.noIncomingTxs >> Locale.int vc.locale)
+                            |> RemoteData.withDefault ""
                     , outgoingNumber =
-                        viewState.data.noOutgoingTxs
-                            |> Locale.int vc.locale
+                        viewState.address.data
+                            |> RemoteData.map (.noOutgoingTxs >> Locale.int vc.locale)
+                            |> RemoteData.withDefault ""
                     , title = Locale.string vc.locale "Transactions"
                     }
                 }
+        , disabled = totalNumber == 0
         , content =
             if viewState.transactionsTableOpen then
-                transactionTableView vc id txOnGraphFn viewState.txs
-                    |> Just
+                viewState.txs
+                    |> RemoteData.toMaybe
+                    |> Maybe.map (transactionTableView vc id txOnGraphFn)
 
             else
                 Nothing
@@ -651,8 +535,18 @@ transactionsDataTab vc model id viewState =
         }
 
 
-accountValuesRundown : View.Config -> AddressDetails.Model -> { totalReceived : Html Pathfinder.Msg, totalSpent : Html Pathfinder.Msg, balance : Html Pathfinder.Msg }
-accountValuesRundown vc viewState =
+type alias AccountValueRundownConfig =
+    { network : String
+    , open : Bool
+    , onClick : Pathfinder.Msg
+    , values : Api.Data.Values
+    , tokenValues : Maybe (Dict String Api.Data.Values)
+    , title : String
+    }
+
+
+accountValueRundown : View.Config -> AccountValueRundownConfig -> Html Pathfinder.Msg
+accountValueRundown vc conf =
     let
         fiatCurr =
             vc.preferredFiatCurrency
@@ -660,7 +554,7 @@ accountValuesRundown vc viewState =
         getValue ( symbol, values ) =
             let
                 ass =
-                    asset viewState.data.currency symbol
+                    asset conf.network symbol
 
                 value =
                     Locale.coinWithoutCode vc.locale ass values.value
@@ -677,139 +571,108 @@ accountValuesRundown vc viewState =
             , asset = ass
             }
 
-        compute ( open, msg ) title values valueToken =
+        fiatSumTotalTokens =
+            conf.tokenValues
+                |> Maybe.withDefault Dict.empty
+                |> Dict.toList
+                |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr)
+                |> List.sum
+
+        fiatSumTotal =
+            fiatSumTotalTokens
+                + (conf.values
+                    |> Locale.getFiatValue fiatCurr
+                    |> Maybe.withDefault 0.0
+                  )
+
+        nativeValue =
+            getValue ( conf.network, conf.values )
+
+        row inpt =
             let
-                fiatSumTotalTokens =
-                    valueToken
-                        |> Maybe.withDefault Dict.empty
-                        |> Dict.toList
-                        |> List.filterMap (Tuple.second >> Locale.getFiatValue fiatCurr)
-                        |> List.sum
-
-                fiatSumTotal =
-                    fiatSumTotalTokens
-                        + (values
-                            |> Locale.getFiatValue fiatCurr
-                            |> Maybe.withDefault 0.0
-                          )
-
-                nativeValue =
-                    getValue ( viewState.data.currency, values )
-
-                row inpt =
-                    let
-                        dotsLAttr =
-                            [ [ Css.flexGrow (Css.int 1)
-                              , Css.borderBottomStyle Css.dotted
-                              ]
-                                |> css
-                            ]
-                    in
-                    SidePanelComponents.sidePanelRowChevronSubRowWithInstances
-                        (SidePanelComponents.sidePanelRowChevronSubRowAttributes
-                            |> Rs.s_root
-                                [ [ Css.justifyContent Css.stretch
-                                  , Css.width (Css.pct 100)
-                                  ]
-                                    |> css
-                                ]
-                            |> Rs.s_dotsLine dotsLAttr
-                        )
-                        SidePanelComponents.sidePanelRowChevronSubRowInstances
-                        { root =
-                            { coinLabel = inpt.asset.asset |> String.toUpper
-                            , coinValue = inpt.native
-                            , fiatValue = inpt.fiat
-                            }
-                        }
-
-                fixedleftAttr =
-                    [ [ Css.left (Css.px (SidePanelComponents.sidePanelRowChevronClosedIconGroup_details.x * 2))
-                      , Css.alignItems Css.center |> Css.important
+                dotsLAttr =
+                    [ [ Css.flexGrow (Css.int 1)
+                      , Css.borderBottomStyle Css.dotted
                       ]
                         |> css
                     ]
-
-                fw =
-                    [ Css.width (Css.pct 100) ]
-                        |> css
-
-                clickAttr =
-                    [ onClick msg, fw, Util.View.pointer ]
             in
-            if open then
-                SidePanelComponents.sidePanelRowOpenWithAttributes
-                    (SidePanelComponents.sidePanelRowOpenAttributes
-                        |> Rs.s_root clickAttr
-                        |> Rs.s_sidePanelRowChevronOpen [ fw ]
-                        |> Rs.s_iconGroup fixedleftAttr
-                        |> Rs.s_tokensList
-                            [ css [ Css.overflowY Css.auto ] ]
-                    )
-                    { tokensList =
-                        (nativeValue
-                            :: (valueToken
-                                    |> Maybe.withDefault Dict.empty
-                                    |> Dict.toList
-                                    |> List.map getValue
-                               )
-                        )
-                            |> List.sortBy
-                                (.fiatFloat
-                                    >> Maybe.withDefault 0.0
-                                )
-                            |> List.reverse
-                            |> List.map row
+            SidePanelComponents.sidePanelRowChevronSubRowWithInstances
+                (SidePanelComponents.sidePanelRowChevronSubRowAttributes
+                    |> Rs.s_root
+                        [ [ Css.justifyContent Css.stretch
+                          , Css.width (Css.pct 100)
+                          ]
+                            |> css
+                        ]
+                    |> Rs.s_dotsLine dotsLAttr
+                )
+                SidePanelComponents.sidePanelRowChevronSubRowInstances
+                { root =
+                    { coinLabel = inpt.asset.asset |> String.toUpper
+                    , coinValue = inpt.native
+                    , fiatValue = inpt.fiat
                     }
-                    { sidePanelRowChevronOpen =
-                        { iconInstance = HIcons.iconsChevronDownThin {}
-                        , title = Locale.string vc.locale title
-                        , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
-                        }
-                    }
+                }
 
-            else
-                SidePanelComponents.sidePanelRowChevronClosedWithAttributes
-                    (SidePanelComponents.sidePanelRowChevronClosedAttributes
-                        |> Rs.s_root
-                            clickAttr
-                        |> Rs.s_iconGroup fixedleftAttr
-                    )
-                    { root =
-                        { iconInstance = HIcons.iconsChevronRightThin { root = { state = HIcons.IconsChevronRightThinStateDefault } }
-                        , title = Locale.string vc.locale title
-                        , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
-                        }
-                    }
+        fixedleftAttr =
+            [ [ Css.left (Css.px (SidePanelComponents.sidePanelRowChevronClosedIconGroup_details.x * 2))
+              , Css.alignItems Css.center |> Css.important
+              ]
+                |> css
+            ]
+
+        fw =
+            [ Css.width (Css.pct 100) ]
+                |> css
+
+        clickAttr =
+            [ onClick conf.onClick, fw, Util.View.pointer ]
     in
-    { totalReceived =
-        compute
-            ( viewState.totalReceivedDetailsOpen
-            , AddressDetails.UserClickedToggleTotalReceivedDetails
-                |> Pathfinder.AddressDetailsMsg viewState.addressId
+    if conf.open then
+        SidePanelComponents.sidePanelRowOpenWithAttributes
+            (SidePanelComponents.sidePanelRowOpenAttributes
+                |> Rs.s_root clickAttr
+                |> Rs.s_sidePanelRowChevronOpen [ fw ]
+                |> Rs.s_iconGroup fixedleftAttr
+                |> Rs.s_tokensList
+                    [ css [ Css.overflowY Css.auto ] ]
             )
-            "Total received"
-            viewState.data.totalReceived
-            viewState.data.totalTokensReceived
-    , totalSpent =
-        compute
-            ( viewState.totalSentDetailsOpen
-            , AddressDetails.UserClickedToggleTotalSpentDetails
-                |> Pathfinder.AddressDetailsMsg viewState.addressId
+            { tokensList =
+                (nativeValue
+                    :: (conf.tokenValues
+                            |> Maybe.withDefault Dict.empty
+                            |> Dict.toList
+                            |> List.map getValue
+                       )
+                )
+                    |> List.sortBy
+                        (.fiatFloat
+                            >> Maybe.withDefault 0.0
+                        )
+                    |> List.reverse
+                    |> List.map row
+            }
+            { sidePanelRowChevronOpen =
+                { iconInstance = HIcons.iconsChevronDownThin {}
+                , title = Locale.string vc.locale conf.title
+                , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
+                }
+            }
+
+    else
+        SidePanelComponents.sidePanelRowChevronClosedWithAttributes
+            (SidePanelComponents.sidePanelRowChevronClosedAttributes
+                |> Rs.s_root
+                    clickAttr
+                |> Rs.s_iconGroup fixedleftAttr
             )
-            "Total sent"
-            viewState.data.totalSpent
-            viewState.data.totalTokensSpent
-    , balance =
-        compute
-            ( viewState.balanceDetailsOpen
-            , AddressDetails.UserClickedToggleBalanceDetails
-                |> Pathfinder.AddressDetailsMsg viewState.addressId
-            )
-            "Balance"
-            viewState.data.balance
-            viewState.data.tokenBalances
-    }
+            { root =
+                { iconInstance = HIcons.iconsChevronRightThin { root = { state = HIcons.IconsChevronRightThinStateDefault } }
+                , title = Locale.string vc.locale conf.title
+                , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
+                }
+            }
 
 
 account : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
@@ -833,7 +696,7 @@ account plugins pluginStates vc model id viewState address =
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "
-                    ++ (if viewState.data.isContract |> Maybe.withDefault False then
+                    ++ (if RemoteData.map .isContract viewState.address.data == RemoteData.Success (Just True) then
                             Locale.string vc.locale "Smart Contract"
 
                         else
@@ -841,8 +704,56 @@ account plugins pluginStates vc model id viewState address =
                        )
             }
 
-        accountValuesRundownHtml =
-            accountValuesRundown vc viewState
+        totalReceivedRundown =
+            viewState.address.data
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\data ->
+                        accountValueRundown vc
+                            { network = data.currency
+                            , open = viewState.totalReceivedDetailsOpen
+                            , onClick =
+                                AddressDetails.UserClickedToggleTotalReceivedDetails
+                                    |> Pathfinder.AddressDetailsMsg viewState.address.id
+                            , title = "Total received"
+                            , values = data.totalReceived
+                            , tokenValues = data.totalTokensReceived
+                            }
+                    )
+
+        totalSentRundown =
+            viewState.address.data
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\data ->
+                        accountValueRundown vc
+                            { network = data.currency
+                            , open = viewState.totalSentDetailsOpen
+                            , onClick =
+                                AddressDetails.UserClickedToggleTotalSpentDetails
+                                    |> Pathfinder.AddressDetailsMsg viewState.address.id
+                            , title = "Total sent"
+                            , values = data.totalSpent
+                            , tokenValues = data.totalTokensSpent
+                            }
+                    )
+
+        balanceRundown =
+            viewState.address.data
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\data ->
+                        accountValueRundown vc
+                            { network = data.currency
+                            , open = viewState.balanceDetailsOpen
+                            , onClick =
+                                AddressDetails.UserClickedToggleBalanceDetails
+                                    |> Pathfinder.AddressDetailsMsg viewState.address.id
+                            , title = "Balance"
+                            , values = data.balance
+                            , tokenValues = data.tokenBalances
+                            }
+                    )
     in
     SidePanelComponents.sidePanelEthAddressWithInstances
         (SidePanelComponents.sidePanelEthAddressAttributes
@@ -879,16 +790,21 @@ account plugins pluginStates vc model id viewState address =
         (SidePanelComponents.sidePanelEthAddressInstances
             |> setTags vc viewState model id
             |> Rs.s_learnMore (Just none)
-            |> Rs.s_totalReceivedRow (Just accountValuesRundownHtml.totalReceived)
-            |> Rs.s_totalSentRow (Just accountValuesRundownHtml.totalSpent)
-            |> Rs.s_balanceRow (Just accountValuesRundownHtml.balance)
+            |> Rs.s_totalReceivedRow totalReceivedRundown
+            |> Rs.s_totalSentRow totalSentRundown
+            |> Rs.s_balanceRow balanceRundown
+            |> Rs.s_sidePanelEthAddressDetails
+                (viewState.address.data
+                    |> RemoteData.map
+                        (\_ -> Nothing)
+                    |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                )
         )
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList =
-            [ transactionsDataTab vc model id viewState
-                |> Html.map (Pathfinder.AddressDetailsMsg viewState.addressId)
-            ]
+            transactionsOrNeighborsDataTabs vc model id viewState
+                |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.address.id))
         , tokensList = []
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
@@ -902,14 +818,27 @@ account plugins pluginStates vc model id viewState address =
             , clusterInfoInstance = none
             }
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = timeToCell vc viewState.data.lastTx.timestamp
+        , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = timeToCell vc viewState.data.firstTx.timestamp
+        , valueOfFirstUsage = viewState.address.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , categoryTags = { tagLabel = "", closeVisible = False }
         , balanceRow = { iconInstance = none, title = "", value = "" }
         , totalSentRow = { iconInstance = none, title = "", value = "" }
         , sidePanelRowChevronOpen = { iconInstance = none, title = "", value = "" }
         }
+
+
+transactionsOrNeighborsDataTabs : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> List (Html AddressDetails.Msg)
+transactionsOrNeighborsDataTabs vc model id viewState =
+    case model.config.tracingMode of
+        TransactionTracingMode ->
+            [ transactionsDataTab vc model id viewState
+            ]
+
+        AggregateTracingMode ->
+            [ neighborsDataTab vc model id viewState Outgoing
+            , neighborsDataTab vc model id viewState Incoming
+            ]
 
 
 viewLabelOfTags : View.Config -> AddressDetails.Model -> Pathfinder.Model -> Id -> Html Pathfinder.Msg

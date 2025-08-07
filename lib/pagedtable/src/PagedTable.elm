@@ -113,13 +113,13 @@ goToFirstPage (Model pt) =
     Model { pt | currentPage = 1 }
 
 
-setLoading : Bool -> ModelInternal d -> ModelInternal d
-setLoading l pt =
+setLoading : Bool -> Model d -> Model d
+setLoading l (Model pt) =
     let
         t =
             pt.table
     in
-    { pt | table = t |> s_loading l }
+    { pt | table = t |> s_loading l } |> Model
 
 
 getPageByNr : ModelInternal d -> Int -> List d
@@ -193,9 +193,9 @@ loadMore config pt =
                 config.fetch
                     |> Maybe.map (\fn -> fn pagesize pt.table.nextpage)
     in
-    ( pt
-        |> setLoading (fetch /= Nothing)
-        |> Model
+    ( pt |> Model
+         |> setLoading (fetch /= Nothing)
+        
     , fetch
     )
 
@@ -264,7 +264,7 @@ getItemsPerPage (Model pt) =
 
 loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
 loadFirstPage config (Model pt) =
-    ( Model pt
+    (( Model pt) |> setLoading True |> goToFirstPage
     , config.fetch
         |> Maybe.map
             (\fn -> fn pt.itemsPerPage Nothing)

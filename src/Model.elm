@@ -38,6 +38,7 @@ import Util.ThemedSelectBox as SelectBox
 
 type alias Flags =
     { localStorage : Json.Encode.Value
+    , characterDimensions : Json.Encode.Value
     , now : Int
     , width : Int
     , height : Int
@@ -132,6 +133,7 @@ type Msg
     | NotificationMsg Model.Notification.Msg
     | ShowNotification Model.Notification.Notification
     | RuntimePostponedUpdateByUrl Url
+    | OpeningTooltip { context : String, domId : String } Bool (TooltipType Msg)
     | OpenTooltip { context : String, domId : String } (TooltipType Msg)
     | ClosingTooltip (Maybe { context : String, domId : String }) Bool
     | RepositionTooltip
@@ -249,4 +251,5 @@ userSettingsFromMainModel model =
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
     , highlightClusterFriends = Just model.pathfinder.config.highlightClusterFriends
     , snapToGrid = Just model.pathfinder.config.snapToGrid
+    , tracingMode = Just model.pathfinder.config.tracingMode
     }

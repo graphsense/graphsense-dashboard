@@ -7,7 +7,7 @@ import Time exposing (Posix)
 type alias Model msg =
     { settings : DurationDatePicker.Settings
     , dateRangePicker : DurationDatePicker.DatePicker msg
-    , fromDate : Posix
-    , toDate : Posix
+    , fromDate : Maybe Posix
+    , toDate : Maybe Posix
     , focusDate : Posix
     }

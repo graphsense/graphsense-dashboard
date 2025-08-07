@@ -11,6 +11,7 @@ type alias Tooltip msg =
     { hovercard : Hovercard.Model
     , type_ : TooltipType msg
     , closing : Bool
+    , open : Bool
     }
 
 
@@ -24,6 +25,7 @@ type alias TooltipMessages msg =
 type TooltipType msg
     = UtxoTx Tx.UtxoTx
     | AccountTx Tx.AccountTx
+    | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress }
     | Address Address (Maybe TagSummary)
     | TagLabel String TagSummary (TooltipMessages msg)
     | TagConcept Id String TagSummary (TooltipMessages msg)
@@ -58,6 +60,9 @@ mapMsgTooltipType toMap f =
         UtxoTx a ->
             UtxoTx a
 
+        AggEdge a ->
+            AggEdge a
+
         Text a ->
             Text a
 
@@ -87,10 +92,40 @@ isSameTooltip t1 t2 =
             a1.id == a2.id
 
         ( Text tt1, Text tt2 ) ->
-            t1 == t2
+            tt1 == tt2
+
+        ( AggEdge tt1, AggEdge tt2 ) ->
+            tt1.leftAddress
+                == tt2.leftAddress
+                && tt1.rightAddress
+                == tt2.rightAddress
 
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
 
-        _ ->
+        ( UtxoTx _, _ ) ->
+            False
+
+        ( AccountTx _, _ ) ->
+            False
+
+        ( Address _ _, _ ) ->
+            False
+
+        ( TagLabel _ _ _, _ ) ->
+            False
+
+        ( TagConcept _ _ _ _, _ ) ->
+            False
+
+        ( ActorDetails _ _, _ ) ->
+            False
+
+        ( Text _, _ ) ->
+            False
+
+        ( AggEdge _, _ ) ->
+            False
+
+        ( Plugin _ _, _ ) ->
             False
