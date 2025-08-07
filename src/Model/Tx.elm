@@ -1,4 +1,4 @@
-module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, getTxHash, hasAddress, parseTxIdentifier, txTypeToLabel)
+module Model.Tx exposing (AccountTxType(..), Tx, TxAccount, fromApiTxAccount, getTxHash, hasAddress, parseTxIdentifier, txTypeToLabel)
 
 import Api.Data
 import Model.Direction exposing (Direction(..))
@@ -77,6 +77,30 @@ txTypeToLabel x =
 
         Token _ _ ->
             "Token-Transaction"
+
+
+fromApiTxAccount : Api.Data.TxAccount -> AccountTxType
+fromApiTxAccount tx =
+    case tx.tokenTxId of
+        Just tokenId ->
+            Token tx.txHash tokenId
+
+        Nothing ->
+            case tx.isExternal of
+                Just True ->
+                    External tx.txHash
+
+                Just False ->
+                    case parseTxIdentifier tx.identifier of
+                        Just (Internal hash index) ->
+                            Internal hash index
+
+                        _ ->
+                            Internal tx.txHash 0
+
+                Nothing ->
+                    parseTxIdentifier tx.identifier
+                        |> Maybe.withDefault (External tx.txHash)
 
 
 hasAddress : Direction -> String -> Api.Data.Tx -> Bool

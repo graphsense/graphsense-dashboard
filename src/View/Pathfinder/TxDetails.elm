@@ -100,10 +100,9 @@ account vc id tx =
             }
         , sidePanelTxHeader =
             { headerText =
-                tx.raw.identifier
-                    |> Tx.parseTxIdentifier
-                    |> Maybe.map Tx.txTypeToLabel
-                    |> Maybe.withDefault "Transaction"
+                tx.raw
+                    |> Tx.fromApiTxAccount
+                    |> Tx.txTypeToLabel
                     |> Locale.string vc.locale
                     |> (++) ((String.toUpper <| Id.network id) ++ " ")
             }
