@@ -88,7 +88,7 @@ type Msg
     | UserClickedSaveGraph (Maybe Time.Posix)
     | UserClickedOpenGraph
     | BrowserGotBulkAddresses (List Api.Data.Address)
-    | BrowserGotBulkTxs Deserializing (List Api.Data.Tx)
+    | BrowserGotBulkTxs Deserializing (List ( String, Api.Data.Tx ))
     | UserOpensContextMenu Coords ContextMenuType
     | UserClickedContextMenuDeleteIcon ContextMenuType
     | UserClickedContextMenuOpenInNewTab ContextMenuType

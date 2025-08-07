@@ -1041,7 +1041,7 @@ deleteTx id network =
         |> Maybe.withDefault network
 
 
-ingestTxs : Pathfinder.Config -> Network -> List DeserializedThing -> List Api.Data.Tx -> Network
+ingestTxs : Pathfinder.Config -> Network -> List DeserializedThing -> List ( String, Api.Data.Tx ) -> Network
 ingestTxs pc network things txs =
     let
         thingsDict =
@@ -1067,14 +1067,15 @@ ingestTxs pc network things txs =
     in
     txs
         |> List.foldl
-            (\tx nw ->
+            (\( requestTxHash, tx ) nw ->
+                -- Use the request tx_hash to find the thing with matching ID
                 (case tx of
                     Api.Data.TxTxUtxo t ->
-                        Dict.get (Id.init t.currency t.txHash) thingsDict
+                        Dict.get (Id.init t.currency requestTxHash) thingsDict
                             |> Maybe.map (toUtxo t)
 
                     Api.Data.TxTxAccount t ->
-                        Dict.get (Id.init t.network t.identifier) thingsDict
+                        Dict.get (Id.init t.network requestTxHash) thingsDict
                             |> Maybe.map (toAccount t)
                 )
                     |> Maybe.map (insertTx pc nw >> second)
