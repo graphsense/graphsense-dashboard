@@ -198,7 +198,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
                           , icon = HIcons.iconsDeleteS {}
-                          , text = "Remove from Graph"
+                          , text = "Remove from graph"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
@@ -210,7 +210,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserOpensDialogWindow (AddTags id)
                           , icon = HIcons.iconsAddTagOutlinedS {}
-                          , text = "Add Tag"
+                          , text = "Report a tag"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc

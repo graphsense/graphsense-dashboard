@@ -25,7 +25,7 @@ import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdent
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
 import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
-import View.Pathfinder.Table.Columns exposing (checkboxColumn, valueColumn)
+import View.Pathfinder.Table.Columns exposing (checkboxColumn, valueColumnWithOptions)
 
 
 type alias NeighborAddressesTableConfig =
@@ -146,7 +146,13 @@ config styles vc conf =
                         HasExchangeTagOnly ->
                             []
                 )
-            , valueColumn vc
+            , valueColumnWithOptions
+                { sortable = False
+                , hideCode = True
+                , colorFlowDirection = False
+                , isOutgoingFn = \_ -> False
+                }
+                vc
                 (.address >> .currency >> Currency.assetFromBase)
                 (Locale.string vc.locale cellLabel)
                 .value

@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.08.1] - 2025-08-07
+
+### Added
+
+- add hint to report tag icon
+
+### Changed
+
+- Minor label changes
+- reporting tags form: hide actor field description if filled
+
+### Fixed
+
+- remove sort handle on neighbor value column
+- fix hovering agg edges
+
 
 ## [25.08.0] - 2025-08-01
 

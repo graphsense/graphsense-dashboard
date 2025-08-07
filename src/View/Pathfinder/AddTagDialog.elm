@@ -13,6 +13,7 @@ import Theme.Colors as Colors
 import Theme.Html.Dialogs as Dialogs
 import Theme.Html.Fields as F
 import Theme.Html.SettingsComponents as Sc
+import Tuple exposing (second)
 import Util.Css exposing (alignItemsStretch)
 import Util.View
 import View.Button as Button
@@ -94,6 +95,12 @@ view plugins vc model =
                     ]
                 |> Rs.s_helperText
                     [ [ Css.property "white-space" "wrap" |> Css.important
+                      , Css.property "display" <|
+                            if Maybe.map (second >> String.isEmpty) model.selectedActor == Just False then
+                                "none"
+
+                            else
+                                "inline-block"
                       ]
                         |> css
                     ]
@@ -155,14 +162,14 @@ view plugins vc model =
         , confirmButton =
             { variant =
                 (Button.defaultConfig
-                    |> Rs.s_text "Add Tag"
+                    |> Rs.s_text "Report tag"
                     |> Rs.s_disabled (model.selectedActor == Nothing)
                     |> Rs.s_onClick (Just model.addTagMsg)
                 )
                     |> Button.primaryButton vc
             }
         , root =
-            { header = Locale.string vc.locale "Add Tag to Address"
+            { header = Locale.string vc.locale "Report a tag" |> Locale.titleCase vc.locale
             , description = Locale.string vc.locale "Add_Tag_description"
             }
         }
