@@ -328,9 +328,15 @@ update plugins uc msg model =
                     | stats = RD.Success stats
                     , statusbar = Statusbar.updateLastBlocks stats model.statusbar
                     , search =
-                        model.search
-                            |> s_searchType
-                                (Search.initSearchAddressAndTxs Nothing)
+                        if model.page == Graph then
+                            model.search
+                                |> s_searchType
+                                    (Search.initSearchAll (Just stats))
+
+                        else
+                            model.search
+                                |> s_searchType
+                                    (Search.initSearchAddressAndTxs Nothing)
                     , plugins = newPluginsState
                 }
                 |> Tuple.mapSecond ((::) (PluginEffect cmd))
