@@ -47,7 +47,7 @@ import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
-import Util.View exposing (copyIconPathfinderAbove, emptyCell, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -1118,11 +1118,19 @@ sidePanelAddressCopyIcon vc id =
     { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
     , copyIconInstance = Id.id id |> copyIconPathfinderAbove vc
     , addTagIconInstance =
-        HIcons.iconsAddTagOutlinedSWithAttributes
-            (HIcons.iconsAddTagOutlinedSAttributes
-                |> Rs.s_root [ onClick (Pathfinder.UserOpensDialogWindow (Pathfinder.AddTags id)), Util.View.pointer ]
-            )
-            {}
+        iconWithHint
+            vc
+            { hint = Locale.string vc.locale "Report tag"
+            , icon =
+                HIcons.iconsAddTagOutlinedSWithAttributes
+                    (HIcons.iconsAddTagOutlinedSAttributes
+                        |> Rs.s_root [ onClick (Pathfinder.UserOpensDialogWindow (Pathfinder.AddTags id)), Util.View.pointer ]
+                    )
+                    {}
+            , hide = False
+            , position = Above
+            }
+            []
     , chevronInstance =
         div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
             [ HIcons.iconsChevronDownThinWithAttributes
