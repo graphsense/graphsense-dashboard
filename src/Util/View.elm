@@ -1,4 +1,4 @@
-module Util.View exposing (aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -248,7 +248,7 @@ copyableLongIdentifierPathfinder vc attr identifier =
         ]
 
 
-type CopyHintPosition
+type HintPosition
     = Right
     | Above
 
@@ -273,7 +273,7 @@ copyIconWithAttrPathfinder =
     copyIconWithAttrPathfinderInternal Right
 
 
-copyIconWithAttrPathfinderInternal : CopyHintPosition -> Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
+copyIconWithAttrPathfinderInternal : HintPosition -> Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
 copyIconWithAttrPathfinderInternal hp hideHint attr vc value =
     let
         ( component, compAttr, triangleAttr ) =
@@ -342,6 +342,79 @@ copyIconWithAttrPathfinderInternal hp hideHint attr vc value =
                 { root = { hint = Locale.string vc.locale "Copy" }
                 }
             ]
+        ]
+
+
+type alias HintConfig msg =
+    { position : HintPosition
+    , hint : String
+    , hide : Bool
+    , icon : Html msg
+    }
+
+
+iconWithHint : View.Config -> HintConfig msg -> List (Attribute msg) -> Html msg
+iconWithHint vc { position, hint, hide, icon } attr =
+    let
+        ( ( component, compInst, compAttr ), triangleAttr ) =
+            case position of
+                Right ->
+                    ( ( Theme.Html.GraphComponents.iconWithHintRightWithInstances
+                      , Theme.Html.GraphComponents.iconWithHintRightInstances
+                      , Theme.Html.GraphComponents.iconWithHintRightAttributes
+                      )
+                    , css
+                        [ Css.px 1 |> Css.left
+                        ]
+                    )
+
+                Above ->
+                    ( ( Theme.Html.GraphComponents.iconWithHintAboveWithInstances
+                      , Theme.Html.GraphComponents.iconWithHintAboveInstances
+                      , Theme.Html.GraphComponents.iconWithHintAboveAttributes
+                      )
+                    , css
+                        [ Css.px -5 |> Css.top ]
+                    )
+    in
+    Html.Styled.node "with-hint"
+        (pointer :: attr)
+        [ component
+            (compAttr
+                |> s_hint
+                    [ Html.Styled.Attributes.attribute "data-hint" ""
+                    , css
+                        [ Css.display Css.none
+                        , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
+                        , Css.position Css.fixed |> Css.important
+                        ]
+                    ]
+                |> s_label
+                    [ Html.Styled.Attributes.attribute "data-label" ""
+                    ]
+                |> s_anchor
+                    [ css
+                        [ Css.px 1 |> Css.width |> Css.important
+                        ]
+                    ]
+                |> s_triangle
+                    [ triangleAttr
+                    ]
+            )
+            (compInst
+                |> s_hint
+                    (if hide then
+                        Just none
+
+                     else
+                        Nothing
+                    )
+            )
+            { root =
+                { hint = Locale.string vc.locale hint
+                , instance = icon
+                }
+            }
         ]
 
 

@@ -160,7 +160,7 @@ buttonWithAttributes attr vc btn =
                     Buttons.ButtonTypeTextIcon
             , style = btn.style
             , size = btn.size
-            , buttonText = Locale.string vc.locale btn.text
+            , buttonText = Locale.string vc.locale btn.text |> Locale.titleCase vc.locale
             , iconInstance = icon
             , iconVisible = btn.icon /= Nothing
             }

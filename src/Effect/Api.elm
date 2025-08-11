@@ -284,7 +284,7 @@ type Effect msg
         , includeBestClusterTag : Bool
         }
         (List ( Id, Api.Data.TagSummary ) -> msg)
-    | AddUserReportedTag Api.Data.UserReportedTag (() -> msg)
+    | AddUserReportedTag Api.Data.UserReportedTag (Api.Data.UserTagReportResponse -> msg)
 
 
 getEntityEgonet :

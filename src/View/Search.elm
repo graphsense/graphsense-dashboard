@@ -23,6 +23,15 @@ import View.Autocomplete as Autocomplete
 import View.Locale as Locale
 
 
+removeLeading0x : String -> String
+removeLeading0x s =
+    if String.startsWith "0x" s then
+        s |> String.dropLeft 2
+
+    else
+        s
+
+
 type alias SearchConfig =
     { css : String -> List Style
     , resultsAsLink : Bool
@@ -360,6 +369,9 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
 
                 Custom x ->
                     ( FontAwesome.plus, x.label, ( False, [ Css.color (TColor.blue300_color |> Util.View.toCssColor) |> Css.important ] ) )
+
+        querycomp =
+            removeLeading0x query
     in
     span
         ((Css.resultLine vc
@@ -383,20 +395,32 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
                 [ Css.resultLineIcon vc |> css
                 , css sc.resultLineIcon
                 ]
-        , if String.contains query label && highlight_suffix then
-            span
-                []
-                [ text query
-                , span
-                    [ css
-                        [ Css.fontWeight Css.bold
+        , if String.startsWith querycomp (removeLeading0x label) && highlight_suffix then
+            let
+                left =
+                    String.Extra.leftOf querycomp label
+
+                right =
+                    String.Extra.rightOf querycomp label
+
+                total =
+                    left ++ querycomp ++ right
+            in
+            if total /= label then
+                text label
+
+            else
+                span
+                    []
+                    [ text (left ++ querycomp)
+                    , span
+                        [ css
+                            [ Css.fontWeight Css.bold
+                            ]
+                        , css sc.resultTextEmphasized
                         ]
-                    , css sc.resultTextEmphasized
+                        [ text right ]
                     ]
-                    [ text
-                        (String.Extra.rightOf query label)
-                    ]
-                ]
 
           else
             text label

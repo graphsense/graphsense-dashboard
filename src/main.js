@@ -314,6 +314,31 @@ if(!customElements.get('copy-icon')) {
   customElements.define('copy-icon', CopyIcon) 
 }
 
+class WithHint extends HTMLElement {
+  constructor () {
+    let label, original
+    setTimeout(() => {
+      label = this.querySelector('[data-label]')
+      original = label?.innerText
+    }, 0)
+    super()
+    this.addEventListener('mouseover', () => {
+      let hint = this.querySelector('[data-hint]');
+      if(!hint) return
+      hint.style.display = 'flex'
+    })
+    this.addEventListener('mouseleave', () => {
+      let hint = this.querySelector('[data-hint]');
+      if(!hint) return
+      hint.style.display = 'none'
+    })
+  }
+}
+
+if(!customElements.get('with-hint')) {
+  customElements.define('with-hint', WithHint) 
+}
+
 app.ports.newTab.subscribe( url => window.open(url, '_blank'));
 
 app.ports.toClipboard.subscribe(text => {

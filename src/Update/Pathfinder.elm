@@ -952,22 +952,26 @@ updateByMsg plugins uc msg model =
                     domId =
                         Id.toString id
 
-                    maybeTT =
-                        model.network.txs
-                            |> Dict.get id
-                            |> Maybe.map
-                                (\tx ->
-                                    case tx.type_ of
-                                        Tx.Utxo t ->
-                                            Tooltip.UtxoTx t
+                    hovered _ =
+                        let
+                            unhovered =
+                                unhover model
 
-                                        Tx.Account t ->
-                                            Tooltip.AccountTx t
-                                )
+                            maybeTT =
+                                unhovered.network.txs
+                                    |> Dict.get id
+                                    |> Maybe.map
+                                        (\tx ->
+                                            case tx.type_ of
+                                                Tx.Utxo t ->
+                                                    Tooltip.UtxoTx t
 
-                    hovered =
-                        ( { model
-                            | network = Network.updateTx id (s_hovered True) model.network
+                                                Tx.Account t ->
+                                                    Tooltip.AccountTx t
+                                        )
+                        in
+                        ( { unhovered
+                            | network = Network.updateTx id (s_hovered True) unhovered.network
                             , hovered = HoveredTx id
                           }
                         , case maybeTT of
@@ -981,13 +985,13 @@ updateByMsg plugins uc msg model =
                 case model.details of
                     Just (TxDetails txid _) ->
                         if id /= txid then
-                            hovered
+                            hovered ()
 
                         else
                             n model
 
                     _ ->
-                        hovered
+                        hovered ()
 
         UserMovesMouseOverAddress id ->
             if model.hovered == HoveredAddress id then
@@ -998,26 +1002,30 @@ updateByMsg plugins uc msg model =
                     domId =
                         Id.toString id
 
-                    maybeTT =
-                        model.network.addresses
-                            |> Dict.get id
-                            |> Maybe.map
-                                (\addr ->
-                                    Tooltip.Address addr
-                                        (case Dict.get id model.tagSummaries of
-                                            Just (HasTagSummaries { withCluster }) ->
-                                                Just withCluster
+                    showHover _ =
+                        let
+                            unhovered =
+                                unhover model
 
-                                            Just (HasTagSummaryWithCluster ts) ->
-                                                Just ts
+                            maybeTT =
+                                unhovered.network.addresses
+                                    |> Dict.get id
+                                    |> Maybe.map
+                                        (\addr ->
+                                            Tooltip.Address addr
+                                                (case Dict.get id model.tagSummaries of
+                                                    Just (HasTagSummaries { withCluster }) ->
+                                                        Just withCluster
 
-                                            _ ->
-                                                Nothing
+                                                    Just (HasTagSummaryWithCluster ts) ->
+                                                        Just ts
+
+                                                    _ ->
+                                                        Nothing
+                                                )
                                         )
-                                )
-
-                    showHover =
-                        ( { model
+                        in
+                        ( { unhovered
                             | hovered = HoveredAddress id
                           }
                         , case maybeTT of
@@ -1031,13 +1039,13 @@ updateByMsg plugins uc msg model =
                 case model.details of
                     Just (AddressDetails aid _) ->
                         if id /= aid then
-                            showHover
+                            showHover ()
 
                         else
                             n model
 
                     _ ->
-                        showHover
+                        showHover ()
 
         UserMovesMouseOutAddress id ->
             ( unhover model, CloseTooltipEffect (Just { context = Id.toString id, domId = Id.toString id }) False |> List.singleton )
@@ -1691,11 +1699,15 @@ updateByMsg plugins uc msg model =
                         AggEdge.idToString id
 
                     hovered _ =
-                        ( { model
-                            | network = Network.updateAggEdge id (s_hovered True) model.network
+                        let
+                            unhovered =
+                                unhover model
+                        in
+                        ( { unhovered
+                            | network = Network.updateAggEdge id (s_hovered True) unhovered.network
                             , hovered = HoveredAggEdge id
                           }
-                        , model.network.aggEdges
+                        , unhovered.network.aggEdges
                             |> Dict.get id
                             |> Maybe.andThen
                                 (\edge ->
