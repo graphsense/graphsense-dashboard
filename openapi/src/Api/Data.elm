@@ -64,6 +64,7 @@ module Api.Data exposing
     , TxUtxo
     , TxValue
     , UserReportedTag
+    , UserTagReportResponse
     , Values
     , encodeActor
     , encodeActorContext
@@ -114,6 +115,7 @@ module Api.Data exposing
     , encodeTxUtxo
     , encodeTxValue
     , encodeUserReportedTag
+    , encodeUserTagReportResponse
     , encodeValues
     , actorDecoder
     , actorContextDecoder
@@ -164,6 +166,7 @@ module Api.Data exposing
     , txUtxoDecoder
     , txValueDecoder
     , userReportedTagDecoder
+    , userTagReportResponseDecoder
     , valuesDecoder
     )
 
@@ -634,6 +637,7 @@ type alias TxAccount =
     , fromAddress : String
     , height : Int
     , identifier : String
+    , isExternal : Maybe Bool
     , network : String
     , timestamp : Int
     , toAddress : String
@@ -687,6 +691,11 @@ type alias UserReportedTag =
     , description : String
     , label : String
     , network : String
+    }
+
+
+type alias UserTagReportResponse =
+    { id : Maybe String
     }
 
 
@@ -1865,6 +1874,7 @@ encodeTxAccountPairs model =
             , encode "from_address" Json.Encode.string model.fromAddress
             , encode "height" Json.Encode.int model.height
             , encode "identifier" Json.Encode.string model.identifier
+            , maybeEncode "is_external" Json.Encode.bool model.isExternal
             , encode "network" Json.Encode.string model.network
             , encode "timestamp" Json.Encode.int model.timestamp
             , encode "to_address" Json.Encode.string model.toAddress
@@ -1993,6 +2003,26 @@ encodeUserReportedTagPairs model =
             , encode "description" Json.Encode.string model.description
             , encode "label" Json.Encode.string model.label
             , encode "network" Json.Encode.string model.network
+            ]
+    in
+    pairs
+
+
+encodeUserTagReportResponse : UserTagReportResponse -> Json.Encode.Value
+encodeUserTagReportResponse =
+    encodeObject << encodeUserTagReportResponsePairs
+
+
+encodeUserTagReportResponseWithTag : ( String, String ) -> UserTagReportResponse -> Json.Encode.Value
+encodeUserTagReportResponseWithTag (tagField, tag) model =
+    encodeObject (encodeUserTagReportResponsePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeUserTagReportResponsePairs : UserTagReportResponse -> List EncodedField
+encodeUserTagReportResponsePairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Json.Encode.string model.id
             ]
     in
     pairs
@@ -2592,6 +2622,7 @@ txAccountDecoder =
         |> decode "from_address" Json.Decode.string 
         |> decode "height" Json.Decode.int 
         |> decode "identifier" Json.Decode.string 
+        |> maybeDecode "is_external" Json.Decode.bool Nothing
         |> decode "network" Json.Decode.string 
         |> decode "timestamp" Json.Decode.int 
         |> decode "to_address" Json.Decode.string 
@@ -2650,6 +2681,12 @@ userReportedTagDecoder =
         |> decode "description" Json.Decode.string 
         |> decode "label" Json.Decode.string 
         |> decode "network" Json.Decode.string 
+
+
+userTagReportResponseDecoder : Json.Decode.Decoder UserTagReportResponse
+userTagReportResponseDecoder =
+    Json.Decode.succeed UserTagReportResponse
+        |> maybeDecode "id" Json.Decode.string Nothing
 
 
 valuesDecoder : Json.Decode.Decoder Values

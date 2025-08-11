@@ -90,7 +90,7 @@ listTaxonomies =
 
 
 
-reportTag : (Api.Data.UserReportedTag) -> Api.Request ()
+reportTag : (Api.Data.UserReportedTag) -> Api.Request Api.Data.UserTagReportResponse
 reportTag userReportedTag_body =
     Api.request
         "POST"
@@ -99,5 +99,5 @@ reportTag userReportedTag_body =
         []
         []
         (Just (Api.Data.encodeUserReportedTag userReportedTag_body))
-        (Json.Decode.succeed ())
+        Api.Data.userTagReportResponseDecoder
 

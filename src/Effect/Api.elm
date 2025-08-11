@@ -277,14 +277,14 @@ type Effect msg
         { currency : String
         , txs : List String
         }
-        (List Api.Data.Tx -> msg)
+        (List ( String, Api.Data.Tx ) -> msg)
     | BulkGetAddressTagSummaryEffect
         { currency : String
         , addresses : List String
         , includeBestClusterTag : Bool
         }
         (List ( Id, Api.Data.TagSummary ) -> msg)
-    | AddUserReportedTag Api.Data.UserReportedTag (() -> msg)
+    | AddUserReportedTag Api.Data.UserReportedTag (Api.Data.UserTagReportResponse -> msg)
 
 
 getEntityEgonet :
@@ -863,7 +863,15 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetTxEffect e toMsg ->
-            listWithMaybes Api.Data.txDecoder
+            listWithMaybes
+                (Json.Decode.field "_request_tx_hash" Json.Decode.string
+                    |> Json.Decode.andThen
+                        (\requestTxHash ->
+                            Json.Decode.map
+                                (\tx -> ( requestTxHash, tx ))
+                                Api.Data.txDecoder
+                        )
+                )
                 |> Api.Request.MyBulk.bulkJson
                     e.currency
                     Api.Request.MyBulk.OperationGetTx
