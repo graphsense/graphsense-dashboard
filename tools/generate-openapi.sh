@@ -45,8 +45,8 @@ sed -i 's/labelSummaryinheritedFromVariants/labelSummaryInheritedFromVariants/' 
 sed -i 's/taginheritedFromVariants/tagInheritedFromVariants/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/ExternalConversionsconversionType/ExternalConversionsConversionType/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/externalConversionsconversionTypeVariants/externalConversionsConversionTypeVariants/' "${dir}/../openapi/src/Api/Data.elm"
-
-
+sed -i 's/RelatedAddressrelationType/RelatedAddressRelationType/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/relatedAddressrelationTypeVariants/relatedAddressRelationTypeVariants/' "${dir}/../openapi/src/Api/Data.elm"
 
 # remove duplicate Direction and order types
 patterns='^type Direction,^directionVariants : List Direction,^stringFromDirection : Direction -> String,^makeDirectionFromString : String -> Maybe Direction,^type Order_,^orderVariants : List Order_,^stringFromOrder_ : Order_ -> String,^makeOrder_FromString : String -> Maybe Order_'
