@@ -41,10 +41,12 @@ type Msg
     | TxTableAssetSelectBoxMsg (ThemedSelectBox.Msg (Maybe String))
     | TableMsg Table.State
     | RelatedAddressesTableMsg Table.State
+    | RelatedAddressesPubkeyTableMsg Table.State
     | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
     | BrowserGotEntityAddressTagsForRelatedAddressesTable String Api.Data.AddressTags
     | UserClickedToggleRelatedAddressesTable
     | RelatedAddressesTablePagedTableMsg PagedTable.Msg
+    | RelatedAddressesPubkeyTablePagedTableMsg PagedTable.Msg
     | UserClickedAddressCheckboxInTable Id
     | UserClickedAggEdgeCheckboxInTable Direction Id Api.Data.NeighborAddress
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
@@ -52,4 +54,5 @@ type Msg
     | UserClickedTx Id
     | NoOp
     | BrowserGotAddressesForTags (Maybe String) (List Api.Data.Address)
+    | BrowserGotPubkeyRelations Api.Data.RelatedAddresses
     | TooltipMsg Tag.Msg

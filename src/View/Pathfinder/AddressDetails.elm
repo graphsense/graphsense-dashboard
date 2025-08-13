@@ -25,6 +25,7 @@ import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
+import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
@@ -54,6 +55,7 @@ import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
+import View.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.TransactionFilter as TransactionFilter
@@ -305,13 +307,21 @@ relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetail
 relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
-            Locale.string vc.locale "Cluster addresses"
+            Locale.string vc.locale "Related addresses"
                 |> Locale.titleCase vc.locale
 
         noRelatedAddresses =
             cluster
                 |> RemoteData.map (.noAddresses >> flip (-) 1)
                 |> RemoteData.withDefault 0
+
+        pubkeyHasData =
+            viewState.relatedAddressesPubkey
+                |> RemoteData.map RelatedAddressesPubkeyTable.hasData
+                |> RemoteData.withDefault False
+
+        disabled =
+            noRelatedAddresses == 0 && not pubkeyHasData
     in
     dataTab
         { title =
@@ -338,44 +348,74 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 }
                             }
                     )
-        , disabled = noRelatedAddresses == 0
+        , disabled = disabled
         , content =
-            if not viewState.relatedAddressesTableOpen || noRelatedAddresses == 0 then
+            if not viewState.relatedAddressesTableOpen || disabled then
                 Nothing
 
             else
-                case viewState.relatedAddresses of
-                    RemoteData.Failure _ ->
-                        Html.text "error" |> Just
+                Just
+                    (div []
+                        [ Html.text (Locale.string vc.locale "Cluster addresses")
+                        , case viewState.relatedAddresses of
+                            RemoteData.Failure _ ->
+                                Html.text "error"
 
-                    RemoteData.Loading ->
-                        loadingSpinner vc Css.View.loadingSpinner
-                            |> Just
+                            RemoteData.Loading ->
+                                loadingSpinner vc Css.View.loadingSpinner
 
-                    RemoteData.NotAsked ->
-                        loadingSpinner vc Css.View.loadingSpinner
-                            |> Just
+                            RemoteData.NotAsked ->
+                                loadingSpinner vc Css.View.loadingSpinner
 
-                    RemoteData.Success ra ->
-                        let
-                            ratc =
-                                { isChecked = flip Network.hasAddress model.network
-                                , hasTags = getHavingTags model
-                                , coinCode = assetFromBase <| Id.network viewState.address.id
-                                }
-                        in
-                        div
-                            [ css <|
-                                SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
-                                    ++ fullWidth
-                            ]
-                            [ PagedTable.pagedTableView vc
-                                [ css fullWidth ]
-                                (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
-                                (RelatedAddressesTable.getTable ra)
-                                AddressDetails.RelatedAddressesTablePagedTableMsg
-                            ]
-                            |> Just
+                            RemoteData.Success ra ->
+                                let
+                                    ratc =
+                                        { isChecked = flip Network.hasAddress model.network
+                                        , hasTags = getHavingTags model
+                                        , coinCode = assetFromBase <| Id.network viewState.address.id
+                                        }
+                                in
+                                div
+                                    [ css <|
+                                        SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                                            ++ fullWidth
+                                    ]
+                                    [ PagedTable.pagedTableView vc
+                                        [ css fullWidth ]
+                                        (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
+                                        (RelatedAddressesTable.getTable ra)
+                                        AddressDetails.RelatedAddressesTablePagedTableMsg
+                                    ]
+                        , Html.text (Locale.string vc.locale "Crosschain addresses")
+                        , case viewState.relatedAddressesPubkey of
+                            RemoteData.Failure _ ->
+                                Html.text "error"
+
+                            RemoteData.Loading ->
+                                loadingSpinner vc Css.View.loadingSpinner
+
+                            RemoteData.NotAsked ->
+                                loadingSpinner vc Css.View.loadingSpinner
+
+                            RemoteData.Success ra ->
+                                let
+                                    ratc =
+                                        { isChecked = flip Network.hasAddress model.network
+                                        }
+                                in
+                                div
+                                    [ css <|
+                                        SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                                            ++ fullWidth
+                                    ]
+                                    [ PagedTable.pagedTableView vc
+                                        [ css fullWidth ]
+                                        (RelatedAddressesPubkeyTable.config Css.Table.styles vc ratc ra)
+                                        (RelatedAddressesPubkeyTable.getTable ra)
+                                        AddressDetails.RelatedAddressesPubkeyTablePagedTableMsg
+                                    ]
+                        ]
+                    )
         , onClick = AddressDetails.UserClickedToggleRelatedAddressesTable
         }
 
@@ -754,6 +794,14 @@ account plugins pluginStates vc model id viewState address =
                             , tokenValues = data.tokenBalances
                             }
                     )
+
+        relatedAddressesTab =
+            [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
+
+        relatedDataTabsList =
+            transactionsOrNeighborsDataTabs vc model id viewState
+                ++ relatedAddressesTab
+                |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.address.id))
     in
     SidePanelComponents.sidePanelEthAddressWithInstances
         (SidePanelComponents.sidePanelEthAddressAttributes
@@ -802,9 +850,7 @@ account plugins pluginStates vc model id viewState address =
         )
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
-        , relatedDataTabsList =
-            transactionsOrNeighborsDataTabs vc model id viewState
-                |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.address.id))
+        , relatedDataTabsList = relatedDataTabsList
         , tokensList = []
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id

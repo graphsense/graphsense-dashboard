@@ -81,6 +81,12 @@ shallPushHistory plugins msg _ =
 
         AddressDetailsMsg _ am ->
             case am of
+                AddressDetails.RelatedAddressesPubkeyTablePagedTableMsg _ ->
+                    False
+
+                AddressDetails.BrowserGotPubkeyRelations _ ->
+                    False
+
                 AddressDetails.UserClickedTxCheckboxInTable _ ->
                     True
 
@@ -169,6 +175,9 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.RelatedAddressesTableMsg _ ->
+                    False
+
+                AddressDetails.RelatedAddressesPubkeyTableMsg _ ->
                     False
 
                 AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable _ ->

@@ -248,6 +248,12 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.GetConversionEffect _ _ ->
+            Nothing
+
+        Api.ListRelatedAddressesEffect _ _ ->
+            Nothing
+
         Api.SearchEffect _ _ ->
             Nothing
 

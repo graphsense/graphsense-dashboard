@@ -21,6 +21,7 @@ import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
+import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder as Pathfinder
@@ -32,6 +33,7 @@ import Set
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
 import Update.DateRangePicker as DateRangePicker
+import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (n)
 import Util.ThemedSelectBox as ThemedSelectBox
@@ -445,15 +447,25 @@ update uc msg model =
         RelatedAddressesTableMsg _ ->
             n model
 
+        RelatedAddressesPubkeyTableMsg _ ->
+            n model
+
+        BrowserGotPubkeyRelations x ->
+            RelatedAddressesPubkeyTable.appendAddresses x.nextPage x.relatedAddresses
+                |> updateRelatedAddressesPubkeyTable model
+
         UserClickedToggleRelatedAddressesTable ->
+            let
+                show =
+                    not model.relatedAddressesTableOpen
+
+                nm =
+                    { model | relatedAddressesTableOpen = show }
+            in
             model.relatedAddresses
                 |> RemoteData.map
                     (\ra ->
-                        let
-                            show =
-                                not model.relatedAddressesTableOpen
-                        in
-                        ( { model | relatedAddressesTableOpen = show }
+                        ( nm
                         , if show then
                             [ RelatedAddressesTable.loadFirstPage ra
                             ]
@@ -462,7 +474,7 @@ update uc msg model =
                             []
                         )
                     )
-                |> RemoteData.withDefault (n model)
+                |> RemoteData.withDefault (n nm)
 
         RelatedAddressesTablePagedTableMsg pm ->
             (\rm ->
@@ -471,6 +483,14 @@ update uc msg model =
                     rm
             )
                 |> updateRelatedAddressesTable model
+
+        RelatedAddressesPubkeyTablePagedTableMsg pm ->
+            (\rm ->
+                RelatedAddressesPubkeyTable.updateTable
+                    (PagedTable.update (RelatedAddressesPubkeyTable.tableConfig rm) pm)
+                    rm
+            )
+                |> updateRelatedAddressesPubkeyTable model
 
         BrowserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } ->
             RelatedAddressesTable.appendAddresses nextPage addresses
@@ -578,6 +598,14 @@ updateRelatedAddressesTable model upd =
     model.relatedAddresses
         |> RemoteData.toMaybe
         |> Maybe.map (upd >> mapFirst (RemoteData.Success >> flip s_relatedAddresses model))
+        |> Maybe.withDefault (n model)
+
+
+updateRelatedAddressesPubkeyTable : Model -> (RelatedAddressesPubkeyTable.Model -> ( RelatedAddressesPubkeyTable.Model, List Effect )) -> ( Model, List Effect )
+updateRelatedAddressesPubkeyTable model upd =
+    model.relatedAddressesPubkey
+        |> RemoteData.toMaybe
+        |> Maybe.map (upd >> mapFirst (RemoteData.Success >> flip s_relatedAddressesPubkey model))
         |> Maybe.withDefault (n model)
 
 
@@ -694,6 +722,19 @@ syncByAddress uc network clusters dateFilterPreset model address =
                                     |> Maybe.withDefault RemoteData.NotAsked
                                 )
 
+                    relatedPubkey =
+                        model.relatedAddressesPubkey
+                            |> RemoteData.map (\_ -> ( model.relatedAddressesPubkey, [] ))
+                            |> RemoteData.withDefault
+                                (let
+                                    newTable =
+                                        RelatedAddressesPubkeyTable.init address.id
+                                 in
+                                 ( RemoteData.Success newTable
+                                 , [ RelatedAddressesPubkeyTable.loadFirstPage address.id ]
+                                 )
+                                )
+
                     neighborsOutgoing =
                         model.neighborsOutgoing
                             |> RemoteData.map (\_ -> model.neighborsOutgoing)
@@ -711,10 +752,11 @@ syncByAddress uc network clusters dateFilterPreset model address =
                             , neighborsOutgoing = neighborsOutgoing
                             , neighborsIncoming = neighborsIncoming
                             , relatedAddresses = related
+                            , relatedAddressesPubkey = first relatedPubkey
                         }
                 in
                 ( newModel
-                , second txsEff
+                , second txsEff ++ second relatedPubkey
                 )
             )
         |> RemoteData.withDefault (n model)

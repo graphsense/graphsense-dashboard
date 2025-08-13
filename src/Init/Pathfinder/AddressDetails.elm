@@ -30,6 +30,7 @@ init dateFilterPreset address =
     , neighborsOutgoing = RemoteData.NotAsked
     , neighborsIncoming = RemoteData.NotAsked
     , address = address
+    , relatedAddressesPubkey = RemoteData.NotAsked
     , relatedAddresses = RemoteData.NotAsked
     , relatedAddressesTableOpen = False
     , totalReceivedDetailsOpen = False

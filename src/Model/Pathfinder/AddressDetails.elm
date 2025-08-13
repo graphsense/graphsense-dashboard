@@ -2,6 +2,7 @@ module Model.Pathfinder.AddressDetails exposing (Model)
 
 import Api.Data
 import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import PagedTable
@@ -17,6 +18,7 @@ type alias Model =
     , neighborsOutgoing : WebData (PagedTable.Model Api.Data.NeighborAddress)
     , address : Address
     , relatedAddresses : WebData RelatedAddressesTable.Model
+    , relatedAddressesPubkey : WebData RelatedAddressesPubkeyTable.Model
     , relatedAddressesTableOpen : Bool
     , totalReceivedDetailsOpen : Bool
     , balanceDetailsOpen : Bool
