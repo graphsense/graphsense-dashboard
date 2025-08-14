@@ -356,8 +356,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
             else
                 Just
                     (div []
-                        [ Html.text (Locale.string vc.locale "Cluster addresses")
-                        , case viewState.relatedAddresses of
+                        [ case viewState.relatedAddresses of
                             RemoteData.Failure _ ->
                                 Html.text "error"
 
@@ -365,7 +364,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 loadingSpinner vc Css.View.loadingSpinner
 
                             RemoteData.NotAsked ->
-                                loadingSpinner vc Css.View.loadingSpinner
+                                none
 
                             RemoteData.Success ra ->
                                 let
@@ -380,13 +379,13 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                         SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                                             ++ fullWidth
                                     ]
-                                    [ PagedTable.pagedTableView vc
+                                    [ Html.text (Locale.string vc.locale "Cluster addresses")
+                                    , PagedTable.pagedTableView vc
                                         [ css fullWidth ]
                                         (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
                                         (RelatedAddressesTable.getTable ra)
                                         AddressDetails.RelatedAddressesTablePagedTableMsg
                                     ]
-                        , Html.text (Locale.string vc.locale "Crosschain addresses")
                         , case viewState.relatedAddressesPubkey of
                             RemoteData.Failure _ ->
                                 Html.text "error"
@@ -395,7 +394,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 loadingSpinner vc Css.View.loadingSpinner
 
                             RemoteData.NotAsked ->
-                                loadingSpinner vc Css.View.loadingSpinner
+                                none
 
                             RemoteData.Success ra ->
                                 let
@@ -408,7 +407,8 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                         SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                                             ++ fullWidth
                                     ]
-                                    [ PagedTable.pagedTableView vc
+                                    [ Html.text (Locale.string vc.locale "Crosschain addresses")
+                                    , PagedTable.pagedTableView vc
                                         [ css fullWidth ]
                                         (RelatedAddressesPubkeyTable.config Css.Table.styles vc ratc ra)
                                         (RelatedAddressesPubkeyTable.getTable ra)

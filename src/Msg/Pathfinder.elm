@@ -61,6 +61,7 @@ type Msg
     | NoOp
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx FindPosition Bool Api.Data.Tx
+    | BrowserGotConversions (List Api.Data.ExternalConversion)
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
     | UserClickedAddressCheckboxInTable Id

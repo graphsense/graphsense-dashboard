@@ -1291,6 +1291,25 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
 
+        BrowserGotConversions conversions ->
+            conversions
+                |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset)
+                |> List.foldl
+                    (\conversion ( aggm, effects ) ->
+                        let
+                            toTransferId =
+                                Id.init conversion.toNetwork conversion.toAssetTransfer
+
+                            fromTransferId =
+                                Id.init conversion.fromNetwork conversion.toAssetTransfer
+
+                            ( newModel, effs ) =
+                                loadTxWithPosition (NextTo ( Outgoing, fromTransferId )) True plugins toTransferId aggm
+                        in
+                        ( newModel, effects ++ effs )
+                    )
+                    ( model, [] )
+
         BrowserGotTx pos loadAddresses tx ->
             if Dict.member (Tx.getTxId tx) model.network.txs then
                 n model
@@ -1309,6 +1328,7 @@ updateByMsg plugins uc msg model =
                          else
                             n
                         )
+                    |> and (autoLoadConversions plugins newTx)
 
         UserClickedSelectionTool ->
             n
@@ -3237,8 +3257,11 @@ addTx plugins _ anchorAddressId direction addressId tx model =
 
     else
         let
+            posNewTx =
+                Network.NextTo ( direction, anchorAddressId )
+
             ( newTx, network ) =
-                Network.addTxWithPosition model.config (Network.NextTo ( direction, anchorAddressId )) tx model.network
+                Network.addTxWithPosition model.config posNewTx tx model.network
 
             transform =
                 Transform.move
@@ -3273,6 +3296,7 @@ addTx plugins _ anchorAddressId direction addressId tx model =
                     loadAddressWithPosition plugins position a newmodel
                 )
             |> Maybe.withDefault (n newmodel)
+            |> and (autoLoadConversions plugins newTx)
 
 
 checkSelection : Update.Config -> Model -> ( Model, List Effect )
@@ -3553,6 +3577,24 @@ fromDeserialized plugins deserialized model =
         ++ addressesRequests
         ++ relationRequests
     )
+
+
+autoLoadConversions : Plugins -> Tx -> Model -> ( Model, List Effect )
+autoLoadConversions _ tx model =
+    case tx.type_ of
+        Tx.Utxo _ ->
+            n model
+
+        Tx.Account atx ->
+            ( model
+            , BrowserGotConversions
+                |> Api.GetConversionEffect
+                    { currency = atx.raw.network
+                    , txHash = atx.raw.identifier
+                    }
+                |> ApiEffect
+                |> List.singleton
+            )
 
 
 autoLoadAddresses : Plugins -> Tx -> Model -> ( Model, List Effect )

@@ -293,7 +293,7 @@ type Effect msg
         , nextpage : Maybe String
         }
         (Api.Data.RelatedAddresses -> msg)
-    | GetConversionEffect { currency : String, tx_hash : String } (List Api.Data.ExternalConversions -> msg)
+    | GetConversionEffect { currency : String, txHash : String } (List Api.Data.ExternalConversion -> msg)
 
 
 getEntityEgonet :
@@ -925,8 +925,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Addresses.listRelatedAddresses currency address (Just reltype) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetConversionEffect { currency, tx_hash } toMsg ->
-            Api.Request.Txs.getTxConversions currency tx_hash
+        GetConversionEffect { currency, txHash } toMsg ->
+            Api.Request.Txs.getTxConversions currency txHash
                 |> send apiKey wrapMsg effect toMsg
 
 
