@@ -364,22 +364,30 @@ updateByMsg plugins uc msg model =
         UserPressedNormalKey _ ->
             n model
 
-        BrowserGotAddressData id position data ->
-            if position == Auto && (not <| Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
+        BrowserGotAddressData { id, pos, addEgoNet } data ->
+            let
+                condFetchEgonet =
+                    if addEgoNet then
+                        fetchEgonet id data
+
+                    else
+                        n
+            in
+            if pos == Auto && not (Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
                 let
                     ( newModel, eff ) =
-                        fetchEgonet id data model
+                        condFetchEgonet model
                 in
                 if List.isEmpty eff then
                     browserGotAddressData uc plugins id Auto data newModel
-                        |> and (fetchEgonet id data)
+                        |> and condFetchEgonet
 
                 else
                     ( newModel, eff )
 
             else
-                browserGotAddressData uc plugins id position data model
-                    |> and (fetchEgonet id data)
+                browserGotAddressData uc plugins id pos data model
+                    |> and condFetchEgonet
 
         BrowserGotRelationsToVisibleNeighbors id dir requestIds { neighbors } ->
             let
@@ -1270,7 +1278,7 @@ updateByMsg plugins uc msg model =
                             removeAddress aId m |> Tuple.mapSecond ((++) eff)
 
                         addAcc aId ( m, eff ) =
-                            loadAddress plugins aId m |> Tuple.mapSecond ((++) eff)
+                            loadAddress plugins True aId m |> Tuple.mapSecond ((++) eff)
                     in
                     if allChecked then
                         idsTable
@@ -1301,16 +1309,16 @@ updateByMsg plugins uc msg model =
                                 Id.init conversion.toNetwork conversion.toAssetTransfer
 
                             fromTransferId =
-                                Id.init conversion.fromNetwork conversion.toAssetTransfer
+                                Id.init conversion.fromNetwork conversion.toAddress
 
                             ( newModel, effs ) =
-                                loadTxWithPosition (NextTo ( Outgoing, fromTransferId )) True plugins toTransferId aggm
+                                loadTxWithPosition (NextTo ( Outgoing, fromTransferId )) False True plugins toTransferId aggm
                         in
                         ( newModel, effects ++ effs )
                     )
                     ( model, [] )
 
-        BrowserGotTx pos loadAddresses tx ->
+        BrowserGotTx { pos, loadAddresses, addEgoNet } tx ->
             if Dict.member (Tx.getTxId tx) model.network.txs then
                 n model
 
@@ -1323,7 +1331,7 @@ updateByMsg plugins uc msg model =
                     |> checkSelection uc
                     |> and
                         (if loadAddresses then
-                            autoLoadAddresses plugins newTx
+                            autoLoadAddresses plugins addEgoNet newTx
 
                          else
                             n
@@ -1792,7 +1800,7 @@ checkAllTxs plugins uc txIds model =
             )
 
         addAcc txId ( m, eff ) =
-            loadTx True plugins txId m |> Tuple.mapSecond ((++) eff)
+            loadTx True True plugins txId m |> Tuple.mapSecond ((++) eff)
     in
     if allChecked then
         let
@@ -2196,7 +2204,7 @@ userClickedAddressCheckboxInTable plugins id model =
         removeAddress id model
 
     else
-        loadAddress plugins id model
+        loadAddress plugins True id model
 
 
 userClickedAggEdgeCheckboxInTable : Plugins -> Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
@@ -2243,7 +2251,7 @@ userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
             )
 
     else
-        loadAddressWithPosition plugins (NextTo ( dir, anchorId )) id model
+        loadAddressWithPosition plugins True (NextTo ( dir, anchorId )) id model
 
 
 userClickedTx : Id -> Model -> ( Model, List Effect )
@@ -2616,10 +2624,10 @@ addPathToGraph plugins uc model net config list =
                 action =
                     case a of
                         Route.AddressHop _ adr ->
-                            loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
+                            loadAddressWithPosition plugins True (Fixed x_ y_) ( net, adr )
 
                         Route.TxHop h ->
-                            loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
+                            loadTxWithPosition (Fixed x_ y_) True False plugins ( net, h )
 
                 annotations =
                     case a of
@@ -2676,7 +2684,7 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins id
+                |> loadAddress plugins True id
                 |> and (selectAddress id)
 
         Route.Network network (Route.Tx a) ->
@@ -2685,7 +2693,7 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadTx True plugins id
+                |> loadTx True True plugins id
                 |> and (selectTx id)
 
         Route.Network network (Route.Relation a b) ->
@@ -2697,8 +2705,8 @@ updateByRoute_ plugins uc route model =
                     Id.init network b
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins aId
-                |> and (loadAddress plugins bId)
+                |> loadAddress plugins True aId
+                |> and (loadAddress plugins True bId)
                 |> and (selectAggEdge uc (AggEdge.initId aId bId))
                 |> and (setTracingMode AggregateTracingMode)
 
@@ -2824,19 +2832,23 @@ updateByPluginOutMsg plugins uc outMsgs model =
             ( model, [] )
 
 
-loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
-loadAddress plugins =
-    loadAddressWithPosition plugins Auto
+loadAddress : Plugins -> Bool -> Id -> Model -> ( Model, List Effect )
+loadAddress plugins fetchEgoNet =
+    loadAddressWithPosition plugins fetchEgoNet Auto
 
 
-loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition _ position id model =
+loadAddressWithPosition : Plugins -> Bool -> FindPosition -> Id -> Model -> ( Model, List Effect )
+loadAddressWithPosition _ fetchEgoNet position id model =
     let
         request =
             ( -- don't add the address here because it is not loaded yet
               --{ model | network = Network.addAddressWithPosition plugins position id model.network }
               model
-            , [ BrowserGotAddressData id position
+            , [ BrowserGotAddressData
+                    { id = id
+                    , pos = position
+                    , addEgoNet = fetchEgoNet
+                    }
                     |> Api.GetAddressEffect
                         { currency = Id.network id
                         , address = Id.id id
@@ -2862,10 +2874,10 @@ loadAddressWithPosition _ position id model =
         |> Maybe.withDefault request
 
 
-loadTxWithPosition : FindPosition -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
-loadTxWithPosition pos loadAddresses _ id model =
+loadTxWithPosition : FindPosition -> Bool -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
+loadTxWithPosition pos addEgoNet loadAddresses _ id model =
     ( model
-    , BrowserGotTx pos loadAddresses
+    , BrowserGotTx { pos = pos, loadAddresses = loadAddresses, addEgoNet = addEgoNet }
         |> Api.GetTxEffect
             { currency = Id.network id
             , txHash = Id.id id
@@ -2877,7 +2889,7 @@ loadTxWithPosition pos loadAddresses _ id model =
     )
 
 
-loadTx : Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
+loadTx : Bool -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
 loadTx =
     loadTxWithPosition Auto
 
@@ -3293,7 +3305,7 @@ addTx plugins _ anchorAddressId direction addressId tx model =
                         position =
                             NextTo ( direction, newTx.id )
                     in
-                    loadAddressWithPosition plugins position a newmodel
+                    loadAddressWithPosition plugins True position a newmodel
                 )
             |> Maybe.withDefault (n newmodel)
             |> and (autoLoadConversions plugins newTx)
@@ -3597,15 +3609,15 @@ autoLoadConversions _ tx model =
             )
 
 
-autoLoadAddresses : Plugins -> Tx -> Model -> ( Model, List Effect )
-autoLoadAddresses plugins tx model =
+autoLoadAddresses : Plugins -> Bool -> Tx -> Model -> ( Model, List Effect )
+autoLoadAddresses plugins addEgoNet tx model =
     let
         addresses =
             Tx.listAddressesForTx tx
                 |> List.map first
 
         aggAddressAdd addressId =
-            and (loadAddress plugins addressId)
+            and (loadAddress plugins addEgoNet addressId)
 
         src =
             if List.member Incoming addresses then
@@ -3733,4 +3745,4 @@ addOrRemoveTx plugins addressId txId model =
                         |> n
             )
         |> Maybe.Extra.withDefaultLazy
-            (\_ -> loadTx (addressId /= Nothing) plugins txId model)
+            (\_ -> loadTx True (addressId /= Nothing) plugins txId model)

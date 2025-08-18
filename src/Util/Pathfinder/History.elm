@@ -275,7 +275,7 @@ shallPushHistory plugins msg _ =
         AnimationFrameDeltaForMove _ ->
             False
 
-        BrowserGotAddressData _ _ _ ->
+        BrowserGotAddressData _ _ ->
             False
 
         BrowserGotClusterData _ _ ->
@@ -299,7 +299,7 @@ shallPushHistory plugins msg _ =
         BrowserGotActor _ _ ->
             False
 
-        BrowserGotTx _ _ _ ->
+        BrowserGotTx _ _ ->
             False
 
         BrowserGotConversions _ ->

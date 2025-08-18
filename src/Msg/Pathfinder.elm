@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingTxConfig, DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -20,6 +20,20 @@ import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
+
+
+type alias AddingAddressConfig =
+    { id : Id
+    , pos : FindPosition
+    , addEgoNet : Bool
+    }
+
+
+type alias AddingTxConfig =
+    { pos : FindPosition
+    , loadAddresses : Bool
+    , addEgoNet : Bool
+    }
 
 
 type Msg
@@ -49,7 +63,7 @@ type Msg
     | RelationDetailsMsg ( Id, Id ) RelationDetails.Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
-    | BrowserGotAddressData Id FindPosition Api.Data.Address
+    | BrowserGotAddressData AddingAddressConfig Api.Data.Address
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
@@ -60,7 +74,7 @@ type Msg
     | SearchMsg Search.Msg
     | NoOp
     | BrowserGotActor String Api.Data.Actor
-    | BrowserGotTx FindPosition Bool Api.Data.Tx
+    | BrowserGotTx AddingTxConfig Api.Data.Tx
     | BrowserGotConversions (List Api.Data.ExternalConversion)
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
