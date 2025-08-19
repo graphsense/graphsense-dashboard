@@ -88,7 +88,7 @@ import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
-import Util exposing (and, n)
+import Util exposing (and, n, removeLeading0x)
 import Util.Annotations as Annotations
 import Util.Data as Data
 import Util.Pathfinder.History as History
@@ -1299,22 +1299,69 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
 
-        BrowserGotConversions conversions ->
-            conversions
-                |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset)
+        BrowserGotConversionLoop txA conversion tx ->
+            let
+                ( ( ntx, nn ), newTx ) =
+                    case Dict.get (Tx.getTxId tx) model.network.txs of
+                        Just oldTx ->
+                            ( ( oldTx, model.network ), False )
+
+                        Nothing ->
+                            ( Network.addTxWithPosition model.config Auto tx model.network, True )
+
+                -- order txs such from and to, according to the which is the output leg (to) and which is the input leg (from)
+                ( inputTx, outputTx ) =
+                    if (txA.id |> Id.id |> removeLeading0x) == (conversion.fromAssetTransfer |> removeLeading0x) then
+                        ( txA, ntx )
+
+                    else
+                        ( ntx, txA )
+
+                nnn =
+                    nn |> Network.addConversion conversion inputTx outputTx
+            in
+            (model |> s_network nnn)
+                |> checkSelection uc
+                |> and
+                    (if newTx then
+                        autoLoadAddresses plugins False ntx
+
+                     else
+                        n
+                    )
+
+        BrowserGotConversions tx conversions ->
+            let
+                txid =
+                    Tx.getTxIdForTx tx
+
+                supportedConversions =
+                    conversions
+                        |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset)
+            in
+            supportedConversions
                 |> List.foldl
                     (\conversion ( aggm, effects ) ->
                         let
-                            toTransferId =
-                                Id.init conversion.toNetwork conversion.toAssetTransfer
+                            secondTransferId =
+                                if Id.network txid == conversion.toNetwork && Id.id txid == conversion.toAddress then
+                                    Id.init conversion.toNetwork conversion.toAssetTransfer
 
-                            fromTransferId =
-                                Id.init conversion.fromNetwork conversion.toAddress
+                                else
+                                    Id.init conversion.fromNetwork conversion.toAssetTransfer
 
-                            ( newModel, effs ) =
-                                loadTxWithPosition (NextTo ( Outgoing, fromTransferId )) False True plugins toTransferId aggm
+                            effs =
+                                BrowserGotConversionLoop tx conversion
+                                    |> Api.GetTxEffect
+                                        { currency = Id.network secondTransferId
+                                        , txHash = Id.id secondTransferId
+                                        , includeIo = True
+                                        , tokenTxId = Nothing
+                                        }
+                                    |> ApiEffect
+                                    |> List.singleton
                         in
-                        ( newModel, effects ++ effs )
+                        ( aggm, effects ++ effs )
                     )
                     ( model, [] )
 
@@ -3599,7 +3646,7 @@ autoLoadConversions _ tx model =
 
         Tx.Account atx ->
             ( model
-            , BrowserGotConversions
+            , BrowserGotConversions tx
                 |> Api.GetConversionEffect
                     { currency = atx.raw.network
                     , txHash = atx.raw.identifier
@@ -3616,8 +3663,8 @@ autoLoadAddresses plugins addEgoNet tx model =
             Tx.listAddressesForTx tx
                 |> List.map first
 
-        aggAddressAdd addressId =
-            and (loadAddress plugins addEgoNet addressId)
+        aggAddressAdd ( d, addressId ) =
+            and (loadAddressWithPosition plugins addEgoNet (NextTo ( d, addressId )) addressId)
 
         src =
             if List.member Incoming addresses then
@@ -3625,6 +3672,7 @@ autoLoadAddresses plugins addEgoNet tx model =
 
             else
                 getAddressForDirection tx Incoming Set.empty
+                    |> Maybe.map (Tuple.pair Incoming)
 
         dst =
             if List.member Outgoing addresses then
@@ -3636,6 +3684,7 @@ autoLoadAddresses plugins addEgoNet tx model =
                     |> List.map Id.id
                     |> Set.fromList
                     |> getAddressForDirection tx Outgoing
+                    |> Maybe.map (Tuple.pair Outgoing)
     in
     [ src, dst ]
         |> List.filterMap identity

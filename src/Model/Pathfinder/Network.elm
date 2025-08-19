@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAggEdge, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, getUniqueConversions, hasAddress, hasAggEdge, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -8,6 +8,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder.Address exposing (Address, getCoords, txsGetSet)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
+import Model.Pathfinder.Conversion exposing (Conversion)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData
@@ -22,6 +23,8 @@ type alias Network =
     , addressAggEdgeMap : Dict Id (Set ( Id, Id ))
     , animatedAddresses : Set Id
     , animatedTxs : Set Id
+    , conversions : Dict ( Id, Id ) (List Conversion)
+    , conversionsEdgeMap : Dict Id (Set ( Id, Id ))
     }
 
 
@@ -186,3 +189,11 @@ getRecentTxForAddress network direction addressId =
 isEmpty : Network -> Bool
 isEmpty { addresses, txs } =
     Dict.isEmpty addresses && Dict.isEmpty txs
+
+
+getUniqueConversions : Network -> List Conversion
+getUniqueConversions network =
+    network.conversions
+        |> Dict.values
+        |> List.concat
+        |> List.Extra.uniqueBy (\c -> c.raw.fromAssetTransfer ++ "|" ++ c.raw.toAssetTransfer)

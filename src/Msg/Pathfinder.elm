@@ -10,6 +10,7 @@ import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
+import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Search as Search
@@ -75,7 +76,8 @@ type Msg
     | NoOp
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx AddingTxConfig Api.Data.Tx
-    | BrowserGotConversions (List Api.Data.ExternalConversion)
+    | BrowserGotConversionLoop Tx Api.Data.ExternalConversion Api.Data.Tx
+    | BrowserGotConversions Tx (List Api.Data.ExternalConversion)
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
     | UserClickedAddressCheckboxInTable Id

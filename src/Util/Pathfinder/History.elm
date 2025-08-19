@@ -302,7 +302,10 @@ shallPushHistory plugins msg _ =
         BrowserGotTx _ _ ->
             False
 
-        BrowserGotConversions _ ->
+        BrowserGotConversionLoop _ _ _ ->
+            False
+
+        BrowserGotConversions _ _ ->
             False
 
         ChangedDisplaySettingsMsg _ ->

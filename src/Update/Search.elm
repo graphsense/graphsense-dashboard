@@ -9,7 +9,7 @@ import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import RecordSetter as Rs
 import Tuple exposing (pair)
-import Util exposing (n)
+import Util exposing (n, removeLeading0x)
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
@@ -96,15 +96,6 @@ filterByPrefix input result =
                 )
                 result.currencies
     }
-
-
-removeLeading0x : String -> String
-removeLeading0x s =
-    if String.startsWith "0x" s then
-        s |> String.dropLeft 2
-
-    else
-        s
 
 
 removeSubTxIndicators : String -> String
