@@ -7,18 +7,23 @@ import Model.Pathfinder.Id exposing (Id)
 
 updateAddress : Id -> (Address -> Address) -> Conversion -> Conversion
 updateAddress id upd conversion =
-    if id == conversion.inputId then
-        { conversion
-            | inputAddress = Maybe.map upd conversion.inputAddress
-        }
+    let
+        c1 =
+            if id == conversion.inputId then
+                { conversion
+                    | inputAddress = Maybe.map upd conversion.inputAddress
+                }
 
-    else if id == conversion.outputId then
-        { conversion
+            else
+                conversion
+    in
+    if id == conversion.outputId then
+        { c1
             | outputAddress = Maybe.map upd conversion.outputAddress
         }
 
     else
-        conversion
+        c1
 
 
 setAddress : Maybe Address -> Conversion -> Conversion
@@ -26,13 +31,18 @@ setAddress ma conversion =
     ma
         |> Maybe.map
             (\a ->
-                if a.id == conversion.inputId then
-                    { conversion | inputAddress = Just a }
+                let
+                    c1 =
+                        if a.id == conversion.inputId then
+                            { conversion | inputAddress = Just a }
 
-                else if a.id == conversion.outputId then
-                    { conversion | outputAddress = Just a }
+                        else
+                            conversion
+                in
+                if a.id == conversion.outputId then
+                    { c1 | outputAddress = Just a }
 
                 else
-                    conversion
+                    c1
             )
         |> Maybe.withDefault conversion

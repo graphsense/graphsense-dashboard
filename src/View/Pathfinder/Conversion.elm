@@ -7,6 +7,7 @@ import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Conversion exposing (Conversion)
 import Msg.Pathfinder exposing (Msg)
+import RecordSetter as Rs
 import Svg.PathD exposing (Segment(..), pathD)
 import Svg.Styled exposing (Svg, g, path)
 import Svg.Styled.Attributes as Svg exposing (css)
@@ -16,12 +17,6 @@ import Theme.Svg.GraphComponentsAggregatedTracing as Theme
 import Util.TextDimensions
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
-
-
-
--- view : Plugins -> View.Config -> Pathfinder.Config -> ExternalConversion -> Address -> Address-> Svg Msg
--- view plugins vc gc tx conversion =
---     Svg.g [] []
 
 
 type alias Dimensions =
@@ -66,8 +61,8 @@ calcDimensions _ _ aAddress bAddress =
     }
 
 
-view : View.Config -> Conversion -> Address -> Address -> Maybe (Svg Msg) -> Svg Msg
-view vc conversion inputAddress outputAddress maybeIcon =
+view : View.Config -> Conversion -> Address -> Address -> Svg Msg
+view vc conversion inputAddress outputAddress =
     let
         cr =
             conversion.raw
@@ -76,10 +71,10 @@ view vc conversion inputAddress outputAddress maybeIcon =
         labelText =
             case cr.conversionType of
                 Api.Data.ExternalConversionConversionTypeDexSwap ->
-                    Locale.string vc.locale "Swap" ++ " " ++ conversion.fromAsset ++ " / " ++ conversion.toAsset
+                    Locale.string vc.locale "Swap:" ++ " " ++ conversion.fromAsset ++ " / " ++ conversion.toAsset
 
                 Api.Data.ExternalConversionConversionTypeBridgeTx ->
-                    Locale.string vc.locale "Bridge Tx" ++ " " ++ cr.fromNetwork ++ "." ++ conversion.fromAsset ++ " / " ++ cr.toNetwork ++ "." ++ conversion.toAsset
+                    Locale.string vc.locale "Bridge TX:" ++ " " ++ (cr.fromNetwork |> String.toUpper) ++ "." ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "." ++ (conversion.toAsset |> String.toUpper)
 
         horizontalExtension =
             150.0
@@ -131,14 +126,11 @@ view vc conversion inputAddress outputAddress maybeIcon =
             (startY + 3 * control1Y + 3 * control2Y + endY) / 8
 
         -- Node properties
-        nodeRadius =
-            5
-
         iconSize =
-            nodeRadius * 0.8
+            GraphComponents.swapNode_details.renderedHeight
 
         labelOffset =
-            nodeRadius + (Util.TextDimensions.estimateTextWidth vc.characterDimensions labelText / 2) + 10
+            iconSize + (Util.TextDimensions.estimateTextWidth vc.characterDimensions labelText / 2) + 2
 
         -- Create simple curved path using single cubic Bézier
         pat =
@@ -150,37 +142,20 @@ view vc conversion inputAddress outputAddress maybeIcon =
         hl =
             conversion.hovered
 
-        -- Create the circular node
-        circularNode =
-            Svg.Styled.circle
-                [ Svg.cx (String.fromFloat nodeX)
-                , Svg.cy (String.fromFloat nodeY)
-                , Svg.r (String.fromFloat nodeRadius)
-                , css
-                    [ Css.property "fill" Colors.black0
-                    ]
-                ]
-                []
-
-        -- Icon in the center of the node
-        iconElement =
-            case maybeIcon of
-                Just icon ->
-                    Svg.Styled.g
+        swapNode =
+            GraphComponents.swapNodeWithAttributes
+                (GraphComponents.swapNodeAttributes
+                    |> Rs.s_root
                         [ Svg.transform
                             ("translate("
                                 ++ String.fromFloat (nodeX - iconSize / 2)
                                 ++ ","
                                 ++ String.fromFloat (nodeY - iconSize / 2)
-                                ++ ") scale("
-                                ++ String.fromFloat (iconSize / 16)
                                 ++ ")"
                             )
                         ]
-                        [ icon ]
-
-                Nothing ->
-                    Svg.Styled.g [] []
+                )
+                {}
 
         -- Text label below the node
         textLabel =
@@ -234,10 +209,7 @@ view vc conversion inputAddress outputAddress maybeIcon =
             []
 
         -- Circular node
-        , circularNode
-
-        -- Icon in center
-        , iconElement
+        , swapNode
 
         -- Text label
         , textLabel
@@ -250,4 +222,4 @@ view vc conversion inputAddress outputAddress maybeIcon =
 
 edge : View.Config -> Conversion -> Address -> Address -> Svg Msg
 edge vc conversion inputAddress outputAddress =
-    view vc conversion inputAddress outputAddress Nothing
+    view vc conversion inputAddress outputAddress
