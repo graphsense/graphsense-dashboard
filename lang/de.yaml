@@ -518,3 +518,4 @@ one more asset: ein weiterer Vermögenswert
 track funds: Werte verfolgen
 view network: Netzwerk einsehen
 Annotate transaction: Transaktion annotieren
+"loading Swaps and Briding events for Tx {0}: {1}": "Lade Swaps und Bridging-Ereignisse für Transaktion {0}: {1}"

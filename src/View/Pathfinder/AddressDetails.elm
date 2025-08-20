@@ -48,6 +48,7 @@ import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
+import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
@@ -303,6 +304,20 @@ neighborsDataTab vc model id viewState direction =
         }
 
 
+relatedAddressesSelectBoxConfig : ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
+relatedAddressesSelectBoxConfig =
+    { optionToLabel =
+        \x ->
+            case x of
+                AddressDetails.Pubkey ->
+                    "Crosschain addresses"
+
+                AddressDetails.Clusters ->
+                    "Cluster addresses"
+    , width = Nothing
+    }
+
+
 relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Entity -> Html AddressDetails.Msg
 relatedAddressesDataTab vc model _ viewState cluster =
     let
@@ -325,29 +340,14 @@ relatedAddressesDataTab vc model _ viewState cluster =
     in
     dataTab
         { title =
-            cluster
-                |> RemoteData.unpack
-                    (\_ ->
-                        SidePanelComponents.sidePanelListHeaderTitleWithAttributes
-                            (SidePanelComponents.sidePanelListHeaderTitleAttributes
-                                |> Rs.s_root [ spread ]
-                            )
-                            { root =
-                                { label = label
-                                }
-                            }
-                    )
-                    (\_ ->
-                        SidePanelComponents.sidePanelListHeaderTitleWithNumberWithAttributes
-                            (SidePanelComponents.sidePanelListHeaderTitleWithNumberAttributes
-                                |> Rs.s_root [ spread ]
-                            )
-                            { root =
-                                { label = label
-                                , number = Locale.int vc.locale noRelatedAddresses
-                                }
-                            }
-                    )
+            SidePanelComponents.sidePanelListHeaderTitleWithAttributes
+                (SidePanelComponents.sidePanelListHeaderTitleAttributes
+                    |> Rs.s_root [ spread ]
+                )
+                { root =
+                    { label = label
+                    }
+                }
         , disabled = disabled
         , content =
             if not viewState.relatedAddressesTableOpen || disabled then
@@ -356,64 +356,78 @@ relatedAddressesDataTab vc model _ viewState cluster =
             else
                 Just
                     (div []
-                        [ case viewState.relatedAddresses of
-                            RemoteData.Failure _ ->
-                                Html.text "error"
+                        [ if not (Data.isAccountLike (Id.network viewState.address.id)) then
+                            -- Only show select box if we have clusters or pubkey relations
+                            (ThemedSelectBox.view relatedAddressesSelectBoxConfig
+                                viewState.relatedAddressesVisibleTableSelectBox
+                                viewState.relatedAddressesVisibleTable
+                                |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
+                            )
+                                |> List.singleton
+                                |> div [ css [ Css.margin (Css.px 5) ] ]
 
-                            RemoteData.Loading ->
-                                loadingSpinner vc Css.View.loadingSpinner
+                          else
+                            none
+                        , case viewState.relatedAddressesVisibleTable of
+                            AddressDetails.Clusters ->
+                                case viewState.relatedAddresses of
+                                    RemoteData.Failure _ ->
+                                        Html.text "error"
 
-                            RemoteData.NotAsked ->
-                                none
+                                    RemoteData.Loading ->
+                                        loadingSpinner vc Css.View.loadingSpinner
 
-                            RemoteData.Success ra ->
-                                let
-                                    ratc =
-                                        { isChecked = flip Network.hasAddress model.network
-                                        , hasTags = getHavingTags model
-                                        , coinCode = assetFromBase <| Id.network viewState.address.id
-                                        }
-                                in
-                                div
-                                    [ css <|
-                                        SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
-                                            ++ fullWidth
-                                    ]
-                                    [ Html.text (Locale.string vc.locale "Cluster addresses")
-                                    , PagedTable.pagedTableView vc
-                                        [ css fullWidth ]
-                                        (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
-                                        (RelatedAddressesTable.getTable ra)
-                                        AddressDetails.RelatedAddressesTablePagedTableMsg
-                                    ]
-                        , case viewState.relatedAddressesPubkey of
-                            RemoteData.Failure _ ->
-                                Html.text "error"
+                                    RemoteData.NotAsked ->
+                                        none
 
-                            RemoteData.Loading ->
-                                loadingSpinner vc Css.View.loadingSpinner
+                                    RemoteData.Success ra ->
+                                        let
+                                            ratc =
+                                                { isChecked = flip Network.hasAddress model.network
+                                                , hasTags = getHavingTags model
+                                                , coinCode = assetFromBase <| Id.network viewState.address.id
+                                                }
+                                        in
+                                        div
+                                            [ css <|
+                                                SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                                                    ++ fullWidth
+                                            ]
+                                            [ PagedTable.pagedTableView vc
+                                                [ css fullWidth ]
+                                                (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
+                                                (RelatedAddressesTable.getTable ra)
+                                                AddressDetails.RelatedAddressesTablePagedTableMsg
+                                            ]
 
-                            RemoteData.NotAsked ->
-                                none
+                            AddressDetails.Pubkey ->
+                                case viewState.relatedAddressesPubkey of
+                                    RemoteData.Failure _ ->
+                                        Html.text "error"
 
-                            RemoteData.Success ra ->
-                                let
-                                    ratc =
-                                        { isChecked = flip Network.hasAddress model.network
-                                        }
-                                in
-                                div
-                                    [ css <|
-                                        SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
-                                            ++ fullWidth
-                                    ]
-                                    [ Html.text (Locale.string vc.locale "Crosschain addresses")
-                                    , PagedTable.pagedTableView vc
-                                        [ css fullWidth ]
-                                        (RelatedAddressesPubkeyTable.config Css.Table.styles vc ratc ra)
-                                        (RelatedAddressesPubkeyTable.getTable ra)
-                                        AddressDetails.RelatedAddressesPubkeyTablePagedTableMsg
-                                    ]
+                                    RemoteData.Loading ->
+                                        loadingSpinner vc Css.View.loadingSpinner
+
+                                    RemoteData.NotAsked ->
+                                        none
+
+                                    RemoteData.Success ra ->
+                                        let
+                                            ratc =
+                                                { isChecked = flip Network.hasAddress model.network
+                                                }
+                                        in
+                                        div
+                                            [ css <|
+                                                SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
+                                                    ++ fullWidth
+                                            ]
+                                            [ PagedTable.pagedTableView vc
+                                                [ css fullWidth ]
+                                                (RelatedAddressesPubkeyTable.config Css.Table.styles vc ratc ra)
+                                                (RelatedAddressesPubkeyTable.getTable ra)
+                                                AddressDetails.RelatedAddressesPubkeyTablePagedTableMsg
+                                            ]
                         ]
                     )
         , onClick = AddressDetails.UserClickedToggleRelatedAddressesTable

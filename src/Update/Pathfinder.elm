@@ -364,14 +364,10 @@ updateByMsg plugins uc msg model =
         UserPressedNormalKey _ ->
             n model
 
-        BrowserGotAddressData { id, pos, addEgoNet } data ->
+        BrowserGotAddressData { id, pos, autoLinkTxInTraceMode } data ->
             let
                 condFetchEgonet =
-                    if addEgoNet then
-                        fetchEgonet id data
-
-                    else
-                        n
+                    fetchEgonet id autoLinkTxInTraceMode data
             in
             if pos == Auto && not (Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
                 let
@@ -389,7 +385,7 @@ updateByMsg plugins uc msg model =
                 browserGotAddressData uc plugins id pos data model
                     |> and condFetchEgonet
 
-        BrowserGotRelationsToVisibleNeighbors id dir requestIds { neighbors } ->
+        BrowserGotRelationsToVisibleNeighbors { id, dir, requestIds, autoLinkInTraceMode } { neighbors } ->
             let
                 neighborIds =
                     neighbors
@@ -528,7 +524,7 @@ updateByMsg plugins uc msg model =
                                 getNextTxEffects newModel2.network
                                     addressId
                                     (Direction.flip dir)
-                                    { addBetweenLinks = loadBetweenLinks }
+                                    { addBetweenLinks = autoLinkInTraceMode && loadBetweenLinks }
                                     (Just id)
 
                             else
@@ -1365,7 +1361,7 @@ updateByMsg plugins uc msg model =
                     )
                     ( model, [] )
 
-        BrowserGotTx { pos, loadAddresses, addEgoNet } tx ->
+        BrowserGotTx { pos, loadAddresses, autoLinkInTraceMode } tx ->
             if Dict.member (Tx.getTxId tx) model.network.txs then
                 n model
 
@@ -1378,7 +1374,7 @@ updateByMsg plugins uc msg model =
                     |> checkSelection uc
                     |> and
                         (if loadAddresses then
-                            autoLoadAddresses plugins addEgoNet newTx
+                            autoLoadAddresses plugins autoLinkInTraceMode newTx
 
                          else
                             n
@@ -1753,6 +1749,15 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
+        UserClickedConversionEdge id conversion ->
+            n model
+
+        UserMovesMouseOverConversionEdge id conversion ->
+            n model
+
+        UserMovesMouseOutConversionEdge id conversion ->
+            n model
+
         UserClickedAggEdge id ->
             ( model
             , Route.aggEdgeRoute
@@ -1917,8 +1922,8 @@ getRelationDetails model id =
             Nothing
 
 
-fetchEgonet : Id -> Api.Data.Address -> Model -> ( Model, List Effect )
-fetchEgonet id data model =
+fetchEgonet : Id -> Bool -> Api.Data.Address -> Model -> ( Model, List Effect )
+fetchEgonet id autoLinkInTraceMode data model =
     let
         ( outOnlyIds, incOnlyIds ) =
             model.network.addresses
@@ -1982,18 +1987,18 @@ fetchEgonet id data model =
         ( CheckingNeighbors.initAddress data outOnlyIds incOnlyIds model.checkingNeighbors
             |> flip s_checkingNeighbors model
             |> s_network nw2
-        , getRelations id Outgoing outOnlyIds
-            ++ getRelations id Incoming incOnlyIds
+        , getRelations id Outgoing autoLinkInTraceMode outOnlyIds
+            ++ getRelations id Incoming autoLinkInTraceMode incOnlyIds
         )
 
 
-getRelations : Id -> Direction -> List Id -> List Effect
-getRelations id dir onlyIds =
+getRelations : Id -> Direction -> Bool -> List Id -> List Effect
+getRelations id dir autoLinkInTraceMode onlyIds =
     if List.isEmpty onlyIds then
         []
 
     else
-        BrowserGotRelationsToVisibleNeighbors id dir onlyIds
+        BrowserGotRelationsToVisibleNeighbors { id = id, dir = dir, requestIds = onlyIds, autoLinkInTraceMode = autoLinkInTraceMode }
             |> Api.GetAddressNeighborsEffect
                 { currency = Id.network id
                 , address = Id.id id
@@ -2282,7 +2287,7 @@ userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
             ( model.network
                 |> Network.upsertAggEdgeData model.config anchorId dir data
                 |> flip s_network model
-            , BrowserGotRelationsToVisibleNeighbors anchorId flippedDir [ id ]
+            , BrowserGotRelationsToVisibleNeighbors { id = anchorId, dir = flippedDir, requestIds = [ id ], autoLinkInTraceMode = True }
                 |> Api.GetAddressNeighborsEffect
                     { currency = Id.network anchorId
                     , address = Id.id anchorId
@@ -2880,12 +2885,12 @@ updateByPluginOutMsg plugins uc outMsgs model =
 
 
 loadAddress : Plugins -> Bool -> Id -> Model -> ( Model, List Effect )
-loadAddress plugins fetchEgoNet =
-    loadAddressWithPosition plugins fetchEgoNet Auto
+loadAddress plugins autoLinkTxInTraceMode =
+    loadAddressWithPosition plugins autoLinkTxInTraceMode Auto
 
 
 loadAddressWithPosition : Plugins -> Bool -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition _ fetchEgoNet position id model =
+loadAddressWithPosition _ autoLinkTxInTraceMode position id model =
     let
         request =
             ( -- don't add the address here because it is not loaded yet
@@ -2894,7 +2899,7 @@ loadAddressWithPosition _ fetchEgoNet position id model =
             , [ BrowserGotAddressData
                     { id = id
                     , pos = position
-                    , addEgoNet = fetchEgoNet
+                    , autoLinkTxInTraceMode = autoLinkTxInTraceMode
                     }
                     |> Api.GetAddressEffect
                         { currency = Id.network id
@@ -2922,9 +2927,9 @@ loadAddressWithPosition _ fetchEgoNet position id model =
 
 
 loadTxWithPosition : FindPosition -> Bool -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
-loadTxWithPosition pos addEgoNet loadAddresses _ id model =
+loadTxWithPosition pos autoLinkInTraceMode loadAddresses _ id model =
     ( model
-    , BrowserGotTx { pos = pos, loadAddresses = loadAddresses, addEgoNet = addEgoNet }
+    , BrowserGotTx { pos = pos, loadAddresses = loadAddresses, autoLinkInTraceMode = autoLinkInTraceMode }
         |> Api.GetTxEffect
             { currency = Id.network id
             , txHash = Id.id id
@@ -3613,8 +3618,8 @@ fromDeserialized plugins deserialized model =
                             onlyIds =
                                 parent.b :: List.map .b children
                         in
-                        getRelations parent.a Outgoing onlyIds
-                            ++ getRelations parent.a Incoming onlyIds
+                        getRelations parent.a Outgoing False onlyIds
+                            ++ getRelations parent.a Incoming False onlyIds
                     )
 
         ( newAndEmptyPathfinder, _ ) =
@@ -3657,14 +3662,14 @@ autoLoadConversions _ tx model =
 
 
 autoLoadAddresses : Plugins -> Bool -> Tx -> Model -> ( Model, List Effect )
-autoLoadAddresses plugins addEgoNet tx model =
+autoLoadAddresses plugins autoLinkInTraceMode tx model =
     let
         addresses =
             Tx.listAddressesForTx tx
                 |> List.map first
 
         aggAddressAdd ( d, addressId ) =
-            and (loadAddressWithPosition plugins addEgoNet (NextTo ( d, addressId )) addressId)
+            and (loadAddressWithPosition plugins autoLinkInTraceMode (NextTo ( d, addressId )) addressId)
 
         src =
             if List.member Incoming addresses then

@@ -1,4 +1,4 @@
-module Msg.Pathfinder.AddressDetails exposing (Msg(..))
+module Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..), relatedAddressTypeOptions)
 
 import Api.Data
 import DurationDatePicker
@@ -9,6 +9,18 @@ import Table
 import Time
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
+
+
+type RelatedAddressTypes
+    = Pubkey
+    | Clusters
+
+
+relatedAddressTypeOptions : List RelatedAddressTypes
+relatedAddressTypeOptions =
+    [ Pubkey
+    , Clusters
+    ]
 
 
 type Msg
@@ -56,3 +68,4 @@ type Msg
     | BrowserGotAddressesForTags (Maybe String) (List Api.Data.Address)
     | BrowserGotPubkeyRelations Api.Data.RelatedAddresses
     | TooltipMsg Tag.Msg
+    | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)

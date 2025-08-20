@@ -68,17 +68,29 @@ view vc conversion inputAddress outputAddress =
             conversion.raw
 
         -- Length of horizontal extension from nodes
-        labelText =
+        labelTextLine1 =
             case cr.conversionType of
                 Api.Data.ExternalConversionConversionTypeDexSwap ->
-                    Locale.string vc.locale "Swap:" ++ " " ++ conversion.fromAsset ++ " / " ++ conversion.toAsset
+                    Locale.string vc.locale "Swap:"
 
                 Api.Data.ExternalConversionConversionTypeBridgeTx ->
-                    Locale.string vc.locale "Bridge TX:" ++ " " ++ (cr.fromNetwork |> String.toUpper) ++ "." ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "." ++ (conversion.toAsset |> String.toUpper)
+                    Locale.string vc.locale "Bridge TX:"
+
+        labelTextLine2 =
+            case cr.conversionType of
+                Api.Data.ExternalConversionConversionTypeDexSwap ->
+                    conversion.fromAsset ++ " / " ++ conversion.toAsset
+
+                Api.Data.ExternalConversionConversionTypeBridgeTx ->
+                    (cr.fromNetwork |> String.toUpper) ++ "." ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "." ++ (conversion.toAsset |> String.toUpper)
 
         horizontalExtension =
             150.0
 
+        loopSize =
+            30.0
+
+        -- Size of the loop when start == end
         { left, right } =
             calcDimensions vc conversion inputAddress outputAddress
 
@@ -101,43 +113,82 @@ view vc conversion inputAddress outputAddress =
         endY =
             right.y * unit
 
-        -- Calculate control points for cubic Bézier curve
-        -- First control point - extend horizontally to the right from start
-        control1X =
-            startX + horizontalExtension
+        -- Check if start and end points are the same
+        isSamePoint =
+            abs (startX - endX) < 1.0 && abs (startY - endY) < 1.0
 
-        control1Y =
-            startY
+        -- Create path - either loop or curve
+        pat =
+            if isSamePoint then
+                -- Create a simple circle loop
+                let
+                    circleRadius =
+                        loopSize / 2
+                in
+                pathD
+                    [ M ( startX, startY ) -- Start at the node
 
-        -- Second control point - extend horizontally to the right from end, with curvature offset
-        control2X =
-            endX + horizontalExtension
+                    -- Create a circle using two arc commands
+                    , A ( circleRadius, circleRadius ) 0 False True ( startX + 2 * circleRadius, startY ) -- First half of circle
+                    , A ( circleRadius, circleRadius ) 0 False True ( startX, startY ) -- Second half of circle
+                    ]
 
-        control2Y =
-            endY
+            else
+                -- Original curve path
+                let
+                    -- Calculate control points for cubic Bézier curve
+                    -- First control point - extend horizontally to the right from start
+                    control1X =
+                        startX + horizontalExtension
 
-        --+ curvature  -- Add curvature to bend the line
-        -- Calculate position for the circular node (at the curve's peak)
-        -- For cubic Bézier at t=0.5: (P0 + 3*P1 + 3*P2 + P3) / 8
-        nodeX =
-            (startX + 3 * control1X + 3 * control2X + endX) / 8
+                    control1Y =
+                        startY
 
-        nodeY =
-            (startY + 3 * control1Y + 3 * control2Y + endY) / 8
+                    -- Second control point - extend horizontally to the right from end, with curvature offset
+                    control2X =
+                        endX + horizontalExtension
+
+                    control2Y =
+                        endY
+                in
+                pathD
+                    [ M ( startX, startY ) -- Start at node
+                    , C ( control1X, control1Y ) ( control2X, control2Y ) ( endX, endY ) -- Single curve
+                    ]
+
+        -- Calculate node position
+        ( nodeX, nodeY ) =
+            if isSamePoint then
+                -- Position node at the same height as start, shifted by diameter
+                let
+                    circleRadius =
+                        loopSize / 2
+                in
+                ( startX + 2 * circleRadius, startY )
+                -- Same Y, shifted X by diameter
+
+            else
+                -- Original calculation for curve
+                let
+                    control1X =
+                        startX + horizontalExtension
+
+                    control1Y =
+                        startY
+
+                    control2X =
+                        endX + horizontalExtension
+
+                    control2Y =
+                        endY
+                in
+                ( (startX + 3 * control1X + 3 * control2X + endX) / 8
+                , (startY + 3 * control1Y + 3 * control2Y + endY) / 8
+                )
 
         -- Node properties
         iconSize =
             GraphComponents.swapNode_details.renderedHeight
-
-        labelOffset =
-            iconSize + (Util.TextDimensions.estimateTextWidth vc.characterDimensions labelText / 2) + 2
-
-        -- Create simple curved path using single cubic Bézier
-        pat =
-            pathD
-                [ M ( startX, startY ) -- Start at node
-                , C ( control1X, control1Y ) ( control2X, control2Y ) ( endX, endY ) -- Single curve
-                ]
 
         hl =
             conversion.hovered
@@ -158,26 +209,48 @@ view vc conversion inputAddress outputAddress =
                 {}
 
         -- Text label below the node
+        labelOffsetLine1 =
+            iconSize + (Util.TextDimensions.estimateTextWidth vc.characterDimensions labelTextLine1 / 2) + 2
+
+        labelOffsetLine2 =
+            iconSize + (Util.TextDimensions.estimateTextWidth vc.characterDimensions labelTextLine2 / 2) + 2
+
+        lableOffset =
+            max labelOffsetLine1 labelOffsetLine2
+
         textLabel =
-            if String.isEmpty labelText then
+            if String.isEmpty labelTextLine1 then
                 Svg.Styled.g [] []
 
             else
-                Svg.Styled.text_
-                    [ Svg.x (String.fromFloat (nodeX + labelOffset))
-                    , Svg.y (String.fromFloat nodeY)
-                    , Svg.textAnchor "middle"
-                    , Svg.dominantBaseline "middle"
-                    , css
-                        [ Css.property "fill" Colors.black0
-                        , Css.property "user-select" "none"
+                Svg.Styled.g []
+                    [ Svg.Styled.text_
+                        [ Svg.x (String.fromFloat (nodeX + lableOffset))
+                        , Svg.y (String.fromFloat (nodeY - 7))
+                        , Svg.textAnchor "middle"
+                        , Svg.dominantBaseline "middle"
+                        , css
+                            [ Css.property "fill" Colors.black0
+                            , Css.property "user-select" "none"
+                            ]
                         ]
+                        [ Svg.Styled.text labelTextLine1 ]
+                    , Svg.Styled.text_
+                        [ Svg.x (String.fromFloat (nodeX + lableOffset))
+                        , Svg.y (String.fromFloat (nodeY + 7))
+                        , Svg.textAnchor "middle"
+                        , Svg.dominantBaseline "middle"
+                        , css
+                            [ Css.property "fill" Colors.black0
+                            , Css.property "user-select" "none"
+                            ]
+                        ]
+                        [ Svg.Styled.text labelTextLine2 ]
                     ]
-                    [ Svg.Styled.text labelText ]
     in
     g
         []
-        [ -- Simple curved path
+        [ -- Simple curved path or loop
           path
             [ Svg.d pat
             , Svg.strokeDasharray "5, 5"

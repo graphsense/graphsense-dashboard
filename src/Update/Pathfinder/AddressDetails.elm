@@ -25,7 +25,7 @@ import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPub
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder as Pathfinder
-import Msg.Pathfinder.AddressDetails exposing (Msg(..))
+import Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..))
 import PagedTable
 import RecordSetter exposing (..)
 import RemoteData exposing (WebData)
@@ -514,6 +514,23 @@ update uc msg model =
         NoOp ->
             n model
 
+        RelatedAddressesVisibleTableSelectBoxMsg ms ->
+            let
+                ( newSelect, outMsg ) =
+                    ThemedSelectBox.update ms model.relatedAddressesVisibleTableSelectBox
+            in
+            n
+                { model
+                    | relatedAddressesVisibleTableSelectBox = newSelect
+                    , relatedAddressesVisibleTable =
+                        case outMsg of
+                            ThemedSelectBox.Selected table ->
+                                table
+
+                            _ ->
+                                model.relatedAddressesVisibleTable
+                }
+
         BrowserGotEntityAddressTagsForRelatedAddressesTable currency tags ->
             let
                 existingAddresses =
@@ -655,6 +672,12 @@ browserGotClusterData addressId entity model =
     in
     ( { model
         | relatedAddresses = RemoteData.Success relatedAddresses
+        , relatedAddressesVisibleTable =
+            if entity.noAddresses > 1 then
+                Clusters
+
+            else
+                Pubkey
       }
     , []
     )

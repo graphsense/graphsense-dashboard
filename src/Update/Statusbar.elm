@@ -248,8 +248,11 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
-        Api.GetConversionEffect _ _ ->
-            Nothing
+        Api.GetConversionEffect { currency, txHash } _ ->
+            ( "loading Swaps and Briding events for Tx {0}: {1}"
+            , [ currency |> String.toUpper, txHash ]
+            )
+                |> Just
 
         Api.ListRelatedAddressesEffect _ _ ->
             Nothing

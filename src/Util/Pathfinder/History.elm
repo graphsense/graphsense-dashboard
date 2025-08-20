@@ -81,6 +81,9 @@ shallPushHistory plugins msg _ =
 
         AddressDetailsMsg _ am ->
             case am of
+                AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg _ ->
+                    False
+
                 AddressDetails.RelatedAddressesPubkeyTablePagedTableMsg _ ->
                     False
 
@@ -344,6 +347,12 @@ shallPushHistory plugins msg _ =
         UserMovesMouseOverAggEdge _ ->
             False
 
+        UserMovesMouseOutConversionEdge _ _ ->
+            False
+
+        UserMovesMouseOverConversionEdge _ _ ->
+            False
+
         UserMovesMouseOutAggEdge _ ->
             False
 
@@ -437,11 +446,14 @@ shallPushHistory plugins msg _ =
         UserClickedToggleTracingMode ->
             False
 
-        BrowserGotRelationsToVisibleNeighbors _ _ _ _ ->
+        BrowserGotRelationsToVisibleNeighbors _ _ ->
             False
 
         InternalPathfinderAddedAddress _ ->
             False
 
         UserClickedAggEdge _ ->
+            False
+
+        UserClickedConversionEdge _ _ ->
             False

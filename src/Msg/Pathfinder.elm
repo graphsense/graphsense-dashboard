@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingTxConfig, DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -7,6 +7,7 @@ import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
+import Model.Pathfinder.Conversion exposing (Conversion)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
@@ -26,14 +27,22 @@ import Util.Tag exposing (TooltipContext)
 type alias AddingAddressConfig =
     { id : Id
     , pos : FindPosition
-    , addEgoNet : Bool
+    , autoLinkTxInTraceMode : Bool
     }
 
 
 type alias AddingTxConfig =
     { pos : FindPosition
     , loadAddresses : Bool
-    , addEgoNet : Bool
+    , autoLinkInTraceMode : Bool
+    }
+
+
+type alias AddingRelationsConfig =
+    { id : Id
+    , dir : Direction
+    , requestIds : List Id
+    , autoLinkInTraceMode : Bool
     }
 
 
@@ -118,11 +127,14 @@ type Msg
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
     | UserClickedToggleTracingMode
-    | BrowserGotRelationsToVisibleNeighbors Id Direction (List Id) Api.Data.NeighborAddresses
+    | BrowserGotRelationsToVisibleNeighbors AddingRelationsConfig Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id
     | UserClickedAggEdge ( Id, Id )
     | UserMovesMouseOverAggEdge ( Id, Id )
     | UserMovesMouseOutAggEdge ( Id, Id )
+    | UserClickedConversionEdge ( Id, Id ) Conversion
+    | UserMovesMouseOverConversionEdge ( Id, Id ) Conversion
+    | UserMovesMouseOutConversionEdge ( Id, Id ) Conversion
 
 
 type alias TextTooltipConfig =
