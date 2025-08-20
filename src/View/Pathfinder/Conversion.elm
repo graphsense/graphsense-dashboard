@@ -1,5 +1,6 @@
-module View.Pathfinder.Conversion exposing (edge)
+module View.Pathfinder.Conversion exposing (edge, view)
 
+import Api.Data
 import Config.View as View
 import Css
 import Model.Pathfinder exposing (unit)
@@ -12,7 +13,8 @@ import Svg.Styled.Attributes as Svg exposing (css)
 import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.GraphComponentsAggregatedTracing as Theme
-import Util.TextDimensions as TextDimensions
+import Util.TextDimensions
+import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
 
 
@@ -25,24 +27,14 @@ import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
 type alias Dimensions =
     { x : Float
     , y : Float
-    , totalWidth : Float
-    , leftLabelWidth : Float
-    , rightLabelWidth : Float
-    , leftLabel : String
-    , rightLabel : String
-    , leftVisible : Bool
-    , rightVisible : Bool
     , left : Pos
     , right : Pos
     }
 
 
 calcDimensions : View.Config -> Conversion -> Address -> Address -> Dimensions
-calcDimensions vc _ aAddress bAddress =
+calcDimensions _ _ aAddress bAddress =
     let
-        padding =
-            15
-
         -- Padding for the labels
         aPos =
             aAddress |> toPosition
@@ -66,61 +58,33 @@ calcDimensions vc _ aAddress bAddress =
                 { left = bPos
                 , right = aPos
                 }
-
-        leftLabel =
-            "test 2"
-
-        leftValueVisible =
-            not (String.isEmpty leftLabel)
-
-        rightValueVisible =
-            not (String.isEmpty rightLabel)
-
-        rightLabel =
-            "test"
-
-        leftLabelWidth =
-            TextDimensions.estimateTextWidth vc.characterDimensions leftLabel
-                + (if String.isEmpty leftLabel then
-                    0
-
-                   else
-                    padding
-                  )
-
-        rightLabelWidth =
-            TextDimensions.estimateTextWidth vc.characterDimensions rightLabel
-                + (if String.isEmpty rightLabel then
-                    0
-
-                   else
-                    padding
-                  )
-
-        totalWidth =
-            Theme.aggregatedLabel_details.width
-                - Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
-                + leftLabelWidth
-                + rightLabelWidth
     in
     { x = x * unit
     , y = y * unit
-    , totalWidth = totalWidth
-    , leftLabelWidth = leftLabelWidth
-    , rightLabelWidth = rightLabelWidth
-    , leftLabel = leftLabel
-    , rightLabel = rightLabel
-    , leftVisible = leftValueVisible
-    , rightVisible = rightValueVisible
     , left = left
     , right = right
     }
 
 
-edge : View.Config -> Conversion -> Address -> Address -> Svg Msg
-edge vc conversion inputAddress outputAddress =
+view : View.Config -> Conversion -> Address -> Address -> Maybe (Svg Msg) -> Svg Msg
+view vc conversion inputAddress outputAddress maybeIcon =
     let
-        { left, right, totalWidth, x, y } =
+        cr =
+            conversion.raw
+
+        -- Length of horizontal extension from nodes
+        labelText =
+            case cr.conversionType of
+                Api.Data.ExternalConversionConversionTypeDexSwap ->
+                    Locale.string vc.locale "Swap" ++ " " ++ conversion.fromAsset ++ " / " ++ conversion.toAsset
+
+                Api.Data.ExternalConversionConversionTypeBridgeTx ->
+                    Locale.string vc.locale "Bridge Tx" ++ " " ++ cr.fromNetwork ++ "." ++ conversion.fromAsset ++ " / " ++ cr.toNetwork ++ "." ++ conversion.toAsset
+
+        horizontalExtension =
+            150.0
+
+        { left, right } =
             calcDimensions vc conversion inputAddress outputAddress
 
         fd =
@@ -129,75 +93,119 @@ edge vc conversion inputAddress outputAddress =
         rad =
             fd.width / 2 + fd.strokeWidth
 
-        ax_ =
+        -- Always attach to the right side of both nodes
+        startX =
             left.x * unit + rad
 
-        ax =
-            if ax_ > lx then
-                ax_ - 2 * rad
-
-            else
-                ax_
-
-        ay =
+        startY =
             left.y * unit
 
-        bx_ =
-            right.x * unit - rad
+        endX =
+            right.x * unit + rad
 
-        bx =
-            if bx_ < rx then
-                bx_ + 2 * rad
-
-            else
-                bx_
-
-        by =
+        endY =
             right.y * unit
 
-        lx =
-            x - totalWidth / 2
+        -- Calculate control points for cubic Bézier curve
+        -- First control point - extend horizontally to the right from start
+        control1X =
+            startX + horizontalExtension
 
-        rx =
-            x + totalWidth / 2
+        control1Y =
+            startY
 
-        maxDiff =
+        -- Second control point - extend horizontally to the right from end, with curvature offset
+        control2X =
+            endX + horizontalExtension
+
+        control2Y =
+            endY
+
+        --+ curvature  -- Add curvature to bend the line
+        -- Calculate position for the circular node (at the curve's peak)
+        -- For cubic Bézier at t=0.5: (P0 + 3*P1 + 3*P2 + P3) / 8
+        nodeX =
+            (startX + 3 * control1X + 3 * control2X + endX) / 8
+
+        nodeY =
+            (startY + 3 * control1Y + 3 * control2Y + endY) / 8
+
+        -- Node properties
+        nodeRadius =
             5
 
-        diffr =
-            bx
-                - rx
-                |> min 0
+        iconSize =
+            nodeRadius * 0.8
 
-        diffrCap =
-            diffr
-                |> max (negate maxDiff)
+        labelOffset =
+            nodeRadius + (Util.TextDimensions.estimateTextWidth vc.characterDimensions labelText / 2) + 10
 
+        -- Create simple curved path using single cubic Bézier
         pat =
             pathD
-                [ M ( ax, ay )
-
-                -- , C ( ax + (lx - ax) / 3 - diffl, y ) ( lx - difflCap, y ) ( lx, y )
-                -- , L ( rx, y )
-                , C ( rx - diffrCap, y ) ( rx + (bx - rx) / 3 * 2 - diffr, y ) ( bx, by )
+                [ M ( startX, startY ) -- Start at node
+                , C ( control1X, control1Y ) ( control2X, control2Y ) ( endX, endY ) -- Single curve
                 ]
 
         hl =
             conversion.hovered
+
+        -- Create the circular node
+        circularNode =
+            Svg.Styled.circle
+                [ Svg.cx (String.fromFloat nodeX)
+                , Svg.cy (String.fromFloat nodeY)
+                , Svg.r (String.fromFloat nodeRadius)
+                , css
+                    [ Css.property "fill" Colors.black0
+                    ]
+                ]
+                []
+
+        -- Icon in the center of the node
+        iconElement =
+            case maybeIcon of
+                Just icon ->
+                    Svg.Styled.g
+                        [ Svg.transform
+                            ("translate("
+                                ++ String.fromFloat (nodeX - iconSize / 2)
+                                ++ ","
+                                ++ String.fromFloat (nodeY - iconSize / 2)
+                                ++ ") scale("
+                                ++ String.fromFloat (iconSize / 16)
+                                ++ ")"
+                            )
+                        ]
+                        [ icon ]
+
+                Nothing ->
+                    Svg.Styled.g [] []
+
+        -- Text label below the node
+        textLabel =
+            if String.isEmpty labelText then
+                Svg.Styled.g [] []
+
+            else
+                Svg.Styled.text_
+                    [ Svg.x (String.fromFloat (nodeX + labelOffset))
+                    , Svg.y (String.fromFloat nodeY)
+                    , Svg.textAnchor "middle"
+                    , Svg.dominantBaseline "middle"
+                    , css
+                        [ Css.property "fill" Colors.black0
+                        , Css.property "user-select" "none"
+                        ]
+                    ]
+                    [ Svg.Styled.text labelText ]
     in
     g
-        [--     id
-         --     |> UserClickedAggEdge
-         --     |> onClickWithStop
-         -- , id
-         --     |> UserMovesMouseOutAggEdge
-         --     |> onMouseLeave
-         -- , id
-         --     |> UserMovesMouseOverAggEdge
-         --     |> onMouseOver
-        ]
-        [ path
+        []
+        [ -- Simple curved path
+          path
             [ Svg.d pat
+            , Svg.strokeDasharray "5, 5"
             , css Theme.aggregatedLinkHighlightLine_details.styles
             , css
                 [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkHighlightLine_details.strokeWidth
@@ -208,19 +216,38 @@ edge vc conversion inputAddress outputAddress =
                     else
                         "transparent"
                 , Css.property "fill" "none" |> Css.important
-                , Css.property "stroke-linecap" "square"
+                , Css.property "stroke-linecap" "round"
                 ]
             ]
             []
         , path
             [ Svg.d pat
+            , Svg.strokeDasharray "5, 5"
             , css Theme.aggregatedLinkMainLine_details.styles
             , css
                 [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
                 , Css.property "stroke" Colors.pathMiddle
                 , Css.property "fill" "none" |> Css.important
-                , Css.property "stroke-linecap" "square"
+                , Css.property "stroke-linecap" "round"
                 ]
             ]
             []
+
+        -- Circular node
+        , circularNode
+
+        -- Icon in center
+        , iconElement
+
+        -- Text label
+        , textLabel
         ]
+
+
+
+-- Keep the original edge function for backward compatibility with default curvature
+
+
+edge : View.Config -> Conversion -> Address -> Address -> Svg Msg
+edge vc conversion inputAddress outputAddress =
+    view vc conversion inputAddress outputAddress Nothing

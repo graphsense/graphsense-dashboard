@@ -8,7 +8,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder.Address exposing (Address, getCoords, txsGetSet)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
-import Model.Pathfinder.Conversion exposing (Conversion)
+import Model.Pathfinder.Conversion as Conversion exposing (Conversion)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData
@@ -196,4 +196,4 @@ getUniqueConversions network =
     network.conversions
         |> Dict.values
         |> List.concat
-        |> List.Extra.uniqueBy (\c -> c.raw.fromAssetTransfer ++ "|" ++ c.raw.toAssetTransfer)
+        |> List.Extra.uniqueBy Conversion.toIdString

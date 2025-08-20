@@ -8,6 +8,7 @@ module Model.Pathfinder.Tx exposing
     , avg
     , calcCoords
     , getAccountTx
+    , getAsset
     , getCoords
     , getInputAddressIds
     , getInputs
@@ -87,6 +88,16 @@ type alias Io =
     , address : Maybe Address -- the address present on the graph
     , aggregatesN : Int
     }
+
+
+getAsset : Tx -> String
+getAsset tx =
+    case tx.type_ of
+        Account { raw } ->
+            raw.currency
+
+        Utxo { raw } ->
+            raw.currency
 
 
 getNetwork : Tx -> String

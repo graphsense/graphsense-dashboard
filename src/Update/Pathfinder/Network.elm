@@ -85,7 +85,7 @@ addConversion conversion inputTx outputTx network =
         Just edge ->
             let
                 c =
-                    Conversion.init conversion edge
+                    Conversion.init conversion edge ( inputTx |> Tx.getAsset, outputTx |> Tx.getAsset )
                         |> s_inputAddress (Dict.get (first edge) network.addresses)
                         |> s_outputAddress (Dict.get (second edge) network.addresses)
 

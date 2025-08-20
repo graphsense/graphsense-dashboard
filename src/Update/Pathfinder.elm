@@ -1344,11 +1344,11 @@ updateByMsg plugins uc msg model =
                     (\conversion ( aggm, effects ) ->
                         let
                             secondTransferId =
-                                if Id.network txid == conversion.toNetwork && Id.id txid == conversion.toAddress then
-                                    Id.init conversion.toNetwork conversion.toAssetTransfer
+                                if Id.network txid == conversion.toNetwork && (Id.id txid |> removeLeading0x) == (conversion.toAssetTransfer |> removeLeading0x) then
+                                    Id.init conversion.fromNetwork conversion.fromAssetTransfer
 
                                 else
-                                    Id.init conversion.fromNetwork conversion.toAssetTransfer
+                                    Id.init conversion.toNetwork conversion.toAssetTransfer
 
                             effs =
                                 BrowserGotConversionLoop tx conversion

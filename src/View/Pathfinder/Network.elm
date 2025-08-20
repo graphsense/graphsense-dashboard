@@ -77,6 +77,14 @@ relations plugins vc gc annotations txs agg conversions =
                             )
                         )
                     |> Keyed.node "g" []
+                , conversions_
+                    |> List.filterMap
+                        (\conversion ->
+                            Maybe.map2 (conversionEdge plugins vc gc conversion)
+                                conversion.inputAddress
+                                conversion.outputAddress
+                        )
+                    |> Keyed.node "g" []
                 , agg_
                     |> List.filterMap
                         (\edge ->
@@ -100,14 +108,6 @@ relations plugins vc gc annotations txs agg conversions =
                             Maybe.map2 (aggEdgeNodeHighlight plugins vc gc edge)
                                 edge.aAddress
                                 edge.bAddress
-                        )
-                    |> Keyed.node "g" []
-                , conversions_
-                    |> List.filterMap
-                        (\conversion ->
-                            Maybe.map2 (conversionEdge plugins vc gc conversion)
-                                conversion.inputAddress
-                                conversion.outputAddress
                         )
                     |> Keyed.node "g" []
                 ]
@@ -139,7 +139,7 @@ aggEdgeEdge _ vc _ edge aAddress bAddress =
 conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> Conversion -> Address -> Address -> ( String, Svg Msg )
 conversionEdge _ vc _ conversion aAddress bAddress =
     ( Conversion.toIdString conversion |> (++) "ce"
-    , Svg.lazy4 Conversion.edge vc conversion aAddress bAddress
+    , Svg.lazy5 Conversion.view vc conversion aAddress bAddress Nothing
     )
 
 
