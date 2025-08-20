@@ -1,4 +1,4 @@
-module Model.Pathfinder.Conversion exposing (Conversion, idToString)
+module Model.Pathfinder.Conversion exposing (Conversion, toIdString)
 
 import Api.Data
 import Model.Pathfinder.Address exposing (Address)
@@ -14,6 +14,11 @@ type alias Conversion =
     , selected : Bool
     , hovered : Bool
     }
+
+
+toIdString : Conversion -> String
+toIdString conversion =
+    idToString ( conversion.outputId, conversion.inputId )
 
 
 idToString : ( Id, Id ) -> String

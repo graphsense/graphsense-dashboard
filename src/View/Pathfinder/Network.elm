@@ -8,6 +8,7 @@ import Dict exposing (Dict)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.Conversion as Conversion exposing (Conversion)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
@@ -17,10 +18,11 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Tuple exposing (mapFirst)
+import Tuple3
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
 import View.Pathfinder.AggEdge as AggEdge
+import View.Pathfinder.Conversion as Conversion
 import View.Pathfinder.Tx as Tx
 
 
@@ -38,24 +40,25 @@ addresses plugins vc pc colors clusters annotations =
         >> Keyed.node "g" []
 
 
-relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
-relations plugins vc gc annotations txs agg =
+relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) (List Conversion) -> Svg Msg
+relations plugins vc gc annotations txs agg conversions =
     (case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
-            ( Dict.values agg, [] )
+            ( Dict.values agg, [], [] )
 
         Pathfinder.TransactionTracingMode ->
             ( []
             , Dict.values txs
+            , Dict.values conversions |> List.concat
             )
     )
-        |> mapFirst
+        |> Tuple3.mapFirst
             (List.filter
                 (\edge ->
                     RemoteData.isSuccess edge.a2b && RemoteData.isSuccess edge.b2a
                 )
             )
-        |> (\( agg_, txs_ ) ->
+        |> (\( agg_, txs_, conversions_ ) ->
                 [ txs_
                     |> List.map
                         (\tx ->
@@ -99,6 +102,14 @@ relations plugins vc gc annotations txs agg =
                                 edge.bAddress
                         )
                     |> Keyed.node "g" []
+                , conversions_
+                    |> List.filterMap
+                        (\conversion ->
+                            Maybe.map2 (conversionEdge plugins vc gc conversion)
+                                conversion.inputAddress
+                                conversion.outputAddress
+                        )
+                    |> Keyed.node "g" []
                 ]
                     |> Svg.g []
            )
@@ -122,6 +133,13 @@ aggEdgeEdge : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address 
 aggEdgeEdge _ vc _ edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "ee"
     , Svg.lazy5 AggEdge.edge vc edge aAddress bAddress False
+    )
+
+
+conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> Conversion -> Address -> Address -> ( String, Svg Msg )
+conversionEdge _ vc _ conversion aAddress bAddress =
+    ( Conversion.toIdString conversion |> (++) "ce"
+    , Svg.lazy4 Conversion.edge vc conversion aAddress bAddress
     )
 
 

@@ -71,7 +71,7 @@ addConversion : Api.Data.ExternalConversion -> Tx -> Tx -> Network -> Network
 addConversion conversion inputTx outputTx network =
     let
         faid =
-            inputTx |> Tx.getInputAddressIds |> List.head
+            inputTx |> Tx.getOutputAddressIds |> List.head
 
         taid =
             outputTx |> Tx.getInputAddressIds |> List.head
