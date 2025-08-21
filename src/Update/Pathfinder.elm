@@ -39,6 +39,7 @@ import Model.Pathfinder.AggEdge as AggEdge
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
+import Model.Pathfinder.ConversionEdge as ConversionEdge
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
@@ -91,6 +92,7 @@ import Update.Search as Search
 import Util exposing (and, n, removeLeading0x)
 import Util.Annotations as Annotations
 import Util.Data as Data
+import Util.EventualMessages as EventualMessages
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
@@ -122,6 +124,17 @@ getTagsummary ht =
             Nothing
 
 
+dispatchEventualMessages : Model -> ( Model, List Effect )
+dispatchEventualMessages model =
+    let
+        ( updatedModel, cmds ) =
+            EventualMessages.dispatchMessages model.network model.eventualMessages
+    in
+    ( { model | eventualMessages = updatedModel }
+    , cmds |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []
+    )
+
+
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
@@ -129,6 +142,7 @@ update plugins uc msg model =
         |> markDirty plugins msg
         |> updateByMsg plugins uc msg
         |> and (syncSidePanel uc)
+        |> and dispatchEventualMessages
 
 
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
@@ -276,6 +290,13 @@ resultLineToRoute search =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
+        EventualMessagesHeartBeat ->
+            let
+                ( nm, cmd ) =
+                    EventualMessages.heartBeat model.eventualMessages
+            in
+            ( { model | eventualMessages = nm }, cmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault [] )
+
         UserOpensDialogWindow windowType ->
             case windowType of
                 TagsList id ->
@@ -1295,15 +1316,67 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
 
+        InternalConversionLoopAddressesLoaded conv ->
+            let
+                mtxInput =
+                    ConversionEdge.getInputTransferIdRaw conv |> flip Dict.get model.network.txs
+
+                mtxOutput =
+                    ConversionEdge.getOutputTransferIdRaw conv |> flip Dict.get model.network.txs
+
+                arrangeConversionNodes txInput txOutput =
+                    let
+                        moveNode v txOrAdrId net =
+                            Network.updateAddress txOrAdrId (Node.moveAbs v) net
+
+                        displacementFromTx =
+                            4
+
+                        --input leg
+                        inputTxCoords =
+                            txInput |> Tx.toFinalCoords
+
+                        a =
+                            txInput
+                                |> Tx.getInputAddressIds
+                                |> List.foldl (moveNode { x = inputTxCoords.x - displacementFromTx, y = inputTxCoords.y }) model.network
+
+                        b =
+                            txInput
+                                |> Tx.getOutputAddressIds
+                                |> List.foldl (moveNode { x = inputTxCoords.x + displacementFromTx, y = inputTxCoords.y }) a
+
+                        -- output leg
+                        outputTxCoords =
+                            txOutput |> Tx.toFinalCoords
+
+                        c =
+                            txOutput
+                                |> Tx.getOutputAddressIds
+                                |> List.foldl (moveNode { x = outputTxCoords.x - displacementFromTx, y = outputTxCoords.y }) b
+
+                        netOut =
+                            txOutput
+                                |> Tx.getInputAddressIds
+                                |> List.foldl (moveNode { x = outputTxCoords.x + displacementFromTx, y = outputTxCoords.y }) c
+                    in
+                    n { model | network = netOut }
+            in
+            Maybe.map2 arrangeConversionNodes mtxInput mtxOutput
+                |> Maybe.withDefault (n model)
+
         BrowserGotConversionLoop txA conversion tx ->
             let
+                posA =
+                    txA |> Tx.toFinalCoords
+
                 ( ( ntx, nn ), newTx ) =
                     case Dict.get (Tx.getTxId tx) model.network.txs of
                         Just oldTx ->
                             ( ( oldTx, model.network ), False )
 
                         Nothing ->
-                            ( Network.addTxWithPosition model.config Auto tx model.network, True )
+                            ( Network.addTxWithPosition model.config (Fixed posA.x (posA.y + 2)) tx model.network, True )
 
                 -- order txs such from and to, according to the which is the output leg (to) and which is the input leg (from)
                 ( inputTx, outputTx ) =
@@ -1315,8 +1388,23 @@ updateByMsg plugins uc msg model =
 
                 nnn =
                     nn |> Network.addConversion conversion inputTx outputTx
+
+                eventualMsg =
+                    Network.AndCondition
+                        [ Network.AddressIsLoaded (Id.init conversion.fromNetwork conversion.fromAddress)
+                        , Network.AddressIsLoaded (Id.init conversion.toNetwork conversion.toAddress)
+                        , Network.OrCondition (inputTx |> Tx.getOutputAddressIds |> List.map Network.AddressIsLoaded)
+                        , Network.OrCondition (outputTx |> Tx.getInputAddressIds |> List.map Network.AddressIsLoaded)
+                        ]
+
+                ( eventualMessagesNew, mcmd ) =
+                    model.eventualMessages
+                        |> EventualMessages.addMessage eventualMsg (InternalConversionLoopAddressesLoaded conversion)
             in
-            (model |> s_network nnn)
+            (model
+                |> s_network nnn
+                |> s_eventualMessages eventualMessagesNew
+            )
                 |> checkSelection uc
                 |> and
                     (if newTx then
@@ -1325,6 +1413,7 @@ updateByMsg plugins uc msg model =
                      else
                         n
                     )
+                |> Tuple.mapSecond ((++) (mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []))
 
         BrowserGotConversions tx conversions ->
             let
@@ -1752,7 +1841,7 @@ updateByMsg plugins uc msg model =
         UserClickedConversionEdge _ _ ->
             n model
 
-        UserMovesMouseOverConversionEdge id _ ->
+        UserMovesMouseOverConversionEdge id conv ->
             if model.hovered == HoveredConversionEdge id then
                 n model
 
@@ -1760,16 +1849,40 @@ updateByMsg plugins uc msg model =
                 let
                     unhovered =
                         unhover model
+
+                    txid1 =
+                        ConversionEdge.getInputTransferId conv
+
+                    txid2 =
+                        ConversionEdge.getOutputTransferId conv
                 in
                 ( { unhovered
-                    | network = Network.updateConversionEdge id (s_hovered True) unhovered.network
+                    | network =
+                        Network.updateConversionEdge id (s_hovered True) unhovered.network
+                            |> Network.updateTx txid1 (s_hovered True)
+                            |> Network.updateTx txid2 (s_hovered True)
                     , hovered = HoveredConversionEdge id
                   }
                 , []
                 )
 
-        UserMovesMouseOutConversionEdge id _ ->
-            ( unhover model
+        UserMovesMouseOutConversionEdge id conv ->
+            let
+                uhm =
+                    unhover model
+
+                txid1 =
+                    ConversionEdge.getOutputTransferId conv
+
+                txid2 =
+                    ConversionEdge.getInputTransferId conv
+            in
+            ( { uhm
+                | network =
+                    uhm.network
+                        |> Network.updateTx txid1 (s_hovered False)
+                        |> Network.updateTx txid2 (s_hovered False)
+              }
             , CloseTooltipEffect
                 (Just { context = AggEdge.idToString id, domId = AggEdge.idToString id })
                 False

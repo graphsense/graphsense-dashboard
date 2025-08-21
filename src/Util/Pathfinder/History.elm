@@ -10,6 +10,12 @@ import Plugin.Update as Plugin exposing (Plugins)
 shallPushHistory : Plugins -> Msg -> Model -> Bool
 shallPushHistory plugins msg _ =
     case msg of
+        InternalConversionLoopAddressesLoaded _ ->
+            False
+
+        EventualMessagesHeartBeat ->
+            False
+
         UserClickedGraph _ ->
             False
 

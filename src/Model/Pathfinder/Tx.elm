@@ -30,6 +30,7 @@ module Model.Pathfinder.Tx exposing
     , isRawOutFlow
     , listAddressesForTx
     , listSeparatedAddressesForTx
+    , toFinalCoords
     )
 
 import Animation exposing (Animation, Clock)
@@ -263,9 +264,13 @@ avg field items =
 
 
 addressToCoords : Address -> Coords
-addressToCoords { x, y } =
-    Animation.getTo y
-        |> Coords x
+addressToCoords =
+    toFinalCoords
+
+
+toFinalCoords : { t | x : Float, y : Animation } -> Coords
+toFinalCoords { x, y } =
+    Coords x (Animation.getTo y)
 
 
 getUtxoTx : Tx -> Maybe UtxoTx

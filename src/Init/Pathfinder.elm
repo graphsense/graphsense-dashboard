@@ -10,10 +10,12 @@ import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Tools exposing (PointerTool(..))
-import Msg.Pathfinder exposing (Msg)
+import Msg.Pathfinder exposing (Msg(..))
 import Route.Pathfinder as Route
 import Util.Annotations as Annotations
+import Util.EventualMessages as EventualMessages
 
 
 init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool, tracingMode : Maybe TracingMode } -> ( Model, Cmd Msg )
@@ -45,6 +47,7 @@ init us =
       , contextMenu = Nothing
       , name = "graph"
       , checkingNeighbors = CheckingNeighbors.init
+      , eventualMessages = EventualMessages.init Network.isConditionMet EventualMessagesHeartBeat
       }
     , Cmd.none
     )

@@ -135,6 +135,8 @@ type Msg
     | UserClickedConversionEdge ( Id, Id ) ConversionEdge
     | UserMovesMouseOverConversionEdge ( Id, Id ) ConversionEdge
     | UserMovesMouseOutConversionEdge ( Id, Id ) ConversionEdge
+    | EventualMessagesHeartBeat
+    | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
 
 
 type alias TextTooltipConfig =

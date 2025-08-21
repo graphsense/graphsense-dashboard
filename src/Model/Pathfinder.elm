@@ -13,16 +13,18 @@ import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Network exposing (Network)
+import Model.Pathfinder.Network exposing (Network, NetworkConditions)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
+import Msg.Pathfinder exposing (Msg)
 import RemoteData exposing (WebData)
 import Route.Pathfinder exposing (Route)
 import Theme.Svg.GraphComponents as GraphComponents
 import Tuple
 import Util.Annotations exposing (AnnotationModel)
+import Util.EventualMessages exposing (EventualMessages)
 
 
 unit : Float
@@ -54,6 +56,7 @@ type alias Model =
     , contextMenu : Maybe ContextMenu
     , name : String
     , checkingNeighbors : CheckingNeighbors.Model
+    , eventualMessages : EventualMessages NetworkConditions Network Msg
     }
 
 
