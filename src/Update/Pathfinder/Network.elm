@@ -2,7 +2,6 @@ module Update.Pathfinder.Network exposing
     ( addAddress
     , addAddressWithPosition
     , addConversion
-      -- , hasConversion
     , addTx
     , addTxWithPosition
     , aggEdgeNeedsData
@@ -24,6 +23,7 @@ module Update.Pathfinder.Network exposing
     , updateAddress
     , updateAddressesByClusterId
     , updateAggEdge
+    , updateConversionEdge
     , updateTx
     , upsertAggEdgeData
     )
@@ -35,7 +35,7 @@ import Config.Pathfinder as Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict exposing (Dict)
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.AggEdge as AggEdge
-import Init.Pathfinder.Conversion as Conversion
+import Init.Pathfinder.ConversionEdge as ConversionEdge
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Tx as Tx
 import List.Nonempty as NList
@@ -44,7 +44,7 @@ import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address, txsToSet)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
-import Model.Pathfinder.Conversion exposing (Conversion)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (DeserializedAggEdge, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
@@ -57,7 +57,7 @@ import Tuple exposing (first, pair, second)
 import Tuple2 exposing (pairTo, swap)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
 import Update.Pathfinder.AggEdge as AggEdge
-import Update.Pathfinder.Conversion as Conversion
+import Update.Pathfinder.ConversionEdge as ConversionEdge
 import Update.Pathfinder.Tx as Tx
 
 
@@ -85,7 +85,7 @@ addConversion conversion inputTx outputTx network =
         Just edge ->
             let
                 c =
-                    Conversion.init conversion edge ( inputTx |> Tx.getAsset, outputTx |> Tx.getAsset )
+                    ConversionEdge.init conversion edge ( inputTx |> Tx.getAsset, outputTx |> Tx.getAsset )
                         |> s_inputAddress (Dict.get (first edge) network.addresses)
                         |> s_outputAddress (Dict.get (second edge) network.addresses)
 
@@ -400,7 +400,7 @@ setAddressInAggEdges address network =
 
 setAddressInConversions : Address -> Network -> Network
 setAddressInConversions address network =
-    updateConversionsById address.id (List.map (Conversion.setAddress (Just address))) network
+    updateConversionsById address.id (List.map (ConversionEdge.setAddress (Just address))) network
 
 
 updateAggEdgesById : Id -> (AggEdge -> AggEdge) -> Network -> Network
@@ -415,7 +415,7 @@ updateAggEdgesById id update network =
         |> Maybe.withDefault network
 
 
-updateConversionsById : Id -> (List Conversion -> List Conversion) -> Network -> Network
+updateConversionsById : Id -> (List ConversionEdge -> List ConversionEdge) -> Network -> Network
 updateConversionsById id update network =
     Dict.get id network.conversionsEdgeMap
         |> Maybe.map
@@ -431,6 +431,13 @@ updateAggEdge : ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
 updateAggEdge id upd network =
     { network
         | aggEdges = Dict.update id (Maybe.map upd) network.aggEdges
+    }
+
+
+updateConversionEdge : ( Id, Id ) -> (ConversionEdge -> ConversionEdge) -> Network -> Network
+updateConversionEdge id upd network =
+    { network
+        | conversions = Dict.update id (Maybe.map (List.map upd)) network.conversions
     }
 
 
@@ -533,7 +540,7 @@ updateAddress id update model =
                 | addresses = Dict.update id (Maybe.map update) model.addresses
             }
         |> updateAggEdgesById id (AggEdge.updateAddress id update)
-        |> updateConversionsById id (List.map (Conversion.updateAddress id update))
+        |> updateConversionsById id (List.map (ConversionEdge.updateAddress id update))
 
 
 updateAllAddresses : (Address -> Address) -> Network -> Network

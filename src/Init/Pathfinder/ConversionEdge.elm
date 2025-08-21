@@ -1,12 +1,12 @@
-module Init.Pathfinder.Conversion exposing (init)
+module Init.Pathfinder.ConversionEdge exposing (init)
 
 import Api.Data
-import Model.Pathfinder.Conversion exposing (Conversion)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id exposing (Id)
 import Tuple exposing (first, second)
 
 
-init : Api.Data.ExternalConversion -> ( Id, Id ) -> ( String, String ) -> Conversion
+init : Api.Data.ExternalConversion -> ( Id, Id ) -> ( String, String ) -> ConversionEdge
 init apiConversion edge assets =
     { inputId = first edge
     , outputId = second edge

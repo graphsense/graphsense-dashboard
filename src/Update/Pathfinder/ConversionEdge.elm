@@ -1,11 +1,11 @@
-module Update.Pathfinder.Conversion exposing (setAddress, updateAddress)
+module Update.Pathfinder.ConversionEdge exposing (setAddress, updateAddress)
 
 import Model.Pathfinder.Address exposing (Address)
-import Model.Pathfinder.Conversion exposing (Conversion)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id exposing (Id)
 
 
-updateAddress : Id -> (Address -> Address) -> Conversion -> Conversion
+updateAddress : Id -> (Address -> Address) -> ConversionEdge -> ConversionEdge
 updateAddress id upd conversion =
     let
         c1 =
@@ -26,7 +26,7 @@ updateAddress id upd conversion =
         c1
 
 
-setAddress : Maybe Address -> Conversion -> Conversion
+setAddress : Maybe Address -> ConversionEdge -> ConversionEdge
 setAddress ma conversion =
     ma
         |> Maybe.map

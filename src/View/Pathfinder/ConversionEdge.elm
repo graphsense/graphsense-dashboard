@@ -1,20 +1,23 @@
-module View.Pathfinder.Conversion exposing (edge, view)
+module View.Pathfinder.ConversionEdge exposing (edge, view)
 
 import Api.Data
 import Config.View as View
 import Css
+import Html.Styled.Events exposing (onMouseLeave)
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
-import Model.Pathfinder.Conversion exposing (Conversion)
-import Msg.Pathfinder exposing (Msg)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
+import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.PathD exposing (Segment(..), pathD)
 import Svg.Styled exposing (Svg, g, path)
-import Svg.Styled.Attributes as Svg exposing (css)
+import Svg.Styled.Attributes as Svg exposing (css, filter)
+import Svg.Styled.Events exposing (onMouseOver)
 import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.GraphComponentsAggregatedTracing as Theme
 import Util.TextDimensions
+import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
 
@@ -27,7 +30,7 @@ type alias Dimensions =
     }
 
 
-calcDimensions : View.Config -> Conversion -> Address -> Address -> Dimensions
+calcDimensions : View.Config -> ConversionEdge -> Address -> Address -> Dimensions
 calcDimensions _ _ aAddress bAddress =
     let
         -- Padding for the labels
@@ -61,11 +64,14 @@ calcDimensions _ _ aAddress bAddress =
     }
 
 
-view : View.Config -> Conversion -> Address -> Address -> Svg Msg
+view : View.Config -> ConversionEdge -> Address -> Address -> Svg Msg
 view vc conversion inputAddress outputAddress =
     let
         cr =
             conversion.raw
+
+        id =
+            ( conversion.inputId, conversion.outputId )
 
         -- Length of horizontal extension from nodes
         labelTextLine1 =
@@ -204,6 +210,12 @@ view vc conversion inputAddress outputAddress =
                                 ++ String.fromFloat (nodeY - iconSize / 2)
                                 ++ ")"
                             )
+                        , UserMovesMouseOutConversionEdge id conversion
+                            |> onMouseLeave
+                        , UserMovesMouseOverConversionEdge id conversion
+                            |> onMouseOver
+                        , pointer
+                        , filter "url(#dropShadowAggEdgeHighlight)"
                         ]
                 )
                 {}
@@ -249,7 +261,13 @@ view vc conversion inputAddress outputAddress =
                     ]
     in
     g
-        []
+        [ UserClickedConversionEdge id conversion
+            |> onClickWithStop
+        , UserMovesMouseOutConversionEdge id conversion
+            |> onMouseLeave
+        , UserMovesMouseOverConversionEdge id conversion
+            |> onMouseOver
+        ]
         [ -- Simple curved path or loop
           path
             [ Svg.d pat
@@ -293,6 +311,6 @@ view vc conversion inputAddress outputAddress =
 -- Keep the original edge function for backward compatibility with default curvature
 
 
-edge : View.Config -> Conversion -> Address -> Address -> Svg Msg
-edge vc conversion inputAddress outputAddress =
-    view vc conversion inputAddress outputAddress
+edge : View.Config -> ConversionEdge -> Address -> Address -> Svg Msg
+edge vc conversionEdge inputAddress outputAddress =
+    view vc conversionEdge inputAddress outputAddress

@@ -7,7 +7,7 @@ import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
-import Model.Pathfinder.Conversion exposing (Conversion)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
@@ -132,9 +132,9 @@ type Msg
     | UserClickedAggEdge ( Id, Id )
     | UserMovesMouseOverAggEdge ( Id, Id )
     | UserMovesMouseOutAggEdge ( Id, Id )
-    | UserClickedConversionEdge ( Id, Id ) Conversion
-    | UserMovesMouseOverConversionEdge ( Id, Id ) Conversion
-    | UserMovesMouseOutConversionEdge ( Id, Id ) Conversion
+    | UserClickedConversionEdge ( Id, Id ) ConversionEdge
+    | UserMovesMouseOverConversionEdge ( Id, Id ) ConversionEdge
+    | UserMovesMouseOutConversionEdge ( Id, Id ) ConversionEdge
 
 
 type alias TextTooltipConfig =

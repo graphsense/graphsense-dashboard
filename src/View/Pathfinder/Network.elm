@@ -8,7 +8,7 @@ import Dict exposing (Dict)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Colors as Colors
-import Model.Pathfinder.Conversion as Conversion exposing (Conversion)
+import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
@@ -22,7 +22,7 @@ import Tuple3
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
 import View.Pathfinder.AggEdge as AggEdge
-import View.Pathfinder.Conversion as Conversion
+import View.Pathfinder.ConversionEdge as ConversionEdge
 import View.Pathfinder.Tx as Tx
 
 
@@ -40,7 +40,7 @@ addresses plugins vc pc colors clusters annotations =
         >> Keyed.node "g" []
 
 
-relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) (List Conversion) -> Svg Msg
+relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) (List ConversionEdge) -> Svg Msg
 relations plugins vc gc annotations txs agg conversions =
     (case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
@@ -136,10 +136,10 @@ aggEdgeEdge _ vc _ edge aAddress bAddress =
     )
 
 
-conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> Conversion -> Address -> Address -> ( String, Svg Msg )
+conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> ConversionEdge -> Address -> Address -> ( String, Svg Msg )
 conversionEdge _ vc _ conversion aAddress bAddress =
-    ( Conversion.toIdString conversion |> (++) "ce"
-    , Svg.lazy4 Conversion.view vc conversion aAddress bAddress
+    ( ConversionEdge.toIdString conversion |> (++) "ce"
+    , Svg.lazy4 ConversionEdge.view vc conversion aAddress bAddress
     )
 
 

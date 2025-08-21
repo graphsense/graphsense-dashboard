@@ -524,7 +524,7 @@ updateByMsg plugins uc msg model =
                                 getNextTxEffects newModel2.network
                                     addressId
                                     (Direction.flip dir)
-                                    { addBetweenLinks = autoLinkInTraceMode && loadBetweenLinks }
+                                    { addBetweenLinks = autoLinkInTraceMode && loadBetweenLinks, addAnyLinks = autoLinkInTraceMode }
                                     (Just id)
 
                             else
@@ -1749,14 +1749,32 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
-        UserClickedConversionEdge id conversion ->
+        UserClickedConversionEdge _ _ ->
             n model
 
-        UserMovesMouseOverConversionEdge id conversion ->
-            n model
+        UserMovesMouseOverConversionEdge id _ ->
+            if model.hovered == HoveredConversionEdge id then
+                n model
 
-        UserMovesMouseOutConversionEdge id conversion ->
-            n model
+            else
+                let
+                    unhovered =
+                        unhover model
+                in
+                ( { unhovered
+                    | network = Network.updateConversionEdge id (s_hovered True) unhovered.network
+                    , hovered = HoveredConversionEdge id
+                  }
+                , []
+                )
+
+        UserMovesMouseOutConversionEdge id _ ->
+            ( unhover model
+            , CloseTooltipEffect
+                (Just { context = AggEdge.idToString id, domId = AggEdge.idToString id })
+                False
+                |> List.singleton
+            )
 
         UserClickedAggEdge id ->
             ( model
@@ -2398,7 +2416,7 @@ expandAddress address direction model =
         TxsNotFetched ->
             ( newmodel |> setLoading
             , Nothing
-                |> getNextTxEffects newmodel.network id direction { addBetweenLinks = False }
+                |> getNextTxEffects newmodel.network id direction { addBetweenLinks = False, addAnyLinks = True }
                 |> (++) eff
             )
 
@@ -2495,8 +2513,8 @@ updateTagDataOnAddress addressId m =
     tag |> Maybe.map (\n -> { m | network = net n }) |> Maybe.withDefault m
 
 
-getNextTxEffects : Network -> Id -> Direction -> { addBetweenLinks : Bool } -> Maybe Id -> List Effect
-getNextTxEffects network addressId direction { addBetweenLinks } neighborId =
+getNextTxEffects : Network -> Id -> Direction -> { addBetweenLinks : Bool, addAnyLinks : Bool } -> Maybe Id -> List Effect
+getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } neighborId =
     let
         config =
             { addressId = addressId
@@ -2506,18 +2524,22 @@ getNextTxEffects network addressId direction { addBetweenLinks } neighborId =
     Network.getRecentTxForAddress network (Direction.flip direction) addressId
         |> Maybe.map
             (\tx ->
-                case tx.type_ of
-                    Tx.Account t ->
-                        WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
-                            |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
-                            |> Workflow.next
-                            |> List.map ApiEffect
+                if addAnyLinks then
+                    case tx.type_ of
+                        Tx.Account t ->
+                            WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
+                                |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
+                                |> Workflow.next
+                                |> List.map ApiEffect
 
-                    Tx.Utxo t ->
-                        WorkflowNextUtxoTx.start config t.raw
-                            |> Workflow.mapEffect (WorkflowNextUtxoTx config neighborId)
-                            |> Workflow.next
-                            |> List.map ApiEffect
+                        Tx.Utxo t ->
+                            WorkflowNextUtxoTx.start config t.raw
+                                |> Workflow.mapEffect (WorkflowNextUtxoTx config neighborId)
+                                |> Workflow.next
+                                |> List.map ApiEffect
+
+                else
+                    []
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ ->
@@ -2529,11 +2551,14 @@ getNextTxEffects network addressId direction { addBetweenLinks } neighborId =
                         |> Workflow.next
                         |> List.map ApiEffect
 
-                else
+                else if addAnyLinks then
                     WorkflowNextTxByTime.start config
                         |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
                         |> Workflow.next
                         |> List.map ApiEffect
+
+                else
+                    []
             )
 
 
@@ -3073,6 +3098,9 @@ unhover model =
 
                 HoveredAggEdge a ->
                     Network.updateAggEdge a (s_hovered False) model.network
+
+                HoveredConversionEdge ( a, b ) ->
+                    Network.updateConversionEdge ( a, b ) (s_hovered False) model.network
 
                 NoHover ->
                     model.network
