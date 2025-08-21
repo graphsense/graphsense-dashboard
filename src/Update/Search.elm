@@ -91,7 +91,7 @@ filterByPrefix input result =
                     in
                     { currency
                         | addresses = List.filter (String.startsWith addr) currency.addresses
-                        , txs = List.filter (\x -> String.startsWith (removeSubTxIndicators (removeLeading0x input)) (removeLeading0x x)) currency.txs
+                        , txs = List.filter (\x -> String.startsWith (removeSubTxIndicators (removeLeading0x input) |> String.toLower) (removeLeading0x x |> String.toLower)) currency.txs
                     }
                 )
                 result.currencies

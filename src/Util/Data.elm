@@ -1,7 +1,11 @@
-module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, negateTxValue, negateValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, negateTxValue, negateValues, normalizeIdentifier, timestampToPosix, valuesZero)
 
 import Api.Data
 import Time
+
+
+
+-- import Util exposing (removeLeading0x)
 
 
 supportedFiatCurrencies : List String
@@ -71,3 +75,18 @@ addValues x y =
 valuesZero : Api.Data.Values
 valuesZero =
     { value = 0, fiatValues = supportedFiatCurrencies |> List.map (\c -> { code = c, value = 0.0 }) }
+
+
+normalizeIdentifier : String -> String -> String
+normalizeIdentifier net address =
+    String.trim address
+        |> (if isAccountLike net then
+                String.toLower
+
+            else
+                identity
+           )
+
+
+
+-- |> removeLeading0x

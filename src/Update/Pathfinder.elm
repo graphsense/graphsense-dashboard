@@ -1389,10 +1389,16 @@ updateByMsg plugins uc msg model =
                 nnn =
                     nn |> Network.addConversion conversion inputTx outputTx
 
+                nFromAddress =
+                    Data.normalizeIdentifier conversion.fromNetwork conversion.fromAddress
+
+                nToAddress =
+                    Data.normalizeIdentifier conversion.toNetwork conversion.toAddress
+
                 eventualMsg =
                     Network.AndCondition
-                        [ Network.AddressIsLoaded (Id.init conversion.fromNetwork conversion.fromAddress)
-                        , Network.AddressIsLoaded (Id.init conversion.toNetwork conversion.toAddress)
+                        [ Network.AddressIsLoaded (Id.init conversion.fromNetwork nFromAddress)
+                        , Network.AddressIsLoaded (Id.init conversion.toNetwork nToAddress)
                         , Network.OrCondition (inputTx |> Tx.getOutputAddressIds |> List.map Network.AddressIsLoaded)
                         , Network.OrCondition (outputTx |> Tx.getInputAddressIds |> List.map Network.AddressIsLoaded)
                         ]
