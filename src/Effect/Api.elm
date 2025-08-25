@@ -285,6 +285,15 @@ type Effect msg
         }
         (List ( Id, Api.Data.TagSummary ) -> msg)
     | AddUserReportedTag Api.Data.UserReportedTag (Api.Data.UserTagReportResponse -> msg)
+    | ListRelatedAddressesEffect
+        { currency : String
+        , address : String
+        , reltype : Api.Request.Addresses.AddressRelationType
+        , pagesize : Int
+        , nextpage : Maybe String
+        }
+        (Api.Data.RelatedAddresses -> msg)
+    | GetConversionEffect { currency : String, txHash : String } (List Api.Data.ExternalConversion -> msg)
 
 
 getEntityEgonet :
@@ -551,6 +560,16 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> BulkGetTxEffect eff
+
+        ListRelatedAddressesEffect eff m ->
+            m
+                >> mapMsg
+                |> ListRelatedAddressesEffect eff
+
+        GetConversionEffect eff m ->
+            m
+                >> mapMsg
+                |> GetConversionEffect eff
 
 
 perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> Effect msg -> Cmd msg
@@ -900,6 +919,14 @@ perform apiKey wrapMsg effect =
                         , ( "include_best_cluster_tag", Json.Encode.bool includeBestClusterTag )
                         ]
                     )
+                |> send apiKey wrapMsg effect toMsg
+
+        ListRelatedAddressesEffect { currency, address, reltype, pagesize, nextpage } toMsg ->
+            Api.Request.Addresses.listRelatedAddresses currency address (Just reltype) nextpage (Just pagesize)
+                |> send apiKey wrapMsg effect toMsg
+
+        GetConversionEffect { currency, txHash } toMsg ->
+            Api.Request.Txs.getTxConversions currency txHash
                 |> send apiKey wrapMsg effect toMsg
 
 

@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -7,9 +7,11 @@ import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
+import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Search as Search
@@ -20,6 +22,28 @@ import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
+
+
+type alias AddingAddressConfig =
+    { id : Id
+    , pos : FindPosition
+    , autoLinkTxInTraceMode : Bool
+    }
+
+
+type alias AddingTxConfig =
+    { pos : FindPosition
+    , loadAddresses : Bool
+    , autoLinkInTraceMode : Bool
+    }
+
+
+type alias AddingRelationsConfig =
+    { id : Id
+    , dir : Direction
+    , requestIds : List Id
+    , autoLinkInTraceMode : Bool
+    }
 
 
 type Msg
@@ -49,7 +73,7 @@ type Msg
     | RelationDetailsMsg ( Id, Id ) RelationDetails.Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
-    | BrowserGotAddressData Id FindPosition Api.Data.Address
+    | BrowserGotAddressData AddingAddressConfig Api.Data.Address
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
@@ -60,7 +84,9 @@ type Msg
     | SearchMsg Search.Msg
     | NoOp
     | BrowserGotActor String Api.Data.Actor
-    | BrowserGotTx FindPosition Bool Api.Data.Tx
+    | BrowserGotTx AddingTxConfig Api.Data.Tx
+    | BrowserGotConversionLoop Tx Api.Data.ExternalConversion Api.Data.Tx
+    | BrowserGotConversions Tx (List Api.Data.ExternalConversion)
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
     | UserClickedAddressCheckboxInTable Id
@@ -101,11 +127,16 @@ type Msg
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
     | UserClickedToggleTracingMode
-    | BrowserGotRelationsToVisibleNeighbors Id Direction (List Id) Api.Data.NeighborAddresses
+    | BrowserGotRelationsToVisibleNeighbors AddingRelationsConfig Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id
     | UserClickedAggEdge ( Id, Id )
     | UserMovesMouseOverAggEdge ( Id, Id )
     | UserMovesMouseOutAggEdge ( Id, Id )
+    | UserClickedConversionEdge ( Id, Id ) ConversionEdge
+    | UserMovesMouseOverConversionEdge ( Id, Id ) ConversionEdge
+    | UserMovesMouseOutConversionEdge ( Id, Id ) ConversionEdge
+    | EventualMessagesHeartBeat
+    | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
 
 
 type alias TextTooltipConfig =

@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAggEdge, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, NetworkConditions(..), getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAggEdge, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isConditionMet, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -8,10 +8,18 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder.Address exposing (Address, getCoords, txsGetSet)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData
 import Set exposing (Set)
+
+
+type NetworkConditions
+    = AddressIsLoaded Id
+    | TxIsLoaded Id
+    | AndCondition (List NetworkConditions)
+    | OrCondition (List NetworkConditions)
 
 
 type alias Network =
@@ -22,6 +30,8 @@ type alias Network =
     , addressAggEdgeMap : Dict Id (Set ( Id, Id ))
     , animatedAddresses : Set Id
     , animatedTxs : Set Id
+    , conversions : Dict ( Id, Id ) (List ConversionEdge)
+    , conversionsEdgeMap : Dict Id (Set ( Id, Id ))
     }
 
 
@@ -67,6 +77,26 @@ getBoundingBox net =
 hasAddress : Id -> Network -> Bool
 hasAddress id network =
     Dict.member id network.addresses
+
+
+addressIsSettled : Id -> Network -> Bool
+addressIsSettled id network =
+    case Dict.get id network.addresses of
+        Just a ->
+            Animation.isDone a.clock a.y
+
+        _ ->
+            False
+
+
+txIsSettled : Id -> Network -> Bool
+txIsSettled id network =
+    case Dict.get id network.txs of
+        Just tx ->
+            Animation.isDone tx.clock tx.y
+
+        _ ->
+            False
 
 
 hasTx : Id -> Network -> Bool
@@ -186,3 +216,19 @@ getRecentTxForAddress network direction addressId =
 isEmpty : Network -> Bool
 isEmpty { addresses, txs } =
     Dict.isEmpty addresses && Dict.isEmpty txs
+
+
+isConditionMet : NetworkConditions -> Network -> Bool
+isConditionMet condition network =
+    case condition of
+        AddressIsLoaded id ->
+            hasAddress id network && addressIsSettled id network
+
+        TxIsLoaded id ->
+            hasTx id network && txIsSettled id network
+
+        AndCondition conditionsList ->
+            List.all (\cond -> isConditionMet cond network) conditionsList
+
+        OrCondition conditionsList ->
+            List.any (\cond -> isConditionMet cond network) conditionsList

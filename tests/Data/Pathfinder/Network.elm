@@ -45,6 +45,8 @@ oneAddress =
     , addressAggEdgeMap = Dict.empty
     , animatedAddresses = Set.empty
     , animatedTxs = Set.empty
+    , conversions = Dict.empty
+    , conversionsEdgeMap = Dict.empty
     }
 
 

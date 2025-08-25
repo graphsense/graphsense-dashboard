@@ -723,7 +723,7 @@ graphSvg plugins vc gc model bbox =
             , gradient "account" { outgoing = False, reverse = True }
             , dropShadowAggEdgeHighlight
             ]
-        , Svg.lazy6 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges
+        , Svg.lazy7 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges model.network.conversions
         , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
         , drawDragSelector vc model
 

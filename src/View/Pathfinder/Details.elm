@@ -49,9 +49,14 @@ dataTab config =
     let
         attr =
             [ pointer
-            , onClick config.onClick
             , css [ Css.zIndex <| Css.int 2 ]
             ]
+                ++ (if not config.disabled then
+                        [ onClick config.onClick ]
+
+                    else
+                        []
+                   )
 
         dis =
             if config.disabled then

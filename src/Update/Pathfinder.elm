@@ -39,6 +39,7 @@ import Model.Pathfinder.AggEdge as AggEdge
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
+import Model.Pathfinder.ConversionEdge as ConversionEdge
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
@@ -88,9 +89,10 @@ import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
-import Util exposing (and, n)
+import Util exposing (and, n, removeLeading0x)
 import Util.Annotations as Annotations
 import Util.Data as Data
+import Util.EventualMessages as EventualMessages
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
@@ -122,6 +124,17 @@ getTagsummary ht =
             Nothing
 
 
+dispatchEventualMessages : Model -> ( Model, List Effect )
+dispatchEventualMessages model =
+    let
+        ( updatedModel, cmds ) =
+            EventualMessages.dispatchMessages model.network model.eventualMessages
+    in
+    ( { model | eventualMessages = updatedModel }
+    , cmds |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []
+    )
+
+
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
@@ -129,6 +142,7 @@ update plugins uc msg model =
         |> markDirty plugins msg
         |> updateByMsg plugins uc msg
         |> and (syncSidePanel uc)
+        |> and dispatchEventualMessages
 
 
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
@@ -276,6 +290,13 @@ resultLineToRoute search =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
+        EventualMessagesHeartBeat ->
+            let
+                ( nm, cmd ) =
+                    EventualMessages.heartBeat model.eventualMessages
+            in
+            ( { model | eventualMessages = nm }, cmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault [] )
+
         UserOpensDialogWindow windowType ->
             case windowType of
                 TagsList id ->
@@ -364,24 +385,28 @@ updateByMsg plugins uc msg model =
         UserPressedNormalKey _ ->
             n model
 
-        BrowserGotAddressData id position data ->
-            if position == Auto && (not <| Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
+        BrowserGotAddressData { id, pos, autoLinkTxInTraceMode } data ->
+            let
+                condFetchEgonet =
+                    fetchEgonet id autoLinkTxInTraceMode data
+            in
+            if pos == Auto && not (Network.isEmpty model.network) && Network.findAddressCoords id model.network == Nothing then
                 let
                     ( newModel, eff ) =
-                        fetchEgonet id data model
+                        condFetchEgonet model
                 in
                 if List.isEmpty eff then
                     browserGotAddressData uc plugins id Auto data newModel
-                        |> and (fetchEgonet id data)
+                        |> and condFetchEgonet
 
                 else
                     ( newModel, eff )
 
             else
-                browserGotAddressData uc plugins id position data model
-                    |> and (fetchEgonet id data)
+                browserGotAddressData uc plugins id pos data model
+                    |> and condFetchEgonet
 
-        BrowserGotRelationsToVisibleNeighbors id dir requestIds { neighbors } ->
+        BrowserGotRelationsToVisibleNeighbors { id, dir, requestIds, autoLinkInTraceMode } { neighbors } ->
             let
                 neighborIds =
                     neighbors
@@ -520,7 +545,7 @@ updateByMsg plugins uc msg model =
                                 getNextTxEffects newModel2.network
                                     addressId
                                     (Direction.flip dir)
-                                    { addBetweenLinks = loadBetweenLinks }
+                                    { addBetweenLinks = autoLinkInTraceMode && loadBetweenLinks, addAnyLinks = autoLinkInTraceMode }
                                     (Just id)
 
                             else
@@ -1270,7 +1295,7 @@ updateByMsg plugins uc msg model =
                             removeAddress aId m |> Tuple.mapSecond ((++) eff)
 
                         addAcc aId ( m, eff ) =
-                            loadAddress plugins aId m |> Tuple.mapSecond ((++) eff)
+                            loadAddress plugins True aId m |> Tuple.mapSecond ((++) eff)
                     in
                     if allChecked then
                         idsTable
@@ -1291,7 +1316,147 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
 
-        BrowserGotTx pos loadAddresses tx ->
+        InternalConversionLoopAddressesLoaded conv ->
+            let
+                mtxInput =
+                    ConversionEdge.getInputTransferIdRaw conv |> flip Dict.get model.network.txs
+
+                mtxOutput =
+                    ConversionEdge.getOutputTransferIdRaw conv |> flip Dict.get model.network.txs
+
+                arrangeConversionNodes txInput txOutput =
+                    let
+                        moveNode v txOrAdrId net =
+                            Network.updateAddress txOrAdrId (Node.moveAbs v) net
+
+                        displacementFromTx =
+                            4
+
+                        --input leg
+                        inputTxCoords =
+                            txInput |> Tx.toFinalCoords
+
+                        a =
+                            txInput
+                                |> Tx.getInputAddressIds
+                                |> List.foldl (moveNode { x = inputTxCoords.x - displacementFromTx, y = inputTxCoords.y }) model.network
+
+                        b =
+                            txInput
+                                |> Tx.getOutputAddressIds
+                                |> List.foldl (moveNode { x = inputTxCoords.x + displacementFromTx, y = inputTxCoords.y }) a
+
+                        -- output leg
+                        outputTxCoords =
+                            txOutput |> Tx.toFinalCoords
+
+                        c =
+                            txOutput
+                                |> Tx.getOutputAddressIds
+                                |> List.foldl (moveNode { x = outputTxCoords.x - displacementFromTx, y = outputTxCoords.y }) b
+
+                        netOut =
+                            txOutput
+                                |> Tx.getInputAddressIds
+                                |> List.foldl (moveNode { x = outputTxCoords.x + displacementFromTx, y = outputTxCoords.y }) c
+                    in
+                    n { model | network = netOut }
+            in
+            Maybe.map2 arrangeConversionNodes mtxInput mtxOutput
+                |> Maybe.withDefault (n model)
+
+        BrowserGotConversionLoop txA conversion tx ->
+            let
+                posA =
+                    txA |> Tx.toFinalCoords
+
+                ( ( ntx, nn ), newTx ) =
+                    case Dict.get (Tx.getTxId tx) model.network.txs of
+                        Just oldTx ->
+                            ( ( oldTx, model.network ), False )
+
+                        Nothing ->
+                            ( Network.addTxWithPosition model.config (Fixed posA.x (posA.y + 2)) tx model.network, True )
+
+                -- order txs such from and to, according to the which is the output leg (to) and which is the input leg (from)
+                ( inputTx, outputTx ) =
+                    if (txA.id |> Id.id |> removeLeading0x) == (conversion.fromAssetTransfer |> removeLeading0x) then
+                        ( txA, ntx )
+
+                    else
+                        ( ntx, txA )
+
+                nnn =
+                    nn |> Network.addConversion conversion inputTx outputTx
+
+                nFromAddress =
+                    Data.normalizeIdentifier conversion.fromNetwork conversion.fromAddress
+
+                nToAddress =
+                    Data.normalizeIdentifier conversion.toNetwork conversion.toAddress
+
+                eventualMsg =
+                    Network.AndCondition
+                        [ Network.AddressIsLoaded (Id.init conversion.fromNetwork nFromAddress)
+                        , Network.AddressIsLoaded (Id.init conversion.toNetwork nToAddress)
+                        , Network.OrCondition (inputTx |> Tx.getOutputAddressIds |> List.map Network.AddressIsLoaded)
+                        , Network.OrCondition (outputTx |> Tx.getInputAddressIds |> List.map Network.AddressIsLoaded)
+                        ]
+
+                ( eventualMessagesNew, mcmd ) =
+                    model.eventualMessages
+                        |> EventualMessages.addMessage eventualMsg (InternalConversionLoopAddressesLoaded conversion)
+            in
+            (model
+                |> s_network nnn
+                |> s_eventualMessages eventualMessagesNew
+            )
+                |> checkSelection uc
+                |> and
+                    (if newTx then
+                        autoLoadAddresses plugins False ntx
+
+                     else
+                        n
+                    )
+                |> Tuple.mapSecond ((++) (mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []))
+
+        BrowserGotConversions tx conversions ->
+            let
+                txid =
+                    Tx.getTxIdForTx tx
+
+                supportedConversions =
+                    conversions
+                        |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset)
+            in
+            supportedConversions
+                |> List.foldl
+                    (\conversion ( aggm, effects ) ->
+                        let
+                            secondTransferId =
+                                if Id.network txid == conversion.toNetwork && (Id.id txid |> removeLeading0x) == (conversion.toAssetTransfer |> removeLeading0x) then
+                                    Id.init conversion.fromNetwork conversion.fromAssetTransfer
+
+                                else
+                                    Id.init conversion.toNetwork conversion.toAssetTransfer
+
+                            effs =
+                                BrowserGotConversionLoop tx conversion
+                                    |> Api.GetTxEffect
+                                        { currency = Id.network secondTransferId
+                                        , txHash = Id.id secondTransferId
+                                        , includeIo = True
+                                        , tokenTxId = Nothing
+                                        }
+                                    |> ApiEffect
+                                    |> List.singleton
+                        in
+                        ( aggm, effects ++ effs )
+                    )
+                    ( model, [] )
+
+        BrowserGotTx { pos, loadAddresses, autoLinkInTraceMode } tx ->
             if Dict.member (Tx.getTxId tx) model.network.txs then
                 n model
 
@@ -1304,11 +1469,12 @@ updateByMsg plugins uc msg model =
                     |> checkSelection uc
                     |> and
                         (if loadAddresses then
-                            autoLoadAddresses plugins newTx
+                            autoLoadAddresses plugins autoLinkInTraceMode newTx
 
                          else
                             n
                         )
+                    |> and (autoLoadConversions plugins newTx)
 
         UserClickedSelectionTool ->
             n
@@ -1678,6 +1844,57 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
+        UserClickedConversionEdge _ _ ->
+            n model
+
+        UserMovesMouseOverConversionEdge id conv ->
+            if model.hovered == HoveredConversionEdge id then
+                n model
+
+            else
+                let
+                    unhovered =
+                        unhover model
+
+                    txid1 =
+                        ConversionEdge.getInputTransferId conv
+
+                    txid2 =
+                        ConversionEdge.getOutputTransferId conv
+                in
+                ( { unhovered
+                    | network =
+                        Network.updateConversionEdge id (s_hovered True) unhovered.network
+                            |> Network.updateTx txid1 (s_hovered True)
+                            |> Network.updateTx txid2 (s_hovered True)
+                    , hovered = HoveredConversionEdge id
+                  }
+                , []
+                )
+
+        UserMovesMouseOutConversionEdge id conv ->
+            let
+                uhm =
+                    unhover model
+
+                txid1 =
+                    ConversionEdge.getOutputTransferId conv
+
+                txid2 =
+                    ConversionEdge.getInputTransferId conv
+            in
+            ( { uhm
+                | network =
+                    uhm.network
+                        |> Network.updateTx txid1 (s_hovered False)
+                        |> Network.updateTx txid2 (s_hovered False)
+              }
+            , CloseTooltipEffect
+                (Just { context = AggEdge.idToString id, domId = AggEdge.idToString id })
+                False
+                |> List.singleton
+            )
+
         UserClickedAggEdge id ->
             ( model
             , Route.aggEdgeRoute
@@ -1772,7 +1989,7 @@ checkAllTxs plugins uc txIds model =
             )
 
         addAcc txId ( m, eff ) =
-            loadTx True plugins txId m |> Tuple.mapSecond ((++) eff)
+            loadTx True True plugins txId m |> Tuple.mapSecond ((++) eff)
     in
     if allChecked then
         let
@@ -1842,8 +2059,8 @@ getRelationDetails model id =
             Nothing
 
 
-fetchEgonet : Id -> Api.Data.Address -> Model -> ( Model, List Effect )
-fetchEgonet id data model =
+fetchEgonet : Id -> Bool -> Api.Data.Address -> Model -> ( Model, List Effect )
+fetchEgonet id autoLinkInTraceMode data model =
     let
         ( outOnlyIds, incOnlyIds ) =
             model.network.addresses
@@ -1907,18 +2124,18 @@ fetchEgonet id data model =
         ( CheckingNeighbors.initAddress data outOnlyIds incOnlyIds model.checkingNeighbors
             |> flip s_checkingNeighbors model
             |> s_network nw2
-        , getRelations id Outgoing outOnlyIds
-            ++ getRelations id Incoming incOnlyIds
+        , getRelations id Outgoing autoLinkInTraceMode outOnlyIds
+            ++ getRelations id Incoming autoLinkInTraceMode incOnlyIds
         )
 
 
-getRelations : Id -> Direction -> List Id -> List Effect
-getRelations id dir onlyIds =
+getRelations : Id -> Direction -> Bool -> List Id -> List Effect
+getRelations id dir autoLinkInTraceMode onlyIds =
     if List.isEmpty onlyIds then
         []
 
     else
-        BrowserGotRelationsToVisibleNeighbors id dir onlyIds
+        BrowserGotRelationsToVisibleNeighbors { id = id, dir = dir, requestIds = onlyIds, autoLinkInTraceMode = autoLinkInTraceMode }
             |> Api.GetAddressNeighborsEffect
                 { currency = Id.network id
                 , address = Id.id id
@@ -2112,62 +2329,74 @@ browserGotAddressData uc plugins id position data model =
         |> and (checkSelection uc)
 
 
-handleTooltipMsg : Tag.Msg -> Model -> ( Model, List Effect )
+handleTooltipMsg : AddressDetails.TooltipMsgs -> Model -> ( Model, List Effect )
 handleTooltipMsg msg model =
     case msg of
-        Tag.UserMovesMouseOutTagConcept ctx ->
-            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
+        AddressDetails.RelatedAddressesTooltipMsg inner ->
+            case inner of
+                AddressDetails.ShowRelatedAddressesTooltip config ->
+                    ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
 
-        Tag.UserMovesMouseOverTagConcept ctx ->
-            let
-                decoder =
-                    Json.Decode.map3 Tuple3.join
-                        (Json.Decode.index 0 Json.Decode.string)
-                        (Json.Decode.index 1 Json.Decode.string)
-                        (Json.Decode.index 2 Json.Decode.string)
-            in
-            Json.Decode.decodeString decoder ctx.context
-                |> Result.map
-                    (\( concept, currency, address ) ->
-                        let
-                            id =
-                                Id.init currency address
+                AddressDetails.HideRelatedAddressesTooltip config ->
+                    ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
 
-                            tsToTooltip ts =
-                                Tooltip.TagConcept id
-                                    concept
-                                    ts
-                                    { openTooltip =
-                                        Tag.UserMovesMouseOverTagConcept ctx
-                                            |> AddressDetails.TooltipMsg
-                                            |> AddressDetailsMsg id
-                                    , closeTooltip =
-                                        Tag.UserMovesMouseOutTagConcept ctx
-                                            |> AddressDetails.TooltipMsg
-                                            |> AddressDetailsMsg id
-                                    , openDetails = Just (UserOpensDialogWindow (TagsList id))
-                                    }
-                        in
-                        case Dict.get id model.tagSummaries of
-                            Just (HasTagSummaries { withCluster }) ->
-                                ( model
-                                , OpenTooltipEffect ctx False (tsToTooltip withCluster) |> List.singleton
-                                )
+        AddressDetails.TagTooltipMsg inner ->
+            case inner of
+                Tag.UserMovesMouseOutTagConcept ctx ->
+                    ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
-                            Just (HasTagSummaryWithCluster ts) ->
-                                ( model
-                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
-                                )
+                Tag.UserMovesMouseOverTagConcept ctx ->
+                    let
+                        decoder =
+                            Json.Decode.map3 Tuple3.join
+                                (Json.Decode.index 0 Json.Decode.string)
+                                (Json.Decode.index 1 Json.Decode.string)
+                                (Json.Decode.index 2 Json.Decode.string)
+                    in
+                    Json.Decode.decodeString decoder ctx.context
+                        |> Result.map
+                            (\( concept, currency, address ) ->
+                                let
+                                    id =
+                                        Id.init currency address
 
-                            Just (HasTagSummaryOnlyWithCluster ts) ->
-                                ( model
-                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
-                                )
+                                    tsToTooltip ts =
+                                        Tooltip.TagConcept id
+                                            concept
+                                            ts
+                                            { openTooltip =
+                                                Tag.UserMovesMouseOverTagConcept ctx
+                                                    |> AddressDetails.TagTooltipMsg
+                                                    |> AddressDetails.TooltipMsg
+                                                    |> AddressDetailsMsg id
+                                            , closeTooltip =
+                                                Tag.UserMovesMouseOutTagConcept ctx
+                                                    |> AddressDetails.TagTooltipMsg
+                                                    |> AddressDetails.TooltipMsg
+                                                    |> AddressDetailsMsg id
+                                            , openDetails = Just (UserOpensDialogWindow (TagsList id))
+                                            }
+                                in
+                                case Dict.get id model.tagSummaries of
+                                    Just (HasTagSummaries { withCluster }) ->
+                                        ( model
+                                        , OpenTooltipEffect ctx False (tsToTooltip withCluster) |> List.singleton
+                                        )
 
-                            _ ->
-                                n model
-                    )
-                |> Result.withDefault (n model)
+                                    Just (HasTagSummaryWithCluster ts) ->
+                                        ( model
+                                        , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
+                                        )
+
+                                    Just (HasTagSummaryOnlyWithCluster ts) ->
+                                        ( model
+                                        , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
+                                        )
+
+                                    _ ->
+                                        n model
+                            )
+                        |> Result.withDefault (n model)
 
 
 userClickedAddressCheckboxInTable : Plugins -> Id -> Model -> ( Model, List Effect )
@@ -2176,7 +2405,7 @@ userClickedAddressCheckboxInTable plugins id model =
         removeAddress id model
 
     else
-        loadAddress plugins id model
+        loadAddress plugins True id model
 
 
 userClickedAggEdgeCheckboxInTable : Plugins -> Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
@@ -2207,7 +2436,7 @@ userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
             ( model.network
                 |> Network.upsertAggEdgeData model.config anchorId dir data
                 |> flip s_network model
-            , BrowserGotRelationsToVisibleNeighbors anchorId flippedDir [ id ]
+            , BrowserGotRelationsToVisibleNeighbors { id = anchorId, dir = flippedDir, requestIds = [ id ], autoLinkInTraceMode = True }
                 |> Api.GetAddressNeighborsEffect
                     { currency = Id.network anchorId
                     , address = Id.id anchorId
@@ -2223,7 +2452,7 @@ userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
             )
 
     else
-        loadAddressWithPosition plugins (NextTo ( dir, anchorId )) id model
+        loadAddressWithPosition plugins True (NextTo ( dir, anchorId )) id model
 
 
 userClickedTx : Id -> Model -> ( Model, List Effect )
@@ -2318,7 +2547,7 @@ expandAddress address direction model =
         TxsNotFetched ->
             ( newmodel |> setLoading
             , Nothing
-                |> getNextTxEffects newmodel.network id direction { addBetweenLinks = False }
+                |> getNextTxEffects newmodel.network id direction { addBetweenLinks = False, addAnyLinks = True }
                 |> (++) eff
             )
 
@@ -2415,8 +2644,8 @@ updateTagDataOnAddress addressId m =
     tag |> Maybe.map (\n -> { m | network = net n }) |> Maybe.withDefault m
 
 
-getNextTxEffects : Network -> Id -> Direction -> { addBetweenLinks : Bool } -> Maybe Id -> List Effect
-getNextTxEffects network addressId direction { addBetweenLinks } neighborId =
+getNextTxEffects : Network -> Id -> Direction -> { addBetweenLinks : Bool, addAnyLinks : Bool } -> Maybe Id -> List Effect
+getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } neighborId =
     let
         config =
             { addressId = addressId
@@ -2426,18 +2655,22 @@ getNextTxEffects network addressId direction { addBetweenLinks } neighborId =
     Network.getRecentTxForAddress network (Direction.flip direction) addressId
         |> Maybe.map
             (\tx ->
-                case tx.type_ of
-                    Tx.Account t ->
-                        WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
-                            |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
-                            |> Workflow.next
-                            |> List.map ApiEffect
+                if addAnyLinks then
+                    case tx.type_ of
+                        Tx.Account t ->
+                            WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
+                                |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
+                                |> Workflow.next
+                                |> List.map ApiEffect
 
-                    Tx.Utxo t ->
-                        WorkflowNextUtxoTx.start config t.raw
-                            |> Workflow.mapEffect (WorkflowNextUtxoTx config neighborId)
-                            |> Workflow.next
-                            |> List.map ApiEffect
+                        Tx.Utxo t ->
+                            WorkflowNextUtxoTx.start config t.raw
+                                |> Workflow.mapEffect (WorkflowNextUtxoTx config neighborId)
+                                |> Workflow.next
+                                |> List.map ApiEffect
+
+                else
+                    []
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ ->
@@ -2449,11 +2682,14 @@ getNextTxEffects network addressId direction { addBetweenLinks } neighborId =
                         |> Workflow.next
                         |> List.map ApiEffect
 
-                else
+                else if addAnyLinks then
                     WorkflowNextTxByTime.start config
                         |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
                         |> Workflow.next
                         |> List.map ApiEffect
+
+                else
+                    []
             )
 
 
@@ -2596,10 +2832,10 @@ addPathToGraph plugins uc model net config list =
                 action =
                     case a of
                         Route.AddressHop _ adr ->
-                            loadAddressWithPosition plugins (Fixed x_ y_) ( net, adr )
+                            loadAddressWithPosition plugins True (Fixed x_ y_) ( net, adr )
 
                         Route.TxHop h ->
-                            loadTxWithPosition (Fixed x_ y_) False plugins ( net, h )
+                            loadTxWithPosition (Fixed x_ y_) True False plugins ( net, h )
 
                 annotations =
                     case a of
@@ -2656,7 +2892,7 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins id
+                |> loadAddress plugins True id
                 |> and (selectAddress id)
 
         Route.Network network (Route.Tx a) ->
@@ -2665,7 +2901,7 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadTx True plugins id
+                |> loadTx True True plugins id
                 |> and (selectTx id)
 
         Route.Network network (Route.Relation a b) ->
@@ -2677,8 +2913,8 @@ updateByRoute_ plugins uc route model =
                     Id.init network b
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins aId
-                |> and (loadAddress plugins bId)
+                |> loadAddress plugins True aId
+                |> and (loadAddress plugins True bId)
                 |> and (selectAggEdge uc (AggEdge.initId aId bId))
                 |> and (setTracingMode AggregateTracingMode)
 
@@ -2804,19 +3040,23 @@ updateByPluginOutMsg plugins uc outMsgs model =
             ( model, [] )
 
 
-loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
-loadAddress plugins =
-    loadAddressWithPosition plugins Auto
+loadAddress : Plugins -> Bool -> Id -> Model -> ( Model, List Effect )
+loadAddress plugins autoLinkTxInTraceMode =
+    loadAddressWithPosition plugins autoLinkTxInTraceMode Auto
 
 
-loadAddressWithPosition : Plugins -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition _ position id model =
+loadAddressWithPosition : Plugins -> Bool -> FindPosition -> Id -> Model -> ( Model, List Effect )
+loadAddressWithPosition _ autoLinkTxInTraceMode position id model =
     let
         request =
             ( -- don't add the address here because it is not loaded yet
               --{ model | network = Network.addAddressWithPosition plugins position id model.network }
               model
-            , [ BrowserGotAddressData id position
+            , [ BrowserGotAddressData
+                    { id = id
+                    , pos = position
+                    , autoLinkTxInTraceMode = autoLinkTxInTraceMode
+                    }
                     |> Api.GetAddressEffect
                         { currency = Id.network id
                         , address = Id.id id
@@ -2842,10 +3082,10 @@ loadAddressWithPosition _ position id model =
         |> Maybe.withDefault request
 
 
-loadTxWithPosition : FindPosition -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
-loadTxWithPosition pos loadAddresses _ id model =
+loadTxWithPosition : FindPosition -> Bool -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
+loadTxWithPosition pos autoLinkInTraceMode loadAddresses _ id model =
     ( model
-    , BrowserGotTx pos loadAddresses
+    , BrowserGotTx { pos = pos, loadAddresses = loadAddresses, autoLinkInTraceMode = autoLinkInTraceMode }
         |> Api.GetTxEffect
             { currency = Id.network id
             , txHash = Id.id id
@@ -2857,7 +3097,7 @@ loadTxWithPosition pos loadAddresses _ id model =
     )
 
 
-loadTx : Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
+loadTx : Bool -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
 loadTx =
     loadTxWithPosition Auto
 
@@ -2989,6 +3229,9 @@ unhover model =
 
                 HoveredAggEdge a ->
                     Network.updateAggEdge a (s_hovered False) model.network
+
+                HoveredConversionEdge ( a, b ) ->
+                    Network.updateConversionEdge ( a, b ) (s_hovered False) model.network
 
                 NoHover ->
                     model.network
@@ -3237,8 +3480,11 @@ addTx plugins _ anchorAddressId direction addressId tx model =
 
     else
         let
+            posNewTx =
+                Network.NextTo ( direction, anchorAddressId )
+
             ( newTx, network ) =
-                Network.addTxWithPosition model.config (Network.NextTo ( direction, anchorAddressId )) tx model.network
+                Network.addTxWithPosition model.config posNewTx tx model.network
 
             transform =
                 Transform.move
@@ -3270,9 +3516,10 @@ addTx plugins _ anchorAddressId direction addressId tx model =
                         position =
                             NextTo ( direction, newTx.id )
                     in
-                    loadAddressWithPosition plugins position a newmodel
+                    loadAddressWithPosition plugins True position a newmodel
                 )
             |> Maybe.withDefault (n newmodel)
+            |> and (autoLoadConversions plugins newTx)
 
 
 checkSelection : Update.Config -> Model -> ( Model, List Effect )
@@ -3530,8 +3777,8 @@ fromDeserialized plugins deserialized model =
                             onlyIds =
                                 parent.b :: List.map .b children
                         in
-                        getRelations parent.a Outgoing onlyIds
-                            ++ getRelations parent.a Incoming onlyIds
+                        getRelations parent.a Outgoing False onlyIds
+                            ++ getRelations parent.a Incoming False onlyIds
                     )
 
         ( newAndEmptyPathfinder, _ ) =
@@ -3555,15 +3802,33 @@ fromDeserialized plugins deserialized model =
     )
 
 
-autoLoadAddresses : Plugins -> Tx -> Model -> ( Model, List Effect )
-autoLoadAddresses plugins tx model =
+autoLoadConversions : Plugins -> Tx -> Model -> ( Model, List Effect )
+autoLoadConversions _ tx model =
+    case tx.type_ of
+        Tx.Utxo _ ->
+            n model
+
+        Tx.Account atx ->
+            ( model
+            , BrowserGotConversions tx
+                |> Api.GetConversionEffect
+                    { currency = atx.raw.network
+                    , txHash = atx.raw.identifier
+                    }
+                |> ApiEffect
+                |> List.singleton
+            )
+
+
+autoLoadAddresses : Plugins -> Bool -> Tx -> Model -> ( Model, List Effect )
+autoLoadAddresses plugins autoLinkInTraceMode tx model =
     let
         addresses =
             Tx.listAddressesForTx tx
                 |> List.map first
 
-        aggAddressAdd addressId =
-            and (loadAddress plugins addressId)
+        aggAddressAdd ( d, addressId ) =
+            and (loadAddressWithPosition plugins autoLinkInTraceMode (NextTo ( d, addressId )) addressId)
 
         src =
             if List.member Incoming addresses then
@@ -3571,6 +3836,7 @@ autoLoadAddresses plugins tx model =
 
             else
                 getAddressForDirection tx Incoming Set.empty
+                    |> Maybe.map (Tuple.pair Incoming)
 
         dst =
             if List.member Outgoing addresses then
@@ -3582,6 +3848,7 @@ autoLoadAddresses plugins tx model =
                     |> List.map Id.id
                     |> Set.fromList
                     |> getAddressForDirection tx Outgoing
+                    |> Maybe.map (Tuple.pair Outgoing)
     in
     [ src, dst ]
         |> List.filterMap identity
@@ -3691,4 +3958,4 @@ addOrRemoveTx plugins addressId txId model =
                         |> n
             )
         |> Maybe.Extra.withDefaultLazy
-            (\_ -> loadTx (addressId /= Nothing) plugins txId model)
+            (\_ -> loadTx True (addressId /= Nothing) plugins txId model)

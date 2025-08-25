@@ -1,6 +1,7 @@
 module Update.Pathfinder.Network exposing
     ( addAddress
     , addAddressWithPosition
+    , addConversion
     , addTx
     , addTxWithPosition
     , aggEdgeNeedsData
@@ -22,6 +23,7 @@ module Update.Pathfinder.Network exposing
     , updateAddress
     , updateAddressesByClusterId
     , updateAggEdge
+    , updateConversionEdge
     , updateTx
     , upsertAggEdgeData
     )
@@ -33,6 +35,7 @@ import Config.Pathfinder as Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict exposing (Dict)
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.AggEdge as AggEdge
+import Init.Pathfinder.ConversionEdge as ConversionEdge
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Tx as Tx
 import List.Nonempty as NList
@@ -41,6 +44,7 @@ import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address, txsToSet)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (DeserializedAggEdge, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
@@ -53,7 +57,55 @@ import Tuple exposing (first, pair, second)
 import Tuple2 exposing (pairTo, swap)
 import Update.Pathfinder.Address as Address exposing (txsInsertId)
 import Update.Pathfinder.AggEdge as AggEdge
+import Update.Pathfinder.ConversionEdge as ConversionEdge
 import Update.Pathfinder.Tx as Tx
+
+
+
+-- hasConversion : Id -> Network -> Bool
+-- hasConversion id network =
+--     Dict.member id network.conversions
+
+
+addConversion : Api.Data.ExternalConversion -> Tx -> Tx -> Network -> Network
+addConversion conversion inputTx outputTx network =
+    let
+        faid =
+            inputTx |> Tx.getOutputAddressIds |> List.head
+
+        taid =
+            outputTx |> Tx.getInputAddressIds |> List.head
+
+        -- currently we only support conversions between two addresses, and only draw conversion
+        -- between the first address of the input and the first address of the output tx
+        medge =
+            Maybe.map2 pair faid taid
+    in
+    case medge of
+        Just edge ->
+            let
+                c =
+                    ConversionEdge.init conversion edge ( inputTx |> Tx.getAsset, outputTx |> Tx.getAsset )
+                        |> s_inputAddress (Dict.get (first edge) network.addresses)
+                        |> s_outputAddress (Dict.get (second edge) network.addresses)
+
+                edgeMapUpsertFn =
+                    Maybe.map (Set.insert edge) >> Maybe.withDefault (edge |> Set.singleton) >> Just
+
+                edgeUpsertFn =
+                    Maybe.map (List.append [ c ]) >> Maybe.withDefault [ c ] >> Just
+
+                conversionsEdgeMap1 =
+                    Dict.update (first edge) edgeMapUpsertFn network.conversionsEdgeMap
+                        |> Dict.update (second edge) edgeMapUpsertFn
+            in
+            { network
+                | conversions = Dict.update edge edgeUpsertFn network.conversions
+                , conversionsEdgeMap = conversionsEdgeMap1
+            }
+
+        _ ->
+            network
 
 
 clearSelection : Network -> Network
@@ -325,6 +377,7 @@ insertAddress pc model newAddress =
                     )
                     ( newAddress
                     , setAddressInAggEdges newAddress model
+                        |> setAddressInConversions newAddress
                     )
 
         animAddress =
@@ -345,6 +398,11 @@ setAddressInAggEdges address network =
     updateAggEdgesById address.id (AggEdge.setAddress (Just address)) network
 
 
+setAddressInConversions : Address -> Network -> Network
+setAddressInConversions address network =
+    updateConversionsById address.id (List.map (ConversionEdge.setAddress (Just address))) network
+
+
 updateAggEdgesById : Id -> (AggEdge -> AggEdge) -> Network -> Network
 updateAggEdgesById id update network =
     Dict.get id network.addressAggEdgeMap
@@ -357,10 +415,29 @@ updateAggEdgesById id update network =
         |> Maybe.withDefault network
 
 
+updateConversionsById : Id -> (List ConversionEdge -> List ConversionEdge) -> Network -> Network
+updateConversionsById id update network =
+    Dict.get id network.conversionsEdgeMap
+        |> Maybe.map
+            (Set.foldl
+                (\conversionId -> Dict.update conversionId (Maybe.map update))
+                network.conversions
+            )
+        |> Maybe.map (flip s_conversions network)
+        |> Maybe.withDefault network
+
+
 updateAggEdge : ( Id, Id ) -> (AggEdge -> AggEdge) -> Network -> Network
 updateAggEdge id upd network =
     { network
         | aggEdges = Dict.update id (Maybe.map upd) network.aggEdges
+    }
+
+
+updateConversionEdge : ( Id, Id ) -> (ConversionEdge -> ConversionEdge) -> Network -> Network
+updateConversionEdge id upd network =
+    { network
+        | conversions = Dict.update id (Maybe.map (List.map upd)) network.conversions
     }
 
 
@@ -463,6 +540,7 @@ updateAddress id update model =
                 | addresses = Dict.update id (Maybe.map update) model.addresses
             }
         |> updateAggEdgesById id (AggEdge.updateAddress id update)
+        |> updateConversionsById id (List.map (ConversionEdge.updateAddress id update))
 
 
 updateAllAddresses : (Address -> Address) -> Network -> Network

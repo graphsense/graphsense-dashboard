@@ -78,7 +78,7 @@ stringColumn _ { label, accessor } =
         { name = label
         , viewData =
             \data ->
-                Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
+                Table.HtmlDetails [ [ PCSS.mGap |> Css.padding, Css.verticalAlign Css.middle ] |> css ]
                     [ text (accessor data)
                     ]
         , sorter = Table.unsortable

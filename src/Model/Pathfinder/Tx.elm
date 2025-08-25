@@ -8,6 +8,7 @@ module Model.Pathfinder.Tx exposing
     , avg
     , calcCoords
     , getAccountTx
+    , getAsset
     , getCoords
     , getInputAddressIds
     , getInputs
@@ -19,6 +20,7 @@ module Model.Pathfinder.Tx exposing
     , getTxId
     , getTxIdForAddressTx
     , getTxIdForRelationTx
+    , getTxIdForTx
     , getUtxoTx
     , hasAddress
     , hasInput
@@ -28,6 +30,7 @@ module Model.Pathfinder.Tx exposing
     , isRawOutFlow
     , listAddressesForTx
     , listSeparatedAddressesForTx
+    , toFinalCoords
     )
 
 import Animation exposing (Animation, Clock)
@@ -86,6 +89,16 @@ type alias Io =
     , address : Maybe Address -- the address present on the graph
     , aggregatesN : Int
     }
+
+
+getAsset : Tx -> String
+getAsset tx =
+    case tx.type_ of
+        Account { raw } ->
+            raw.currency
+
+        Utxo { raw } ->
+            raw.currency
 
 
 getNetwork : Tx -> String
@@ -251,9 +264,13 @@ avg field items =
 
 
 addressToCoords : Address -> Coords
-addressToCoords { x, y } =
-    Animation.getTo y
-        |> Coords x
+addressToCoords =
+    toFinalCoords
+
+
+toFinalCoords : { t | x : Float, y : Animation } -> Coords
+toFinalCoords { x, y } =
+    Coords x (Animation.getTo y)
 
 
 getUtxoTx : Tx -> Maybe UtxoTx
@@ -294,6 +311,16 @@ getTxId tx =
 
         Api.Data.TxTxUtxo t ->
             Id.init t.currency t.txHash
+
+
+getTxIdForTx : Tx -> Id
+getTxIdForTx tx =
+    case tx.type_ of
+        Account t ->
+            Id.init t.raw.network t.raw.identifier
+
+        Utxo t ->
+            Id.init t.raw.currency t.raw.txHash
 
 
 getTxIdForAddressTx : Api.Data.AddressTx -> Id

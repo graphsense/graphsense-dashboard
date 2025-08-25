@@ -10,6 +10,12 @@ import Plugin.Update as Plugin exposing (Plugins)
 shallPushHistory : Plugins -> Msg -> Model -> Bool
 shallPushHistory plugins msg _ =
     case msg of
+        InternalConversionLoopAddressesLoaded _ ->
+            False
+
+        EventualMessagesHeartBeat ->
+            False
+
         UserClickedGraph _ ->
             False
 
@@ -81,6 +87,15 @@ shallPushHistory plugins msg _ =
 
         AddressDetailsMsg _ am ->
             case am of
+                AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg _ ->
+                    False
+
+                AddressDetails.RelatedAddressesPubkeyTablePagedTableMsg _ ->
+                    False
+
+                AddressDetails.BrowserGotPubkeyRelations _ ->
+                    False
+
                 AddressDetails.UserClickedTxCheckboxInTable _ ->
                     True
 
@@ -169,6 +184,9 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.RelatedAddressesTableMsg _ ->
+                    False
+
+                AddressDetails.RelatedAddressesPubkeyTableMsg _ ->
                     False
 
                 AddressDetails.BrowserGotEntityAddressesForRelatedAddressesTable _ ->
@@ -266,7 +284,7 @@ shallPushHistory plugins msg _ =
         AnimationFrameDeltaForMove _ ->
             False
 
-        BrowserGotAddressData _ _ _ ->
+        BrowserGotAddressData _ _ ->
             False
 
         BrowserGotClusterData _ _ ->
@@ -290,7 +308,13 @@ shallPushHistory plugins msg _ =
         BrowserGotActor _ _ ->
             False
 
-        BrowserGotTx _ _ _ ->
+        BrowserGotTx _ _ ->
+            False
+
+        BrowserGotConversionLoop _ _ _ ->
+            False
+
+        BrowserGotConversions _ _ ->
             False
 
         ChangedDisplaySettingsMsg _ ->
@@ -327,6 +351,12 @@ shallPushHistory plugins msg _ =
             False
 
         UserMovesMouseOverAggEdge _ ->
+            False
+
+        UserMovesMouseOutConversionEdge _ _ ->
+            False
+
+        UserMovesMouseOverConversionEdge _ _ ->
             False
 
         UserMovesMouseOutAggEdge _ ->
@@ -422,11 +452,14 @@ shallPushHistory plugins msg _ =
         UserClickedToggleTracingMode ->
             False
 
-        BrowserGotRelationsToVisibleNeighbors _ _ _ _ ->
+        BrowserGotRelationsToVisibleNeighbors _ _ ->
             False
 
         InternalPathfinderAddedAddress _ ->
             False
 
         UserClickedAggEdge _ ->
+            False
+
+        UserClickedConversionEdge _ _ ->
             False

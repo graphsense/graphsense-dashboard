@@ -9,7 +9,7 @@ import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import RecordSetter as Rs
 import Tuple exposing (pair)
-import Util exposing (n)
+import Util exposing (n, removeLeading0x)
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
@@ -91,20 +91,11 @@ filterByPrefix input result =
                     in
                     { currency
                         | addresses = List.filter (String.startsWith addr) currency.addresses
-                        , txs = List.filter (\x -> String.startsWith (removeSubTxIndicators (removeLeading0x input)) (removeLeading0x x)) currency.txs
+                        , txs = List.filter (\x -> String.startsWith (removeSubTxIndicators (removeLeading0x input) |> String.toLower) (removeLeading0x x |> String.toLower)) currency.txs
                     }
                 )
                 result.currencies
     }
-
-
-removeLeading0x : String -> String
-removeLeading0x s =
-    if String.startsWith "0x" s then
-        s |> String.dropLeft 2
-
-    else
-        s
 
 
 removeSubTxIndicators : String -> String
