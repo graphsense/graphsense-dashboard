@@ -1,6 +1,7 @@
 module Model.Graph.Browser exposing (Model, Row(..), ScrollPos, TableLink, Type(..), Value(..), loadableActor, loadableActorId, loadableAddress, loadableAddressCurrency, loadableAddressId, loadableBlock, loadableBlockId, loadableCurrency, loadableEntity, loadableEntityCurrency, loadableEntityId, loadableTx, loadableTxAccount, loadableTxId)
 
 import Api.Data
+import Components.Table exposing (Table)
 import Config.Graph as Graph
 import FontAwesome
 import Html.Styled exposing (Html)

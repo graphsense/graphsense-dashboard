@@ -1,9 +1,7 @@
-module Components.PagedTable exposing (Config, Model, Msg(..), appendData, getCurrentPage, getItemsPerPage, getNrItems, getPage, getTable, goToFirstPage, hasNextPage, hasPrevPage, init, loadFirstPage, removeItem, setData, setItemsPerPage, setNrItems, update, updateTable)
+module Components.PagedTable exposing (Config, Fetch, Model, Msg(..), appendData, getCurrentPage, getItemsPerPage, getNrItems, getPage, getTable, goToFirstPage, hasNextPage, hasPrevPage, init, loadFirstPage, removeItem, setData, setItemsPerPage, setNrItems, update, updateTable)
 
-import Init.Graph.Table as Table
-import Model.Graph.Table as Table exposing (Table)
+import Components.Table as Table exposing (Table)
 import RecordSetter exposing (s_loading, s_nextpage)
-import Update.Graph.Table as Table
 
 
 type Model d
@@ -193,9 +191,9 @@ loadMore config pt =
                 config.fetch
                     |> Maybe.map (\fn -> fn pagesize pt.table.nextpage)
     in
-    ( pt |> Model
-         |> setLoading (fetch /= Nothing)
-        
+    ( pt
+        |> Model
+        |> setLoading (fetch /= Nothing)
     , fetch
     )
 
@@ -264,7 +262,7 @@ getItemsPerPage (Model pt) =
 
 loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
 loadFirstPage config (Model pt) =
-    (( Model pt) |> setLoading True |> goToFirstPage
+    ( Model pt |> setLoading True |> goToFirstPage
     , config.fetch
         |> Maybe.map
             (\fn -> fn pt.itemsPerPage Nothing)

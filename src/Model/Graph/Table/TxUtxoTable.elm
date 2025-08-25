@@ -1,8 +1,7 @@
 module Model.Graph.Table.TxUtxoTable exposing (columnTitleFromDirection, filter, joinAddresses, titleValue)
 
 import Api.Data
-import Config.Graph as Graph
-import Model.Graph.Table as Table
+import Components.Table as Table
 
 
 titleValue : String

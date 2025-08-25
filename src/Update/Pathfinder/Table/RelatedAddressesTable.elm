@@ -2,15 +2,15 @@ module Update.Pathfinder.Table.RelatedAddressesTable exposing (appendAddresses, 
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.PagedTable as PagedTable
+import Components.Table as Table
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
-import Init.Graph.Table
 import Maybe.Extra
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, filter, getTable, setTable)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
-import PagedTable
 import RecordSetter as Rs
 import Set
 import Tuple exposing (mapFirst, mapSecond)
@@ -30,7 +30,7 @@ itemsPerPage =
 init : Id -> Api.Data.Entity -> Model
 init addressId entity =
     { table =
-        PagedTable.init Init.Graph.Table.initUnsorted
+        PagedTable.init Table.initUnsorted
             |> PagedTable.setNrItems entity.noAddresses
             |> PagedTable.setItemsPerPage itemsPerPage
     , addressId = addressId

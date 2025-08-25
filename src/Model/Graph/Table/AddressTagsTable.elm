@@ -1,7 +1,7 @@
 module Model.Graph.Table.AddressTagsTable exposing (filter)
 
 import Api.Data
-import Config.Graph as Graph
+import Components.Table as Table
 import Model.Graph.Table as Table
 
 

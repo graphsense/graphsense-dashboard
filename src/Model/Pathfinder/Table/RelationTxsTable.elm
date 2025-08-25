@@ -2,11 +2,11 @@ module Model.Pathfinder.Table.RelationTxsTable exposing (Model, filter, titleHas
 
 import Api.Data
 import Api.Request.Addresses
+import Components.PagedTable as PagedTable
+import Components.Table as Table
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction)
-import Model.Graph.Table as Table
 import Msg.Pathfinder.RelationDetails exposing (Msg)
-import PagedTable
 import Util.ThemedSelectBox as ThemedSelectBox
 
 

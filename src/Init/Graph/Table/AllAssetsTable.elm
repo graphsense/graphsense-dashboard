@@ -1,11 +1,11 @@
 module Init.Graph.Table.AllAssetsTable exposing (init)
 
-import Init.Graph.Table
+import Components.Table as Table
 import Model.Graph.Table exposing (AllAssetsTable, titleValue)
 import RecordSetter exposing (..)
 
 
 init : AllAssetsTable
 init =
-    Init.Graph.Table.initSorted True titleValue
+    Table.initSorted True titleValue
         |> s_loading False

@@ -2,6 +2,7 @@ module View.Pathfinder.AddressDetails exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.InfiniteTable as InfiniteTable
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -30,7 +31,6 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
-import PagedTable
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
@@ -52,6 +52,7 @@ import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
@@ -459,16 +460,17 @@ transactionTableView vc addressId txOnGraphFn model =
 
         allChecked =
             model.table
-                |> PagedTable.getPage
+                |> InfiniteTable.getTable
+                |> .filtered
                 |> List.map Tx.getTxIdForAddressTx
                 |> allAndNotEmpty txOnGraphFn
 
         table =
-            PagedTable.pagedTableView vc
+            InfiniteTable.view vc
                 []
                 (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
-                model.table
                 AddressDetails.TransactionsTablePagedTableMsg
+                model.table
     in
     [ TransactionFilter.filterHeader vc
         model

@@ -1,6 +1,7 @@
 module View.Graph.Table.LabelAddressTagsTable exposing (config)
 
 import Api.Data
+import Components.Table exposing (Table)
 import Config.View as View
 import Css
 import Css.Table exposing (styles)
@@ -8,8 +9,6 @@ import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Init.Graph.Table
-import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.LabelAddressTagsTable exposing (titleConfidence)
 import Msg.Graph exposing (Msg(..))
 import Table

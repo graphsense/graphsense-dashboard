@@ -9,13 +9,13 @@
         "themes",
         "config",
         "lib/elm-autocomplete/src",
-        "lib/elm-css-sortable-table/src",
-        "lib/pagedtable/src"
+        "lib/elm-css-sortable-table/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {
         "direct": {
             "BrianHicks/elm-csv": "3.0.3",
+            "FabienHenon/elm-infinite-scroll": "3.0.3",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
             "Spaxe/svg-pathd": "3.0.2",
             "TSFoster/elm-tuple-extra": "2.0.0",

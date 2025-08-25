@@ -1,8 +1,8 @@
-module Model.Graph.Table exposing (ActorTable(..), AddressTable(..), AddresslinkTable(..), AllAssetsTable, BlockTable(..), EntityTable(..), Filter, Table, TxAccountTable(..), TxUtxoTable(..), titleAddress, titleCurrency, titleHeight, titleLabel, titleTimestamp, titleTx, titleValue)
+module Model.Graph.Table exposing (ActorTable(..), AddressTable(..), AddresslinkTable(..), AllAssetsTable, BlockTable(..), EntityTable(..), TxAccountTable(..), TxUtxoTable(..), titleAddress, titleCurrency, titleHeight, titleLabel, titleTimestamp, titleTx, titleValue)
 
 import Api.Data
+import Components.Table exposing (Table)
 import Model.Currency exposing (AssetIdentifier)
-import Table
 
 
 titleTx : String
@@ -88,19 +88,3 @@ type AddresslinkTable
 
 type alias AllAssetsTable =
     Table ( AssetIdentifier, Api.Data.Values )
-
-
-type alias Table a =
-    { data : List a
-    , filtered : List a
-    , loading : Bool
-    , state : Table.State
-    , nextpage : Maybe String
-    , searchTerm : Maybe String
-    }
-
-
-type alias Filter a =
-    { search : String -> a -> Bool
-    , filter : a -> Bool
-    }

@@ -1,10 +1,10 @@
 module Model.Pathfinder.AddressDetails exposing (Model)
 
 import Api.Data
+import Components.PagedTable as PagedTable
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import PagedTable
 import RemoteData exposing (WebData)
 
 

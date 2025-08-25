@@ -1,6 +1,7 @@
 module View.Graph.Table exposing (Tools, addressColumn, csvTool, customizations, filterTool, htmlColumn, htmlColumnWithSorter, info, intColumn, intColumnWithoutValueDetailFormatting, maybeIntColumn, noTools, simpleThead, simpleTheadHelp, stringColumn, table, tableHint, tickColumn, tickIf, timestampColumn, valueAndTokensColumnWithOptions, valueColumn, valueColumnWithOptions, valueColumnWithoutCode, valuesCell, valuesCss, valuesSorter)
 
 import Api.Data
+import Components.Table as T
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
@@ -10,7 +11,6 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Currency exposing (AssetIdentifier, asset, assetFromBase)
-import Model.Graph.Table as T
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)

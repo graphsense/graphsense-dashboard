@@ -1,10 +1,11 @@
 module Msg.Pathfinder.AddressDetails exposing (Msg(..))
 
 import Api.Data
+import Components.InfiniteTable as InfiniteTable
+import Components.PagedTable as PagedTable
 import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
-import PagedTable
 import Table
 import Time
 import Util.Tag as Tag
@@ -20,7 +21,7 @@ type Msg
     | UserClickedToggleTotalSpentDetails
     | UserClickedToggleClusterDetailsOpen
     | UserClickedToggleDisplayAllTagsInDetails
-    | TransactionsTablePagedTableMsg PagedTable.Msg
+    | TransactionsTablePagedTableMsg InfiniteTable.Msg
     | NeighborsTablePagedTableMsg Direction PagedTable.Msg
     | GotTxsForAddressDetails ( Maybe Time.Posix, Maybe Time.Posix ) Api.Data.AddressTxs
     | GotNextPageTxsForAddressDetails Api.Data.AddressTxs

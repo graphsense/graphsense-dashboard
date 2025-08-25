@@ -99,7 +99,6 @@
     { "count": 1, "filePath": "src/Init/Graph/Highlighter.elm" },
     { "count": 1, "filePath": "src/Init/Graph/Layer.elm" },
     { "count": 1, "filePath": "src/Init/Graph/Search.elm" },
-    { "count": 1, "filePath": "src/Init/Graph/Table.elm" },
     { "count": 1, "filePath": "src/Init/Graph/Table/AllAssetsTable.elm" },
     { "count": 1, "filePath": "src/Init/Graph/Table/TxUtxoTable.elm" },
     { "count": 1, "filePath": "src/Init/Graph/Table/UserAddressTagsTable.elm" },
@@ -119,7 +118,6 @@
     { "count": 1, "filePath": "src/Update/Graph/Adding.elm" },
     { "count": 1, "filePath": "src/Update/Graph/Address.elm" },
     { "count": 1, "filePath": "src/Update/Graph/Search.elm" },
-    { "count": 1, "filePath": "src/Update/Graph/Table.elm" },
     { "count": 1, "filePath": "src/Update/Locale.elm" },
     { "count": 1, "filePath": "src/Update/Search.elm" },
     { "count": 1, "filePath": "src/View/Header.elm" }

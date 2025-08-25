@@ -2,7 +2,6 @@ module Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress, init
 
 import Config.Update as Update
 import Model.Address as Address
-import Model.DateFilter exposing (DateFilterRaw)
 import Model.Locale as Locale
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
@@ -21,10 +20,10 @@ getExposedAssetsForAddress uc address =
         |> RemoteData.withDefault allAssets
 
 
-init : Maybe DateFilterRaw -> Address -> AddressDetails.Model
-init dateFilterPreset address =
+init : Address -> AddressDetails.Model
+init address =
     { neighborsTableOpen = False
-    , transactionsTableOpen = dateFilterPreset /= Nothing
+    , transactionsTableOpen = False
     , tokenBalancesOpen = False
     , txs = RemoteData.NotAsked
     , neighborsOutgoing = RemoteData.NotAsked

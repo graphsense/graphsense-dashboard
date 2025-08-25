@@ -1,6 +1,7 @@
 module Update.Graph.Browser exposing (filterTable, hideTable, infiniteScroll, loadingActor, loadingAddress, loadingBlock, loadingEntity, loadingLabel, loadingTxAccount, loadingTxUtxo, openActor, searchTable, setHeight, showActor, showActorTable, showActorTags, showAddress, showAddressNeighbors, showAddressTable, showAddressTags, showAddressTxsAccount, showAddressTxsUtxo, showAddresslink, showAddresslinkTable, showAddresslinkTxsAccount, showAddresslinkTxsUtxo, showBlock, showBlockTable, showBlockTxsAccount, showBlockTxsUtxo, showEntity, showEntityAddressTags, showEntityAddresses, showEntityNeighbors, showEntityTable, showEntityTxsAccount, showEntityTxsUtxo, showEntitylink, showEntitylinkTable, showEntitylinkTxsAccount, showEntitylinkTxsUtxo, showLabelAddressTags, showPlugin, showTokenTxs, showTx, showTxAccountTable, showTxUtxoAddresses, showTxUtxoTable, showUserTags, tableAsCSV, tableNewState, updateAddress, updateEntityIf, updateUserTags)
 
 import Api.Data
+import Components.Table as Table exposing (UpdateSearchTerm(..), appendData, searchData, setData)
 import Config.Graph as Graph
 import Config.Update
 import Dict
@@ -54,7 +55,6 @@ import RecordSetter exposing (..)
 import Route.Graph as Route
 import Table
 import Tuple exposing (..)
-import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, searchData, setData)
 import Util exposing (n)
 import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
@@ -2797,7 +2797,7 @@ tableAsCSV locale uc { type_ } =
             List.map (mapFirst first)
 
         asCsv prep t title =
-            Update.Graph.Table.asCsv (prep >> translate) t |> pair title |> Just
+            Table.asCsv (prep >> translate) t |> pair title |> Just
 
         loadableAddressToList l =
             loadableAddress l

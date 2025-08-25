@@ -2,6 +2,7 @@ module View.Graph.Browser exposing (browseRow, browseValue, browser, frame, prop
 
 import Api.Data exposing (Entity)
 import Basics.Extra exposing (uncurry)
+import Components.Table exposing (Table)
 import Config.Graph as Graph
 import Config.View as View
 import Css as CssStyled

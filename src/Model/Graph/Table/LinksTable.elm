@@ -1,8 +1,6 @@
 module Model.Graph.Table.LinksTable exposing (filter, titleUrl)
 
-import Api.Data
-import Config.Graph as Graph
-import Model.Graph.Table as Table
+import Components.Table as Table
 
 
 titleUrl : String

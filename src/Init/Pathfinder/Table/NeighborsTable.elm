@@ -1,8 +1,8 @@
 module Init.Pathfinder.Table.NeighborsTable exposing (init)
 
 import Api.Data
-import Init.Graph.Table as Table
-import PagedTable
+import Components.PagedTable as PagedTable
+import Components.Table as Table
 
 
 init : Int -> PagedTable.Model Api.Data.NeighborAddress

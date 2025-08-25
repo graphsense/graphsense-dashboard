@@ -2,6 +2,7 @@ module View.Pathfinder.TxDetails exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.Table exposing (Table)
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -12,7 +13,6 @@ import Json.Decode
 import List.Extra
 import Model.Currency exposing (asset, assetFromBase)
 import Model.Graph.Coords as Coords
-import Model.Graph.Table
 import Model.Pathfinder as Pathfinder exposing (getHavingTags)
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -245,7 +245,7 @@ utxo vc model id viewState tx =
         }
 
 
-ioTableView : View.Config -> IoDirection -> Network -> Model.Graph.Table.Table Api.Data.TxValue -> IoColumnConfig -> Html Msg
+ioTableView : View.Config -> IoDirection -> Network -> Table Api.Data.TxValue -> IoColumnConfig -> Html Msg
 ioTableView vc dir network table ioColumnConfig =
     let
         isCheckedFn =

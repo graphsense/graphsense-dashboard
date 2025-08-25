@@ -3,9 +3,9 @@ module Update.Graph exposing (At(..), More(..), SearchResult, addAddress, addAdd
 import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
+import Components.Table as Table
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
-import Css exposing (transformBox)
 import DateFormat
 import Decode.Graph044 as Graph044
 import Decode.Graph045 as Graph045
@@ -14,7 +14,6 @@ import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
 import Effect.Api exposing (Effect(..), getAddressEgonet, getEntityEgonet)
 import Effect.Graph exposing (Effect(..))
-import Encode.Graph as Encode
 import File
 import File.Select
 import Hovercard
@@ -26,7 +25,7 @@ import Init.Graph.Search as Search
 import Init.Graph.Tag as Tag
 import IntDict exposing (IntDict)
 import Json.Decode
-import Json.Encode exposing (Value)
+import Json.Encode
 import List.Extra
 import Log
 import Maybe.Extra
@@ -71,7 +70,6 @@ import Update.Graph.Highlighter as Highlighter
 import Update.Graph.History as History
 import Update.Graph.Layer as Layer
 import Update.Graph.Search as Search
-import Update.Graph.Table as Table
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
 import Util exposing (n)
@@ -302,7 +300,7 @@ syncBrowser old model =
 
 
 loadNextAddress : Plugins -> Update.Config -> Model -> Id.AddressId -> ( Model, List Effect )
-loadNextAddress plugins uc model id =
+loadNextAddress plugins _ model id =
     Adding.getNextAddressFor id model.adding
         |> Maybe.map
             (\nextId ->
@@ -322,7 +320,7 @@ loadNextAddress plugins uc model id =
 
 
 loadNextEntity : Plugins -> Update.Config -> Model -> Id.EntityId -> ( Model, List Effect )
-loadNextEntity plugins uc model id =
+loadNextEntity plugins _ model id =
     Adding.getNextEntityFor id model.adding
         |> Maybe.map
             (\nextId ->
@@ -402,7 +400,7 @@ updateByMsg plugins uc msg model =
             else
                 n newModel
 
-        InternalGraphSelectedAddress id ->
+        InternalGraphSelectedAddress _ ->
             n model
 
         -- handled upstream
@@ -526,13 +524,13 @@ updateByMsg plugins uc msg model =
                 NoDragging ->
                     n model
 
-                Dragging _ start coords ->
+                Dragging _ _ _ ->
                     { model
                         | dragging = NoDragging
                     }
                         |> repositionHovercards
 
-                DraggingNode id start coords ->
+                DraggingNode id _ _ ->
                     { model
                         | layers = Layer.releaseEntity id model.layers
                         , dragging = NoDragging
@@ -3697,7 +3695,7 @@ loadAddress :
         }
     -> Model
     -> ( Model, List Effect )
-loadAddress plugins { currency, address, table, at } model =
+loadAddress _ { currency, address, table, at } model =
     at
         |> Maybe.andThen
             (\l ->
@@ -3789,7 +3787,7 @@ loadEntity :
         }
     -> Model
     -> ( Model, List Effect )
-loadEntity plugins { currency, entity, table, layer } model =
+loadEntity _ { currency, entity, table, layer } model =
     layer
         |> Maybe.andThen
             (\l -> Layer.getEntity (Id.initEntityId { currency = currency, id = entity, layer = l }) model.layers)

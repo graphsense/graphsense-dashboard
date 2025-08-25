@@ -1,11 +1,11 @@
 module Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, filter, getTable, setTable, totalReceivedColumn)
 
 import Api.Data
+import Components.PagedTable as PagedTable
+import Components.Table as Table
 import Init.Pathfinder.Id as Pathfinder
 import Model.Entity exposing (Entity)
-import Model.Graph.Table as Table
 import Model.Pathfinder.Id as Pathfinder
-import PagedTable
 import RecordSetter as Rs
 import Set exposing (Set)
 

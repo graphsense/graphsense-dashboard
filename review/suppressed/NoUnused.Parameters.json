@@ -4,7 +4,6 @@
   "learn more": "elm-review suppress --help",
   "suppressions": [
     { "count": 29, "filePath": "src/View/Graph/Browser.elm" },
-    { "count": 5, "filePath": "src/Update/Graph.elm" },
     { "count": 4, "filePath": "src/View/Graph/Entity.elm" },
     { "count": 4, "filePath": "src/View/Graph/Link.elm" },
     { "count": 3, "filePath": "src/Log.elm" },
@@ -13,6 +12,7 @@
     { "count": 2, "filePath": "src/Update/Graph/Entity.elm" },
     { "count": 1, "filePath": "src/Config/Graph.elm" },
     { "count": 1, "filePath": "src/Model/Graph/Address.elm" },
+    { "count": 1, "filePath": "src/Update/Graph.elm" },
     { "count": 1, "filePath": "src/Update/Graph/Browser.elm" },
     { "count": 1, "filePath": "src/Update/Graph/Layer.elm" },
     { "count": 1, "filePath": "src/Update/Graph/Search.elm" },

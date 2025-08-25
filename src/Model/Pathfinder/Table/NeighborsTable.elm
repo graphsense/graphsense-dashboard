@@ -1,7 +1,7 @@
 module Model.Pathfinder.Table.NeighborsTable exposing (filter)
 
 import Api.Data
-import Model.Graph.Table as Table
+import Components.Table as Table
 
 
 filter : Table.Filter Api.Data.NeighborAddress

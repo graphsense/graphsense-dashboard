@@ -1,7 +1,6 @@
 module Model.Graph.Table.UserAddressTagsTable exposing (filter, titleAbuse, titleAddress, titleCategory, titleCurrency, titleDefinesEntity, titleLabel, titleSource)
 
-import Config.Graph as Graph
-import Model.Graph.Table as Table
+import Components.Table as Table
 import Model.Graph.Tag as Tag
 
 

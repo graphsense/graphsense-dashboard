@@ -1,8 +1,8 @@
 module Model.Graph.Table.AddressNeighborsTable exposing (filter, titleAddressBalance, titleAddressReceived, titleLabels, titleNoTxs, titleValue)
 
 import Api.Data
+import Components.Table as Table
 import Config.Graph as Graph
-import Model.Currency exposing (AssetIdentifier, assetFromBase)
 import Model.Graph.Table as Table
 import Util.Data as Data
 import Util.Graph as Graph
