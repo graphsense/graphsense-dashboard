@@ -1,10 +1,11 @@
 module Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..), RelatedAddressesTooltipMsgs(..), TooltipContext, TooltipMsgs(..), relatedAddressTypeOptions)
 
 import Api.Data
+import Components.InfiniteTable as InfiniteTable
+import Components.PagedTable as PagedTable
 import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
-import PagedTable
 import Table
 import Time
 import Util.Tag as Tag
@@ -46,8 +47,8 @@ type Msg
     | UserClickedToggleTotalSpentDetails
     | UserClickedToggleClusterDetailsOpen
     | UserClickedToggleDisplayAllTagsInDetails
-    | TransactionsTablePagedTableMsg PagedTable.Msg
-    | NeighborsTablePagedTableMsg Direction PagedTable.Msg
+    | TransactionsTableSubTableMsg InfiniteTable.Msg
+    | NeighborsTableSubTableMsg Direction InfiniteTable.Msg
     | GotTxsForAddressDetails ( Maybe Time.Posix, Maybe Time.Posix ) Api.Data.AddressTxs
     | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
@@ -71,7 +72,7 @@ type Msg
     | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
     | BrowserGotEntityAddressTagsForRelatedAddressesTable String Api.Data.AddressTags
     | UserClickedToggleRelatedAddressesTable
-    | RelatedAddressesTablePagedTableMsg PagedTable.Msg
+    | RelatedAddressesTableSubTableMsg InfiniteTable.Msg
     | RelatedAddressesPubkeyTablePagedTableMsg PagedTable.Msg
     | UserClickedAddressCheckboxInTable Id
     | UserClickedAggEdgeCheckboxInTable Direction Id Api.Data.NeighborAddress

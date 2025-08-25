@@ -2,6 +2,7 @@ module View.Pathfinder.RelationDetails exposing (ValuesFormatted, ValuesRow, mak
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.PagedTable as PagedTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -18,7 +19,6 @@ import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails
-import PagedTable
 import RecordSetter as Rs
 import RemoteData exposing (RemoteData(..))
 import Svg.Styled.Attributes exposing (css)

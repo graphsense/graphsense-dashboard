@@ -1,10 +1,10 @@
 module Model.Dialog exposing (AddTagConfig, ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg)
 
 import Api.Data
+import Components.Table exposing (Table)
 import Config.View exposing (Config)
 import Html.Styled exposing (Html)
 import Http
-import Model.Graph.Table exposing (Table)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Search as Search
 

@@ -1,12 +1,12 @@
 module View.Pathfinder.TagDetailsList exposing (view)
 
 import Api.Data
+import Components.Table exposing (Table)
 import Config.View as View
 import Css
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Model exposing (Msg)
-import Model.Graph.Table exposing (Table)
 import Model.Pathfinder.Id as Id exposing (Id)
 import RecordSetter as Rs
 import Theme.Html.TagsComponents as TagsComponents

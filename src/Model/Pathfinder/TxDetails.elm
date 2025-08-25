@@ -1,7 +1,7 @@
 module Model.Pathfinder.TxDetails exposing (Model)
 
 import Api.Data
-import Model.Graph.Table exposing (Table)
+import Components.Table exposing (Table)
 import Model.Pathfinder.Tx exposing (Tx)
 
 

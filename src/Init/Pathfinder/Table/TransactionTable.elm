@@ -1,32 +1,22 @@
-module Init.Pathfinder.Table.TransactionTable exposing (init, initWithFilter, loadTxs)
+module Init.Pathfinder.Table.TransactionTable exposing (init)
 
 import Api.Data
 import Api.Request.Addresses
-import Api.Time exposing (Posix)
+import Components.InfiniteTable as InfiniteTable
+import Components.Table as Table
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
-import Effect.Api as Api
-import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
-import Init.Graph.Table
-import Model.DateFilter exposing (DateFilterRaw)
-import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
-import PagedTable
 import Util.Data exposing (timestampToPosix)
 import Util.ThemedSelectBox as ThemedSelectBox
-
-
-itemsPerPage : Int
-itemsPerPage =
-    5
 
 
 getCompleteAssetList : List String -> List (Maybe String)
@@ -34,33 +24,23 @@ getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
-init : Update.Config -> Network -> Maybe DateFilterRaw -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
-init uc network datefilterPreset addressId data assets =
+pagesize : Int
+pagesize =
+    25
+
+
+init : Update.Config -> Network -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
+init uc network addressId data assets =
     let
-        nrItems =
-            data.noIncomingTxs + data.noOutgoingTxs
-
         table isDesc =
-            Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
-                |> PagedTable.init
-                |> PagedTable.setNrItems nrItems
-                |> PagedTable.setItemsPerPage itemsPerPage
+            Table.initSorted isDesc TransactionTable.titleTimestamp
+                |> InfiniteTable.init pagesize
 
-        ( mmin, mmax ) =
+        ( _, mmax ) =
             Address.getActivityRange data
-    in
-    datefilterPreset
-        |> Maybe.map
-            (\dfp ->
-                let
-                    drp =
-                        datePickerSettings uc.locale (dfp.fromDate |> Maybe.withDefault mmin) (dfp.toDate |> Maybe.withDefault mmax)
-                            |> DateRangePicker.init UpdateDateRangePicker mmax dfp.fromDate dfp.toDate
-                in
-                initWithFilter data (Just drp) Nothing Nothing assets
-            )
-        |> Maybe.withDefault
-            (Network.getRecentTxForAddress network Incoming addressId
+
+        ( desc, order, drp ) =
+            Network.getRecentTxForAddress network Incoming addressId
                 |> Maybe.map
                     (\tx ->
                         let
@@ -68,57 +48,24 @@ init uc network datefilterPreset addressId data assets =
                                 Tx.getRawTimestamp tx
                                     |> timestampToPosix
                         in
-                        { table = table False
-                        , order = Just Api.Request.Addresses.Order_Asc
-                        , dateRangePicker =
-                            datePickerSettings uc.locale mn mmax
-                                |> DateRangePicker.init UpdateDateRangePicker mmax (Just mn) (Just mmax)
-                                |> Just
-                        , direction = Nothing
-                        , isTxFilterViewOpen = False
-                        , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
-                        , selectedAsset = Nothing
-                        }
+                        ( False
+                        , Just Api.Request.Addresses.Order_Asc
+                        , datePickerSettings uc.locale mn mmax
+                            |> DateRangePicker.init UpdateDateRangePicker mmax (Just mn) (Just mmax)
+                            |> Just
+                        )
                     )
                 |> Maybe.withDefault
-                    (initWithFilter data Nothing Nothing Nothing assets)
-            )
-
-
-initWithFilter : Api.Data.Address -> Maybe (DateRangePicker.Model Msg) -> Maybe Direction -> Maybe String -> List String -> TransactionTable.Model
-initWithFilter data dateFilter direction selectedAsset assets =
-    let
-        nrItems =
-            data.noIncomingTxs + data.noOutgoingTxs
-
-        table isDesc =
-            Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
-                |> PagedTable.init
-                |> PagedTable.setNrItems nrItems
-                |> PagedTable.setItemsPerPage itemsPerPage
+                    ( True
+                    , Just Api.Request.Addresses.Order_Desc
+                    , Nothing
+                    )
     in
-    { table = table True
-    , order = Nothing
-    , dateRangePicker = dateFilter
-    , direction = direction
+    { table = table desc
+    , order = order
+    , dateRangePicker = drp
+    , direction = Nothing
     , isTxFilterViewOpen = False
     , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
-    , selectedAsset = selectedAsset
+    , selectedAsset = Nothing
     }
-
-
-loadTxs : Id -> Maybe Api.Request.Addresses.Order_ -> Maybe Direction -> Maybe Posix -> Maybe Posix -> Maybe String -> Effect
-loadTxs addressId order direction fromDate toDate selectedAsset =
-    (GotTxsForAddressDetails ( fromDate, toDate ) >> AddressDetailsMsg addressId)
-        |> Api.GetAddressTxsByDateEffect
-            { currency = Id.network addressId
-            , address = Id.id addressId
-            , direction = direction
-            , pagesize = itemsPerPage
-            , nextpage = Nothing
-            , order = order
-            , tokenCurrency = selectedAsset
-            , minDate = fromDate
-            , maxDate = toDate
-            }
-        |> ApiEffect

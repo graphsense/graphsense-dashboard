@@ -6,9 +6,7 @@ import Css.Table exposing (styles)
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Init.Graph.Table
 import Model.Currency exposing (assetFromBase)
-import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.AddresslinkTxsUtxoTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))

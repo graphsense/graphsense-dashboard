@@ -2,6 +2,7 @@ module Update.Pathfinder.Table.RelatedAddressesPubkeyTable exposing (appendAddre
 
 import Api.Data
 import Api.Request.Addresses
+import Components.PagedTable as PagedTable
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Maybe.Extra
@@ -9,7 +10,6 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable exposing (Model, filter, getTable, setTable)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
-import PagedTable
 import Tuple exposing (mapFirst, mapSecond)
 
 

@@ -1,7 +1,7 @@
 module Model.Pathfinder.Table.IoTable exposing (filter, titleValue)
 
 import Api.Data
-import Model.Graph.Table as Table
+import Components.Table as Table
 
 
 filter : Table.Filter Api.Data.TxValue

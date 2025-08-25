@@ -1,10 +1,10 @@
 module Init.Graph.Table.AddressTxsUtxoTable exposing (init)
 
 import Api.Data
-import Init.Graph.Table
-import Model.Graph.Table exposing (Table, titleTimestamp)
+import Components.Table as Table exposing (Table)
+import Model.Graph.Table exposing (titleTimestamp)
 
 
 init : Table Api.Data.AddressTxUtxo
 init =
-    Init.Graph.Table.initSorted True titleTimestamp
+    Table.initSorted True titleTimestamp

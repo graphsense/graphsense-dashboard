@@ -1,15 +1,14 @@
 module View.Graph.Table.TxUtxoTable exposing (config, prepareCSV)
 
 import Api.Data
+import Components.Table as Table
 import Config.View as View
 import Css
 import Css.Table exposing (styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Init.Graph.Table
 import Model.Currency exposing (assetFromBase)
-import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.TxUtxoTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))

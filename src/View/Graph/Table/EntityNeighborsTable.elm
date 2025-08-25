@@ -8,13 +8,11 @@ import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Init.Graph.Table
 import Maybe.Extra
 import Model.Currency exposing (AssetIdentifier, assetFromBase)
 import Model.Entity as E
 import Model.Graph.Entity
 import Model.Graph.Id exposing (EntityId)
-import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.AddressNeighborsTable exposing (titleLabels, titleNoTxs, titleValue)
 import Model.Graph.Table.EntityNeighborsTable exposing (..)
 import Model.Locale as Locale

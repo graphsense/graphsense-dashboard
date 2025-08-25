@@ -1,12 +1,10 @@
 module Init.Pathfinder.Table.NeighborsTable exposing (init)
 
 import Api.Data
-import Init.Graph.Table as Table
-import PagedTable
+import Components.InfiniteTable as InfiniteTable
+import Components.Table as Table
 
 
-init : Int -> PagedTable.Model Api.Data.NeighborAddress
-init nrItems =
-    PagedTable.init Table.initUnsorted
-        |> PagedTable.setNrItems nrItems
-        |> PagedTable.setItemsPerPage 5
+init : Int -> InfiniteTable.Model Api.Data.NeighborAddress
+init _ =
+    InfiniteTable.init 25 Table.initUnsorted

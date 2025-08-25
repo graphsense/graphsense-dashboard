@@ -2,6 +2,8 @@ module View.Pathfinder.AddressDetails exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.InfiniteTable as InfiniteTable
+import Components.PagedTable
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -31,7 +33,6 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails exposing (RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
-import PagedTable
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
@@ -54,6 +55,7 @@ import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
@@ -290,11 +292,11 @@ neighborsDataTab vc model id viewState direction =
                             SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                                 ++ fullWidth
                         ]
-                        [ PagedTable.pagedTableView vc
+                        [ InfiniteTable.view vc
                             [ css fullWidth ]
                             (NeighborAddressesTable.config Css.Table.styles vc conf)
+                            (AddressDetails.NeighborsTableSubTableMsg direction)
                             tbl
-                            (AddressDetails.NeighborsTablePagedTableMsg direction)
                         ]
                         |> Just
 
@@ -436,11 +438,11 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                                 SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                                                     ++ fullWidth
                                             ]
-                                            [ PagedTable.pagedTableView vc
+                                            [ InfiniteTable.view vc
                                                 [ css fullWidth ]
                                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
+                                                AddressDetails.RelatedAddressesTableSubTableMsg
                                                 (RelatedAddressesTable.getTable ra)
-                                                AddressDetails.RelatedAddressesTablePagedTableMsg
                                             ]
 
                             AddressDetails.Pubkey ->
@@ -556,16 +558,17 @@ transactionTableView vc addressId txOnGraphFn model =
 
         allChecked =
             model.table
-                |> PagedTable.getPage
+                |> InfiniteTable.getTable
+                |> .filtered
                 |> List.map Tx.getTxIdForAddressTx
                 |> allAndNotEmpty txOnGraphFn
 
         table =
-            PagedTable.pagedTableView vc
+            InfiniteTable.view vc
                 []
                 (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
+                AddressDetails.TransactionsTableSubTableMsg
                 model.table
-                AddressDetails.TransactionsTablePagedTableMsg
     in
     [ TransactionFilter.filterHeader vc
         model

@@ -1,12 +1,12 @@
 module Init.Pathfinder.Table.RelationTxsTable exposing (emptyDateFilter, init)
 
 import Api.Request.Addresses
-import Init.Graph.Table
+import Components.PagedTable as PagedTable
+import Components.Table as Table
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Msg.Pathfinder.RelationDetails exposing (Msg)
-import PagedTable
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
@@ -29,7 +29,7 @@ init : Direction -> List String -> RelationTxsTable.Model
 init dir assets =
     let
         table isDesc =
-            Init.Graph.Table.initSorted isDesc RelationTxsTable.titleTimestamp
+            Table.initSorted isDesc RelationTxsTable.titleTimestamp
                 |> PagedTable.init
                 |> PagedTable.setNrItems itemsPerPage
                 |> PagedTable.setItemsPerPage itemsPerPage

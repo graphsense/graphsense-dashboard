@@ -1,8 +1,7 @@
 module Model.Graph.Table.EntityAddressesTable exposing (filter, titleAddress, titleFinalBalance, titleFirstUsage, titleLastUsage, titleTotalReceived)
 
 import Api.Data
-import Config.Graph as Graph
-import Model.Graph.Table as Table
+import Components.Table as Table
 
 
 titleAddress : String

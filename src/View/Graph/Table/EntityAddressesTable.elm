@@ -7,11 +7,9 @@ import Css.Table exposing (styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Init.Graph.Table
 import Model.Address as A
 import Model.Currency exposing (assetFromBase)
 import Model.Graph.Id exposing (EntityId)
-import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.EntityAddressesTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))

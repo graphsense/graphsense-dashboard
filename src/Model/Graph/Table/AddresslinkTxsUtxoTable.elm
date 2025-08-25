@@ -1,8 +1,7 @@
 module Model.Graph.Table.AddresslinkTxsUtxoTable exposing (filter, titleHeight, titleInputValue, titleOutputValue, titleTimestamp, titleTx)
 
 import Api.Data
-import Config.Graph as Graph
-import Model.Graph.Table as Table
+import Components.Table as Table
 
 
 titleTx : String

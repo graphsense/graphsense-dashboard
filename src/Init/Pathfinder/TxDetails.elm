@@ -1,10 +1,9 @@
 module Init.Pathfinder.TxDetails exposing (init)
 
-import Init.Graph.Table
+import Components.Table as Table
 import Model.Pathfinder.Table.IoTable as IoTable
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
-import Update.Graph.Table
 import Util.Data exposing (negateTxValue)
 
 
@@ -27,10 +26,10 @@ init tx =
     { inputsTableOpen = False
     , outputsTableOpen = False
     , inputsTable =
-        Init.Graph.Table.initSorted False IoTable.titleValue
-            |> Update.Graph.Table.setData IoTable.filter inputs
+        Table.initSorted False IoTable.titleValue
+            |> Table.setData IoTable.filter inputs
     , outputsTable =
-        Init.Graph.Table.initSorted False IoTable.titleValue
-            |> Update.Graph.Table.setData IoTable.filter outputs
+        Table.initSorted False IoTable.titleValue
+            |> Table.setData IoTable.filter outputs
     , tx = tx
     }

@@ -4,6 +4,8 @@ import Animation as A
 import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
+import Components.InfiniteTable as InfiniteTable
+import Components.PagedTable as PagedTable
 import Config.Pathfinder exposing (TracingMode(..), nodeXOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
@@ -61,7 +63,6 @@ import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
-import PagedTable
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -148,17 +149,9 @@ update plugins uc msg model =
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
 syncSidePanel uc model =
     let
-        dateFilterPreset =
-            case model.route of
-                Route.Network _ (Route.Address _ dateFilter) ->
-                    dateFilter
-
-                _ ->
-                    Nothing
-
         makeAddressDetails aid =
             Dict.get aid model.network.addresses
-                |> Maybe.map (AddressDetails.init dateFilterPreset)
+                |> Maybe.map AddressDetails.init
                 |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
@@ -248,11 +241,24 @@ syncSidePanel uc model =
 
                     TxDetails tid td ->
                         Dict.get tid model.network.txs
-                            |> Maybe.map (flip s_tx td >> TxDetails tid >> Just)
+                            |> Maybe.map
+                                (flip s_tx td
+                                    >> TxDetails tid
+                                    >> Just
+                                )
                             |> Maybe.withDefault Nothing
                             |> n
 
                     AddressDetails aid ad ->
+                        let
+                            dateFilterPreset =
+                                case model.route of
+                                    Route.Network _ (Route.Address _ dateFilter) ->
+                                        dateFilter
+
+                                    _ ->
+                                        Nothing
+                        in
                         Dict.get aid model.network.addresses
                             |> Maybe.map
                                 (AddressDetails.syncByAddress uc model.network model.clusters dateFilterPreset ad
@@ -728,7 +734,8 @@ updateByMsg plugins uc msg model =
                             data.txs
                                 |> RemoteData.map
                                     (.table
-                                        >> PagedTable.getPage
+                                        >> InfiniteTable.getTable
+                                        >> .filtered
                                         >> List.map Tx.getTxIdForAddressTx
                                         >> flip (checkAllTxs plugins uc) model
                                     )

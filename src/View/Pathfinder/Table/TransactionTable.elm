@@ -15,6 +15,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Table
+import Theme.Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
@@ -90,6 +91,7 @@ config styles vc addressId isCheckedFn allChecked =
                         [ a
                         , [ PCSS.mGap |> Css.padding
                           , Css.width <| Css.px 50
+                          , Css.property "background-color" Theme.Colors.white
                           ]
                             |> css
                         ]

@@ -1,9 +1,9 @@
 module Msg.Pathfinder.RelationDetails exposing (Msg(..))
 
 import Api.Data
+import Components.PagedTable as PagedTable
 import DurationDatePicker
 import Model.Pathfinder.Id exposing (Id)
-import PagedTable
 import Util.ThemedSelectBox as ThemedSelectBox
 
 

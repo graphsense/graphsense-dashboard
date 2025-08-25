@@ -2,6 +2,7 @@ module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, update)
 
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
+import Components.PagedTable as PagedTable
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
 import Effect.Api as Api
@@ -17,7 +18,6 @@ import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
-import PagedTable
 import RecordSetter exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_isTxFilterViewOpen, s_selectedAsset, s_table)
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)

@@ -1,17 +1,17 @@
 module Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, filter, getTable, setTable, totalReceivedColumn)
 
 import Api.Data
+import Components.InfiniteTable as InfiniteTable
+import Components.Table as Table
 import Init.Pathfinder.Id as Pathfinder
 import Model.Entity exposing (Entity)
-import Model.Graph.Table as Table
 import Model.Pathfinder.Id as Pathfinder
-import PagedTable
 import RecordSetter as Rs
 import Set exposing (Set)
 
 
 type alias Model =
-    { table : PagedTable.Model Api.Data.Address
+    { table : InfiniteTable.Model Api.Data.Address
     , entity : Entity
     , addressId : Pathfinder.Id
     , existingTaggedAddresses : Set String
@@ -33,11 +33,11 @@ filter { addressId } =
     }
 
 
-setTable : Model -> PagedTable.Model Api.Data.Address -> Model
+setTable : Model -> InfiniteTable.Model Api.Data.Address -> Model
 setTable ra table =
     Rs.s_table table ra
 
 
-getTable : Model -> PagedTable.Model Api.Data.Address
+getTable : Model -> InfiniteTable.Model Api.Data.Address
 getTable ra =
     ra.table

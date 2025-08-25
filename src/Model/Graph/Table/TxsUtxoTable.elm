@@ -1,8 +1,7 @@
 module Model.Graph.Table.TxsUtxoTable exposing (filter, titleNoInputs, titleNoOutputs, titleTotalInput, titleTotalOutput, titleTx)
 
 import Api.Data
-import Config.Graph as Graph
-import Model.Graph.Table as Table
+import Components.Table as Table
 
 
 titleTx : String

@@ -1,5 +1,6 @@
 module View.Pathfinder.PagedTable exposing (ColumnAlign(..), addTHeadOverwrite, alignColumnHeader, customizations, pagedTableView)
 
+import Components.PagedTable as PagedTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (emptyTableMsg, fullWidth)
@@ -8,7 +9,6 @@ import Dict exposing (Dict)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
-import PagedTable
 import RecordSetter as Rs
 import Table
 import Theme.Colors
