@@ -3,7 +3,6 @@ module View.Pathfinder.AddressDetails exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
-import Components.PagedTable
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
