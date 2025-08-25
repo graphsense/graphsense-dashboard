@@ -65,6 +65,7 @@ setData config filt nextpage data (Model it) =
             Table.setData filt data it.table
                 |> s_nextpage nextpage
                 |> s_loading False
+        , iterations = 1
     }
         |> loadMore config False
 

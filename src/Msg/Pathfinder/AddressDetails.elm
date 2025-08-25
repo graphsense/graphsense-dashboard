@@ -2,7 +2,6 @@ module Msg.Pathfinder.AddressDetails exposing (Msg(..))
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
-import Components.PagedTable as PagedTable
 import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
@@ -21,8 +20,8 @@ type Msg
     | UserClickedToggleTotalSpentDetails
     | UserClickedToggleClusterDetailsOpen
     | UserClickedToggleDisplayAllTagsInDetails
-    | TransactionsTablePagedTableMsg InfiniteTable.Msg
-    | NeighborsTablePagedTableMsg Direction PagedTable.Msg
+    | TransactionsTableSubTableMsg InfiniteTable.Msg
+    | NeighborsTableSubTableMsg Direction InfiniteTable.Msg
     | GotTxsForAddressDetails ( Maybe Time.Posix, Maybe Time.Posix ) Api.Data.AddressTxs
     | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
@@ -45,7 +44,7 @@ type Msg
     | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
     | BrowserGotEntityAddressTagsForRelatedAddressesTable String Api.Data.AddressTags
     | UserClickedToggleRelatedAddressesTable
-    | RelatedAddressesTableInfiniteTableMsg InfiniteTable.Msg
+    | RelatedAddressesTableSubTableMsg InfiniteTable.Msg
     | UserClickedAddressCheckboxInTable Id
     | UserClickedAggEdgeCheckboxInTable Direction Id Api.Data.NeighborAddress
     | UserClickedTxCheckboxInTable Api.Data.AddressTx

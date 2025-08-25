@@ -53,7 +53,6 @@ import View.Locale as Locale
 import View.Pathfinder.Address as Address
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.InfiniteTable as InfiniteTable
-import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
@@ -288,11 +287,11 @@ neighborsDataTab vc model id viewState direction =
                             SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                                 ++ fullWidth
                         ]
-                        [ PagedTable.pagedTableView vc
+                        [ InfiniteTable.view vc
                             [ css fullWidth ]
                             (NeighborAddressesTable.config Css.Table.styles vc conf)
+                            (AddressDetails.NeighborsTableSubTableMsg direction)
                             tbl
-                            (AddressDetails.NeighborsTablePagedTableMsg direction)
                         ]
                         |> Just
 
@@ -373,7 +372,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                             [ InfiniteTable.view vc
                                 [ css fullWidth ]
                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
-                                AddressDetails.RelatedAddressesTableInfiniteTableMsg
+                                AddressDetails.RelatedAddressesTableSubTableMsg
                                 (RelatedAddressesTable.getTable ra)
                             ]
                             |> Just
@@ -469,7 +468,7 @@ transactionTableView vc addressId txOnGraphFn model =
             InfiniteTable.view vc
                 []
                 (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
-                AddressDetails.TransactionsTablePagedTableMsg
+                AddressDetails.TransactionsTableSubTableMsg
                 model.table
     in
     [ TransactionFilter.filterHeader vc

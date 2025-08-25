@@ -1,7 +1,7 @@
 module Model.Pathfinder.AddressDetails exposing (Model)
 
 import Api.Data
-import Components.PagedTable as PagedTable
+import Components.InfiniteTable as InfiniteTable
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
@@ -13,8 +13,8 @@ type alias Model =
     , transactionsTableOpen : Bool
     , tokenBalancesOpen : Bool
     , txs : WebData TransactionTable.Model
-    , neighborsIncoming : WebData (PagedTable.Model Api.Data.NeighborAddress)
-    , neighborsOutgoing : WebData (PagedTable.Model Api.Data.NeighborAddress)
+    , neighborsIncoming : WebData (InfiniteTable.Model Api.Data.NeighborAddress)
+    , neighborsOutgoing : WebData (InfiniteTable.Model Api.Data.NeighborAddress)
     , address : Address
     , relatedAddresses : WebData RelatedAddressesTable.Model
     , relatedAddressesTableOpen : Bool

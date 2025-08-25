@@ -111,10 +111,10 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleDisplayAllTagsInDetails ->
                     False
 
-                AddressDetails.TransactionsTablePagedTableMsg _ ->
+                AddressDetails.TransactionsTableSubTableMsg _ ->
                     False
 
-                AddressDetails.NeighborsTablePagedTableMsg _ _ ->
+                AddressDetails.NeighborsTableSubTableMsg _ _ ->
                     False
 
                 AddressDetails.GotTxsForAddressDetails _ _ ->
@@ -180,7 +180,7 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleRelatedAddressesTable ->
                     False
 
-                AddressDetails.RelatedAddressesTableInfiniteTableMsg _ ->
+                AddressDetails.RelatedAddressesTableSubTableMsg _ ->
                     False
 
                 AddressDetails.UserClickedAddressCheckboxInTable _ ->

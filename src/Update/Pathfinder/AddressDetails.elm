@@ -4,7 +4,6 @@ import Api.Data
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
-import Components.PagedTable as PagedTable
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
 import Dict exposing (Dict)
@@ -38,29 +37,27 @@ import Util exposing (n)
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
-neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> PagedTable.Config Effect
+neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
 neighborsTableConfigWithMsg msg addressId dir =
     { fetch =
-        Just
-            (\pagesize nextpage ->
-                msg dir
-                    >> Pathfinder.AddressDetailsMsg addressId
-                    |> Api.GetAddressNeighborsEffect
-                        { currency = Id.network addressId
-                        , address = Id.id addressId
-                        , includeLabels = True
-                        , onlyIds = Nothing
-                        , isOutgoing = dir == Outgoing
-                        , pagesize = pagesize
-                        , nextpage = nextpage
-                        , includeActors = False
-                        }
-                    |> ApiEffect
-            )
+        \pagesize nextpage ->
+            msg dir
+                >> Pathfinder.AddressDetailsMsg addressId
+                |> Api.GetAddressNeighborsEffect
+                    { currency = Id.network addressId
+                    , address = Id.id addressId
+                    , includeLabels = True
+                    , onlyIds = Nothing
+                    , isOutgoing = dir == Outgoing
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    , includeActors = False
+                    }
+                |> ApiEffect
     }
 
 
-neighborsTableConfig : Id -> Direction -> PagedTable.Config Effect
+neighborsTableConfig : Id -> Direction -> InfiniteTable.Config Effect
 neighborsTableConfig =
     neighborsTableConfigWithMsg GotNeighborsNextPageForAddressDetails
 
@@ -112,7 +109,7 @@ update uc msg model =
                     (\( tbl, setter ) ->
                         let
                             ( tblNew, eff1 ) =
-                                PagedTable.loadFirstPage
+                                InfiniteTable.loadFirstPage
                                     (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.address.id dir)
                                     tbl
                         in
@@ -136,13 +133,13 @@ update uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        NeighborsTablePagedTableMsg dir pm ->
+        NeighborsTableSubTableMsg dir pm ->
             getNeighborsTableAndSetter model dir
                 |> Maybe.map
                     (\( tbl, setter ) ->
                         let
                             ( pt, eff ) =
-                                PagedTable.update (neighborsTableConfig model.address.id dir) pm tbl
+                                InfiniteTable.update (neighborsTableConfig model.address.id dir) pm tbl
                         in
                         ( setter pt model
                         , Maybe.Extra.toList eff
@@ -156,7 +153,7 @@ update uc msg model =
                     (\( tbl, setter ) ->
                         let
                             ( pt, eff ) =
-                                PagedTable.setData
+                                InfiniteTable.setData
                                     (neighborsTableConfig model.address.id dir)
                                     NeighborsTable.filter
                                     neighbors.nextPage
@@ -175,7 +172,7 @@ update uc msg model =
                     (\( tbl, setter ) ->
                         let
                             ( pt, eff ) =
-                                PagedTable.appendData
+                                InfiniteTable.appendData
                                     (neighborsTableConfig model.address.id dir)
                                     NeighborsTable.filter
                                     neighbors.nextPage
@@ -188,7 +185,7 @@ update uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        TransactionsTablePagedTableMsg pm ->
+        TransactionsTableSubTableMsg pm ->
             model.txs
                 |> RemoteData.map
                     (\txs ->
@@ -411,7 +408,7 @@ update uc msg model =
                     )
                 |> RemoteData.withDefault (n model)
 
-        RelatedAddressesTableInfiniteTableMsg pm ->
+        RelatedAddressesTableSubTableMsg pm ->
             (\rm ->
                 RelatedAddressesTable.updateTable
                     (InfiniteTable.update (RelatedAddressesTable.tableConfig rm) pm)
@@ -584,7 +581,7 @@ browserGotClusterData addressId entity model =
     )
 
 
-getNeighborsTableAndSetter : Model -> Direction -> Maybe ( PagedTable.Model Api.Data.NeighborAddress, PagedTable.Model Api.Data.NeighborAddress -> Model -> Model )
+getNeighborsTableAndSetter : Model -> Direction -> Maybe ( InfiniteTable.Model Api.Data.NeighborAddress, InfiniteTable.Model Api.Data.NeighborAddress -> Model -> Model )
 getNeighborsTableAndSetter model dir =
     case dir of
         Incoming ->
