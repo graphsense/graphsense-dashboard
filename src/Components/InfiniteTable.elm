@@ -20,6 +20,7 @@ type alias Fetch eff =
 type alias ModelInternal d =
     { table : Table d
     , pagesize : Int
+    , iterations : Int
     }
 
 
@@ -42,6 +43,7 @@ init pagesize table =
     Model
         { table = table
         , pagesize = pagesize
+        , iterations = 0
         }
 
 
@@ -73,18 +75,21 @@ loadMore config force pt =
         len =
             List.length pt.table.filtered
 
-        rest =
-            len
-                |> modBy pt.pagesize
+        needsMore =
+            pt.iterations * pt.pagesize > len
     in
     if len > 0 && pt.table.nextpage == Nothing then
         ( Model pt, Nothing )
 
-    else if not force && rest == 0 then
+    else if not force && not needsMore then
         ( Model pt, Nothing )
 
     else
-        ( Model { pt | table = s_loading True pt.table }
+        ( Model
+            { pt
+                | table = s_loading True pt.table
+                , iterations = pt.iterations + 1
+            }
         , config.fetch pt.pagesize pt.table.nextpage
             |> Just
         )

@@ -370,11 +370,11 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                                     ++ fullWidth
                             ]
-                            [ PagedTable.pagedTableView vc
+                            [ InfiniteTable.view vc
                                 [ css fullWidth ]
                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
+                                AddressDetails.RelatedAddressesTableInfiniteTableMsg
                                 (RelatedAddressesTable.getTable ra)
-                                AddressDetails.RelatedAddressesTablePagedTableMsg
                             ]
                             |> Just
         , onClick = AddressDetails.UserClickedToggleRelatedAddressesTable

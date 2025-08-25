@@ -45,7 +45,7 @@ type Msg
     | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
     | BrowserGotEntityAddressTagsForRelatedAddressesTable String Api.Data.AddressTags
     | UserClickedToggleRelatedAddressesTable
-    | RelatedAddressesTablePagedTableMsg PagedTable.Msg
+    | RelatedAddressesTableInfiniteTableMsg InfiniteTable.Msg
     | UserClickedAddressCheckboxInTable Id
     | UserClickedAggEdgeCheckboxInTable Direction Id Api.Data.NeighborAddress
     | UserClickedTxCheckboxInTable Api.Data.AddressTx

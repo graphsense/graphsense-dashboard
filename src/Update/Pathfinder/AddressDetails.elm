@@ -400,21 +400,21 @@ update uc msg model =
                             show =
                                 not model.relatedAddressesTableOpen
                         in
-                        ( { model | relatedAddressesTableOpen = show }
-                        , if show then
-                            [ RelatedAddressesTable.loadFirstPage ra
-                            ]
+                        { model | relatedAddressesTableOpen = show }
+                            |> (if show then
+                                    flip updateRelatedAddressesTable
+                                        (RelatedAddressesTable.loadFirstPage (RelatedAddressesTable.tableConfig ra))
 
-                          else
-                            []
-                        )
+                                else
+                                    n
+                               )
                     )
                 |> RemoteData.withDefault (n model)
 
-        RelatedAddressesTablePagedTableMsg pm ->
+        RelatedAddressesTableInfiniteTableMsg pm ->
             (\rm ->
                 RelatedAddressesTable.updateTable
-                    (PagedTable.update (RelatedAddressesTable.tableConfig rm) pm)
+                    (InfiniteTable.update (RelatedAddressesTable.tableConfig rm) pm)
                     rm
             )
                 |> updateRelatedAddressesTable model

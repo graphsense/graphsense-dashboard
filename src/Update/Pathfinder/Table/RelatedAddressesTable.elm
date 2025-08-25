@@ -2,7 +2,7 @@ module Update.Pathfinder.Table.RelatedAddressesTable exposing (appendAddresses, 
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Components.PagedTable as PagedTable
+import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
@@ -11,28 +11,25 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, filter, getTable, setTable)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
-import RecordSetter as Rs
+import RecordSetter as Rs exposing (s_table)
 import Set
 import Tuple exposing (mapFirst, mapSecond)
 
 
-tableConfig : Model -> PagedTable.Config Effect
+tableConfig : Model -> InfiniteTable.Config Effect
 tableConfig rm =
-    { fetch = Just (loadData rm)
+    { fetch = loadData rm
     }
 
 
-itemsPerPage : Int
-itemsPerPage =
-    5
+pagesize : Int
+pagesize =
+    25
 
 
 init : Id -> Api.Data.Entity -> Model
 init addressId entity =
-    { table =
-        PagedTable.init Table.initUnsorted
-            |> PagedTable.setNrItems entity.noAddresses
-            |> PagedTable.setItemsPerPage itemsPerPage
+    { table = InfiniteTable.init pagesize Table.initUnsorted
     , addressId = addressId
     , entity = { currency = entity.currency, entity = entity.entity }
     , existingTaggedAddresses = Set.empty
@@ -40,18 +37,20 @@ init addressId entity =
     }
 
 
-loadFirstPage : Model -> Effect
-loadFirstPage model =
-    loadData model itemsPerPage Nothing
+loadFirstPage : InfiniteTable.Config Effect -> Model -> ( Model, List Effect )
+loadFirstPage config model =
+    InfiniteTable.loadFirstPage config model.table
+        |> mapFirst (flip s_table model)
+        |> mapSecond Maybe.Extra.toList
 
 
 loadData : Model -> Int -> Maybe String -> Effect
-loadData model pagesize nextpage =
+loadData model pagesize_ nextpage =
     let
         params =
             { currency = model.entity.currency
             , entity = model.entity.entity
-            , pagesize = pagesize
+            , pagesize = pagesize_
             , nextpage = nextpage
             }
 
@@ -91,7 +90,7 @@ appendTaggedAddresses nextpage addresses ra =
                 ( raNew
                 , eff
                     ++ (if not ra.allTaggedAddressesFetched && raNew.allTaggedAddressesFetched then
-                            [ loadData raNew itemsPerPage Nothing
+                            [ (tableConfig raNew).fetch pagesize Nothing
                             ]
 
                         else
@@ -108,7 +107,7 @@ appendAddresses nextpage addresses ra =
             addresses
                 |> List.filter (.address >> flip Set.member ra.existingTaggedAddresses >> not)
     in
-    PagedTable.appendData
+    InfiniteTable.appendData
         (tableConfig ra)
         (filter ra)
         nextpage
@@ -118,7 +117,7 @@ appendAddresses nextpage addresses ra =
         |> mapSecond Maybe.Extra.toList
 
 
-updateTable : (PagedTable.Model Api.Data.Address -> ( PagedTable.Model Api.Data.Address, Maybe Effect )) -> Model -> ( Model, List Effect )
+updateTable : (InfiniteTable.Model Api.Data.Address -> ( InfiniteTable.Model Api.Data.Address, Maybe Effect )) -> Model -> ( Model, List Effect )
 updateTable updTable model =
     getTable model
         |> updTable

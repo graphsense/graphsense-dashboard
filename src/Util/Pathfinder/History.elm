@@ -180,7 +180,7 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleRelatedAddressesTable ->
                     False
 
-                AddressDetails.RelatedAddressesTablePagedTableMsg _ ->
+                AddressDetails.RelatedAddressesTableInfiniteTableMsg _ ->
                     False
 
                 AddressDetails.UserClickedAddressCheckboxInTable _ ->
