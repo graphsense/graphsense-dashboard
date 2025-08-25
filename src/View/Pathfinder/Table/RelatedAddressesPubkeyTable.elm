@@ -79,7 +79,7 @@ config styles vc ratc _ =
                     ]
                 )
             , stringColumn vc
-                { label = Locale.string vc.locale "currency"
+                { label = Locale.string vc.locale "Currency"
                 , accessor = \{ currency } -> currency |> String.toUpper
                 , onClick = Nothing
                 }

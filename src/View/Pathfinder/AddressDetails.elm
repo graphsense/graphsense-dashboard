@@ -9,7 +9,7 @@ import Css.Pathfinder as Css exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, div, img)
+import Html.Styled as Html exposing (Html, div, img, span)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
@@ -30,7 +30,7 @@ import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
-import Msg.Pathfinder.AddressDetails as AddressDetails
+import Msg.Pathfinder.AddressDetails as AddressDetails exposing (RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
 import PagedTable
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -49,7 +49,7 @@ import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, fixFillRule, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -304,16 +304,16 @@ neighborsDataTab vc model id viewState direction =
         }
 
 
-relatedAddressesSelectBoxConfig : ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
-relatedAddressesSelectBoxConfig =
+relatedAddressesSelectBoxConfig : View.Config -> ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
+relatedAddressesSelectBoxConfig vc =
     { optionToLabel =
         \x ->
             case x of
                 AddressDetails.Pubkey ->
-                    "Crosschain addresses"
+                    Locale.string vc.locale "Related by Public Key"
 
-                AddressDetails.Clusters ->
-                    "Cluster addresses"
+                AddressDetails.MultiInputCluster ->
+                    Locale.string vc.locale "Related by Multi-Input Heuristic"
     , width = Nothing
     }
 
@@ -322,7 +322,13 @@ relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetail
 relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
-            Locale.string vc.locale "Related addresses"
+            Locale.string vc.locale
+                (if Data.isAccountLike (Id.network viewState.address.id) then
+                    "Crosschain addresses"
+
+                 else
+                    "Cluster addresses"
+                )
                 |> Locale.titleCase vc.locale
 
         noRelatedAddresses =
@@ -356,20 +362,57 @@ relatedAddressesDataTab vc model _ viewState cluster =
             else
                 Just
                     (div []
-                        [ if not (Data.isAccountLike (Id.network viewState.address.id)) then
-                            -- Only show select box if we have clusters or pubkey relations
-                            (ThemedSelectBox.view relatedAddressesSelectBoxConfig
-                                viewState.relatedAddressesVisibleTableSelectBox
-                                viewState.relatedAddressesVisibleTable
-                                |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
-                            )
-                                |> List.singleton
-                                |> div [ css [ Css.margin (Css.px 5) ] ]
+                        [ let
+                            ttConfig =
+                                { domId = "related_addresses_select_help"
+                                , text =
+                                    case viewState.relatedAddressesVisibleTable of
+                                        AddressDetails.MultiInputCluster ->
+                                            "Group addresses by Transaction: Addresses used together (likely same owner)."
 
-                          else
-                            none
+                                        AddressDetails.Pubkey ->
+                                            "Group addresses by Public Key: Addresses from the same key (same owner)."
+                                }
+                          in
+                          div
+                            [ css
+                                [ Css.displayFlex
+                                , Css.flexDirection Css.row
+                                , Css.alignItems Css.center
+                                , Css.margin (Css.px 5)
+                                , Css.justifyContent Css.spaceBetween -- This pushes items to opposite ends
+                                ]
+                            ]
+                            [ if not (Data.isAccountLike (Id.network viewState.address.id)) then
+                                -- Only show select box if we have clusters or pubkey relations
+                                div
+                                    [ css [ Css.flexGrow (Css.int 1) ] ]
+                                    -- This makes the select box container take all available space
+                                    [ ThemedSelectBox.view (relatedAddressesSelectBoxConfig vc)
+                                        viewState.relatedAddressesVisibleTableSelectBox
+                                        viewState.relatedAddressesVisibleTable
+                                        |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
+                                    ]
+
+                              else
+                                div [ css [ Css.flexGrow (Css.int 1) ] ] []
+
+                            -- Empty div to take space when no select box
+                            , span
+                                [ onMouseEnter (ShowRelatedAddressesTooltip ttConfig |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
+                                , onMouseLeave (HideRelatedAddressesTooltip ttConfig |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
+                                , Svg.Styled.Attributes.id ttConfig.domId
+                                , css [ Css.flexShrink (Css.int 0) ] -- Prevent the icon from shrinking
+                                ]
+                                [ HIcons.iconsInfoSnoPaddingWithAttributes
+                                    (HIcons.iconsInfoSnoPaddingAttributes
+                                        |> Rs.s_shape [ fixFillRule ]
+                                    )
+                                    {}
+                                ]
+                            ]
                         , case viewState.relatedAddressesVisibleTable of
-                            AddressDetails.Clusters ->
+                            AddressDetails.MultiInputCluster ->
                                 case viewState.relatedAddresses of
                                     RemoteData.Failure _ ->
                                         Html.text "error"
@@ -1013,7 +1056,7 @@ viewLabelOfTags vc viewState model id =
             ((concepts
                 |> List.map
                     (Tag.conceptItem vc id
-                        >> Html.map AddressDetails.TooltipMsg
+                        >> Html.map (TagTooltipMsg >> AddressDetails.TooltipMsg)
                         >> Html.map (Pathfinder.AddressDetailsMsg id)
                     )
              )

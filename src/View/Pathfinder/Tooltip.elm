@@ -126,6 +126,7 @@ tooltipRow =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
             |> Rs.s_root [ css baseRowStyle ]
+            |> Rs.s_tooltipRowLabel [ css [ Css.minWidth (Css.px 90) ] ]
         )
 
 

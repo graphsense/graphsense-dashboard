@@ -88,7 +88,7 @@ view vc conversion inputAddress outputAddress =
                     conversion.fromAsset ++ " / " ++ conversion.toAsset
 
                 Api.Data.ExternalConversionConversionTypeBridgeTx ->
-                    (cr.fromNetwork |> String.toUpper) ++ "." ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "." ++ (conversion.toAsset |> String.toUpper)
+                    (cr.fromNetwork |> String.toUpper) ++ "-" ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "-" ++ (conversion.toAsset |> String.toUpper)
 
         horizontalExtension =
             150.0
@@ -235,15 +235,20 @@ view vc conversion inputAddress outputAddress =
                 Svg.Styled.g [] []
 
             else
-                Svg.Styled.g []
+                Svg.Styled.g
+                    [ css
+                        [ Css.property "fill" Colors.black0
+                        , Css.property "user-select" "none"
+                        , Css.fontSize (Css.px 12)
+                        ]
+                    ]
                     [ Svg.Styled.text_
                         [ Svg.x (String.fromFloat (nodeX + lableOffset))
                         , Svg.y (String.fromFloat (nodeY - 7))
                         , Svg.textAnchor "middle"
                         , Svg.dominantBaseline "middle"
                         , css
-                            [ Css.property "fill" Colors.black0
-                            , Css.property "user-select" "none"
+                            [ Css.fontWeight (Css.int 600)
                             ]
                         ]
                         [ Svg.Styled.text labelTextLine1 ]
@@ -253,9 +258,7 @@ view vc conversion inputAddress outputAddress =
                         , Svg.textAnchor "middle"
                         , Svg.dominantBaseline "middle"
                         , css
-                            [ Css.property "fill" Colors.black0
-                            , Css.property "user-select" "none"
-                            ]
+                            []
                         ]
                         [ Svg.Styled.text labelTextLine2 ]
                     ]
@@ -273,6 +276,7 @@ view vc conversion inputAddress outputAddress =
             [ Svg.d pat
             , Svg.strokeDasharray "5, 5"
             , css Theme.aggregatedLinkHighlightLine_details.styles
+            , pointer
             , css
                 [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkHighlightLine_details.strokeWidth
                 , Css.property "stroke" <|
@@ -290,6 +294,7 @@ view vc conversion inputAddress outputAddress =
             [ Svg.d pat
             , Svg.strokeDasharray "5, 5"
             , css Theme.aggregatedLinkMainLine_details.styles
+            , pointer
             , css
                 [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
                 , Css.property "stroke" Colors.pathMiddle

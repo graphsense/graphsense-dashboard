@@ -29,7 +29,7 @@ moveAbs : Coords -> Node a -> Node a
 moveAbs position node =
     { node
         | x = position.x
-        , y = position.y |> Animation.static
+        , y = node.y |> Animation.to position.y
     }
 
 

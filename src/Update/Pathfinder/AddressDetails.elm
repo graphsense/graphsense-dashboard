@@ -674,7 +674,7 @@ browserGotClusterData addressId entity model =
         | relatedAddresses = RemoteData.Success relatedAddresses
         , relatedAddressesVisibleTable =
             if entity.noAddresses > 1 then
-                Clusters
+                MultiInputCluster
 
             else
                 Pubkey

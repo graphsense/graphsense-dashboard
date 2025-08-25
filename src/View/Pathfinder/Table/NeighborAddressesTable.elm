@@ -112,7 +112,7 @@ config styles vc conf =
                                 |> List.head
                                 |> Maybe.map
                                     (Tag.conceptItem vc (toId data)
-                                        >> Html.map AddressDetails.TooltipMsg
+                                        >> Html.map (AddressDetails.TagTooltipMsg >> AddressDetails.TooltipMsg)
                                         >> List.singleton
                                     )
                                 |> Maybe.withDefault []

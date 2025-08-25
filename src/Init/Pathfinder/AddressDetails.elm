@@ -41,7 +41,7 @@ init dateFilterPreset address =
             Pubkey
 
         else
-            Clusters
+            MultiInputCluster
     , relatedAddressesTableOpen = False
     , totalReceivedDetailsOpen = False
     , balanceDetailsOpen = False

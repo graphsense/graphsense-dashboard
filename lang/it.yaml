@@ -469,3 +469,5 @@ Related addresses: Indirizzi correlati
 Tag Import: Importazione Tag
 "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Solo {0} di {1} tag sono stati importati. {2} tag non possono essere applicati perché i loro indirizzi non sono presenti nel pathfinder."
 "loading Swaps and Bridging events for Tx {0}: {1}": "Caricamento eventi di Swaps e Bridging per la transazione {0}: {1}"
+"Related by Multi-Input Heuristic": "Correlato tramite euristica multi-input"
+"Related by Public Key": "Correlato tramite chiave pubblica"

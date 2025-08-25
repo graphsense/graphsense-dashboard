@@ -2329,62 +2329,74 @@ browserGotAddressData uc plugins id position data model =
         |> and (checkSelection uc)
 
 
-handleTooltipMsg : Tag.Msg -> Model -> ( Model, List Effect )
+handleTooltipMsg : AddressDetails.TooltipMsgs -> Model -> ( Model, List Effect )
 handleTooltipMsg msg model =
     case msg of
-        Tag.UserMovesMouseOutTagConcept ctx ->
-            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
+        AddressDetails.RelatedAddressesTooltipMsg inner ->
+            case inner of
+                AddressDetails.ShowRelatedAddressesTooltip config ->
+                    ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
 
-        Tag.UserMovesMouseOverTagConcept ctx ->
-            let
-                decoder =
-                    Json.Decode.map3 Tuple3.join
-                        (Json.Decode.index 0 Json.Decode.string)
-                        (Json.Decode.index 1 Json.Decode.string)
-                        (Json.Decode.index 2 Json.Decode.string)
-            in
-            Json.Decode.decodeString decoder ctx.context
-                |> Result.map
-                    (\( concept, currency, address ) ->
-                        let
-                            id =
-                                Id.init currency address
+                AddressDetails.HideRelatedAddressesTooltip config ->
+                    ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
 
-                            tsToTooltip ts =
-                                Tooltip.TagConcept id
-                                    concept
-                                    ts
-                                    { openTooltip =
-                                        Tag.UserMovesMouseOverTagConcept ctx
-                                            |> AddressDetails.TooltipMsg
-                                            |> AddressDetailsMsg id
-                                    , closeTooltip =
-                                        Tag.UserMovesMouseOutTagConcept ctx
-                                            |> AddressDetails.TooltipMsg
-                                            |> AddressDetailsMsg id
-                                    , openDetails = Just (UserOpensDialogWindow (TagsList id))
-                                    }
-                        in
-                        case Dict.get id model.tagSummaries of
-                            Just (HasTagSummaries { withCluster }) ->
-                                ( model
-                                , OpenTooltipEffect ctx False (tsToTooltip withCluster) |> List.singleton
-                                )
+        AddressDetails.TagTooltipMsg inner ->
+            case inner of
+                Tag.UserMovesMouseOutTagConcept ctx ->
+                    ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
-                            Just (HasTagSummaryWithCluster ts) ->
-                                ( model
-                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
-                                )
+                Tag.UserMovesMouseOverTagConcept ctx ->
+                    let
+                        decoder =
+                            Json.Decode.map3 Tuple3.join
+                                (Json.Decode.index 0 Json.Decode.string)
+                                (Json.Decode.index 1 Json.Decode.string)
+                                (Json.Decode.index 2 Json.Decode.string)
+                    in
+                    Json.Decode.decodeString decoder ctx.context
+                        |> Result.map
+                            (\( concept, currency, address ) ->
+                                let
+                                    id =
+                                        Id.init currency address
 
-                            Just (HasTagSummaryOnlyWithCluster ts) ->
-                                ( model
-                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
-                                )
+                                    tsToTooltip ts =
+                                        Tooltip.TagConcept id
+                                            concept
+                                            ts
+                                            { openTooltip =
+                                                Tag.UserMovesMouseOverTagConcept ctx
+                                                    |> AddressDetails.TagTooltipMsg
+                                                    |> AddressDetails.TooltipMsg
+                                                    |> AddressDetailsMsg id
+                                            , closeTooltip =
+                                                Tag.UserMovesMouseOutTagConcept ctx
+                                                    |> AddressDetails.TagTooltipMsg
+                                                    |> AddressDetails.TooltipMsg
+                                                    |> AddressDetailsMsg id
+                                            , openDetails = Just (UserOpensDialogWindow (TagsList id))
+                                            }
+                                in
+                                case Dict.get id model.tagSummaries of
+                                    Just (HasTagSummaries { withCluster }) ->
+                                        ( model
+                                        , OpenTooltipEffect ctx False (tsToTooltip withCluster) |> List.singleton
+                                        )
 
-                            _ ->
-                                n model
-                    )
-                |> Result.withDefault (n model)
+                                    Just (HasTagSummaryWithCluster ts) ->
+                                        ( model
+                                        , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
+                                        )
+
+                                    Just (HasTagSummaryOnlyWithCluster ts) ->
+                                        ( model
+                                        , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
+                                        )
+
+                                    _ ->
+                                        n model
+                            )
+                        |> Result.withDefault (n model)
 
 
 userClickedAddressCheckboxInTable : Plugins -> Id -> Model -> ( Model, List Effect )
