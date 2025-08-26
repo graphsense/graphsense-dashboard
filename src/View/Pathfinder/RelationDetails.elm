@@ -2,7 +2,7 @@ module View.Pathfinder.RelationDetails exposing (ValuesFormatted, ValuesRow, mak
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Components.PagedTable as PagedTable
+import Components.InfiniteTable as InfiniteTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -30,7 +30,7 @@ import Util.Css exposing (spread)
 import Util.View exposing (loadingSpinner, none, truncateLongIdentifier)
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab)
-import View.Pathfinder.PagedTable as PagedTable
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import View.Pathfinder.TransactionFilter as TransactionFilter
 
@@ -262,7 +262,8 @@ tableTab vc network edgeId viewState isA2b =
                 let
                     allChecked =
                         table.table
-                            |> PagedTable.getPage
+                            |> InfiniteTable.getTable
+                            |> .filtered
                             |> List.map Tx.getTxIdForRelationTx
                             |> allAndNotEmpty isChecked
 
@@ -277,11 +278,11 @@ tableTab vc network edgeId viewState isA2b =
                         }
 
                     tableView =
-                        PagedTable.pagedTableView vc
+                        InfiniteTable.view vc
                             [ css fullWidth ]
                             (RelationTxsTable.config Css.Table.styles vc conf)
-                            table.table
                             (RelationDetails.TableMsg isA2b)
+                            table.table
                 in
                 div
                     [ css <|

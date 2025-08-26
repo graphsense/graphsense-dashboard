@@ -1,18 +1,13 @@
 module Init.Pathfinder.Table.RelationTxsTable exposing (emptyDateFilter, init)
 
 import Api.Request.Addresses
-import Components.PagedTable as PagedTable
+import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Msg.Pathfinder.RelationDetails exposing (Msg)
 import Util.ThemedSelectBox as ThemedSelectBox
-
-
-itemsPerPage : Int
-itemsPerPage =
-    5
 
 
 emptyDateFilter : { txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) }
@@ -30,9 +25,7 @@ init dir assets =
     let
         table isDesc =
             Table.initSorted isDesc RelationTxsTable.titleTimestamp
-                |> PagedTable.init
-                |> PagedTable.setNrItems itemsPerPage
-                |> PagedTable.setItemsPerPage itemsPerPage
+                |> InfiniteTable.init 25
     in
     { table = table False
     , order = Just Api.Request.Addresses.Order_Desc
