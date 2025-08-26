@@ -94,6 +94,8 @@ account vc id tx =
             }
         , root =
             { tabsVisible = False
+            , assetListInstance = none
+            , swapsListInstance = none
             }
         , sidePanelEthTxDetails =
             { contractCreationVisible = tx.raw.contractCreation |> Maybe.withDefault False

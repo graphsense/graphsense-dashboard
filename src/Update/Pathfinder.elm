@@ -1367,7 +1367,17 @@ updateByMsg plugins uc msg model =
                                 |> Tx.getInputAddressIds
                                 |> List.foldl (moveNode { x = outputTxCoords.x + displacementFromTx, y = outputTxCoords.y }) c
                     in
-                    n { model | network = netOut }
+                    n
+                        { model
+                            | network =
+                                netOut
+                                    |> (if model.config.snapToGrid then
+                                            Network.snapToGrid
+
+                                        else
+                                            identity
+                                       )
+                        }
             in
             Maybe.map2 arrangeConversionNodes mtxInput mtxOutput
                 |> Maybe.withDefault (n model)
