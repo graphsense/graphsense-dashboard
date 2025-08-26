@@ -2,7 +2,7 @@ module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, update)
 
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
-import Components.PagedTable as PagedTable
+import Components.InfiniteTable as InfiniteTable
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
 import Effect.Api as Api
@@ -73,9 +73,9 @@ loadRelationTxs id isA2b txTable nrItems nextpage =
         |> ApiEffect
 
 
-tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> PagedTable.Config Effect
+tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config Effect
 tableConfig id isA2b txTable =
-    { fetch = loadRelationTxs id isA2b txTable |> Just
+    { fetch = loadRelationTxs id isA2b txTable
     }
 
 
@@ -134,7 +134,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                     else
                         tbl.table
-                            |> PagedTable.loadFirstPage
+                            |> InfiniteTable.loadFirstPage
                                 (tableConfig id isA2b tbl)
             in
             ( isOpen
@@ -154,7 +154,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             in
             tbl
                 |> .table
-                |> PagedTable.update (tableConfig id isA2b tbl) tm
+                |> InfiniteTable.update (tableConfig id isA2b tbl) tm
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
                 |> mapSecond Maybe.Extra.toList
@@ -169,7 +169,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             in
             tbl
                 |> .table
-                |> PagedTable.setData
+                |> InfiniteTable.setData
                     (tableConfig id isA2b tbl)
                     RelationTxsTable.filter
                     data.nextPage
@@ -188,7 +188,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             in
             tbl
                 |> .table
-                |> PagedTable.appendData
+                |> InfiniteTable.appendData
                     (tableConfig id isA2b tbl)
                     RelationTxsTable.filter
                     data.nextPage
@@ -248,7 +248,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     gs.getTable model
 
                 focusDate =
-                    PagedTable.getTable tbl.table
+                    InfiniteTable.getTable tbl.table
                         |> .data
                         -- this is only try if data is sorted desc
                         |> List.head
@@ -300,7 +300,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                 if dateRangeChanged then
                                     udateTbl
                                         |> .table
-                                        |> PagedTable.loadFirstPage
+                                        |> InfiniteTable.loadFirstPage
                                             (tableConfig id isA2b udateTbl)
 
                                 else
@@ -347,7 +347,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 ( table, eff ) =
                     tbl
                         |> .table
-                        |> PagedTable.loadFirstPage
+                        |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
                         |> mapSecond Maybe.Extra.toList
             in
@@ -366,7 +366,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 ( table, eff ) =
                     tbl
                         |> .table
-                        |> PagedTable.loadFirstPage
+                        |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
                         |> mapSecond Maybe.Extra.toList
             in
@@ -389,7 +389,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 ( table, eff ) =
                     tbl
                         |> .table
-                        |> PagedTable.loadFirstPage
+                        |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
                         |> mapSecond Maybe.Extra.toList
             in
@@ -428,7 +428,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     ( ntbl, eff ) =
                         newTxs
                             |> .table
-                            |> PagedTable.loadFirstPage
+                            |> InfiniteTable.loadFirstPage
                                 (tableConfig id isA2b newTxs)
                 in
                 ( model |> gs.setTable (newTxs |> s_table ntbl), eff ) |> mapSecond Maybe.Extra.toList

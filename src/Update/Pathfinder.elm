@@ -5,7 +5,6 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Components.InfiniteTable as InfiniteTable
-import Components.PagedTable as PagedTable
 import Config.Pathfinder exposing (TracingMode(..), nodeXOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
@@ -671,7 +670,8 @@ updateByMsg plugins uc msg model =
                                 in
                                 gs.getTable rdModel
                                     |> .table
-                                    |> PagedTable.getPage
+                                    |> InfiniteTable.getTable
+                                    |> .filtered
                                     |> List.map Tx.getTxIdForRelationTx
                                     |> flip (checkAllTxs plugins uc) model
                                     |> and (setTracingMode TransactionTracingMode)

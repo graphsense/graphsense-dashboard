@@ -1,7 +1,7 @@
 module Msg.Pathfinder.RelationDetails exposing (Msg(..))
 
 import Api.Data
-import Components.PagedTable as PagedTable
+import Components.InfiniteTable as InfiniteTable
 import DurationDatePicker
 import Model.Pathfinder.Id exposing (Id)
 import Util.ThemedSelectBox as ThemedSelectBox
@@ -9,7 +9,7 @@ import Util.ThemedSelectBox as ThemedSelectBox
 
 type Msg
     = UserClickedToggleTable Bool
-    | TableMsg Bool PagedTable.Msg
+    | TableMsg Bool InfiniteTable.Msg
     | BrowserGotLinks Bool Api.Data.Links
     | UserClickedAllTxCheckboxInTable Bool
     | UserClickedTxCheckboxInTable Api.Data.Link

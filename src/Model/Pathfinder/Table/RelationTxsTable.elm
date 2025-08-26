@@ -2,7 +2,7 @@ module Model.Pathfinder.Table.RelationTxsTable exposing (Model, filter, titleHas
 
 import Api.Data
 import Api.Request.Addresses
-import Components.PagedTable as PagedTable
+import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction)
@@ -11,7 +11,7 @@ import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type alias Model =
-    { table : PagedTable.Model Api.Data.Link
+    { table : InfiniteTable.Model Api.Data.Link
     , order : Maybe Api.Request.Addresses.Order_
     , dateRangePicker : Maybe (DateRangePicker.Model Msg)
     , direction : Maybe Direction
