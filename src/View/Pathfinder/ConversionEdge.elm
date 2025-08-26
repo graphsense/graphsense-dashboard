@@ -77,10 +77,10 @@ view vc conversion inputAddress outputAddress =
         labelTextLine1 =
             case cr.conversionType of
                 Api.Data.ExternalConversionConversionTypeDexSwap ->
-                    Locale.string vc.locale "Swap:"
+                    Locale.string vc.locale "Swap"
 
                 Api.Data.ExternalConversionConversionTypeBridgeTx ->
-                    Locale.string vc.locale "Bridge TX:"
+                    Locale.string vc.locale "Bridge TX"
 
         labelTextLine2 =
             case cr.conversionType of
