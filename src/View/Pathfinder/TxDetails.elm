@@ -7,6 +7,7 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
+import Dict
 import Html.Styled exposing (Html, div)
 import Html.Styled.Events exposing (preventDefaultOn, stopPropagationOn)
 import Json.Decode
@@ -31,7 +32,9 @@ import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, ti
 import View.Graph.Table exposing (noTools)
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
+import View.Pathfinder.Table.SubTxsTable as SubTxsTable
 
 
 view : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
@@ -41,11 +44,25 @@ view vc model id viewState =
             utxo vc model id viewState tx
 
         Tx.Account tx ->
-            account vc id tx
+            let
+                txExistsFn =
+                    \tid -> Dict.member tid model.network.txs
+            in
+            account vc viewState id tx txExistsFn
 
 
-account : View.Config -> Id -> Tx.AccountTx -> Html Msg
-account vc id tx =
+accountAssetList : View.Config -> TxDetails.Model -> (Id -> Bool) -> Html Msg
+accountAssetList vc viewState txExistsFn =
+    InfiniteTable.view vc
+        [ css fullWidth ]
+        (SubTxsTable.config Css.Table.styles vc txExistsFn)
+        TableMsgSubTxTable
+        viewState.subTxsTable
+        |> Html.Styled.map TxDetailsMsg
+
+
+account : View.Config -> TxDetails.Model -> Id -> Tx.AccountTx -> (Id -> Bool) -> Html Msg
+account vc viewState id tx txExistsFn =
     let
         chevronActions =
             div [ stopPropagationOn "click" (Json.Decode.succeed ( Msg.Pathfinder.NoOp, True )) ]
@@ -94,7 +111,7 @@ account vc id tx =
             }
         , root =
             { tabsVisible = False
-            , assetListInstance = none
+            , assetListInstance = accountAssetList vc viewState txExistsFn
             , swapsListInstance = none
             }
         , sidePanelEthTxDetails =

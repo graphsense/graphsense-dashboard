@@ -2,6 +2,7 @@ module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, Addi
 
 import Api.Data
 import Color exposing (Color)
+import Components.InfiniteTable as InfiniteTable
 import Hovercard
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
@@ -162,6 +163,12 @@ type DisplaySettingsMsg
 type TxDetailsMsg
     = UserClickedToggleIoTable IoDirection
     | TableMsg IoDirection Table.State
+    | TableMsgSubTxTable InfiniteTable.Msg
+    | BrowserGotBaseTx Api.Data.Tx
+    | BrowserGotTxFlows Api.Data.Txs
+    | UserClickedToggleSubTxsTable
+    | UserClickedTxInSubTxsTable Api.Data.TxAccount
+    | NoOpSubTxsTable
 
 
 type IoDirection

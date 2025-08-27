@@ -269,6 +269,9 @@ messageFromApiEffect model effect =
         Api.GetBlockByDateEffect _ _ ->
             Nothing
 
+        Api.ListTxFlowsEffect _ _ ->
+            Nothing
+
         Api.SearchEntityNeighborsEffect e _ ->
             ( searchNeighborsKey
             , [ if e.isOutgoing then

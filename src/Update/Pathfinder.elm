@@ -50,6 +50,7 @@ import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
+import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import Model.Tx as GTx exposing (parseTxIdentifier)
 import Msg.Pathfinder
@@ -57,6 +58,7 @@ import Msg.Pathfinder
         ( DisplaySettingsMsg(..)
         , Msg(..)
         , OverlayWindows(..)
+        , TxDetailsMsg(..)
         )
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
@@ -239,14 +241,21 @@ syncSidePanel uc model =
                             |> n
 
                     TxDetails tid td ->
-                        Dict.get tid model.network.txs
-                            |> Maybe.map
-                                (flip s_tx td
-                                    >> TxDetails tid
-                                    >> Just
-                                )
-                            |> Maybe.withDefault Nothing
-                            |> n
+                        case Dict.get tid model.network.txs of
+                            Just tx ->
+                                let
+                                    -- hasToFetchMoreData = Data.isAccountLike(tid |> Id.network) && td.baseTx == RemoteData.NotAsked
+                                    -- baseTxHash = td.tx |> Tx.getRawBaseTxHashForTx
+                                    newM =
+                                        tx |> flip s_tx td
+
+                                    -- |> s_baseTx (if hasToFetchMoreData then RemoteData.Loading else td.baseTx)
+                                in
+                                TxDetails.loadTxDetailsDataAccount tx (TxDetails.transactionTableConfig newM) newM
+                                    |> mapFirst (TxDetails tid >> Just)
+
+                            _ ->
+                                n Nothing
 
                     AddressDetails aid ad ->
                         let
@@ -611,6 +620,9 @@ updateByMsg plugins uc msg model =
         UserClosedDetailsView ->
             { model | details = Nothing, selection = NoSelection }
                 |> n
+
+        TxDetailsMsg (UserClickedTxInSubTxsTable tx) ->
+            loadTx True True plugins (Id.init tx.network tx.identifier) model
 
         TxDetailsMsg submsg ->
             case model.details of

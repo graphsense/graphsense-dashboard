@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addressColumn, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
@@ -13,8 +13,33 @@ import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple exposing (pair)
 import Util.Checkbox
+import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
+
+
+addressColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
+addressColumn vc name accessor =
+    Table.veryCustomColumn
+        { name = name
+        , viewData =
+            \data ->
+                let
+                    id =
+                        accessor data
+                in
+                Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
+                    [ SidePanelComponents.sidePanelListIdentifierCell
+                        { root =
+                            { copyIconInstance = id |> String.split "_" |> List.head |> Maybe.withDefault "" |> copyIconPathfinder vc
+                            , identifier = id |> truncateLongIdentifierWithLengths 8 4
+                            }
+                        }
+                    ]
+
+        -- , sorter = Table.increasingOrDecreasingBy accessor
+        , sorter = Table.unsortable
+        }
 
 
 timestampDateMultiRowColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg

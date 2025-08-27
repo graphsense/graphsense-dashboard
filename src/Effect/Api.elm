@@ -294,6 +294,13 @@ type Effect msg
         }
         (Api.Data.RelatedAddresses -> msg)
     | GetConversionEffect { currency : String, txHash : String } (List Api.Data.ExternalConversion -> msg)
+    | ListTxFlowsEffect
+        { currency : String
+        , txHash : String
+        , pagesize : Maybe Int
+        , nextpage : Maybe String
+        }
+        (Api.Data.Txs -> msg)
 
 
 getEntityEgonet :
@@ -361,6 +368,11 @@ getAddressEgonet id msg layers =
 map : (msgA -> msgB) -> Effect msgA -> Effect msgB
 map mapMsg effect =
     case effect of
+        ListTxFlowsEffect eff m ->
+            m
+                >> mapMsg
+                |> ListTxFlowsEffect eff
+
         AddUserReportedTag eff m ->
             m
                 >> mapMsg
@@ -927,6 +939,10 @@ perform apiKey wrapMsg effect =
 
         GetConversionEffect { currency, txHash } toMsg ->
             Api.Request.Txs.getTxConversions currency txHash
+                |> send apiKey wrapMsg effect toMsg
+
+        ListTxFlowsEffect { currency, txHash, pagesize, nextpage } toMsg ->
+            Api.Request.Txs.listTxFlows currency txHash Nothing Nothing nextpage pagesize
                 |> send apiKey wrapMsg effect toMsg
 
 

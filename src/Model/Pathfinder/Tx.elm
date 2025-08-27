@@ -8,6 +8,7 @@ module Model.Pathfinder.Tx exposing
     , avg
     , calcCoords
     , getAccountTx
+    , getAccountTxRaw
     , getAsset
     , getCoords
     , getInputAddressIds
@@ -15,6 +16,7 @@ module Model.Pathfinder.Tx exposing
     , getNetwork
     , getOutputAddressIds
     , getOutputs
+    , getRawBaseTxHashForTx
     , getRawTimestamp
     , getRawTimestampForRelationTx
     , getTxId
@@ -105,7 +107,7 @@ getNetwork : Tx -> String
 getNetwork tx =
     case tx.type_ of
         Account { raw } ->
-            raw.currency
+            raw.network
 
         Utxo { raw } ->
             raw.currency
@@ -283,6 +285,16 @@ getUtxoTx { type_ } =
             Nothing
 
 
+getAccountTxRaw : Api.Data.Tx -> Maybe Api.Data.TxAccount
+getAccountTxRaw tx =
+    case tx of
+        Api.Data.TxTxAccount t ->
+            Just t
+
+        _ ->
+            Nothing
+
+
 getAccountTx : Tx -> Maybe AccountTx
 getAccountTx { type_ } =
     case type_ of
@@ -321,6 +333,16 @@ getTxIdForTx tx =
 
         Utxo t ->
             Id.init t.raw.currency t.raw.txHash
+
+
+getRawBaseTxHashForTx : Tx -> String
+getRawBaseTxHashForTx tx =
+    case tx.type_ of
+        Account t ->
+            t.raw.txHash
+
+        Utxo t ->
+            t.raw.txHash
 
 
 getTxIdForAddressTx : Api.Data.AddressTx -> Id

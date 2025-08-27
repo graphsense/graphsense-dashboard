@@ -1,9 +1,11 @@
 module Init.Pathfinder.TxDetails exposing (init)
 
+import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Model.Pathfinder.Table.IoTable as IoTable
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
+import RemoteData
 import Util.Data exposing (negateTxValue)
 
 
@@ -32,4 +34,8 @@ init tx =
         Table.initSorted False IoTable.titleValue
             |> Table.setData IoTable.filter outputs
     , tx = tx
+    , baseTx = RemoteData.NotAsked
+    , subTxsTable =
+        Table.initUnsorted |> InfiniteTable.init 5
+    , subTxsTableOpen = True
     }
