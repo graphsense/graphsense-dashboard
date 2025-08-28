@@ -348,7 +348,7 @@ txFilterDialogView vc net config model =
                 config.txTableFilterToggleZeroValueMsg
                     |> Maybe.map
                         (\msg ->
-                            View.Controls.toggle
+                            Controls.toggle
                                 { size = Sc.SwitchSizeSmall
                                 , disabled = False
                                 , selected = model.includeZeroValueTxs |> Maybe.withDefault False
