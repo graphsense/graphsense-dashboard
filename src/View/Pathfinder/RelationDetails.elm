@@ -281,7 +281,6 @@ tableTab vc network edgeId viewState isA2b =
                         InfiniteTable.view vc
                             [ css fullWidth ]
                             (RelationTxsTable.config Css.Table.styles vc conf)
-                            (RelationDetails.TableMsg isA2b)
                             table.table
                 in
                 div

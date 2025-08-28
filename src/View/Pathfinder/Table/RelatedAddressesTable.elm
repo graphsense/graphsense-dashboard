@@ -2,6 +2,7 @@ module View.Pathfinder.Table.RelatedAddressesTable exposing (RelatedAddressesTab
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.InfiniteTable as InfiniteTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
@@ -23,6 +24,7 @@ import Util.Tag as Tag
 import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifier)
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns exposing (checkboxColumn, twoValuesColumn)
 
@@ -34,7 +36,7 @@ type alias RelatedAddressesTableConfig =
     }
 
 
-config : Styles -> View.Config -> RelatedAddressesTableConfig -> Model -> Table.Config Api.Data.Address AddressDetails.Msg
+config : Styles -> View.Config -> RelatedAddressesTableConfig -> Model -> InfiniteTable.TableConfig Api.Data.Address AddressDetails.Msg
 config styles vc ratc _ =
     let
         rightAlignedColumns =
@@ -62,82 +64,86 @@ config styles vc ratc _ =
         toId { currency, address } =
             Id.init currency address
     in
-    Table.customConfig
-        { toId = .address
-        , toMsg = AddressDetails.RelatedAddressesTableMsg
-        , columns =
-            [ checkboxColumn vc
-                { isChecked = toId >> ratc.isChecked
-                , onClick = toId >> AddressDetails.UserClickedAddressCheckboxInTable
-                , readonly = \_ -> False
-                }
-            , htmlColumnWithSorter Table.unsortable
-                styles
-                vc
-                (Locale.string vc.locale "Address")
-                (\{ address } -> address)
-                (\{ address } ->
-                    [ SidePanelComponents.sidePanelListIdentifierCell
-                        { root =
-                            { identifier = truncateLongIdentifier address
-                            , copyIconInstance = copyIconPathfinder vc address
-                            }
+    { toId = .address
+    , toMsg = AddressDetails.RelatedAddressesTableMsg
+    , columns =
+        [ checkboxColumn vc
+            { isChecked = toId >> ratc.isChecked
+            , onClick = toId >> AddressDetails.UserClickedAddressCheckboxInTable
+            , readonly = \_ -> False
+            }
+        , htmlColumnWithSorter Table.unsortable
+            styles
+            vc
+            (Locale.string vc.locale "Address")
+            (\{ address } -> address)
+            (\{ address } ->
+                [ SidePanelComponents.sidePanelListIdentifierCell
+                    { root =
+                        { identifier = truncateLongIdentifier address
+                        , copyIconInstance = copyIconPathfinder vc address
                         }
-                    ]
-                )
-            , htmlColumnWithSorter Table.unsortable
-                styles
-                vc
-                (Locale.string vc.locale "Category")
-                (\{ address } -> address)
-                (\data ->
-                    let
-                        withTagSummary ts =
-                            getSortedConceptsByWeight ts
-                                |> List.head
-                                |> Maybe.map
-                                    (Tag.conceptItem vc (toId data)
-                                        >> Html.map (AddressDetails.TagTooltipMsg >> AddressDetails.TooltipMsg)
-                                        >> List.singleton
-                                    )
-                                |> Maybe.withDefault []
-                    in
-                    case toId data |> ratc.hasTags of
-                        NoTags ->
-                            []
+                    }
+                ]
+            )
+        , htmlColumnWithSorter Table.unsortable
+            styles
+            vc
+            (Locale.string vc.locale "Category")
+            (\{ address } -> address)
+            (\data ->
+                let
+                    withTagSummary ts =
+                        getSortedConceptsByWeight ts
+                            |> List.head
+                            |> Maybe.map
+                                (Tag.conceptItem vc (toId data)
+                                    >> Html.map (AddressDetails.TagTooltipMsg >> AddressDetails.TooltipMsg)
+                                    >> List.singleton
+                                )
+                            |> Maybe.withDefault []
+                in
+                case toId data |> ratc.hasTags of
+                    NoTags ->
+                        []
 
-                        NoTagsWithoutCluster ->
-                            []
+                    NoTagsWithoutCluster ->
+                        []
 
-                        HasTags _ ->
-                            []
+                    HasTags _ ->
+                        []
 
-                        HasTagSummaryWithCluster _ ->
-                            []
+                    HasTagSummaryWithCluster _ ->
+                        []
 
-                        HasTagSummaryOnlyWithCluster _ ->
-                            []
+                    HasTagSummaryOnlyWithCluster _ ->
+                        []
 
-                        HasTagSummaryWithoutCluster ts ->
-                            withTagSummary ts
+                    HasTagSummaryWithoutCluster ts ->
+                        withTagSummary ts
 
-                        HasTagSummaries { withoutCluster } ->
-                            withTagSummary withoutCluster
+                    HasTagSummaries { withoutCluster } ->
+                        withTagSummary withoutCluster
 
-                        LoadingTags ->
-                            [ loadingSpinner vc Css.View.loadingSpinner
-                            ]
+                    LoadingTags ->
+                        [ loadingSpinner vc Css.View.loadingSpinner
+                        ]
 
-                        HasExchangeTagOnly ->
-                            []
-                )
-            , twoValuesColumn vc
-                (Locale.string vc.locale "Total received")
-                { coinCode = ratc.coinCode
-                , getValue1 = .totalReceived
-                , getValue2 = .balance
-                , labelValue2 = Locale.string vc.locale "Balance"
-                }
-            ]
-        , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
-        }
+                    HasExchangeTagOnly ->
+                        []
+            )
+        , twoValuesColumn vc
+            (Locale.string vc.locale "Total received")
+            { coinCode = ratc.coinCode
+            , getValue1 = .totalReceived
+            , getValue2 = .balance
+            , labelValue2 = Locale.string vc.locale "Balance"
+            }
+        ]
+    , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
+    , tag = AddressDetails.RelatedAddressesTableSubTableMsg
+    , rowHeight = 36
+    , containerHeight = 300
+    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
+    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
+    }

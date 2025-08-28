@@ -2,6 +2,7 @@ module View.Pathfinder.Table.RelationTxsTable exposing (RelationTxsTableConfig, 
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.InfiniteTable as InfiniteTable
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS
@@ -20,6 +21,7 @@ import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
 import View.Pathfinder.PagedTable as PT exposing (addTHeadOverwrite, alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
+import View.Pathfinder.InfiniteTable as InfiniteTable
 
 
 type alias GenericTx =
@@ -55,7 +57,7 @@ type alias RelationTxsTableConfig =
     }
 
 
-config : Styles -> View.Config -> RelationTxsTableConfig -> Table.Config Api.Data.Link Msg
+config : Styles -> View.Config -> RelationTxsTableConfig -> InfiniteTable.TableConfig Api.Data.Link Msg
 config styles vc { isA2b, addressId, isChecked, allChecked } =
     let
         network =
@@ -107,32 +109,36 @@ config styles vc { isA2b, addressId, isChecked, allChecked } =
         cc =
             c |> Rs.s_thead newTheadWithCheckbox
     in
-    Table.customConfig
-        { toId = toGerneric >> getId >> Id.toString
-        , toMsg = \_ -> NoOp
-        , columns =
-            [ PT.checkboxColumn vc
-                { isChecked = toGerneric >> getId >> isChecked
-                , onClick = UserClickedTxCheckboxInTable
-                , readonly = \_ -> False
-                }
-            , PT.timestampDateMultiRowColumn vc
-                "Timestamp"
-                (toGerneric >> .timestamp)
-            , txColumn vc
-                { label = "Hash"
-                , accessor = toGerneric >> .txHash
-                , onClick = Just (toGerneric >> getId >> UserClickedTx)
-                }
-            , PT.debitCreditColumn
-                (\_ -> False)
-                vc
-                (toGerneric >> .asset >> asset network)
-                "Value"
-                (toGerneric >> .value)
-            ]
-        , customizations = cc
-        }
+    { toId = toGerneric >> getId >> Id.toString
+    , toMsg = \_ -> NoOp
+    , columns =
+        [ PT.checkboxColumn vc
+            { isChecked = toGerneric >> getId >> isChecked
+            , onClick = UserClickedTxCheckboxInTable
+            , readonly = \_ -> False
+            }
+        , PT.timestampDateMultiRowColumn vc
+            "Timestamp"
+            (toGerneric >> .timestamp)
+        , txColumn vc
+            { label = "Hash"
+            , accessor = toGerneric >> .txHash
+            , onClick = Just (toGerneric >> getId >> UserClickedTx)
+            }
+        , PT.debitCreditColumn
+            (\_ -> False)
+            vc
+            (toGerneric >> .asset >> asset network)
+            "Value"
+            (toGerneric >> .value)
+        ]
+    , customizations = cc
+    , tag = TableMsg isA2b
+    , rowHeight = 38
+    , containerHeight = 300
+    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
+    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
+    }
 
 
 txColumn : View.Config -> ColumnConfig Api.Data.Link msg -> Table.Column Api.Data.Link msg
