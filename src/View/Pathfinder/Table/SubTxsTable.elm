@@ -19,14 +19,14 @@ import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns as PT
 
 
-config : Styles -> View.Config -> (Id -> Bool) -> Table.Config Api.Data.TxAccount TxDetailsMsg
-config styles vc isCheckedFn =
+config : Styles -> View.Config -> { selectedSubTx : Id, isCheckedFn : Id -> Bool } -> Table.Config Api.Data.TxAccount TxDetailsMsg
+config styles vc { selectedSubTx, isCheckedFn } =
     let
         toId r =
             Id.init r.network r.identifier
 
         rightAlignedColumns =
-            Dict.empty
+            Dict.fromList [ ( "Value", View.Pathfinder.PagedTable.RightAligned ) ]
 
         styles_ =
             styles
@@ -51,7 +51,8 @@ config styles vc isCheckedFn =
         { toId = toId >> Id.toString
         , toMsg = \_ -> NoOpSubTxsTable
         , columns =
-            [ PT.checkboxColumn vc
+            [ PT.selectionIndicatorColumn vc { isSelected = toId >> (==) selectedSubTx }
+            , PT.checkboxColumn vc
                 { isChecked = toId >> isCheckedFn
                 , onClick = UserClickedTxInSubTxsTable
                 , readonly = \_ -> False

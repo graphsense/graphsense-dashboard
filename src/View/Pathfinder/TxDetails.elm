@@ -89,7 +89,7 @@ accountAssetList vc viewState txExistsFn =
     [ toToggle "Include Zero Value Txs" viewState.includeZeroValueSubTxs (UserClickedToggleIncludeZeroValueSubTxs |> TxDetailsMsg)
     , InfiniteTable.view vc
         [ css fullWidth, css [ Css.height (Css.px 200) ] ]
-        (SubTxsTable.config Css.Table.styles vc txExistsFn)
+        (SubTxsTable.config Css.Table.styles vc { selectedSubTx = viewState.tx |> Tx.getTxIdForTx, isCheckedFn = txExistsFn })
         TableMsgSubTxTable
         viewState.subTxsTable
         |> Html.Styled.map TxDetailsMsg

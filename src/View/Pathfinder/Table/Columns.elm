@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addressColumn, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addressColumn, checkboxColumn, debitCreditColumn, selectionIndicatorColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
@@ -13,7 +13,7 @@ import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple exposing (pair)
 import Util.Checkbox
-import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 
@@ -115,6 +115,28 @@ type alias CheckboxColumnConfig data msg =
     , onClick : data -> msg
     , readonly : data -> Bool
     }
+
+
+selectionIndicatorColumn : View.Config -> { isSelected : data -> Bool } -> Table.Column data msg
+selectionIndicatorColumn _ { isSelected } =
+    Table.veryCustomColumn
+        { name = ""
+        , viewData =
+            \data ->
+                Table.HtmlDetails
+                    [ [ PCSS.mGap |> Css.padding
+                      , Css.verticalAlign Css.middle
+                      ]
+                        |> css
+                    ]
+                    [ if isSelected data then
+                        text ">"
+
+                      else
+                        none
+                    ]
+        , sorter = Table.unsortable
+        }
 
 
 checkboxColumn : View.Config -> CheckboxColumnConfig data msg -> Table.Column data msg
