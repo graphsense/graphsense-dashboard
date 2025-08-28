@@ -169,6 +169,7 @@ type TxDetailsMsg
     | UserClickedToggleSubTxsTable
     | UserClickedTxInSubTxsTable Api.Data.TxAccount
     | NoOpSubTxsTable
+    | UserClickedToggleIncludeZeroValueSubTxs
 
 
 type IoDirection

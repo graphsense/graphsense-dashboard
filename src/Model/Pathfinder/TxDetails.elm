@@ -25,6 +25,7 @@ transactionTableConfig m =
                 |> Api.ListTxFlowsEffect
                     { currency = currency
                     , txHash = baseTxHash
+                    , includeZeroValueSubTxs = m.includeZeroValueSubTxs
                     , pagesize = Just pagesize
                     , nextpage = nextpage
                     }
@@ -47,6 +48,7 @@ type alias Model =
     , outputsTable : Table Api.Data.TxValue
     , tx : Tx
     , subTxsTableOpen : Bool
-    , baseTx : WebData Api.Data.Tx
+    , baseTx : WebData Api.Data.TxAccount
     , subTxsTable : InfiniteTable.Model Api.Data.TxAccount
+    , includeZeroValueSubTxs : Bool
     }

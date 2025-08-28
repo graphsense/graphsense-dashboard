@@ -1,5 +1,6 @@
-module Init.Pathfinder.TxDetails exposing (init)
+module Init.Pathfinder.TxDetails exposing (init, initSubTxTable)
 
+import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Model.Pathfinder.Table.IoTable as IoTable
@@ -7,6 +8,11 @@ import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
 import RemoteData
 import Util.Data exposing (negateTxValue)
+
+
+initSubTxTable : InfiniteTable.Model Api.Data.TxAccount
+initSubTxTable =
+    Table.initUnsorted |> InfiniteTable.init 6
 
 
 init : Tx -> TxDetails.Model
@@ -36,6 +42,7 @@ init tx =
     , tx = tx
     , baseTx = RemoteData.NotAsked
     , subTxsTable =
-        Table.initUnsorted |> InfiniteTable.init 5
-    , subTxsTableOpen = True
+        Table.initUnsorted |> InfiniteTable.init 6
+    , subTxsTableOpen = False
+    , includeZeroValueSubTxs = False
     }

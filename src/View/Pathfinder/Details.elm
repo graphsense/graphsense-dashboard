@@ -1,4 +1,4 @@
-module View.Pathfinder.Details exposing (DataTabConfig, closeAttrs, dataTab, valuesToCell)
+module View.Pathfinder.Details exposing (DataTabConfig, closeAttrs, dataTab, emptyCell, valuesToCell)
 
 import Api.Data
 import Config.View as View
@@ -19,6 +19,14 @@ import View.Locale as Locale
 valuesToCell : View.Config -> Currency.AssetIdentifier -> Api.Data.Values -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
 valuesToCell vc asset value =
     { firstRowText = Locale.currency (View.toCurrency vc) vc.locale [ ( asset, value ) ]
+    , secondRowText = ""
+    , secondRowVisible = False
+    }
+
+
+emptyCell : { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+emptyCell =
+    { firstRowText = ""
     , secondRowText = ""
     , secondRowVisible = False
     }
