@@ -67,7 +67,10 @@ update msg model =
     case msg of
         UserClickedResetZeroValueSubTxsTableFilters ->
             model
-                |> s_subTxsTableFilter (model.subTxsTableFilter |> s_includeZeroValueTxs (Just False))
+                |> s_subTxsTableFilter
+                    (model.subTxsTableFilter
+                        |> s_includeZeroValueTxs (Just (not (model.subTxsTableFilter.includeZeroValueTxs |> Maybe.withDefault False)))
+                    )
                 |> n
                 |> and reloadSubTxTable
 
