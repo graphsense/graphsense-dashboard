@@ -57,6 +57,7 @@ neighborsTableConfigWithMsg msg addressId dir =
                     , includeActors = False
                     }
                 |> ApiEffect
+    , triggerOffset = 100
     }
 
 
@@ -88,6 +89,7 @@ transactionTableConfigWithMsg msg txs addressId =
                     , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate
                     }
                 |> ApiEffect
+    , triggerOffset = 100
     }
 
 
@@ -141,11 +143,12 @@ update uc msg model =
                 |> Maybe.map
                     (\( tbl, setter ) ->
                         let
-                            ( pt, eff ) =
+                            ( pt, cmd, eff ) =
                                 InfiniteTable.update (neighborsTableConfig model.address.id dir) pm tbl
                         in
                         ( setter pt model
-                        , Maybe.Extra.toList eff
+                        , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
+                            :: Maybe.Extra.toList eff
                         )
                     )
                 |> Maybe.withDefault (n model)
@@ -192,10 +195,24 @@ update uc msg model =
             model.txs
                 |> RemoteData.map
                     (\txs ->
-                        InfiniteTable.update (transactionTableConfig txs model.address.id) pm txs.table
+                        let
+                            ( table, cmd, eff ) =
+                                InfiniteTable.update (transactionTableConfig txs model.address.id) pm txs.table
+                        in
+                        ( table, eff )
                             |> mapFirst (flip s_table txs)
                             |> mapFirst (RemoteData.Success >> flip s_txs model)
                             |> mapSecond Maybe.Extra.toList
+                            |> mapSecond
+                                ((::)
+                                    (cmd
+                                        |> Cmd.map
+                                            (TransactionsTableSubTableMsg
+                                                >> Pathfinder.AddressDetailsMsg model.address.id
+                                            )
+                                        |> CmdEffect
+                                    )
+                                )
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -424,6 +441,9 @@ update uc msg model =
         RelatedAddressesTableSubTableMsg pm ->
             (\rm ->
                 RelatedAddressesTable.updateTable
+                    (RelatedAddressesTableSubTableMsg
+                        >> Pathfinder.AddressDetailsMsg model.address.id
+                    )
                     (InfiniteTable.update (RelatedAddressesTable.tableConfig rm) pm)
                     rm
             )

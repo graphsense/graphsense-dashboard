@@ -9,7 +9,7 @@ import Effect.Pathfinder exposing (Effect(..))
 import Maybe.Extra
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, filter, getTable, setTable)
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder as Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter as Rs exposing (s_table)
 import Set
@@ -19,6 +19,7 @@ import Tuple exposing (mapFirst, mapSecond)
 tableConfig : Model -> InfiniteTable.Config Effect
 tableConfig rm =
     { fetch = loadData rm
+    , triggerOffset = 100
     }
 
 
@@ -117,9 +118,20 @@ appendAddresses nextpage addresses ra =
         |> mapSecond Maybe.Extra.toList
 
 
-updateTable : (InfiniteTable.Model Api.Data.Address -> ( InfiniteTable.Model Api.Data.Address, Maybe Effect )) -> Model -> ( Model, List Effect )
-updateTable updTable model =
-    getTable model
-        |> updTable
+updateTable : (InfiniteTable.Msg -> Pathfinder.Msg) -> (InfiniteTable.Model Api.Data.Address -> ( InfiniteTable.Model Api.Data.Address, Cmd InfiniteTable.Msg, Maybe Effect )) -> Model -> ( Model, List Effect )
+updateTable mapCmd updTable model =
+    let
+        ( m, cmd, eff ) =
+            getTable model
+                |> updTable
+    in
+    ( m, eff )
         |> mapFirst (setTable model)
         |> mapSecond Maybe.Extra.toList
+        |> mapSecond
+            ((::)
+                (cmd
+                    |> Cmd.map mapCmd
+                    |> CmdEffect
+                )
+            )

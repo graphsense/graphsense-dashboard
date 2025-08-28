@@ -1,4 +1,4 @@
-module View.Pathfinder.InfiniteTable exposing (Config, view)
+module View.Pathfinder.InfiniteTable exposing (Config, loadingPlaceholderAbove, loadingPlaceholderBelow, view)
 
 import Components.InfiniteTable as InfiniteTable
 import Config.View as View
@@ -8,7 +8,6 @@ import Css.Table exposing (loadingSpinner)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import InfiniteScroll
-import Table
 import Util.View
 import View.Locale as Locale
 
@@ -27,49 +26,49 @@ tableHint vc msg =
         ]
 
 
-view : View.Config -> List (Attribute msg) -> Table.Config data msg -> (InfiniteTable.Msg -> msg) -> InfiniteTable.Model data -> Html msg
-view vc attributes config infiniteScrollMsg tblInfinite =
-    let
-        tbl =
-            InfiniteTable.getTable tblInfinite
-
-        filteredData =
-            tbl.filtered
-
-        wrapNote =
-            List.singleton
-                >> div
-                    [ css
-                        [ Css.flexGrow <| Css.num 1
-                        ]
-                    ]
-                >> List.singleton
-    in
+view : View.Config -> List (Attribute msg) -> InfiniteTable.TableConfig data msg -> InfiniteTable.Model data -> Html msg
+view vc attributes config tblInfinite =
     div
         (css
             [ Css.displayFlex
             , Css.flexDirection Css.column
             , Css.justifyContent Css.spaceBetween
-            , Css.maxHeight <| Css.px 300
-            , Css.overflowY Css.auto
             ]
-            :: InfiniteTable.infiniteScroll infiniteScrollMsg
             :: attributes
         )
-        (Table.view config tbl.state filteredData
-            :: (if tbl.loading then
-                    Util.View.loadingSpinner vc loadingSpinner
-                        |> wrapNote
+        [ if InfiniteTable.isEmpty tblInfinite then
+            div
+                [ css
+                    [ Css.flexGrow <| Css.num 1
+                    ]
+                ]
+                (if InfiniteTable.isLoading tblInfinite then
+                    loadingPlaceholderBelow vc
 
-                else if List.isEmpty tbl.data then
-                    tableHint vc "No records found"
-                        |> wrapNote
+                 else
+                    [ tableHint vc "No records found" ]
+                )
 
-                else if List.isEmpty filteredData then
-                    tableHint vc "No rows match your filter criteria"
-                        |> wrapNote
+          else
+            InfiniteTable.viewTable config [] tblInfinite
+        ]
 
-                else
-                    []
-               )
-        )
+
+loadingPlaceholderAbove : View.Config -> List (Html msg)
+loadingPlaceholderAbove vc =
+    Util.View.loadingSpinner vc loadingSpinner
+        |> List.singleton
+        |> div
+            [ css
+                [ Css.alignItems Css.flexEnd
+                , Css.displayFlex
+                , Css.height <| Css.pct 100
+                ]
+            ]
+        |> List.singleton
+
+
+loadingPlaceholderBelow : View.Config -> List (Html msg)
+loadingPlaceholderBelow vc =
+    Util.View.loadingSpinner vc loadingSpinner
+        |> List.singleton

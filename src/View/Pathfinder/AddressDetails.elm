@@ -2,7 +2,7 @@ module View.Pathfinder.AddressDetails exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Components.InfiniteTable as InfiniteTable
+import Components.InfiniteTable as Inf
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -295,7 +295,6 @@ neighborsDataTab vc model id viewState direction =
                         [ InfiniteTable.view vc
                             [ css fullWidth ]
                             (NeighborAddressesTable.config Css.Table.styles vc conf)
-                            (AddressDetails.NeighborsTableSubTableMsg direction)
                             tbl
                         ]
                         |> Just
@@ -445,7 +444,6 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                             [ InfiniteTable.view vc
                                                 [ css fullWidth ]
                                                 (RelatedAddressesTable.config Css.Table.styles vc ratc ra)
-                                                AddressDetails.RelatedAddressesTableSubTableMsg
                                                 (RelatedAddressesTable.getTable ra)
                                             ]
 
@@ -562,7 +560,7 @@ transactionTableView vc addressId txOnGraphFn model =
 
         allChecked =
             model.table
-                |> InfiniteTable.getTable
+                |> Inf.getTable
                 |> .filtered
                 |> List.map Tx.getTxIdForAddressTx
                 |> allAndNotEmpty txOnGraphFn
@@ -571,7 +569,6 @@ transactionTableView vc addressId txOnGraphFn model =
             InfiniteTable.view vc
                 []
                 (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
-                AddressDetails.TransactionsTableSubTableMsg
                 model.table
     in
     [ TransactionFilter.filterHeader vc

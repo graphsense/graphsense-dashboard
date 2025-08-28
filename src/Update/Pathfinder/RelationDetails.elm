@@ -76,6 +76,7 @@ loadRelationTxs id isA2b txTable nrItems nextpage =
 tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config Effect
 tableConfig id isA2b txTable =
     { fetch = loadRelationTxs id isA2b txTable
+    , triggerOffset = 100
     }
 
 
@@ -151,13 +152,23 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                 tbl =
                     gs.getTable model
+
+                ( m, cmd, eff ) =
+                    tbl
+                        |> .table
+                        |> InfiniteTable.update (tableConfig id isA2b tbl) tm
             in
-            tbl
-                |> .table
-                |> InfiniteTable.update (tableConfig id isA2b tbl) tm
+            ( m, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
                 |> mapSecond Maybe.Extra.toList
+                |> mapSecond
+                    ((::)
+                        (cmd
+                            |> Cmd.map (TableMsg isA2b >> RelationDetailsMsg id)
+                            |> CmdEffect
+                        )
+                    )
 
         BrowserGotLinks isA2b data ->
             let

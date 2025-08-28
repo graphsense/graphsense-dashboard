@@ -2,6 +2,7 @@ module View.Pathfinder.Table.NeighborAddressesTable exposing (NeighborAddressesT
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.InfiniteTable as InfiniteTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
@@ -24,6 +25,7 @@ import Util.Tag as Tag
 import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifier)
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns exposing (checkboxColumn, valueColumnWithOptions)
 
@@ -37,7 +39,7 @@ type alias NeighborAddressesTableConfig =
     }
 
 
-config : Styles -> View.Config -> NeighborAddressesTableConfig -> Table.Config Api.Data.NeighborAddress AddressDetails.Msg
+config : Styles -> View.Config -> NeighborAddressesTableConfig -> InfiniteTable.TableConfig Api.Data.NeighborAddress AddressDetails.Msg
 config styles vc conf =
     let
         cellLabel =
@@ -77,85 +79,89 @@ config styles vc conf =
             toId nb
                 |> AggEdge.initId conf.anchorId
     in
-    Table.customConfig
-        { toId = .address >> .address
-        , toMsg = \_ -> AddressDetails.NoOp
-        , columns =
-            [ checkboxColumn vc
-                { isChecked = toAggId >> conf.isChecked
-                , onClick = AddressDetails.UserClickedAggEdgeCheckboxInTable conf.direction conf.anchorId
-                , readonly = \_ -> False
-                }
-            , htmlColumnWithSorter Table.unsortable
-                styles
-                vc
-                (Locale.string vc.locale "Address")
-                (\{ address } -> address.address)
-                (\{ address } ->
-                    [ SidePanelComponents.sidePanelListIdentifierCell
-                        { root =
-                            { identifier = truncateLongIdentifier address.address
-                            , copyIconInstance = copyIconPathfinder vc address.address
-                            }
+    { toId = .address >> .address
+    , toMsg = \_ -> AddressDetails.NoOp
+    , columns =
+        [ checkboxColumn vc
+            { isChecked = toAggId >> conf.isChecked
+            , onClick = AddressDetails.UserClickedAggEdgeCheckboxInTable conf.direction conf.anchorId
+            , readonly = \_ -> False
+            }
+        , htmlColumnWithSorter Table.unsortable
+            styles
+            vc
+            (Locale.string vc.locale "Address")
+            (\{ address } -> address.address)
+            (\{ address } ->
+                [ SidePanelComponents.sidePanelListIdentifierCell
+                    { root =
+                        { identifier = truncateLongIdentifier address.address
+                        , copyIconInstance = copyIconPathfinder vc address.address
                         }
-                    ]
-                )
-            , htmlColumnWithSorter Table.unsortable
-                styles
-                vc
-                (Locale.string vc.locale "Category")
-                (\{ address } -> address.address)
-                (\data ->
-                    let
-                        withTagSummary ts =
-                            getSortedConceptsByWeight ts
-                                |> List.head
-                                |> Maybe.map
-                                    (Tag.conceptItem vc (toId data)
-                                        >> Html.map (AddressDetails.TagTooltipMsg >> AddressDetails.TooltipMsg)
-                                        >> List.singleton
-                                    )
-                                |> Maybe.withDefault []
-                    in
-                    case toId data |> conf.hasTags of
-                        NoTags ->
-                            []
+                    }
+                ]
+            )
+        , htmlColumnWithSorter Table.unsortable
+            styles
+            vc
+            (Locale.string vc.locale "Category")
+            (\{ address } -> address.address)
+            (\data ->
+                let
+                    withTagSummary ts =
+                        getSortedConceptsByWeight ts
+                            |> List.head
+                            |> Maybe.map
+                                (Tag.conceptItem vc (toId data)
+                                    >> Html.map (AddressDetails.TagTooltipMsg >> AddressDetails.TooltipMsg)
+                                    >> List.singleton
+                                )
+                            |> Maybe.withDefault []
+                in
+                case toId data |> conf.hasTags of
+                    NoTags ->
+                        []
 
-                        NoTagsWithoutCluster ->
-                            []
+                    NoTagsWithoutCluster ->
+                        []
 
-                        HasTags _ ->
-                            []
+                    HasTags _ ->
+                        []
 
-                        HasTagSummaryWithCluster _ ->
-                            []
+                    HasTagSummaryWithCluster _ ->
+                        []
 
-                        HasTagSummaryOnlyWithCluster _ ->
-                            []
+                    HasTagSummaryOnlyWithCluster _ ->
+                        []
 
-                        HasTagSummaryWithoutCluster ts ->
-                            withTagSummary ts
+                    HasTagSummaryWithoutCluster ts ->
+                        withTagSummary ts
 
-                        HasTagSummaries { withoutCluster } ->
-                            withTagSummary withoutCluster
+                    HasTagSummaries { withoutCluster } ->
+                        withTagSummary withoutCluster
 
-                        LoadingTags ->
-                            [ loadingSpinner vc Css.View.loadingSpinner
-                            ]
+                    LoadingTags ->
+                        [ loadingSpinner vc Css.View.loadingSpinner
+                        ]
 
-                        HasExchangeTagOnly ->
-                            []
-                )
-            , valueColumnWithOptions
-                { sortable = False
-                , hideCode = True
-                , colorFlowDirection = False
-                , isOutgoingFn = \_ -> False
-                }
-                vc
-                (.address >> .currency >> Currency.assetFromBase)
-                (Locale.string vc.locale cellLabel)
-                .value
-            ]
-        , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
-        }
+                    HasExchangeTagOnly ->
+                        []
+            )
+        , valueColumnWithOptions
+            { sortable = False
+            , hideCode = True
+            , colorFlowDirection = False
+            , isOutgoingFn = \_ -> False
+            }
+            vc
+            (.address >> .currency >> Currency.assetFromBase)
+            (Locale.string vc.locale cellLabel)
+            .value
+        ]
+    , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
+    , tag = AddressDetails.NeighborsTableSubTableMsg conf.direction
+    , rowHeight = 34
+    , containerHeight = 300
+    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
+    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
+    }
