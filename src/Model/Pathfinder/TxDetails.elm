@@ -1,13 +1,16 @@
-module Model.Pathfinder.TxDetails exposing (Model, transactionTableConfig, transactionTableFilter)
+module Model.Pathfinder.TxDetails exposing (Model, SubTxTableFilter, transactionTableConfig, transactionTableFilter)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table exposing (Table)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
+import Model.DateRangePicker as DateRangePicker
+import Model.Direction exposing (Direction)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg(..), TxDetailsMsg(..))
 import RemoteData exposing (WebData)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 transactionTableConfig : Model -> InfiniteTable.Config Effect
@@ -25,7 +28,7 @@ transactionTableConfig m =
                 |> Api.ListTxFlowsEffect
                     { currency = currency
                     , txHash = baseTxHash
-                    , includeZeroValueSubTxs = m.includeZeroValueSubTxs
+                    , includeZeroValueSubTxs = m.subTxsTableFilter.includeZeroValueSubTxs
                     , pagesize = Just pagesize
                     , nextpage = nextpage
                     }
@@ -41,6 +44,16 @@ transactionTableFilter =
     }
 
 
+type alias SubTxTableFilter =
+    { includeZeroValueSubTxs : Bool
+    , isSubTxsTableFilterDialogOpen : Bool
+    , selectedAsset : Maybe String
+    , dateRangePicker : Maybe (DateRangePicker.Model TxDetailsMsg)
+    , direction : Maybe Direction
+    , assetSelectBox : ThemedSelectBox.Model (Maybe String)
+    }
+
+
 type alias Model =
     { inputsTableOpen : Bool
     , outputsTableOpen : Bool
@@ -50,5 +63,5 @@ type alias Model =
     , subTxsTableOpen : Bool
     , baseTx : WebData Api.Data.TxAccount
     , subTxsTable : InfiniteTable.Model Api.Data.TxAccount
-    , includeZeroValueSubTxs : Bool
+    , subTxsTableFilter : SubTxTableFilter
     }

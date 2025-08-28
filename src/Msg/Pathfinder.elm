@@ -23,6 +23,7 @@ import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type alias AddingAddressConfig =
@@ -167,9 +168,13 @@ type TxDetailsMsg
     | BrowserGotBaseTx Api.Data.Tx
     | BrowserGotTxFlows Api.Data.Txs
     | UserClickedToggleSubTxsTable
+    | UserClickedResetAllSubTxsTableFilters
+    | UserClickedToggleSubTxsTableFilter
+    | UserClickedCloseSubTxTableFilterDialog
     | UserClickedTxInSubTxsTable Api.Data.TxAccount
     | NoOpSubTxsTable
     | UserClickedToggleIncludeZeroValueSubTxs
+    | SubTxsSelectedAssetSelectBoxMsg (ThemedSelectBox.Msg (Maybe String))
 
 
 type IoDirection

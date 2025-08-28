@@ -21,7 +21,6 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tx as Tx exposing (ioToId)
 import Model.Pathfinder.TxDetails as TxDetails
-import Model.Tx as Tx
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
 import RemoteData
@@ -39,6 +38,7 @@ import View.Pathfinder.Details exposing (closeAttrs, dataTab, emptyCell, valuesT
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 import View.Pathfinder.Table.SubTxsTable as SubTxsTable
+import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 view : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
@@ -63,7 +63,15 @@ accountAssetList vc viewState txExistsFn =
                 t =
                     Locale.string vc.locale name
             in
-            div [] [ text t, View.Controls.toggle { size = Sc.SwitchSizeSmall, disabled = False, selected = selected, msg = msg } ]
+            div []
+                [ text t
+                , View.Controls.toggle
+                    { size = Sc.SwitchSizeSmall
+                    , disabled = False
+                    , selected = selected
+                    , msg = msg
+                    }
+                ]
 
         subTxsTab c =
             dataTab
@@ -86,7 +94,15 @@ accountAssetList vc viewState txExistsFn =
                 , onClick = UserClickedToggleSubTxsTable |> TxDetailsMsg
                 }
     in
-    [ toToggle "Include Zero Value Txs" viewState.includeZeroValueSubTxs (UserClickedToggleIncludeZeroValueSubTxs |> TxDetailsMsg)
+    [ toToggle "Include Zero Value Txs" viewState.subTxsTableFilter.includeZeroValueSubTxs (UserClickedToggleIncludeZeroValueSubTxs |> TxDetailsMsg)
+    , TransactionFilter.filterHeader vc
+        viewState.subTxsTableFilter
+        { resetDateFilterMsg = NoOpSubTxsTable
+        , resetAssetsFilterMsg = UserClickedResetAllSubTxsTableFilters
+        , resetDirectionFilterMsg = Nothing
+        , toggleFilterView = UserClickedToggleSubTxsTableFilter
+        }
+        |> Html.Styled.map TxDetailsMsg
     , InfiniteTable.view vc
         [ css fullWidth, css [ Css.height (Css.px 200) ] ]
         (SubTxsTable.config Css.Table.styles vc { selectedSubTx = viewState.tx |> Tx.getTxIdForTx, isCheckedFn = txExistsFn })
@@ -115,6 +131,16 @@ account vc viewState id txExistsFn =
                     {}
                 ]
 
+        filterDialogMsgs =
+            { closeTxFilterViewMsg = UserClickedCloseSubTxTableFilterDialog
+            , txTableFilterShowAllTxsMsg = Nothing
+            , txTableFilterShowIncomingTxOnlyMsg = Nothing
+            , txTableFilterShowOutgoingTxOnlyMsg = Nothing
+            , resetAllTxFiltersMsg = UserClickedResetAllSubTxsTableFilters
+            , txTableAssetSelectBoxMsg = SubTxsSelectedAssetSelectBoxMsg
+            , openDateRangePickerMsg = NoOpSubTxsTable
+            }
+
         baseTx =
             viewState.baseTx |> RemoteData.toMaybe
 
@@ -129,69 +155,88 @@ account vc viewState id txExistsFn =
         baseTxIdString =
             ("0x" ++ Id.id id) |> String.split "_" |> List.head |> Maybe.withDefault ""
     in
-    SidePanelComponents.sidePanelEthTransactionWithAttributes
-        (SidePanelComponents.sidePanelEthTransactionAttributes
-            |> Rs.s_root
-                [ sidePanelCss
+    div []
+        [ SidePanelComponents.sidePanelEthTransactionWithAttributes
+            (SidePanelComponents.sidePanelEthTransactionAttributes
+                |> Rs.s_root
+                    [ sidePanelCss
+                        |> css
+                    ]
+                |> Rs.s_sidePanelHeaderText [ spread ]
+                |> Rs.s_iconsCloseBlack closeAttrs
+            )
+            { identifierWithCopyIcon =
+                { identifier = baseTxIdString |> truncateLongIdentifierWithLengths 8 4
+                , copyIconInstance = baseTxIdString |> copyIconPathfinder vc
+                , chevronInstance = chevronActions
+                , addTagIconInstance = none
+                }
+            , leftTab = { variant = none }
+            , rightTab = { variant = none }
+            , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
+            , valueOfTimestamp = baseTx |> Maybe.map (timeToCell vc << .timestamp) |> Maybe.withDefault emptyCell
+            , titleOfEstimatedValue = { infoLabel = Locale.string vc.locale "Value" }
+            , valueOfEstimatedValue = baseTx |> Maybe.map (\b -> valuesToCell vc (asset b.network b.currency) b.value) |> Maybe.withDefault emptyCell
+            , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
+            , valueOfSender =
+                { firstRowText = baseTx |> Maybe.map (.fromAddress >> truncateLongIdentifierWithLengths 8 4) |> Maybe.withDefault ""
+                , copyIconInstance = orLoadingSpinner (.fromAddress >> copyIconPathfinderAbove vc)
+                }
+            , titleOfReceiver = { infoLabel = Locale.string vc.locale "Receiver" }
+            , valueOfReceiver =
+                { firstRowText = baseTx |> Maybe.map (.toAddress >> truncateLongIdentifierWithLengths 8 4) |> Maybe.withDefault ""
+                , copyIconInstance = orLoadingSpinner (.toAddress >> copyIconPathfinderAbove vc)
+                }
+            , root =
+                { tabsVisible = False
+                , assetListInstance = accountAssetList vc viewState txExistsFn
+                , swapsListInstance = none
+                }
+            , sidePanelEthTxDetails =
+                { contractCreationVisible = baseTx |> Maybe.andThen .contractCreation |> Maybe.withDefault False
+                }
+            , sidePanelTxHeader =
+                { headerText = (Id.network id |> String.toUpper) ++ " " ++ Locale.string vc.locale "Transaction"
+
+                -- baseTx
+                --     |> Maybe.map
+                --         (Tx.fromApiTxAccount
+                --             >> Tx.txTypeToLabel
+                --             >> Locale.string vc.locale
+                --             >> (++) ((String.toUpper <| Id.network id) ++ " ")
+                --         )
+                --     |> Maybe.withDefault ""
+                }
+            , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
+            , valueOfContractCreation =
+                { firstRowText =
+                    Locale.string vc.locale <|
+                        if baseTx |> Maybe.andThen .contractCreation |> Maybe.withDefault False then
+                            "yes"
+
+                        else
+                            "no"
+                , secondRowText = ""
+                , secondRowVisible = False
+                }
+            }
+        , if viewState.subTxsTableFilter.isSubTxsTableFilterDialogOpen then
+            div
+                [ [ Css.position Css.fixed
+                  , Css.right (Css.px 42)
+                  , Css.top (Css.px 350)
+                  , Css.property "transform" "translate(0%, -50%)"
+                  , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
+                  ]
                     |> css
                 ]
-            |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack closeAttrs
-        )
-        { identifierWithCopyIcon =
-            { identifier = baseTxIdString |> truncateLongIdentifierWithLengths 8 4
-            , copyIconInstance = baseTxIdString |> copyIconPathfinder vc
-            , chevronInstance = chevronActions
-            , addTagIconInstance = none
-            }
-        , leftTab = { variant = none }
-        , rightTab = { variant = none }
-        , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
-        , valueOfTimestamp = baseTx |> Maybe.map (timeToCell vc << .timestamp) |> Maybe.withDefault emptyCell
-        , titleOfEstimatedValue = { infoLabel = Locale.string vc.locale "Value" }
-        , valueOfEstimatedValue = baseTx |> Maybe.map (\b -> valuesToCell vc (asset b.network b.currency) b.value) |> Maybe.withDefault emptyCell
-        , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
-        , valueOfSender =
-            { firstRowText = baseTx |> Maybe.map (.fromAddress >> truncateLongIdentifierWithLengths 8 4) |> Maybe.withDefault ""
-            , copyIconInstance = orLoadingSpinner (.fromAddress >> copyIconPathfinderAbove vc)
-            }
-        , titleOfReceiver = { infoLabel = Locale.string vc.locale "Receiver" }
-        , valueOfReceiver =
-            { firstRowText = baseTx |> Maybe.map (.toAddress >> truncateLongIdentifierWithLengths 8 4) |> Maybe.withDefault ""
-            , copyIconInstance = orLoadingSpinner (.toAddress >> copyIconPathfinderAbove vc)
-            }
-        , root =
-            { tabsVisible = False
-            , assetListInstance = accountAssetList vc viewState txExistsFn
-            , swapsListInstance = none
-            }
-        , sidePanelEthTxDetails =
-            { contractCreationVisible = baseTx |> Maybe.andThen .contractCreation |> Maybe.withDefault False
-            }
-        , sidePanelTxHeader =
-            { headerText =
-                baseTx
-                    |> Maybe.map
-                        (Tx.fromApiTxAccount
-                            >> Tx.txTypeToLabel
-                            >> Locale.string vc.locale
-                            >> (++) ((String.toUpper <| Id.network id) ++ " ")
-                        )
-                    |> Maybe.withDefault ""
-            }
-        , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
-        , valueOfContractCreation =
-            { firstRowText =
-                Locale.string vc.locale <|
-                    if baseTx |> Maybe.andThen .contractCreation |> Maybe.withDefault False then
-                        "yes"
+                [ TransactionFilter.txFilterDialogView vc (Id.network id) filterDialogMsgs viewState.subTxsTableFilter
+                    |> Html.Styled.map TxDetailsMsg
+                ]
 
-                    else
-                        "no"
-            , secondRowText = ""
-            , secondRowVisible = False
-            }
-        }
+          else
+            none
+        ]
 
 
 utxo : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Tx.UtxoTx -> Html Msg

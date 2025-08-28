@@ -8,6 +8,7 @@ import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
 import RemoteData
 import Util.Data exposing (negateTxValue)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 initSubTxTable : InfiniteTable.Model Api.Data.TxAccount
@@ -44,5 +45,12 @@ init tx =
     , subTxsTable =
         Table.initUnsorted |> InfiniteTable.init 6
     , subTxsTableOpen = False
-    , includeZeroValueSubTxs = False
+    , subTxsTableFilter =
+        { includeZeroValueSubTxs = False
+        , selectedAsset = Nothing
+        , dateRangePicker = Nothing
+        , direction = Nothing
+        , assetSelectBox = ThemedSelectBox.init [ Nothing, Just "ETH" ]
+        , isSubTxsTableFilterDialogOpen = False
+        }
     }

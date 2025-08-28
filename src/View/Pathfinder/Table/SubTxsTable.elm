@@ -7,6 +7,7 @@ import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.Table exposing (Styles)
 import Dict
+import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency as Currency
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -27,6 +28,11 @@ config styles vc { selectedSubTx, isCheckedFn } =
 
         rightAlignedColumns =
             Dict.fromList [ ( "Value", View.Pathfinder.PagedTable.RightAligned ) ]
+
+        rowBaseAttrs =
+            [ Css.height (Css.px 52)
+            , Css.property "border" ("1px solid " ++ Colors.grey50)
+            ]
 
         styles_ =
             styles
@@ -51,15 +57,29 @@ config styles vc { selectedSubTx, isCheckedFn } =
         { toId = toId >> Id.toString
         , toMsg = \_ -> NoOpSubTxsTable
         , columns =
-            [ PT.selectionIndicatorColumn vc { isSelected = toId >> (==) selectedSubTx }
-            , PT.checkboxColumn vc
+            [ PT.checkboxColumn vc
                 { isChecked = toId >> isCheckedFn
                 , onClick = UserClickedTxInSubTxsTable
                 , readonly = \_ -> False
                 }
-            , PT.addressColumn vc "from Address" .fromAddress
-            , PT.addressColumn vc "to Address" .toAddress
+            , PT.addressColumn vc { name = "from Address", withCopy = False } .fromAddress
+            , PT.addressColumn vc { name = "to Address", withCopy = False } .toAddress
             , PT.valueColumnWithOptions { sortable = False, hideCode = False, colorFlowDirection = False, isOutgoingFn = \_ -> False } vc (\d -> Currency.asset d.network d.currency) "Value" .value
             ]
-        , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
+        , customizations =
+            customizations vc
+                |> Rs.s_rowAttrs
+                    (\d ->
+                        (if (d |> toId) == selectedSubTx then
+                            rowBaseAttrs
+                                ++ [ Css.property "background-color" Colors.blue50
+                                   ]
+
+                         else
+                            rowBaseAttrs
+                        )
+                            |> css
+                            |> List.singleton
+                    )
+                |> alignColumnHeader styles_ vc rightAlignedColumns
         }

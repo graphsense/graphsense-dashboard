@@ -18,8 +18,8 @@ import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 
 
-addressColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
-addressColumn vc name accessor =
+addressColumn : View.Config -> { name : String, withCopy : Bool } -> (data -> String) -> Table.Column data msg
+addressColumn vc { name, withCopy } accessor =
     Table.veryCustomColumn
         { name = name
         , viewData =
@@ -27,11 +27,25 @@ addressColumn vc name accessor =
                 let
                     id =
                         accessor data
+
+                    attrs =
+                        (if not withCopy then
+                            [ Css.paddingRight (Css.px 20) ] |> css
+
+                         else
+                            [] |> css
+                        )
+                            |> List.singleton
                 in
-                Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
+                Table.HtmlDetails (css [ Css.verticalAlign Css.middle ] :: attrs)
                     [ SidePanelComponents.sidePanelListIdentifierCell
                         { root =
-                            { copyIconInstance = id |> String.split "_" |> List.head |> Maybe.withDefault "" |> copyIconPathfinder vc
+                            { copyIconInstance =
+                                if withCopy then
+                                    id |> String.split "_" |> List.head |> Maybe.withDefault "" |> copyIconPathfinder vc
+
+                                else
+                                    none
                             , identifier = id |> truncateLongIdentifierWithLengths 8 4
                             }
                         }
@@ -156,6 +170,7 @@ checkboxColumn _ { isChecked, onClick, readonly } =
                 Table.HtmlDetails
                     [ [ PCSS.mGap |> Css.padding
                       , Css.width <| Css.px 50
+                      , Css.verticalAlign Css.middle
                       ]
                         |> css
                     ]

@@ -10,11 +10,12 @@ import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails exposing (Model, transactionTableConfig, transactionTableFilter)
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
-import RecordSetter exposing (s_baseTx, s_state, s_subTxsTable)
+import RecordSetter exposing (s_baseTx, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable, s_subTxsTableFilter)
 import RemoteData
 import Tuple exposing (mapFirst, mapSecond)
-import Util exposing (n)
+import Util exposing (and, n)
 import Util.Data as Data
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 loadTxDetailsDataAccount : Tx -> InfiniteTable.Config Effect -> Model -> ( Model, List Effect )
@@ -52,18 +53,83 @@ loadTxDetailsDataAccount tx config model =
         n model
 
 
+reloadSubTxTable : Model -> ( Model, List Effect )
+reloadSubTxTable m =
+    n
+        { m
+            | baseTx = RemoteData.NotAsked
+            , subTxsTable = initSubTxTable
+        }
+
+
 update : TxDetailsMsg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
+        SubTxsSelectedAssetSelectBoxMsg tsbmsg ->
+            let
+                subTxsTableFilter =
+                    model.subTxsTableFilter
+
+                ( newSelect, outMsg ) =
+                    ThemedSelectBox.update tsbmsg subTxsTableFilter.assetSelectBox
+
+                subTxsTableFilterNew =
+                    { subTxsTableFilter
+                        | assetSelectBox = newSelect
+                        , selectedAsset =
+                            case outMsg of
+                                ThemedSelectBox.Selected table ->
+                                    table
+
+                                _ ->
+                                    subTxsTableFilter.selectedAsset
+                    }
+            in
+            model |> s_subTxsTableFilter subTxsTableFilterNew |> n
+
+        UserClickedCloseSubTxTableFilterDialog ->
+            model
+                |> s_subTxsTableFilter (model.subTxsTableFilter |> s_isSubTxsTableFilterDialogOpen False)
+                |> n
+
+        UserClickedResetAllSubTxsTableFilters ->
+            let
+                subTxsTableFilter =
+                    model.subTxsTableFilter
+            in
+            n
+                { model
+                    | subTxsTableFilter =
+                        { subTxsTableFilter
+                            | isSubTxsTableFilterDialogOpen = False
+                            , includeZeroValueSubTxs = False
+                            , selectedAsset = Nothing
+                        }
+                }
+
+        UserClickedToggleSubTxsTableFilter ->
+            model
+                |> s_subTxsTableFilter
+                    (model.subTxsTableFilter
+                        |> s_isSubTxsTableFilterDialogOpen (not model.subTxsTableFilter.isSubTxsTableFilterDialogOpen)
+                    )
+                |> n
+
         UserClickedToggleIncludeZeroValueSubTxs ->
             -- setting base Tx to NotAsked and reinit the table should cause a
             -- refetch of all data in the Update Pathfinder.elm syncDetails
+            let
+                subTxsTableFilter =
+                    model.subTxsTableFilter
+            in
             n
                 { model
-                    | includeZeroValueSubTxs = not model.includeZeroValueSubTxs
-                    , baseTx = RemoteData.NotAsked
-                    , subTxsTable = initSubTxTable
+                    | subTxsTableFilter =
+                        { subTxsTableFilter
+                            | includeZeroValueSubTxs = not subTxsTableFilter.includeZeroValueSubTxs
+                        }
                 }
+                |> and reloadSubTxTable
 
         NoOpSubTxsTable ->
             n model
