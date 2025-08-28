@@ -51,7 +51,6 @@ import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Tx)
-import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import Model.Tx as GTx exposing (parseTxIdentifier)
 import Msg.Pathfinder
@@ -245,14 +244,10 @@ syncSidePanel uc model =
                         case Dict.get tid model.network.txs of
                             Just tx ->
                                 let
-                                    -- hasToFetchMoreData = Data.isAccountLike(tid |> Id.network) && td.baseTx == RemoteData.NotAsked
-                                    -- baseTxHash = td.tx |> Tx.getRawBaseTxHashForTx
                                     newM =
                                         tx |> flip s_tx td
-
-                                    -- |> s_baseTx (if hasToFetchMoreData then RemoteData.Loading else td.baseTx)
                                 in
-                                TxDetails.loadTxDetailsDataAccount tx (TxDetails.transactionTableConfig newM) newM
+                                TxDetails.loadTxDetailsDataAccount tx newM
                                     |> mapFirst (TxDetails tid >> Just)
 
                             _ ->

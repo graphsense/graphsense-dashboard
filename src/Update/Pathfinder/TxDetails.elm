@@ -1,14 +1,16 @@
 module Update.Pathfinder.TxDetails exposing (loadTxDetailsDataAccount, update)
 
+import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
+import Components.Table as Table
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.Pathfinder.TxDetails exposing (initSubTxTable)
 import Maybe.Extra
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx as Tx exposing (Tx)
-import Model.Pathfinder.TxDetails exposing (Model, transactionTableConfig, transactionTableFilter)
+import Model.Pathfinder.TxDetails exposing (Model)
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter exposing (s_baseTx, s_includeZeroValueTxs, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable, s_subTxsTableFilter)
 import RemoteData
@@ -18,9 +20,44 @@ import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
-loadTxDetailsDataAccount : Tx -> InfiniteTable.Config Effect -> Model -> ( Model, List Effect )
-loadTxDetailsDataAccount tx config model =
+transactionTableConfig : Model -> InfiniteTable.Config Effect
+transactionTableConfig m =
     let
+        baseTxHash =
+            m.tx |> Tx.getRawBaseTxHashForTx
+
+        currency =
+            m.tx |> Tx.getNetwork
+    in
+    { fetch =
+        \pagesize nextpage ->
+            (BrowserGotTxFlows >> TxDetailsMsg)
+                |> Api.ListTxFlowsEffect
+                    { currency = currency
+                    , txHash = baseTxHash
+                    , includeZeroValueSubTxs = m.subTxsTableFilter.includeZeroValueTxs |> Maybe.withDefault False
+                    , pagesize = Just pagesize
+                    , token_currency = m.subTxsTableFilter.selectedAsset
+                    , nextpage = nextpage
+                    }
+                |> ApiEffect
+    }
+
+
+transactionTableFilter : Table.Filter Api.Data.TxAccount
+transactionTableFilter =
+    { search =
+        \_ _ -> True
+    , filter = always True
+    }
+
+
+loadTxDetailsDataAccount : Tx -> Model -> ( Model, List Effect )
+loadTxDetailsDataAccount tx model =
+    let
+        config =
+            transactionTableConfig model
+
         hasToFetchMoreData =
             Data.isAccountLike (tx.id |> Id.network) && model.baseTx == RemoteData.NotAsked
 
@@ -93,8 +130,23 @@ update msg model =
                                 _ ->
                                     subTxsTableFilter.selectedAsset
                     }
+
+                oldvalue =
+                    subTxsTableFilter.selectedAsset
+
+                newValue =
+                    subTxsTableFilterNew.selectedAsset
             in
-            model |> s_subTxsTableFilter subTxsTableFilterNew |> n
+            model
+                |> s_subTxsTableFilter subTxsTableFilterNew
+                |> n
+                |> and
+                    (if oldvalue /= newValue then
+                        reloadSubTxTable
+
+                     else
+                        n
+                    )
 
         UserClickedCloseSubTxTableFilterDialog ->
             model
@@ -115,6 +167,7 @@ update msg model =
                             , selectedAsset = Nothing
                         }
                 }
+                |> and reloadSubTxTable
 
         UserClickedToggleSubTxsTableFilter ->
             model
@@ -165,7 +218,7 @@ update msg model =
 
                 ( nt, meff ) =
                     model.subTxsTable
-                        |> InfiniteTable.appendData config (transactionTableFilter model.subTxsTableFilter.selectedAsset) txs.nextPage accountTxs
+                        |> InfiniteTable.appendData config transactionTableFilter txs.nextPage accountTxs
             in
             ( { model | subTxsTable = nt }, Maybe.Extra.toList meff )
 

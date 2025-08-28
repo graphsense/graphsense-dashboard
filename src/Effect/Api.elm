@@ -298,6 +298,7 @@ type Effect msg
         { currency : String
         , txHash : String
         , includeZeroValueSubTxs : Bool
+        , token_currency : Maybe String
         , pagesize : Maybe Int
         , nextpage : Maybe String
         }
@@ -942,8 +943,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Txs.getTxConversions currency txHash
                 |> send apiKey wrapMsg effect toMsg
 
-        ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, pagesize, nextpage } toMsg ->
-            Api.Request.Txs.listTxFlows currency txHash (Just (not includeZeroValueSubTxs)) Nothing nextpage pagesize
+        ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, token_currency, pagesize, nextpage } toMsg ->
+            Api.Request.Txs.listTxFlows currency txHash (Just (not includeZeroValueSubTxs)) Nothing token_currency nextpage pagesize
                 |> send apiKey wrapMsg effect toMsg
 
 

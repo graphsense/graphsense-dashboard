@@ -141,13 +141,13 @@ listTokenTxs currency_path txHash_path =
 
 
 
-listTxFlows : (String) -> (String) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.Txs
-listTxFlows currency_path txHash_path stripZeroValueTxs_query onlyTokenTxs_query page_query pagesize_query =
+listTxFlows : (String) -> (String) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.Txs
+listTxFlows currency_path txHash_path stripZeroValueTxs_query onlyTokenTxs_query tokenCurrency_query page_query pagesize_query =
     Api.request
         "GET"
         "/{currency}/txs/{txHash}/flows"
         [ ( "currency", identity currency_path ), ( "txHash", identity txHash_path ) ]
-        [ ( "strip_zero_value_txs", Maybe.map ((\val -> if val then "true" else "false")) stripZeroValueTxs_query ), ( "only_token_txs", Maybe.map ((\val -> if val then "true" else "false")) onlyTokenTxs_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
+        [ ( "strip_zero_value_txs", Maybe.map ((\val -> if val then "true" else "false")) stripZeroValueTxs_query ), ( "only_token_txs", Maybe.map ((\val -> if val then "true" else "false")) onlyTokenTxs_query ), ( "token_currency", Maybe.map (identity) tokenCurrency_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
         Api.Data.txsDecoder
