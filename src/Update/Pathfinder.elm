@@ -32,6 +32,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
+import Model.Locale as Locale
 import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
@@ -157,7 +158,7 @@ syncSidePanel uc model =
 
         makeTxDetails tid =
             Dict.get tid model.network.txs
-                |> Maybe.map (TxDetails.init >> TxDetails tid)
+                |> Maybe.map (TxDetails.init (uc.locale |> flip Locale.getTokenTickers (Id.network tid)) >> TxDetails tid)
 
         makeRelationDetails rid =
             Dict.get rid model.network.aggEdges

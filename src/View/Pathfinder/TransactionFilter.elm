@@ -6,12 +6,14 @@ import Css.DateTimePicker as DateTimePicker
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Events exposing (onClick)
+import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import RecordSetter as Rs
 import Svg.Styled.Attributes exposing (css)
 import Theme.Colors
 import Theme.Html.Icons as HIcons
+import Theme.Html.SelectionControls as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css
 import Util.Data as Data
@@ -28,6 +30,7 @@ type alias FilterMetadata msg x =
         , direction : Maybe Direction
         , selectedAsset : Maybe String
         , assetSelectBox : ThemedSelectBox.Model (Maybe String)
+        , includeZeroValueTxs : Maybe Bool
     }
 
 
@@ -35,6 +38,7 @@ type alias FilterHeaderConfig msg =
     { resetDateFilterMsg : msg
     , resetDirectionFilterMsg : Maybe msg
     , resetAssetsFilterMsg : msg
+    , resetZeroValueFilterMsg : Maybe msg
     , toggleFilterView : msg
     }
 
@@ -44,9 +48,10 @@ type alias FilterDialogConfig msg =
     , txTableFilterShowAllTxsMsg : Maybe msg
     , txTableFilterShowIncomingTxOnlyMsg : Maybe msg
     , txTableFilterShowOutgoingTxOnlyMsg : Maybe msg
+    , txTableFilterToggleZeroValueMsg : Maybe msg
     , resetAllTxFiltersMsg : msg
     , txTableAssetSelectBoxMsg : ThemedSelectBox.Msg (Maybe String) -> msg
-    , openDateRangePickerMsg : msg
+    , openDateRangePickerMsg : Maybe msg
     }
 
 
@@ -135,6 +140,15 @@ assetFilterHeader vc resetMsg asset =
     stringFilterHeader vc resetMsg asset
 
 
+zeroValuesHeader : View.Config -> msg -> Bool -> Html msg
+zeroValuesHeader vc resetMsg includeZeroValueTxs =
+    if includeZeroValueTxs then
+        stringFilterHeader vc resetMsg "All Values"
+
+    else
+        stringFilterHeader vc resetMsg "No zero value transactions"
+
+
 filterHeader : View.Config -> FilterMetadata msg x -> FilterHeaderConfig msg -> Html msg
 filterHeader vc model config =
     div
@@ -162,6 +176,7 @@ filterHeader vc model config =
                 _ ->
                     none
             , model.selectedAsset |> Maybe.map (assetFilterHeader vc config.resetAssetsFilterMsg) |> Maybe.withDefault none
+            , model.includeZeroValueTxs |> Maybe.map2 (\b m -> zeroValuesHeader vc b m) config.resetZeroValueFilterMsg |> Maybe.withDefault none
             ]
         , div []
             [ HIcons.framedIconWithAttributes
@@ -202,12 +217,26 @@ txFilterDialogView vc net config model =
                     [ Css.display Css.none ] |> css |> List.singleton
                 )
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick config.closeTxFilterViewMsg ]
-            |> Rs.s_labelOfTransactionDirection
+            |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
                     [ Css.display Css.none ] |> css |> List.singleton
 
                  else
                     []
+                )
+            |> Rs.s_zeroValue
+                (if config.txTableFilterToggleZeroValueMsg |> Maybe.Extra.isJust then
+                    []
+
+                 else
+                    [ Css.display Css.none ] |> css |> List.singleton
+                )
+            |> Rs.s_dateRange
+                (if config.openDateRangePickerMsg |> Maybe.Extra.isJust then
+                    []
+
+                 else
+                    [ Css.display Css.none ] |> css |> List.singleton
                 )
         )
         { radioItemsList = directionRadios
@@ -270,10 +299,17 @@ txFilterDialogView vc net config model =
                                     SidePanelComponents.datePickerFilledWithAttributes
                                         (SidePanelComponents.datePickerFilledAttributes
                                             |> Rs.s_root
-                                                [ onClick config.openDateRangePickerMsg
-                                                , Util.View.pointer
-                                                , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
-                                                ]
+                                                ([ Util.View.pointer
+                                                 , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
+                                                 ]
+                                                    ++ (case config.openDateRangePickerMsg of
+                                                            Just msg ->
+                                                                [ onClick msg ]
+
+                                                            Nothing ->
+                                                                []
+                                                       )
+                                                )
                                         )
                                         { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to", state = SidePanelComponents.DatePickerFilledStateDefault } }
                                 )
@@ -285,10 +321,17 @@ txFilterDialogView vc net config model =
                         SidePanelComponents.datePickerCtaWithAttributes
                             (SidePanelComponents.datePickerCtaAttributes
                                 |> Rs.s_root
-                                    [ onClick config.openDateRangePickerMsg
-                                    , Util.View.pointer
-                                    , [ Css.hover SidePanelComponents.datePickerCtaStateHover_details.styles ] |> css
-                                    ]
+                                    ([ Util.View.pointer
+                                     , [ Css.hover SidePanelComponents.datePickerCtaStateHover_details.styles ] |> css
+                                     ]
+                                        ++ (case config.openDateRangePickerMsg of
+                                                Just msg ->
+                                                    [ onClick msg ]
+
+                                                Nothing ->
+                                                    []
+                                           )
+                                    )
                             )
                             { root =
                                 { placeholder = Locale.string vc.locale "Select date range"
@@ -298,5 +341,20 @@ txFilterDialogView vc net config model =
             , dateLabel = Locale.string vc.locale "Date Range"
             , headerTitle = Locale.string vc.locale "Transaction Filter"
             , txDirection = Locale.string vc.locale "Transaction Direction"
+            , zeroValues = Locale.string vc.locale "Include Zero Value Transfers"
+            }
+        , switch =
+            { variant =
+                config.txTableFilterToggleZeroValueMsg
+                    |> Maybe.map
+                        (\msg ->
+                            View.Controls.toggle
+                                { size = Sc.SwitchSizeSmall
+                                , disabled = False
+                                , selected = model.includeZeroValueTxs |> Maybe.withDefault False
+                                , msg = msg
+                                }
+                        )
+                    |> Maybe.withDefault none
             }
         }

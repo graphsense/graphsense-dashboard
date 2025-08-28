@@ -16,8 +16,8 @@ initSubTxTable =
     Table.initUnsorted |> InfiniteTable.init 6
 
 
-init : Tx -> TxDetails.Model
-init tx =
+init : List String -> Tx -> TxDetails.Model
+init assets tx =
     let
         ( inputs, outputs ) =
             case tx.type_ of
@@ -46,11 +46,11 @@ init tx =
         Table.initUnsorted |> InfiniteTable.init 6
     , subTxsTableOpen = False
     , subTxsTableFilter =
-        { includeZeroValueSubTxs = False
+        { includeZeroValueTxs = Just False
         , selectedAsset = Nothing
         , dateRangePicker = Nothing
         , direction = Nothing
-        , assetSelectBox = ThemedSelectBox.init [ Nothing, Just "ETH" ]
+        , assetSelectBox = ThemedSelectBox.init (Nothing :: List.map Just assets)
         , isSubTxsTableFilterDialogOpen = False
         }
     }

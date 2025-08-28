@@ -156,7 +156,8 @@ view vc model id viewState =
                                         , txTableFilterShowOutgoingTxOnlyMsg = Nothing
                                         , resetAllTxFiltersMsg = RelationDetails.ResetAllTxFilters isA2b_
                                         , txTableAssetSelectBoxMsg = RelationDetails.TxTableAssetSelectBoxMsg isA2b_
-                                        , openDateRangePickerMsg = RelationDetails.OpenDateRangePicker isA2b_
+                                        , openDateRangePickerMsg = Just (RelationDetails.OpenDateRangePicker isA2b_)
+                                        , txTableFilterToggleZeroValueMsg = Nothing
                                         }
                                 in
                                 div
@@ -295,6 +296,7 @@ tableTab vc network edgeId viewState isA2b =
                         , resetAssetsFilterMsg = RelationDetails.ResetTxAssetFilter isA2b
                         , resetDirectionFilterMsg = Nothing
                         , toggleFilterView = RelationDetails.ToggleTxFilterView isA2b
+                        , resetZeroValueFilterMsg = Nothing
                         }
                     , tableView
                     ]

@@ -73,7 +73,8 @@ view plugins pluginStates vc model id viewState =
             , txTableFilterShowOutgoingTxOnlyMsg = Just AddressDetails.TxTableFilterShowOutgoingTxOnly
             , resetAllTxFiltersMsg = AddressDetails.ResetAllTxFilters
             , txTableAssetSelectBoxMsg = AddressDetails.TxTableAssetSelectBoxMsg
-            , openDateRangePickerMsg = AddressDetails.OpenDateRangePicker
+            , txTableFilterToggleZeroValueMsg = Nothing
+            , openDateRangePickerMsg = Just AddressDetails.OpenDateRangePicker
             }
     in
     div []
@@ -575,6 +576,7 @@ transactionTableView vc addressId txOnGraphFn model =
         , resetAssetsFilterMsg = AddressDetails.ResetTxAssetFilter
         , resetDirectionFilterMsg = Just AddressDetails.ResetTxDirectionFilter
         , toggleFilterView = AddressDetails.ToggleTxFilterView
+        , resetZeroValueFilterMsg = Nothing
         }
     , table
     ]

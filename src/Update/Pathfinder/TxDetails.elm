@@ -10,7 +10,7 @@ import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails exposing (Model, transactionTableConfig, transactionTableFilter)
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
-import RecordSetter exposing (s_baseTx, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable, s_subTxsTableFilter)
+import RecordSetter exposing (s_baseTx, s_includeZeroValueTxs, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable, s_subTxsTableFilter)
 import RemoteData
 import Tuple exposing (mapFirst, mapSecond)
 import Util exposing (and, n)
@@ -65,6 +65,12 @@ reloadSubTxTable m =
 update : TxDetailsMsg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
+        UserClickedResetZeroValueSubTxsTableFilters ->
+            model
+                |> s_subTxsTableFilter (model.subTxsTableFilter |> s_includeZeroValueTxs (Just False))
+                |> n
+                |> and reloadSubTxTable
+
         SubTxsSelectedAssetSelectBoxMsg tsbmsg ->
             let
                 subTxsTableFilter =
@@ -102,7 +108,7 @@ update msg model =
                     | subTxsTableFilter =
                         { subTxsTableFilter
                             | isSubTxsTableFilterDialogOpen = False
-                            , includeZeroValueSubTxs = False
+                            , includeZeroValueTxs = Just False
                             , selectedAsset = Nothing
                         }
                 }
@@ -118,17 +124,19 @@ update msg model =
         UserClickedToggleIncludeZeroValueSubTxs ->
             -- setting base Tx to NotAsked and reinit the table should cause a
             -- refetch of all data in the Update Pathfinder.elm syncDetails
-            let
-                subTxsTableFilter =
-                    model.subTxsTableFilter
-            in
-            n
-                { model
-                    | subTxsTableFilter =
-                        { subTxsTableFilter
-                            | includeZeroValueSubTxs = not subTxsTableFilter.includeZeroValueSubTxs
-                        }
-                }
+            model
+                |> s_subTxsTableFilter
+                    (model.subTxsTableFilter
+                        |> s_includeZeroValueTxs
+                            (case model.subTxsTableFilter.includeZeroValueTxs of
+                                Just current ->
+                                    Just (not current)
+
+                                Nothing ->
+                                    Just False
+                            )
+                    )
+                |> n
                 |> and reloadSubTxTable
 
         NoOpSubTxsTable ->
@@ -153,7 +161,8 @@ update msg model =
                     txs.txs |> List.filterMap Tx.getAccountTxRaw
 
                 ( nt, meff ) =
-                    model.subTxsTable |> InfiniteTable.appendData config transactionTableFilter txs.nextPage accountTxs
+                    model.subTxsTable
+                        |> InfiniteTable.appendData config (transactionTableFilter model.subTxsTableFilter.selectedAsset) txs.nextPage accountTxs
             in
             ( { model | subTxsTable = nt }, Maybe.Extra.toList meff )
 

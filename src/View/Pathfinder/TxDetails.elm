@@ -9,7 +9,7 @@ import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict
-import Html.Styled exposing (Html, div, text)
+import Html.Styled exposing (Html, div)
 import Html.Styled.Events exposing (preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import List.Extra
@@ -26,12 +26,10 @@ import RecordSetter as Rs
 import RemoteData
 import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as HIcons
-import Theme.Html.SelectionControls as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css exposing (spread)
 import Util.Graph exposing (decodeCoords)
 import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, timeToCell, truncateLongIdentifierWithLengths)
-import View.Controls
 import View.Graph.Table exposing (noTools)
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, emptyCell, valuesToCell)
@@ -58,21 +56,6 @@ view vc model id viewState =
 accountAssetList : View.Config -> TxDetails.Model -> (Id -> Bool) -> Html Msg
 accountAssetList vc viewState txExistsFn =
     let
-        toToggle name selected msg =
-            let
-                t =
-                    Locale.string vc.locale name
-            in
-            div []
-                [ text t
-                , View.Controls.toggle
-                    { size = Sc.SwitchSizeSmall
-                    , disabled = False
-                    , selected = selected
-                    , msg = msg
-                    }
-                ]
-
         subTxsTab c =
             dataTab
                 { title =
@@ -81,7 +64,7 @@ accountAssetList vc viewState txExistsFn =
                             |> Rs.s_root [ spread ]
                         )
                         { root =
-                            { label = Locale.string vc.locale "Asset Transfers"
+                            { label = Locale.string vc.locale "Sub Transfers"
                             }
                         }
                 , disabled = False
@@ -94,13 +77,13 @@ accountAssetList vc viewState txExistsFn =
                 , onClick = UserClickedToggleSubTxsTable |> TxDetailsMsg
                 }
     in
-    [ toToggle "Include Zero Value Txs" viewState.subTxsTableFilter.includeZeroValueSubTxs (UserClickedToggleIncludeZeroValueSubTxs |> TxDetailsMsg)
-    , TransactionFilter.filterHeader vc
+    [ TransactionFilter.filterHeader vc
         viewState.subTxsTableFilter
         { resetDateFilterMsg = NoOpSubTxsTable
         , resetAssetsFilterMsg = UserClickedResetAllSubTxsTableFilters
         , resetDirectionFilterMsg = Nothing
         , toggleFilterView = UserClickedToggleSubTxsTableFilter
+        , resetZeroValueFilterMsg = Just UserClickedResetZeroValueSubTxsTableFilters
         }
         |> Html.Styled.map TxDetailsMsg
     , InfiniteTable.view vc
@@ -136,9 +119,10 @@ account vc viewState id txExistsFn =
             , txTableFilterShowAllTxsMsg = Nothing
             , txTableFilterShowIncomingTxOnlyMsg = Nothing
             , txTableFilterShowOutgoingTxOnlyMsg = Nothing
+            , txTableFilterToggleZeroValueMsg = Just UserClickedToggleIncludeZeroValueSubTxs
             , resetAllTxFiltersMsg = UserClickedResetAllSubTxsTableFilters
             , txTableAssetSelectBoxMsg = SubTxsSelectedAssetSelectBoxMsg
-            , openDateRangePickerMsg = NoOpSubTxsTable
+            , openDateRangePickerMsg = Nothing
             }
 
         baseTx =

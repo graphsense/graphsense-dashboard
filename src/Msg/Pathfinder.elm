@@ -169,6 +169,7 @@ type TxDetailsMsg
     | BrowserGotTxFlows Api.Data.Txs
     | UserClickedToggleSubTxsTable
     | UserClickedResetAllSubTxsTableFilters
+    | UserClickedResetZeroValueSubTxsTableFilters
     | UserClickedToggleSubTxsTableFilter
     | UserClickedCloseSubTxTableFilterDialog
     | UserClickedTxInSubTxsTable Api.Data.TxAccount

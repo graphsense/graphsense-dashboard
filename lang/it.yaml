@@ -471,3 +471,6 @@ Tag Import: Importazione Tag
 "loading Swaps and Bridging events for Tx {0}: {1}": "Caricamento eventi di Swaps e Bridging per la transazione {0}: {1}"
 "Related by Multi-Input Heuristic": "Correlato tramite euristica multi-input"
 "Related by Public Key": "Correlato tramite chiave pubblica"
+"Sub Transfers": "Sotto trasferimenti"
+"Include Zero Value Transfers": "Includi trasferimenti a valore zero"
+"No zero value transactions": "Nessuna transazione a valore zero"

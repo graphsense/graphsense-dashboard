@@ -28,7 +28,7 @@ transactionTableConfig m =
                 |> Api.ListTxFlowsEffect
                     { currency = currency
                     , txHash = baseTxHash
-                    , includeZeroValueSubTxs = m.subTxsTableFilter.includeZeroValueSubTxs
+                    , includeZeroValueSubTxs = m.subTxsTableFilter.includeZeroValueTxs |> Maybe.withDefault False
                     , pagesize = Just pagesize
                     , nextpage = nextpage
                     }
@@ -36,16 +36,25 @@ transactionTableConfig m =
     }
 
 
-transactionTableFilter : Table.Filter Api.Data.TxAccount
-transactionTableFilter =
+transactionTableFilter : Maybe String -> Table.Filter Api.Data.TxAccount
+transactionTableFilter asset =
+    let
+        filter x =
+            case asset of
+                Just a ->
+                    (x.currency |> String.toUpper) == (a |> String.toUpper)
+
+                Nothing ->
+                    True
+    in
     { search =
         \_ _ -> True
-    , filter = always True
+    , filter = filter
     }
 
 
 type alias SubTxTableFilter =
-    { includeZeroValueSubTxs : Bool
+    { includeZeroValueTxs : Maybe Bool
     , isSubTxsTableFilterDialogOpen : Bool
     , selectedAsset : Maybe String
     , dateRangePicker : Maybe (DateRangePicker.Model TxDetailsMsg)
