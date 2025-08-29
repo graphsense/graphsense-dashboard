@@ -143,10 +143,10 @@ assetFilterHeader vc resetMsg asset =
 zeroValuesHeader : View.Config -> msg -> Bool -> Html msg
 zeroValuesHeader vc resetMsg includeZeroValueTxs =
     if includeZeroValueTxs then
-        stringFilterHeader vc resetMsg "All Values"
+        none
 
     else
-        stringFilterHeader vc resetMsg "No zero value transactions"
+        stringFilterHeader vc resetMsg "No zero value"
 
 
 filterHeader : View.Config -> FilterMetadata msg x -> FilterHeaderConfig msg -> Html msg

@@ -523,5 +523,5 @@ Annotate transaction: Transaktion annotieren
 "Related by Public Key": "Gleicher öffentlicher Schlüssel"
 "Sub Transfers": "Untertransfers"
 "Include Zero Value Transfers": "Transfers mit Nullwert einbeziehen"
-"No zero value transactions": "Keine Nullwerttransaktionen"
+"No zero value": "Ohne Nullwert"
 "All Values": "Alle Werte"

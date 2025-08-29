@@ -274,7 +274,8 @@ view vc conversion inputAddress outputAddress =
         [ -- Simple curved path or loop
           path
             [ Svg.d pat
-            , Svg.strokeDasharray "5, 5"
+
+            -- , Svg.strokeDasharray "5, 5"
             , css Theme.aggregatedLinkHighlightLine_details.styles
             , pointer
             , css
