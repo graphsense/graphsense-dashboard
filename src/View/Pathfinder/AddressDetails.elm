@@ -306,16 +306,19 @@ neighborsDataTab vc model id viewState direction =
         }
 
 
+getRelatedAddressTypeLabel : View.Config -> AddressDetails.RelatedAddressTypes -> String
+getRelatedAddressTypeLabel vc relatedAddressType =
+    case relatedAddressType of
+        AddressDetails.Pubkey ->
+            Locale.string vc.locale "Related by Public Key"
+
+        AddressDetails.MultiInputCluster ->
+            Locale.string vc.locale "Related by Multi-Input Heuristic"
+
+
 relatedAddressesSelectBoxConfig : View.Config -> ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
 relatedAddressesSelectBoxConfig vc =
-    { optionToLabel =
-        \x ->
-            case x of
-                AddressDetails.Pubkey ->
-                    Locale.string vc.locale "Related by Public Key"
-
-                AddressDetails.MultiInputCluster ->
-                    Locale.string vc.locale "Related by Multi-Input Heuristic"
+    { optionToLabel = getRelatedAddressTypeLabel vc
     , width = Nothing
     }
 
@@ -325,12 +328,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
             Locale.string vc.locale
-                (if Data.isAccountLike (Id.network viewState.address.id) then
-                    "Crosschain addresses"
-
-                 else
-                    "Cluster addresses"
-                )
+                "Cluster addresses"
                 |> Locale.titleCase vc.locale
 
         noRelatedAddresses =
@@ -370,7 +368,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 , text =
                                     case viewState.relatedAddressesVisibleTable of
                                         AddressDetails.MultiInputCluster ->
-                                            "Group addresses by Transaction: Addresses used together (likely same owner)."
+                                            "Group addresses by Transaction: Addresses were used together (likely same owner)."
 
                                         AddressDetails.Pubkey ->
                                             "Group addresses by Public Key: Addresses from the same key (same owner)."
@@ -397,7 +395,13 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                     ]
 
                               else
-                                div [ css [ Css.flexGrow (Css.int 1) ] ] []
+                                div [ css [ Css.flexGrow (Css.int 1) ] ]
+                                    [ -- currently the themed selectbox does not support disabled state
+                                      ThemedSelectBox.viewDisabled (relatedAddressesSelectBoxConfig vc)
+                                        viewState.relatedAddressesVisibleTableSelectBox
+                                        viewState.relatedAddressesVisibleTable
+                                        |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
+                                    ]
 
                             -- Empty div to take space when no select box
                             , span

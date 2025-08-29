@@ -525,3 +525,5 @@ Annotate transaction: Transaktion annotieren
 "Include Zero Value Transfers": "Transfers mit Nullwert einbeziehen"
 "No zero value": "Ohne Nullwert"
 "All Values": "Alle Werte"
+"Group addresses by Transaction: Addresses were used together (likely same owner).": "Gruppiere Adressen nach Transaktion: Adressen wurden zusammen verwendet (wahrscheinlich derselbe Besitzer)."
+"Group addresses by Public Key: Addresses from the same key (same owner).": "Gruppiere Adressen nach öffentlichem Schlüssel: Adressen erzeugt von selben Schlüssel (derselbe Besitzer)."
