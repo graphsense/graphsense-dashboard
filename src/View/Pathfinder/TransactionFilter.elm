@@ -211,7 +211,7 @@ txFilterDialogView vc net config model =
         (SidePanelComponents.filterTransactionsPopupAttributes
             |> Rs.s_assetType
                 (if isAssetFilterVisible then
-                    []
+                    [ Css.padding (Css.px 0) |> Css.important ] |> css |> List.singleton
 
                  else
                     [ Css.display Css.none ] |> css |> List.singleton
