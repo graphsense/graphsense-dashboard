@@ -2,6 +2,7 @@ module View.Pathfinder.Table.SubTxsTable exposing (config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.InfiniteTable as InfiniteTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
@@ -13,14 +14,14 @@ import Model.Currency as Currency
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (TxDetailsMsg(..))
 import RecordSetter as Rs
-import Table
 import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns as PT
 
 
-config : Styles -> View.Config -> { selectedSubTx : Id, isCheckedFn : Id -> Bool } -> Table.Config Api.Data.TxAccount TxDetailsMsg
+config : Styles -> View.Config -> { selectedSubTx : Id, isCheckedFn : Id -> Bool } -> InfiniteTable.TableConfig Api.Data.TxAccount TxDetailsMsg
 config styles vc { selectedSubTx, isCheckedFn } =
     let
         toId r =
@@ -53,33 +54,34 @@ config styles vc { selectedSubTx, isCheckedFn } =
                 |> Rs.s_table
                     (styles.table >> flip (++) fullWidth)
     in
-    Table.customConfig
-        { toId = toId >> Id.toString
-        , toMsg = \_ -> NoOpSubTxsTable
-        , columns =
-            [ PT.checkboxColumn vc
-                { isChecked = toId >> isCheckedFn
-                , onClick = UserClickedTxInSubTxsTable
-                , readonly = \_ -> False
-                }
-            , PT.addressColumn vc { name = "from Address", withCopy = False } .fromAddress
-            , PT.addressColumn vc { name = "to Address", withCopy = False } .toAddress
-            , PT.valueColumnWithOptions { sortable = False, hideCode = False, colorFlowDirection = False, isOutgoingFn = \_ -> False } vc (\d -> Currency.asset d.network d.currency) "Value" .value
-            ]
-        , customizations =
-            customizations vc
-                |> Rs.s_rowAttrs
-                    (\d ->
-                        (if (d |> toId) == selectedSubTx then
-                            rowBaseAttrs
-                                ++ [ Css.property "background-color" Colors.blue50
-                                   ]
+    { toId = toId >> Id.toString
+    , columns =
+        [ PT.checkboxColumn vc
+            { isChecked = toId >> isCheckedFn
+            , onClick = UserClickedTxInSubTxsTable
+            , readonly = \_ -> False
+            }
+        , PT.addressColumn vc { name = "from Address", withCopy = False } .fromAddress
+        , PT.addressColumn vc { name = "to Address", withCopy = False } .toAddress
+        , PT.valueColumnWithOptions { sortable = False, hideCode = False, colorFlowDirection = False, isOutgoingFn = \_ -> False } vc (\d -> Currency.asset d.network d.currency) "Value" .value
+        ]
+    , customizations =
+        customizations vc
+            |> Rs.s_rowAttrs
+                (\d ->
+                    (if (d |> toId) == selectedSubTx then
+                        rowBaseAttrs
+                            ++ [ Css.property "background-color" Colors.blue50
+                               ]
 
-                         else
-                            rowBaseAttrs
-                        )
-                            |> css
-                            |> List.singleton
+                     else
+                        rowBaseAttrs
                     )
-                |> alignColumnHeader styles_ vc rightAlignedColumns
-        }
+                        |> css
+                        |> List.singleton
+                )
+            |> alignColumnHeader styles_ vc rightAlignedColumns
+    , tag = TableMsgSubTxTable
+    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
+    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
+    }

@@ -41,6 +41,7 @@ transactionTableConfig m =
                     , nextpage = nextpage
                     }
                 |> ApiEffect
+    , triggerOffset = 100
     }
 
 
@@ -236,10 +237,10 @@ update msg model =
 
         TableMsgSubTxTable m ->
             let
-                ( pt, eff ) =
+                ( pt, cmd, eff ) =
                     InfiniteTable.update (transactionTableConfig model) m model.subTxsTable
             in
-            ( { model | subTxsTable = pt }, Maybe.Extra.toList eff )
+            ( { model | subTxsTable = pt }, CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: Maybe.Extra.toList eff )
 
         UserClickedTxInSubTxsTable _ ->
             -- handled upstream
