@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, checkboxColumn, debitCreditColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addressColumn, checkboxColumn, debitCreditColumn, selectionIndicatorColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
@@ -13,8 +13,47 @@ import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple exposing (pair)
 import Util.Checkbox
+import Util.View exposing (copyIconPathfinder, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
+
+
+addressColumn : View.Config -> { name : String, withCopy : Bool } -> (data -> String) -> Table.Column data msg
+addressColumn vc { name, withCopy } accessor =
+    Table.veryCustomColumn
+        { name = name
+        , viewData =
+            \data ->
+                let
+                    id =
+                        accessor data
+
+                    attrs =
+                        (if not withCopy then
+                            [ Css.paddingRight (Css.px 20) ] |> css
+
+                         else
+                            [] |> css
+                        )
+                            |> List.singleton
+                in
+                Table.HtmlDetails (css [ Css.verticalAlign Css.middle ] :: attrs)
+                    [ SidePanelComponents.sidePanelListIdentifierCell
+                        { root =
+                            { copyIconInstance =
+                                if withCopy then
+                                    id |> String.split "_" |> List.head |> Maybe.withDefault "" |> copyIconPathfinder vc
+
+                                else
+                                    none
+                            , identifier = id |> truncateLongIdentifierWithLengths 8 4
+                            }
+                        }
+                    ]
+
+        -- , sorter = Table.increasingOrDecreasingBy accessor
+        , sorter = Table.unsortable
+        }
 
 
 timestampDateMultiRowColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
@@ -92,6 +131,28 @@ type alias CheckboxColumnConfig data msg =
     }
 
 
+selectionIndicatorColumn : View.Config -> { isSelected : data -> Bool } -> Table.Column data msg
+selectionIndicatorColumn _ { isSelected } =
+    Table.veryCustomColumn
+        { name = ""
+        , viewData =
+            \data ->
+                Table.HtmlDetails
+                    [ [ PCSS.mGap |> Css.padding
+                      , Css.verticalAlign Css.middle
+                      ]
+                        |> css
+                    ]
+                    [ if isSelected data then
+                        text ">"
+
+                      else
+                        none
+                    ]
+        , sorter = Table.unsortable
+        }
+
+
 checkboxColumn : View.Config -> CheckboxColumnConfig data msg -> Table.Column data msg
 checkboxColumn _ { isChecked, onClick, readonly } =
     Table.veryCustomColumn
@@ -109,6 +170,7 @@ checkboxColumn _ { isChecked, onClick, readonly } =
                 Table.HtmlDetails
                     [ [ PCSS.mGap |> Css.padding
                       , Css.width <| Css.px 50
+                      , Css.verticalAlign Css.middle
                       ]
                         |> css
                     ]

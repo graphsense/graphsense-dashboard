@@ -10,6 +10,7 @@ module Util.ThemedSelectBox exposing
     , init
     , update
     , view
+    , viewDisabled
     , viewWithLabel
     )
 
@@ -20,6 +21,7 @@ import Html.Styled.Events exposing (onMouseLeave)
 import List.Extra
 import RecordSetter as Rs
 import Theme.Html.Fields as F
+import Theme.Html.Icons as Icons
 import Theme.Html.SelectionControls as Sc
 import Util.Css
 import Util.View
@@ -112,6 +114,34 @@ viewWithLabel config m selected label =
     F.dropDownLabel { dropDown = { variant = view config m selected }, root = { label = label } }
 
 
+getWidthAttrs : Config a b -> Html.Styled.Attribute msg
+getWidthAttrs config =
+    case config.width of
+        Just w ->
+            [ Css.width w |> Css.important ] |> css
+
+        _ ->
+            [ Css.width (Css.px Sc.dropDownClosed_details.width) |> Css.important ] |> css
+
+
+viewDisabled : Config a b -> Model a -> a -> Html (Msg a)
+viewDisabled config _ selected =
+    let
+        baseAttrs =
+            [ getWidthAttrs config ]
+    in
+    F.dropDownStateDisabledWithAttributes
+        (F.dropDownStateDisabledAttributes
+            |> Rs.s_root baseAttrs
+            |> Rs.s_text (([ Css.alignItems Css.center ] |> css) :: baseAttrs)
+        )
+        { root =
+            { iconInstance = Icons.iconsChevronDownThick {}
+            , text = config.optionToLabel selected
+            }
+        }
+
+
 view : Config a b -> Model a -> a -> Html (Msg a)
 view config (SelectBox sBox) selected =
     let
@@ -119,12 +149,7 @@ view config (SelectBox sBox) selected =
             List.Extra.find ((==) selected) sBox.options
 
         widthAttr =
-            case config.width of
-                Just w ->
-                    [ Css.width w |> Css.important ] |> css
-
-                _ ->
-                    [ Css.width (Css.px Sc.dropDownClosed_details.width) |> Css.important ] |> css
+            getWidthAttrs config
 
         createRow sItem hoverEffect x =
             let

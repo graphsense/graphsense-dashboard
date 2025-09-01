@@ -38,4 +38,5 @@ init dir assets =
     , isTxFilterViewOpen = False
     , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
     , selectedAsset = Nothing
+    , includeZeroValueTxs = Nothing -- Backend does not support this filter at the moment
     }

@@ -2,6 +2,7 @@ module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, Addi
 
 import Api.Data
 import Color exposing (Color)
+import Components.InfiniteTable as InfiniteTable
 import Hovercard
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
@@ -22,6 +23,7 @@ import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
+import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type alias AddingAddressConfig =
@@ -162,6 +164,18 @@ type DisplaySettingsMsg
 type TxDetailsMsg
     = UserClickedToggleIoTable IoDirection
     | TableMsg IoDirection Table.State
+    | TableMsgSubTxTable InfiniteTable.Msg
+    | BrowserGotBaseTx Api.Data.Tx
+    | BrowserGotTxFlows Api.Data.Txs
+    | UserClickedToggleSubTxsTable
+    | UserClickedResetAllSubTxsTableFilters
+    | UserClickedResetZeroValueSubTxsTableFilters
+    | UserClickedToggleSubTxsTableFilter
+    | UserClickedCloseSubTxTableFilterDialog
+    | UserClickedTxInSubTxsTable Api.Data.TxAccount
+    | NoOpSubTxsTable
+    | UserClickedToggleIncludeZeroValueSubTxs
+    | SubTxsSelectedAssetSelectBoxMsg (ThemedSelectBox.Msg (Maybe String))
 
 
 type IoDirection
