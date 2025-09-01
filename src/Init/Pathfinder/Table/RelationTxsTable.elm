@@ -25,7 +25,11 @@ init dir assets =
     let
         table isDesc =
             Table.initSorted isDesc RelationTxsTable.titleTimestamp
-                |> InfiniteTable.init 25
+                |> InfiniteTable.init
+                    { pagesize = 25
+                    , rowHeight = 38
+                    , containerHeight = 300
+                    }
     in
     { table = table False
     , order = Just Api.Request.Addresses.Order_Desc

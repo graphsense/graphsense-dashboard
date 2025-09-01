@@ -24,17 +24,16 @@ getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
-pagesize : Int
-pagesize =
-    25
-
-
 init : Update.Config -> Network -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
 init uc network addressId data assets =
     let
         table isDesc =
             Table.initSorted isDesc TransactionTable.titleTimestamp
-                |> InfiniteTable.init pagesize
+                |> InfiniteTable.init
+                    { pagesize = 25
+                    , rowHeight = 38
+                    , containerHeight = 300
+                    }
 
         ( _, mmax ) =
             Address.getActivityRange data

@@ -670,8 +670,7 @@ updateByMsg plugins uc msg model =
                                 in
                                 gs.getTable rdModel
                                     |> .table
-                                    |> InfiniteTable.getTable
-                                    |> .filtered
+                                    |> InfiniteTable.getPage
                                     |> List.map Tx.getTxIdForRelationTx
                                     |> flip (checkAllTxs plugins uc) model
                                     |> and (setTracingMode TransactionTracingMode)
@@ -734,8 +733,7 @@ updateByMsg plugins uc msg model =
                             data.txs
                                 |> RemoteData.map
                                     (.table
-                                        >> InfiniteTable.getTable
-                                        >> .filtered
+                                        >> InfiniteTable.getPage
                                         >> List.map Tx.getTxIdForAddressTx
                                         >> flip (checkAllTxs plugins uc) model
                                     )

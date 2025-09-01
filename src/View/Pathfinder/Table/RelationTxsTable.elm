@@ -19,9 +19,9 @@ import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable as PT exposing (addTHeadOverwrite, alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
-import View.Pathfinder.InfiniteTable as InfiniteTable
 
 
 type alias GenericTx =
@@ -110,7 +110,6 @@ config styles vc { isA2b, addressId, isChecked, allChecked } =
             c |> Rs.s_thead newTheadWithCheckbox
     in
     { toId = toGerneric >> getId >> Id.toString
-    , toMsg = \_ -> NoOp
     , columns =
         [ PT.checkboxColumn vc
             { isChecked = toGerneric >> getId >> isChecked
@@ -134,8 +133,6 @@ config styles vc { isA2b, addressId, isChecked, allChecked } =
         ]
     , customizations = cc
     , tag = TableMsg isA2b
-    , rowHeight = 38
-    , containerHeight = 300
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
     }

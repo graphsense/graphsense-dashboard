@@ -1,7 +1,29 @@
-module Components.InfiniteTable exposing (Config, Fetch, Model, Msg, TableConfig, appendData, getPageSize, getTable, infiniteScroll, init, isEmpty, isLoading, loadFirstPage, onScrollUpdate, removeItem, setData, sortBy, update, updateTable, viewTable)
+module Components.InfiniteTable exposing
+    ( Config
+    , Fetch
+    , Model
+    , Msg
+    , TableConfig
+    , appendData
+    , getPage
+    , getPageSize
+    , getTable
+    , infiniteScroll
+    , init
+    , isEmpty
+    , isLoading
+    , loadFirstPage
+    , onScrollUpdate
+    , removeItem
+    , setData
+    , sortBy
+    , update
+    , updateTable
+    , viewTable
+    )
 
-import Basics.Extra exposing (curry, flip, uncurry)
-import Bounce
+import Basics.Extra exposing (flip, uncurry)
+import Bounce exposing (Bounce)
 import Components.Table as Table exposing (Table)
 import Css
 import Html.Styled exposing (Attribute, Html, div)
@@ -10,9 +32,9 @@ import Html.Styled.Events exposing (stopPropagationOn)
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
-import RecordSetter exposing (s_caption, s_loading, s_nextpage, s_table, s_tfoot)
+import RecordSetter exposing (s_caption, s_loading, s_nextpage, s_state, s_table, s_tfoot)
 import Table as T
-import Tuple exposing (first, mapFirst, pair)
+import Tuple exposing (mapFirst, pair)
 
 
 type Model d
@@ -28,9 +50,10 @@ type alias ModelInternal d =
     , pagesize : Int
     , iterations : Int
     , scrollPos : ScrollPos
+    , rowHeight : Int
     , hackyFlag : Bool
     , data : IntDict d
-    , bounce : Bounce.Bounce
+    , bounce : Bounce
     , direction : Direction
     }
 
@@ -43,12 +66,9 @@ type alias Config eff =
 
 type alias TableConfig data msg =
     { toId : data -> String
-    , toMsg : T.State -> msg
     , columns : List (T.Column data msg)
     , customizations : T.Customizations data msg
     , tag : Msg -> msg
-    , rowHeight : Int
-    , containerHeight : Float
     , loadingPlaceholderAbove : List (Html msg)
     , loadingPlaceholderBelow : List (Html msg)
     }
@@ -64,6 +84,7 @@ type alias ScrollPos =
 type Msg
     = Scroll ScrollPos
     | Debounce ScrollPos
+    | TableMsg T.State
 
 
 type Direction
@@ -71,13 +92,14 @@ type Direction
     | Bottom
 
 
-init : Int -> Table d -> Model d
-init pagesize table =
+init : { pagesize : Int, rowHeight : Int, containerHeight : Float } -> Table d -> Model d
+init { pagesize, rowHeight, containerHeight } table =
     Model
         { table = table
         , pagesize = pagesize
         , iterations = 0
-        , scrollPos = { scrollTop = 0, contentHeight = 0, containerHeight = 0 }
+        , scrollPos = { scrollTop = 0, contentHeight = 0, containerHeight = containerHeight }
+        , rowHeight = rowHeight
         , data = IntDict.empty
         , bounce = Bounce.init
         , hackyFlag = False
@@ -196,6 +218,15 @@ update config msg (Model model) =
             in
             ( nnewModel, Cmd.none, eff )
 
+        TableMsg tm ->
+            let
+                newModel =
+                    s_state tm model.table
+                        |> flip s_table model
+                        |> Model
+            in
+            ( newModel, Cmd.none, Nothing )
+
 
 updateTable : (Table d -> Table d) -> Model d -> Model d
 updateTable upd (Model pt) =
@@ -206,6 +237,25 @@ updateTable upd (Model pt) =
 getPageSize : Model d -> Int
 getPageSize (Model pt) =
     pt.pagesize
+
+
+getPage : Model d -> List d
+getPage (Model model) =
+    let
+        start =
+            getStart model
+
+        end =
+            start + getNumVisibleItems model
+    in
+    getRange start end model
+
+
+getNumVisibleItems : ModelInternal d -> Int
+getNumVisibleItems model =
+    round model.scrollPos.containerHeight
+        // model.rowHeight
+        + 1
 
 
 loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
@@ -293,6 +343,19 @@ sortBy col desc (Model model) =
         |> Model
 
 
+getStart : ModelInternal data -> Int
+getStart model =
+    round model.scrollPos.scrollTop
+        // model.rowHeight
+
+
+getRange : Int -> Int -> ModelInternal data -> List data
+getRange start end =
+    .data
+        >> IntDict.range start end
+        >> IntDict.values
+
+
 viewTable :
     TableConfig data msg
     -> List (Attribute msg)
@@ -304,8 +367,7 @@ viewTable config attributes (Model model) =
             model.pagesize // 2 * 2
 
         start =
-            round model.scrollPos.scrollTop
-                // config.rowHeight
+            getStart model
                 // model.pagesize
                 * overhead
                 - overhead
@@ -313,7 +375,7 @@ viewTable config attributes (Model model) =
 
         prefix =
             start
-                * config.rowHeight
+                * model.rowHeight
                 |> toFloat
 
         end =
@@ -325,7 +387,7 @@ viewTable config attributes (Model model) =
 
         suffix =
             (IntDict.size model.data - end)
-                * config.rowHeight
+                * model.rowHeight
                 |> toFloat
 
         placeholder dir height =
@@ -365,7 +427,7 @@ viewTable config attributes (Model model) =
         c =
             T.customConfig
                 { toId = config.toId
-                , toMsg = config.toMsg
+                , toMsg = TableMsg >> config.tag
                 , columns = config.columns
                 , customizations =
                     config.customizations
@@ -374,13 +436,11 @@ viewTable config attributes (Model model) =
                 }
 
         data =
-            model.data
-                |> IntDict.range start end
-                |> IntDict.values
+            getRange start end model
     in
     div
         (css
-            [ Css.maxHeight <| Css.px config.containerHeight
+            [ Css.maxHeight <| Css.px model.scrollPos.containerHeight
             , Css.overflowY Css.auto
             ]
             :: attributes

@@ -80,7 +80,6 @@ config styles vc conf =
                 |> AggEdge.initId conf.anchorId
     in
     { toId = .address >> .address
-    , toMsg = \_ -> AddressDetails.NoOp
     , columns =
         [ checkboxColumn vc
             { isChecked = toAggId >> conf.isChecked
@@ -160,8 +159,6 @@ config styles vc conf =
         ]
     , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
     , tag = AddressDetails.NeighborsTableSubTableMsg conf.direction
-    , rowHeight = 34
-    , containerHeight = 300
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
     }

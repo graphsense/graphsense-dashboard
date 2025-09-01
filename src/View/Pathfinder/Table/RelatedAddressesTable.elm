@@ -65,7 +65,6 @@ config styles vc ratc _ =
             Id.init currency address
     in
     { toId = .address
-    , toMsg = AddressDetails.RelatedAddressesTableMsg
     , columns =
         [ checkboxColumn vc
             { isChecked = toId >> ratc.isChecked
@@ -142,8 +141,6 @@ config styles vc ratc _ =
         ]
     , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
     , tag = AddressDetails.RelatedAddressesTableSubTableMsg
-    , rowHeight = 36
-    , containerHeight = 300
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
     }

@@ -41,7 +41,7 @@ timestampDateMultiRowColumn vc name accessor =
                         }
                     ]
 
-        -- , sorter = Table.increasingOrDecreasingBy accessor
+        --, sorter = Table.increasingOrDecreasingBy accessor
         , sorter = Table.unsortable
         }
 

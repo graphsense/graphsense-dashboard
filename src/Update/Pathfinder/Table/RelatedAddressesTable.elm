@@ -30,7 +30,13 @@ pagesize =
 
 init : Id -> Api.Data.Entity -> Model
 init addressId entity =
-    { table = InfiniteTable.init pagesize Table.initUnsorted
+    { table =
+        InfiniteTable.init
+            { pagesize = pagesize
+            , rowHeight = 36
+            , containerHeight = 300
+            }
+            Table.initUnsorted
     , addressId = addressId
     , entity = { currency = entity.currency, entity = entity.entity }
     , existingTaggedAddresses = Set.empty
