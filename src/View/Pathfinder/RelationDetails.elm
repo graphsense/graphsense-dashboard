@@ -263,8 +263,7 @@ tableTab vc network edgeId viewState isA2b =
                 let
                     allChecked =
                         table.table
-                            |> InfiniteTable.getTable
-                            |> .filtered
+                            |> InfiniteTable.getPage
                             |> List.map Tx.getTxIdForRelationTx
                             |> allAndNotEmpty isChecked
 

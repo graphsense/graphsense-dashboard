@@ -20,9 +20,9 @@ import Theme.Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
+import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable as PT exposing (addTHeadOverwrite, alignColumnHeader, customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
-import View.Pathfinder.InfiniteTable as InfiniteTable
 
 
 type alias GenericTx =
@@ -105,16 +105,12 @@ config styles vc addressId isCheckedFn allChecked =
             c |> Rs.s_thead newTheadWithCheckbox
     in
     { toId = toGerneric addressId >> getId >> Id.toString
-    , toMsg = \_ -> NoOp
     , columns =
         [ PT.checkboxColumn vc
             { isChecked = toGerneric addressId >> getId >> isCheckedFn
             , onClick = UserClickedTxCheckboxInTable
             , readonly = \_ -> False
             }
-        , PT.timestampDateMultiRowColumn vc
-            "Timestamp"
-            (toGerneric addressId >> .timestamp)
         , txColumn vc
             { label = "Hash"
             , accessor = toGerneric addressId >> .txHash
@@ -126,11 +122,12 @@ config styles vc addressId isCheckedFn allChecked =
             (toGerneric addressId >> .asset >> asset network)
             "Value"
             (toGerneric addressId >> .value)
+        , PT.timestampDateMultiRowColumn vc
+            "Timestamp"
+            (toGerneric addressId >> .timestamp)
         ]
     , customizations = cc
     , tag = TransactionsTableSubTableMsg
-    , rowHeight = 38
-    , containerHeight = 300
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
     }
@@ -154,7 +151,5 @@ txColumn vc { label, accessor, onClick } =
                     }
                     |> List.singleton
                     |> wrapCell onClick data
-
-        --, sorter = Table.increasingOrDecreasingBy accessor
         , sorter = Table.unsortable
         }

@@ -560,8 +560,7 @@ transactionTableView vc addressId txOnGraphFn model =
 
         allChecked =
             model.table
-                |> Inf.getTable
-                |> .filtered
+                |> Inf.getPage
                 |> List.map Tx.getTxIdForAddressTx
                 |> allAndNotEmpty txOnGraphFn
 
