@@ -522,7 +522,7 @@ Annotate transaction: Transaktion annotieren
 "Related by Multi-Input Heuristic": "Multi-Input-Heuristik"
 "Related by Public Key": "Gleicher öffentlicher Schlüssel"
 "Sub Transfers": "Untertransfers"
-"Include Zero Value Transfers": "Transfers mit Nullwert einbeziehen"
+"Exclude Zero Value Transfers": "Transfers mit Nullwert ausschließen"
 "No zero value": "Ohne Nullwert"
 "All Values": "Alle Werte"
 "Group addresses by Transaction: Addresses were used together (likely same owner).": "Gruppiere Adressen nach Transaktion: Adressen wurden zusammen verwendet (wahrscheinlich derselbe Besitzer)."

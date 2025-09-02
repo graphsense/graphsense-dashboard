@@ -27,6 +27,7 @@ fromTxAccountData tx coords =
     , dy = 0
     , opacity = A.static 1
     , clock = 0
+    , isConversionLeg = False
     , type_ =
         let
             from =
@@ -108,6 +109,7 @@ fromTxUtxoData tx coords =
     , dy = 0
     , opacity = A.static 1
     , clock = 0
+    , isConversionLeg = False
     , type_ =
         let
             inputs =

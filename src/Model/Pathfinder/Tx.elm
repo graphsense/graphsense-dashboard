@@ -61,6 +61,7 @@ type alias Tx =
     , clock : Clock
     , opacity : Animation
     , isStartingPoint : Bool
+    , isConversionLeg : Bool
     }
 
 

@@ -9,6 +9,7 @@ import Dict
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
+import Maybe.Extra
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
@@ -20,6 +21,7 @@ import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
+import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeUtxoAttributes)
 import Theme.Svg.Icons as Icons
 import Tuple exposing (pair, second)
@@ -123,8 +125,8 @@ view _ vc _ tx utxo annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ vc _ hovered tx pos annotation =
+edge : Plugins -> View.Config -> Pathfinder.Config -> { t | hovered : Bool, isConversionLeg : Bool } -> UtxoTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge _ vc _ { hovered, isConversionLeg } tx pos annotation =
     let
         toValues =
             Dict.toList
@@ -181,13 +183,20 @@ edge _ vc _ hovered tx pos annotation =
                 ( Id.toString address.id
                 , pickPathFunction False
                     hovered
-                    color
+                    (color
+                        |> Maybe.Extra.or
+                            (if isConversionLeg then
+                                Just Colors.pathMiddle
+
+                             else
+                                Nothing
+                            )
+                    )
                     values
-                    (fromPos.x * unit + (rad * sign))
-                    (fromPos.y * unit)
-                    (txPos.x * unit - (txRad * sign))
-                    (txPos.y * unit)
+                    { x = fromPos.x * unit + (rad * sign), y = fromPos.y * unit }
+                    { x = txPos.x * unit - (txRad * sign), y = txPos.y * unit }
                     (A.animate pos.clock pos.opacity)
+                    isConversionLeg
                 )
             )
     )
@@ -204,13 +213,20 @@ edge _ vc _ hovered tx pos annotation =
                         ( Id.toString address.id
                         , pickPathFunction True
                             hovered
-                            color
+                            (color
+                                |> Maybe.Extra.or
+                                    (if isConversionLeg then
+                                        Just Colors.pathMiddle
+
+                                     else
+                                        Nothing
+                                    )
+                            )
                             values
-                            (txPos.x * unit + (txRad * sign))
-                            (txPos.y * unit)
-                            (toPos.x * unit - (rad * sign))
-                            (toPos.y * unit)
+                            { x = txPos.x * unit + (txRad * sign), y = txPos.y * unit }
+                            { x = toPos.x * unit - (rad * sign), y = toPos.y * unit }
                             (A.animate address.clock address.opacity)
+                            isConversionLeg
                         )
                     )
            )

@@ -13,130 +13,138 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Util.Graph exposing (translate)
 
 
-inPath : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-inPath label x1 y1 x2 y2 opacity =
+inPath : String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+inPath label start end opacity isDashed =
     coloredPath
         { label = label
         , highlight = False
         , isOutgoing = False
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
+        , x1 = start.x
+        , y1 = start.y
+        , x2 = end.x
+        , y2 = end.y
         , opacity = opacity
         , isUtxo = True
+        , dashed = isDashed
         , color = Nothing
         }
 
 
-inPathColored : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-inPathColored color label x1 y1 x2 y2 opacity =
+inPathColored : String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+inPathColored color label start end opacity isDashed =
     coloredPath
         { label = label
         , highlight = False
         , isOutgoing = False
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
+        , x1 = start.x
+        , y1 = start.y
+        , x2 = end.x
+        , y2 = end.y
         , opacity = opacity
         , isUtxo = True
+        , dashed = isDashed
         , color = Just color
         }
 
 
-inPathHovered : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-inPathHovered label x1 y1 x2 y2 opacity =
+inPathHovered : String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+inPathHovered label start end opacity isDashed =
     coloredPath
         { label = label
         , highlight = True
         , isOutgoing = False
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
+        , x1 = start.x
+        , y1 = start.y
+        , x2 = end.x
+        , y2 = end.y
         , opacity = opacity
         , isUtxo = True
+        , dashed = isDashed
         , color = Nothing
         }
 
 
-inPathColoredHovered : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-inPathColoredHovered color label x1 y1 x2 y2 opacity =
+inPathColoredHovered : String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+inPathColoredHovered color label start end opacity isDashed =
     coloredPath
         { label = label
         , highlight = True
         , isOutgoing = False
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
+        , x1 = start.x
+        , y1 = start.y
+        , x2 = end.x
+        , y2 = end.y
         , opacity = opacity
         , isUtxo = True
+        , dashed = isDashed
         , color = Just color
         }
 
 
-outPath : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-outPath label x1 y1 x2 y2 opacity =
+outPath : String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+outPath label start end opacity isDashed =
     coloredPath
         { label = label
         , highlight = False
         , isOutgoing = True
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
+        , x1 = start.x
+        , y1 = start.y
+        , x2 = end.x
+        , y2 = end.y
         , opacity = opacity
         , isUtxo = True
+        , dashed = isDashed
         , color = Nothing
         }
 
 
-outPathHovered : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-outPathHovered label x1 y1 x2 y2 opacity =
+outPathHovered : String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+outPathHovered label start end opacity isDashed =
     coloredPath
         { label = label
         , highlight = True
         , isOutgoing = True
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
+        , x1 = start.x
+        , y1 = start.y
+        , x2 = end.x
+        , y2 = end.y
         , opacity = opacity
         , isUtxo = True
+        , dashed = isDashed
         , color = Nothing
         }
 
 
-outPathColored : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-outPathColored color label x1 y1 x2 y2 opacity =
+outPathColored : String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+outPathColored color label start end opacity isDashed =
     coloredPath
         { label = label
         , highlight = False
         , isOutgoing = True
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
+        , x1 = start.x
+        , y1 = start.y
+        , x2 = end.x
+        , y2 = end.y
         , opacity = opacity
         , isUtxo = True
+        , dashed = isDashed
         , color = Just color
         }
 
 
-outPathColoredHovered : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-outPathColoredHovered color label x1 y1 x2 y2 opacity =
+outPathColoredHovered : String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+outPathColoredHovered color label start end opacity isDashed =
     coloredPath
         { label = label
         , highlight = True
         , isOutgoing = True
-        , x1 = x1
-        , y1 = y1
-        , x2 = x2
-        , y2 = y2
+        , x1 = start.x
+        , y1 = start.y
+        , x2 = end.x
+        , y2 = end.y
         , opacity = opacity
         , isUtxo = True
+        , dashed = isDashed
         , color = Just color
         }
 
@@ -167,6 +175,7 @@ type alias ColoredPathConfig =
     , y2 : Float
     , opacity : Float
     , isUtxo : Bool
+    , dashed : Bool
     , color : Maybe String
     }
 
@@ -307,15 +316,22 @@ coloredPath c =
                 |> Css.property "stroke"
                 |> List.singleton
 
-        path det =
+        path det isLine =
             Svg.path
-                [ p
-                , Css.property "stroke-width" (String.fromFloat det.strokeWidth)
+                ([ p
+                 , Css.property "stroke-width" (String.fromFloat det.strokeWidth)
                     :: (Css.property "fill" "none" |> Css.important)
                     :: det.styles
                     ++ gradientStyles
                     |> css
-                ]
+                 ]
+                    ++ (if c.dashed && isLine then
+                            [ strokeDasharray "5,5" ]
+
+                        else
+                            []
+                       )
+                )
                 []
     in
     [ if c.highlight then
@@ -326,6 +342,7 @@ coloredPath c =
              else
                 GraphComponents.inputPathHighlightLine_details
             )
+            False
 
       else
         g [] []
@@ -336,6 +353,7 @@ coloredPath c =
          else
             GraphComponents.inputPathMainLine_details
         )
+        True
     , if c.isOutgoing then
         Svg.path
             [ d <|
@@ -408,29 +426,29 @@ coloredPath c =
             ]
 
 
-pickPathFunction : Bool -> Bool -> Maybe String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+pickPathFunction : Bool -> Bool -> Maybe String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 pickPathFunction isOutgoing hovered color =
     case ( isOutgoing, hovered, color ) of
         ( False, False, Nothing ) ->
-            Svg.lazy6 inPath
+            Svg.lazy5 inPath
 
         ( False, True, Nothing ) ->
-            Svg.lazy6 inPathHovered
+            Svg.lazy5 inPathHovered
 
         ( False, False, Just c ) ->
-            Svg.lazy7 inPathColored c
+            Svg.lazy6 inPathColored c
 
         ( False, True, Just c ) ->
-            Svg.lazy7 inPathColoredHovered c
+            Svg.lazy6 inPathColoredHovered c
 
         ( True, False, Nothing ) ->
-            Svg.lazy6 outPath
+            Svg.lazy5 outPath
 
         ( True, True, Nothing ) ->
-            Svg.lazy6 outPathHovered
+            Svg.lazy5 outPathHovered
 
         ( True, False, Just c ) ->
-            Svg.lazy7 outPathColored c
+            Svg.lazy6 outPathColored c
 
         ( True, True, Just c ) ->
-            Svg.lazy7 outPathColoredHovered c
+            Svg.lazy6 outPathColoredHovered c

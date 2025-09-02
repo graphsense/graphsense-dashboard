@@ -28,7 +28,7 @@ edge : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Maybe Annotations.An
 edge plugins vc gc tx annotation =
     case tx.type_ of
         Utxo t ->
-            Svg.lazy7 Utxo.edge plugins vc gc (tx.selected || tx.hovered) t tx annotation
+            Svg.lazy7 Utxo.edge plugins vc gc { hovered = tx.selected || tx.hovered, isConversionLeg = tx.isConversionLeg } t tx annotation
 
         Account t ->
-            Svg.lazy7 AccountTx.edge plugins vc gc (tx.selected || tx.hovered) t tx annotation
+            Svg.lazy7 AccountTx.edge plugins vc gc { hovered = tx.selected || tx.hovered, isConversionLeg = tx.isConversionLeg } t tx annotation

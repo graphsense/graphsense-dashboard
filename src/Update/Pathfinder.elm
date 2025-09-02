@@ -1410,7 +1410,10 @@ updateByMsg plugins uc msg model =
                         ( ntx, txA )
 
                 nnn =
-                    nn |> Network.addConversion conversion inputTx outputTx
+                    nn
+                        |> Network.addConversion conversion inputTx outputTx
+                        |> Network.updateTx inputTx.id (s_isConversionLeg True)
+                        |> Network.updateTx outputTx.id (s_isConversionLeg True)
 
                 nFromAddress =
                     Data.normalizeIdentifier conversion.fromNetwork conversion.fromAddress

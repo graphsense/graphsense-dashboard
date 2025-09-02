@@ -341,7 +341,7 @@ txFilterDialogView vc net config model =
             , dateLabel = Locale.string vc.locale "Date Range"
             , headerTitle = Locale.string vc.locale "Transaction Filter"
             , txDirection = Locale.string vc.locale "Transaction Direction"
-            , zeroValues = Locale.string vc.locale "Include Zero Value Transfers"
+            , zeroValues = Locale.string vc.locale "Exclude Zero Value Transfers"
             }
         , switch =
             { variant =
@@ -351,7 +351,7 @@ txFilterDialogView vc net config model =
                             Controls.toggle
                                 { size = Sc.SwitchSizeSmall
                                 , disabled = False
-                                , selected = model.includeZeroValueTxs |> Maybe.withDefault False
+                                , selected = model.includeZeroValueTxs |> Maybe.withDefault True |> not
                                 , msg = msg
                                 }
                         )
