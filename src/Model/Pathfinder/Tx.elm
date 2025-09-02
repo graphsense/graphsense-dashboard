@@ -10,15 +10,19 @@ module Model.Pathfinder.Tx exposing
     , getAccountTx
     , getAccountTxRaw
     , getAsset
+    , getAssetFromRawTx
     , getCoords
     , getInputAddressIds
+    , getInputValueForAddressFromRawTx
     , getInputs
     , getNetwork
     , getOutputAddressIds
+    , getOutputValueForAddressFromRawTx
     , getOutputs
     , getRawBaseTxHashForTx
     , getRawTimestamp
     , getRawTimestampForRelationTx
+    , getRawTx
     , getTxId
     , getTxIdForAddressTx
     , getTxIdForRelationTx
@@ -46,7 +50,9 @@ import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import Model.Pathfinder.Id as Id exposing (Id)
+import Set
 import Tuple exposing (pair)
+import Util.Data
 
 
 type alias Tx =
@@ -94,6 +100,16 @@ type alias Io =
     }
 
 
+getRawTx : Tx -> Api.Data.Tx
+getRawTx tx =
+    case tx.type_ of
+        Account { raw } ->
+            Api.Data.TxTxAccount raw
+
+        Utxo { raw } ->
+            Api.Data.TxTxUtxo raw
+
+
 getAsset : Tx -> String
 getAsset tx =
     case tx.type_ of
@@ -102,6 +118,16 @@ getAsset tx =
 
         Utxo { raw } ->
             raw.currency
+
+
+getAssetFromRawTx : Api.Data.Tx -> String
+getAssetFromRawTx tx =
+    case tx of
+        Api.Data.TxTxAccount { currency } ->
+            currency
+
+        Api.Data.TxTxUtxo { currency } ->
+            currency
 
 
 getNetwork : Tx -> String
@@ -401,3 +427,39 @@ getInputs tx =
 
         Account { from } ->
             [ from ]
+
+
+getInputValueForAddressFromRawTx : String -> Api.Data.Tx -> Api.Data.Values
+getInputValueForAddressFromRawTx address tx =
+    case tx of
+        Api.Data.TxTxAccount { fromAddress, value } ->
+            if String.toLower fromAddress == String.toLower address then
+                value
+
+            else
+                Util.Data.valuesZero
+
+        Api.Data.TxTxUtxo { inputs } ->
+            inputs
+                |> Maybe.withDefault []
+                |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
+                |> List.map .value
+                |> Util.Data.sumValues
+
+
+getOutputValueForAddressFromRawTx : String -> Api.Data.Tx -> Api.Data.Values
+getOutputValueForAddressFromRawTx address tx =
+    case tx of
+        Api.Data.TxTxAccount { toAddress, value } ->
+            if String.toLower toAddress == String.toLower address then
+                value
+
+            else
+                Util.Data.valuesZero
+
+        Api.Data.TxTxUtxo { outputs } ->
+            outputs
+                |> Maybe.withDefault []
+                |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
+                |> List.map .value
+                |> Util.Data.sumValues

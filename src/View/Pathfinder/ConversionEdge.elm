@@ -71,7 +71,7 @@ view vc conversion inputAddress outputAddress =
             conversion.raw
 
         id =
-            ( conversion.inputId, conversion.outputId )
+            conversion.id
 
         -- Length of horizontal extension from nodes
         labelTextLine1 =
@@ -197,7 +197,7 @@ view vc conversion inputAddress outputAddress =
             GraphComponents.swapNode_details.renderedHeight
 
         hl =
-            conversion.hovered
+            conversion.hovered || conversion.selected
 
         swapNode =
             GraphComponents.swapNodeWithAttributes
@@ -215,6 +215,14 @@ view vc conversion inputAddress outputAddress =
                         , UserMovesMouseOverConversionEdge id conversion
                             |> onMouseOver
                         , pointer
+                        , [ Css.property "stroke" <|
+                                if hl then
+                                    Colors.pathAggregatedHighlight
+
+                                else
+                                    "transparent"
+                          ]
+                            |> css
                         , filter "url(#dropShadowAggEdgeHighlight)"
                         ]
                 )

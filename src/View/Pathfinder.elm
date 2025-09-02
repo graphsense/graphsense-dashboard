@@ -47,6 +47,7 @@ import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.AddressDetails as AddressDetails
 import View.Pathfinder.ContextMenuItem as ContextMenuItem
+import View.Pathfinder.ConversionDetails as ConversionDetails
 import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.Toolbar as Toolbar
@@ -585,6 +586,9 @@ detailsView plugin pluginStates vc model =
 
                 Pathfinder.RelationDetails id state ->
                     RelationDetails.view vc model id state
+
+                Pathfinder.ConversionDetails id state ->
+                    ConversionDetails.view vc model id state
 
         Nothing ->
             none

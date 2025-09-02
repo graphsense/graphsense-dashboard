@@ -9,12 +9,15 @@ import Util exposing (removeLeading0x)
 
 
 type alias ConversionEdge =
-    { outputId : Id
-    , inputId : Id
+    { id : ( Id, Id )
+    , outputAddressId : Id
+    , inputAddressId : Id
     , fromAsset : String
     , toAsset : String
     , inputAddress : Maybe Address
     , outputAddress : Maybe Address
+    , rawInputTransaction : Api.Data.Tx
+    , rawOutputTransaction : Api.Data.Tx
     , raw : Api.Data.ExternalConversion
     , selected : Bool
     , hovered : Bool

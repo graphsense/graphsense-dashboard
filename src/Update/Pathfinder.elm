@@ -171,6 +171,9 @@ syncSidePanel uc model =
             else
                 makeAddressDetails id
 
+        ( SelectedConversionEdge id, _ ) ->
+            Dict.get id model.network.conversions |> Maybe.map (ConversionDetails id)
+
         ( SelectedAddress id, _ ) ->
             makeAddressDetails id
 
@@ -234,6 +237,9 @@ syncSidePanel uc model =
         |> Maybe.map
             (\details ->
                 (case details of
+                    ConversionDetails _ _ ->
+                        n (Just details)
+
                     RelationDetails rid rd ->
                         Dict.get rid model.network.aggEdges
                             |> Maybe.map (flip s_aggEdge rd >> RelationDetails rid >> Just)
@@ -1870,8 +1876,8 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
-        UserClickedConversionEdge _ _ ->
-            n model
+        UserClickedConversionEdge id conv ->
+            model |> selectConversionEdge id
 
         UserMovesMouseOverConversionEdge id conv ->
             if model.hovered == HoveredConversionEdge id then
@@ -2581,6 +2587,9 @@ expandAddress address direction model =
 deleteSelection : Model -> ( Model, List Effect )
 deleteSelection model =
     (case model.selection of
+        SelectedConversionEdge ( id, _ ) ->
+            n model
+
         SelectedAddress id ->
             removeAddress id model
 
@@ -3166,6 +3175,19 @@ selectAggEdge _ id model =
                 |> n
 
 
+selectConversionEdge : ( Id, Id ) -> Model -> ( Model, List Effect )
+selectConversionEdge ( a, b ) model =
+    let
+        ( m1, eff ) =
+            unselect model
+    in
+    Network.updateConversionEdge ( a, b ) (s_selected True) m1.network
+        |> flip s_network m1
+        |> s_selection (SelectedConversionEdge ( a, b ))
+        |> n
+        |> Tuple.mapSecond ((++) eff)
+
+
 selectAddress : Id -> Model -> ( Model, List Effect )
 selectAddress id model =
     case Dict.get id model.network.addresses of
@@ -3196,8 +3218,14 @@ unselect model =
         unselectAggEdge a nw =
             Network.updateAggEdge a (s_selected False) nw
 
+        unselectConversionEdge ( a, b ) nw =
+            Network.updateConversionEdge ( a, b ) (s_selected False) nw
+
         network =
             case model.selection of
+                SelectedConversionEdge id ->
+                    unselectConversionEdge id model.network
+
                 SelectedAddress a ->
                     unselectAddress a model.network
 
@@ -3576,6 +3604,9 @@ checkSelection uc model =
             selectAggEdge uc id model
 
         SelectedAddress _ ->
+            n model
+
+        SelectedConversionEdge _ ->
             n model
 
         SelectedTx _ ->

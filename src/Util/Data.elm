@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, negateTxValue, negateValues, normalizeIdentifier, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, negateTxValue, negateValues, normalizeIdentifier, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Time
@@ -70,6 +70,11 @@ addValues x y =
             List.map (\( xf, yf ) -> { code = xf.code, value = xf.value + yf.value }) rates
     in
     { value = x.value + y.value, fiatValues = fvalues }
+
+
+sumValues : List Api.Data.Values -> Api.Data.Values
+sumValues values =
+    List.foldl addValues valuesZero values
 
 
 valuesZero : Api.Data.Values

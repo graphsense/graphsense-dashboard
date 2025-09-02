@@ -40,7 +40,7 @@ addresses plugins vc pc colors clusters annotations =
         >> Keyed.node "g" []
 
 
-relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) (List ConversionEdge) -> Svg Msg
+relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
 relations plugins vc gc annotations txs agg conversions =
     (case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
@@ -49,7 +49,8 @@ relations plugins vc gc annotations txs agg conversions =
         Pathfinder.TransactionTracingMode ->
             ( []
             , Dict.values txs
-            , Dict.values conversions |> List.concat
+            , Dict.values conversions
+              --|> List.concat
             )
     )
         |> Tuple3.mapFirst

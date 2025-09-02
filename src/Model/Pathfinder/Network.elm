@@ -30,7 +30,7 @@ type alias Network =
     , addressAggEdgeMap : Dict Id (Set ( Id, Id ))
     , animatedAddresses : Set Id
     , animatedTxs : Set Id
-    , conversions : Dict ( Id, Id ) (List ConversionEdge)
+    , conversions : Dict ( Id, Id ) ConversionEdge
     , conversionsEdgeMap : Dict Id (Set ( Id, Id ))
     }
 

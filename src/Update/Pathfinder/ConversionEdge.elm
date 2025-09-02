@@ -9,7 +9,7 @@ updateAddress : Id -> (Address -> Address) -> ConversionEdge -> ConversionEdge
 updateAddress id upd conversion =
     let
         c1 =
-            if id == conversion.inputId then
+            if id == conversion.inputAddressId then
                 { conversion
                     | inputAddress = Maybe.map upd conversion.inputAddress
                 }
@@ -17,7 +17,7 @@ updateAddress id upd conversion =
             else
                 conversion
     in
-    if id == conversion.outputId then
+    if id == conversion.outputAddressId then
         { c1
             | outputAddress = Maybe.map upd conversion.outputAddress
         }
@@ -33,13 +33,13 @@ setAddress ma conversion =
             (\a ->
                 let
                     c1 =
-                        if a.id == conversion.inputId then
+                        if a.id == conversion.inputAddressId then
                             { conversion | inputAddress = Just a }
 
                         else
                             conversion
                 in
-                if a.id == conversion.outputId then
+                if a.id == conversion.outputAddressId then
                     { c1 | outputAddress = Just a }
 
                 else

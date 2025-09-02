@@ -11,6 +11,7 @@ import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.ContextMenu exposing (ContextMenu)
+import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
@@ -80,6 +81,7 @@ type Selection
     | WillSelectTx Id
     | WillSelectAddress Id
     | WillSelectAggEdge ( Id, Id )
+    | SelectedConversionEdge ( Id, Id )
     | NoSelection
 
 
@@ -100,6 +102,7 @@ type Details
     = AddressDetails Id AddressDetails.Model
     | TxDetails Id TxDetails.Model
     | RelationDetails ( Id, Id ) RelationDetails.Model
+    | ConversionDetails ( Id, Id ) ConversionEdge
 
 
 getLoadedAddress : Model -> Id -> Maybe Address

@@ -82,25 +82,25 @@ addConversion conversion inputTx outputTx network =
             Maybe.map2 pair faid taid
     in
     case medge of
-        Just edge ->
+        Just edgeAddressIds ->
             let
+                edgeId =
+                    ( inputTx |> Tx.getTxIdForTx, outputTx |> Tx.getTxIdForTx )
+
                 c =
-                    ConversionEdge.init conversion edge ( inputTx |> Tx.getAsset, outputTx |> Tx.getAsset )
-                        |> s_inputAddress (Dict.get (first edge) network.addresses)
-                        |> s_outputAddress (Dict.get (second edge) network.addresses)
+                    ConversionEdge.init conversion edgeId edgeAddressIds (inputTx |> Tx.getRawTx) (outputTx |> Tx.getRawTx)
+                        |> s_inputAddress (Dict.get (first edgeAddressIds) network.addresses)
+                        |> s_outputAddress (Dict.get (second edgeAddressIds) network.addresses)
 
                 edgeMapUpsertFn =
-                    Maybe.map (Set.insert edge) >> Maybe.withDefault (edge |> Set.singleton) >> Just
-
-                edgeUpsertFn =
-                    Maybe.map (List.append [ c ]) >> Maybe.withDefault [ c ] >> Just
+                    Maybe.map (Set.insert edgeId) >> Maybe.withDefault (edgeId |> Set.singleton) >> Just
 
                 conversionsEdgeMap1 =
-                    Dict.update (first edge) edgeMapUpsertFn network.conversionsEdgeMap
-                        |> Dict.update (second edge) edgeMapUpsertFn
+                    Dict.update (first edgeAddressIds) edgeMapUpsertFn network.conversionsEdgeMap
+                        |> Dict.update (second edgeAddressIds) edgeMapUpsertFn
             in
             { network
-                | conversions = Dict.update edge edgeUpsertFn network.conversions
+                | conversions = Dict.insert edgeId c network.conversions
                 , conversionsEdgeMap = conversionsEdgeMap1
             }
 
@@ -400,7 +400,7 @@ setAddressInAggEdges address network =
 
 setAddressInConversions : Address -> Network -> Network
 setAddressInConversions address network =
-    updateConversionsById address.id (List.map (ConversionEdge.setAddress (Just address))) network
+    updateConversionsById address.id (ConversionEdge.setAddress (Just address)) network
 
 
 updateAggEdgesById : Id -> (AggEdge -> AggEdge) -> Network -> Network
@@ -415,7 +415,7 @@ updateAggEdgesById id update network =
         |> Maybe.withDefault network
 
 
-updateConversionsById : Id -> (List ConversionEdge -> List ConversionEdge) -> Network -> Network
+updateConversionsById : Id -> (ConversionEdge -> ConversionEdge) -> Network -> Network
 updateConversionsById id update network =
     Dict.get id network.conversionsEdgeMap
         |> Maybe.map
@@ -437,7 +437,7 @@ updateAggEdge id upd network =
 updateConversionEdge : ( Id, Id ) -> (ConversionEdge -> ConversionEdge) -> Network -> Network
 updateConversionEdge id upd network =
     { network
-        | conversions = Dict.update id (Maybe.map (List.map upd)) network.conversions
+        | conversions = Dict.update id (Maybe.map upd) network.conversions
     }
 
 
@@ -540,7 +540,7 @@ updateAddress id update model =
                 | addresses = Dict.update id (Maybe.map update) model.addresses
             }
         |> updateAggEdgesById id (AggEdge.updateAddress id update)
-        |> updateConversionsById id (List.map (ConversionEdge.updateAddress id update))
+        |> updateConversionsById id (ConversionEdge.updateAddress id update)
 
 
 updateAllAddresses : (Address -> Address) -> Network -> Network
