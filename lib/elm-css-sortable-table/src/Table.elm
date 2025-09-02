@@ -72,6 +72,7 @@ import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
 import Html.Styled.Lazy exposing (lazy2, lazy3)
 import Json.Decode as Json
+import Tuple2 exposing (pairTo)
 
 
 
@@ -534,9 +535,10 @@ toHeaderInfo (State sortName isReversed) toMsg { name, sorter } =
 
 onClick : String -> Bool -> (State -> msg) -> Attribute msg
 onClick name isReversed toMsg =
-    Events.on "click" <|
-        Json.map toMsg <|
-            Json.map2 State (Json.succeed name) (Json.succeed isReversed)
+    Events.stopPropagationOn "click" <|
+        Json.map (pairTo True) <|
+            Json.map toMsg <|
+                Json.map2 State (Json.succeed <| Debug.log "name" name) (Json.succeed <| Debug.log "name" isReversed)
 
 
 viewRow : (data -> String) -> List (ColumnData data msg) -> (data -> List (Attribute msg)) -> data -> ( String, Html msg )
