@@ -50,7 +50,7 @@ view vc attributes config tblInfinite =
                 )
 
           else
-            InfiniteTable.viewTable config [] tblInfinite
+            InfiniteTable.viewTable config [ css [ Css.maxHeight <| Css.px 300 ] ] tblInfinite
         ]
 
 

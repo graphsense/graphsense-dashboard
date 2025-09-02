@@ -31,12 +31,7 @@ pagesize =
 init : Id -> Api.Data.Entity -> Model
 init addressId entity =
     { table =
-        InfiniteTable.init
-            { pagesize = pagesize
-            , rowHeight = 36
-            , containerHeight = 300
-            }
-            Table.initUnsorted
+        InfiniteTable.init "relatedAddressesTable" pagesize Table.initUnsorted
     , addressId = addressId
     , entity = { currency = entity.currency, entity = entity.entity }
     , existingTaggedAddresses = Set.empty
@@ -77,8 +72,8 @@ loadData model pagesize_ nextpage =
         |> ApiEffect
 
 
-appendTaggedAddresses : Maybe String -> List Api.Data.Address -> Model -> ( Model, List Effect )
-appendTaggedAddresses nextpage addresses ra =
+appendTaggedAddresses : (InfiniteTable.Msg -> Pathfinder.Msg) -> Maybe String -> List Api.Data.Address -> Model -> ( Model, List Effect )
+appendTaggedAddresses mapCmd nextpage addresses ra =
     let
         existingTaggedAddresses =
             addresses
@@ -86,7 +81,8 @@ appendTaggedAddresses nextpage addresses ra =
                 |> Set.fromList
                 |> Set.union ra.existingTaggedAddresses
     in
-    appendAddresses nextpage
+    appendAddresses mapCmd
+        nextpage
         addresses
         { ra
             | allTaggedAddressesFetched =
@@ -107,21 +103,31 @@ appendTaggedAddresses nextpage addresses ra =
            )
 
 
-appendAddresses : Maybe String -> List Api.Data.Address -> Model -> ( Model, List Effect )
-appendAddresses nextpage addresses ra =
+appendAddresses : (InfiniteTable.Msg -> Pathfinder.Msg) -> Maybe String -> List Api.Data.Address -> Model -> ( Model, List Effect )
+appendAddresses mapCmd nextpage addresses ra =
     let
         dedupAddresses =
             addresses
                 |> List.filter (.address >> flip Set.member ra.existingTaggedAddresses >> not)
+
+        ( table, cmd, eff ) =
+            InfiniteTable.appendData
+                (tableConfig ra)
+                (filter ra)
+                nextpage
+                dedupAddresses
+                ra.table
     in
-    InfiniteTable.appendData
-        (tableConfig ra)
-        (filter ra)
-        nextpage
-        dedupAddresses
-        ra.table
+    ( table, eff )
         |> mapFirst (setTable ra)
         |> mapSecond Maybe.Extra.toList
+        |> mapSecond
+            ((::)
+                (cmd
+                    |> Cmd.map mapCmd
+                    |> CmdEffect
+                )
+            )
 
 
 updateTable : (InfiniteTable.Msg -> Pathfinder.Msg) -> (InfiniteTable.Model Api.Data.Address -> ( InfiniteTable.Model Api.Data.Address, Cmd InfiniteTable.Msg, Maybe Effect )) -> Model -> ( Model, List Effect )

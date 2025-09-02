@@ -13,7 +13,6 @@ module Components.InfiniteTable exposing
     , isEmpty
     , isLoading
     , loadFirstPage
-    , onScrollUpdate
     , removeItem
     , setData
     , sortBy
@@ -24,16 +23,19 @@ module Components.InfiniteTable exposing
 
 import Basics.Extra exposing (flip, uncurry)
 import Bounce exposing (Bounce)
+import Browser.Dom as Dom
 import Components.Table as Table exposing (Table)
 import Css
 import Html.Styled exposing (Attribute, Html, div)
-import Html.Styled.Attributes exposing (css, property)
+import Html.Styled.Attributes exposing (css, id, property)
 import Html.Styled.Events exposing (stopPropagationOn)
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
-import RecordSetter exposing (s_caption, s_loading, s_nextpage, s_state, s_table, s_tfoot)
+import RecordSetter exposing (s_caption, s_loading, s_nextpage, s_rowAttrs, s_state, s_table, s_tfoot)
+import Result.Extra
 import Table as T
+import Task
 import Tuple exposing (mapFirst, pair)
 
 
@@ -46,11 +48,14 @@ type alias Fetch eff =
 
 
 type alias ModelInternal d =
-    { table : Table d
+    { tableId : String
+    , table : Table d
     , pagesize : Int
     , iterations : Int
-    , scrollPos : ScrollPos
-    , rowHeight : Int
+    , scrollTop : Float
+    , contentHeight : Float
+    , rowHeight : Float
+    , containerHeight : Float
     , hackyFlag : Bool
     , data : IntDict d
     , bounce : Bounce
@@ -85,6 +90,8 @@ type Msg
     = Scroll ScrollPos
     | Debounce ScrollPos
     | TableMsg T.State
+    | GotTableElement (Result Dom.Error Dom.Element)
+    | GotRowElement (Result Dom.Error Dom.Element)
 
 
 type Direction
@@ -92,14 +99,17 @@ type Direction
     | Bottom
 
 
-init : { pagesize : Int, rowHeight : Int, containerHeight : Float } -> Table d -> Model d
-init { pagesize, rowHeight, containerHeight } table =
+init : String -> Int -> Table d -> Model d
+init tableId pagesize table =
     Model
         { table = table
+        , tableId = tableId
         , pagesize = pagesize
         , iterations = 0
-        , scrollPos = { scrollTop = 0, contentHeight = 0, containerHeight = containerHeight }
-        , rowHeight = rowHeight
+        , scrollTop = 0
+        , contentHeight = 300
+        , containerHeight = 300
+        , rowHeight = 30
         , data = IntDict.empty
         , bounce = Bounce.init
         , hackyFlag = False
@@ -107,7 +117,7 @@ init { pagesize, rowHeight, containerHeight } table =
         }
 
 
-appendData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Maybe eff )
+appendData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, Maybe eff )
 appendData config filt nextpage data (Model it) =
     { it
         | table =
@@ -125,9 +135,10 @@ appendData config filt nextpage data (Model it) =
                 |> List.foldl (uncurry IntDict.insert) it.data
     }
         |> loadMore config False
+        |> getRowHeight
 
 
-setData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Maybe eff )
+setData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, Maybe eff )
 setData config filt nextpage data (Model it) =
     { it
         | table =
@@ -141,6 +152,20 @@ setData config filt nextpage data (Model it) =
         , iterations = 1
     }
         |> loadMore config False
+        |> getRowHeight
+
+
+getRowHeight : ( Model d, Maybe eff ) -> ( Model d, Cmd Msg, Maybe eff )
+getRowHeight ( Model model, maybeEff ) =
+    ( Model model
+    , [ Dom.getElement model.tableId
+            |> Task.attempt GotTableElement
+      , Dom.getElement (model.tableId ++ "_row")
+            |> Task.attempt GotRowElement
+      ]
+        |> Cmd.batch
+    , maybeEff
+    )
 
 
 loadMore : Config eff -> Bool -> ModelInternal d -> ( Model d, Maybe eff )
@@ -209,7 +234,9 @@ update config msg (Model model) =
                         scrollUpdate config
                             pos
                             { newModel
-                                | scrollPos = pos
+                                | scrollTop = pos.scrollTop
+                                , contentHeight = pos.contentHeight
+                                , containerHeight = pos.containerHeight
                                 , hackyFlag = not model.hackyFlag
                             }
 
@@ -226,6 +253,26 @@ update config msg (Model model) =
                         |> Model
             in
             ( newModel, Cmd.none, Nothing )
+
+        GotTableElement result ->
+            ( Result.Extra.unwrap (Model model)
+                (\el ->
+                    Model { model | containerHeight = el.element.height }
+                )
+                result
+            , Cmd.none
+            , Nothing
+            )
+
+        GotRowElement result ->
+            ( Result.Extra.unwrap (Model model)
+                (\el ->
+                    Model { model | rowHeight = el.element.height }
+                )
+                result
+            , Cmd.none
+            , Nothing
+            )
 
 
 updateTable : (Table d -> Table d) -> Model d -> Model d
@@ -253,8 +300,8 @@ getPage (Model model) =
 
 getNumVisibleItems : ModelInternal d -> Int
 getNumVisibleItems model =
-    round model.scrollPos.containerHeight
-        // model.rowHeight
+    round model.containerHeight
+        // round model.rowHeight
         + 1
 
 
@@ -320,16 +367,6 @@ clientHeight =
         ]
 
 
-onScrollUpdate : Config eff -> Json.Decode.Value -> Model d -> ( Model d, Maybe eff )
-onScrollUpdate config value (Model model) =
-    case Json.Decode.decodeValue decodeScrollPos value of
-        Ok pos ->
-            scrollUpdate config pos { model | scrollPos = pos }
-
-        Err _ ->
-            ( Model model, Nothing )
-
-
 infiniteScroll : (Msg -> msg) -> Attribute msg
 infiniteScroll mapper =
     Html.Styled.Attributes.map mapper <|
@@ -345,8 +382,8 @@ sortBy col desc (Model model) =
 
 getStart : ModelInternal data -> Int
 getStart model =
-    round model.scrollPos.scrollTop
-        // model.rowHeight
+    round model.scrollTop
+        // round model.rowHeight
 
 
 getRange : Int -> Int -> ModelInternal data -> List data
@@ -363,32 +400,29 @@ viewTable :
     -> Html msg
 viewTable config attributes (Model model) =
     let
-        overhead =
-            model.pagesize // 2 * 2
+        visibleArea =
+            round model.containerHeight // round model.rowHeight // 2 * 2
 
         start =
             getStart model
-                // model.pagesize
-                * overhead
-                - overhead
+                // visibleArea
+                * visibleArea
+                - visibleArea
                 |> max 0
 
         prefix =
-            start
+            toFloat start
                 * model.rowHeight
-                |> toFloat
 
         end =
             start
-                + model.pagesize
-                + overhead
-                * 2
+                + visibleArea
+                * 3
                 |> min (IntDict.size model.data)
 
         suffix =
-            (IntDict.size model.data - end)
+            (IntDict.size model.data - end |> toFloat)
                 * model.rowHeight
-                |> toFloat
 
         placeholder dir height =
             let
@@ -433,6 +467,11 @@ viewTable config attributes (Model model) =
                     config.customizations
                         |> s_caption (placeholder Top prefix)
                         |> s_tfoot (placeholder Bottom suffix)
+                        |> s_rowAttrs
+                            (\d ->
+                                config.customizations.rowAttrs d
+                                    ++ [ model.tableId ++ "_row" |> id ]
+                            )
                 }
 
         data =
@@ -440,9 +479,9 @@ viewTable config attributes (Model model) =
     in
     div
         (css
-            [ Css.maxHeight <| Css.px model.scrollPos.containerHeight
-            , Css.overflowY Css.auto
+            [ Css.overflowY Css.auto
             ]
+            :: id model.tableId
             :: attributes
             ++ [ infiniteScroll config.tag ]
         )

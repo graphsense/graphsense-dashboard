@@ -177,17 +177,27 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                 tbl =
                     gs.getTable model
+
+                ( table, cmd, eff ) =
+                    tbl
+                        |> .table
+                        |> InfiniteTable.setData
+                            (tableConfig id isA2b tbl)
+                            RelationTxsTable.filter
+                            data.nextPage
+                            data.links
             in
-            tbl
-                |> .table
-                |> InfiniteTable.setData
-                    (tableConfig id isA2b tbl)
-                    RelationTxsTable.filter
-                    data.nextPage
-                    data.links
+            ( table, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
                 |> mapSecond Maybe.Extra.toList
+                |> mapSecond
+                    ((::)
+                        (cmd
+                            |> Cmd.map (TableMsg isA2b >> RelationDetailsMsg id)
+                            |> CmdEffect
+                        )
+                    )
 
         BrowserGotLinksNextPage isA2b data ->
             let
@@ -196,17 +206,27 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                 tbl =
                     gs.getTable model
+
+                ( table, cmd, eff ) =
+                    tbl
+                        |> .table
+                        |> InfiniteTable.appendData
+                            (tableConfig id isA2b tbl)
+                            RelationTxsTable.filter
+                            data.nextPage
+                            data.links
             in
-            tbl
-                |> .table
-                |> InfiniteTable.appendData
-                    (tableConfig id isA2b tbl)
-                    RelationTxsTable.filter
-                    data.nextPage
-                    data.links
+            ( table, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
                 |> mapSecond Maybe.Extra.toList
+                |> mapSecond
+                    ((::)
+                        (cmd
+                            |> Cmd.map (TableMsg isA2b >> RelationDetailsMsg id)
+                            |> CmdEffect
+                        )
+                    )
 
         RelationDetails.NoOp ->
             n model
