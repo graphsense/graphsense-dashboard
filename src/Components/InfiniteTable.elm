@@ -401,7 +401,11 @@ viewTable :
 viewTable config attributes (Model model) =
     let
         visibleArea =
-            round model.containerHeight // round model.rowHeight // 2 * 2
+            round model.containerHeight
+                // round model.rowHeight
+                // 2
+                * 2
+                |> max 2
 
         start =
             getStart model

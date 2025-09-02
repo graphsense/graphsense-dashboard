@@ -111,6 +111,9 @@ config styles vc addressId isCheckedFn allChecked =
             , onClick = UserClickedTxCheckboxInTable
             , readonly = \_ -> False
             }
+        , PT.timestampDateMultiRowColumn vc
+            "Timestamp"
+            (toGerneric addressId >> .timestamp)
         , txColumn vc
             { label = "Hash"
             , accessor = toGerneric addressId >> .txHash
@@ -122,9 +125,6 @@ config styles vc addressId isCheckedFn allChecked =
             (toGerneric addressId >> .asset >> asset network)
             "Value"
             (toGerneric addressId >> .value)
-        , PT.timestampDateMultiRowColumn vc
-            "Timestamp"
-            (toGerneric addressId >> .timestamp)
         ]
     , customizations = cc
     , tag = TransactionsTableSubTableMsg
