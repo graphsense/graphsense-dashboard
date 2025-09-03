@@ -1053,7 +1053,9 @@ updateByMsg plugins uc msg model =
                                         )
                         in
                         ( { unhovered
-                            | network = Network.updateTx id (s_hovered True) unhovered.network
+                            | network =
+                                Network.updateTx id (s_hovered True) unhovered.network
+                                    |> Network.trySetHoverConversionLoop id True
                             , hovered = HoveredTx id
                           }
                         , case maybeTT of
@@ -3342,6 +3344,7 @@ unhover model =
                 --Network.updateAddress a (s_hovered False) model.network
                 HoveredTx a ->
                     Network.updateTx a (s_hovered False) model.network
+                        |> Network.trySetHoverConversionLoop a False
 
                 HoveredAggEdge a ->
                     Network.updateAggEdge a (s_hovered False) model.network

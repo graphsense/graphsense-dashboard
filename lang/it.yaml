@@ -477,3 +477,7 @@ Tag Import: Importazione Tag
 "All Values": "Tutti i valori"
 "Group addresses by Transaction: Addresses were used together (likely same owner).": "Raggruppa gli indirizzi per transazione: gli indirizzi sono stati usati insieme (probabilmente lo stesso proprietario)."
 "Group addresses by Public Key: Addresses from the same key (same owner).": "Raggruppa gli indirizzi per chiave pubblica: indirizzi della stessa chiave (stesso proprietario)."
+"Bridge Transaction": "Transazione di Bridge"
+"Swap Transaction": "Transazione di Swap"
+"Bridge Transaction Legs": "Bridge Transazione"
+"Swap Transaction Legs": "Swap Transazione"

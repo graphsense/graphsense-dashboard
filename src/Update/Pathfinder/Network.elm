@@ -20,6 +20,7 @@ module Update.Pathfinder.Network exposing
     , insertFetchedEdge
     , rupsertAggEdge
     , snapToGrid
+    , trySetHoverConversionLoop
     , updateAddress
     , updateAddressesByClusterId
     , updateAggEdge
@@ -98,6 +99,8 @@ addConversion conversion inputTx outputTx network =
                 conversionsEdgeMap1 =
                     Dict.update (first edgeAddressIds) edgeMapUpsertFn network.conversionsEdgeMap
                         |> Dict.update (second edgeAddressIds) edgeMapUpsertFn
+                        |> Dict.update (first edgeId) edgeMapUpsertFn
+                        |> Dict.update (second edgeId) edgeMapUpsertFn
             in
             { network
                 | conversions = Dict.insert edgeId c network.conversions
@@ -413,6 +416,25 @@ updateAggEdgesById id update network =
             )
         |> Maybe.map (flip s_aggEdges network)
         |> Maybe.withDefault network
+
+
+trySetHoverConversionLoop : Id -> Bool -> Network -> Network
+trySetHoverConversionLoop tId isHovered network =
+    let
+        conversion =
+            Dict.get tId network.conversionsEdgeMap
+                |> Maybe.map (\x -> x |> Set.toList |> List.filterMap (flip Dict.get network.conversions))
+                |> Maybe.withDefault []
+                |> List.head
+    in
+    case conversion of
+        Just conv ->
+            updateConversionEdge conv.id (s_hovered isHovered) network
+                |> updateTx (conv.rawInputTransaction |> Tx.getTxId) (s_hovered isHovered)
+                |> updateTx (conv.rawOutputTransaction |> Tx.getTxId) (s_hovered isHovered)
+
+        Nothing ->
+            network
 
 
 updateConversionsById : Id -> (ConversionEdge -> ConversionEdge) -> Network -> Network
