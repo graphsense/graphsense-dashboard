@@ -113,7 +113,7 @@ view vc model id viewState =
                     [ sidePanelCss
                         |> css
                     ]
-                |> Rs.s_iconsCloseBlack closeAttrs
+                |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
                 |> Rs.s_valuesList
                     [ css [ Css.overflowY Css.auto ] ]
             )

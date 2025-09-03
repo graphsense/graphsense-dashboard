@@ -19,7 +19,7 @@ tx1 =
     , opacity = Animation.static 0
     , selected = False
     , isStartingPoint = False
-    , isConversionLeg = False
+    , conversionType = Nothing
     , hovered = False
     , type_ =
         Tx.Utxo
@@ -44,7 +44,7 @@ tx2 =
     , opacity = Animation.static 0
     , clock = 0
     , isStartingPoint = False
-    , isConversionLeg = False
+    , conversionType = Nothing
     , hovered = False
     , type_ =
         Tx.Utxo
@@ -66,7 +66,7 @@ tx3 =
     , opacity = Animation.static 0
     , clock = 0
     , isStartingPoint = False
-    , isConversionLeg = False
+    , conversionType = Nothing
     , hovered = False
     , type_ =
         Tx.Utxo
@@ -88,7 +88,7 @@ tx4 =
     , opacity = Animation.static 0
     , clock = 0
     , isStartingPoint = False
-    , isConversionLeg = False
+    , conversionType = Nothing
     , hovered = False
     , type_ =
         Tx.Utxo

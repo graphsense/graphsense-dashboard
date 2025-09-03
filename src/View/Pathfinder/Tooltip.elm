@@ -34,14 +34,14 @@ view plugins model vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
-                UtxoTx t ->
-                    ( genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }, [] )
+                UtxoTx t msgs ->
+                    ( genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
-                AccountTx t ->
-                    ( genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }, [] )
+                AccountTx t msgs ->
+                    ( genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
-                AggEdge a ->
-                    ( aggEdge vc a, [] )
+                AggEdge a msgs ->
+                    ( aggEdge vc a, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
                 Address a ts ->
                     ( address vc ts a, [] )

@@ -60,6 +60,7 @@ init plugins uc flags url key =
             , showLabelsInTaggingOverview = False
             , allConcepts = []
             , abuseConcepts = []
+            , showConversionEdges = True
             , characterDimensions = cd
             }
       , page = Home

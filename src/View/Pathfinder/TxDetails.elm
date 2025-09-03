@@ -146,7 +146,7 @@ account vc viewState id txExistsFn =
                         |> css
                     ]
                 |> Rs.s_sidePanelHeaderText [ spread ]
-                |> Rs.s_iconsCloseBlack closeAttrs
+                |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
             )
             { identifierWithCopyIcon =
                 { identifier = baseTxIdString |> truncateLongIdentifierWithLengths 8 4
@@ -247,7 +247,7 @@ utxo vc model id viewState tx =
                 ]
             |> Rs.s_sidePanelTxDetails [ css fullWidth ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack closeAttrs
+            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
         )
         { identifierWithCopyIcon =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4

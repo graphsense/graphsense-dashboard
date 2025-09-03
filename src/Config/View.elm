@@ -21,6 +21,7 @@ type alias Config =
     , preferredFiatCurrency : String
     , showValuesInFiat : Bool
     , showLabelsInTaggingOverview : Bool
+    , showConversionEdges : Bool
     , allConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
     , characterDimensions : Dict String { width : Float, height : Float }

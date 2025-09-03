@@ -14,6 +14,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition)
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
@@ -71,6 +72,7 @@ type Msg
     | UserPressedNormalKey String
     | UserReleasedNormalKey String
     | AddressDetailsMsg Id AddressDetails.Msg
+    | ConversionDetailsMsg ( Id, Id ) ConversionDetails.ConversionDetailsMsgs
     | TxDetailsMsg TxDetailsMsg
     | RelationDetailsMsg ( Id, Id ) RelationDetails.Msg
     | AnimationFrameDeltaForTransform Float
@@ -98,8 +100,8 @@ type Msg
     | UserPushesLeftMouseButtonOnUtxoTx Id Coords
     | UserClickedRemoveAddressFromGraph Id
     | UserReleasedDeleteKey
-    | UserMovesMouseOverUtxoTx Id
-    | UserMovesMouseOutUtxoTx Id
+    | UserMovesMouseOverTx Id
+    | UserMovesMouseOutTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
     | UserMovesMouseOverTagLabel TooltipContext

@@ -5,6 +5,7 @@ import Basics.Extra exposing (flip)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict exposing (Dict)
+import List.Extra
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Colors as Colors
@@ -60,58 +61,73 @@ relations plugins vc gc annotations txs agg conversions =
                 )
             )
         |> (\( agg_, txs_, conversions_ ) ->
-                [ conversions_
-                    |> List.filterMap
-                        (\conversion ->
-                            Maybe.map2 (conversionEdge plugins vc gc conversion)
-                                conversion.inputAddress
-                                conversion.outputAddress
-                        )
-                    |> Keyed.node "g" []
-                , txs_
-                    |> List.map
-                        (\tx ->
-                            ( Id.toString tx.id |> (++) "te"
-                            , Annotations.getAnnotation tx.id annotations
-                                |> Tx.edge plugins vc gc tx
+                (if vc.showConversionEdges then
+                    [ conversions_
+                        |> List.filterMap
+                            (\x ->
+                                case ( x.inputAddress, x.outputAddress ) of
+                                    ( Just a, Just b ) ->
+                                        Just ( x, a, b )
+
+                                    _ ->
+                                        Nothing
                             )
-                        )
-                    |> Keyed.node "g" []
-                , txs_
-                    |> List.map
-                        (\tx ->
-                            ( Id.toString tx.id |> (++) "tn"
-                            , Annotations.getAnnotation tx.id annotations
-                                |> Svg.lazy5 Tx.view plugins vc gc tx
+                        |> List.Extra.gatherEqualsBy (\( _, a, b ) -> ( a, b ))
+                        |> List.concatMap (\( first, rest ) -> (first :: rest) |> List.indexedMap Tuple.pair)
+                        |> List.map
+                            (\( i, ( conversion, a, b ) ) ->
+                                conversionEdge plugins vc gc conversion i a b
                             )
-                        )
-                    |> Keyed.node "g" []
-                , agg_
-                    |> List.filterMap
-                        (\edge ->
-                            Maybe.map2 (aggEdgeEdge plugins vc gc edge)
-                                edge.aAddress
-                                edge.bAddress
-                        )
-                    |> Keyed.node "g" []
-                , agg_
-                    |> List.filterMap
-                        (\edge ->
-                            Maybe.map2 (aggEdgeNode plugins vc gc edge)
-                                edge.aAddress
-                                edge.bAddress
-                        )
-                    |> Keyed.node "g" []
-                , agg_
-                    |> List.filter (\a -> a.selected || a.hovered)
-                    |> List.filterMap
-                        (\edge ->
-                            Maybe.map2 (aggEdgeNodeHighlight plugins vc gc edge)
-                                edge.aAddress
-                                edge.bAddress
-                        )
-                    |> Keyed.node "g" []
-                ]
+                        |> Keyed.node "g" []
+                    ]
+
+                 else
+                    []
+                )
+                    ++ [ txs_
+                            |> List.map
+                                (\tx ->
+                                    ( Id.toString tx.id |> (++) "te"
+                                    , Annotations.getAnnotation tx.id annotations
+                                        |> Tx.edge plugins vc gc tx
+                                    )
+                                )
+                            |> Keyed.node "g" []
+                       , txs_
+                            |> List.map
+                                (\tx ->
+                                    ( Id.toString tx.id |> (++) "tn"
+                                    , Annotations.getAnnotation tx.id annotations
+                                        |> Svg.lazy5 Tx.view plugins vc gc tx
+                                    )
+                                )
+                            |> Keyed.node "g" []
+                       , agg_
+                            |> List.filterMap
+                                (\edge ->
+                                    Maybe.map2 (aggEdgeEdge plugins vc gc edge)
+                                        edge.aAddress
+                                        edge.bAddress
+                                )
+                            |> Keyed.node "g" []
+                       , agg_
+                            |> List.filterMap
+                                (\edge ->
+                                    Maybe.map2 (aggEdgeNode plugins vc gc edge)
+                                        edge.aAddress
+                                        edge.bAddress
+                                )
+                            |> Keyed.node "g" []
+                       , agg_
+                            |> List.filter (\a -> a.selected || a.hovered)
+                            |> List.filterMap
+                                (\edge ->
+                                    Maybe.map2 (aggEdgeNodeHighlight plugins vc gc edge)
+                                        edge.aAddress
+                                        edge.bAddress
+                                )
+                            |> Keyed.node "g" []
+                       ]
                     |> Svg.g []
            )
 
@@ -137,10 +153,10 @@ aggEdgeEdge _ vc _ edge aAddress bAddress =
     )
 
 
-conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> ConversionEdge -> Address -> Address -> ( String, Svg Msg )
-conversionEdge _ vc _ conversion aAddress bAddress =
+conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> ConversionEdge -> Int -> Address -> Address -> ( String, Svg Msg )
+conversionEdge _ vc _ conversion displacementIndex aAddress bAddress =
     ( ConversionEdge.toIdString conversion |> (++) "ce"
-    , Svg.lazy4 ConversionEdge.view vc conversion aAddress bAddress
+    , Svg.lazy5 ConversionEdge.view vc conversion displacementIndex aAddress bAddress
     )
 
 

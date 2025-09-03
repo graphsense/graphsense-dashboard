@@ -1,5 +1,6 @@
 module Model.Pathfinder.Tx exposing
     ( AccountTx
+    , ConversionLegType(..)
     , Io
     , Tx
     , TxType(..)
@@ -55,6 +56,11 @@ import Tuple exposing (pair)
 import Util.Data
 
 
+type ConversionLegType
+    = InputLegConversion
+    | OutputLegConversion
+
+
 type alias Tx =
     { id : Id
     , hovered : Bool
@@ -67,7 +73,7 @@ type alias Tx =
     , clock : Clock
     , opacity : Animation
     , isStartingPoint : Bool
-    , isConversionLeg : Bool
+    , conversionType : Maybe ConversionLegType
     }
 
 

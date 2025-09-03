@@ -1,5 +1,6 @@
 module View.Pathfinder exposing (view)
 
+import Basics.Extra exposing (flip)
 import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -312,7 +313,16 @@ topCenterPanel plugins _ vc gc model =
             , Toolbar.view vc
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
-                , deleteDisabled = model.selection == Pathfinder.NoSelection
+                , deleteDisabled =
+                    case model.selection of
+                        Pathfinder.NoSelection ->
+                            True
+
+                        Pathfinder.SelectedConversionEdge _ ->
+                            True
+
+                        _ ->
+                            False
                 , newDisabled = not model.isDirty
                 , annotateDisabled =
                     case model.selection of
@@ -588,7 +598,7 @@ detailsView plugin pluginStates vc model =
                     RelationDetails.view vc model id state
 
                 Pathfinder.ConversionDetails id state ->
-                    ConversionDetails.view vc model id state
+                    ConversionDetails.view vc id (flip Dict.member model.network.txs) state
 
         Nothing ->
             none

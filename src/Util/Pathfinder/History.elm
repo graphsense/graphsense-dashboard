@@ -344,10 +344,10 @@ shallPushHistory plugins msg _ =
         UserReleasedDeleteKey ->
             True
 
-        UserMovesMouseOverUtxoTx _ ->
+        UserMovesMouseOverTx _ ->
             False
 
-        UserMovesMouseOutUtxoTx _ ->
+        UserMovesMouseOutTx _ ->
             False
 
         UserMovesMouseOverAggEdge _ ->
@@ -462,4 +462,7 @@ shallPushHistory plugins msg _ =
             False
 
         UserClickedConversionEdge _ _ ->
+            False
+
+        ConversionDetailsMsg _ _ ->
             False

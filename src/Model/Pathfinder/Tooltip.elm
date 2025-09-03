@@ -23,9 +23,9 @@ type alias TooltipMessages msg =
 
 
 type TooltipType msg
-    = UtxoTx Tx.UtxoTx
-    | AccountTx Tx.AccountTx
-    | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress }
+    = UtxoTx Tx.UtxoTx (TooltipMessages msg)
+    | AccountTx Tx.AccountTx (TooltipMessages msg)
+    | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress } (TooltipMessages msg)
     | Address Address (Maybe TagSummary)
     | TagLabel String TagSummary (TooltipMessages msg)
     | TagConcept Id String TagSummary (TooltipMessages msg)
@@ -54,14 +54,14 @@ mapMsgTooltipType toMap f =
         Address a b ->
             Address a b
 
-        AccountTx a ->
-            AccountTx a
+        AccountTx a msgs ->
+            AccountTx a (mapMsgTooltipMsg msgs f)
 
-        UtxoTx a ->
-            UtxoTx a
+        UtxoTx a msgs ->
+            UtxoTx a (mapMsgTooltipMsg msgs f)
 
-        AggEdge a ->
-            AggEdge a
+        AggEdge a msgs ->
+            AggEdge a (mapMsgTooltipMsg msgs f)
 
         Text a ->
             Text a
@@ -73,10 +73,10 @@ mapMsgTooltipType toMap f =
 isSameTooltip : Tooltip msg -> Tooltip msg -> Bool
 isSameTooltip t1 t2 =
     case ( t1.type_, t2.type_ ) of
-        ( UtxoTx tx1, UtxoTx tx2 ) ->
+        ( UtxoTx tx1 _, UtxoTx tx2 _ ) ->
             tx1 == tx2
 
-        ( AccountTx tx1, AccountTx tx2 ) ->
+        ( AccountTx tx1 _, AccountTx tx2 _ ) ->
             tx1 == tx2
 
         ( Address a1 _, Address a2 _ ) ->
@@ -94,7 +94,7 @@ isSameTooltip t1 t2 =
         ( Text tt1, Text tt2 ) ->
             tt1 == tt2
 
-        ( AggEdge tt1, AggEdge tt2 ) ->
+        ( AggEdge tt1 _, AggEdge tt2 _ ) ->
             tt1.leftAddress
                 == tt2.leftAddress
                 && tt1.rightAddress
@@ -103,10 +103,10 @@ isSameTooltip t1 t2 =
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
 
-        ( UtxoTx _, _ ) ->
+        ( UtxoTx _ _, _ ) ->
             False
 
-        ( AccountTx _, _ ) ->
+        ( AccountTx _ _, _ ) ->
             False
 
         ( Address _ _, _ ) ->
@@ -124,7 +124,7 @@ isSameTooltip t1 t2 =
         ( Text _, _ ) ->
             False
 
-        ( AggEdge _, _ ) ->
+        ( AggEdge _ _, _ ) ->
             False
 
         ( Plugin _ _, _ ) ->

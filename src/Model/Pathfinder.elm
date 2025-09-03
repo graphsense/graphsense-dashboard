@@ -11,7 +11,7 @@ import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.ContextMenu exposing (ContextMenu)
-import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
+import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
@@ -102,7 +102,7 @@ type Details
     = AddressDetails Id AddressDetails.Model
     | TxDetails Id TxDetails.Model
     | RelationDetails ( Id, Id ) RelationDetails.Model
-    | ConversionDetails ( Id, Id ) ConversionEdge
+    | ConversionDetails ( Id, Id ) ConversionDetailsModel
 
 
 getLoadedAddress : Model -> Id -> Maybe Address

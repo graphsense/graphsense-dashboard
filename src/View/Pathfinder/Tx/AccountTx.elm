@@ -79,9 +79,9 @@ view _ vc _ tx accTx annotation =
                     [ UserClickedTx tx.id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx tx.id
                         |> Util.Graph.mousedown
-                    , UserMovesMouseOverUtxoTx tx.id
+                    , UserMovesMouseOverTx tx.id
                         |> onMouseOver
-                    , UserMovesMouseOutUtxoTx tx.id
+                    , UserMovesMouseOutTx tx.id
                         |> onMouseLeave
                     , css [ Css.cursor Css.pointer ]
                     , Id.toString tx.id
@@ -117,14 +117,17 @@ view _ vc _ tx accTx annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> { t | hovered : Bool, isConversionLeg : Bool } -> AccountTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ _ _ { hovered, isConversionLeg } tx aTxPos annotation =
+edge : Plugins -> View.Config -> Pathfinder.Config -> { t | hovered : Bool, conversionType : Maybe ConversionLegType } -> AccountTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
     let
         radTx =
             GraphComponents.txNodeEthNodeEllipse_details.width / 2
 
         radA =
             GraphComponents.addressNodeNodeFrame_details.width / 2
+
+        isConversionLeg =
+            Maybe.Extra.isJust conversionType
 
         color =
             annotation
@@ -149,19 +152,25 @@ edge _ _ _ { hovered, isConversionLeg } tx aTxPos annotation =
                 leftSign =
                     signX fromPos txPos
 
+                colorFinal =
+                    color
+                        |> Maybe.Extra.or
+                            (case conversionType of
+                                Just InputLegConversion ->
+                                    Just Colors.pathIn
+
+                                Just OutputLegConversion ->
+                                    Just Colors.pathOut
+
+                                Nothing ->
+                                    Nothing
+                            )
+
                 leftLeg =
                     ( Id.toString txId
                     , pickPathFunction False
                         hovered
-                        (color
-                            |> Maybe.Extra.or
-                                (if isConversionLeg then
-                                    Just Colors.pathMiddle
-
-                                 else
-                                    Nothing
-                                )
-                        )
+                        colorFinal
                         ""
                         { x = fromPos.x * unit + (radA * leftSign), y = fromPos.y * unit }
                         { x = txPos.x * unit - (radTx * leftSign), y = txPos.y * unit }
@@ -176,15 +185,7 @@ edge _ _ _ { hovered, isConversionLeg } tx aTxPos annotation =
                     ( Id.toString txId
                     , pickPathFunction True
                         hovered
-                        (color
-                            |> Maybe.Extra.or
-                                (if isConversionLeg then
-                                    Just Colors.pathMiddle
-
-                                 else
-                                    Nothing
-                                )
-                        )
+                        colorFinal
                         ""
                         { x = txPos.x * unit + (radTx * rightSign), y = txPos.y * unit }
                         { x = toPos.x * unit - (radA * rightSign), y = toPos.y * unit }
@@ -195,10 +196,10 @@ edge _ _ _ { hovered, isConversionLeg } tx aTxPos annotation =
             [ leftLeg, rightLeg ]
                 |> Keyed.node "g"
                     [ txId
-                        |> UserMovesMouseOverUtxoTx
+                        |> UserMovesMouseOverTx
                         |> onMouseOver
                     , txId
-                        |> UserMovesMouseOutUtxoTx
+                        |> UserMovesMouseOutTx
                         |> onMouseLeave
                     , txId
                         |> UserClickedTx

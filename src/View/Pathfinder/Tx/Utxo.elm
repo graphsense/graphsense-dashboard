@@ -87,9 +87,9 @@ view _ vc _ tx utxo annotation =
                     [ UserClickedTx id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx id
                         |> Util.Graph.mousedown
-                    , UserMovesMouseOverUtxoTx id
+                    , UserMovesMouseOverTx id
                         |> onMouseOver
-                    , UserMovesMouseOutUtxoTx id
+                    , UserMovesMouseOutTx id
                         |> onMouseLeave
                     , css [ Css.cursor Css.pointer ]
                     , Id.toString id
@@ -125,8 +125,8 @@ view _ vc _ tx utxo annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> { t | hovered : Bool, isConversionLeg : Bool } -> UtxoTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ vc _ { hovered, isConversionLeg } tx pos annotation =
+edge : Plugins -> View.Config -> Pathfinder.Config -> { t | hovered : Bool, conversionType : Maybe ConversionLegType } -> UtxoTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge _ vc _ { hovered, conversionType } tx pos annotation =
     let
         toValues =
             Dict.toList
@@ -169,6 +169,23 @@ edge _ vc _ { hovered, isConversionLeg } tx pos annotation =
             annotation
                 |> Maybe.andThen .color
                 |> Maybe.map Color.toCssString
+
+        isConversionLeg =
+            Maybe.Extra.isJust conversionType
+
+        colorFinal =
+            color
+                |> Maybe.Extra.or
+                    (case conversionType of
+                        Just InputLegConversion ->
+                            Just Colors.pathIn
+
+                        Just OutputLegConversion ->
+                            Just Colors.pathOut
+
+                        Nothing ->
+                            Nothing
+                    )
     in
     (inputValues
         |> List.map
@@ -183,15 +200,7 @@ edge _ vc _ { hovered, isConversionLeg } tx pos annotation =
                 ( Id.toString address.id
                 , pickPathFunction False
                     hovered
-                    (color
-                        |> Maybe.Extra.or
-                            (if isConversionLeg then
-                                Just Colors.pathMiddle
-
-                             else
-                                Nothing
-                            )
-                    )
+                    colorFinal
                     values
                     { x = fromPos.x * unit + (rad * sign), y = fromPos.y * unit }
                     { x = txPos.x * unit - (txRad * sign), y = txPos.y * unit }
@@ -213,15 +222,7 @@ edge _ vc _ { hovered, isConversionLeg } tx pos annotation =
                         ( Id.toString address.id
                         , pickPathFunction True
                             hovered
-                            (color
-                                |> Maybe.Extra.or
-                                    (if isConversionLeg then
-                                        Just Colors.pathMiddle
-
-                                     else
-                                        Nothing
-                                    )
-                            )
+                            colorFinal
                             values
                             { x = txPos.x * unit + (txRad * sign), y = txPos.y * unit }
                             { x = toPos.x * unit - (rad * sign), y = toPos.y * unit }
@@ -232,10 +233,10 @@ edge _ vc _ { hovered, isConversionLeg } tx pos annotation =
            )
         |> Keyed.node "g"
             [ txId
-                |> UserMovesMouseOverUtxoTx
+                |> UserMovesMouseOverTx
                 |> onMouseOver
             , txId
-                |> UserMovesMouseOutUtxoTx
+                |> UserMovesMouseOutTx
                 |> onMouseLeave
             , txId
                 |> UserClickedTx

@@ -30,7 +30,7 @@ import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPub
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
-import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
+import Msg.Pathfinder as Pathfinder exposing (Msg(..), OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails exposing (RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -180,7 +180,7 @@ utxo plugins pluginStates vc model id viewState address =
                 ]
             |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack closeAttrs
+            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
             |> Rs.s_tagsLayout
@@ -871,7 +871,7 @@ account plugins pluginStates vc model id viewState address =
                     |> css
                 ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack closeAttrs
+            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
             |> Rs.s_tagsLayout

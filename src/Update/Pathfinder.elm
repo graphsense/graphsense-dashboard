@@ -19,6 +19,7 @@ import Init.Graph.Transform as Transform
 import Init.Pathfinder as Pathfinder
 import Init.Pathfinder.AddressDetails as AddressDetails
 import Init.Pathfinder.AggEdge as AggEdge
+import Init.Pathfinder.ConversionDetails as ConversionDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.RelationDetails as RelationDetails
@@ -61,6 +62,7 @@ import Msg.Pathfinder
         , TxDetailsMsg(..)
         )
 import Msg.Pathfinder.AddressDetails as AddressDetails
+import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
@@ -84,6 +86,7 @@ import Update.Graph.History as History
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.AggEdge as AggEdge
+import Update.Pathfinder.ConversionDetails as ConversionDetails
 import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestAggEdges, ingestTxs)
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.RelationDetails as RelationDetails
@@ -171,8 +174,17 @@ syncSidePanel uc model =
             else
                 makeAddressDetails id
 
+        ( SelectedConversionEdge id, Just (ConversionDetails cid _) ) ->
+            if id == cid then
+                model.details
+
+            else
+                Dict.get id model.network.conversions
+                    |> Maybe.map (ConversionDetails.init >> ConversionDetails id)
+
         ( SelectedConversionEdge id, _ ) ->
-            Dict.get id model.network.conversions |> Maybe.map (ConversionDetails id)
+            Dict.get id model.network.conversions
+                |> Maybe.map (ConversionDetails.init >> ConversionDetails id)
 
         ( SelectedAddress id, _ ) ->
             makeAddressDetails id
@@ -306,6 +318,24 @@ resultLineToRoute search =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
+        ConversionDetailsMsg id (ConversionDetails.UserClickedTxCheckboxInTable txId) ->
+            addOrRemoveTx plugins Nothing txId model
+                |> and (setTracingMode TransactionTracingMode)
+
+        ConversionDetailsMsg id smsg ->
+            case model.details of
+                Just (ConversionDetails cid cModel) ->
+                    let
+                        ( nm, eff ) =
+                            ConversionDetails.update smsg cModel
+                    in
+                    ( { model | details = Just (ConversionDetails cid nm) }
+                    , eff
+                    )
+
+                _ ->
+                    n model
+
         EventualMessagesHeartBeat ->
             let
                 ( nm, cmd ) =
@@ -624,7 +654,8 @@ updateByMsg plugins uc msg model =
                 |> n
 
         TxDetailsMsg (UserClickedTxInSubTxsTable tx) ->
-            loadTx True True plugins (Id.init tx.network tx.identifier) model
+            addOrRemoveTx plugins Nothing (Id.init tx.network tx.identifier) model
+                |> and (setTracingMode TransactionTracingMode)
 
         TxDetailsMsg submsg ->
             case model.details of
@@ -987,7 +1018,7 @@ updateByMsg plugins uc msg model =
             , CloseTooltipEffect Nothing False |> List.singleton
             )
 
-        UserMovesMouseOverUtxoTx id ->
+        UserMovesMouseOverTx id ->
             if model.hovered == HoveredTx id then
                 n model
 
@@ -1006,12 +1037,19 @@ updateByMsg plugins uc msg model =
                                     |> Dict.get id
                                     |> Maybe.map
                                         (\tx ->
+                                            let
+                                                msgs =
+                                                    { openTooltip = UserMovesMouseOverTx tx.id
+                                                    , closeTooltip = UserMovesMouseOverTx tx.id
+                                                    , openDetails = Nothing
+                                                    }
+                                            in
                                             case tx.type_ of
                                                 Tx.Utxo t ->
-                                                    Tooltip.UtxoTx t
+                                                    Tooltip.UtxoTx t msgs
 
                                                 Tx.Account t ->
-                                                    Tooltip.AccountTx t
+                                                    Tooltip.AccountTx t msgs
                                         )
                         in
                         ( { unhovered
@@ -1159,7 +1197,7 @@ updateByMsg plugins uc msg model =
         UserMovesMouseOutTagLabel ctx ->
             ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
-        UserMovesMouseOutUtxoTx id ->
+        UserMovesMouseOutTx id ->
             ( unhover model
             , CloseTooltipEffect
                 (Just { context = Id.toString id, domId = Id.toString id })
@@ -1418,8 +1456,8 @@ updateByMsg plugins uc msg model =
                 nnn =
                     nn
                         |> Network.addConversion conversion inputTx outputTx
-                        |> Network.updateTx inputTx.id (s_isConversionLeg True)
-                        |> Network.updateTx outputTx.id (s_isConversionLeg True)
+                        |> Network.updateTx inputTx.id (s_conversionType (Just Tx.InputLegConversion))
+                        |> Network.updateTx outputTx.id (s_conversionType (Just Tx.OutputLegConversion))
 
                 nFromAddress =
                     Data.normalizeIdentifier conversion.fromNetwork conversion.fromAddress
@@ -1756,7 +1794,14 @@ updateByMsg plugins uc msg model =
                     (n model)
 
         BrowserGotBulkTxs deserializing txs ->
-            n { model | network = ingestTxs model.config model.network deserializing.deserialized.txs txs }
+            let
+                updatedModel =
+                    { model | network = ingestTxs model.config model.network deserializing.deserialized.txs txs }
+            in
+            -- Load Conversion Edges for new loaded transactions
+            updatedModel.network.txs
+                |> Dict.values
+                |> List.foldl (\tx acc -> acc |> and (autoLoadConversions plugins tx)) ( updatedModel, [] )
 
         UserClickedOpenGraph ->
             ( model
@@ -1877,7 +1922,8 @@ updateByMsg plugins uc msg model =
             n model
 
         UserClickedConversionEdge id conv ->
-            model |> selectConversionEdge id
+            model
+                |> selectConversionEdge id
 
         UserMovesMouseOverConversionEdge id conv ->
             if model.hovered == HoveredConversionEdge id then
@@ -1909,18 +1955,24 @@ updateByMsg plugins uc msg model =
                 uhm =
                     unhover model
 
-                txid1 =
-                    ConversionEdge.getOutputTransferId conv
-
-                txid2 =
-                    ConversionEdge.getInputTransferId conv
+                newModel =
+                    { uhm
+                        | network =
+                            uhm.network
+                                |> Network.updateTx (ConversionEdge.getOutputTransferId conv) (s_hovered False)
+                                |> Network.updateTx (ConversionEdge.getInputTransferId conv) (s_hovered False)
+                    }
             in
-            ( { uhm
-                | network =
-                    uhm.network
-                        |> Network.updateTx txid1 (s_hovered False)
-                        |> Network.updateTx txid2 (s_hovered False)
-              }
+            ( case model.selection of
+                SelectedConversionEdge selId ->
+                    if selId == id then
+                        model
+
+                    else
+                        newModel
+
+                _ ->
+                    newModel
             , CloseTooltipEffect
                 (Just { context = AggEdge.idToString id, domId = AggEdge.idToString id })
                 False
@@ -1981,7 +2033,13 @@ updateByMsg plugins uc msg model =
                                         (RemoteData.toMaybe edge.a2b)
                                         (RemoteData.toMaybe edge.b2a)
                                 )
-                            |> Maybe.map Tooltip.AggEdge
+                            |> Maybe.map
+                                (flip Tooltip.AggEdge
+                                    { openTooltip = UserMovesMouseOverAggEdge id
+                                    , closeTooltip = UserMovesMouseOutAggEdge id
+                                    , openDetails = Nothing
+                                    }
+                                )
                             |> Maybe.map (OpenTooltipEffect { context = domId, domId = domId } False)
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
@@ -3182,6 +3240,8 @@ selectConversionEdge ( a, b ) model =
             unselect model
     in
     Network.updateConversionEdge ( a, b ) (s_selected True) m1.network
+        |> Network.updateTx a (s_hovered True)
+        |> Network.updateTx b (s_hovered True)
         |> flip s_network m1
         |> s_selection (SelectedConversionEdge ( a, b ))
         |> n
@@ -3219,7 +3279,9 @@ unselect model =
             Network.updateAggEdge a (s_selected False) nw
 
         unselectConversionEdge ( a, b ) nw =
-            Network.updateConversionEdge ( a, b ) (s_selected False) nw
+            Network.updateConversionEdge ( a, b ) (s_selected False >> s_hovered False) nw
+                |> Network.updateTx a (s_hovered False)
+                |> Network.updateTx b (s_hovered False)
 
         network =
             case model.selection of

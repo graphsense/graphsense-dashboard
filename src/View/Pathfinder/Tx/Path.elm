@@ -358,7 +358,7 @@ coloredPath c =
         Svg.path
             [ d <|
                 pathD
-                    [ M ( x2 - arrowLength, y2 - arrowLength * 0.7 )
+                    [ M ( x2 - arrowLength - 2, y2 - arrowLength * 0.7 )
                     , l ( arrowLength, arrowLength * 0.7 )
                     , l ( -arrowLength, arrowLength * 0.7 )
                     , Svg.PathD.z

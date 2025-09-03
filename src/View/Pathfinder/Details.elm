@@ -1,5 +1,7 @@
 module View.Pathfinder.Details exposing (DataTabConfig, closeAttrs, dataTab, emptyCell, valuesToCell)
 
+-- import Msg.Pathfinder exposing (Msg(..))
+
 import Api.Data
 import Config.View as View
 import Css
@@ -8,7 +10,6 @@ import Html.Styled exposing (Html)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model.Currency as Currency
-import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.Styled
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -32,15 +33,15 @@ emptyCell =
     }
 
 
-closeAttrs : List (Svg.Styled.Attribute Msg)
-closeAttrs =
+closeAttrs : msg -> List (Svg.Styled.Attribute msg)
+closeAttrs closeMsg =
     [ css
         [ Css.cursor Css.pointer
         , Css.important <| Css.right <| Css.px 6
         , Css.important <| Css.top <| Css.px 0
         , Css.important <| Css.left <| Css.unset
         ]
-    , onClick UserClosedDetailsView
+    , onClick closeMsg
     ]
 
 
