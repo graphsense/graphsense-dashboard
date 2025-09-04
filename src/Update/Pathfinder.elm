@@ -318,11 +318,11 @@ resultLineToRoute search =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
-        ConversionDetailsMsg id (ConversionDetails.UserClickedTxCheckboxInTable txId) ->
+        ConversionDetailsMsg _ (ConversionDetails.UserClickedTxCheckboxInTable txId) ->
             addOrRemoveTx plugins Nothing txId model
                 |> and (setTracingMode TransactionTracingMode)
 
-        ConversionDetailsMsg id smsg ->
+        ConversionDetailsMsg _ smsg ->
             case model.details of
                 Just (ConversionDetails cid cModel) ->
                     let
@@ -717,7 +717,7 @@ updateByMsg plugins uc msg model =
                                     |> .table
                                     |> InfiniteTable.getPage
                                     |> List.map Tx.getTxIdForRelationTx
-                                    |> flip (checkAllTxs plugins uc) model
+                                    |> flip (checkAllTxs plugins uc Nothing) model
                                     |> and (setTracingMode TransactionTracingMode)
                             )
                         |> Maybe.withDefault (n model)
@@ -780,7 +780,7 @@ updateByMsg plugins uc msg model =
                                     (.table
                                         >> InfiniteTable.getPage
                                         >> List.map Tx.getTxIdForAddressTx
-                                        >> flip (checkAllTxs plugins uc) model
+                                        >> flip (checkAllTxs plugins uc (Just addressId)) model
                                     )
                                 |> RemoteData.withDefault (n model)
 
@@ -1923,7 +1923,7 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
-        UserClickedConversionEdge id conv ->
+        UserClickedConversionEdge id _ ->
             model
                 |> selectConversionEdge id
 
@@ -2067,18 +2067,15 @@ updateByMsg plugins uc msg model =
             )
 
 
-checkAllTxs : Plugins -> Update.Config -> List Id -> Model -> ( Model, List Effect )
-checkAllTxs plugins uc txIds model =
+checkAllTxs : Plugins -> Update.Config -> Maybe Id -> List Id -> Model -> ( Model, List Effect )
+checkAllTxs plugins uc addressId txIds model =
     let
         allChecked =
             txIds
                 |> List.all (flip Dict.member model.network.txs)
 
-        deleteAcc txId ( m, eff ) =
-            ( Network.deleteTx txId m.network
-                |> flip s_network m
-            , eff
-            )
+        deleteAcc txId =
+            and (addOrRemoveTx plugins addressId txId)
 
         addAcc txId ( m, eff ) =
             loadTx True True plugins txId m |> Tuple.mapSecond ((++) eff)
@@ -2647,7 +2644,7 @@ expandAddress address direction model =
 deleteSelection : Model -> ( Model, List Effect )
 deleteSelection model =
     (case model.selection of
-        SelectedConversionEdge ( id, _ ) ->
+        SelectedConversionEdge ( _, _ ) ->
             n model
 
         SelectedAddress id ->
