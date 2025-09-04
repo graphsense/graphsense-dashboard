@@ -1,4 +1,4 @@
-module View.Pathfinder.PagedTable exposing (customizations, pagedTableView)
+module View.Pathfinder.PagedTable exposing (customizations, view)
 
 import Components.PagedTable as PagedTable
 import Config.View as View
@@ -46,8 +46,8 @@ customizations vc =
 --         ]
 
 
-pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable.Model data -> (PagedTable.Msg -> msg) -> Html msg
-pagedTableView vc attributes config tblPaged msgTag =
+view : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable.Model data -> (PagedTable.Msg -> msg) -> Html msg
+view vc attributes config tblPaged msgTag =
     let
         tbl =
             PagedTable.getTable tblPaged

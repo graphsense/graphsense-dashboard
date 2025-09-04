@@ -469,7 +469,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                                 SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                                                     ++ fullWidth
                                             ]
-                                            [ PagedTable.pagedTableView vc
+                                            [ PagedTable.view vc
                                                 [ css fullWidth ]
                                                 (RelatedAddressesPubkeyTable.config Css.Table.styles vc ratc ra)
                                                 (RelatedAddressesPubkeyTable.getTable ra)
