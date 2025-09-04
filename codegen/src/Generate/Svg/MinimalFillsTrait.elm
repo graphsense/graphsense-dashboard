@@ -12,7 +12,10 @@ toStyles : ColorMap -> MinimalFillsTrait -> List Elm.Expression
 toStyles colorMap node =
     []
         |> m (Paint.toStylesString colorMap >> Maybe.withDefault "transparent" >> Css.property "fill") (Just node.fills)
-        |> a opacity (Just node.fills)
+
+
+
+--|> a opacity (Just node.fills)
 
 
 opacity : List Paint -> Maybe Elm.Expression

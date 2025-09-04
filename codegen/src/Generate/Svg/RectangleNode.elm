@@ -13,6 +13,7 @@ import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Util exposing (callStyles, getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details, OriginAdjust)
+import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 
 
 toExpressions : Config -> String -> RectangleNode -> List Elm.Expression
@@ -40,6 +41,7 @@ toExpressions config componentName node =
 toStyles : ColorMap -> RectangleNode -> List Elm.Expression
 toStyles colorMap node =
     HasGeometryTrait.toStyles colorMap node.rectangularShapeTraits.defaultShapeTraits.hasGeometryTrait
+        ++ HasBlendModeAndOpacityTrait.toStyles node.rectangularShapeTraits.defaultShapeTraits.hasBlendModeAndOpacityTrait
 
 
 toAttributes : RectangleNode -> List Elm.Expression

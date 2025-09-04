@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -258,9 +258,14 @@ copyIconPathfinder =
     copyIconWithAttrPathfinder False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
 
 
+copyIconPathfinderFixed : View.Config -> String -> Html msg
+copyIconPathfinderFixed =
+    copyIconWithAttrPathfinderInternal True Right False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
+
+
 copyIconPathfinderAbove : View.Config -> String -> Html msg
 copyIconPathfinderAbove =
-    copyIconWithAttrPathfinderInternal Above False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
+    copyIconWithAttrPathfinderInternal False Above False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
 
 
 copyIconWithoutHint : View.Config -> String -> Html msg
@@ -270,11 +275,11 @@ copyIconWithoutHint =
 
 copyIconWithAttrPathfinder : Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
 copyIconWithAttrPathfinder =
-    copyIconWithAttrPathfinderInternal Right
+    copyIconWithAttrPathfinderInternal False Right
 
 
-copyIconWithAttrPathfinderInternal : HintPosition -> Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
-copyIconWithAttrPathfinderInternal hp hideHint attr vc value =
+copyIconWithAttrPathfinderInternal : Bool -> HintPosition -> Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
+copyIconWithAttrPathfinderInternal fixedHint hp hideHint attr vc value =
     let
         ( component, compAttr, triangleAttr ) =
             case hp of
@@ -312,10 +317,16 @@ copyIconWithAttrPathfinderInternal hp hideHint attr vc value =
                         ]
                     |> s_hint
                         [ Html.Styled.Attributes.attribute "data-hint" ""
-                        , css
+                        , css <|
                             [ Css.display Css.none
                             , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
                             ]
+                                ++ (if fixedHint then
+                                        [ Css.position Css.fixed |> Css.important ]
+
+                                    else
+                                        []
+                                   )
                         ]
                     |> s_label
                         [ Html.Styled.Attributes.attribute "data-label" ""

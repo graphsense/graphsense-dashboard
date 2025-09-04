@@ -10,6 +10,7 @@ import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.TypeStyle as TypeStyle
 import Generate.Util exposing (callStyles, getElementAttributes, getTextProperty, m, mm, withVisibility)
 import Types exposing (ColorMap, Config, Details)
+import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 
 
 toExpressions : Config -> String -> TextNode -> List Elm.Expression
@@ -41,6 +42,7 @@ toStyles : ColorMap -> TextNode -> List Elm.Expression
 toStyles colorMap node =
     TypeStyle.toStyles colorMap node.style
         ++ HasGeometryTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait
+        ++ HasBlendModeAndOpacityTrait.toStyles node.defaultShapeTraits.hasBlendModeAndOpacityTrait
 
 
 toAlignmentBaseline : TypeStyleTextAlignVertical -> Elm.Expression

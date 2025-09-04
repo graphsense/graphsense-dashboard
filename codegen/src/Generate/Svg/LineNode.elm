@@ -6,6 +6,7 @@ import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
+import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Util exposing (..)
 import List.Nonempty as NList
@@ -63,6 +64,7 @@ toStrokePaths config node =
 toStyles : ColorMap -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
 toStyles colorMap node =
     HasGeometryTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait
+        ++ HasBlendModeAndOpacityTrait.toStyles node.defaultShapeTraits.hasBlendModeAndOpacityTrait
 
 
 toAttributes : { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression

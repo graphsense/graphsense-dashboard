@@ -14,4 +14,4 @@ toStyles colorMap node =
     []
         |> m (Paint.toStylesString colorMap >> Maybe.withDefault "transparent" >> Css.property "stroke") node.strokes
         |> m (String.fromFloat >> Css.property "stroke-width") node.strokeWeight
-        |> a MinimalFillsTrait.opacity node.strokes
+        --|> a MinimalFillsTrait.opacity node.strokes
