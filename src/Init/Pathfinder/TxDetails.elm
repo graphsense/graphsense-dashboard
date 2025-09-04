@@ -14,11 +14,7 @@ import Util.ThemedSelectBox as ThemedSelectBox
 initSubTxTable : InfiniteTable.Model Api.Data.TxAccount
 initSubTxTable =
     Table.initUnsorted
-        |> InfiniteTable.init
-            { pagesize = 6
-            , rowHeight = 35
-            , containerHeight = 300
-            }
+        |> InfiniteTable.init "subTxTable" 6
 
 
 init : List String -> Tx -> TxDetails.Model
@@ -47,13 +43,7 @@ init assets tx =
             |> Table.setData IoTable.filter outputs
     , tx = tx
     , baseTx = RemoteData.NotAsked
-    , subTxsTable =
-        Table.initUnsorted
-            |> InfiniteTable.init
-                { pagesize = 6
-                , rowHeight = 35
-                , containerHeight = 300
-                }
+    , subTxsTable = initSubTxTable
     , subTxsTableOpen = tx |> Tx.getAccountTx |> Maybe.map (not << (.raw >> .isExternal >> Maybe.withDefault False)) |> Maybe.withDefault False
     , subTxsTableFilter =
         { includeZeroValueTxs = Just False

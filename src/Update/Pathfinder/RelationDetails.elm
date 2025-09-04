@@ -26,8 +26,8 @@ import Util exposing (n)
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
-loadRelationTxs : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Int -> Maybe String -> Effect
-loadRelationTxs id isA2b txTable nrItems nextpage =
+loadRelationTxs : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+loadRelationTxs id isA2b txTable sorting nrItems nextpage =
     let
         a =
             first id
@@ -66,7 +66,20 @@ loadRelationTxs id isA2b txTable nrItems nextpage =
             , minDate = fromD
             , maxDate = toD
             , tokenCurrency = txTable.selectedAsset
-            , order = Just Api.Request.Addresses.Order_Desc
+            , order =
+                sorting
+                    |> Maybe.andThen
+                        (\( col, isReversed ) ->
+                            if col == RelationTxsTable.titleTimestamp then
+                                if isReversed then
+                                    Just Api.Request.Addresses.Order_Desc
+
+                                else
+                                    Just Api.Request.Addresses.Order_Asc
+
+                            else
+                                Nothing
+                        )
             , nextpage = nextpage
             , pagesize = nrItems
             }
@@ -177,17 +190,27 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                 tbl =
                     gs.getTable model
+
+                ( table, cmd, eff ) =
+                    tbl
+                        |> .table
+                        |> InfiniteTable.setData
+                            (tableConfig id isA2b tbl)
+                            RelationTxsTable.filter
+                            data.nextPage
+                            data.links
             in
-            tbl
-                |> .table
-                |> InfiniteTable.setData
-                    (tableConfig id isA2b tbl)
-                    RelationTxsTable.filter
-                    data.nextPage
-                    data.links
+            ( table, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
                 |> mapSecond Maybe.Extra.toList
+                |> mapSecond
+                    ((::)
+                        (cmd
+                            |> Cmd.map (TableMsg isA2b >> RelationDetailsMsg id)
+                            |> CmdEffect
+                        )
+                    )
 
         BrowserGotLinksNextPage isA2b data ->
             let
@@ -196,17 +219,27 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                 tbl =
                     gs.getTable model
+
+                ( table, cmd, eff ) =
+                    tbl
+                        |> .table
+                        |> InfiniteTable.appendData
+                            (tableConfig id isA2b tbl)
+                            RelationTxsTable.filter
+                            data.nextPage
+                            data.links
             in
-            tbl
-                |> .table
-                |> InfiniteTable.appendData
-                    (tableConfig id isA2b tbl)
-                    RelationTxsTable.filter
-                    data.nextPage
-                    data.links
+            ( table, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
                 |> mapSecond Maybe.Extra.toList
+                |> mapSecond
+                    ((::)
+                        (cmd
+                            |> Cmd.map (TableMsg isA2b >> RelationDetailsMsg id)
+                            |> CmdEffect
+                        )
+                    )
 
         RelationDetails.NoOp ->
             n model

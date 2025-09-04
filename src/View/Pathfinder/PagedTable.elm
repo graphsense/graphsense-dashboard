@@ -1,11 +1,10 @@
-module View.Pathfinder.PagedTable exposing (ColumnAlign(..), addTHeadOverwrite, alignColumnHeader, customizations, pagedTableView)
+module View.Pathfinder.PagedTable exposing (customizations, view)
 
 import Components.PagedTable as PagedTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (emptyTableMsg, fullWidth)
 import Css.Table exposing (Styles, loadingSpinner, styles)
-import Dict exposing (Dict)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
@@ -30,53 +29,6 @@ tableHint _ vc msg =
         ]
 
 
-type ColumnAlign
-    = LeftAligned
-    | CenterAligned
-    | RightAligned
-
-
-alignColumnHeader : Styles -> View.Config -> Dict String ColumnAlign -> Table.Customizations data msg -> Table.Customizations data msg
-alignColumnHeader styles_ vc columns tc =
-    let
-        addAttr ( name, x, attr ) =
-            ( name
-            , x
-            , case Dict.get name columns of
-                Just LeftAligned ->
-                    ([ Css.textAlign Css.left ] |> css) :: attr
-
-                Just CenterAligned ->
-                    ([ Css.textAlign Css.center ] |> css) :: attr
-
-                Just RightAligned ->
-                    ([ Css.textAlign Css.right ] |> css) :: attr
-
-                _ ->
-                    attr
-            )
-    in
-    tc |> Rs.s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles_ vc)
-
-
-addTHeadOverwrite : String -> (( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg) -> (List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg) -> List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg
-addTHeadOverwrite key alternative default l =
-    let
-        merge acc i =
-            { attributes = acc.attributes ++ i.attributes, children = acc.children ++ i.children }
-    in
-    l
-        |> List.map
-            (\( n, s, a ) ->
-                if n == key then
-                    alternative ( n, s, a )
-
-                else
-                    default [ ( n, s, a ) ]
-            )
-        |> List.foldr merge { attributes = [], children = [] }
-
-
 customizations : View.Config -> Table.Customizations data msg
 customizations vc =
     Table.defaultCustomizations
@@ -94,8 +46,8 @@ customizations vc =
 --         ]
 
 
-pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable.Model data -> (PagedTable.Msg -> msg) -> Html msg
-pagedTableView vc attributes config tblPaged msgTag =
+view : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable.Model data -> (PagedTable.Msg -> msg) -> Html msg
+view vc attributes config tblPaged msgTag =
     let
         tbl =
             PagedTable.getTable tblPaged

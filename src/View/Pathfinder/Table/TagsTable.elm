@@ -1,10 +1,10 @@
 module View.Pathfinder.Table.TagsTable exposing (config, styles)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Table
-import Dict
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onMouseOut, onMouseOver)
@@ -24,7 +24,7 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (fixFillRule, none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (alignColumnHeader)
+import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders)
 
 
 tagId : Api.Data.AddressTag -> String
@@ -458,7 +458,7 @@ sourceColumn vc =
 lastModColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
 lastModColumn vc =
     Table.veryCustomColumn
-        { name = "Last Modified"
+        { name = titleLastModified
         , viewData =
             \data ->
                 let
@@ -468,6 +468,11 @@ lastModColumn vc =
                 cell vc (LastModCell { label = date, subLabel = Nothing })
         , sorter = Table.increasingOrDecreasingBy (\data -> data.lastmod |> Maybe.withDefault 0)
         }
+
+
+titleLastModified : String
+titleLastModified =
+    "Last modified"
 
 
 styles : Css.Table.Styles
@@ -519,6 +524,7 @@ config vc =
             , lastModColumn vc
             ]
         , customizations =
-            customizations styles vc
-                |> alignColumnHeader styles vc (Dict.fromList [ ( "Last Modified", View.Pathfinder.PagedTable.RightAligned ) ])
+            initCustomHeaders
+                |> addHeaderAttributes titleLastModified [ css [ Css.textAlign Css.right ] ]
+                |> flip (applyHeaderCustomizations styles vc) (customizations styles vc)
         }

@@ -5,23 +5,20 @@ import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Config.View as View
 import Css
-import Css.Pathfinder as PCSS
 import Css.Table exposing (Styles)
-import Dict
-import Html.Styled exposing (td, th)
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Table.RelationTxsTable exposing (titleValue)
 import Msg.Pathfinder.RelationDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
 import View.Pathfinder.InfiniteTable as InfiniteTable
-import View.Pathfinder.PagedTable as PT exposing (addTHeadOverwrite, alignColumnHeader, customizations)
-import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
+import View.Pathfinder.PagedTable exposing (customizations)
+import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders, setHeaderCheckbox, wrapCell)
 
 
 type alias GenericTx =
@@ -63,9 +60,6 @@ config styles vc { isA2b, addressId, isChecked, allChecked } =
         network =
             Id.network addressId
 
-        rightAlignedColumns =
-            Dict.fromList [ ( "Value", PT.RightAligned ) ]
-
         styles_ =
             styles
                 |> Rs.s_headCell
@@ -77,41 +71,19 @@ config styles vc { isA2b, addressId, isChecked, allChecked } =
                             )
                     )
 
-        c =
-            customizations vc
-                |> alignColumnHeader styles_ vc rightAlignedColumns
-
-        addAllCheckbox =
-            Util.Checkbox.checkbox
-                { state = Util.Checkbox.stateFromBool allChecked
-                , size = Util.Checkbox.smallSize
-                , msg = UserClickedAllTxCheckboxInTable isA2b
-                }
-                ([ Css.paddingLeft <| Css.px 5 ]
-                    |> css
-                    |> List.singleton
-                )
-
-        newTheadWithCheckbox =
-            addTHeadOverwrite ""
-                (\( _, _, a ) ->
-                    Table.HtmlDetails
-                        [ a
-                        , [ PCSS.mGap |> Css.padding
-                          , Css.width <| Css.px 50
-                          ]
-                            |> css
-                        ]
-                        [ th [] [ td [] [ addAllCheckbox ] ] ]
-                )
-                c.thead
+        checkboxTitle =
+            "checkbox"
 
         cc =
-            c |> Rs.s_thead newTheadWithCheckbox
+            initCustomHeaders
+                |> addHeaderAttributes titleValue [ css [ Css.textAlign Css.right ] ]
+                |> setHeaderCheckbox checkboxTitle allChecked (UserClickedAllTxCheckboxInTable isA2b)
+                |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
     in
     { toId = toGerneric >> getId >> Id.toString
     , columns =
         [ PT.checkboxColumn vc
+            checkboxTitle
             { isChecked = toGerneric >> getId >> isChecked
             , onClick = UserClickedTxCheckboxInTable
             , readonly = \_ -> False

@@ -7,7 +7,6 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.Table exposing (Styles)
-import Dict
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency as Currency
@@ -17,8 +16,13 @@ import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import View.Pathfinder.InfiniteTable as InfiniteTable
-import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
-import View.Pathfinder.Table.Columns as PT
+import View.Pathfinder.PagedTable exposing (customizations)
+import View.Pathfinder.Table.Columns as PT exposing (addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders)
+
+
+titleValue : String
+titleValue =
+    "Value"
 
 
 config : Styles -> View.Config -> { selectedSubTx : Id, isCheckedFn : Id -> Bool } -> InfiniteTable.TableConfig Api.Data.TxAccount TxDetailsMsg
@@ -26,9 +30,6 @@ config styles vc { selectedSubTx, isCheckedFn } =
     let
         toId r =
             Id.init r.network r.identifier
-
-        rightAlignedColumns =
-            Dict.fromList [ ( "Value", View.Pathfinder.PagedTable.RightAligned ) ]
 
         rowBaseAttrs =
             [ Css.height (Css.px 52)
@@ -57,16 +58,19 @@ config styles vc { selectedSubTx, isCheckedFn } =
     { toId = toId >> Id.toString
     , columns =
         [ PT.checkboxColumn vc
+            ""
             { isChecked = toId >> isCheckedFn
             , onClick = UserClickedTxInSubTxsTable
             , readonly = \_ -> False
             }
         , PT.addressColumn vc { name = "from Address", withCopy = False } .fromAddress
         , PT.addressColumn vc { name = "to Address", withCopy = False } .toAddress
-        , PT.valueColumnWithOptions { sortable = False, hideCode = False, colorFlowDirection = False, isOutgoingFn = \_ -> False } vc (\d -> Currency.asset d.network d.currency) "Value" .value
+        , PT.valueColumnWithOptions { sortable = False, hideCode = False, colorFlowDirection = False, isOutgoingFn = \_ -> False } vc (\d -> Currency.asset d.network d.currency) titleValue .value
         ]
     , customizations =
-        customizations vc
+        initCustomHeaders
+            |> addHeaderAttributes titleValue [ css [ Css.textAlign Css.right ] ]
+            |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
             |> Rs.s_rowAttrs
                 (\d ->
                     (if (d |> toId) == selectedSubTx then
@@ -80,7 +84,6 @@ config styles vc { selectedSubTx, isCheckedFn } =
                         |> css
                         |> List.singleton
                 )
-            |> alignColumnHeader styles_ vc rightAlignedColumns
     , tag = TableMsgSubTxTable
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc

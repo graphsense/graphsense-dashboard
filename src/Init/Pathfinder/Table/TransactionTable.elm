@@ -29,11 +29,7 @@ init uc network addressId data assets =
     let
         table isDesc =
             Table.initSorted isDesc TransactionTable.titleTimestamp
-                |> InfiniteTable.init
-                    { pagesize = 25
-                    , rowHeight = 38
-                    , containerHeight = 300
-                    }
+                |> InfiniteTable.init "transactionTable" 25
 
         ( _, mmax ) =
             Address.getActivityRange data

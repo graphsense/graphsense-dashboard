@@ -2,7 +2,7 @@ module View.Pathfinder.RelationDetails exposing (ValuesFormatted, ValuesRow, mak
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Components.InfiniteTable as InfiniteTable
+import Components.InfiniteTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -263,7 +263,7 @@ tableTab vc network edgeId viewState isA2b =
                 let
                     allChecked =
                         table.table
-                            |> InfiniteTable.getPage
+                            |> Components.InfiniteTable.getPage
                             |> List.map Tx.getTxIdForRelationTx
                             |> allAndNotEmpty isChecked
 

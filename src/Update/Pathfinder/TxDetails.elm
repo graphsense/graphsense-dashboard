@@ -30,7 +30,7 @@ transactionTableConfig m =
             m.tx |> Tx.getNetwork
     in
     { fetch =
-        \pagesize nextpage ->
+        \_ pagesize nextpage ->
             (BrowserGotTxFlows >> TxDetailsMsg)
                 |> Api.ListTxFlowsEffect
                     { currency = currency
@@ -217,11 +217,11 @@ update msg model =
                 accountTxs =
                     txs.txs |> List.filterMap Tx.getAccountTxRaw
 
-                ( nt, meff ) =
+                ( nt, cmd, meff ) =
                     model.subTxsTable
                         |> InfiniteTable.appendData config transactionTableFilter txs.nextPage accountTxs
             in
-            ( { model | subTxsTable = nt }, Maybe.Extra.toList meff )
+            ( { model | subTxsTable = nt }, CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: Maybe.Extra.toList meff )
 
         UserClickedToggleIoTable Inputs ->
             n { model | inputsTableOpen = not model.inputsTableOpen }

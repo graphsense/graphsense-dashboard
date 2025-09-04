@@ -8,8 +8,8 @@ import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.Table exposing (Styles)
 import Css.View
-import Dict
 import Html.Styled as Html
+import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.AggEdge as AggEdge
 import Init.Pathfinder.Id as Id
 import Model.Currency as Currency exposing (AssetIdentifier)
@@ -26,8 +26,8 @@ import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdent
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as InfiniteTable
-import View.Pathfinder.PagedTable exposing (alignColumnHeader, customizations)
-import View.Pathfinder.Table.Columns exposing (checkboxColumn, valueColumnWithOptions)
+import View.Pathfinder.PagedTable exposing (customizations)
+import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, applyHeaderCustomizations, checkboxColumn, initCustomHeaders, valueColumnWithOptions)
 
 
 type alias NeighborAddressesTableConfig =
@@ -49,9 +49,6 @@ config styles vc conf =
 
                 Incoming ->
                     "Total sent"
-
-        rightAlignedColumns =
-            Dict.fromList [ ( cellLabel, View.Pathfinder.PagedTable.RightAligned ) ]
 
         styles_ =
             styles
@@ -82,6 +79,7 @@ config styles vc conf =
     { toId = .address >> .address
     , columns =
         [ checkboxColumn vc
+            ""
             { isChecked = toAggId >> conf.isChecked
             , onClick = AddressDetails.UserClickedAggEdgeCheckboxInTable conf.direction conf.anchorId
             , readonly = \_ -> False
@@ -157,7 +155,10 @@ config styles vc conf =
             (Locale.string vc.locale cellLabel)
             .value
         ]
-    , customizations = customizations vc |> alignColumnHeader styles_ vc rightAlignedColumns
+    , customizations =
+        initCustomHeaders
+            |> addHeaderAttributes cellLabel [ css [ Css.textAlign Css.right ] ]
+            |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
     , tag = AddressDetails.NeighborsTableSubTableMsg conf.direction
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc

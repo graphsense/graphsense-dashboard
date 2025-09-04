@@ -43,7 +43,7 @@ import Util.ThemedSelectBox as ThemedSelectBox
 neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
 neighborsTableConfigWithMsg msg addressId dir =
     { fetch =
-        \pagesize nextpage ->
+        \_ pagesize nextpage ->
             msg dir
                 >> Pathfinder.AddressDetailsMsg addressId
                 |> Api.GetAddressNeighborsEffect
@@ -74,7 +74,7 @@ transactionTableConfig =
 transactionTableConfigWithMsg : (Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
 transactionTableConfigWithMsg msg txs addressId =
     { fetch =
-        \pagesize nextpage ->
+        \sorting pagesize nextpage ->
             msg
                 >> Pathfinder.AddressDetailsMsg addressId
                 |> Api.GetAddressTxsByDateEffect
@@ -83,7 +83,20 @@ transactionTableConfigWithMsg msg txs addressId =
                     , direction = txs.direction
                     , pagesize = pagesize
                     , nextpage = nextpage
-                    , order = txs.order
+                    , order =
+                        sorting
+                            |> Maybe.andThen
+                                (\( column, isReversed ) ->
+                                    if column == TransactionTable.titleTimestamp then
+                                        if isReversed then
+                                            Just Api.Request.Addresses.Order_Desc
+
+                                        else
+                                            Just Api.Request.Addresses.Order_Asc
+
+                                    else
+                                        txs.order
+                                )
                     , tokenCurrency = txs.selectedAsset
                     , minDate = txs.dateRangePicker |> Maybe.andThen .fromDate
                     , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate
@@ -158,7 +171,7 @@ update uc msg model =
                 |> Maybe.map
                     (\( tbl, setter ) ->
                         let
-                            ( pt, eff ) =
+                            ( pt, cmd, eff ) =
                                 InfiniteTable.setData
                                     (neighborsTableConfig model.address.id dir)
                                     NeighborsTable.filter
@@ -167,7 +180,8 @@ update uc msg model =
                                     tbl
                         in
                         ( setter pt model
-                        , Maybe.Extra.toList eff
+                        , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
+                            :: Maybe.Extra.toList eff
                         )
                     )
                 |> Maybe.withDefault (n model)
@@ -177,7 +191,7 @@ update uc msg model =
                 |> Maybe.map
                     (\( tbl, setter ) ->
                         let
-                            ( pt, eff ) =
+                            ( pt, cmd, eff ) =
                                 InfiniteTable.appendData
                                     (neighborsTableConfig model.address.id dir)
                                     NeighborsTable.filter
@@ -186,7 +200,8 @@ update uc msg model =
                                     tbl
                         in
                         ( setter pt model
-                        , Maybe.Extra.toList eff
+                        , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
+                            :: Maybe.Extra.toList eff
                         )
                     )
                 |> Maybe.withDefault (n model)
@@ -227,15 +242,29 @@ update uc msg model =
             model.txs
                 |> RemoteData.map
                     (\txsTable ->
-                        InfiniteTable.appendData
-                            (transactionTableConfig txsTable model.address.id)
-                            TransactionTable.filter
-                            txs.nextPage
-                            txs.addressTxs
-                            txsTable.table
+                        let
+                            ( table, cmd, eff ) =
+                                InfiniteTable.appendData
+                                    (transactionTableConfig txsTable model.address.id)
+                                    TransactionTable.filter
+                                    txs.nextPage
+                                    txs.addressTxs
+                                    txsTable.table
+                        in
+                        ( table, eff )
                             |> mapFirst (flip s_table txsTable)
                             |> mapFirst (RemoteData.Success >> flip s_txs model)
                             |> mapSecond Maybe.Extra.toList
+                            |> mapSecond
+                                ((::)
+                                    (cmd
+                                        |> Cmd.map
+                                            (TransactionsTableSubTableMsg
+                                                >> Pathfinder.AddressDetailsMsg model.address.id
+                                            )
+                                        |> CmdEffect
+                                    )
+                                )
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -248,15 +277,29 @@ update uc msg model =
                                 txsTable.dateRangePicker
                         in
                         if Maybe.andThen .fromDate drp == min && Maybe.andThen .toDate drp == max then
-                            InfiniteTable.setData
-                                (transactionTableConfig txsTable model.address.id)
-                                TransactionTable.filter
-                                txs.nextPage
-                                txs.addressTxs
-                                txsTable.table
+                            let
+                                ( table, cmd, eff ) =
+                                    InfiniteTable.setData
+                                        (transactionTableConfig txsTable model.address.id)
+                                        TransactionTable.filter
+                                        txs.nextPage
+                                        txs.addressTxs
+                                        txsTable.table
+                            in
+                            ( table, eff )
                                 |> mapFirst (flip s_table txsTable)
                                 |> mapFirst (RemoteData.Success >> flip s_txs model)
                                 |> mapSecond Maybe.Extra.toList
+                                |> mapSecond
+                                    ((::)
+                                        (cmd
+                                            |> Cmd.map
+                                                (TransactionsTableSubTableMsg
+                                                    >> Pathfinder.AddressDetailsMsg model.address.id
+                                                )
+                                            |> CmdEffect
+                                        )
+                                    )
 
                         else
                             n model
@@ -458,7 +501,12 @@ update uc msg model =
                 |> updateRelatedAddressesPubkeyTable model
 
         BrowserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } ->
-            RelatedAddressesTable.appendAddresses nextPage addresses
+            RelatedAddressesTable.appendAddresses
+                (RelatedAddressesTableSubTableMsg
+                    >> Pathfinder.AddressDetailsMsg model.address.id
+                )
+                nextPage
+                addresses
                 |> updateRelatedAddressesTable model
 
         UserClickedTx _ ->
@@ -523,11 +571,21 @@ update uc msg model =
                 )
 
             else
-                RelatedAddressesTable.appendTaggedAddresses tags.nextPage []
+                RelatedAddressesTable.appendTaggedAddresses
+                    (RelatedAddressesTableSubTableMsg
+                        >> Pathfinder.AddressDetailsMsg model.address.id
+                    )
+                    tags.nextPage
+                    []
                     |> updateRelatedAddressesTable model
 
         BrowserGotAddressesForTags nextpage addresses ->
-            RelatedAddressesTable.appendTaggedAddresses nextpage addresses
+            RelatedAddressesTable.appendTaggedAddresses
+                (RelatedAddressesTableSubTableMsg
+                    >> Pathfinder.AddressDetailsMsg model.address.id
+                )
+                nextpage
+                addresses
                 |> updateRelatedAddressesTable model
 
         TooltipMsg _ ->
@@ -710,12 +768,12 @@ syncByAddress uc network clusters dateFilterPreset model address =
                     neighborsOutgoing =
                         model.neighborsOutgoing
                             |> RemoteData.map (\_ -> model.neighborsOutgoing)
-                            |> RemoteData.withDefault (RemoteData.map (.outDegree >> NeighborsTable.init) address.data)
+                            |> RemoteData.withDefault (RemoteData.map (.outDegree >> NeighborsTable.init True) address.data)
 
                     neighborsIncoming =
                         model.neighborsIncoming
                             |> RemoteData.map (\_ -> model.neighborsIncoming)
-                            |> RemoteData.withDefault (RemoteData.map (.outDegree >> NeighborsTable.init) address.data)
+                            |> RemoteData.withDefault (RemoteData.map (.outDegree >> NeighborsTable.init False) address.data)
 
                     newModel =
                         { model

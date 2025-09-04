@@ -315,7 +315,6 @@ copyIconWithAttrPathfinderInternal hp hideHint attr vc value =
                         , css
                             [ Css.display Css.none
                             , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
-                            , Css.position Css.fixed |> Css.important
                             ]
                         ]
                     |> s_label
