@@ -32,6 +32,7 @@ config styles vc ratc _ =
         , toMsg = AddressDetails.RelatedAddressesPubkeyTableMsg
         , columns =
             [ checkboxColumn vc
+                ""
                 { isChecked = toId >> ratc.isChecked
                 , onClick = toId >> AddressDetails.UserClickedAddressCheckboxInTable
                 , readonly = \_ -> False

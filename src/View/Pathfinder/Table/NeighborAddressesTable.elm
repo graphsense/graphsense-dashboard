@@ -27,7 +27,7 @@ import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable exposing (customizations)
-import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, checkboxColumn, valueColumnWithOptions)
+import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, applyHeaderCustomizations, checkboxColumn, initCustomHeaders, valueColumnWithOptions)
 
 
 type alias NeighborAddressesTableConfig =
@@ -79,6 +79,7 @@ config styles vc conf =
     { toId = .address >> .address
     , columns =
         [ checkboxColumn vc
+            ""
             { isChecked = toAggId >> conf.isChecked
             , onClick = AddressDetails.UserClickedAggEdgeCheckboxInTable conf.direction conf.anchorId
             , readonly = \_ -> False
@@ -155,8 +156,9 @@ config styles vc conf =
             .value
         ]
     , customizations =
-        customizations vc
-            |> addHeaderAttributes styles_ vc cellLabel [ css [ Css.textAlign Css.right ] ]
+        initCustomHeaders
+            |> addHeaderAttributes cellLabel [ css [ Css.textAlign Css.right ] ]
+            |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
     , tag = AddressDetails.NeighborsTableSubTableMsg conf.direction
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc

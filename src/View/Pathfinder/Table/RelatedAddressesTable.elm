@@ -26,7 +26,7 @@ import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable exposing (customizations)
-import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, checkboxColumn, twoValuesColumn)
+import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, applyHeaderCustomizations, checkboxColumn, initCustomHeaders, twoValuesColumn)
 
 
 type alias RelatedAddressesTableConfig =
@@ -64,6 +64,7 @@ config styles vc ratc _ =
     { toId = .address
     , columns =
         [ checkboxColumn vc
+            ""
             { isChecked = toId >> ratc.isChecked
             , onClick = toId >> AddressDetails.UserClickedAddressCheckboxInTable
             , readonly = \_ -> False
@@ -137,8 +138,9 @@ config styles vc ratc _ =
             }
         ]
     , customizations =
-        customizations vc
-            |> addHeaderAttributes styles_ vc totalReceivedColumn [ css [ Css.textAlign Css.right ] ]
+        initCustomHeaders
+            |> addHeaderAttributes totalReceivedColumn [ css [ Css.textAlign Css.right ] ]
+            |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
     , tag = AddressDetails.RelatedAddressesTableSubTableMsg
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc

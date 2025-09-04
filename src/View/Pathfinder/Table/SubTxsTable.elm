@@ -17,7 +17,7 @@ import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable exposing (customizations)
-import View.Pathfinder.Table.Columns as PT exposing (addHeaderAttributes)
+import View.Pathfinder.Table.Columns as PT exposing (addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders)
 
 
 titleValue : String
@@ -58,6 +58,7 @@ config styles vc { selectedSubTx, isCheckedFn } =
     { toId = toId >> Id.toString
     , columns =
         [ PT.checkboxColumn vc
+            ""
             { isChecked = toId >> isCheckedFn
             , onClick = UserClickedTxInSubTxsTable
             , readonly = \_ -> False
@@ -67,7 +68,9 @@ config styles vc { selectedSubTx, isCheckedFn } =
         , PT.valueColumnWithOptions { sortable = False, hideCode = False, colorFlowDirection = False, isOutgoingFn = \_ -> False } vc (\d -> Currency.asset d.network d.currency) titleValue .value
         ]
     , customizations =
-        customizations vc
+        initCustomHeaders
+            |> addHeaderAttributes titleValue [ css [ Css.textAlign Css.right ] ]
+            |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
             |> Rs.s_rowAttrs
                 (\d ->
                     (if (d |> toId) == selectedSubTx then
@@ -81,7 +84,6 @@ config styles vc { selectedSubTx, isCheckedFn } =
                         |> css
                         |> List.singleton
                 )
-            |> addHeaderAttributes styles_ vc titleValue [ css [ Css.textAlign Css.right ] ]
     , tag = TableMsgSubTxTable
     , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
     , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc

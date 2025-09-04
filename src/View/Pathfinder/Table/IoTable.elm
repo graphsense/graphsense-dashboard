@@ -4,10 +4,9 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
-import Css.Pathfinder as PCSS
 import Css.Table exposing (Styles)
 import Css.View
-import Html.Styled exposing (span, td, th)
+import Html.Styled exposing (span)
 import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
 import Model.Direction
@@ -21,13 +20,11 @@ import Table
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.Checkbox
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (addTHeadOverwrite)
-import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, wrapCell)
+import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders, setHeaderCheckbox, wrapCell)
 
 
 type alias IoColumnConfig =
@@ -57,45 +54,24 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                             )
                     )
 
-        c =
-            customizations styles_ vc
-                |> addHeaderAttributes styles_ vc titleValue [ css [ Css.textAlign Css.right ] ]
-
-        addAllCheckbox =
-            Util.Checkbox.checkbox
-                { state = Util.Checkbox.stateFromBool allChecked
-                , size = Util.Checkbox.smallSize
-                , msg =
-                    UserClickedAllAddressCheckboxInTable
-                        (case ioDirection of
-                            Inputs ->
-                                Model.Direction.Outgoing
-
-                            Outputs ->
-                                Model.Direction.Incoming
-                        )
-                }
-                ([ Css.paddingLeft <| Css.px 5 ]
-                    |> css
-                    |> List.singleton
-                )
-
-        newTheadWithCheckbox =
-            addTHeadOverwrite ""
-                (\( _, _, a ) ->
-                    Table.HtmlDetails
-                        [ a
-                        , [ PCSS.mGap |> Css.padding
-                          , Css.width <| Css.px 50
-                          ]
-                            |> css
-                        ]
-                        [ th [] [ td [] [ addAllCheckbox ] ] ]
-                )
-                c.thead
+        checkboxTitle =
+            "checkbox"
 
         cc =
-            c |> Rs.s_thead newTheadWithCheckbox
+            initCustomHeaders
+                |> addHeaderAttributes titleValue [ css [ Css.textAlign Css.right ] ]
+                |> setHeaderCheckbox checkboxTitle allChecked msg
+                |> flip (applyHeaderCustomizations styles_ vc) (customizations styles_ vc)
+
+        msg =
+            UserClickedAllAddressCheckboxInTable
+                (case ioDirection of
+                    Inputs ->
+                        Model.Direction.Outgoing
+
+                    Outputs ->
+                        Model.Direction.Incoming
+                )
 
         network =
             ioColumnConfig.network
@@ -105,6 +81,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
         , toMsg = TableMsg ioDirection >> TxDetailsMsg
         , columns =
             [ PT.checkboxColumn vc
+                checkboxTitle
                 { isChecked =
                     ioToId network
                         >> Maybe.map isCheckedFn

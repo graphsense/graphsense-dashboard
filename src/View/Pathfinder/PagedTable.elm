@@ -1,4 +1,4 @@
-module View.Pathfinder.PagedTable exposing (addTHeadOverwrite, customizations, pagedTableView)
+module View.Pathfinder.PagedTable exposing (customizations, pagedTableView)
 
 import Components.PagedTable as PagedTable
 import Config.View as View
@@ -27,24 +27,6 @@ tableHint _ vc msg =
         ]
         [ Locale.string vc.locale msg |> text
         ]
-
-
-addTHeadOverwrite : String -> (( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg) -> (List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg) -> List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg
-addTHeadOverwrite key alternative default l =
-    let
-        merge acc i =
-            { attributes = acc.attributes ++ i.attributes, children = acc.children ++ i.children }
-    in
-    l
-        |> List.map
-            (\( n, s, a ) ->
-                if n == key then
-                    alternative ( n, s, a )
-
-                else
-                    default [ ( n, s, a ) ]
-            )
-        |> List.foldr merge { attributes = [], children = [] }
 
 
 customizations : View.Config -> Table.Customizations data msg

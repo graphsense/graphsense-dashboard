@@ -1,19 +1,22 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, checkboxColumn, debitCreditColumn, selectionIndicatorColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, checkboxColumn, debitCreditColumn, initCustomHeaders, selectionIndicatorColumn, setHeaderCheckbox, setHeaderHtml, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS exposing (inoutStyle)
 import Css.Table exposing (Styles)
-import Html.Styled exposing (Attribute, Html, text)
+import Dict exposing (Dict)
+import Html.Styled exposing (Attribute, Html, td, text, th)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events
 import List.Extra
 import Model.Currency exposing (AssetIdentifier)
 import RecordSetter as Rs
 import Table
+import Theme.Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Tuple exposing (pair)
+import Tuple exposing (mapFirst, mapSecond, pair)
 import Tuple3
 import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, none, truncateLongIdentifierWithLengths)
@@ -21,16 +24,100 @@ import View.Graph.Table exposing (simpleThead, valuesSorter)
 import View.Locale as Locale
 
 
-addHeaderAttributes : Styles -> View.Config -> String -> List (Attribute msg) -> Table.Customizations data msg -> Table.Customizations data msg
-addHeaderAttributes styles_ vc col attrs =
+type CustomHeaders msg
+    = CustomHeaders (Dict String (AttrOrHtml msg))
+
+
+type alias AttrOrHtml msg =
+    ( List (Attribute msg), Maybe (List (Html msg)) )
+
+
+initCustomHeaders : CustomHeaders msg
+initCustomHeaders =
+    CustomHeaders Dict.empty
+
+
+addHeaderAttributes : String -> List (Attribute msg) -> CustomHeaders msg -> CustomHeaders msg
+addHeaderAttributes col attrs (CustomHeaders headers) =
+    Dict.update col
+        (Maybe.map (mapFirst ((++) attrs))
+            >> Maybe.withDefault ( attrs, Nothing )
+            >> Just
+        )
+        headers
+        |> CustomHeaders
+
+
+setHeaderHtml : String -> List (Html.Styled.Html msg) -> CustomHeaders msg -> CustomHeaders msg
+setHeaderHtml col html (CustomHeaders headers) =
+    Dict.update col
+        (Maybe.map (mapSecond (\_ -> Just html))
+            >> Maybe.withDefault ( [], Just html )
+            >> Just
+        )
+        headers
+        |> CustomHeaders
+
+
+setHeaderCheckbox : String -> Bool -> msg -> CustomHeaders msg -> CustomHeaders msg
+setHeaderCheckbox checkboxTitle checked msg =
+    let
+        addAllCheckbox =
+            Util.Checkbox.checkbox
+                { state = Util.Checkbox.stateFromBool checked
+                , size = Util.Checkbox.smallSize
+                , msg = msg
+                }
+                []
+    in
+    addHeaderAttributes
+        checkboxTitle
+        [ css
+            [ PCSS.mGap |> Css.padding
+            , Css.width <| Css.px 50
+            , Css.property "background-color" Theme.Colors.white
+            ]
+        ]
+        >> setHeaderHtml checkboxTitle [ addAllCheckbox ]
+
+
+applyHeaderCustomizations : Styles -> View.Config -> CustomHeaders msg -> Table.Customizations data msg -> Table.Customizations data msg
+applyHeaderCustomizations styles_ vc (CustomHeaders dict) =
     let
         upd : List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg
-        upd =
-            List.map (Tuple3.mapThird List.singleton)
-                >> List.Extra.updateIf
-                    (Tuple3.first >> (==) col)
-                    (Tuple3.mapThird ((++) attrs))
-                >> simpleThead styles_ vc
+        upd headers =
+            headers
+                |> List.map (Tuple3.mapThird List.singleton)
+                |> flip
+                    (Dict.foldl
+                        (\col ( attrs, _ ) ->
+                            List.Extra.updateIf
+                                (Tuple3.first >> (==) col)
+                                (Tuple3.mapThird ((++) attrs))
+                        )
+                    )
+                    dict
+                |> simpleThead styles_ vc
+                |> flip
+                    (Dict.foldl
+                        (\col attrsOrHtml newHeaderHtml ->
+                            case attrsOrHtml of
+                                ( attrs, Just html ) ->
+                                    List.Extra.findIndex (Tuple3.first >> (==) col) headers
+                                        |> Maybe.map
+                                            (\i ->
+                                                List.Extra.updateAt i
+                                                    (\_ -> html |> td attrs |> List.singleton |> th [])
+                                                    newHeaderHtml.children
+                                                    |> flip Rs.s_children newHeaderHtml
+                                            )
+                                        |> Maybe.withDefault newHeaderHtml
+
+                                _ ->
+                                    newHeaderHtml
+                        )
+                    )
+                    dict
     in
     Rs.s_thead upd
 
@@ -168,10 +255,10 @@ selectionIndicatorColumn _ { isSelected } =
         }
 
 
-checkboxColumn : View.Config -> CheckboxColumnConfig data msg -> Table.Column data msg
-checkboxColumn _ { isChecked, onClick, readonly } =
+checkboxColumn : View.Config -> String -> CheckboxColumnConfig data msg -> Table.Column data msg
+checkboxColumn _ name { isChecked, onClick, readonly } =
     Table.veryCustomColumn
-        { name = ""
+        { name = name
         , viewData =
             \data ->
                 let

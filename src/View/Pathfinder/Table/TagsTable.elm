@@ -1,6 +1,7 @@
 module View.Pathfinder.Table.TagsTable exposing (config, styles)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Table
@@ -23,7 +24,7 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (fixFillRule, none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.Table.Columns exposing (addHeaderAttributes)
+import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders)
 
 
 tagId : Api.Data.AddressTag -> String
@@ -523,6 +524,7 @@ config vc =
             , lastModColumn vc
             ]
         , customizations =
-            customizations styles vc
-                |> addHeaderAttributes styles vc titleLastModified [ css [ Css.textAlign Css.right ] ]
+            initCustomHeaders
+                |> addHeaderAttributes titleLastModified [ css [ Css.textAlign Css.right ] ]
+                |> flip (applyHeaderCustomizations styles vc) (customizations styles vc)
         }
