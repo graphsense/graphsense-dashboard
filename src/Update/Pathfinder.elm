@@ -654,7 +654,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         TxDetailsMsg (UserClickedTxInSubTxsTable tx) ->
-            addOrRemoveTx plugins Nothing (Id.init tx.network tx.identifier) model
+            addOrRemoveTx plugins (Just (Id.init tx.network tx.fromAddress)) (Id.init tx.network tx.identifier) model
                 |> and (setTracingMode TransactionTracingMode)
 
         TxDetailsMsg submsg ->
