@@ -18,7 +18,7 @@ module Components.InfiniteTable exposing
     , sortBy
     , update
     , updateTable
-    , viewTable
+    , view
     )
 
 import Basics.Extra exposing (flip, uncurry)
@@ -481,12 +481,12 @@ getRange start end =
         >> IntDict.values
 
 
-viewTable :
+view :
     TableConfig data msg
     -> List (Attribute msg)
     -> Model data
     -> Html msg
-viewTable config attributes (Model model) =
+view config attributes (Model model) =
     let
         dict =
             getIntDict model
