@@ -538,7 +538,7 @@ onClick name isReversed toMsg =
     Events.stopPropagationOn "click" <|
         Json.map (pairTo True) <|
             Json.map toMsg <|
-                Json.map2 State (Json.succeed <| Debug.log "name" name) (Json.succeed <| Debug.log "name" isReversed)
+                Json.map2 State (Json.succeed name) (Json.succeed isReversed)
 
 
 viewRow : (data -> String) -> List (ColumnData data msg) -> (data -> List (Attribute msg)) -> data -> ( String, Html msg )
