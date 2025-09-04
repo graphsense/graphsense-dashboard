@@ -7,13 +7,13 @@ import Css
 import Css.Pathfinder as PCSS
 import Css.Table exposing (Styles)
 import Css.View
-import Dict
 import Html.Styled exposing (span, td, th)
 import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
 import Model.Direction
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Table.IoTable exposing (titleValue)
 import Model.Pathfinder.Tx exposing (ioToId)
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
@@ -26,8 +26,8 @@ import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
-import View.Pathfinder.PagedTable exposing (addTHeadOverwrite, alignColumnHeader)
-import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
+import View.Pathfinder.PagedTable exposing (addTHeadOverwrite)
+import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, wrapCell)
 
 
 type alias IoColumnConfig =
@@ -40,9 +40,6 @@ type alias IoColumnConfig =
 config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> Bool -> IoColumnConfig -> Table.Config Api.Data.TxValue Msg
 config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
     let
-        rightAlignedColumns =
-            Dict.fromList [ ( "Value", View.Pathfinder.PagedTable.RightAligned ) ]
-
         styles_ =
             styles
                 |> Rs.s_headRow
@@ -61,7 +58,8 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                     )
 
         c =
-            customizations styles_ vc |> alignColumnHeader styles_ vc rightAlignedColumns
+            customizations styles_ vc
+                |> addHeaderAttributes styles_ vc titleValue [ css [ Css.textAlign Css.right ] ]
 
         addAllCheckbox =
             Util.Checkbox.checkbox

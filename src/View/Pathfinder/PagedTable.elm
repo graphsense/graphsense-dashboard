@@ -1,11 +1,10 @@
-module View.Pathfinder.PagedTable exposing (ColumnAlign(..), addTHeadOverwrite, alignColumnHeader, customizations, pagedTableView)
+module View.Pathfinder.PagedTable exposing (addTHeadOverwrite, customizations, pagedTableView)
 
 import Components.PagedTable as PagedTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (emptyTableMsg, fullWidth)
 import Css.Table exposing (Styles, loadingSpinner, styles)
-import Dict exposing (Dict)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
@@ -28,35 +27,6 @@ tableHint _ vc msg =
         ]
         [ Locale.string vc.locale msg |> text
         ]
-
-
-type ColumnAlign
-    = LeftAligned
-    | CenterAligned
-    | RightAligned
-
-
-alignColumnHeader : Styles -> View.Config -> Dict String ColumnAlign -> Table.Customizations data msg -> Table.Customizations data msg
-alignColumnHeader styles_ vc columns tc =
-    let
-        addAttr ( name, x, attr ) =
-            ( name
-            , x
-            , case Dict.get name columns of
-                Just LeftAligned ->
-                    ([ Css.textAlign Css.left ] |> css) :: attr
-
-                Just CenterAligned ->
-                    ([ Css.textAlign Css.center ] |> css) :: attr
-
-                Just RightAligned ->
-                    ([ Css.textAlign Css.right ] |> css) :: attr
-
-                _ ->
-                    attr
-            )
-    in
-    tc |> Rs.s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles_ vc)
 
 
 addTHeadOverwrite : String -> (( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg) -> (List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg) -> List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg

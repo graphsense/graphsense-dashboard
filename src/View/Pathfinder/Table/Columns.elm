@@ -1,21 +1,38 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addressColumn, checkboxColumn, debitCreditColumn, selectionIndicatorColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, checkboxColumn, debitCreditColumn, selectionIndicatorColumn, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS exposing (inoutStyle)
-import Html.Styled exposing (Html, text)
+import Css.Table exposing (Styles)
+import Html.Styled exposing (Attribute, Html, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events
+import List.Extra
 import Model.Currency exposing (AssetIdentifier)
 import RecordSetter as Rs
 import Table
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple exposing (pair)
+import Tuple3
 import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, none, truncateLongIdentifierWithLengths)
-import View.Graph.Table exposing (valuesSorter)
+import View.Graph.Table exposing (simpleThead, valuesSorter)
 import View.Locale as Locale
+
+
+addHeaderAttributes : Styles -> View.Config -> String -> List (Attribute msg) -> Table.Customizations data msg -> Table.Customizations data msg
+addHeaderAttributes styles_ vc col attrs =
+    let
+        upd : List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg
+        upd =
+            List.map (Tuple3.mapThird List.singleton)
+                >> List.Extra.updateIf
+                    (Tuple3.first >> (==) col)
+                    (Tuple3.mapThird ((++) attrs))
+                >> simpleThead styles_ vc
+    in
+    Rs.s_thead upd
 
 
 addressColumn : View.Config -> { name : String, withCopy : Bool } -> (data -> String) -> Table.Column data msg

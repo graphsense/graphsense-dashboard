@@ -7,12 +7,12 @@ import Config.View as View
 import Css
 import Css.Pathfinder as PCSS
 import Css.Table exposing (Styles)
-import Dict
 import Html.Styled exposing (td, th)
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Table.TransactionTable exposing (titleValue)
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Table
@@ -21,8 +21,8 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Checkbox
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
 import View.Pathfinder.InfiniteTable as InfiniteTable
-import View.Pathfinder.PagedTable as PT exposing (addTHeadOverwrite, alignColumnHeader, customizations)
-import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
+import View.Pathfinder.PagedTable exposing (addTHeadOverwrite, customizations)
+import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, wrapCell)
 
 
 type alias GenericTx =
@@ -57,9 +57,6 @@ config styles vc addressId isCheckedFn allChecked =
         network =
             Id.network addressId
 
-        rightAlignedColumns =
-            Dict.fromList [ ( "Value", PT.RightAligned ) ]
-
         styles_ =
             styles
                 |> Rs.s_headCell
@@ -73,7 +70,7 @@ config styles vc addressId isCheckedFn allChecked =
 
         c =
             customizations vc
-                |> alignColumnHeader styles_ vc rightAlignedColumns
+                |> addHeaderAttributes styles_ vc titleValue [ css [ Css.textAlign Css.right ] ]
 
         addAllCheckbox =
             Util.Checkbox.checkbox
