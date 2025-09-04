@@ -43,7 +43,7 @@ import Util.ThemedSelectBox as ThemedSelectBox
 neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
 neighborsTableConfigWithMsg msg addressId dir =
     { fetch =
-        \pagesize nextpage ->
+        \_ pagesize nextpage ->
             msg dir
                 >> Pathfinder.AddressDetailsMsg addressId
                 |> Api.GetAddressNeighborsEffect
@@ -74,7 +74,7 @@ transactionTableConfig =
 transactionTableConfigWithMsg : (Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
 transactionTableConfigWithMsg msg txs addressId =
     { fetch =
-        \pagesize nextpage ->
+        \sorting pagesize nextpage ->
             msg
                 >> Pathfinder.AddressDetailsMsg addressId
                 |> Api.GetAddressTxsByDateEffect
@@ -83,7 +83,20 @@ transactionTableConfigWithMsg msg txs addressId =
                     , direction = txs.direction
                     , pagesize = pagesize
                     , nextpage = nextpage
-                    , order = txs.order
+                    , order =
+                        sorting
+                            |> Maybe.andThen
+                                (\( column, isReversed ) ->
+                                    if column == TransactionTable.titleTimestamp then
+                                        if isReversed then
+                                            Just Api.Request.Addresses.Order_Desc
+
+                                        else
+                                            Just Api.Request.Addresses.Order_Asc
+
+                                    else
+                                        txs.order
+                                )
                     , tokenCurrency = txs.selectedAsset
                     , minDate = txs.dateRangePicker |> Maybe.andThen .fromDate
                     , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate

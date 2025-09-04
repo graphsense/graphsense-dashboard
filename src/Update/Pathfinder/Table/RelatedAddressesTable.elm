@@ -46,8 +46,8 @@ loadFirstPage config model =
         |> mapSecond Maybe.Extra.toList
 
 
-loadData : Model -> Int -> Maybe String -> Effect
-loadData model pagesize_ nextpage =
+loadData : Model -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+loadData model _ pagesize_ nextpage =
     let
         params =
             { currency = model.entity.currency
@@ -93,7 +93,7 @@ appendTaggedAddresses mapCmd nextpage addresses ra =
                 ( raNew
                 , eff
                     ++ (if not ra.allTaggedAddressesFetched && raNew.allTaggedAddressesFetched then
-                            [ (tableConfig raNew).fetch pagesize Nothing
+                            [ (tableConfig raNew).fetch Nothing pagesize Nothing
                             ]
 
                         else

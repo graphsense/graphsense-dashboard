@@ -30,7 +30,7 @@ transactionTableConfig m =
             m.tx |> Tx.getNetwork
     in
     { fetch =
-        \pagesize nextpage ->
+        \_ pagesize nextpage ->
             (BrowserGotTxFlows >> TxDetailsMsg)
                 |> Api.ListTxFlowsEffect
                     { currency = currency

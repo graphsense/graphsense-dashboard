@@ -26,8 +26,8 @@ import Util exposing (n)
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
-loadRelationTxs : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Int -> Maybe String -> Effect
-loadRelationTxs id isA2b txTable nrItems nextpage =
+loadRelationTxs : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+loadRelationTxs id isA2b txTable sorting nrItems nextpage =
     let
         a =
             first id
@@ -66,7 +66,20 @@ loadRelationTxs id isA2b txTable nrItems nextpage =
             , minDate = fromD
             , maxDate = toD
             , tokenCurrency = txTable.selectedAsset
-            , order = Just Api.Request.Addresses.Order_Desc
+            , order =
+                sorting
+                    |> Maybe.andThen
+                        (\( col, isReversed ) ->
+                            if col == RelationTxsTable.titleTimestamp then
+                                if isReversed then
+                                    Just Api.Request.Addresses.Order_Desc
+
+                                else
+                                    Just Api.Request.Addresses.Order_Asc
+
+                            else
+                                Nothing
+                        )
             , nextpage = nextpage
             , pagesize = nrItems
             }
