@@ -5,7 +5,6 @@ import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
-import Dict
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency as Currency
@@ -17,8 +16,8 @@ import Table
 import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
-import View.Pathfinder.PagedTable as PT exposing (alignColumnHeader, customizations)
-import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, wrapCell)
+import View.Pathfinder.PagedTable exposing (customizations)
+import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders, wrapCell)
 
 
 type alias GenericTx =
@@ -54,9 +53,6 @@ getId { network, id } =
 config : Styles -> View.Config -> ( Id, Id ) -> (Id -> Bool) -> Table.Config Api.Data.Tx Msg
 config styles vc tId isCheckedFn =
     let
-        rightAlignedColumns =
-            Dict.fromList [ ( "Value", PT.RightAligned ) ]
-
         rowBaseAttrs =
             [ Css.height (Css.px 52)
             , Css.property "border" ("1px solid " ++ Colors.grey50)
@@ -77,6 +73,7 @@ config styles vc tId isCheckedFn =
         { toId = toGerneric >> getId >> Id.toString
         , columns =
             [ PT.checkboxColumn vc
+                ""
                 { isChecked = toGerneric >> getId >> isCheckedFn
                 , onClick = toGerneric >> getId >> ConversionDetails.UserClickedTxCheckboxInTable >> ConversionDetailsMsg tId
                 , readonly = \_ -> False
@@ -101,14 +98,15 @@ config styles vc tId isCheckedFn =
                 (toGerneric >> .value)
             ]
         , customizations =
-            customizations vc
+            initCustomHeaders
+                |> addHeaderAttributes "Value" [ css [ Css.textAlign Css.right ] ]
+                |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
                 |> Rs.s_rowAttrs
                     (\_ ->
                         rowBaseAttrs
                             |> css
                             |> List.singleton
                     )
-                |> alignColumnHeader styles_ vc rightAlignedColumns
         , toMsg = always NoOp
         }
 
