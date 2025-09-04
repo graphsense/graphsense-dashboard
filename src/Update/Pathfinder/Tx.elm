@@ -91,21 +91,22 @@ unsetAccountAddress dir =
 
 
 updateAccountAddress : Direction -> Id -> (Address -> Address) -> AccountTx -> AccountTx
-updateAccountAddress dir id upd tx =
-    case dir of
-        Outgoing ->
-            if tx.to == id then
-                tx.toAddress |> Maybe.map upd |> flip s_toAddress tx
+updateAccountAddress _ id upd tx =
+    -- ignore Direction has problems with self loops of zero value
+    -- we always both addresses if the addresses match
+    (if tx.to == id then
+        tx.toAddress |> Maybe.map upd |> flip s_toAddress tx
 
-            else
-                tx
+     else
+        tx
+    )
+        |> (\nexTx ->
+                if nexTx.from == id then
+                    nexTx.fromAddress |> Maybe.map upd |> flip s_fromAddress nexTx
 
-        Incoming ->
-            if tx.from == id then
-                tx.fromAddress |> Maybe.map upd |> flip s_fromAddress tx
-
-            else
-                tx
+                else
+                    nexTx
+           )
 
 
 setAddressInTx : Direction -> Address -> Tx -> Tx
@@ -117,21 +118,20 @@ setAddressInTx dir a t =
                 |> flip updateUtxo t
 
         Account { to, from } ->
-            (case dir of
-                Outgoing ->
-                    if to == a.id then
-                        setToAddress a
+            -- ignore direction and only look at address
+            -- direction only setter had problems with selfloops (esp. with null value, where its not clear if in or out)
+            (if to == a.id then
+                setToAddress a
 
-                    else
-                        identity
-
-                Incoming ->
-                    if from == a.id then
+             else
+                identity
+            )
+                >> (if from == a.id then
                         setFromAddress a
 
                     else
                         identity
-            )
+                   )
                 |> flip updateAccount t
 
 

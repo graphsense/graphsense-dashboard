@@ -156,6 +156,7 @@ listTxsForAddress network id =
                 if Tx.hasInput id tx then
                     Just ( Incoming, tx )
                     -- TODO: Revise for UTXO, depends on total flow not only if address is on the in side.
+                    -- TODO: Also a problem for Account self loops there we should emit an in and out for both
 
                 else if Tx.hasOutput id tx then
                     Just ( Outgoing, tx )

@@ -1,7 +1,7 @@
 module View.Pathfinder.Network exposing (addresses, relations)
 
 import Api.Data
-import Basics.Extra exposing (flip)
+import Basics.Extra exposing (flip, uncurry)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict exposing (Dict)
@@ -64,16 +64,9 @@ relations plugins vc gc annotations txs agg conversions =
                 (if vc.showConversionEdges then
                     [ conversions_
                         |> List.filterMap
-                            (\x ->
-                                case ( x.inputAddress, x.outputAddress ) of
-                                    ( Just a, Just b ) ->
-                                        Just ( x, a, b )
-
-                                    _ ->
-                                        Nothing
-                            )
+                            (\x -> Maybe.map2 (\a b -> ( x, a, b )) x.inputAddress x.outputAddress)
                         |> List.Extra.gatherEqualsBy (\( _, a, b ) -> ( a, b ))
-                        |> List.concatMap (\( first, rest ) -> (first :: rest) |> List.indexedMap Tuple.pair)
+                        |> List.concatMap (uncurry (::) >> List.indexedMap Tuple.pair)
                         |> List.map
                             (\( i, ( conversion, a, b ) ) ->
                                 conversionEdge plugins vc gc conversion i a b
