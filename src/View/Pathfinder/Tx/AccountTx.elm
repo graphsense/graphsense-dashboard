@@ -63,6 +63,23 @@ view _ vc _ tx accTx annotation =
                         UserOpensTxAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
+
+        colorFinal =
+            annotation
+                |> Maybe.andThen .color
+                |> Maybe.map Color.toCssString
+                |> Maybe.Extra.or
+                    (case tx.conversionType of
+                        Just InputLegConversion ->
+                            Just Colors.pathIn
+
+                        Just OutputLegConversion ->
+                            Just Colors.pathOut
+
+                        Nothing ->
+                            Nothing
+                    )
+                |> Maybe.withDefault Colors.pathMiddle
     in
     g
         [ translate
@@ -91,9 +108,10 @@ view _ vc _ tx accTx annotation =
                         |> preventDefaultOn "contextmenu"
                     ]
                 , nodeEllipse = annAttr
+                , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
             }
             { root =
-                { highlightVisible = tx.selected
+                { highlightVisible = tx.selected || tx.hovered
                 , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
                 , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
                 , inputValue = Locale.currency (View.toCurrency vc) vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
@@ -129,10 +147,21 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
         isConversionLeg =
             Maybe.Extra.isJust conversionType
 
-        color =
+        colorFinal =
             annotation
                 |> Maybe.andThen .color
                 |> Maybe.map Color.toCssString
+                |> Maybe.Extra.or
+                    (case conversionType of
+                        Just InputLegConversion ->
+                            Just Colors.pathIn
+
+                        Just OutputLegConversion ->
+                            Just Colors.pathOut
+
+                        Nothing ->
+                            Nothing
+                    )
     in
     Maybe.map2
         (\fro too ->
@@ -151,20 +180,6 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
 
                 leftSign =
                     signX fromPos txPos
-
-                colorFinal =
-                    color
-                        |> Maybe.Extra.or
-                            (case conversionType of
-                                Just InputLegConversion ->
-                                    Just Colors.pathIn
-
-                                Just OutputLegConversion ->
-                                    Just Colors.pathOut
-
-                                Nothing ->
-                                    Nothing
-                            )
 
                 leftLeg =
                     ( Id.toString txId

@@ -479,5 +479,5 @@ Tag Import: Importazione Tag
 "Group addresses by Public Key: Addresses from the same key (same owner).": "Raggruppa gli indirizzi per chiave pubblica: indirizzi della stessa chiave (stesso proprietario)."
 "Bridge Transaction": "Transazione di Bridge"
 "Swap Transaction": "Transazione di Swap"
-"Bridge Transaction Legs": "Bridge Transazione"
-"Swap Transaction Legs": "Swap Transazione"
+"Bridge Transactions": "Bridge Transazione"
+"Swap Transactions": "Swap Transazione"

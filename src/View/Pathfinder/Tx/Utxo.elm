@@ -39,6 +39,23 @@ view _ vc _ tx utxo annotation =
         id =
             tx.id
 
+        colorFinal =
+            annotation
+                |> Maybe.andThen .color
+                |> Maybe.map Color.toCssString
+                |> Maybe.Extra.or
+                    (case tx.conversionType of
+                        Just InputLegConversion ->
+                            Just Colors.pathIn
+
+                        Just OutputLegConversion ->
+                            Just Colors.pathOut
+
+                        Nothing ->
+                            Nothing
+                    )
+                |> Maybe.withDefault Colors.pathMiddle
+
         anyIsNotVisible =
             Dict.toList
                 >> List.any (second >> .address >> (==) Nothing)
@@ -99,6 +116,7 @@ view _ vc _ tx utxo annotation =
                         |> preventDefaultOn "contextmenu"
                     ]
                 , txNode = annAttr
+                , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
             }
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs

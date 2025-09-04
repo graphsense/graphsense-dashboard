@@ -231,7 +231,7 @@ view vc conversion displacementIndex inputAddress outputAddress =
 
         -- Node properties
         iconSize =
-            GraphComponents.swapNode_details.renderedHeight
+            GraphComponents.swapNode_details.width
 
         hl =
             conversion.hovered || conversion.selected
@@ -252,18 +252,18 @@ view vc conversion displacementIndex inputAddress outputAddress =
                         , UserMovesMouseOverConversionEdge id conversion
                             |> onMouseOver
                         , pointer
-                        , [ Css.property "stroke" <|
-                                if hl then
-                                    Colors.pathAggregatedHighlight
-
-                                else
-                                    "transparent"
-                          ]
-                            |> css
-                        , filter "url(#dropShadowAggEdgeHighlight)"
                         ]
+                    |> Rs.s_swapNodeInner
+                        ([ (Css.property "background-color" <|
+                                Colors.greyBlue20
+                           )
+                            |> Css.important
+                         ]
+                            |> css
+                            |> List.singleton
+                        )
                 )
-                {}
+                { root = { highlightInvisible = hl } }
 
         -- Text label below the node
         labelOffsetLine1 =
@@ -315,47 +315,51 @@ view vc conversion displacementIndex inputAddress outputAddress =
             |> onMouseLeave
         , UserMovesMouseOverConversionEdge id conversion
             |> onMouseOver
+        , filter "url(#dropShadowConversionHighlight)"
         ]
-        [ -- Simple curved path or loop
-          path
-            [ Svg.d pat
+        ((if hl then
+            [ path
+                [ Svg.d pat
 
-            -- , Svg.strokeDasharray "5, 5"
-            , css Theme.aggregatedLinkHighlightLine_details.styles
-            , pointer
-            , css
-                [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkHighlightLine_details.strokeWidth
-                , Css.property "stroke" <|
-                    if hl then
-                        Colors.pathAggregatedHighlight
-
-                    else
-                        "transparent"
-                , Css.property "fill" "none" |> Css.important
-                , Css.property "stroke-linecap" "round"
+                -- , Svg.strokeDasharray "5, 5"
+                , css Theme.aggregatedLinkHighlightLine_details.styles
+                , pointer
+                , css
+                    [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkHighlightLine_details.strokeWidth
+                    , Css.property "stroke" <| Colors.pathMiddle
+                    , Css.property "opacity" "0.6"
+                    , Css.property "fill" "none" |> Css.important
+                    , Css.property "stroke-linecap" "round"
+                    ]
                 ]
+                []
             ]
-            []
-        , path
-            [ Svg.d pat
-            , Svg.strokeDasharray "5, 5"
-            , css Theme.aggregatedLinkMainLine_details.styles
-            , pointer
-            , css
-                [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
-                , Css.property "stroke" Colors.pathMiddle
-                , Css.property "fill" "none" |> Css.important
-                , Css.property "stroke-linecap" "round"
-                ]
-            ]
-            []
 
-        -- Circular node
-        , swapNode
+          else
+            []
+         )
+            ++ [ -- Simple curved path or loop
+                 path
+                    [ Svg.d pat
+                    , Svg.strokeDasharray "5, 5"
+                    , css Theme.aggregatedLinkMainLine_details.styles
+                    , pointer
+                    , css
+                        [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
+                        , Css.property "stroke" Colors.pathMiddle
+                        , Css.property "fill" "none" |> Css.important
+                        , Css.property "stroke-linecap" "round"
+                        ]
+                    ]
+                    []
 
-        -- Text label
-        , textLabel
-        ]
+               -- Circular node
+               , swapNode
+
+               -- Text label
+               , textLabel
+               ]
+        )
 
 
 

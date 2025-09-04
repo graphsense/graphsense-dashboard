@@ -48,10 +48,10 @@ txTab vc isTxOnGraph viewState =
                             { label =
                                 case viewState.raw.raw.conversionType of
                                     Api.Data.ExternalConversionConversionTypeDexSwap ->
-                                        Locale.string vc.locale "Swap Transaction Legs"
+                                        Locale.string vc.locale "Swap Transactions"
 
                                     Api.Data.ExternalConversionConversionTypeBridgeTx ->
-                                        Locale.string vc.locale "Bridge Transaction Legs"
+                                        Locale.string vc.locale "Bridge Transactions"
                             }
                         }
                 , disabled = False
