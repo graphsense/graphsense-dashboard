@@ -315,7 +315,6 @@ view vc conversion displacementIndex inputAddress outputAddress =
             |> onMouseLeave
         , UserMovesMouseOverConversionEdge id conversion
             |> onMouseOver
-        , filter "url(#dropShadowConversionHighlight)"
         ]
         ((if hl then
             [ path
@@ -331,6 +330,7 @@ view vc conversion displacementIndex inputAddress outputAddress =
                     , Css.property "fill" "none" |> Css.important
                     , Css.property "stroke-linecap" "round"
                     ]
+                , filter "url(#dropShadowEdgeHighlight)"
                 ]
                 []
             ]

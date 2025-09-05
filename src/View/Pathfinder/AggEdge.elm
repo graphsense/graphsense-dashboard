@@ -307,7 +307,7 @@ highlight vc ed aAddress bAddress =
             |> UserMovesMouseOverAggEdge
             |> onMouseOver
         , pointer
-        , filter "url(#dropShadowAggEdgeHighlight)"
+        , filter "url(#dropShadowEdgeHighlight)"
         ]
         [ Theme.aggregatedLabelWithAttributes
             (Theme.aggregatedLabelAttributes

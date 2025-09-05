@@ -421,9 +421,16 @@ coloredPath c =
         [ text c.label ]
     ]
         |> g
-            [ c.opacity |> String.fromFloat |> opacity
-            , Css.cursor Css.pointer |> List.singleton |> css
-            ]
+            ([ c.opacity |> String.fromFloat |> opacity
+             , Css.cursor Css.pointer |> List.singleton |> css
+             ]
+                ++ (if c.highlight then
+                        [ Svg.Styled.Attributes.filter "url(#dropShadowEdgeHighlight)" ]
+
+                    else
+                        []
+                   )
+            )
 
 
 pickPathFunction : Bool -> Bool -> Maybe String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg

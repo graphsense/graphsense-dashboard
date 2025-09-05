@@ -735,8 +735,7 @@ graphSvg plugins vc gc model bbox =
             , gradient "account" { outgoing = False, reverse = False }
             , gradient "account" { outgoing = True, reverse = True }
             , gradient "account" { outgoing = False, reverse = True }
-            , dropShadowAggEdgeHighlight
-            , dropShadowConversionHighlight
+            , dropShadowEdgeHighlight
             ]
         , Svg.lazy7 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges model.network.conversions
         , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
@@ -747,52 +746,10 @@ graphSvg plugins vc gc model bbox =
         ]
 
 
-dropShadowAggEdgeHighlight : Svg Msg
-dropShadowAggEdgeHighlight =
+dropShadowEdgeHighlight : Svg Msg
+dropShadowEdgeHighlight =
     filter
-        [ id "dropShadowAggEdgeHighlight"
-        , x "-100%"
-        , y "-200%"
-        , width "300%"
-        , height "500%"
-        ]
-        [ feGaussianBlur
-            [ in_ "SourceAlpha"
-            , stdDeviation "10"
-            ]
-            []
-        , feOffset
-            [ dx "0"
-            , dy "2"
-            , result "offsetblur"
-            ]
-            []
-        , feFlood
-            [ floodColor "rgba(0, 0, 0, 0.25)"
-            ]
-            []
-        , feComposite
-            [ in2 "offsetblur"
-            , operator "in"
-            ]
-            []
-        , feMerge
-            []
-            [ feMergeNode
-                []
-                []
-            , feMergeNode
-                [ in_ "SourceGraphic"
-                ]
-                []
-            ]
-        ]
-
-
-dropShadowConversionHighlight : Svg Msg
-dropShadowConversionHighlight =
-    filter
-        [ id "dropShadowConversionHighlight"
+        [ id "dropShadowEdgeHighlight"
         , x "-100%"
         , y "-200%"
         , width "300%"
