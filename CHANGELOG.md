@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.09.0] - 2025-09-05
+
+### Added
+- edge shadow on transactions
+- sorting to timestamp columns
+- swap and bridge transaction support (rendered as special edges)
+- new address clustering (by public key), now displayed in the clustered addresses dropdown table.
+
+### Changed
+- auto remove dangling addresses on unchecking all txs
+- made tables "infinitely" scrollable
+- Overhauled Tx Details Panel in Account model currencies (now show base tx and a list of sub txs, instead of the sub tx directly)
+
+### Fixed
+- fix missing translation
+- infinite table with sorting
+- rendering of self loops in account model currencies
+- fixed ambiguous handling of sub tx hashes (could lead to users being able to add the same payment twice to the graph)
+
 ## [25.08.1] - 2025-08-07
 
 ### Added
