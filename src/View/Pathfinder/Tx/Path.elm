@@ -333,9 +333,44 @@ coloredPath c =
                        )
                 )
                 []
+
+        boundingHeight =
+            y2 - c.y1 |> abs
+
+        strokeWidth =
+            GraphComponents.outputPathHighlightLine_details.strokeWidth
+
+        hackyRect =
+            if boundingHeight < strokeWidth then
+                let
+                    rx =
+                        if dx < 0 then
+                            x2
+
+                        else
+                            c.x1
+
+                    ry =
+                        if dy < 0 then
+                            y2
+
+                        else
+                            c.y1
+                in
+                rect
+                    [ x <| String.fromFloat rx
+                    , y <| String.fromFloat <| ry - strokeWidth / 2
+                    , width <| String.fromFloat <| abs dx
+                    , height <| String.fromFloat <| strokeWidth
+                    , fill "transparent"
+                    ]
+                    []
+
+            else
+                g [] []
     in
-    [ if c.highlight then
-        path
+    (if c.highlight then
+        [ path
             (if c.isOutgoing then
                 GraphComponents.outputPathHighlightLine_details
 
@@ -343,83 +378,86 @@ coloredPath c =
                 GraphComponents.inputPathHighlightLine_details
             )
             False
+        , hackyRect
+        ]
 
-      else
-        g [] []
-    , path
-        (if c.isOutgoing then
-            GraphComponents.outputPathMainLine_details
+     else
+        []
+    )
+        ++ [ path
+                (if c.isOutgoing then
+                    GraphComponents.outputPathMainLine_details
 
-         else
-            GraphComponents.inputPathMainLine_details
-        )
-        True
-    , if c.isOutgoing then
-        Svg.path
-            [ d <|
-                pathD
-                    [ M ( x2 - arrowLength - 2, y2 - arrowLength * 0.7 )
-                    , l ( arrowLength, arrowLength * 0.7 )
-                    , l ( -arrowLength, arrowLength * 0.7 )
-                    , Svg.PathD.z
-                    ]
-            , "rotate("
-                ++ ([ if dx < 0 then
-                        "180"
+                 else
+                    GraphComponents.inputPathMainLine_details
+                )
+                True
+           , if c.isOutgoing then
+                Svg.path
+                    [ d <|
+                        pathD
+                            [ M ( x2 - arrowLength - 2, y2 - arrowLength * 0.7 )
+                            , l ( arrowLength, arrowLength * 0.7 )
+                            , l ( -arrowLength, arrowLength * 0.7 )
+                            , Svg.PathD.z
+                            ]
+                    , "rotate("
+                        ++ ([ if dx < 0 then
+                                "180"
 
-                      else
-                        "0"
-                    , String.fromFloat x2
-                    , String.fromFloat y2
-                    ]
-                        |> String.join ","
-                   )
-                ++ ")"
-                |> transform
-            , (c.color
-                |> Maybe.withDefault Colors.pathOut
-                |> Css.property "stroke"
-              )
-                :: (c.color
+                              else
+                                "0"
+                            , String.fromFloat x2
+                            , String.fromFloat y2
+                            ]
+                                |> String.join ","
+                           )
+                        ++ ")"
+                        |> transform
+                    , (c.color
                         |> Maybe.withDefault Colors.pathOut
-                        |> Css.property "fill"
-                        |> Css.important
-                   )
-                :: GraphComponents.outputPathMainLine_details.styles
-                |> css
-            ]
-            []
-
-      else
-        text ""
-    , text_
-        [ translate lx ly
-            |> transform
-
-        {- , if c.isOutgoing then
-             if dx > 0 then
-                 textAnchor "end"
+                        |> Css.property "stroke"
+                      )
+                        :: (c.color
+                                |> Maybe.withDefault Colors.pathOut
+                                |> Css.property "fill"
+                                |> Css.important
+                           )
+                        :: GraphComponents.outputPathMainLine_details.styles
+                        |> css
+                    ]
+                    []
 
              else
-                 textAnchor "start"
+                text ""
+           , text_
+                [ translate lx ly
+                    |> transform
 
-           else if dx > 0 then
-             textAnchor "start"
+                {- , if c.isOutgoing then
+                     if dx > 0 then
+                         textAnchor "end"
 
-           else
-             textAnchor "end"
-        -}
-        , textAnchor "middle"
-        , dominantBaseline "hanging"
-        , [ Css.px 12 |> Css.fontSize
-          , Css.property "fill" Colors.black0
-          ]
-            |> css
+                     else
+                         textAnchor "start"
 
-        -- fix font size to ensure scaling in export (screenshot)
-        ]
-        [ text c.label ]
-    ]
+                   else if dx > 0 then
+                     textAnchor "start"
+
+                   else
+                     textAnchor "end"
+                -}
+                , textAnchor "middle"
+                , dominantBaseline "hanging"
+                , [ Css.px 12 |> Css.fontSize
+                  , Css.property "fill" Colors.black0
+                  ]
+                    |> css
+
+                -- fix font size to ensure scaling in export (screenshot)
+                ]
+                [ text c.label ]
+           ]
         |> g
             ([ c.opacity |> String.fromFloat |> opacity
              , Css.cursor Css.pointer |> List.singleton |> css
