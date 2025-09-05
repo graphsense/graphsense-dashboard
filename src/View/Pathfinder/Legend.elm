@@ -9,6 +9,7 @@ import Model exposing (Msg)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Html.Dialogs
+import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.Icons as Icons
 import Util.View exposing (pointer)
 import View.Locale as Locale
@@ -117,6 +118,18 @@ legendView plugins vc closeMsg =
                 { description = "Programmed address for automated transactions."
                 , icon = Icons.iconsSmartContractSnoPadding {}
                 , label = "Smart Contract"
+                }
+            , legendItem vc
+                IconItem
+                { description = "A direct transfer of an asset from one wallet to another."
+                , icon = Icons.iconsUntagged {}
+                , label = "Unlabeled Transaction"
+                }
+            , legendItem vc
+                IconItem
+                { description = "A simplified path that combines all of a swaps's underlying transfers."
+                , icon = GraphComponents.swapNode { root = { highlightInvisible = False } }
+                , label = "Swap/Bridge Transaction"
                 }
             ]
         }
