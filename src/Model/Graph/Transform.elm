@@ -1,4 +1,4 @@
-module Model.Graph.Transform exposing (Coords, Model, Transition(..), defaultDuration, equals, getBoundingBox, getCurrent, getZ)
+module Model.Graph.Transform exposing (Coords, Model, Transition(..), coordsToBBox, defaultDuration, equals, getBoundingBox, getCurrent, getZ)
 
 import Bounce exposing (Bounce)
 import Model.Graph.Coords exposing (BBox)
@@ -88,3 +88,16 @@ equals a b =
         == b.y
         && Bounded.value a.z
         == Bounded.value b.z
+
+
+coordsToBBox : { width : Float, height : Float } -> Coords -> BBox
+coordsToBBox { width, height } coords =
+    let
+        z =
+            Bounded.value coords.z
+    in
+    { x = coords.x - width / 2 * z
+    , y = coords.y - height / 2 * z
+    , width = max 0 <| width * z
+    , height = max 0 <| height * z
+    }

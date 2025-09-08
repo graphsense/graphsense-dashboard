@@ -4,7 +4,6 @@
   "learn more": "elm-review suppress --help",
   "suppressions": [
     { "count": 6, "filePath": "src/View/Graph/Table/AllAssetsTable.elm" },
-    { "count": 4, "filePath": "src/Update/Graph/Coords.elm" },
     { "count": 4, "filePath": "src/View/Graph/Browser.elm" },
     { "count": 4, "filePath": "src/View/Graph/Link.elm" },
     { "count": 2, "filePath": "src/Update/Graph/Browser.elm" },

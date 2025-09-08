@@ -30,7 +30,7 @@ import Log
 import Maybe.Extra
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords exposing (relativeToGraphZero)
+import Model.Graph.Coords exposing (BBox, relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale as Locale
@@ -2394,7 +2394,16 @@ browserGotAddressData uc plugins id position data model =
                 )
 
         transform =
-            Transform.move
+            (uc.size
+                |> Maybe.map
+                    (\{ width, height } ->
+                        { width = width
+                        , height = height
+                        }
+                    )
+                |> Maybe.map Transform.politeMove
+                |> Maybe.withDefault Transform.move
+            )
                 { x = newAddress.x * unit
                 , y = A.getTo newAddress.y * unit
                 , z = Transform.initZ
@@ -2566,29 +2575,20 @@ userClickedTx id model =
 
 fitGraph : Update.Config -> Model -> Model
 fitGraph uc model =
-    let
-        bbox =
-            Network.getBoundingBox model.network
-
-        bboxXUnit =
-            { x = bbox.x * unit - unit
-            , y = bbox.y * unit - unit
-            , width = bbox.width * unit + (2 * unit)
-            , height = bbox.height * unit + (2 * unit)
-            }
-    in
     { model
         | transform =
             uc.size
                 |> Maybe.map
-                    (\{ width, height, x } ->
-                        { width = width - (x * 4) -- not sure why I need this offset
+                    (\{ width, height } ->
+                        { width = width - searchBoxMinWidth / 2
                         , height = height
                         }
                     )
                 |> Maybe.map
-                    (bboxXUnit
-                        |> Transform.updateByBoundingBox model.transform
+                    (\viewport ->
+                        Network.getBoundingBox model.network
+                            |> addMarginPathfinder
+                            |> flip (Transform.updateByBoundingBox viewport) model.transform
                     )
                 |> Maybe.withDefault model.transform
     }
@@ -3590,7 +3590,7 @@ getAddressForDirection tx direction exceptAddress =
 
 
 addTx : Plugins -> Update.Config -> Id -> Direction -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
-addTx plugins _ anchorAddressId direction addressId tx model =
+addTx plugins uc anchorAddressId direction addressId tx model =
     if Dict.member (Tx.getTxId tx) model.network.txs then
         n model
 
@@ -3603,7 +3603,16 @@ addTx plugins _ anchorAddressId direction addressId tx model =
                 Network.addTxWithPosition model.config posNewTx tx model.network
 
             transform =
-                Transform.move
+                (uc.size
+                    |> Maybe.map
+                        (\{ width, height } ->
+                            { width = width
+                            , height = height
+                            }
+                        )
+                    |> Maybe.map Transform.politeMove
+                    |> Maybe.withDefault Transform.move
+                )
                     { x = newTx.x * unit
                     , y = A.getTo newTx.y * unit
                     , z = Transform.initZ
@@ -4078,3 +4087,12 @@ addOrRemoveTx plugins addressId txId model =
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ -> loadTx True (addressId /= Nothing) plugins txId model)
+
+
+addMarginPathfinder : BBox -> BBox
+addMarginPathfinder bbox =
+    { x = bbox.x * unit - unit
+    , y = bbox.y * unit - unit * 3
+    , width = bbox.width * unit + (2 * unit)
+    , height = bbox.height * unit + (8 * unit)
+    }

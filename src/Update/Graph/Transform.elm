@@ -1,4 +1,4 @@
-module Update.Graph.Transform exposing (delay, move, pop, transition, update, updateByBoundingBox, vector, wheel)
+module Update.Graph.Transform exposing (delay, move, politeMove, pop, transition, update, updateByBoundingBox, vector, wheel)
 
 import Basics.Extra exposing (flip)
 import Bounce
@@ -10,6 +10,7 @@ import Msg.Graph as Graph
 import Number.Bounded as Bounded
 import RecordSetter exposing (..)
 import Set exposing (Set)
+import Update.Graph.Coords exposing (mergeBoundingBoxes)
 
 
 update : Graph.Coords -> Graph.Coords -> Model comparable -> Model comparable
@@ -115,8 +116,8 @@ vector a b model =
     }
 
 
-updateByBoundingBox : Model comparable -> BBox -> { width : Float, height : Float } -> Model comparable
-updateByBoundingBox model bbox { width, height } =
+updateByBoundingBox : { width : Float, height : Float } -> BBox -> Model comparable -> Model comparable
+updateByBoundingBox viewport bbox model =
     let
         current =
             getCurrent model
@@ -126,8 +127,8 @@ updateByBoundingBox model bbox { width, height } =
             , y = bbox.y + bbox.height / 2
             , z =
                 max
-                    (bbox.width / width)
-                    (bbox.height / height)
+                    (bbox.width / viewport.width)
+                    (bbox.height / viewport.height)
                     |> max 1
                     |> flip Bounded.set current.z
             }
@@ -137,6 +138,24 @@ updateByBoundingBox model bbox { width, height } =
 
     else
         move coords model
+
+
+politeMove : { width : Float, height : Float } -> Coords -> Model comparable -> Model comparable
+politeMove viewport coords model =
+    case model.state of
+        Transitioning t ->
+            let
+                oldBBox =
+                    coordsToBBox viewport t.to
+
+                newBBox =
+                    coordsToBBox viewport coords
+                        |> mergeBoundingBoxes oldBBox
+            in
+            updateByBoundingBox viewport newBBox model
+
+        Settled t ->
+            initTransitioning True defaultDuration t coords
 
 
 move : Coords -> Model comparable -> Model comparable

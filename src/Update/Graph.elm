@@ -4096,8 +4096,8 @@ updateTransformByBoundingBox uc model bbox =
                         }
                     )
                 |> Maybe.map
-                    (Coords.addMargin bbox
-                        |> Transform.updateByBoundingBox model.transform
+                    (\viewport ->
+                        Transform.updateByBoundingBox viewport (Coords.addMargin bbox) model.transform
                     )
                 |> Maybe.withDefault model.transform
     }
@@ -4115,10 +4115,10 @@ extendTransformWithBoundingBox uc model bbox =
                         }
                     )
                 |> Maybe.map
-                    (\size ->
-                        Transform.getBoundingBox model.transform size
+                    (\viewport ->
+                        Transform.getBoundingBox model.transform viewport
                             |> Coords.mergeBoundingBoxes (Coords.addMargin bbox)
-                            |> flip (Transform.updateByBoundingBox model.transform) size
+                            |> flip (Transform.updateByBoundingBox viewport) model.transform
                     )
                 |> Maybe.withDefault model.transform
     }

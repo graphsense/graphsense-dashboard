@@ -1,6 +1,6 @@
 module Update.Graph.Coords exposing (addMargin, mergeBoundingBoxes)
 
-import Config.Graph exposing (addressHeight, entityMinHeight, entityOneAddressHeight, entityTotalWidth, entityWidth, expandHandleWidth)
+import Config.Graph exposing (entityOneAddressHeight, entityTotalWidth)
 import Model.Graph.Coords exposing (BBox)
 
 
