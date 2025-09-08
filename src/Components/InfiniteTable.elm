@@ -27,9 +27,9 @@ import Browser.Dom as Dom
 import Components.Table as Table exposing (Table)
 import Css
 import Dict exposing (Dict)
-import Html.Styled exposing (Attribute, Html, div)
-import Html.Styled.Attributes exposing (css, id, property)
-import Html.Styled.Events exposing (stopPropagationOn)
+import Html.Styled exposing (Attribute, Html, div, iframe)
+import Html.Styled.Attributes exposing (css, height, id, property)
+import Html.Styled.Events exposing (on, stopPropagationOn)
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
@@ -102,6 +102,7 @@ type Msg
     | GotRowElement (Result Dom.Error Dom.Element)
     | NoOp
     | ScrolledToTop T.State (Result Dom.Error ())
+    | ContainerLoaded
 
 
 type Direction
@@ -280,14 +281,7 @@ update config msg (Model model) =
 
                 ( nnewModel, eff ) =
                     if Bounce.steady bounce then
-                        scrollUpdate config
-                            pos
-                            { newModel
-                                | scrollTop = pos.scrollTop
-                                , contentHeight = pos.contentHeight
-                                , containerHeight = pos.containerHeight
-                                , hackyFlag = not model.hackyFlag
-                            }
+                        scrollUpdate config pos newModel
 
                     else
                         ( Model newModel, Nothing )
@@ -356,6 +350,18 @@ update config msg (Model model) =
                         ( nnnewModel, Cmd.none, eff )
                     )
 
+        ContainerLoaded ->
+            let
+                ( newModel, eff ) =
+                    scrollUpdate config
+                        { scrollTop = 0
+                        , containerHeight = model.containerHeight
+                        , contentHeight = model.contentHeight
+                        }
+                        model
+            in
+            ( newModel, Cmd.none, eff )
+
 
 n : ModelInternal d -> ( Model d, Cmd Msg, Maybe eff )
 n model =
@@ -415,11 +421,20 @@ shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
 
 scrollUpdate : Config eff -> ScrollPos -> ModelInternal d -> ( Model d, Maybe eff )
 scrollUpdate config pos model =
-    if shouldLoadMore config model pos then
+    let
+        newModel =
+            { model
+                | scrollTop = pos.scrollTop
+                , contentHeight = pos.contentHeight
+                , containerHeight = pos.containerHeight
+                , hackyFlag = not model.hackyFlag
+            }
+    in
+    if shouldLoadMore config newModel pos then
         loadMore config True model
 
     else
-        ( Model model, Nothing )
+        ( Model newModel, Nothing )
 
 
 decodeScrollPos : Json.Decode.Decoder ScrollPos
@@ -581,7 +596,14 @@ view config attributes (Model model) =
             :: attributes
             ++ [ infiniteScroll config.tag ]
         )
-        [ -- this is needed to force rerendering of the whole table
+        [ iframe
+            -- here to trigger a load event when the table is rendered the first time
+            [ Json.Decode.succeed (config.tag ContainerLoaded)
+                |> on "load"
+            , height 0
+            ]
+            []
+        , -- this is needed to force rerendering of the whole table
           -- otherwise a scroll event would be triggered by dom changes
           if model.hackyFlag then
             T.view c model.table.state data
