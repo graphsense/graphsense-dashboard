@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.09.1] - 2025-09-08
+
+### Fixed
+- show whole graph on loading from .gs file
+- show infinite table after closing/opening the table tab in the side panel
+
 ## [25.09.0] - 2025-09-05
 
 ### Added
