@@ -746,21 +746,27 @@ syncByAddress uc network clusters dateFilterPreset model address =
                         model.relatedAddressesVisibleTable
                             |> Maybe.map (\_ -> model.relatedAddressesVisibleTable)
                             |> Maybe.withDefault
-                                (Maybe.map2
-                                    (\cl pu ->
-                                        if cl.noAddresses > 1 then
-                                            MultiInputCluster
+                                (Maybe.andThen
+                                    (\pu ->
+                                        let
+                                            cl =
+                                                Maybe.andThen RemoteData.toMaybe cluster
+                                        in
+                                        if Data.isAccountLike data.currency then
+                                            Just Pubkey
 
-                                        else if Data.isAccountLike data.currency then
-                                            Pubkey
+                                        else if cl == Nothing then
+                                            Nothing
+
+                                        else if Maybe.map (.noAddresses >> (<) 1) cl == Just True then
+                                            Just MultiInputCluster
 
                                         else if pu > 0 then
-                                            Pubkey
+                                            Just Pubkey
 
                                         else
-                                            MultiInputCluster
+                                            Just MultiInputCluster
                                     )
-                                    (Maybe.andThen RemoteData.toMaybe cluster)
                                     (first relatedPubkey
                                         |> RemoteData.toMaybe
                                         |> Maybe.andThen (.table >> PagedTable.getNrItems)
