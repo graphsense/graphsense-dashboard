@@ -68,6 +68,7 @@ type alias ModelInternal d =
             }
     , bounce : Bounce
     , direction : Direction
+    , loaded : Bool
     }
 
 
@@ -125,6 +126,7 @@ init tableId pagesize table =
         , bounce = Bounce.init
         , hackyFlag = False
         , direction = Bottom
+        , loaded = False
         }
 
 
@@ -140,15 +142,17 @@ appendData config filt nextpage data (Model model) =
 
         newDict =
             data
+                |> List.filter filt.filter
                 |> List.indexedMap pair
                 |> List.map (mapFirst ((+) offset))
                 |> List.foldl (uncurry IntDict.insert) dict
     in
     { model
         | table =
-            Table.appendData filt data model.table
+            model.table
                 |> s_nextpage nextpage
                 |> s_loading False
+        , loaded = True
     }
         |> setIntDict nextpage newDict
         |> loadMore config False
@@ -160,6 +164,7 @@ setData config filt nextpage data (Model model) =
     let
         dict =
             data
+                |> List.filter filt.filter
                 |> List.indexedMap pair
                 |> IntDict.fromList
 
@@ -168,11 +173,12 @@ setData config filt nextpage data (Model model) =
     in
     { model
         | table =
-            Table.setData filt data model.table
+            model.table
                 |> s_nextpage nextpage
                 |> s_loading False
         , iterations = 1
         , data = Dict.insert col initData model.data
+        , loaded = True
     }
         |> setIntDict nextpage dict
         |> loadMore config False
@@ -220,45 +226,45 @@ getRowHeight ( Model model, maybeEff ) =
 
 
 loadMore : Config eff -> Bool -> ModelInternal d -> ( Model d, Maybe eff )
-loadMore config force pt =
+loadMore config force model =
     let
         len =
-            List.length pt.table.filtered
+            List.length model.table.filtered
 
         needsMore =
-            pt.iterations * pt.pagesize > len
+            model.iterations * model.pagesize > len
     in
-    if len > 0 && pt.table.nextpage == Nothing then
-        ( Model pt, Nothing )
+    if model.loaded && model.table.nextpage == Nothing then
+        ( Model model, Nothing )
 
     else if not force && not needsMore then
-        ( Model pt, Nothing )
+        ( Model model, Nothing )
 
     else
         ( Model
-            { pt
-                | table = s_loading True pt.table
-                , iterations = pt.iterations + 1
+            { model
+                | table = s_loading True model.table
+                , iterations = model.iterations + 1
             }
-        , config.fetch (Just (T.getSortState pt.table.state)) pt.pagesize pt.table.nextpage
+        , config.fetch (Just (T.getSortState model.table.state)) model.pagesize model.table.nextpage
             |> Just
         )
 
 
 setLoading : Bool -> Model d -> Model d
-setLoading l (Model pt) =
-    { pt | table = pt.table |> s_loading l } |> Model
+setLoading l (Model model) =
+    { model | table = model.table |> s_loading l } |> Model
 
 
 getTable : Model d -> Table d
-getTable (Model pt) =
-    pt.table
+getTable (Model model) =
+    model.table
 
 
 removeItem : (d -> Bool) -> Model d -> Model d
-removeItem predicate (Model pt) =
-    { pt
-        | table = Table.filterTable (predicate >> not) pt.table
+removeItem predicate (Model model) =
+    { model
+        | table = Table.filterTable (predicate >> not) model.table
     }
         |> Model
 
@@ -369,14 +375,14 @@ n model =
 
 
 updateTable : (Table d -> Table d) -> Model d -> Model d
-updateTable upd (Model pt) =
-    { pt | table = upd pt.table }
+updateTable upd (Model model) =
+    { model | table = upd model.table }
         |> Model
 
 
 getPageSize : Model d -> Int
-getPageSize (Model pt) =
-    pt.pagesize
+getPageSize (Model model) =
+    model.pagesize
 
 
 getPage : Model d -> List d
@@ -399,9 +405,9 @@ getNumVisibleItems model =
 
 
 loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
-loadFirstPage config (Model pt) =
-    ( Model pt |> setLoading True
-    , config.fetch (Just (T.getSortState pt.table.state)) pt.pagesize Nothing
+loadFirstPage config (Model model) =
+    ( Model model |> setLoading True
+    , config.fetch (Just (T.getSortState model.table.state)) model.pagesize Nothing
         |> Just
     )
 
