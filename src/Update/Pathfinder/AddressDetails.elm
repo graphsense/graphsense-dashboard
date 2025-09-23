@@ -173,12 +173,12 @@ update uc msg model =
                     (\( tbl, setter ) ->
                         let
                             ( pt, cmd, eff ) =
-                                InfiniteTable.setData
-                                    (neighborsTableConfig model.address.id dir)
-                                    NeighborsTable.filter
-                                    neighbors.nextPage
-                                    neighbors.neighbors
-                                    tbl
+                                InfiniteTable.reset tbl
+                                    |> InfiniteTable.appendData
+                                        (neighborsTableConfig model.address.id dir)
+                                        NeighborsTable.filter
+                                        neighbors.nextPage
+                                        neighbors.neighbors
                         in
                         ( setter pt model
                         , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
@@ -280,12 +280,12 @@ update uc msg model =
                         if Maybe.andThen .fromDate drp == min && Maybe.andThen .toDate drp == max then
                             let
                                 ( table, cmd, eff ) =
-                                    InfiniteTable.setData
-                                        (transactionTableConfig txsTable model.address.id)
-                                        TransactionTable.filter
-                                        txs.nextPage
-                                        txs.addressTxs
-                                        txsTable.table
+                                    InfiniteTable.reset txsTable.table
+                                        |> InfiniteTable.appendData
+                                            (transactionTableConfig txsTable model.address.id)
+                                            TransactionTable.filter
+                                            txs.nextPage
+                                            txs.addressTxs
                             in
                             ( table, eff )
                                 |> mapFirst (flip s_table txsTable)

@@ -14,7 +14,7 @@ module Components.InfiniteTable exposing
     , isLoading
     , loadFirstPage
     , removeItem
-    , setData
+    , reset
     , sortBy
     , update
     , updateTable
@@ -152,6 +152,7 @@ appendData config filt nextpage data (Model model) =
             model.table
                 |> s_nextpage nextpage
                 |> s_loading False
+        , iterations = model.iterations + 1
         , loaded = True
     }
         |> setIntDict nextpage newDict
@@ -159,30 +160,17 @@ appendData config filt nextpage data (Model model) =
         |> getRowHeight
 
 
-setData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, Maybe eff )
-setData config filt nextpage data (Model model) =
+reset : Model d -> Model d
+reset (Model model) =
     let
-        dict =
-            data
-                |> List.filter filt.filter
-                |> List.indexedMap pair
-                |> IntDict.fromList
-
         ( col, _ ) =
             T.getSortState model.table.state
     in
-    { model
-        | table =
-            model.table
-                |> s_nextpage nextpage
-                |> s_loading False
-        , iterations = 1
-        , data = Dict.insert col initData model.data
-        , loaded = True
-    }
-        |> setIntDict nextpage dict
-        |> loadMore config False
-        |> getRowHeight
+    Model
+        { model
+            | iterations = 1
+            , data = Dict.insert col initData model.data
+        }
 
 
 initData : { asc : ( IntDict d, Maybe String ), desc : ( IntDict d, Maybe String ) }
@@ -227,28 +215,34 @@ getRowHeight ( Model model, maybeEff ) =
 
 loadMore : Config eff -> Bool -> ModelInternal d -> ( Model d, Maybe eff )
 loadMore config force model =
-    let
-        len =
-            List.length model.table.filtered
-
-        needsMore =
-            model.iterations * model.pagesize > len
-    in
     if model.loaded && model.table.nextpage == Nothing then
         ( Model model, Nothing )
 
-    else if not force && not needsMore then
-        ( Model model, Nothing )
-
     else
-        ( Model
-            { model
-                | table = s_loading True model.table
-                , iterations = model.iterations + 1
-            }
-        , config.fetch (Just (T.getSortState model.table.state)) model.pagesize model.table.nextpage
-            |> Just
-        )
+        let
+            ( len, _ ) =
+                getIntDict model
+                    |> mapFirst IntDict.size
+
+            needsMore =
+                shouldLoadMore config
+                    model
+                    { scrollTop = model.scrollTop
+                    , containerHeight = model.containerHeight
+                    , contentHeight = model.rowHeight * toFloat len
+                    }
+        in
+        if not force && not needsMore then
+            ( Model model, Nothing )
+
+        else
+            ( Model
+                { model
+                    | table = s_loading True model.table
+                }
+            , config.fetch (Just (T.getSortState model.table.state)) model.pagesize model.table.nextpage
+                |> Just
+            )
 
 
 setLoading : Bool -> Model d -> Model d
