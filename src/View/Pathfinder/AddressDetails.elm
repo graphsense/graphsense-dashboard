@@ -351,16 +351,24 @@ relatedAddressesDataTab vc model _ viewState cluster =
             noMultiInputAddresses == 0 && not pubkeyHasData
 
         noRelatedAddresses =
-            case viewState.relatedAddressesVisibleTable of
-                AddressDetails.MultiInputCluster ->
-                    noMultiInputAddresses
+            viewState.relatedAddressesVisibleTable
+                |> Maybe.map
+                    (\vt ->
+                        case vt of
+                            AddressDetails.MultiInputCluster ->
+                                noMultiInputAddresses
 
-                AddressDetails.Pubkey ->
-                    viewState.relatedAddressesPubkey
-                        |> RemoteData.map (RelatedAddressesPubkeyTable.getTable >> PagedTable.getNrItems)
-                        |> RemoteData.toMaybe
-                        |> Maybe.andThen identity
-                        |> Maybe.withDefault 0
+                            AddressDetails.Pubkey ->
+                                viewState.relatedAddressesPubkey
+                                    |> RemoteData.map (RelatedAddressesPubkeyTable.getTable >> PagedTable.getNrItems)
+                                    |> RemoteData.toMaybe
+                                    |> Maybe.andThen identity
+                                    |> Maybe.withDefault 0
+                    )
+
+        relatedAddressesVisibleTable =
+            Maybe.withDefault AddressDetails.MultiInputCluster
+                viewState.relatedAddressesVisibleTable
     in
     dataTab
         { title =
@@ -370,7 +378,9 @@ relatedAddressesDataTab vc model _ viewState cluster =
                 )
                 { root =
                     { label = label
-                    , number = String.fromInt noRelatedAddresses
+                    , number =
+                        Maybe.map (Locale.int vc.locale) noRelatedAddresses
+                            |> Maybe.withDefault ""
                     }
                 }
         , disabled = disabled
@@ -385,7 +395,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                             ttConfig =
                                 { domId = "related_addresses_select_help"
                                 , text =
-                                    case viewState.relatedAddressesVisibleTable of
+                                    case relatedAddressesVisibleTable of
                                         AddressDetails.MultiInputCluster ->
                                             "Multi Input Cluster Help"
                                                 |> Locale.string vc.locale
@@ -409,7 +419,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 -- This makes the select box container take all available space
                                 [ ThemedSelectBox.view (relatedAddressesSelectBoxConfig vc viewState.address.id)
                                     viewState.relatedAddressesVisibleTableSelectBox
-                                    viewState.relatedAddressesVisibleTable
+                                    relatedAddressesVisibleTable
                                     |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
                                 ]
                             , span
@@ -425,7 +435,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                     {}
                                 ]
                             ]
-                        , case viewState.relatedAddressesVisibleTable of
+                        , case relatedAddressesVisibleTable of
                             AddressDetails.MultiInputCluster ->
                                 case viewState.relatedAddresses of
                                     RemoteData.Failure _ ->

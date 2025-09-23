@@ -608,10 +608,6 @@ updateByMsg plugins uc msg model =
                 { model
                     | clusters = Dict.insert clusterId (Success data) model.clusters
                 }
-                |> and
-                    (AddressDetails.browserGotClusterData addressId data
-                        |> updateAddressDetails addressId
-                    )
 
         SearchMsg m ->
             case m of

@@ -7,8 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - loading token transactions from relation table
-- show cluster size number in data tab
 - show same value in neighbors table as on relation edge label 
+- loading infinite table with only one item which is filtered
+
+### Changed
+- show cluster size number in data tab
+- improve preselecting the related addresses table type
 
 
 ## [25.09.1] - 2025-09-08

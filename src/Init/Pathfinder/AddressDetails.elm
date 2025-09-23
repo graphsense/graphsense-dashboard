@@ -6,9 +6,8 @@ import Model.Locale as Locale
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Id as Id
-import Msg.Pathfinder.AddressDetails exposing (RelatedAddressTypes(..), relatedAddressTypeOptions)
+import Msg.Pathfinder.AddressDetails exposing (relatedAddressTypeOptions)
 import RemoteData
-import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
@@ -35,12 +34,7 @@ init address =
     , relatedAddressesPubkey = RemoteData.NotAsked
     , relatedAddresses = RemoteData.NotAsked
     , relatedAddressesVisibleTableSelectBox = ThemedSelectBox.init relatedAddressTypeOptions
-    , relatedAddressesVisibleTable =
-        if Data.isAccountLike (address.id |> Id.network) then
-            Pubkey
-
-        else
-            MultiInputCluster
+    , relatedAddressesVisibleTable = Nothing
     , relatedAddressesTableOpen = False
     , totalReceivedDetailsOpen = False
     , balanceDetailsOpen = False
