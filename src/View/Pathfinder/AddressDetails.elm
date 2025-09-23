@@ -3,6 +3,7 @@ module View.Pathfinder.AddressDetails exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as Inf
+import Components.PagedTable as PagedTable
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -43,7 +44,7 @@ import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util exposing (allAndNotEmpty)
 import Util.Css exposing (spread)
-import Util.Data as Data
+import Util.Data as Data exposing (isAccountLike)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
@@ -315,10 +316,16 @@ getRelatedAddressTypeLabel vc relatedAddressType =
             Locale.string vc.locale "Related by Multi-Input Heuristic"
 
 
-relatedAddressesSelectBoxConfig : View.Config -> ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
-relatedAddressesSelectBoxConfig vc =
+relatedAddressesSelectBoxConfig : View.Config -> Id -> ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
+relatedAddressesSelectBoxConfig vc id =
     { optionToLabel = getRelatedAddressTypeLabel vc
     , width = Nothing
+    , filter =
+        if isAccountLike (Id.network id) then
+            (==) AddressDetails.Pubkey
+
+        else
+            always True
     }
 
 
@@ -330,7 +337,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                 "Cluster addresses"
                 |> Locale.titleCase vc.locale
 
-        noRelatedAddresses =
+        noMultiInputAddresses =
             cluster
                 |> RemoteData.map (.noAddresses >> flip (-) 1)
                 |> RemoteData.withDefault 0
@@ -341,16 +348,29 @@ relatedAddressesDataTab vc model _ viewState cluster =
                 |> RemoteData.withDefault False
 
         disabled =
-            noRelatedAddresses == 0 && not pubkeyHasData
+            noMultiInputAddresses == 0 && not pubkeyHasData
+
+        noRelatedAddresses =
+            case viewState.relatedAddressesVisibleTable of
+                AddressDetails.MultiInputCluster ->
+                    noMultiInputAddresses
+
+                AddressDetails.Pubkey ->
+                    viewState.relatedAddressesPubkey
+                        |> RemoteData.map (RelatedAddressesPubkeyTable.getTable >> PagedTable.getNrItems)
+                        |> RemoteData.toMaybe
+                        |> Maybe.andThen identity
+                        |> Maybe.withDefault 0
     in
     dataTab
         { title =
-            SidePanelComponents.sidePanelListHeaderTitleWithAttributes
-                (SidePanelComponents.sidePanelListHeaderTitleAttributes
+            SidePanelComponents.sidePanelListHeaderTitleWithNumberWithAttributes
+                (SidePanelComponents.sidePanelListHeaderTitleWithNumberAttributes
                     |> Rs.s_root [ spread ]
                 )
                 { root =
                     { label = label
+                    , number = String.fromInt noRelatedAddresses
                     }
                 }
         , disabled = disabled
@@ -367,10 +387,12 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 , text =
                                     case viewState.relatedAddressesVisibleTable of
                                         AddressDetails.MultiInputCluster ->
-                                            "Group addresses by Transaction: Addresses were used together (likely same owner)."
+                                            "Multi Input Cluster Help"
+                                                |> Locale.string vc.locale
 
                                         AddressDetails.Pubkey ->
-                                            "Group addresses by Public Key: Addresses from the same key (same owner)."
+                                            "Pubkey Cluster Help"
+                                                |> Locale.string vc.locale
                                 }
                           in
                           div
@@ -382,27 +404,14 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 , Css.justifyContent Css.spaceBetween -- This pushes items to opposite ends
                                 ]
                             ]
-                            [ if not (Data.isAccountLike (Id.network viewState.address.id)) then
-                                -- Only show select box if we have clusters or pubkey relations
-                                div
-                                    [ css [ Css.flexGrow (Css.int 1) ] ]
-                                    -- This makes the select box container take all available space
-                                    [ ThemedSelectBox.view (relatedAddressesSelectBoxConfig vc)
-                                        viewState.relatedAddressesVisibleTableSelectBox
-                                        viewState.relatedAddressesVisibleTable
-                                        |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
-                                    ]
-
-                              else
-                                div [ css [ Css.flexGrow (Css.int 1) ] ]
-                                    [ -- currently the themed selectbox does not support disabled state
-                                      ThemedSelectBox.viewDisabled (relatedAddressesSelectBoxConfig vc)
-                                        viewState.relatedAddressesVisibleTableSelectBox
-                                        viewState.relatedAddressesVisibleTable
-                                        |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
-                                    ]
-
-                            -- Empty div to take space when no select box
+                            [ div
+                                [ css [ Css.flexGrow (Css.int 1) ] ]
+                                -- This makes the select box container take all available space
+                                [ ThemedSelectBox.view (relatedAddressesSelectBoxConfig vc viewState.address.id)
+                                    viewState.relatedAddressesVisibleTableSelectBox
+                                    viewState.relatedAddressesVisibleTable
+                                    |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
+                                ]
                             , span
                                 [ onMouseEnter (ShowRelatedAddressesTooltip ttConfig |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
                                 , onMouseLeave (HideRelatedAddressesTooltip ttConfig |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)

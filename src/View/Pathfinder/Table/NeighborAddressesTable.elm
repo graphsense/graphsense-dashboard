@@ -8,6 +8,7 @@ import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.Table exposing (Styles)
 import Css.View
+import Dict
 import Html.Styled as Html
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.AggEdge as AggEdge
@@ -21,13 +22,14 @@ import RecordSetter as Rs
 import Table
 import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Tuple exposing (mapFirst)
 import Util.Tag as Tag
 import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifier)
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.PagedTable exposing (customizations)
-import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, applyHeaderCustomizations, checkboxColumn, initCustomHeaders, valueColumnWithOptions)
+import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, applyHeaderCustomizations, assetsColumnWithOptions, checkboxColumn, initCustomHeaders)
 
 
 type alias NeighborAddressesTableConfig =
@@ -144,16 +146,22 @@ config styles vc conf =
                     HasExchangeTagOnly ->
                         []
             )
-        , valueColumnWithOptions
+        , assetsColumnWithOptions
             { sortable = False
-            , hideCode = True
+            , hideCode = False
             , colorFlowDirection = False
             , isOutgoingFn = \_ -> False
             }
             vc
-            (.address >> .currency >> Currency.assetFromBase)
             (Locale.string vc.locale cellLabel)
-            .value
+            (\data ->
+                ( data.address |> .currency |> Currency.assetFromBase, data.value )
+                    :: (data.tokenValues
+                            |> Maybe.map Dict.toList
+                            |> Maybe.withDefault []
+                            |> List.map (mapFirst (Currency.asset data.address.currency))
+                       )
+            )
         ]
     , customizations =
         initCustomHeaders

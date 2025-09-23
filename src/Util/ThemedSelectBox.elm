@@ -100,12 +100,13 @@ update msg model =
 
 defaultConfig : (a -> String) -> Config a b
 defaultConfig optionToLabel =
-    { optionToLabel = optionToLabel, width = Nothing }
+    { optionToLabel = optionToLabel, width = Nothing, filter = always True }
 
 
 type alias Config a b =
     { optionToLabel : a -> String
     , width : Maybe (Css.ExplicitLength b)
+    , filter : a -> Bool
     }
 
 
@@ -200,6 +201,7 @@ view config (SelectBox sBox) selected =
 
             dropDownList =
                 sBox.options
+                    |> List.filter config.filter
                     |> List.map (createRow selectedItem True)
         in
         Sc.dropDownOpenWithAttributes
