@@ -4048,6 +4048,9 @@ upsertTagSummary id newTagSummary dict =
                         ( NoTags, new ) ->
                             new
 
+                        ( HasExchangeTagOnly, new ) ->
+                            new
+
                         ( _, _ ) ->
                             curr
                 )
