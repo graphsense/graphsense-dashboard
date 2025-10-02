@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.09.3] - 2025-10-??
+
+### Fixed
+- path endpoint was casing sensitive
+- better handling for eth addresses with and without 0x prefix
+- tag loading issue (new tagsummary data did not overwrite old tags.)
+
 ## [25.09.2] - 2025-09-23
 
 ### Fixed

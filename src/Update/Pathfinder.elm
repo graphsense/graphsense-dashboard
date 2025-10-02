@@ -2348,8 +2348,11 @@ handleWorkflowNextTxByTime plugins uc config neighborId wf model =
 
 
 browserGotAddressData : Update.Config -> Plugins -> Id -> FindPosition -> Api.Data.Address -> Model -> ( Model, List Effect )
-browserGotAddressData uc plugins id position data model =
+browserGotAddressData uc plugins providedId position data model =
     let
+        id =
+            providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
+
         ( newAddress, net ) =
             Network.addAddressWithPosition plugins model.config position id model.network
                 |> mapSecond (Network.updateAddress id (s_data (Success data)))
@@ -2817,7 +2820,7 @@ addPathToGraph plugins uc model net config list =
         getAddress adr =
             case adr of
                 Route.AddressHop _ a ->
-                    Just a
+                    Just (Data.normalizeIdentifier net a)
 
                 _ ->
                     Nothing
@@ -2825,7 +2828,7 @@ addPathToGraph plugins uc model net config list =
         pathTypeToAddressId pt =
             case pt of
                 AddressHop _ x ->
-                    Just (Id.init net x)
+                    Just (Id.init net (Data.normalizeIdentifier net x))
 
                 _ ->
                     Nothing
@@ -2833,7 +2836,7 @@ addPathToGraph plugins uc model net config list =
         pathTypeToSelection pt =
             case pt of
                 AddressHop _ x ->
-                    MSelectedAddress (Id.init net x)
+                    MSelectedAddress (Id.init net (Data.normalizeIdentifier net x))
 
                 TxHop txh ->
                     MSelectedTx (Id.init net txh)
@@ -2917,7 +2920,7 @@ addPathToGraph plugins uc model net config list =
                 action =
                     case a of
                         Route.AddressHop _ adr ->
-                            loadAddressWithPosition plugins True (Fixed x_ y_) ( net, adr )
+                            loadAddressWithPosition plugins True (Fixed x_ y_) ( net, Data.normalizeIdentifier net adr )
 
                         Route.TxHop h ->
                             loadTxWithPosition (Fixed x_ y_) True False plugins ( net, h )
@@ -2926,14 +2929,14 @@ addPathToGraph plugins uc model net config list =
                     case a of
                         Route.AddressHop VictimAddress adr ->
                             Annotations.set
-                                ( net, adr )
+                                ( net, Data.normalizeIdentifier net adr )
                                 (Locale.string uc.locale "victim")
                                 (Just annotationGreen)
                                 m.annotations
 
                         Route.AddressHop PerpetratorAddress adr ->
                             Annotations.set
-                                ( net, adr )
+                                ( net, Data.normalizeIdentifier net adr )
                                 (Locale.string uc.locale "perpetrator")
                                 (Just annotationRed)
                                 m.annotations

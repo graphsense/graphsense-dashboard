@@ -82,11 +82,20 @@ valuesZero =
     { value = 0, fiatValues = supportedFiatCurrencies |> List.map (\c -> { code = c, value = 0.0 }) }
 
 
+ensure0x : String -> String
+ensure0x s =
+    if String.startsWith "0x" s then
+        s
+
+    else
+        "0x" ++ s
+
+
 normalizeIdentifier : String -> String -> String
 normalizeIdentifier net address =
     String.trim address
-        |> (if isAccountLike net then
-                String.toLower
+        |> (if net == "eth" then
+                String.toLower >> ensure0x
 
             else
                 identity
