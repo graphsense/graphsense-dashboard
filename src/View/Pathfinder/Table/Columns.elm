@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, checkboxColumn, debitCreditColumn, initCustomHeaders, selectionIndicatorColumn, setHeaderCheckbox, setHeaderHtml, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, assetsCell, assetsColumnWithOptions, checkboxColumn, debitCreditColumn, initCustomHeaders, selectionIndicatorColumn, setHeaderCheckbox, setHeaderHtml, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -341,6 +341,20 @@ valueColumnWithOptions { sortable, hideCode, colorFlowDirection, isOutgoingFn } 
 
 valuesCell : View.Config -> Bool -> Bool -> Bool -> AssetIdentifier -> Api.Data.Values -> Table.HtmlDetails msg
 valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
+    assetsCell vc hideCode colorFlowDirection isOutgoing [ ( coinCode, values ) ]
+
+
+assetsColumnWithOptions : ValueColumnOptions data -> View.Config -> String -> (data -> List ( AssetIdentifier, Api.Data.Values )) -> Table.Column data msg
+assetsColumnWithOptions { hideCode, colorFlowDirection, isOutgoingFn } vc name getAssets =
+    Table.veryCustomColumn
+        { name = name
+        , viewData = \data -> getAssets data |> assetsCell vc hideCode colorFlowDirection (isOutgoingFn data)
+        , sorter = Table.unsortable
+        }
+
+
+assetsCell : View.Config -> Bool -> Bool -> Bool -> List ( AssetIdentifier, Api.Data.Values ) -> Table.HtmlDetails msg
+assetsCell vc hideCode colorFlowDirection isOutgoing assets =
     let
         value =
             (if hideCode then
@@ -351,7 +365,7 @@ valuesCell vc hideCode colorFlowDirection isOutgoing coinCode values =
             )
                 (View.toCurrency vc)
                 vc.locale
-                [ ( coinCode, values ) ]
+                assets
 
         addCss =
             if colorFlowDirection then

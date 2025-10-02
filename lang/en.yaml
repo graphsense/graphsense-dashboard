@@ -23,3 +23,5 @@ this table is empty: No entries found.
 Tag Import: Tag Import
 "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder."
 "Add_Tag_description": "Help improve our data by reporting an entity linked to this address - it will be reviewed and eventually published." 
+"Multi Input Cluster Help": "Addresses have been used in the same transaction (ie. likely by same owner)."
+"Pubkey Cluster Help": "Addresses have been created from the same key (ie. by same owner)."

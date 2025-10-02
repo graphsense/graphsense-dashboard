@@ -19,8 +19,8 @@ type RelatedAddressTypes
 
 relatedAddressTypeOptions : List RelatedAddressTypes
 relatedAddressTypeOptions =
-    [ Pubkey
-    , MultiInputCluster
+    [ MultiInputCluster
+    , Pubkey
     ]
 
 

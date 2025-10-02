@@ -608,10 +608,6 @@ updateByMsg plugins uc msg model =
                 { model
                     | clusters = Dict.insert clusterId (Success data) model.clusters
                 }
-                |> and
-                    (AddressDetails.browserGotClusterData addressId data
-                        |> updateAddressDetails addressId
-                    )
 
         SearchMsg m ->
             case m of
@@ -693,12 +689,8 @@ updateByMsg plugins uc msg model =
                     ( Time.millisToPosix (min (Tuple.first ar1) (Tuple.first ar2)), Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2)) )
             in
             (case submsg of
-                RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkLinkUtxo tx) ->
-                    addOrRemoveTx plugins Nothing (Id.init tx.currency tx.txHash) model
-                        |> and (setTracingMode TransactionTracingMode)
-
-                RelationDetails.UserClickedTxCheckboxInTable (Api.Data.LinkTxAccount tx) ->
-                    addOrRemoveTx plugins Nothing (Id.init tx.currency tx.identifier) model
+                RelationDetails.UserClickedTxCheckboxInTable tx ->
+                    addOrRemoveTx plugins Nothing (Tx.getTxIdForRelationTx tx) model
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTx txId ->
@@ -2074,27 +2066,31 @@ checkAllTxs plugins uc addressId txIds model =
             txIds
                 |> List.all (flip Dict.member model.network.txs)
 
-        deleteAcc txId =
+        addOrRemoveAcc txId =
             and (addOrRemoveTx plugins addressId txId)
 
-        addAcc txId ( m, eff ) =
-            loadTx True True plugins txId m |> Tuple.mapSecond ((++) eff)
+        notify message =
+            String.fromInt
+                >> List.singleton
+                >> Locale.interpolated uc.locale message
+                >> Notification.infoDefault
+                >> Notification.map (s_isEphemeral True)
+                >> Notification.map (s_showClose False)
+                >> ShowNotificationEffect
+                >> List.singleton
     in
     if allChecked then
-        let
-            toRemove =
-                txIds
-                    |> List.filter (flip Dict.member model.network.txs)
-        in
-        toRemove
-            |> List.foldl deleteAcc
-                ( model
-                , Notification.infoDefault (Locale.interpolated uc.locale "Removed {0} transactions" [ toRemove |> List.length |> String.fromInt ])
-                    |> Notification.map (s_isEphemeral True)
-                    |> Notification.map (s_showClose False)
-                    |> ShowNotificationEffect
-                    |> List.singleton
-                )
+        txIds
+            |> List.foldl addOrRemoveAcc ( model, [] )
+            |> (\( newModel, eff ) ->
+                    ( newModel
+                    , txIds
+                        |> List.filter (flip Dict.member newModel.network.txs >> not)
+                        |> List.length
+                        |> notify "Removed {0} transactions"
+                        |> (++) eff
+                    )
+               )
 
     else
         let
@@ -2103,13 +2099,10 @@ checkAllTxs plugins uc addressId txIds model =
                     |> List.filter (flip Dict.member model.network.txs >> not)
         in
         toAdd
-            |> List.foldl addAcc
+            |> List.foldl addOrRemoveAcc
                 ( model
-                , Notification.infoDefault (Locale.interpolated uc.locale "Added {0} transactions" [ toAdd |> List.length |> String.fromInt ])
-                    |> Notification.map (s_isEphemeral True)
-                    |> Notification.map (s_showClose False)
-                    |> ShowNotificationEffect
-                    |> List.singleton
+                , List.length toAdd
+                    |> notify "Added {0} transactions"
                 )
 
 

@@ -210,10 +210,14 @@ update plugins uc msg model =
                     )
 
                 closing =
-                    model.tooltip |> Maybe.map .closing |> Maybe.withDefault False
+                    model.tooltip
+                        |> Maybe.map .closing
+                        |> Maybe.withDefault False
 
                 open =
-                    model.tooltip |> Maybe.map .open |> Maybe.withDefault False
+                    model.tooltip
+                        |> Maybe.map .open
+                        |> Maybe.withDefault False
             in
             if not hasToChange && not closing && not open then
                 ( { model | tooltip = newTooltip |> Maybe.map (s_open True) }
@@ -1988,7 +1992,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         )
 
                     PluginInterface.OpenTooltip s msgs ->
-                        update plugins uc (OpenTooltip s (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg))) mo |> Tuple.mapSecond ((++) eff)
+                        update plugins uc (OpeningTooltip s False (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg))) mo |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.CloseTooltip s withDelay ->
                         update plugins uc (ClosingTooltip (Just s) withDelay) mo

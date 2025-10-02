@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (browserGotClusterData, loadFirstPage, syncByAddress, update)
+module Update.Pathfinder.AddressDetails exposing (loadFirstPage, syncByAddress, update)
 
 import Api.Data
 import Api.Request.Addresses
@@ -37,6 +37,7 @@ import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (and, n)
+import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
@@ -172,12 +173,12 @@ update uc msg model =
                     (\( tbl, setter ) ->
                         let
                             ( pt, cmd, eff ) =
-                                InfiniteTable.setData
-                                    (neighborsTableConfig model.address.id dir)
-                                    NeighborsTable.filter
-                                    neighbors.nextPage
-                                    neighbors.neighbors
-                                    tbl
+                                InfiniteTable.reset tbl
+                                    |> InfiniteTable.appendData
+                                        (neighborsTableConfig model.address.id dir)
+                                        NeighborsTable.filter
+                                        neighbors.nextPage
+                                        neighbors.neighbors
                         in
                         ( setter pt model
                         , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
@@ -279,12 +280,12 @@ update uc msg model =
                         if Maybe.andThen .fromDate drp == min && Maybe.andThen .toDate drp == max then
                             let
                                 ( table, cmd, eff ) =
-                                    InfiniteTable.setData
-                                        (transactionTableConfig txsTable model.address.id)
-                                        TransactionTable.filter
-                                        txs.nextPage
-                                        txs.addressTxs
-                                        txsTable.table
+                                    InfiniteTable.reset txsTable.table
+                                        |> InfiniteTable.appendData
+                                            (transactionTableConfig txsTable model.address.id)
+                                            TransactionTable.filter
+                                            txs.nextPage
+                                            txs.addressTxs
                             in
                             ( table, eff )
                                 |> mapFirst (flip s_table txsTable)
@@ -538,7 +539,7 @@ update uc msg model =
                     , relatedAddressesVisibleTable =
                         case outMsg of
                             ThemedSelectBox.Selected table ->
-                                table
+                                Just table
 
                             _ ->
                                 model.relatedAddressesVisibleTable
@@ -688,29 +689,6 @@ updateDirectionFilter model dir =
         |> RemoteData.withDefault (n model)
 
 
-
--- |> s_isTxFilterViewOpen False
-
-
-browserGotClusterData : Id -> Api.Data.Entity -> Model -> ( Model, List Effect )
-browserGotClusterData addressId entity model =
-    let
-        relatedAddresses =
-            RelatedAddressesTable.init addressId entity
-    in
-    ( { model
-        | relatedAddresses = RemoteData.Success relatedAddresses
-        , relatedAddressesVisibleTable =
-            if entity.noAddresses > 1 then
-                MultiInputCluster
-
-            else
-                Pubkey
-      }
-    , []
-    )
-
-
 getNeighborsTableAndSetter : Model -> Direction -> Maybe ( InfiniteTable.Model Api.Data.NeighborAddress, InfiniteTable.Model Api.Data.NeighborAddress -> Model -> Model )
 getNeighborsTableAndSetter model dir =
     case dir of
@@ -742,12 +720,15 @@ syncByAddress uc network clusters dateFilterPreset model address =
                                     |> RemoteData.Success
                                 )
 
+                    cluster =
+                        Id.initClusterId data.currency data.entity
+                            |> flip Dict.get clusters
+
                     related =
                         model.relatedAddresses
                             |> RemoteData.map (\_ -> model.relatedAddresses)
                             |> RemoteData.withDefault
-                                (Id.initClusterId data.currency data.entity
-                                    |> flip Dict.get clusters
+                                (cluster
                                     |> Maybe.map (RemoteData.map (RelatedAddressesTable.init address.id))
                                     |> Maybe.withDefault RemoteData.NotAsked
                                 )
@@ -756,13 +737,40 @@ syncByAddress uc network clusters dateFilterPreset model address =
                         model.relatedAddressesPubkey
                             |> RemoteData.map (\_ -> ( model.relatedAddressesPubkey, [] ))
                             |> RemoteData.withDefault
-                                (let
-                                    newTable =
-                                        RelatedAddressesPubkeyTable.init address.id
-                                 in
-                                 ( RemoteData.Success newTable
-                                 , [ RelatedAddressesPubkeyTable.loadFirstPage address.id ]
-                                 )
+                                ( RelatedAddressesPubkeyTable.init address.id
+                                    |> RemoteData.Success
+                                , [ RelatedAddressesPubkeyTable.loadFirstPage address.id ]
+                                )
+
+                    relatedAddressesVisibleTable =
+                        model.relatedAddressesVisibleTable
+                            |> Maybe.map (\_ -> model.relatedAddressesVisibleTable)
+                            |> Maybe.withDefault
+                                (Maybe.andThen
+                                    (\pu ->
+                                        let
+                                            cl =
+                                                Maybe.andThen RemoteData.toMaybe cluster
+                                        in
+                                        if Data.isAccountLike data.currency then
+                                            Just Pubkey
+
+                                        else if cl == Nothing then
+                                            Nothing
+
+                                        else if Maybe.map (.noAddresses >> (<) 1) cl == Just True then
+                                            Just MultiInputCluster
+
+                                        else if pu > 0 then
+                                            Just Pubkey
+
+                                        else
+                                            Just MultiInputCluster
+                                    )
+                                    (first relatedPubkey
+                                        |> RemoteData.toMaybe
+                                        |> Maybe.andThen (.table >> PagedTable.getNrItems)
+                                    )
                                 )
 
                     neighborsOutgoing =
@@ -783,6 +791,7 @@ syncByAddress uc network clusters dateFilterPreset model address =
                             , neighborsIncoming = neighborsIncoming
                             , relatedAddresses = related
                             , relatedAddressesPubkey = first relatedPubkey
+                            , relatedAddressesVisibleTable = relatedAddressesVisibleTable
                         }
                 in
                 ( newModel

@@ -194,7 +194,8 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 ( table, cmd, eff ) =
                     tbl
                         |> .table
-                        |> InfiniteTable.setData
+                        |> InfiniteTable.reset
+                        |> InfiniteTable.appendData
                             (tableConfig id isA2b tbl)
                             RelationTxsTable.filter
                             data.nextPage

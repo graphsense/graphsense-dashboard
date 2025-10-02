@@ -22,7 +22,7 @@ type alias Model =
     , relatedAddresses : WebData RelatedAddressesTable.Model
     , relatedAddressesPubkey : WebData RelatedAddressesPubkeyTable.Model
     , relatedAddressesVisibleTableSelectBox : ThemedSelectBox.Model RelatedAddressTypes
-    , relatedAddressesVisibleTable : RelatedAddressTypes
+    , relatedAddressesVisibleTable : Maybe RelatedAddressTypes
     , relatedAddressesTableOpen : Bool
     , totalReceivedDetailsOpen : Bool
     , balanceDetailsOpen : Bool

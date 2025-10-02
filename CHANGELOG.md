@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.09.2] - 2025-09-23
+
+### Fixed
+- loading token transactions from relation table
+- show same value in neighbors table as on relation edge label 
+- loading infinite table with only one item which is filtered
+- showing tooltips from plugins
+
+### Changed
+- show cluster size number in data tab
+- improve preselecting the related addresses table type
+
+
+## [25.09.1] - 2025-09-08
+
+### Fixed
+- show whole graph on loading from .gs file
+- show infinite table after closing/opening the table tab in the side panel
+
 ## [25.09.0] - 2025-09-05
 
 ### Added

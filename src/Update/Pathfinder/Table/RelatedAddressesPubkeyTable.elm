@@ -46,12 +46,17 @@ loadData id pagesize nextpage =
 
 appendAddresses : Maybe String -> List Api.Data.RelatedAddress -> Model -> ( Model, List Effect )
 appendAddresses nextpage addresses ra =
+    let
+        noAddresses =
+            List.length addresses
+    in
     PagedTable.appendData
         (tableConfig ra)
         (filter ra)
         nextpage
         addresses
         ra.table
+        |> mapFirst (PagedTable.setNrItems (Maybe.map ((+) noAddresses) (PagedTable.getNrItems ra.table) |> Maybe.withDefault noAddresses))
         |> mapFirst (setTable ra)
         |> mapSecond Maybe.Extra.toList
 
