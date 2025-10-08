@@ -37,13 +37,13 @@ getStatistics =
 
 
 
-search : (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.SearchResult
-search q_query currency_query limit_query =
+search : (String) -> Maybe (String) -> Maybe (Int) -> Maybe (Bool) -> Api.Request Api.Data.SearchResult
+search q_query currency_query limit_query includeSubTxIdentifiers_query =
     Api.request
         "GET"
         "/search"
         []
-        [ ( "currency", Maybe.map (identity) currency_query ), ( "q", Just <| (identity) q_query ), ( "limit", Maybe.map (String.fromInt) limit_query ) ]
+        [ ( "currency", Maybe.map (identity) currency_query ), ( "q", Just <| (identity) q_query ), ( "limit", Maybe.map (String.fromInt) limit_query ), ( "include_sub_tx_identifiers", Maybe.map ((\val -> if val then "true" else "false")) includeSubTxIdentifiers_query ) ]
         []
         Nothing
         Api.Data.searchResultDecoder
