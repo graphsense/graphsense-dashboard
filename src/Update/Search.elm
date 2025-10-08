@@ -302,6 +302,7 @@ maybeTriggerSearch model =
             { query = query
             , currency = Nothing
             , limit = Just limit
+            , includeSubTxIdentifiers = Nothing
             , toMsg = BrowserGotSearchResult query
             }
             |> List.singleton
@@ -319,6 +320,7 @@ triggerSearch query model =
         { query = query
         , currency = Nothing
         , limit = Just limit
+        , includeSubTxIdentifiers = Nothing
         , toMsg = BrowserGotSearchResult query
         }
         |> List.singleton

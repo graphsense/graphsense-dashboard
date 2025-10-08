@@ -9,6 +9,7 @@ type Effect
         { query : String
         , currency : Maybe String
         , limit : Maybe Int
+        , includeSubTxIdentifiers : Maybe Bool
         , toMsg : Api.Data.SearchResult -> Msg
         }
     | CancelEffect

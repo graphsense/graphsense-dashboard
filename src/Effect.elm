@@ -190,11 +190,12 @@ perform plugins key statusbarToken apiKey effect =
 handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg
 handleSearchEffect apiKey plugins tag effect =
     case effect of
-        Search.SearchEffect { query, currency, limit, toMsg } ->
+        Search.SearchEffect { query, currency, limit, includeSubTxIdentifiers, toMsg } ->
             (Effect.Api.SearchEffect
                 { query = query
                 , currency = currency
                 , limit = limit
+                , includeSubTxIdentifiers = includeSubTxIdentifiers
                 }
                 (toMsg >> tag)
                 |> Effect.Api.perform apiKey (BrowserGotResponseWithHeaders Nothing)

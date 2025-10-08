@@ -30,6 +30,7 @@ type Effect msg
         { query : String
         , currency : Maybe String
         , limit : Maybe Int
+        , includeSubTxIdentifiers : Maybe Bool
         }
         (Api.Data.SearchResult -> msg)
     | GetStatisticsEffect (Api.Data.Stats -> msg)
@@ -596,8 +597,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Experimental.getTagSummaryByAddress currency address (Just includeBestClusterTag)
                 |> send apiKey wrapMsg effect toMsg
 
-        SearchEffect { query, currency, limit } toMsg ->
-            Api.Request.General.search query currency limit
+        SearchEffect { query, currency, limit, includeSubTxIdentifiers } toMsg ->
+            Api.Request.General.search query currency limit includeSubTxIdentifiers
                 |> Api.withTracker "search"
                 |> send apiKey wrapMsg effect toMsg
 
