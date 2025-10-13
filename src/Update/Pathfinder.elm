@@ -728,7 +728,7 @@ updateByMsg plugins uc msg model =
                     in
                     neighbors
                         |> List.map (.address >> .address >> Id.init network)
-                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> fetchTagSummaryForIds True model.tagSummaries
                         |> List.singleton
                         |> pair model
                         |> and
