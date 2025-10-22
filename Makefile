@@ -199,6 +199,6 @@ $(GENERATED_PLUGIN_ELM): elm.json generate.js $(CONFIG) $(PLUGIN_TEMPLATES) $(wi
 
 copy-public: 
 	cp -r $(PUBLIC_DIR) $(GENERATED_PUBLIC)
-	for p in $(PLUGINS); do cp -r $(PLUGINS_DIR)/$$p/$(PUBLIC_DIR)/* $(GENERATED_PUBLIC)/; done
+	for p in $(PLUGINS); do rsync -r $(PLUGINS_DIR)/$$p/$(PUBLIC_DIR)/ $(GENERATED_PUBLIC)/; done
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh 
