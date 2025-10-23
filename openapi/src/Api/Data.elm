@@ -271,11 +271,15 @@ type alias AddressTag =
 
 type AddressTagInheritedFrom
     = AddressTagInheritedFromCluster
+    | AddressTagInheritedFromPubkey
+    | AddressTagInheritedFromPubkeyAndCluster
 
 
 addressTagInheritedFromVariants : List AddressTagInheritedFrom
 addressTagInheritedFromVariants =
     [ AddressTagInheritedFromCluster
+    , AddressTagInheritedFromPubkey
+    , AddressTagInheritedFromPubkeyAndCluster
     ]
 
 
@@ -420,11 +424,15 @@ type alias LabelSummary =
 
 type LabelSummaryInheritedFrom
     = LabelSummaryInheritedFromCluster
+    | LabelSummaryInheritedFromPubkey
+    | LabelSummaryInheritedFromPubkeyAndCluster
 
 
 labelSummaryInheritedFromVariants : List LabelSummaryInheritedFrom
 labelSummaryInheritedFromVariants =
     [ LabelSummaryInheritedFromCluster
+    , LabelSummaryInheritedFromPubkey
+    , LabelSummaryInheritedFromPubkeyAndCluster
     ]
 
 
@@ -614,11 +622,15 @@ type alias Tag =
 
 type TagInheritedFrom
     = TagInheritedFromCluster
+    | TagInheritedFromPubkey
+    | TagInheritedFromPubkeyAndCluster
 
 
 tagInheritedFromVariants : List TagInheritedFrom
 tagInheritedFromVariants =
     [ TagInheritedFromCluster
+    , TagInheritedFromPubkey
+    , TagInheritedFromPubkeyAndCluster
     ]
 
 
@@ -915,12 +927,24 @@ stringFromAddressTagInheritedFrom model =
         AddressTagInheritedFromCluster ->
             "cluster"
 
+        AddressTagInheritedFromPubkey ->
+            "pubkey"
+
+        AddressTagInheritedFromPubkeyAndCluster ->
+            "pubkey_and_cluster"
+
 
 makeAddressTagInheritedFromFromString : String -> Maybe AddressTagInheritedFrom
 makeAddressTagInheritedFromFromString str =
     case str of
     "cluster" ->
         Just AddressTagInheritedFromCluster
+
+    "pubkey" ->
+        Just AddressTagInheritedFromPubkey
+
+    "pubkey_and_cluster" ->
+        Just AddressTagInheritedFromPubkeyAndCluster
 
     _ ->
         Nothing
@@ -1265,12 +1289,24 @@ stringFromLabelSummaryInheritedFrom model =
         LabelSummaryInheritedFromCluster ->
             "cluster"
 
+        LabelSummaryInheritedFromPubkey ->
+            "pubkey"
+
+        LabelSummaryInheritedFromPubkeyAndCluster ->
+            "pubkey_and_cluster"
+
 
 makeLabelSummaryInheritedFromFromString : String -> Maybe LabelSummaryInheritedFrom
 makeLabelSummaryInheritedFromFromString str =
     case str of
     "cluster" ->
         Just LabelSummaryInheritedFromCluster
+
+    "pubkey" ->
+        Just LabelSummaryInheritedFromPubkey
+
+    "pubkey_and_cluster" ->
+        Just LabelSummaryInheritedFromPubkeyAndCluster
 
     _ ->
         Nothing
@@ -1821,12 +1857,24 @@ stringFromTagInheritedFrom model =
         TagInheritedFromCluster ->
             "cluster"
 
+        TagInheritedFromPubkey ->
+            "pubkey"
+
+        TagInheritedFromPubkeyAndCluster ->
+            "pubkey_and_cluster"
+
 
 makeTagInheritedFromFromString : String -> Maybe TagInheritedFrom
 makeTagInheritedFromFromString str =
     case str of
     "cluster" ->
         Just TagInheritedFromCluster
+
+    "pubkey" ->
+        Just TagInheritedFromPubkey
+
+    "pubkey_and_cluster" ->
+        Just TagInheritedFromPubkeyAndCluster
 
     _ ->
         Nothing
@@ -2282,6 +2330,12 @@ addressTagInheritedFromDecoder =
                     "cluster" ->
                         Json.Decode.succeed AddressTagInheritedFromCluster
 
+                    "pubkey" ->
+                        Json.Decode.succeed AddressTagInheritedFromPubkey
+
+                    "pubkey_and_cluster" ->
+                        Json.Decode.succeed AddressTagInheritedFromPubkeyAndCluster
+
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
             )
@@ -2466,6 +2520,12 @@ labelSummaryInheritedFromDecoder =
                 case value of
                     "cluster" ->
                         Json.Decode.succeed LabelSummaryInheritedFromCluster
+
+                    "pubkey" ->
+                        Json.Decode.succeed LabelSummaryInheritedFromPubkey
+
+                    "pubkey_and_cluster" ->
+                        Json.Decode.succeed LabelSummaryInheritedFromPubkeyAndCluster
 
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
@@ -2706,6 +2766,12 @@ tagInheritedFromDecoder =
                 case value of
                     "cluster" ->
                         Json.Decode.succeed TagInheritedFromCluster
+
+                    "pubkey" ->
+                        Json.Decode.succeed TagInheritedFromPubkey
+
+                    "pubkey_and_cluster" ->
+                        Json.Decode.succeed TagInheritedFromPubkeyAndCluster
 
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other

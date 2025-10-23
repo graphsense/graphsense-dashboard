@@ -83,7 +83,7 @@ filterByPrefix input result =
                         addr =
                             String.trim
                                 (if String.toLower currency.currency == "eth" then
-                                    String.toLower input
+                                    String.toLower input |> String.split "..." |> List.head |> Maybe.withDefault input
 
                                  else
                                     input
