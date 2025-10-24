@@ -474,6 +474,17 @@ deleteAggEdge aggEdgeId network =
     }
 
 
+deleteConversionEdge : ( Id, Id ) -> Network -> Network
+deleteConversionEdge convEdgeId network =
+    { network
+        | conversions = Dict.remove convEdgeId network.conversions
+        , fetchedEdges =
+            Set.remove convEdgeId network.fetchedEdges
+                |> Set.remove (swap convEdgeId)
+        , addressAggEdgeMap = deleteFromAggEdgeMap convEdgeId network.addressAggEdgeMap
+    }
+
+
 deleteFromAggEdgeMap : ( Id, Id ) -> Dict Id (Set ( Id, Id )) -> Dict Id (Set ( Id, Id ))
 deleteFromAggEdgeMap ( a, b ) map =
     [ a, b ]
@@ -1093,6 +1104,12 @@ deleteAddress id network =
                             Dict.get id nw.addressAggEdgeMap
                                 |> Maybe.map
                                     (Set.foldl deleteAggEdge nw)
+                                |> Maybe.withDefault nw
+                       )
+                    |> (\nw ->
+                            Dict.get id nw.conversionsEdgeMap
+                                |> Maybe.map
+                                    (Set.foldl deleteConversionEdge nw)
                                 |> Maybe.withDefault nw
                        )
             )
