@@ -2799,7 +2799,7 @@ updateByRoute plugins uc route model =
             |> and (syncSidePanel uc)
 
 
-addPathsToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool } -> List (List PathHopType) -> ( Model, List Effect )
+addPathsToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool, autolinkInTraceMode : Bool } -> List (List PathHopType) -> ( Model, List Effect )
 addPathsToGraph plugins uc model net config listOfPaths =
     let
         baseModelUnselected =
@@ -2814,7 +2814,7 @@ addPathsToGraph plugins uc model net config listOfPaths =
         listOfPaths
 
 
-addPathToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool } -> List PathHopType -> ( Model, List Effect )
+addPathToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool, autolinkInTraceMode : Bool } -> List PathHopType -> ( Model, List Effect )
 addPathToGraph plugins uc model net config list =
     let
         getAddress adr =
@@ -2855,7 +2855,7 @@ addPathToGraph plugins uc model net config list =
                 |> Maybe.withDefault { x = 0, y = 0 }
 
         startY =
-            Network.getYForPathAfterX model.network startCoordsPrel.x startCoordsPrel.y
+            Network.getYForPathFromX model.network { isOutgoing = config.outgoing } startCoordsPrel.x startCoordsPrel.y
 
         startCoords =
             startCoordsPrel |> s_y (max startY startCoordsPrel.y)
@@ -2920,10 +2920,10 @@ addPathToGraph plugins uc model net config list =
                 action =
                     case a of
                         Route.AddressHop _ adr ->
-                            loadAddressWithPosition plugins True (Fixed x_ y_) ( net, Data.normalizeIdentifier net adr )
+                            loadAddressWithPosition plugins config.autolinkInTraceMode (Fixed x_ y_) ( net, Data.normalizeIdentifier net adr )
 
                         Route.TxHop h ->
-                            loadTxWithPosition (Fixed x_ y_) True False plugins ( net, h )
+                            loadTxWithPosition (Fixed x_ y_) config.autolinkInTraceMode False plugins ( net, h )
 
                 annotations =
                     case a of
@@ -3007,7 +3007,7 @@ updateByRoute_ plugins uc route model =
                 |> and (setTracingMode AggregateTracingMode)
 
         Route.Path net list ->
-            addPathToGraph plugins uc model net { outgoing = True } list
+            addPathToGraph plugins uc model net { outgoing = True, autolinkInTraceMode = True } list
 
         _ ->
             n model
@@ -3023,11 +3023,11 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         ( mo, eff )
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder net paths) ->
-                        addPathsToGraph plugins uc mo net { outgoing = True } paths
+                        addPathsToGraph plugins uc mo net { outgoing = True, autolinkInTraceMode = False } paths
                             |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinderWithConfig net c paths) ->
-                        addPathsToGraph plugins uc mo net c paths
+                        addPathsToGraph plugins uc mo net { outgoing = c.outgoing, autolinkInTraceMode = False } paths
                             |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.UpdateAddresses { currency, address } pmsg ->
@@ -3952,7 +3952,7 @@ autoLoadAddresses plugins autoLinkInTraceMode tx model =
                 |> List.map first
 
         aggAddressAdd ( d, addressId ) =
-            and (loadAddressWithPosition plugins autoLinkInTraceMode (NextTo ( d, addressId )) addressId)
+            and (loadAddressWithPosition plugins autoLinkInTraceMode (NextTo ( d, tx.id )) addressId)
 
         src =
             if List.member Incoming addresses then
@@ -4085,7 +4085,7 @@ addOrRemoveTx plugins addressId txId model =
                         |> n
             )
         |> Maybe.Extra.withDefaultLazy
-            (\_ -> loadTx True (addressId /= Nothing) plugins txId model)
+            (\_ -> loadTx False (addressId /= Nothing) plugins txId model)
 
 
 addMarginPathfinder : BBox -> BBox

@@ -13,7 +13,7 @@ module Update.Pathfinder.Network exposing
     , deleteDanglingAddresses
     , deleteTx
     , findAddressCoords
-    , getYForPathAfterX
+    , getYForPathFromX
     , ingestAddresses
     , ingestAggEdges
     , ingestTxs
@@ -616,8 +616,8 @@ updateAllTxs upd model =
     model.txs |> Dict.foldl (\id _ -> updateTx id upd) model
 
 
-getYForPathAfterX : Network -> Float -> Float -> Float
-getYForPathAfterX model xBasis yDefault =
+getYForPathFromX : Network -> { t | isOutgoing : Bool } -> Float -> Float -> Float
+getYForPathFromX model config xBasis yDefault =
     let
         coords item =
             { x = item.x, y = item.y |> A.getTo }
@@ -626,7 +626,14 @@ getYForPathAfterX model xBasis yDefault =
             ((model.addresses |> Dict.values |> List.map coords)
                 ++ (model.txs |> Dict.values |> List.map coords)
             )
-                |> List.filter (\c -> c.x > xBasis)
+                |> List.filter
+                    (\c ->
+                        if config.isOutgoing then
+                            c.x > xBasis
+
+                        else
+                            c.x < xBasis
+                    )
     in
     allCoords |> List.map .y |> List.maximum |> Maybe.map ((+) nodeYOffset) |> Maybe.withDefault yDefault
 
