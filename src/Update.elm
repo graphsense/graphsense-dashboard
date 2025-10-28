@@ -2079,6 +2079,13 @@ updateByUrl plugins uc url model =
                                 let
                                     ( graph, graphEffect ) =
                                         Graph.updateByRoute plugins graphRoute model.graph
+
+                                    ( nm, neff ) =
+                                        Notification.add
+                                            (Notification.infoDefault "pf1_deprecation_notice"
+                                                |> Notification.map (s_title (Just "Deprecation Notice"))
+                                            )
+                                            model.notifications
                                 in
                                 ( { model
                                     | page = Graph
@@ -2086,13 +2093,16 @@ updateByUrl plugins uc url model =
                                     , url = url
                                     , tooltip = Nothing
                                     , navbarSubMenu = Nothing
+                                    , notifications = nm
                                     , search =
                                         model.search
                                             |> s_searchType
                                                 (Search.initSearchAll (model.stats |> RD.toMaybe))
                                   }
-                                , graphEffect
+                                , (graphEffect
                                     |> List.map GraphEffect
+                                  )
+                                    ++ (neff |> List.map NotificationEffect)
                                 )
 
                     Route.Pathfinder pfRoute ->

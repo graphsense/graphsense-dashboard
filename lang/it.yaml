@@ -490,3 +490,5 @@ Relationship-based: Basato sulle relazioni
 Transaction-based: Basato sulle transazioni
 "Please provide at least {0} characters": "Fornire almeno {0} caratteri"
 "No results found.": "Nessun risultato trovato."
+pf1_deprecation_notice: "Pathfinder 1.0 è obsoleto e sarà rimosso a breve. Si prega di passare al nuovo Pathfinder disponibile nella barra laterale. Hai problemi con la rimozione del vecchio Pathfinder? Contatta il supporto via email all'indirizzo contact@ikna.io."
+"Deprecation Notice": "Avviso di deprecazione"

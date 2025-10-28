@@ -543,3 +543,5 @@ Annotate transaction: Transaktion annotieren
 back: zurück
 "Please provide at least {0} characters": "Bitte mindestens {0} Zeichen eingeben"
 "No results found.": "Keine Ergebnisse gefunden."
+pf1_deprecation_notice: "Pathfinder 1.0 ist veraltet und wird bald entfernt. Bitte wechseln Sie zum neuen Pathfinder, der über die Seitenleiste verfügbar ist. Haben Sie Probleme mit der Entfernung des alten Pathfinders? Kontaktieren Sie den Support per E-Mail unter contact@ikna.io."
+"Deprecation Notice": "Ende des Supports"
