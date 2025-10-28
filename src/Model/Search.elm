@@ -1,4 +1,4 @@
-module Model.Search exposing (Model, ResultLine(..), SearchType(..), addToAutoComplete, firstResult, getLatestBlocks, getMulti, isLikelyPathSearchInput, lastResult, minSearchInputLength, query, selectedValue, setIsPickingCurrency, setQuery)
+module Model.Search exposing (Model, ResultLine(..), SearchType(..), addToAutoComplete, firstResult, getLatestBlocks, getMulti, isLikelyPathSearchInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, query, selectedValue, setIsPickingCurrency, setQuery)
 
 import Api.Data
 import Autocomplete exposing (Autocomplete)
@@ -12,6 +12,20 @@ import RecordSetter as Rs
 minSearchInputLength : Int
 minSearchInputLength =
     2
+
+
+minSearchLengthWithResultExpected : SearchType -> Int
+minSearchLengthWithResultExpected st =
+    case st of
+        SearchAddressAndTx _ ->
+            5
+
+        -- Address and tx search index only starts with 5+ characters
+        SearchActorsOnly ->
+            3
+
+        _ ->
+            minSearchInputLength
 
 
 type alias Model =

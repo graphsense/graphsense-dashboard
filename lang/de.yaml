@@ -541,3 +541,5 @@ Annotate transaction: Transaktion annotieren
 "Input Values": "Eingabewerte"
 "Output Values": "Ausgabewerte"
 back: zurück
+"Please provide at least {0} characters": "Bitte mindestens {0} Zeichen eingeben"
+"No results found.": "Keine Ergebnisse gefunden."

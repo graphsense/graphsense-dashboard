@@ -488,3 +488,5 @@ Tag Import: Importazione Tag
 Relationships: Relazioni
 Relationship-based: Basato sulle relazioni
 Transaction-based: Basato sulle transazioni
+"Please provide at least {0} characters": "Fornire almeno {0} caratteri"
+"No results found.": "Nessun risultato trovato."

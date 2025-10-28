@@ -185,19 +185,51 @@ searchResult plugins vc sc model =
     let
         viewState =
             Autocomplete.viewState model.autocomplete
+
+        isLoading =
+            viewState.status == Autocomplete.Fetching
+
+        config1 =
+            { frame = sc.dropdownFrame
+            , result = sc.dropdownResult
+            , loadingSpinner = loadingSpinner vc Css.Autocomplete.loadingSpinner
+            }
+
+        config2 =
+            { loading = isLoading
+            , visible = model.visible
+            , onClick = NoOp
+            }
+
+        min_search_length =
+            minSearchLengthWithResultExpected model.searchType
+
+        noResults =
+            (viewState.choices |> List.isEmpty) && viewState.status == Autocomplete.FetchedChoices
     in
-    if model.visible then
-        resultList plugins vc sc model
+    if (viewState.query |> removeLeading0x |> String.length) < min_search_length && model.visible then
+        [ text (Locale.interpolated vc.locale "Please provide at least {0} characters" [ String.fromInt min_search_length ]) ]
             |> Autocomplete.dropdownStyled
-                { frame = sc.dropdownFrame
-                , result = sc.dropdownResult
-                , loadingSpinner = loadingSpinner vc Css.Autocomplete.loadingSpinner
-                }
+                config1
                 vc
-                { loading = viewState.status == Autocomplete.Fetching
-                , visible = model.visible
+                config2
+
+    else if (viewState.query |> removeLeading0x |> String.length) > 0 && model.visible && noResults then
+        [ text (Locale.string vc.locale "No results found.") ]
+            |> Autocomplete.dropdownStyled
+                config1
+                vc
+                { loading = isLoading
+                , visible = True
                 , onClick = NoOp
                 }
+
+    else if model.visible then
+        resultList plugins vc sc model
+            |> Autocomplete.dropdownStyled
+                config1
+                vc
+                config2
 
     else
         text ""
