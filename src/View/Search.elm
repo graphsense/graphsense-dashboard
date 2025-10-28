@@ -328,10 +328,15 @@ resultLineToHtml : Config -> String -> SearchConfigWithMoreCss Msg -> Maybe Resu
 resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
     let
         ( icon, label, ( highlight_suffix, resultLineStyles ) ) =
+            let
+                search_prefix_length =
+                    Basics.max 8 (String.length (removeLeading0x query) + 2)
+            in
             case resultLine of
                 Address _ a ->
                     ( FontAwesome.at
-                    , Util.View.truncate 50 a
+                    , Util.View.truncateLongIdentifierWithLengths search_prefix_length 4 a
+                      -- Util.View.truncate 50 a
                     , ( True
                       , []
                       )
@@ -339,7 +344,8 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
 
                 Tx _ a ->
                     ( FontAwesome.exchangeAlt
-                    , Util.View.truncate 70 a
+                    , Util.View.truncateLongIdentifierWithLengths search_prefix_length 8 a
+                      -- Util.View.truncate 70 a
                     , ( True
                       , []
                       )
