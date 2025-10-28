@@ -521,6 +521,9 @@ one more asset: ein weiterer Vermögenswert
 "{0} more assets": "{0} weitere Vermögenswerte"
 track funds: Werte verfolgen
 view network: Netzwerk einsehen
+Relationships: Beziehungen
+Relationship-based: Beziehungsbasiert
+Transaction-based: Transaktionsbasiert
 Annotate transaction: Transaktion annotieren
 "loading Swaps and Briding events for Tx {0}: {1}": "Lade Swaps und Bridging-Ereignisse für Transaktion {0}: {1}"
 "Related by Multi-Input Heuristic": "Multi-Input-Heuristik"
