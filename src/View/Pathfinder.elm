@@ -73,7 +73,8 @@ graph plugins pluginStates vc gc model =
     [ vc.size
         |> Maybe.map (graphSvg plugins vc gc model)
         |> Maybe.withDefault none
-    , topLeftPanel plugins pluginStates vc
+
+    -- , topLeftPanel plugins pluginStates vc
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc model
     , bottomCenterPanel vc model
@@ -297,16 +298,18 @@ bottomCenterPanel vc model =
 
 
 topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-topCenterPanel plugins _ vc gc model =
+topCenterPanel plugins pluginStates vc gc model =
     div
         [ css Css.topPanelStyle
         ]
-        [ div [] []
+        [ div [ css [ Css.property "pointer-events" "all", Css.position Css.relative, Css.overflow Css.visible ] ]
+            (Plugin.pathfinderUpperLeftPanel plugins pluginStates vc)
         , div
             [ css
                 [ Css.displayFlex
                 , Css.property "gap" "10px"
                 , Css.property "pointer-events" "all"
+                , Css.flexWrap Css.wrap
                 ]
             ]
             [ searchBoxView plugins vc gc model
@@ -339,16 +342,10 @@ topCenterPanel plugins _ vc gc model =
                 }
             ]
         , div
-            [ css [ Css.property "pointer-events" "all" ] ]
+            [ css [ Css.property "pointer-events" "all", Css.position Css.relative, Css.overflow Css.visible ] ]
             [ graphActionsView vc gc model
             ]
         ]
-
-
-topLeftPanel : Plugins -> ModelState -> View.Config -> Html Msg
-topLeftPanel plugins pluginStates vc =
-    div [ Css.topLeftPanelStyle vc |> css ]
-        (Plugin.pathfinderUpperLeftPanel plugins pluginStates vc)
 
 
 toolbarHovercardView : View.Config -> Pathfinder.Model -> ToolbarHovercardModel -> Html Msg
@@ -484,8 +481,8 @@ graphActionsView vc _ model =
         dropdown =
             if model.helpDropdownOpen then
                 [ div
-                    [ [ Css.position Css.fixed
-                      , Css.top (Css.px 42)
+                    [ [ Css.position Css.absolute
+                      , Css.top (Css.px HIcons.framedIcon_details.height)
                       , Css.zIndex (Css.int 100)
                       ]
                         |> css

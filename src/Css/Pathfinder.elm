@@ -19,7 +19,6 @@ module Css.Pathfinder exposing
     , tagConfidenceTextMediumStyle
     , tagLinkButtonStyle
     , tooltipMargin
-    , topLeftPanelStyle
     , topPanelStyle
     , topRightPanelStyle
     )
@@ -49,7 +48,6 @@ import Css
         , hex
         , important
         , justifyContent
-        , left
         , margin
         , margin4
         , marginLeft
@@ -235,15 +233,6 @@ tagLinkButtonStyle _ =
     [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.blue400 |> property "color" ]
 
 
-topLeftPanelStyle : View.Config -> List Style
-topLeftPanelStyle _ =
-    [ position absolute
-    , mlGap |> left
-    , mlGap |> top
-    , fontSize (px 14)
-    ]
-
-
 topPanelStyle : List Style
 topPanelStyle =
     [ position absolute
@@ -255,6 +244,9 @@ topPanelStyle =
     , width all
     , pointerEvents none
     , justifyContent spaceBetween
+    , Css.flexWrap Css.wrap
+    , Css.property "row-gap" "10px"
+    , Css.property "column-gap" "10px"
     ]
 
 
