@@ -10,7 +10,7 @@ import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
-import Html.Styled.Events exposing (onClick, onInput, preventDefaultOn, stopPropagationOn)
+import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (BBox, Coords)
@@ -25,6 +25,7 @@ import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
+import Sha256
 import String.Format
 import Svg.Styled exposing (Svg, defs, feComposite, feFlood, feGaussianBlur, feMerge, feMergeNode, feOffset, filter, linearGradient, stop, svg)
 import Svg.Styled.Attributes exposing (css, dx, dy, floodColor, height, id, in2, in_, offset, operator, preserveAspectRatio, result, stdDeviation, stopColor, transform, viewBox, width, x, y)
@@ -73,8 +74,6 @@ graph plugins pluginStates vc gc model =
     [ vc.size
         |> Maybe.map (graphSvg plugins vc gc model)
         |> Maybe.withDefault none
-
-    -- , topLeftPanel plugins pluginStates vc
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc model
     , bottomCenterPanel vc model
@@ -272,8 +271,21 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
 
 bottomCenterPanel : View.Config -> Pathfinder.Model -> Html Msg
 bottomCenterPanel vc model =
+    let
+        text =
+            case model.config.tracingMode of
+                TransactionTracingMode ->
+                    Locale.string vc.locale "tx-tracing-mode-help-text"
+
+                AggregateTracingMode ->
+                    Locale.string vc.locale "tx-relationship-mode-help-text"
+
+        ctx =
+            { text = text, domId = Sha256.sha256 text }
+    in
     div
         [ css Css.bottomCenterPanelStyle
+        , [ Css.property "gap" "10px" ] |> css
         ]
         [ GraphComponentsAggregatedTracing.traceModeToggleWithInstances
             (GraphComponentsAggregatedTracing.traceModeToggleAttributes
@@ -293,6 +305,24 @@ bottomCenterPanel vc model =
             { leftCell = { variant = none }
             , rightCell = { variant = none }
             , root = { toggleLabel = "" }
+            }
+        , HIcons.framedIconCircleWithAttributes
+            (HIcons.framedIconCircleAttributes
+                |> Rs.s_root
+                    [ onMouseEnter (ShowTextTooltip ctx)
+                    , onMouseLeave (CloseTextTooltip ctx)
+                    , HA.id ctx.domId
+                    , css [ Css.pointerEventsAll ]
+                    ]
+            )
+            { root =
+                { iconInstance =
+                    HIcons.iconsInfoLWithAttributes
+                        (HIcons.iconsInfoLAttributes
+                            |> Rs.s_root [ fixFillRule ]
+                        )
+                        {}
+                }
             }
         ]
 
