@@ -21,6 +21,20 @@ import View.Locale as Locale
 import View.Search
 
 
+willBePublishedAlertView : View.Config -> Html Msg
+willBePublishedAlertView vc =
+    Html.div
+        [ F.textFieldWithHelpStateDefault_details.styles |> css
+        , Css.property "color" Colors.red500 |> List.singleton |> css
+        ]
+        [ Html.span []
+            [ Html.span [ Css.fontWeight Css.bold |> List.singleton |> css ] [ Html.text "Warning:" ]
+            , Html.text
+                (" " ++ Locale.string vc.locale "The tags reported will be visible to all users.")
+            ]
+        ]
+
+
 view : Plugins -> View.Config -> Dialog.AddTagConfig Msg -> Html Msg
 view plugins vc model =
     let
@@ -150,6 +164,13 @@ view plugins vc model =
             [ actorText
             , additionalInfo
             ]
+                ++ (if model.selectedActor /= Nothing then
+                        [ willBePublishedAlertView vc
+                        ]
+
+                    else
+                        []
+                   )
         }
         { cancelButton =
             { variant =

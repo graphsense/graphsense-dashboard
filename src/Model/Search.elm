@@ -22,7 +22,7 @@ minSearchLengthWithResultExpected st =
 
         -- Address and tx search index only starts with 5+ characters
         SearchActorsOnly ->
-            3
+            minSearchInputLength
 
         _ ->
             minSearchInputLength
