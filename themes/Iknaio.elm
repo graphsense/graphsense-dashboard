@@ -330,7 +330,7 @@ theme =
                     (\lightmode ->
                         [ backgroundColorWithLightmode lightmode colors.greyLight
                         , scaled statsMargin |> rem |> margin
-                        , borderRadiusSm
+                        , boarderRadiusPathfinder2
                         ]
                     )
                 |> s_tokenBadgeStyle
@@ -349,7 +349,7 @@ theme =
                     )
                 |> s_currencyHeading
                     (\lightmode ->
-                        [ backgroundColorWithLightmode lightmode colors.brandLight
+                        [ backgroundColorWithLightmode lightmode colors.brandBase
                         , fontHairline
                         , scaled 2 |> rem |> padding
                         , scaled 5 |> rem |> fontSize
@@ -357,6 +357,7 @@ theme =
                         , scaled currencyPadding |> rem |> paddingLeft
                         , width auto
                         , fontFamilies headingFontFamilies
+                        , boarderRadiusPathfinder2
                         ]
                     )
                 |> s_tableWrapperInner
@@ -392,6 +393,7 @@ theme =
                     , flexDirection column
                     , alignItems center
                     , scaled 20 |> rem |> marginTop
+                    , fontFamilies fontFam
                     ]
                 |> s_searchRoot
                     [ paddingTop <| rem <| scaled 5
@@ -403,7 +405,7 @@ theme =
                         , alignItems center
                         , flexDirection column
                         , scaled 7 |> rem |> padding
-                        , borderRadiusSm
+                        , boarderRadiusPathfinder2
                         , shadowSm
                         ]
                     )
@@ -419,7 +421,7 @@ theme =
                 |> s_loadBox
                     (\lightmode ->
                         [ scaled 4 |> rem |> padding
-                        , borderRadiusSm
+                        , boarderRadiusPathfinder2
                         , border zero
                         , backgroundColorWithLightmode lightmode colors.greyLighter
                         , hover
@@ -1492,6 +1494,9 @@ borderRadiusSm =
         (Tuple.first borderRadiusSmRaw)
         (Tuple.second borderRadiusSmRaw)
 
+boarderRadiusPathfinder2: Style
+boarderRadiusPathfinder2 =
+    property "border-radius" "5px"
 
 inputStyleRaw : Bool -> Maybe Float -> List ( String, String )
 inputStyleRaw lm len =
