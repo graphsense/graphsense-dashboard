@@ -20,6 +20,7 @@ type alias Config =
     , showTimestampOnTxEdge : Bool
     , preferredFiatCurrency : String
     , showValuesInFiat : Bool
+    , showHash : Bool
     , showLabelsInTaggingOverview : Bool
     , showConversionEdges : Bool
     , allConcepts : List Api.Data.Concept

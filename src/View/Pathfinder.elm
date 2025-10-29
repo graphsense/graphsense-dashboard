@@ -492,6 +492,7 @@ settingsHovercardView vc pm hc =
         , timestampSwitch = { variant = switchWithText True "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) }
         , timezoneSwitch = { variant = switchWithText False "with zone code" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) }
         , utcSwitch = { variant = switchWithText False "in UTC" (not vc.showDatesInUserLocale) (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) }
+        , showHash = { variant = switchWithText True "Show transaction hash" vc.showHash (UserClickedToggleShowHash |> ChangedDisplaySettingsMsg) }
         }
         |> Html.toUnstyled
         |> List.singleton

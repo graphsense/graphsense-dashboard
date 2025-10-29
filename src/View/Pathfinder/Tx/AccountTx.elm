@@ -47,7 +47,7 @@ view _ vc _ tx accTx annotation =
         offset =
             2
                 + (if vc.showTimestampOnTxEdge then
-                    0
+                    3
 
                    else
                     -GraphComponents.txNodeEthTimestamp_details.height
@@ -80,6 +80,17 @@ view _ vc _ tx accTx annotation =
                             Nothing
                     )
                 |> Maybe.withDefault Colors.pathMiddle
+
+        ( dateLine, timeLine ) =
+            if not vc.showHash then
+                ( Locale.timestampDateUniform vc.locale accTx.raw.timestamp
+                , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
+                )
+
+            else
+                ( Util.View.truncateLongIdentifier ("0x" ++ accTx.raw.txHash)
+                , Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
+                )
     in
     g
         [ translate
@@ -112,10 +123,15 @@ view _ vc _ tx accTx annotation =
             }
             { root =
                 { highlightVisible = tx.selected || tx.hovered
-                , date = Locale.timestampDateUniform vc.locale accTx.raw.timestamp
-                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
+                , date = dateLine
+                , time =
+                    if vc.showTimestampOnTxEdge then
+                        timeLine
+
+                    else
+                        ""
                 , inputValue = Locale.currency (View.toCurrency vc) vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
-                , timestampVisible = vc.showTimestampOnTxEdge
+                , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
                 , startingPointVisible = tx.isStartingPoint || tx.selected
                 }
             , iconsNodeMarker =

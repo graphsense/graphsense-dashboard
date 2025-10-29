@@ -28,6 +28,7 @@ type alias UserSettings =
     , showTimestampOnTxEdge : Maybe Bool
     , snapToGrid : Maybe Bool
     , tracingMode : Maybe TracingMode
+    , showHash : Maybe Bool
 
     -- , showLabelsInTaggingOverview : Maybe Bool
     }
@@ -108,6 +109,7 @@ decoder =
         |> optional "showTimestampOnTxEdge" (nullable bool |> fromString) Nothing
         |> optional "snapToGrid" (nullable bool |> fromString) Nothing
         |> optional "tracingMode" (Decode.string |> Decode.map stringToTracingMode |> nullable) Nothing
+        |> optional "showHash" (nullable bool |> fromString) Nothing
 
 
 stringToTracingMode : String -> TracingMode
@@ -146,6 +148,7 @@ encoder settings =
         , ( "showTimestampOnTxEdge", settings.showTimestampOnTxEdge |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "snapToGrid", settings.snapToGrid |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "tracingMode", settings.tracingMode |> Maybe.map tracingModeToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
+        , ( "showHash", settings.showHash |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
 
         -- , ( "showLabelsInTaggingOverview", settings.showLabelsInTaggingOverview |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
@@ -179,6 +182,7 @@ default =
     , showTimestampOnTxEdge = Nothing
     , snapToGrid = Nothing
     , tracingMode = Nothing
+    , showHash = Nothing
 
     -- , showLabelsInTaggingOverview = Nothing
     }

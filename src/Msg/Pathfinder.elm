@@ -161,6 +161,7 @@ type DisplaySettingsMsg
     | UserClickedToggleSnapToGrid
     | UserClickedToggleValueDisplay
     | UserClickedToggleValueDetail
+    | UserClickedToggleShowHash
 
 
 type TxDetailsMsg

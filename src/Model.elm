@@ -252,4 +252,5 @@ userSettingsFromMainModel model =
     , highlightClusterFriends = Just model.pathfinder.config.highlightClusterFriends
     , snapToGrid = Just model.pathfinder.config.snapToGrid
     , tracingMode = Just model.pathfinder.config.tracingMode
+    , showHash = Just model.config.showHash
     }

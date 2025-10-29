@@ -1087,6 +1087,20 @@ update plugins uc msg model =
                     in
                     update plugins uc (Graph.UserChangesValueDetail option |> GraphMsg) model
 
+                Pathfinder.UserClickedToggleShowHash ->
+                    let
+                        showHash =
+                            not model.config.showHash
+
+                        newModel =
+                            { model
+                                | config =
+                                    model.config
+                                        |> s_showHash showHash
+                            }
+                    in
+                    ( newModel, [ saveUserSettings newModel ] )
+
                 Pathfinder.UserClickedToggleValueDisplay ->
                     update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
 

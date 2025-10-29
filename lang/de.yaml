@@ -550,3 +550,4 @@ pf1_deprecation_notice: "Pathfinder 1.0 ist veraltet und wird bald entfernt. Bit
 tx-tracing-mode-help-text: "Im Transaktionsbasierten Modus können Sie den Fluss von Vermögenswerten durch einzelne Transaktionen nachverfolgen. Dieser Modus ist nützlich, um bestimmte Transaktionen zu verfolgen und deren Verlauf zu verstehen."
 tx-relationship-mode-help-text: "Im Beziehungsbasierten Modus können Sie die Beziehungen zwischen verschiedenen Entitäten auf der Grundlage aggregierter Transaktionsdaten erkunden. Dieser Modus hilft, Muster und Verbindungen zwischen Entitäten über mehrere Transaktionen hinweg zu identifizieren."
 cluster-details-info-help-text: "Cluster Info bietet Statistiken über alle Adressen im Cluster, einschließlich aggregierter Salden und Transaktionszahlen. Cluster werden basierend auf der Multi-Input-Heuristik erstellt."
+"Show transaction hash": "Tx-Hash anzeigen"

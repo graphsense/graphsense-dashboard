@@ -57,6 +57,7 @@ init plugins uc flags url key =
             , showTimestampOnTxEdge = settings.showTimestampOnTxEdge |> Maybe.withDefault True
             , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
             , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
+            , showHash = settings.showHash |> Maybe.withDefault False
             , showLabelsInTaggingOverview = False
             , allConcepts = []
             , abuseConcepts = []

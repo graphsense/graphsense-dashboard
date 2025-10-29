@@ -78,6 +78,17 @@ view _ vc _ tx utxo annotation =
                     -GraphComponents.txNodeUtxoTxText_details.height
                   )
 
+        ( dateLine, timeLine ) =
+            if not vc.showHash then
+                ( Locale.timestampDateUniform vc.locale utxo.raw.timestamp
+                , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
+                )
+
+            else
+                ( Util.View.truncateLongIdentifier utxo.raw.txHash
+                , Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
+                )
+
         ( annAttr, label ) =
             annotation
                 |> Maybe.map
@@ -121,9 +132,14 @@ view _ vc _ tx utxo annotation =
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
                 , highlightVisible = tx.selected || tx.hovered
-                , date = Locale.timestampDateUniform vc.locale utxo.raw.timestamp
-                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
-                , timestampVisible = vc.showTimestampOnTxEdge
+                , date = dateLine
+                , time =
+                    if vc.showTimestampOnTxEdge then
+                        timeLine
+
+                    else
+                        ""
+                , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
                 , startingPointVisible = tx.isStartingPoint || tx.selected
                 }
             , iconsNodeMarker =

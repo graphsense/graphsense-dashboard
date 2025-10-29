@@ -1577,6 +1577,10 @@ updateByMsg plugins uc msg model =
                     -- handled Upstream
                     n model
 
+                UserClickedToggleShowHash ->
+                    -- handled Upstream
+                    n model
+
                 UserClickedToggleHighlightClusterFriends ->
                     -- handled Upstream
                     n model
