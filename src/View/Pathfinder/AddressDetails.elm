@@ -37,6 +37,7 @@ import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData exposing (WebData)
+import Sha256
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Svg.Styled.Events as Svg
@@ -502,6 +503,27 @@ relatedAddressesDataTab vc model _ viewState cluster =
 
 clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html AddressDetails.Msg
 clusterInfoView vc open colors clstr =
+    let
+        text =
+            Locale.string vc.locale "cluster-details-info-help-text"
+
+        ctxtt =
+            { text = text, domId = Sha256.sha256 text }
+
+        ttAttributes =
+            [ onMouseEnter (AddressDetails.ShowTextTooltip ctxtt |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
+            , onMouseLeave (AddressDetails.HideTextTooltip ctxtt |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
+            , Svg.Styled.Attributes.id ctxtt.domId
+            ]
+
+        helpIcon =
+            Just <|
+                HIcons.iconsInfoSnoPaddingWithAttributes
+                    (HIcons.iconsInfoSnoPaddingAttributes
+                        |> Rs.s_shape (fixFillRule :: ttAttributes)
+                    )
+                    {}
+    in
     if clstr.noAddresses <= 1 then
         none
 
@@ -534,10 +556,13 @@ clusterInfoView vc open colors clstr =
                 assetFromBase clstr.currency
         in
         if open then
-            SidePanelComponents.clusterInformationOpenWithAttributes
+            SidePanelComponents.clusterInformationOpenWithInstances
                 (SidePanelComponents.clusterInformationOpenAttributes
                     |> Rs.s_root headerAttr
                     |> Rs.s_ellipse25 clusterColor
+                )
+                (SidePanelComponents.clusterInformationOpenInstances
+                    |> Rs.s_iconsInfoSnoPadding helpIcon
                 )
                 { root = { label = label }
                 , titleOfClusterId = { infoLabel = Locale.string vc.locale "Cluster" }
@@ -563,9 +588,12 @@ clusterInfoView vc open colors clstr =
                 }
 
         else
-            SidePanelComponents.clusterInformationClosedWithAttributes
+            SidePanelComponents.clusterInformationClosedWithInstances
                 (SidePanelComponents.clusterInformationClosedAttributes
                     |> Rs.s_root headerAttr
+                )
+                (SidePanelComponents.clusterInformationClosedInstances
+                    |> Rs.s_iconsInfoSnoPadding helpIcon
                 )
                 { root = { label = label }
                 }

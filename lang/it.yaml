@@ -496,3 +496,4 @@ pf1_deprecation_notice: "Pathfinder 1.0 è obsoleto e sarà rimosso a breve. Si 
 "The tags reported will be visible to all users.": "I tag segnalati saranno visibili a tutti gli utenti."
 tx-tracing-mode-help-text: "Nella modalità basata sulle transazioni è possibile tracciare il flusso di asset attraverso singole transazioni. Questa modalità è utile per seguire transazioni specifiche e comprendere la loro cronologia."
 tx-relationship-mode-help-text: "Nella modalità basata sulle relazioni è possibile esplorare le relazioni tra diverse entità basandosi su dati di transazione aggregati. Questa modalità aiuta a identificare modelli e connessioni tra entità attraverso più transazioni."
+cluster-details-info-help-text: "I dettagli del cluster forniscono statistiche su tutti gli indirizzi nel cluster, inclusi saldi aggregati e conteggi delle transazioni. I cluster si basano esclusivamente sulla heuristica multi-input."

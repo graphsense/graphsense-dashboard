@@ -2434,6 +2434,12 @@ handleTooltipMsg msg model =
                 AddressDetails.HideRelatedAddressesTooltip config ->
                     ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
 
+                AddressDetails.ShowTextTooltip config ->
+                    ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
+
+                AddressDetails.HideTextTooltip config ->
+                    ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
+
         AddressDetails.TagTooltipMsg inner ->
             case inner of
                 Tag.UserMovesMouseOutTagConcept ctx ->

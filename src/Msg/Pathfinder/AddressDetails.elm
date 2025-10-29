@@ -31,6 +31,8 @@ type alias TooltipContext =
 type RelatedAddressesTooltipMsgs
     = ShowRelatedAddressesTooltip TooltipContext
     | HideRelatedAddressesTooltip TooltipContext
+    | ShowTextTooltip TooltipContext
+    | HideTextTooltip TooltipContext
 
 
 type TooltipMsgs
