@@ -9,7 +9,7 @@ type ConfidenceRange
 
 getConfidenceRangeFromFloat : Float -> ConfidenceRange
 getConfidenceRangeFromFloat f =
-    if f >= 0.8 then
+    if f >= 0.7 then
         High
 
     else if f >= 0.4 then
