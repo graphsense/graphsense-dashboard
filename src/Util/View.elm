@@ -82,8 +82,14 @@ truncateLongIdentifierWithLengths start end str =
     let
         zeroInfoPrefixes =
             [ "bc1", "ltc1", "0x" ]
+
+        inputLength =
+            String.length str
     in
-    if String.length str > 18 then
+    if inputLength <= (start + end + 3) then
+        str
+
+    else if inputLength > 18 then
         let
             -- sigPart =
             --     if String.startsWith "0x" str then
