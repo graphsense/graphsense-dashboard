@@ -17,6 +17,7 @@ toStyles colorMap node =
         |> m (Css.px >> Css.paddingTop) node.paddingTop
         |> m (Css.px >> Css.paddingBottom) node.paddingBottom
         |> mm layoutMode node.layoutMode
+        |> a layoutWrap node.layoutWrap
         |> m primaryAxisAlignItems node.primaryAxisAlignItems
         |> m counterAxisAlignItems node.counterAxisAlignItems
         |> a2 gap node.primaryAxisAlignItems node.itemSpacing
@@ -65,6 +66,17 @@ counterAxisAlignItems axis =
 
         CounterAxisAlignItemsBASELINE ->
             Css.call_.alignItems Css.baseline
+
+
+layoutWrap : LayoutWrap -> Maybe Elm.Expression
+layoutWrap wrap =
+    case wrap of
+        LayoutWrapNOWRAP ->
+            Nothing
+
+        LayoutWrapWRAP ->
+            Css.flexWrap Css.wrap
+            |> Just
 
 
 layoutMode : LayoutMode -> List Elm.Expression

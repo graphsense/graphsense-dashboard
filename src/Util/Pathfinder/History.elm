@@ -222,6 +222,12 @@ shallPushHistory plugins msg _ =
                 AddressDetails.TxTableAssetSelectBoxMsg _ ->
                     False
 
+                AddressDetails.UserClickedExportCSV ->
+                    False
+
+                AddressDetails.GotAddressTxsForExport _ ->
+                    False
+
         TxDetailsMsg _ ->
             False
 

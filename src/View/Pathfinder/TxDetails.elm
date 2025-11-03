@@ -84,6 +84,7 @@ accountAssetList vc viewState txExistsFn =
         , resetDirectionFilterMsg = Nothing
         , toggleFilterView = UserClickedToggleSubTxsTableFilter
         , resetZeroValueFilterMsg = Just UserClickedResetZeroValueSubTxsTableFilters
+        , exportCsv = Nothing
         }
         |> Html.Styled.map TxDetailsMsg
     , InfiniteTable.view vc

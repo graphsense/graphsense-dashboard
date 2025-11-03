@@ -64,4 +64,5 @@ init uc network addressId data assets =
     , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
     , selectedAsset = Nothing
     , includeZeroValueTxs = Nothing -- Backend does not support this filter at the moment
+    , downloadingCSV = False
     }

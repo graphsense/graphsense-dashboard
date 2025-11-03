@@ -19,6 +19,7 @@ type alias Model =
     , assetSelectBox : ThemedSelectBox.Model (Maybe String)
     , selectedAsset : Maybe String
     , includeZeroValueTxs : Maybe Bool -- Backend does not support this filter at the moment
+    , downloadingCSV : Bool
     }
 
 
