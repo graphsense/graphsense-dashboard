@@ -7,6 +7,7 @@ import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
+import Csv.Encode
 import Dict exposing (Dict)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
@@ -31,7 +32,8 @@ import Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..))
 import RecordSetter exposing (..)
 import RemoteData exposing (WebData)
 import Set
-import Tuple exposing (first, mapFirst, mapSecond, second)
+import Table
+import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
@@ -39,6 +41,9 @@ import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (and, n)
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
+import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
+import View.Graph.Table.TxsAccountTable as TxsAccountTable
+import View.Locale as Locale
 
 
 neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
@@ -74,37 +79,40 @@ transactionTableConfig =
 
 transactionTableConfigWithMsg : (Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
 transactionTableConfigWithMsg msg txs addressId =
-    { fetch =
-        \sorting pagesize nextpage ->
-            msg
-                >> Pathfinder.AddressDetailsMsg addressId
-                |> Api.GetAddressTxsByDateEffect
-                    { currency = Id.network addressId
-                    , address = Id.id addressId
-                    , direction = txs.direction
-                    , pagesize = pagesize
-                    , nextpage = nextpage
-                    , order =
-                        sorting
-                            |> Maybe.andThen
-                                (\( column, isReversed ) ->
-                                    if column == TransactionTable.titleTimestamp then
-                                        if isReversed then
-                                            Just Api.Request.Addresses.Order_Desc
-
-                                        else
-                                            Just Api.Request.Addresses.Order_Asc
-
-                                    else
-                                        txs.order
-                                )
-                    , tokenCurrency = txs.selectedAsset
-                    , minDate = txs.dateRangePicker |> Maybe.andThen .fromDate
-                    , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate
-                    }
-                |> ApiEffect
+    { fetch = fetchTransactions msg txs addressId
     , triggerOffset = 100
     }
+
+
+fetchTransactions : (Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+fetchTransactions msg txs addressId sorting pagesize nextpage =
+    msg
+        >> Pathfinder.AddressDetailsMsg addressId
+        |> Api.GetAddressTxsByDateEffect
+            { currency = Id.network addressId
+            , address = Id.id addressId
+            , direction = txs.direction
+            , pagesize = pagesize
+            , nextpage = nextpage
+            , order =
+                sorting
+                    |> Maybe.andThen
+                        (\( column, isReversed ) ->
+                            if column == TransactionTable.titleTimestamp then
+                                if isReversed then
+                                    Just Api.Request.Addresses.Order_Desc
+
+                                else
+                                    Just Api.Request.Addresses.Order_Asc
+
+                            else
+                                txs.order
+                        )
+            , tokenCurrency = txs.selectedAsset
+            , minDate = txs.dateRangePicker |> Maybe.andThen .fromDate
+            , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate
+            }
+        |> ApiEffect
 
 
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -632,6 +640,91 @@ update uc msg model =
                                 else
                                     n
                                )
+                    )
+                |> RemoteData.withDefault (n model)
+
+        UserClickedExportCSV ->
+            model.txs
+                |> RemoteData.map
+                    (\txs ->
+                        ( txs
+                            |> s_downloadingCSV True
+                            |> RemoteData.Success
+                            |> flip s_txs model
+                        , fetchTransactions
+                            GotAddressTxsForExport
+                            txs
+                            model.address.id
+                            (txs.table
+                                |> InfiniteTable.getTable
+                                |> .state
+                                |> Table.getSortState
+                                |> Just
+                            )
+                            100
+                            Nothing
+                            |> List.singleton
+                        )
+                    )
+                |> RemoteData.withDefault (n model)
+
+        GotAddressTxsForExport { addressTxs } ->
+            model.txs
+                |> RemoteData.map
+                    (\txs ->
+                        let
+                            asCsv prepare =
+                                Csv.Encode.encode
+                                    { encoder = Csv.Encode.withFieldNames (prepare >> List.map (mapFirst first))
+                                    , fieldSeparator = ','
+                                    }
+
+                            nw =
+                                model.address.id |> Id.network
+
+                            result =
+                                if nw |> Data.isAccountLike then
+                                    addressTxs
+                                        |> List.filterMap
+                                            (\tx ->
+                                                case tx of
+                                                    Api.Data.AddressTxAddressTxUtxo _ ->
+                                                        Nothing
+
+                                                    Api.Data.AddressTxTxAccount tx_ ->
+                                                        Just tx_
+                                            )
+                                        |> asCsv (TxsAccountTable.prepareCSV uc.locale nw)
+
+                                else
+                                    addressTxs
+                                        |> List.filterMap
+                                            (\tx ->
+                                                case tx of
+                                                    Api.Data.AddressTxAddressTxUtxo tx_ ->
+                                                        Just tx_
+
+                                                    Api.Data.AddressTxTxAccount _ ->
+                                                        Nothing
+                                            )
+                                        |> asCsv (AddressTxsUtxoTable.prepareCSV uc.locale nw)
+
+                            title =
+                                Locale.interpolated uc.locale
+                                    "Address transactions of {0} ({1})"
+                                    [ Id.id model.address.id
+                                    , Id.network model.address.id |> String.toUpper
+                                    ]
+                        in
+                        ( txs
+                            |> s_downloadingCSV False
+                            |> RemoteData.Success
+                            |> flip s_txs model
+                        , result
+                            |> pair title
+                            |> DownloadCSVEffect
+                            |> List.singleton
+                        )
                     )
                 |> RemoteData.withDefault (n model)
 

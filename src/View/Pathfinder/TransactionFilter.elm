@@ -3,6 +3,7 @@ module View.Pathfinder.TransactionFilter exposing (FilterDialogConfig, FilterHea
 import Config.View as View
 import Css
 import Css.DateTimePicker as DateTimePicker
+import Css.Pathfinder exposing (fullWidth)
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Events exposing (onClick)
@@ -18,7 +19,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (none)
+import Util.View exposing (loadingSpinner, none)
 import View.Button as Button
 import View.Controls as Controls
 import View.Locale as Locale
@@ -40,6 +41,7 @@ type alias FilterHeaderConfig msg =
     , resetAssetsFilterMsg : msg
     , resetZeroValueFilterMsg : Maybe msg
     , toggleFilterView : msg
+    , exportCsv : Maybe ( msg, Bool )
     }
 
 
@@ -151,44 +153,57 @@ zeroValuesHeader vc resetMsg includeZeroValueTxs =
 
 filterHeader : View.Config -> FilterMetadata msg x -> FilterHeaderConfig msg -> Html msg
 filterHeader vc model config =
-    div
-        [ [ Css.displayFlex
-          , Css.justifyContent Css.spaceBetween
-          , Css.padding (Css.px 10)
-          , Css.property "gap" "5px"
-          ]
-            |> css
-        ]
-        [ div
-            [ [ Css.displayFlex
-              , Css.flexDirection Css.row
-              , Css.property "gap" "5px"
-              , Css.flexWrap Css.wrap
-              , Css.width (Css.px 320)
-              ]
-                |> css
-            ]
-            [ model.dateRangePicker |> Maybe.map (dateTimeFilterHeader vc config.resetDateFilterMsg) |> Maybe.withDefault none
-            , case config.resetDirectionFilterMsg of
-                Just rdmsg ->
-                    model.direction |> Maybe.map (directionFilterHeader vc rdmsg) |> Maybe.withDefault none
+    SidePanelComponents.sidePanelListFilterRowWithAttributes
+        (SidePanelComponents.sidePanelListFilterRowAttributes
+            |> Rs.s_framedFilter
+                [ onClick config.toggleFilterView
+                , Util.View.pointer
+                ]
+            |> Rs.s_framedExport
+                (config.exportCsv
+                    |> Maybe.map
+                        (\( msg, loading ) ->
+                            if loading then
+                                []
 
-                _ ->
-                    none
-            , model.selectedAsset |> Maybe.map (assetFilterHeader vc config.resetAssetsFilterMsg) |> Maybe.withDefault none
-            , model.includeZeroValueTxs |> Maybe.map2 (\b m -> zeroValuesHeader vc b m) config.resetZeroValueFilterMsg |> Maybe.withDefault none
-            ]
-        , div []
-            [ HIcons.framedIconWithAttributes
-                (HIcons.framedIconAttributes
-                    |> Rs.s_root
-                        [ onClick config.toggleFilterView
-                        , Util.View.pointer
-                        ]
+                            else
+                                [ onClick msg
+                                , Util.View.pointer
+                                ]
+                        )
+                    |> Maybe.withDefault
+                        [ css [ Css.display Css.none ] ]
                 )
-                { root = { iconInstance = HIcons.iconsFilter {} } }
+        )
+        { filterList =
+            [ model.dateRangePicker |> Maybe.map (dateTimeFilterHeader vc config.resetDateFilterMsg)
+            , config.resetDirectionFilterMsg
+                |> Maybe.andThen
+                    (\rdmsg ->
+                        model.direction |> Maybe.map (directionFilterHeader vc rdmsg)
+                    )
+            , model.selectedAsset |> Maybe.map (assetFilterHeader vc config.resetAssetsFilterMsg)
+            , model.includeZeroValueTxs |> Maybe.map2 (\b m -> zeroValuesHeader vc b m) config.resetZeroValueFilterMsg
             ]
-        ]
+                |> List.filterMap identity
+        }
+        { framedFilter =
+            { iconInstance = HIcons.iconsFilter {}
+            }
+        , framedExport =
+            { iconInstance =
+                config.exportCsv
+                    |> Maybe.map
+                        (\( _, loading ) ->
+                            if loading then
+                                loadingSpinner vc (\_ -> fullWidth)
+
+                            else
+                                HIcons.iconsExport {}
+                        )
+                    |> Maybe.withDefault none
+            }
+        }
 
 
 txFilterDialogView : View.Config -> String -> FilterDialogConfig msg -> FilterMetadata msg x -> Html msg

@@ -86,3 +86,5 @@ type Msg
     | BrowserGotPubkeyRelations Api.Data.RelatedAddresses
     | TooltipMsg TooltipMsgs
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)
+    | UserClickedExportCSV
+    | GotAddressTxsForExport Api.Data.AddressTxs
