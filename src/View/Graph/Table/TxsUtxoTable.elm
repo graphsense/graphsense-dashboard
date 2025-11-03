@@ -56,10 +56,10 @@ config vc coinCode =
 
 
 prepareCSV : Model.Locale.Model -> String -> Api.Data.TxUtxo -> List ( ( String, List String ), String )
-prepareCSV locModel currency row =
+prepareCSV locModel network row =
     [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
     , ( ( "no_inputs", [] ), Util.Csv.int row.noInputs )
     , ( ( "no_outputs", [] ), Util.Csv.int row.noOutputs )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_input" row.totalInput locModel currency
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_output" row.totalOutput locModel currency
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_input" row.totalInput locModel (assetFromBase network)
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_output" row.totalOutput locModel (assetFromBase network)

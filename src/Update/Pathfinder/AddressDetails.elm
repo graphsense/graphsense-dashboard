@@ -661,7 +661,7 @@ update uc msg model =
                                 |> Table.getSortState
                                 |> Just
                             )
-                            100
+                            5000
                             Nothing
                             |> List.singleton
                         )

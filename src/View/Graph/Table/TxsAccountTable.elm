@@ -137,11 +137,11 @@ n s =
 
 
 prepareCSV : Model.Locale.Model -> String -> Api.Data.TxAccount -> List ( ( String, List String ), String )
-prepareCSV locModel currency row =
+prepareCSV locModel network row =
     [ ( n "tx_hash", Util.Csv.string row.txHash )
     , ( n "token_tx_id", row.tokenTxId |> Maybe.map Util.Csv.int |> Maybe.withDefault (Util.Csv.string "") )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel row.currency
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel { network = network, asset = row.currency }
         ++ [ ( n "currency", Util.Csv.string row.currency )
            , ( n "height", Util.Csv.int row.height )
            , ( n "timestamp", Util.Csv.timestamp locModel row.timestamp )

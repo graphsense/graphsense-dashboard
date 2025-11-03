@@ -220,9 +220,9 @@ prepareCSV locale isOutgoing network row =
     , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
     , ( n "no_txs", Util.Csv.int row.noTxs )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_balance" ++ suffix) row.address.totalReceived locale network
-        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_received" ++ suffix) row.address.balance locale network
-        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale network
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_balance" ++ suffix) row.address.totalReceived locale (assetFromBase network)
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_received" ++ suffix) row.address.balance locale (assetFromBase network)
+        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale (assetFromBase network)
         ++ (if Data.isAccountLike network then
                 prepareCsvTokens locale network row
 

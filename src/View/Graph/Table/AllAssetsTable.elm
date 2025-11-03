@@ -34,4 +34,4 @@ config vc =
 prepareCSV : Model.Locale.Model -> String -> ( AssetIdentifier, Api.Data.Values ) -> List ( ( String, List String ), String )
 prepareCSV locModel currency row =
     ( ( titleCurrency, [] ), Util.Csv.string <| (first row).asset )
-        :: Util.Csv.valuesWithBaseCurrencyFloat "value" (second row) locModel currency
+        :: Util.Csv.valuesWithBaseCurrencyFloat "value" (second row) locModel (first row)

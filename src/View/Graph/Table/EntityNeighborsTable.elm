@@ -197,9 +197,9 @@ prepareCSV locale isOutgoing network row =
     , ( n "no_txs", Util.Csv.int row.noTxs )
     , ( n "no_addresses", Util.Csv.int row.entity.noAddresses )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_received" ++ suffix) row.entity.totalReceived locale network
-        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_balance" ++ suffix) row.entity.balance locale network
-        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale network
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_received" ++ suffix) row.entity.totalReceived locale (assetFromBase network)
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_balance" ++ suffix) row.entity.balance locale (assetFromBase network)
+        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale (assetFromBase network)
         ++ (if Data.isAccountLike network then
                 prepareCsvTokens locale network row
 
