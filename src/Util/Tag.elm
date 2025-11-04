@@ -8,6 +8,7 @@ import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Json.Encode
 import Model.Pathfinder.Id as Id exposing (Id)
 import Theme.Html.TagsComponents as TagComponents
+import Util.View
 
 
 type alias TooltipContext =
@@ -29,17 +30,32 @@ conceptItem vc id k =
                     |> Json.Encode.encode 0
             , domId = k ++ Id.id id ++ "_tags_concept_tag"
             }
+
+        maxLblLength =
+            15
+
+        lbl =
+            View.getConceptName vc k |> Maybe.withDefault k
+
+        lbl_truncated =
+            lbl |> Util.View.truncate maxLblLength
     in
     Html.div
-        [ onMouseEnter (UserMovesMouseOverTagConcept ctx)
-        , onMouseLeave (UserMovesMouseOutTagConcept ctx)
-        , HA.id ctx.domId
-        , css [ Css.cursor Css.default ]
-        ]
+        ([ onMouseEnter (UserMovesMouseOverTagConcept ctx)
+         , onMouseLeave (UserMovesMouseOutTagConcept ctx)
+         , HA.id ctx.domId
+         , css [ Css.cursor Css.default ]
+         ]
+            ++ (if String.length lbl > maxLblLength then
+                    [ HA.title lbl ]
+
+                else
+                    []
+               )
+        )
         [ TagComponents.categoryTags
             { root =
-                { tagLabel =
-                    View.getConceptName vc k |> Maybe.withDefault k
+                { tagLabel = lbl_truncated
                 , closeVisible = False
                 }
             }

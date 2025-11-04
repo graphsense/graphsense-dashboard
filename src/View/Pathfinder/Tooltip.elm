@@ -264,7 +264,7 @@ tagConcept vc openDetailsMsg concept tag =
                     else
                         none
                 )
-            |> div [ title (String.join ", " labels), [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
+            |> div [ title (String.join ", " labels), [ Css.displayFlex, Css.flexDirection Css.column, Css.padding (Css.px 5) ] |> css ]
         )
     , tooltipRowCustomValue (Locale.string vc.locale "Confidence") (getConfidenceIndicator vc maxConfidence)
     , tooltipRow

@@ -2492,6 +2492,11 @@ handleTooltipMsg msg model =
                                         , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
                                         )
 
+                                    Just (HasTagSummaryWithoutCluster ts) ->
+                                        ( model
+                                        , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
+                                        )
+
                                     Just (HasTagSummaryOnlyWithCluster ts) ->
                                         ( model
                                         , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
@@ -2728,6 +2733,9 @@ updateTagDataOnAddress addressId m =
                     updateTagsummaryData ts
 
                 HasTagSummaryOnlyWithCluster ts ->
+                    updateTagsummaryData ts
+
+                HasTagSummaryWithoutCluster ts ->
                     updateTagsummaryData ts
 
                 HasExchangeTagOnly ->

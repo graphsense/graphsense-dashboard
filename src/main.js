@@ -154,7 +154,7 @@ app.ports.exportGraphImage.subscribe((filename) => {
     
     const bgColor = cssVariables["--c-white"]
 
-    const pixelScaleFactor = 2;
+    const pixelScaleFactor = 6;
     var width = (svg.innerWidth
     || window.innerWidth
     || document.documentElement.clientWidth
