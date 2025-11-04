@@ -416,6 +416,7 @@ Apply filter: Filtro
 mentionTagDescriptionId: Un tag mention indica che questo indirizzo è stato citato, ad esempio, in un sito web. Potrebbe essere rilevante, ma dipende dal contesto.
 actorTagDescriptionId: L'etichetta dell'attore è una dichiarazione sul soggetto che controlla l'indirizzo.
 eventTagDescriptionId: Un tag evento è una dichiarazione su un evento che si è verificato in relazione a questo indirizzo, ad esempio se l'indirizzo ha fatto parte di un hack.
+attributeTagDescriptionId: Un tag attributo descrive una proprietà dell'indirizzo, ad esempio se è noto che viene utilizzato per uno scopo specifico.
 "Note: This tag was inherited from the cluster level.": "Nota: Questo tag è stato ereditato dal livello cluster."
 "Learn more": "Di più"
 "Low confidence": "Bassa fiducia"
@@ -498,3 +499,4 @@ tx-tracing-mode-help-text: "Nella modalità basata sulle transazioni è possibil
 tx-relationship-mode-help-text: "Nella modalità basata sulle relazioni è possibile esplorare le relazioni tra diverse entità basandosi su dati di transazione aggregati. Questa modalità aiuta a identificare modelli e connessioni tra entità attraverso più transazioni."
 cluster-details-info-help-text: "I dettagli del cluster forniscono statistiche su tutti gli indirizzi nel cluster, inclusi saldi aggregati e conteggi delle transazioni. I cluster si basano esclusivamente sulla heuristica multi-input."
 "Show transaction hash": "Mostra hash della tx"
+Attribute: Attributo

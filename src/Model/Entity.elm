@@ -1,4 +1,4 @@
-module Model.Entity exposing (Entity, Entitylink, decoder, encoder, fromId, isPossibleService)
+module Model.Entity exposing (Entity, Entitylink, decoder, encoder, fromId, isPossibleService, isPossibleServiceUtxo)
 
 import Api.Data
 import Json.Decode
@@ -41,13 +41,18 @@ encoder entity =
         ]
 
 
+isPossibleServiceUtxo : Api.Data.Entity -> Bool
+isPossibleServiceUtxo =
+    isPossibleService
+
+
 isPossibleService : Api.Data.Entity -> Bool
 isPossibleService cluster =
     let
         maxClusterSizeUser =
             100
 
-        maxInDegreeUser =
+        maxDegreeUser =
             7500
     in
-    cluster.noAddresses > maxClusterSizeUser || cluster.inDegree > maxInDegreeUser
+    cluster.noAddresses > maxClusterSizeUser || cluster.inDegree > maxDegreeUser || cluster.outDegree > maxDegreeUser

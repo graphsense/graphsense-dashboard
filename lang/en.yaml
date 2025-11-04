@@ -19,6 +19,7 @@ Value format: Value Format
 mentionTagDescriptionId: A mention tag expresses that this address was mentioned e.g. on a website. It might be of relevance, but it depends on the context.
 actorTagDescriptionId: An actor tag is a statement about the party controlling the address.
 eventTagDescriptionId: An event tag is a statement about an event taking place with relation to this address e.g. if the address was part of a hack.
+attributeTagDescriptionId: An attribute tag describes a property of the address, e.g. if it is known to be used for a specific purpose.
 this table is empty: No entries found.
 Tag Import: Tag Import
 "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder."

@@ -12,6 +12,7 @@ module Model.Pathfinder.Address exposing
     , getTotalReceived
     , getTotalSpent
     , getTxs
+    , isSmartContract
     , txsGetSet
     , txsSetter
     , txsToSet

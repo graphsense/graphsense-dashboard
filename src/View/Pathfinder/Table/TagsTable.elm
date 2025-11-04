@@ -393,6 +393,9 @@ typeColumn vc =
                                 "event" ->
                                     "eventTagDescriptionId"
 
+                                "attribute" ->
+                                    "attributeTagDescriptionId"
+
                                 _ ->
                                     ""
                             )

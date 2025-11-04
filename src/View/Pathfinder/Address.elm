@@ -12,10 +12,10 @@ import Init.Pathfinder.Id as Id
 import Json.Decode
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
-import Model.Entity exposing (isPossibleService)
+import Model.Entity exposing (isPossibleServiceUtxo)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
-import Model.Pathfinder.Address exposing (Address, Txs(..), expandAllowed, getTxs, txsGetSet)
+import Model.Pathfinder.Address exposing (Address, Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -109,7 +109,11 @@ view plugins vc pc colors address getCluster annotation =
                 |> Maybe.Extra.orElse
                     (case getAddressType address cluster of
                         LikelyUnknownService ->
-                            Just (Locale.string vc.locale "possible service")
+                            if address |> isSmartContract then
+                                Nothing
+
+                            else
+                                Just (Locale.string vc.locale "possible service")
 
                         _ ->
                             Nothing
@@ -316,9 +320,27 @@ type AddressServiceType
     | Unknown
 
 
+isPossibleServiceAccountLike : Address -> Bool
+isPossibleServiceAccountLike address =
+    address.data
+        |> RemoteData.toMaybe
+        |> Maybe.map
+            (\apiAddress ->
+                let
+                    maxDegree =
+                        7500
+
+                    maxTxs =
+                        500
+                in
+                apiAddress.inDegree > maxDegree || apiAddress.noIncomingTxs > maxTxs
+            )
+        |> Maybe.withDefault False
+
+
 getAddressType : Address -> Maybe Api.Data.Entity -> AddressServiceType
 getAddressType address cluster =
-    if Maybe.map isPossibleService cluster |> Maybe.withDefault False then
+    if Maybe.map isPossibleServiceUtxo cluster |> Maybe.withDefault False then
         if address.actor == Nothing then
             LikelyUnknownService
 
@@ -327,6 +349,9 @@ getAddressType address cluster =
 
     else if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
         KnownService
+
+    else if (address.id |> Id.network |> isAccountLike) && isPossibleServiceAccountLike address then
+        LikelyUnknownService
 
     else
         Unknown
