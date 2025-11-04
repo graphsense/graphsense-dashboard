@@ -209,6 +209,14 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                           , text = "Open in new tab"
                           }
                             |> ContextMenuItem.init
+                            |> ContextMenuItem.setDisabled
+                                (case model.selection of
+                                    Pathfinder.SelectedAddress _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                                )
                             |> ContextMenuItem.view vc
                         , { msg = UserOpensDialogWindow (AddTags id)
                           , icon = HIcons.iconsAddTagOutlinedS {}
@@ -261,6 +269,14 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                           , text = "Open in new tab"
                           }
                             |> ContextMenuItem.init
+                            |> ContextMenuItem.setDisabled
+                                (case model.selection of
+                                    Pathfinder.SelectedTx _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                                )
                             |> ContextMenuItem.view vc
                         ]
                     , pluginsList = pluginsList
