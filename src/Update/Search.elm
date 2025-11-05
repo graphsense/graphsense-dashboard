@@ -3,6 +3,7 @@ module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, trigge
 import Api.Data
 import Autocomplete
 import Basics.Extra exposing (flip)
+import Effect.Api as Api
 import Effect.Search exposing (Effect(..))
 import Init.Search exposing (init)
 import Model.Search exposing (..)
@@ -302,13 +303,41 @@ maybeTriggerSearch model =
             { query = query
             , currency = Nothing
             , limit = Just limit
-            , includeSubTxIdentifiers = Nothing
+            , config = getSearchConfig model.searchType
             , toMsg = BrowserGotSearchResult query
             }
             |> List.singleton
 
     else
         []
+
+
+getSearchConfig : SearchType -> Api.SearchRequestConfig
+getSearchConfig searchType =
+    case searchType of
+        SearchAll { pickingCurrency } ->
+            Api.defaultSearchConfig
+
+        SearchAddressAndTx _ ->
+            Api.defaultSearchConfig
+                |> Rs.s_includeActors (Just False)
+                |> Rs.s_includeLabels (Just False)
+                |> Rs.s_includeAddresses (Just True)
+                |> Rs.s_includeTxs (Just True)
+
+        SearchTagsOnly ->
+            Api.defaultSearchConfig
+                |> Rs.s_includeAddresses (Just False)
+                |> Rs.s_includeTxs (Just False)
+                |> Rs.s_includeActors (Just False)
+                |> Rs.s_includeLabels (Just False)
+
+        SearchActorsOnly ->
+            Api.defaultSearchConfig
+                |> Rs.s_includeAddresses (Just False)
+                |> Rs.s_includeTxs (Just False)
+                |> Rs.s_includeActors (Just True)
+                |> Rs.s_includeLabels (Just False)
 
 
 triggerSearch : String -> Model -> ( Model, List Effect )
@@ -320,7 +349,7 @@ triggerSearch query model =
         { query = query
         , currency = Nothing
         , limit = Just limit
-        , includeSubTxIdentifiers = Nothing
+        , config = getSearchConfig model.searchType
         , toMsg = BrowserGotSearchResult query
         }
         |> List.singleton

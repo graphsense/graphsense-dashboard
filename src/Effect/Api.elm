@@ -1,4 +1,4 @@
-module Effect.Api exposing (Effect(..), getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, listWithMaybes, map, perform, send, withAuthorization)
+module Effect.Api exposing (Effect(..), SearchRequestConfig, defaultSearchConfig, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, listWithMaybes, map, perform, send, withAuthorization)
 
 import Api
 import Api.Data
@@ -25,12 +25,31 @@ import Tuple exposing (pair)
 import Util.Http exposing (Headers)
 
 
+type alias SearchRequestConfig =
+    { includeSubTxIdentifiers : Maybe Bool
+    , includeLabels : Maybe Bool
+    , includeActors : Maybe Bool
+    , includeTxs : Maybe Bool
+    , includeAddresses : Maybe Bool
+    }
+
+
+defaultSearchConfig : SearchRequestConfig
+defaultSearchConfig =
+    { includeSubTxIdentifiers = Nothing
+    , includeLabels = Nothing
+    , includeActors = Nothing
+    , includeTxs = Nothing
+    , includeAddresses = Nothing
+    }
+
+
 type Effect msg
     = SearchEffect
         { query : String
         , currency : Maybe String
         , limit : Maybe Int
-        , includeSubTxIdentifiers : Maybe Bool
+        , config : SearchRequestConfig
         }
         (Api.Data.SearchResult -> msg)
     | GetStatisticsEffect (Api.Data.Stats -> msg)
@@ -597,8 +616,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Experimental.getTagSummaryByAddress currency address (Just includeBestClusterTag)
                 |> send apiKey wrapMsg effect toMsg
 
-        SearchEffect { query, currency, limit, includeSubTxIdentifiers } toMsg ->
-            Api.Request.General.search query currency limit includeSubTxIdentifiers
+        SearchEffect { query, currency, limit, config } toMsg ->
+            Api.Request.General.search query currency limit config.includeSubTxIdentifiers config.includeLabels config.includeActors config.includeTxs config.includeAddresses
                 |> Api.withTracker "search"
                 |> send apiKey wrapMsg effect toMsg
 

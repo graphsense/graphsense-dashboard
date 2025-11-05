@@ -37,13 +37,13 @@ getStatistics =
 
 
 
-search : (String) -> Maybe (String) -> Maybe (Int) -> Maybe (Bool) -> Api.Request Api.Data.SearchResult
-search q_query currency_query limit_query includeSubTxIdentifiers_query =
+search : (String) -> Maybe (String) -> Maybe (Int) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Api.Request Api.Data.SearchResult
+search q_query currency_query limit_query includeSubTxIdentifiers_query includeLabels_query includeActors_query includeTxs_query includeAddresses_query =
     Api.request
         "GET"
         "/search"
         []
-        [ ( "currency", Maybe.map (identity) currency_query ), ( "q", Just <| (identity) q_query ), ( "limit", Maybe.map (String.fromInt) limit_query ), ( "include_sub_tx_identifiers", Maybe.map ((\val -> if val then "true" else "false")) includeSubTxIdentifiers_query ) ]
+        [ ( "currency", Maybe.map (identity) currency_query ), ( "q", Just <| (identity) q_query ), ( "limit", Maybe.map (String.fromInt) limit_query ), ( "include_sub_tx_identifiers", Maybe.map ((\val -> if val then "true" else "false")) includeSubTxIdentifiers_query ), ( "include_labels", Maybe.map ((\val -> if val then "true" else "false")) includeLabels_query ), ( "include_actors", Maybe.map ((\val -> if val then "true" else "false")) includeActors_query ), ( "include_txs", Maybe.map ((\val -> if val then "true" else "false")) includeTxs_query ), ( "include_addresses", Maybe.map ((\val -> if val then "true" else "false")) includeAddresses_query ) ]
         []
         Nothing
         Api.Data.searchResultDecoder
