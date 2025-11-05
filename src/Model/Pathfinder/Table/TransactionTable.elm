@@ -58,4 +58,6 @@ resetFilters model =
         | order = Nothing
         , isTxFilterViewOpen = False
         , selectedAsset = Nothing
+        , dateRangePicker = Nothing
+        , direction = Nothing
     }
