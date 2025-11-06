@@ -206,6 +206,10 @@ update msg model =
             -- handled upstream
             n model
 
+        BrowserGotMultiSearchResult _ _ ->
+            -- handled upstream
+            n model
+
         UserClicksResultLine ->
             clear model
                 |> n

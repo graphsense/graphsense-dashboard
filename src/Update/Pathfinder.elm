@@ -12,6 +12,7 @@ import Decode.Pathfinder1
 import Dict exposing (Dict)
 import Effect.Api as Api exposing (Effect(..))
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
+import Effect.Search
 import Hovercard
 import Iknaio.ColorScheme exposing (annotationGreen, annotationRed)
 import Init.Graph.History as History
@@ -611,6 +612,37 @@ updateByMsg plugins uc msg model =
 
         SearchMsg m ->
             case m of
+                Search.BrowserGotMultiSearchResult _ result ->
+                    let
+                        addAccAddr aId ( x, eff ) =
+                            loadAddress plugins True aId x |> Tuple.mapSecond ((++) eff)
+
+                        addAccTxs aId ( x, eff ) =
+                            loadTx True True plugins aId x |> Tuple.mapSecond ((++) eff)
+
+                        addressesToAdd =
+                            result.currencies
+                                |> List.concatMap
+                                    (\c ->
+                                        c.addresses
+                                            |> List.map (Tuple.pair c.currency)
+                                    )
+                                |> List.map (\( currency, addr ) -> Id.init currency addr)
+
+                        txsToAdd =
+                            result.currencies
+                                |> List.concatMap
+                                    (\c ->
+                                        c.txs
+                                            |> List.map (Tuple.pair c.currency)
+                                    )
+                                |> List.map (\( currency, txh ) -> Id.init currency txh)
+
+                        modelWithTxsAdded =
+                            txsToAdd |> List.foldl addAccTxs ( model, [] )
+                    in
+                    addressesToAdd |> List.foldl addAccAddr modelWithTxsAdded
+
                 Search.UserClicksResultLine ->
                     let
                         query =
@@ -638,7 +670,34 @@ updateByMsg plugins uc msg model =
                                     |> Tuple.pair m2
 
                             Nothing ->
-                                n m2
+                                let
+                                    multiInputList =
+                                        Data.parseMultiIdentifierInput query
+                                in
+                                if List.length multiInputList > 1 then
+                                    ( m2
+                                    , multiInputList
+                                        |> List.map
+                                            (\inp ->
+                                                Pathfinder.SearchEffect
+                                                    (Effect.Search.SearchEffect
+                                                        { query = inp
+                                                        , currency = Nothing
+                                                        , limit = Just 1
+                                                        , config =
+                                                            Api.defaultSearchConfig
+                                                                |> s_includeAddresses (Just True)
+                                                                |> s_includeTxs (Just True)
+                                                                |> s_includeActors (Just False)
+                                                                |> s_includeLabels (Just False)
+                                                        , toMsg = Search.BrowserGotMultiSearchResult query
+                                                        }
+                                                    )
+                                            )
+                                    )
+
+                                else
+                                    n m2
 
                 _ ->
                     Search.update m model.search

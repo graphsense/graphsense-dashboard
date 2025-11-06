@@ -6,6 +6,7 @@ import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
 import Config.DateRangePicker exposing (datePickerSettings)
+import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Csv.Encode
 import Dict exposing (Dict)
@@ -46,7 +47,6 @@ import Util.ThemedSelectBox as ThemedSelectBox
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Locale as Locale exposing (makeTimestampFilename)
-import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 
 
 neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect

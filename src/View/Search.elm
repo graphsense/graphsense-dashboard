@@ -19,6 +19,7 @@ import Plugin.View as Plugin exposing (Plugins)
 import String.Extra
 import Theme.Colors as TColor
 import Util exposing (removeLeading0x)
+import Util.Data as Data
 import Util.View exposing (loadingSpinner)
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
@@ -206,6 +207,10 @@ searchResult plugins vc sc model =
 
         noResults =
             (viewState.choices |> List.isEmpty) && viewState.status == Autocomplete.FetchedChoices
+
+        lengthOfMutliInput =
+            Data.parseMultiIdentifierInput viewState.query
+                |> List.length
     in
     if (viewState.query |> removeLeading0x |> String.length) < min_search_length && model.visible then
         [ text (Locale.interpolated vc.locale "Please provide at least {0} characters" [ String.fromInt min_search_length ]) ]
@@ -223,6 +228,13 @@ searchResult plugins vc sc model =
                 , visible = True
                 , onClick = NoOp
                 }
+
+    else if (lengthOfMutliInput > 1) && model.visible then
+        [ text (Locale.interpolated vc.locale "Multiple search terms detected ({0}). Please hit enter to add." [ String.fromInt lengthOfMutliInput ]) ]
+            |> Autocomplete.dropdownStyled
+                config1
+                vc
+                config2
 
     else if model.visible then
         resultList plugins vc sc model

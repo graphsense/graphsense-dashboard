@@ -566,3 +566,4 @@ no_inputs: Eingänge
 no_outputs: Ausgänge
 total_input: Eingangswerte Gesamt
 total_output: Ausgangswerte Gesamt
+"Multiple search terms detected ({0}). Please hit enter to add.": "Mehrere Suchbegriffe erkannt ({0}). Bitte Enter drücken, um hinzuzufügen."

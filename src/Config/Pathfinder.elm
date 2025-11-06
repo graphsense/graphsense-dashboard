@@ -16,10 +16,10 @@ nodeYOffset =
     2.5
 
 
-
 numberOfRowsForCSVExport : Int
 numberOfRowsForCSVExport =
     5000
+
 
 type TracingMode
     = TransactionTracingMode

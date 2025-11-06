@@ -500,3 +500,17 @@ tx-relationship-mode-help-text: "Nella modalità basata sulle relazioni è possi
 cluster-details-info-help-text: "I dettagli del cluster forniscono statistiche su tutti gli indirizzi nel cluster, inclusi saldi aggregati e conteggi delle transazioni. I cluster si basano esclusivamente sulla heuristica multi-input."
 "Show transaction hash": "Mostra hash della tx"
 Attribute: Attributo
+tx_hash: Hash della transazione
+token_tx_id: ID della sotto-transazione
+value_raw: Valore (grezzo)
+value_in_base_currency: Valore
+value_eur: EUR
+value_usd: USD
+timestamp_utc: Data/Ora (UTC)
+receiving_address: Indirizzo di ricezione
+sending_address: Indirizzo di invio
+no_inputs: Ingressi
+no_outputs: Uscite
+total_input: Valore totale in ingresso
+total_output: Valore totale in uscita
+"Multiple search terms detected ({0}). Please hit enter to add.": "Rilevati più termini di ricerca ({0}). Premere Invio per aggiungere."

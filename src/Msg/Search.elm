@@ -14,4 +14,5 @@ type Msg
     | UserClickedCloseCurrencyPicker
     | PluginMsg Plugin.Msg.Msg
     | AutocompleteMsg Autocomplete.Msg
+    | BrowserGotMultiSearchResult String Api.Data.SearchResult
     | NoOp

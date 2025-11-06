@@ -1,7 +1,9 @@
-module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, negateTxValue, negateValues, normalizeIdentifier, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, negateTxValue, negateValues, normalizeIdentifier, parseMultiIdentifierInput, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Time
+import Util exposing (removeLeading0x)
 
 
 
@@ -100,6 +102,35 @@ normalizeIdentifier net address =
             else
                 identity
            )
+
+
+parseMultiIdentifierInput : String -> List String
+parseMultiIdentifierInput input =
+    let
+        spliters =
+            [ ",", " ", "\n", "\t", ";" ]
+
+        isMultiInput =
+            spliters
+                |> List.any (flip String.contains input)
+
+        inputList =
+            if isMultiInput then
+                spliters
+                    |> List.foldl
+                        (\sp acc ->
+                            acc
+                                |> List.concatMap (String.split sp)
+                        )
+                        [ input ]
+
+            else
+                []
+    in
+    inputList
+        |> List.map (String.trim >> removeLeading0x)
+        |> List.filter (not << String.isEmpty)
+        |> List.filter (\s -> String.length s >= 15)
 
 
 
