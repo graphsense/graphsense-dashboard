@@ -13,9 +13,12 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Time
 import Util.Csv
+import Util.Data as Data
 import Util.View exposing (longIdentifier)
 import View.Graph.Table as T exposing (customizations)
+import View.Locale as Locale
 
 
 config : View.Config -> String -> Table.Config Api.Data.AddressTxUtxo Msg
@@ -53,10 +56,10 @@ config vc coinCode =
         }
 
 
-prepareCSV : Model.Locale.Model -> String -> Api.Data.AddressTxUtxo -> List ( ( String, List String ), String )
+prepareCSV : Model.Locale.Model -> String -> Api.Data.AddressTxUtxo -> List ( String, String )
 prepareCSV locModel network row =
-    ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
+    ( "Tx_hash", Util.Csv.string row.txHash )
         :: Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel (assetFromBase network)
-        ++ [ ( ( "height", [] ), Util.Csv.int row.height )
-           , ( ( "timestamp", [] ), Util.Csv.timestamp locModel row.timestamp )
+        ++ [ ( "Height", Util.Csv.int row.height )
+           , ( "Timestamp_utc", Locale.timestampNormal { locModel | zone = Time.utc } <| Data.timestampToPosix row.timestamp )
            ]

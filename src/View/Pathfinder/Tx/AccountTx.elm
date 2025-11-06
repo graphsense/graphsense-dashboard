@@ -25,6 +25,7 @@ import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeEthAttributes)
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
+import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
@@ -69,27 +70,32 @@ view _ vc _ tx accTx annotation =
                 |> Maybe.andThen .color
                 |> Maybe.map Color.toCssString
                 |> Maybe.Extra.or
-                    (case tx.conversionType of
-                        Just InputLegConversion ->
-                            Just Colors.pathIn
+                    (tx.conversionType
+                        |> Maybe.map
+                            (\ct ->
+                                case ct of
+                                    InputLegConversion ->
+                                        Colors.pathIn
 
-                        Just OutputLegConversion ->
-                            Just Colors.pathOut
-
-                        Nothing ->
-                            Nothing
+                                    OutputLegConversion ->
+                                        Colors.pathOut
+                            )
                     )
                 |> Maybe.withDefault Colors.pathMiddle
 
         ( dateLine, timeLine ) =
+            let
+                t =
+                    Data.timestampToPosix accTx.raw.timestamp
+            in
             if not vc.showHash then
-                ( Locale.timestampDateUniform vc.locale accTx.raw.timestamp
-                , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
+                ( Locale.timestampDateUniform vc.locale t
+                , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t
                 )
 
             else
                 ( Util.View.truncateLongIdentifier ("0x" ++ accTx.raw.txHash)
-                , Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset accTx.raw.timestamp
+                , Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset t
                 )
     in
     g
@@ -168,15 +174,16 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
                 |> Maybe.andThen .color
                 |> Maybe.map Color.toCssString
                 |> Maybe.Extra.or
-                    (case conversionType of
-                        Just InputLegConversion ->
-                            Just Colors.pathIn
+                    (conversionType
+                        |> Maybe.map
+                            (\ct ->
+                                case ct of
+                                    InputLegConversion ->
+                                        Colors.pathIn
 
-                        Just OutputLegConversion ->
-                            Just Colors.pathOut
-
-                        Nothing ->
-                            Nothing
+                                    OutputLegConversion ->
+                                        Colors.pathOut
+                            )
                     )
     in
     Maybe.map2

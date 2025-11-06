@@ -64,7 +64,7 @@ config vc isOutgoing coinCode =
         }
 
 
-prepareCSV : Model.Locale.Model -> String -> Bool -> Api.Data.TxValue -> List ( ( String, List String ), String )
-prepareCSV locModel network isOutgoing row =
-    ( ( "addresses", [] ), Util.Csv.string <| joinAddresses row )
+prepareCSV : Model.Locale.Model -> String -> Bool -> Api.Data.TxValue -> List ( String, String )
+prepareCSV locModel network _ row =
+    ( "addresses", Util.Csv.string <| joinAddresses row )
         :: Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel (assetFromBase network)

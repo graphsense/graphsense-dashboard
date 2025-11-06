@@ -2792,12 +2792,8 @@ searchTable gc searchTerm model =
 tableAsCSV : Locale.Model -> Config.Update.Config -> Model -> Maybe ( String, String )
 tableAsCSV locale uc { type_ } =
     let
-        translate =
-            --List.map (mapFirst (\( str, params ) -> Locale.interpolated locale str params))
-            List.map (mapFirst first)
-
         asCsv prep t title =
-            Table.asCsv (prep >> translate) t |> pair title |> Just
+            Table.asCsv prep t |> pair title |> Just
 
         loadableAddressToList l =
             loadableAddress l

@@ -58,7 +58,7 @@ abuse: Missbrauch
 abuses: Missbräuche
 incoming neighbors: eingehende Nachbarn
 outgoing neighbors: ausgehende Nachbarn
-height: Höhe
+height: Block Nr.
 block hash: Block Hash
 created: erstellt
 no. inputs: Anz. Eingehende
@@ -553,3 +553,16 @@ tx-relationship-mode-help-text: "Im Beziehungsbasierten Modus können Sie die Be
 cluster-details-info-help-text: "Cluster Info bietet Statistiken über alle Adressen im Cluster, einschließlich aggregierter Salden und Transaktionszahlen. Cluster werden basierend auf der Multi-Input-Heuristik erstellt."
 "Show transaction hash": "Tx-Hash anzeigen"
 Attribute: Attribut
+tx_hash: Transaktionshash
+token_tx_id: Sub-Transaktions-ID
+value_raw: Wert (roh)
+value_in_base_currency: Wert
+value_eur: EUR
+value_usd: USD
+timestamp_utc: Datum/Zeit (UTC)
+receiving_address: Empfänger
+sending_address: Sender
+no_inputs: Eingänge
+no_outputs: Ausgänge
+total_input: Eingangswerte Gesamt
+total_output: Ausgangswerte Gesamt

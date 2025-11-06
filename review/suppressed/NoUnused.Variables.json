@@ -3,9 +3,9 @@
   "automatically created by": "elm-review suppress",
   "learn more": "elm-review suppress --help",
   "suppressions": [
-    { "count": 6, "filePath": "src/View/Graph/Table/AllAssetsTable.elm" },
     { "count": 4, "filePath": "src/View/Graph/Browser.elm" },
     { "count": 4, "filePath": "src/View/Graph/Link.elm" },
+    { "count": 3, "filePath": "src/View/Graph/Table/AllAssetsTable.elm" },
     { "count": 2, "filePath": "src/Update/Graph/Browser.elm" },
     { "count": 2, "filePath": "src/View/Graph/Table/TxUtxoTable.elm" },
     { "count": 1, "filePath": "src/Init/Graph/Tag.elm" },

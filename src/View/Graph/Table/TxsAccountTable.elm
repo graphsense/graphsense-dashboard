@@ -13,9 +13,12 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Time
 import Util.Csv
+import Util.Data as Data
 import Util.View exposing (longIdentifier)
 import View.Graph.Table as T exposing (customizations)
+import View.Locale as Locale
 
 
 blockConfig : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
@@ -131,20 +134,15 @@ config vc coinCode =
         }
 
 
-n : x -> ( x, List y )
-n s =
-    ( s, [] )
-
-
-prepareCSV : Model.Locale.Model -> String -> Api.Data.TxAccount -> List ( ( String, List String ), String )
+prepareCSV : Model.Locale.Model -> String -> Api.Data.TxAccount -> List ( String, String )
 prepareCSV locModel network row =
-    [ ( n "tx_hash", Util.Csv.string row.txHash )
-    , ( n "token_tx_id", row.tokenTxId |> Maybe.map Util.Csv.int |> Maybe.withDefault (Util.Csv.string "") )
+    [ ( "Tx_hash", Util.Csv.string row.txHash )
+    , ( "Token_tx_id", row.tokenTxId |> Maybe.map Util.Csv.int |> Maybe.withDefault (Util.Csv.string "") )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel { network = network, asset = row.currency }
-        ++ [ ( n "currency", Util.Csv.string row.currency )
-           , ( n "height", Util.Csv.int row.height )
-           , ( n "timestamp", Util.Csv.timestamp locModel row.timestamp )
-           , ( n "sending_address", Util.Csv.string row.fromAddress )
-           , ( n "receiving_address", Util.Csv.string row.toAddress )
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "Value" row.value locModel { network = network, asset = row.currency }
+        ++ [ ( "Currency", Util.Csv.string row.currency )
+           , ( "Height", Util.Csv.int row.height )
+           , ( "Timestamp_utc", Locale.timestampNormal { locModel | zone = Time.utc } <| Data.timestampToPosix row.timestamp )
+           , ( "Sending_address", Util.Csv.string row.fromAddress )
+           , ( "Receiving_address", Util.Csv.string row.toAddress )
            ]

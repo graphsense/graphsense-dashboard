@@ -194,12 +194,7 @@ reduceLabels labels =
            )
 
 
-n : x -> ( x, List y )
-n s =
-    ( s, [] )
-
-
-prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
+prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborAddress -> List ( String, String )
 prepareCSV locale isOutgoing network row =
     let
         suffix =
@@ -216,9 +211,9 @@ prepareCSV locale isOutgoing network row =
             else
                 "estimated_value"
     in
-    [ ( n <| "address", Util.Csv.string row.address.address )
-    , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
-    , ( n "no_txs", Util.Csv.int row.noTxs )
+    [ ( "address", Util.Csv.string row.address.address )
+    , ( "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
+    , ( "no_txs", Util.Csv.int row.noTxs )
     ]
         ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_balance" ++ suffix) row.address.totalReceived locale (assetFromBase network)
         ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_received" ++ suffix) row.address.balance locale (assetFromBase network)
@@ -231,7 +226,7 @@ prepareCSV locale isOutgoing network row =
            )
 
 
-prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
+prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborAddress -> List ( String, String )
 prepareCsvTokens locale coinCode row =
     Locale.tokenCurrencies coinCode locale
         |> List.concatMap

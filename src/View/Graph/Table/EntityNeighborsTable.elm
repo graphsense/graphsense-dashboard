@@ -170,13 +170,8 @@ zero =
     }
 
 
-n : x -> ( x, List y )
-n s =
-    ( s, [] )
-
-
-prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
-prepareCSV locale isOutgoing network row =
+prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborEntity -> List ( String, String )
+prepareCSV locale _ network row =
     let
         suffix =
             if Data.isAccountLike network then
@@ -192,10 +187,10 @@ prepareCSV locale isOutgoing network row =
             else
                 "estimated_value"
     in
-    [ ( n <| "entity", Util.Csv.int row.entity.entity )
-    , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
-    , ( n "no_txs", Util.Csv.int row.noTxs )
-    , ( n "no_addresses", Util.Csv.int row.entity.noAddresses )
+    [ ( "entity", Util.Csv.int row.entity.entity )
+    , ( "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
+    , ( "no_txs", Util.Csv.int row.noTxs )
+    , ( "no_addresses", Util.Csv.int row.entity.noAddresses )
     ]
         ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_received" ++ suffix) row.entity.totalReceived locale (assetFromBase network)
         ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_balance" ++ suffix) row.entity.balance locale (assetFromBase network)
@@ -208,7 +203,7 @@ prepareCSV locale isOutgoing network row =
            )
 
 
-prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
+prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborEntity -> List ( String, String )
 prepareCsvTokens locale coinCode row =
     Locale.tokenCurrencies coinCode locale
         |> List.concatMap

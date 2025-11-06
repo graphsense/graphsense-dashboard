@@ -13,9 +13,12 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Time
 import Util.Csv
+import Util.Data as Data
 import Util.View
 import View.Graph.Table as T exposing (customizations)
+import View.Locale as Locale
 
 
 config : View.Config -> String -> Table.Config Api.Data.TxUtxo Msg
@@ -55,11 +58,12 @@ config vc coinCode =
         }
 
 
-prepareCSV : Model.Locale.Model -> String -> Api.Data.TxUtxo -> List ( ( String, List String ), String )
+prepareCSV : Model.Locale.Model -> String -> Api.Data.TxUtxo -> List ( String, String )
 prepareCSV locModel network row =
-    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
-    , ( ( "no_inputs", [] ), Util.Csv.int row.noInputs )
-    , ( ( "no_outputs", [] ), Util.Csv.int row.noOutputs )
+    [ ( "Tx_hash", Util.Csv.string row.txHash )
+    , ( "No_inputs", Util.Csv.int row.noInputs )
+    , ( "No_outputs", Util.Csv.int row.noOutputs )
+    , ( "Timestamp_utc", Locale.timestampNormal { locModel | zone = Time.utc } <| Data.timestampToPosix row.timestamp )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_input" row.totalInput locModel (assetFromBase network)
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_output" row.totalOutput locModel (assetFromBase network)
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "Total_input" row.totalInput locModel (assetFromBase network)
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "Total_output" row.totalOutput locModel (assetFromBase network)

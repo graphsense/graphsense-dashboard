@@ -15,6 +15,7 @@ import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Tuple3
+import Util.Data as Data
 import Util.View exposing (copyableLongIdentifier, loadingSpinner, none)
 import View.Locale as Locale
 
@@ -246,7 +247,7 @@ timestampColumn : Styles -> View.Config -> String -> (data -> Int) -> Table.Colu
 timestampColumn styles vc name accessor =
     Table.veryCustomColumn
         { name = name
-        , viewData = accessor >> Locale.timestamp vc.locale >> text >> List.singleton >> Table.HtmlDetails [ styles.cell vc |> css ]
+        , viewData = accessor >> Data.timestampToPosix >> Locale.timestamp vc.locale >> text >> List.singleton >> Table.HtmlDetails [ styles.cell vc |> css ]
         , sorter = Table.increasingOrDecreasingBy accessor
         }
 

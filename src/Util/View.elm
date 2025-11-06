@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, posixToCell, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Color as BColor
 import Config.View as View
@@ -19,8 +19,8 @@ import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangl
 import Switch
 import Theme.Html.Fields as Fields
 import Theme.Html.GraphComponents
-import Time exposing (Posix)
 import Util.Css
+import Util.Data as Data
 import View.Locale as Locale
 
 
@@ -520,16 +520,14 @@ fixFillRule =
         |> css
 
 
-posixToCell : View.Config -> Posix -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
-posixToCell vc posix =
-    Locale.posixToTimestampSeconds posix
-        |> timeToCell vc
-
-
 timeToCell : View.Config -> Int -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
 timeToCell vc d =
-    { firstRowText = Locale.timestampDateUniform vc.locale d
-    , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
+    let
+        t =
+            Data.timestampToPosix d
+    in
+    { firstRowText = Locale.timestampDateUniform vc.locale t
+    , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t
     , secondRowVisible = True
     }
 

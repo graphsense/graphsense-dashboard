@@ -25,7 +25,7 @@ datePickerSettings localeModel min max =
                 isDateBefore (toDate clientZone datetime) (toDate clientZone max)
                     || isDateBefore (toDate clientZone min) (toDate clientZone datetime)
         , focusedDate = Just max
-        , dateStringFn = \_ pos -> (pos |> Time.posixToMillis) |> (\x -> x // 1000) |> Locale.date localeModel
+        , dateStringFn = \_ pos -> pos |> Locale.date localeModel
         , timePickerVisibility = NeverVisible
         , showCalendarWeekNumbers = True
     }

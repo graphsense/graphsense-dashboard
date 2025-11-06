@@ -21,6 +21,7 @@ import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.TagsComponents as TagsComponents
 import Tuple exposing (pair)
 import Util.Css as Css
+import Util.Data as Data
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifier, truncateLongIdentifierWithLengths)
@@ -323,11 +324,14 @@ tagLabel vc lbl tag =
                         { tooltipRowLabel = { title = Locale.string vc.locale "Last modified" }
                         , tooltipRowValue =
                             let
+                                t =
+                                    Data.timestampToPosix lbldata.lastmod
+
                                 date =
-                                    Locale.timestampDateUniform vc.locale lbldata.lastmod
+                                    Locale.timestampDateUniform vc.locale t
 
                                 time =
-                                    Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset lbldata.lastmod
+                                    Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t
                             in
                             { firstRowText = date
                             , secondRowText = time
@@ -415,11 +419,14 @@ genericTx vc tx =
         { tooltipRowLabel = { title = Locale.string vc.locale "Timestamp" }
         , tooltipRowValue =
             let
+                t =
+                    Data.timestampToPosix tx.timestamp
+
                 date =
-                    Locale.timestampDateUniform vc.locale tx.timestamp
+                    Locale.timestampDateUniform vc.locale t
 
                 time =
-                    Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.timestamp
+                    Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t
             in
             { firstRowText = date
             , secondRowText = time

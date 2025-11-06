@@ -19,6 +19,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple exposing (mapFirst, mapSecond, pair)
 import Tuple3
 import Util.Checkbox
+import Util.Data as Data
 import Util.View exposing (copyIconPathfinder, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (simpleThead, valuesSorter)
 import View.Locale as Locale
@@ -170,10 +171,12 @@ timestampDateMultiRowColumn vc name accessor =
                     [ let
                         date =
                             accessor data
+                                |> Data.timestampToPosix
                                 |> Locale.timestampDateUniform vc.locale
 
                         time =
                             accessor data
+                                |> Data.timestampToPosix
                                 |> Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset
                       in
                       SidePanelComponents.sidePanelListTimeCell

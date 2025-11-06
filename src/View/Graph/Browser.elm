@@ -588,13 +588,13 @@ browseValue vc value =
                         [ span
                             [ Css.propertyBoxUsageTimestamp vc |> css
                             ]
-                            [ Locale.timestamp vc.locale timestamp |> text
+                            [ timestamp |> Data.timestampToPosix |> Locale.timestamp vc.locale |> text
                             ]
                         , span
                             [ Css.propertyBoxUsageRelative vc |> css
                             ]
                             [ " ("
-                                ++ Locale.relativeTime vc.locale now timestamp
+                                ++ Locale.relativeTime vc.locale now (Data.timestampToPosix timestamp)
                                 ++ ")"
                                 |> text
                             ]
@@ -606,7 +606,7 @@ browseValue vc value =
                         [ span
                             [ Css.propertyBoxUsageRelative vc |> css
                             ]
-                            [ Locale.relativeTime vc.locale now timestamp
+                            [ Locale.relativeTime vc.locale now (Data.timestampToPosix timestamp)
                                 |> text
                             ]
                         ]
@@ -1622,7 +1622,7 @@ rowsBlock vc gc now table block =
         )
     , Row
         ( "Created"
-        , block |> Loadable.map (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , block |> Loadable.map (.timestamp >> Data.timestampToPosix >> Locale.timestamp vc.locale >> String) |> elseLoading
         , Nothing
         )
     ]
@@ -1852,7 +1852,7 @@ rowsTxUtxo vc gc now table tx =
         )
     , Row
         ( "Created"
-        , tx |> Loadable.map (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , tx |> Loadable.map (.timestamp >> Data.timestampToPosix >> Locale.timestamp vc.locale >> String) |> elseLoading
         , Nothing
         )
     , Row
@@ -1972,7 +1972,7 @@ rowsTxAccount vc gc now tx table coinCode =
         )
     , Row
         ( "Created"
-        , tx |> Loadable.map (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , tx |> Loadable.map (.timestamp >> Data.timestampToPosix >> Locale.timestamp vc.locale >> String) |> elseLoading
         , Nothing
         )
     , Row

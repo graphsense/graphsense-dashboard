@@ -238,6 +238,5 @@ requestLimit vc rl =
 
 
 expiration : Config -> Time.Posix -> String
-expiration vc time =
-    Time.posixToMillis time
-        |> Locale.timestamp vc.locale
+expiration vc =
+    Locale.timestamp vc.locale

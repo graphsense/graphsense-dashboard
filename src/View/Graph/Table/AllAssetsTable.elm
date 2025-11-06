@@ -2,19 +2,17 @@ module View.Graph.Table.AllAssetsTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
-import Css
 import Css.Table exposing (styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Model.Currency exposing (AssetIdentifier, assetFromBase)
+import Model.Currency exposing (AssetIdentifier)
 import Model.Graph.Table exposing (titleCurrency, titleValue)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Tuple exposing (first, second)
 import Util.Csv
-import Util.View exposing (copyableLongIdentifier)
 import View.Graph.Table as T exposing (customizations)
 
 
@@ -31,7 +29,7 @@ config vc =
         }
 
 
-prepareCSV : Model.Locale.Model -> String -> ( AssetIdentifier, Api.Data.Values ) -> List ( ( String, List String ), String )
-prepareCSV locModel currency row =
-    ( ( titleCurrency, [] ), Util.Csv.string <| (first row).asset )
+prepareCSV : Model.Locale.Model -> String -> ( AssetIdentifier, Api.Data.Values ) -> List ( String, String )
+prepareCSV locModel _ row =
+    ( titleCurrency, Util.Csv.string <| (first row).asset )
         :: Util.Csv.valuesWithBaseCurrencyFloat "value" (second row) locModel (first row)

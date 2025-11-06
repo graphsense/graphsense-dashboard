@@ -62,16 +62,11 @@ config vc coinCode entityId entityHasAddress =
         }
 
 
-n : x -> ( x, List y )
-n s =
-    ( s, [] )
-
-
-prepareCSV : Model.Locale.Model -> String -> Api.Data.Address -> List ( ( String, List String ), String )
+prepareCSV : Model.Locale.Model -> String -> Api.Data.Address -> List ( String, String )
 prepareCSV locModel network row =
-    [ ( n "address", Util.Csv.string row.address )
-    , ( n "first_usage", Util.Csv.timestamp locModel row.firstTx.timestamp )
-    , ( n "last_usage", Util.Csv.timestamp locModel row.lastTx.timestamp )
+    [ ( "address", Util.Csv.string row.address )
+    , ( "first_usage", Util.Csv.timestamp locModel row.firstTx.timestamp )
+    , ( "last_usage", Util.Csv.timestamp locModel row.lastTx.timestamp )
     ]
         ++ Util.Csv.valuesWithBaseCurrencyFloat "final_balance" row.totalReceived locModel (assetFromBase network)
         ++ Util.Csv.valuesWithBaseCurrencyFloat "total_received" row.balance locModel (assetFromBase network)

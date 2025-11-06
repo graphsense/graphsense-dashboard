@@ -11,6 +11,7 @@ import Http
 import RemoteData exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as Svg exposing (d, viewBox)
+import Util.Data as Data
 import Util.RemoteData exposing (webdata)
 import Util.View
 import View.CurrencyMeta exposing (networks)
@@ -86,7 +87,8 @@ currency vc cs tokens =
                 [ div
                     [ Css.statsTable vc |> css
                     ]
-                    ([ Locale.timestamp vc.locale cs.timestamp
+                    ([ Data.timestampToPosix cs.timestamp
+                        |> Locale.timestamp vc.locale
                         |> statsRow vc "Last update"
                      , Locale.intWithoutValueDetailFormatting vc.locale (cs.noBlocks - 1)
                         |> statsRow vc "Latest block"

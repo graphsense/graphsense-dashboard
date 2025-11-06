@@ -33,6 +33,8 @@ import RecordSetter exposing (..)
 import RemoteData exposing (WebData)
 import Set
 import Table
+import Task
+import Time
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.DateRangePicker as DateRangePicker
@@ -43,7 +45,8 @@ import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
-import View.Locale as Locale
+import View.Locale as Locale exposing (makeTimestampFilename)
+import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 
 
 neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
@@ -644,6 +647,15 @@ update uc msg model =
                 |> RemoteData.withDefault (n model)
 
         UserClickedExportCSV ->
+            ( model
+            , Time.now
+                |> Task.perform BrowserGotTime
+                |> Cmd.map (Pathfinder.AddressDetailsMsg model.address.id)
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        BrowserGotTime posix ->
             model.txs
                 |> RemoteData.map
                     (\txs ->
@@ -652,7 +664,7 @@ update uc msg model =
                             |> RemoteData.Success
                             |> flip s_txs model
                         , fetchTransactions
-                            GotAddressTxsForExport
+                            (GotAddressTxsForExport posix)
                             txs
                             model.address.id
                             (txs.table
@@ -661,21 +673,26 @@ update uc msg model =
                                 |> Table.getSortState
                                 |> Just
                             )
-                            5000
+                            numberOfRowsForCSVExport
                             Nothing
                             |> List.singleton
                         )
                     )
                 |> RemoteData.withDefault (n model)
 
-        GotAddressTxsForExport { addressTxs } ->
+        GotAddressTxsForExport posix { addressTxs } ->
             model.txs
                 |> RemoteData.map
                     (\txs ->
                         let
+                            translate =
+                                List.map (mapFirst (Locale.string uc.locale))
+
                             asCsv prepare =
                                 Csv.Encode.encode
-                                    { encoder = Csv.Encode.withFieldNames (prepare >> List.map (mapFirst first))
+                                    { encoder =
+                                        Csv.Encode.withFieldNames
+                                            (prepare >> translate)
                                     , fieldSeparator = ','
                                     }
 
@@ -715,6 +732,8 @@ update uc msg model =
                                     [ Id.id model.address.id
                                     , Id.network model.address.id |> String.toUpper
                                     ]
+                                    |> (++) " "
+                                    |> (++) (makeTimestampFilename uc.locale posix)
                         in
                         ( txs
                             |> s_downloadingCSV False

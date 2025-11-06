@@ -7,7 +7,6 @@ import Browser
 import Browser.Dom
 import Config
 import Config.Update exposing (Config)
-import DateFormat
 import Dict exposing (Dict)
 import Effect.Api
 import Effect.Graph as Graph
@@ -76,7 +75,7 @@ import Url exposing (Url)
 import Util exposing (n)
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
-import View.Locale as Locale
+import View.Locale as Locale exposing (makeTimestampFilename)
 import View.Pathfinder.Legend exposing (legendView)
 import Yaml.Decode
 
@@ -2288,26 +2287,6 @@ handleResponse plugins uc result model =
 
         Err _ ->
             n model
-
-
-makeTimestampFilename : Locale.Model -> Time.Posix -> String
-makeTimestampFilename locale t =
-    Time.posixToMillis t
-        // 1000
-        |> Locale.timestampWithFormat
-            [ DateFormat.yearNumber
-            , DateFormat.text "-"
-            , DateFormat.monthFixed
-            , DateFormat.text "-"
-            , DateFormat.dayOfMonthFixed
-            , DateFormat.text " "
-            , DateFormat.hourMilitaryFixed
-            , DateFormat.text "-"
-            , DateFormat.minuteFixed
-            , DateFormat.text "-"
-            , DateFormat.secondFixed
-            ]
-            locale
 
 
 clearSearch : Plugins -> Model key -> ( Model key, List Effect )

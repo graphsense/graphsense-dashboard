@@ -19,6 +19,7 @@ import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Html.TagsComponents as TagsComponents
 import Url
+import Util.Data as Data
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (fixFillRule, none)
@@ -466,7 +467,15 @@ lastModColumn vc =
             \data ->
                 let
                     ( date, _ ) =
-                        data.lastmod |> Maybe.map (\d -> ( Locale.timestampDateUniform vc.locale d, Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d )) |> Maybe.withDefault ( "-", "-" )
+                        data.lastmod
+                            |> Maybe.map Data.timestampToPosix
+                            |> Maybe.map
+                                (\d ->
+                                    ( Locale.timestampDateUniform vc.locale d
+                                    , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
+                                    )
+                                )
+                            |> Maybe.withDefault ( "-", "-" )
                 in
                 cell vc (LastModCell { label = date, subLabel = Nothing })
         , sorter = Table.increasingOrDecreasingBy (\data -> data.lastmod |> Maybe.withDefault 0)

@@ -120,10 +120,9 @@ requestLimit vc rl =
 
 
 expiration : Config -> Time.Posix -> Html Msg
-expiration vc time =
-    Time.posixToMillis time
-        |> Locale.timestamp vc.locale
-        |> text
+expiration vc =
+    Locale.timestamp vc.locale
+        >> text
 
 
 localeSwitch : Config -> Html Msg

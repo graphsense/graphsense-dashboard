@@ -17,11 +17,8 @@ module View.Locale exposing
     , interpolated
     , isFirstSecondOfTheDay
     , isLastSecondOfTheDay
+    , makeTimestampFilename
     , percentage
-    , posixDate
-    , posixDateTimeUniform
-    , posixDateUniform
-    , posixToTimestampSeconds
     , relativeTime
     , string
     , text
@@ -29,6 +26,7 @@ module View.Locale exposing
     , timestamp
     , timestampDateTimeUniform
     , timestampDateUniform
+    , timestampNormal
     , timestampTimeUniform
     , timestampWithFormat
     , titleCase
@@ -56,7 +54,6 @@ import String.Interpolate
 import Time exposing (Posix)
 import Time.Extra exposing (toOffset)
 import Tuple exposing (..)
-import Util.Data exposing (timestampToPosix)
 
 
 fixpointFactor : Maybe Api.Data.TokenConfigs -> Dict String ( Float, String )
@@ -195,11 +192,6 @@ intWithFormat model format =
     toFloat >> model.numberFormat format
 
 
-posixToTimestampSeconds : Posix -> Int
-posixToTimestampSeconds =
-    Time.posixToMillis >> flip (//) 1000
-
-
 isFirstSecondOfTheDay : Model -> Posix -> Bool
 isFirstSecondOfTheDay m d =
     let
@@ -230,22 +222,7 @@ isLastSecondOfTheDay m d =
     hour == 23 && min == 59 && s == 59
 
 
-posixDate : Model -> Posix -> String
-posixDate m d =
-    date m (posixToTimestampSeconds d)
-
-
-posixDateUniform : Model -> Posix -> String
-posixDateUniform m d =
-    timestampDateUniform m (posixToTimestampSeconds d)
-
-
-posixDateTimeUniform : Model -> Bool -> Posix -> String
-posixDateTimeUniform m showTimeZoneOffset d =
-    timestampDateTimeUniform m showTimeZoneOffset (posixToTimestampSeconds d)
-
-
-timestamp : Model -> Int -> String
+timestamp : Model -> Posix -> String
 timestamp model =
     let
         format =
@@ -279,7 +256,7 @@ timestamp model =
     timestampWithFormat format model
 
 
-timestampDateUniform : Model -> Int -> String
+timestampDateUniform : Model -> Posix -> String
 timestampDateUniform model =
     let
         format =
@@ -299,12 +276,12 @@ timestampDateUniform model =
 -- { model | zone = Time.utc }
 
 
-timestampTimeUniform : Model -> Bool -> Int -> String
+timestampTimeUniform : Model -> Bool -> Posix -> String
 timestampTimeUniform model showTimeZoneOffset x =
     let
         timezoneOffset =
             if showTimeZoneOffset then
-                "+" ++ (toOffset model.zone (timestampToPosix x) |> flip (//) 60 |> String.fromInt)
+                "+" ++ (toOffset model.zone x |> flip (//) 60 |> String.fromInt)
 
             else
                 ""
@@ -327,12 +304,12 @@ timestampTimeUniform model showTimeZoneOffset x =
 --{ model | zone = Time.utc }
 
 
-timestampDateTimeUniform : Model -> Bool -> Int -> String
+timestampDateTimeUniform : Model -> Bool -> Posix -> String
 timestampDateTimeUniform model showTimeZoneOffset x =
     timestampDateUniform model x ++ " " ++ timestampTimeUniform model showTimeZoneOffset x
 
 
-date : Model -> Int -> String
+date : Model -> Posix -> String
 date model =
     let
         format =
@@ -356,7 +333,7 @@ date model =
     timestampWithFormat format model
 
 
-time : Model -> Int -> String
+time : Model -> Posix -> String
 time model =
     let
         format =
@@ -382,17 +359,16 @@ time model =
     timestampWithFormat format model
 
 
-timestampWithFormat : List Token -> Model -> Int -> String
+timestampWithFormat : List Token -> Model -> Posix -> String
 timestampWithFormat format { timeLang, zone } =
-    timestampToPosix
-        >> formatWithLanguage timeLang format zone
+    formatWithLanguage timeLang format zone
 
 
-relativeTime : Model -> Time.Posix -> Int -> String
+relativeTime : Model -> Posix -> Posix -> String
 relativeTime { relativeTimeOptions } from to =
     DateFormat.Relative.relativeTimeWithOptions relativeTimeOptions
         from
-        (timestampToPosix to)
+        to
 
 
 percentage : Model -> Float -> String
@@ -645,3 +621,39 @@ titleCase model =
 
     else
         identity
+
+
+makeTimestampFilename : Model -> Time.Posix -> String
+makeTimestampFilename locale =
+    timestampWithFormat
+        [ DateFormat.yearNumber
+        , DateFormat.text "-"
+        , DateFormat.monthFixed
+        , DateFormat.text "-"
+        , DateFormat.dayOfMonthFixed
+        , DateFormat.text " "
+        , DateFormat.hourMilitaryFixed
+        , DateFormat.text "-"
+        , DateFormat.minuteFixed
+        , DateFormat.text "-"
+        , DateFormat.secondFixed
+        ]
+        locale
+
+
+timestampNormal : Model -> Posix -> String
+timestampNormal locale =
+    timestampWithFormat
+        [ DateFormat.yearNumber
+        , DateFormat.text "-"
+        , DateFormat.monthFixed
+        , DateFormat.text "-"
+        , DateFormat.dayOfMonthFixed
+        , DateFormat.text " "
+        , DateFormat.hourMilitaryFixed
+        , DateFormat.text ":"
+        , DateFormat.minuteFixed
+        , DateFormat.text ":"
+        , DateFormat.secondFixed
+        ]
+        locale

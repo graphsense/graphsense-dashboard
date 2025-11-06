@@ -225,7 +225,10 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedExportCSV ->
                     False
 
-                AddressDetails.GotAddressTxsForExport _ ->
+                AddressDetails.BrowserGotTime _ ->
+                    False
+
+                AddressDetails.GotAddressTxsForExport _ _ ->
                     False
 
         TxDetailsMsg _ ->

@@ -75,7 +75,6 @@ dateTimeFilterHeader vc resetMsg dmodel =
     let
         renderDate showTimeFn date =
             date
-                |> Locale.posixToTimestampSeconds
                 |> (if showTimeFn date then
                         Locale.timestampDateUniform vc.locale
 
@@ -287,9 +286,7 @@ txFilterDialogView vc net config model =
                         let
                             prepDate =
                                 Maybe.map
-                                    (Locale.posixToTimestampSeconds
-                                        >> Locale.timestampDateUniform vc.locale
-                                    )
+                                    (Locale.timestampDateUniform vc.locale)
 
                             startDate =
                                 dmodel.fromDate

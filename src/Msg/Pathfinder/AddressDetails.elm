@@ -87,4 +87,5 @@ type Msg
     | TooltipMsg TooltipMsgs
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)
     | UserClickedExportCSV
-    | GotAddressTxsForExport Api.Data.AddressTxs
+    | BrowserGotTime Time.Posix
+    | GotAddressTxsForExport Time.Posix Api.Data.AddressTxs

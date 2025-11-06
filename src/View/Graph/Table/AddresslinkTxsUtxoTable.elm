@@ -55,11 +55,11 @@ config vc coinCode =
         }
 
 
-prepareCSV : Model.Locale.Model -> String -> Api.Data.LinkUtxo -> List ( ( String, List String ), String )
+prepareCSV : Model.Locale.Model -> String -> Api.Data.LinkUtxo -> List ( String, String )
 prepareCSV locModel network row =
-    ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
+    ( "tx_hash", Util.Csv.string row.txHash )
         :: Util.Csv.valuesWithBaseCurrencyFloat "input_value" row.inputValue locModel (assetFromBase network)
         ++ Util.Csv.valuesWithBaseCurrencyFloat "output_value" row.outputValue locModel (assetFromBase network)
-        ++ [ ( ( "height", [] ), Util.Csv.int row.height )
-           , ( ( "timestamp", [] ), Util.Csv.timestamp locModel row.timestamp )
+        ++ [ ( "height", Util.Csv.int row.height )
+           , ( "timestamp", Util.Csv.timestamp locModel row.timestamp )
            ]

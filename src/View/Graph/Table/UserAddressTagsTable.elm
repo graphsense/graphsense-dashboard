@@ -97,18 +97,13 @@ config vc =
         }
 
 
-n : x -> ( x, List y )
-n s =
-    ( s, [] )
-
-
-prepareCSV : Config.Update.Config -> Tag.UserTag -> List ( ( String, List String ), String )
+prepareCSV : Config.Update.Config -> Tag.UserTag -> List ( String, String )
 prepareCSV uc row =
-    [ ( n "address", Util.Csv.string row.address )
-    , ( n "currency", Util.Csv.string <| String.toUpper row.currency )
-    , ( n "label", Util.Csv.string row.label )
-    , ( n "is_cluster_definer", Util.Csv.bool row.isClusterDefiner )
-    , ( n "source", Util.Csv.string row.source )
-    , ( n "category", row.category |> Maybe.andThen (View.getConceptName uc) |> Maybe.withDefault "" |> Util.Csv.string )
-    , ( n "abuse", row.abuse |> View.getAbuseName uc |> Maybe.withDefault "" |> Util.Csv.string )
+    [ ( "address", Util.Csv.string row.address )
+    , ( "currency", Util.Csv.string <| String.toUpper row.currency )
+    , ( "label", Util.Csv.string row.label )
+    , ( "is_cluster_definer", Util.Csv.bool row.isClusterDefiner )
+    , ( "source", Util.Csv.string row.source )
+    , ( "category", row.category |> Maybe.andThen (View.getConceptName uc) |> Maybe.withDefault "" |> Util.Csv.string )
+    , ( "abuse", row.abuse |> View.getAbuseName uc |> Maybe.withDefault "" |> Util.Csv.string )
     ]

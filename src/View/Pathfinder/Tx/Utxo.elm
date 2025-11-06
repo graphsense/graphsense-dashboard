@@ -26,6 +26,7 @@ import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeUtxoAttribut
 import Theme.Svg.Icons as Icons
 import Tuple exposing (pair, second)
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
+import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
@@ -79,14 +80,18 @@ view _ vc _ tx utxo annotation =
                   )
 
         ( dateLine, timeLine ) =
+            let
+                t =
+                    Data.timestampToPosix utxo.raw.timestamp
+            in
             if not vc.showHash then
-                ( Locale.timestampDateUniform vc.locale utxo.raw.timestamp
-                , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
+                ( Locale.timestampDateUniform vc.locale t
+                , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t
                 )
 
             else
                 ( Util.View.truncateLongIdentifier utxo.raw.txHash
-                , Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset utxo.raw.timestamp
+                , Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset t
                 )
 
         ( annAttr, label ) =
