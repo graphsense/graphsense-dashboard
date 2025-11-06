@@ -2,7 +2,6 @@ module Effect.Pathfinder exposing (Effect(..), perform)
 
 import Effect.Api as Api
 import Effect.Search as Search
-import File.Download
 import Model.Notification exposing (Notification)
 import Model.Pathfinder.Error exposing (Error)
 import Model.Pathfinder.Tooltip exposing (TooltipType)
@@ -26,7 +25,6 @@ type Effect
     | PostponeUpdateByRouteEffect Route
     | ShowNotificationEffect Notification
     | InternalEffect Msg
-    | DownloadCSVEffect ( String, String )
 
 
 perform : Effect -> Cmd Msg
@@ -75,6 +73,3 @@ perform eff =
         -- managed in Effect.elm
         InternalEffect _ ->
             Cmd.none
-
-        DownloadCSVEffect ( name, data ) ->
-            File.Download.string (name ++ ".csv") "text/csv" data

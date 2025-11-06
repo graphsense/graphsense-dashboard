@@ -1,11 +1,12 @@
 module View.Pathfinder.TransactionFilter exposing (FilterDialogConfig, FilterHeaderConfig, FilterMetadata, filterHeader, txFilterDialogView)
 
+import Components.ExportCSV as ExportCSV
 import Config.View as View
 import Css
 import Css.DateTimePicker as DateTimePicker
-import Css.Pathfinder exposing (fullWidth)
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div)
+import Html.Styled.Attributes as Attributes
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
@@ -19,7 +20,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (loadingSpinner, none)
+import Util.View exposing (none)
 import View.Button as Button
 import View.Controls as Controls
 import View.Locale as Locale
@@ -41,7 +42,7 @@ type alias FilterHeaderConfig msg =
     , resetAssetsFilterMsg : msg
     , resetZeroValueFilterMsg : Maybe msg
     , toggleFilterView : msg
-    , exportCsv : Maybe ( msg, Bool )
+    , exportCsv : Maybe ( ExportCSV.Msg -> msg, ExportCSV.Model )
     }
 
 
@@ -161,14 +162,9 @@ filterHeader vc model config =
             |> Rs.s_framedExport
                 (config.exportCsv
                     |> Maybe.map
-                        (\( msg, loading ) ->
-                            if loading then
-                                []
-
-                            else
-                                [ onClick msg
-                                , Util.View.pointer
-                                ]
+                        (\( tag, exportCSVModel ) ->
+                            ExportCSV.attributes exportCSVModel
+                                |> List.map (Attributes.map tag)
                         )
                     |> Maybe.withDefault
                         [ css [ Css.display Css.none ] ]
@@ -193,12 +189,8 @@ filterHeader vc model config =
             { iconInstance =
                 config.exportCsv
                     |> Maybe.map
-                        (\( _, loading ) ->
-                            if loading then
-                                loadingSpinner vc (\_ -> fullWidth)
-
-                            else
-                                HIcons.iconsExport {}
+                        (\( _, exportCSVModel ) ->
+                            ExportCSV.icon vc exportCSVModel
                         )
                     |> Maybe.withDefault none
             }

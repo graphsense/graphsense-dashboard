@@ -3,12 +3,12 @@ module Update.Pathfinder.AddressDetails exposing (loadFirstPage, syncByAddress, 
 import Api.Data
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
+import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
-import Csv.Encode
 import Dict exposing (Dict)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
@@ -20,7 +20,6 @@ import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Maybe.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
-import Model.Notification as Notification
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -35,9 +34,7 @@ import RecordSetter exposing (..)
 import RemoteData exposing (WebData)
 import Set
 import Table
-import Task
-import Time
-import Tuple exposing (first, mapFirst, mapSecond, pair, second)
+import Tuple exposing (first, mapFirst, mapSecond, second)
 import Tuple2 exposing (pairTo)
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
@@ -47,7 +44,7 @@ import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
-import View.Locale as Locale exposing (makeTimestampFilename)
+import View.Locale as Locale
 
 
 neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
@@ -647,127 +644,117 @@ update uc msg model =
                     )
                 |> RemoteData.withDefault (n model)
 
-        UserClickedExportCSV ->
-            ( model
-            , Time.now
-                |> Task.perform BrowserGotTime
-                |> Cmd.map (Pathfinder.AddressDetailsMsg model.address.id)
-                |> CmdEffect
-                |> List.singleton
-            )
-
-        BrowserGotTime posix ->
-            model.txs
-                |> RemoteData.map
-                    (\txs ->
-                        ( txs
-                            |> s_downloadingCSV True
-                            |> RemoteData.Success
-                            |> flip s_txs model
-                        , fetchTransactions
-                            (GotAddressTxsForExport posix)
-                            txs
-                            model.address.id
-                            (txs.table
-                                |> InfiniteTable.getTable
-                                |> .state
-                                |> Table.getSortState
-                                |> Just
-                            )
-                            numberOfRowsForCSVExport
-                            Nothing
-                            |> List.singleton
-                        )
-                    )
-                |> RemoteData.withDefault (n model)
-
-        GotAddressTxsForExport posix { nextPage, addressTxs } ->
+        ExportCSVMsg ms ->
             model.txs
                 |> RemoteData.map
                     (\txs ->
                         let
-                            translate =
-                                List.map (mapFirst (Locale.string uc.locale))
+                            exportCSVConfig =
+                                makeExportCSVConfig uc model
 
+                            ( exportCSVModel, cmd, fetch ) =
+                                ExportCSV.update uc exportCSVConfig ms txs.exportCSV
+                        in
+                        updateExportCSVModel exportCSVModel cmd fetch txs model
+                    )
+                |> RemoteData.withDefault (n model)
+
+        GotAddressTxsForExport { nextPage, addressTxs } ->
+            model.txs
+                |> RemoteData.map
+                    (\txs ->
+                        let
                             notification =
                                 nextPage
                                     |> Maybe.map
                                         (\_ ->
-                                            "there_were_more_rows_for_csv_download_info"
-                                                |> Notification.infoDefault
-                                                |> Notification.map
-                                                    (s_isEphemeral False
-                                                        >> s_title (Just "there_were_more_rows_for_csv_download")
-                                                        >> s_showClose True
-                                                        >> s_variables
-                                                            [ numberOfRowsForCSVExport
-                                                                |> String.fromInt
-                                                            ]
-                                                    )
+                                            ExportCSV.makeNotification numberOfRowsForCSVExport
                                                 |> ShowNotificationEffect
                                                 |> List.singleton
                                         )
                                     |> Maybe.withDefault []
 
-                            asCsv prepare =
-                                Csv.Encode.encode
-                                    { encoder =
-                                        Csv.Encode.withFieldNames
-                                            (prepare >> translate)
-                                    , fieldSeparator = ','
-                                    }
+                            exportCSVConfig =
+                                makeExportCSVConfig uc model
 
-                            nw =
-                                model.address.id |> Id.network
-
-                            result =
-                                if nw |> Data.isAccountLike then
-                                    addressTxs
-                                        |> List.filterMap
-                                            (\tx ->
-                                                case tx of
-                                                    Api.Data.AddressTxAddressTxUtxo _ ->
-                                                        Nothing
-
-                                                    Api.Data.AddressTxTxAccount tx_ ->
-                                                        Just tx_
-                                            )
-                                        |> asCsv (TxsAccountTable.prepareCSV uc.locale nw)
-
-                                else
-                                    addressTxs
-                                        |> List.filterMap
-                                            (\tx ->
-                                                case tx of
-                                                    Api.Data.AddressTxAddressTxUtxo tx_ ->
-                                                        Just tx_
-
-                                                    Api.Data.AddressTxTxAccount _ ->
-                                                        Nothing
-                                            )
-                                        |> asCsv (AddressTxsUtxoTable.prepareCSV uc.locale nw)
-
-                            title =
-                                Locale.interpolated uc.locale
-                                    "Address transactions of {0} ({1})"
-                                    [ Id.id model.address.id
-                                    , Id.network model.address.id |> String.toUpper
-                                    ]
-                                    |> (++) " "
-                                    |> (++) (makeTimestampFilename uc.locale posix)
+                            ( exportCSVModel, cmd, fetch ) =
+                                ExportCSV.gotData uc exportCSVConfig addressTxs txs.exportCSV
                         in
-                        ( txs
-                            |> s_downloadingCSV False
-                            |> RemoteData.Success
-                            |> flip s_txs model
-                        , result
-                            |> pair title
-                            |> DownloadCSVEffect
-                            |> List.singleton
-                            |> (++) notification
-                        )
+                        updateExportCSVModel exportCSVModel cmd fetch txs model
+                            |> mapSecond ((++) notification)
                     )
                 |> RemoteData.withDefault (n model)
+
+
+updateExportCSVModel : ExportCSV.Model -> Cmd ExportCSV.Msg -> Bool -> TransactionTable.Model -> Model -> ( Model, List Effect )
+updateExportCSVModel exportCSVModel cmd fetch txs model =
+    ( txs
+        |> s_exportCSV exportCSVModel
+        |> RemoteData.Success
+        |> flip s_txs model
+    , cmd
+        |> Cmd.map
+            (ExportCSVMsg
+                >> Pathfinder.AddressDetailsMsg model.address.id
+            )
+        |> CmdEffect
+        |> flip (::)
+            (if fetch then
+                [ fetchTransactions
+                    GotAddressTxsForExport
+                    txs
+                    model.address.id
+                    (txs.table
+                        |> InfiniteTable.getTable
+                        |> .state
+                        |> Table.getSortState
+                        |> Just
+                    )
+                    numberOfRowsForCSVExport
+                    Nothing
+                ]
+
+             else
+                []
+            )
+    )
+
+
+makeExportCSVConfig : Update.Config -> Model -> ExportCSV.Config Api.Data.AddressTx
+makeExportCSVConfig uc model =
+    ExportCSV.config
+        { filename =
+            Locale.interpolated uc.locale
+                "Address transactions of {0} ({1})"
+                [ Id.id model.address.id
+                , Id.network model.address.id |> String.toUpper
+                ]
+        , toCsv =
+            let
+                nw =
+                    model.address.id |> Id.network
+            in
+            \tx ->
+                if nw |> Data.isAccountLike then
+                    case tx of
+                        Api.Data.AddressTxAddressTxUtxo _ ->
+                            Nothing
+
+                        Api.Data.AddressTxTxAccount tx_ ->
+                            TxsAccountTable.prepareCSV uc.locale nw tx_
+                                |> List.map (mapFirst (Locale.string uc.locale))
+                                |> Just
+
+                else
+                    case tx of
+                        Api.Data.AddressTxAddressTxUtxo tx_ ->
+                            AddressTxsUtxoTable.prepareCSV uc.locale nw tx_
+                                |> List.map (mapFirst (Locale.string uc.locale))
+                                |> Just
+
+                        Api.Data.AddressTxTxAccount _ ->
+                            Nothing
+        }
 
 
 updateRelatedAddressesTable : Model -> (RelatedAddressesTable.Model -> ( RelatedAddressesTable.Model, List Effect )) -> ( Model, List Effect )

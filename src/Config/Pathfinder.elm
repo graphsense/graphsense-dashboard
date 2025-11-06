@@ -21,7 +21,6 @@ numberOfRowsForCSVExport =
     50
 
 
-
 type TracingMode
     = TransactionTracingMode
     | AggregateTracingMode

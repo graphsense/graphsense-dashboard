@@ -624,7 +624,7 @@ transactionTableView vc addressId txOnGraphFn model =
         , resetDirectionFilterMsg = Just AddressDetails.ResetTxDirectionFilter
         , toggleFilterView = AddressDetails.ToggleTxFilterView
         , resetZeroValueFilterMsg = Nothing
-        , exportCsv = Just ( AddressDetails.UserClickedExportCSV, model.downloadingCSV )
+        , exportCsv = Just ( AddressDetails.ExportCSVMsg, model.exportCSV )
         }
     , table
     ]

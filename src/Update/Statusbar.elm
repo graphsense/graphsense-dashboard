@@ -172,9 +172,6 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.InternalEffect _) ->
             Nothing
 
-        Model.PathfinderEffect (Pathfinder.DownloadCSVEffect _) ->
-            Nothing
-
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =

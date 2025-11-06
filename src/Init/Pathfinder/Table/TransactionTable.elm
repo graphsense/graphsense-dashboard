@@ -2,6 +2,7 @@ module Init.Pathfinder.Table.TransactionTable exposing (init)
 
 import Api.Data
 import Api.Request.Addresses
+import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Config.DateRangePicker exposing (datePickerSettings)
@@ -64,5 +65,5 @@ init uc network addressId data assets =
     , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
     , selectedAsset = Nothing
     , includeZeroValueTxs = Nothing -- Backend does not support this filter at the moment
-    , downloadingCSV = False
+    , exportCSV = ExportCSV.init
     }

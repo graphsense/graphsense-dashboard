@@ -1,6 +1,7 @@
 module Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..), RelatedAddressesTooltipMsgs(..), TooltipContext, TooltipMsgs(..), relatedAddressTypeOptions)
 
 import Api.Data
+import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
 import DurationDatePicker
@@ -86,6 +87,5 @@ type Msg
     | BrowserGotPubkeyRelations Api.Data.RelatedAddresses
     | TooltipMsg TooltipMsgs
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)
-    | UserClickedExportCSV
-    | BrowserGotTime Time.Posix
-    | GotAddressTxsForExport Time.Posix Api.Data.AddressTxs
+    | ExportCSVMsg ExportCSV.Msg
+    | GotAddressTxsForExport Api.Data.AddressTxs

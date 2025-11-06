@@ -120,10 +120,6 @@ perform plugins key statusbarToken apiKey effect =
                     Task.succeed (msg |> PathfinderMsg)
                         |> Task.perform identity
 
-                Pathfinder.DownloadCSVEffect _ ->
-                    Pathfinder.perform eff
-                        |> Cmd.map PathfinderMsg
-
         GraphEffect eff ->
             case eff of
                 Graph.ApiEffect apiEff ->
