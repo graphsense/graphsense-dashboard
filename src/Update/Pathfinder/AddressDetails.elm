@@ -20,6 +20,7 @@ import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Maybe.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
+import Model.Notification as Notification
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -680,13 +681,33 @@ update uc msg model =
                     )
                 |> RemoteData.withDefault (n model)
 
-        GotAddressTxsForExport posix { addressTxs } ->
+        GotAddressTxsForExport posix { nextPage, addressTxs } ->
             model.txs
                 |> RemoteData.map
                     (\txs ->
                         let
                             translate =
                                 List.map (mapFirst (Locale.string uc.locale))
+
+                            notification =
+                                nextPage
+                                    |> Maybe.map
+                                        (\_ ->
+                                            "there_were_more_rows_for_csv_download_info"
+                                                |> Notification.infoDefault
+                                                |> Notification.map
+                                                    (s_isEphemeral False
+                                                        >> s_title (Just "there_were_more_rows_for_csv_download")
+                                                        >> s_showClose True
+                                                        >> s_variables
+                                                            [ numberOfRowsForCSVExport
+                                                                |> String.fromInt
+                                                            ]
+                                                    )
+                                                |> ShowNotificationEffect
+                                                |> List.singleton
+                                        )
+                                    |> Maybe.withDefault []
 
                             asCsv prepare =
                                 Csv.Encode.encode
@@ -743,6 +764,7 @@ update uc msg model =
                             |> pair title
                             |> DownloadCSVEffect
                             |> List.singleton
+                            |> (++) notification
                         )
                     )
                 |> RemoteData.withDefault (n model)

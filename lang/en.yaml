@@ -44,3 +44,5 @@ no_inputs: Inputs
 no_outputs: Outputs
 total_input: Total input amount
 total_output: Total output amount
+there_were_more_rows_for_csv_download: Downloading CSV data is limited to {0} rows. 
+there_were_more_rows_for_csv_download_info: Please use filter options to further narrow down the data set.

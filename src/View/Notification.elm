@@ -1,5 +1,6 @@
 module View.Notification exposing (view)
 
+import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Dialog as Css
@@ -72,7 +73,7 @@ view vc model =
                 msgText =
                     message
                         :: moreInfo
-                        |> List.map (\m -> Locale.interpolated vc.locale m variables)
+                        |> List.map (flip (Locale.interpolated vc.locale) variables)
                         |> String.join " "
             in
             { msg =
@@ -89,7 +90,7 @@ view vc model =
 
                 else
                     hide
-            , title = title |> Maybe.withDefault msgText |> Locale.string vc.locale
+            , title = title |> Maybe.withDefault msgText |> flip (Locale.interpolated vc.locale) variables
             , msgTextAttr =
                 if showMsgText then
                     []
