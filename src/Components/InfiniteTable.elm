@@ -576,7 +576,7 @@ view config attributes (Model model) =
                     |> property "style"
                     |> List.singleton
                     |> flip div
-                        (if height > 0 then
+                        (if height > 0 && model.table.loading then
                             ldngHtml
 
                          else
