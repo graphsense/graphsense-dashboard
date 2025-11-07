@@ -27,8 +27,8 @@ Tag Import: Tag Import
 "Multi Input Cluster Help": "Addresses have been used in the same transaction (ie. likely by same owner)."
 "Pubkey Cluster Help": "Addresses have been created from the same key (ie. by same owner)."
 pf1_deprecation_notice: "English: Pathfinder 1.0 is deprecated and will be removed soon. Please switch to the new Pathfinder available from the sidebar. Do you have issues with the retirement of the old pathfinder? Contact support by email at contact@ikna.io."
-tx-tracing-mode-help-text: "In Transaction Tracing Mode, you can trace the flow of funds through individual transactions. This mode is useful for following specific transactions and understanding their paths."
-tx-relationship-mode-help-text: "In Transaction Relationship Mode, you can explore the relationships between different entities based on aggregated transaction data. This mode helps identify patterns and connections between entities over multiple transactions."
+tx-tracing-mode-help-text: "In transaction mode, you can trace the flow of funds through individual transactions. This mode is useful for following specific transactions and understanding their paths."
+tx-relationship-mode-help-text: "In relationship mode, you can explore the relationships between different entities based on aggregated transaction data. This mode helps identify patterns and connections between entities over multiple transactions."
 cluster-details-info-help-text: "Cluster info provide statistics over all addresses in the cluster, including aggregated balances and transaction counts. Clusters are based on the multi-input heuristic only."
 tx_hash: Transaction hash
 token_tx_id: Sub transaction ID
@@ -46,3 +46,5 @@ total_input: Total input amount
 total_output: Total output amount
 there_were_more_rows_for_csv_download: Downloading CSV data is limited to {0} rows. 
 there_were_more_rows_for_csv_download_info: Please use filter options to further narrow down the data set.
+outgoing relations: outgoing relationships
+incoming relations: incoming relationships
