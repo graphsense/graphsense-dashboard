@@ -59,6 +59,7 @@ config vc coinCode =
 prepareCSV : Model.Locale.Model -> String -> Api.Data.AddressTxUtxo -> List ( String, String )
 prepareCSV locModel network row =
     ( "Tx_hash", Util.Csv.string row.txHash )
+        :: ( "Currency", Util.Csv.string <| String.toUpper row.currency )
         :: Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel (assetFromBase network)
         ++ [ ( "Height", Util.Csv.int row.height )
            , ( "Timestamp_utc", Locale.timestampNormal { locModel | zone = Time.utc } <| Data.timestampToPosix row.timestamp )
