@@ -292,6 +292,29 @@ txFilterDialogView vc net config model =
                     none
             }
         , root =
+            let
+                drp =
+                    SidePanelComponents.datePickerCtaWithAttributes
+                        (SidePanelComponents.datePickerCtaAttributes
+                            |> Rs.s_root
+                                ([ Util.View.pointer
+                                 , [ Css.hover SidePanelComponents.datePickerCtaStateHover_details.styles ] |> css
+                                 ]
+                                    ++ (case config.openDateRangePickerMsg of
+                                            Just msg ->
+                                                [ onClick msg ]
+
+                                            Nothing ->
+                                                []
+                                       )
+                                )
+                        )
+                        { root =
+                            { placeholder = Locale.string vc.locale "Select date range"
+                            , state = SidePanelComponents.DatePickerCtaStateDefault
+                            }
+                        }
+            in
             { dateInstance =
                 case model.dateRangePicker of
                     Just dmodel ->
@@ -339,29 +362,10 @@ txFilterDialogView vc net config model =
                                 )
                                 startDate
                                 endDate
-                                |> Maybe.withDefault none
+                                |> Maybe.withDefault drp
 
                     _ ->
-                        SidePanelComponents.datePickerCtaWithAttributes
-                            (SidePanelComponents.datePickerCtaAttributes
-                                |> Rs.s_root
-                                    ([ Util.View.pointer
-                                     , [ Css.hover SidePanelComponents.datePickerCtaStateHover_details.styles ] |> css
-                                     ]
-                                        ++ (case config.openDateRangePickerMsg of
-                                                Just msg ->
-                                                    [ onClick msg ]
-
-                                                Nothing ->
-                                                    []
-                                           )
-                                    )
-                            )
-                            { root =
-                                { placeholder = Locale.string vc.locale "Select date range"
-                                , state = SidePanelComponents.DatePickerCtaStateDefault
-                                }
-                            }
+                        drp
             , dateLabel = Locale.string vc.locale "Date Range"
             , headerTitle = Locale.string vc.locale "Transaction Filter"
             , txDirection = Locale.string vc.locale "Transaction Direction"
