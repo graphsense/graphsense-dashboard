@@ -8,7 +8,6 @@ import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
 import Table
-import Time
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 

@@ -169,6 +169,26 @@ filterHeader vc model config =
                     |> Maybe.withDefault
                         [ css [ Css.display Css.none ] ]
                 )
+            |> Rs.s_icons
+                (let
+                    dateFilterTakesMuchSpace =
+                        (model.dateRangePicker
+                            |> Maybe.andThen .fromDate
+                            |> Maybe.map (Locale.isFirstSecondOfTheDay vc.locale >> not)
+                            |> Maybe.withDefault False
+                        )
+                            && (model.dateRangePicker
+                                    |> Maybe.andThen .toDate
+                                    |> Maybe.map (Locale.isLastSecondOfTheDay vc.locale >> not)
+                                    |> Maybe.withDefault False
+                               )
+                 in
+                 if dateFilterTakesMuchSpace then
+                    [ css [ Css.flexWrap Css.wrap, Css.width <| Css.px 32 ] ]
+
+                 else
+                    []
+                )
         )
         { filterList =
             [ model.dateRangePicker |> Maybe.map (dateTimeFilterHeader vc config.resetDateFilterMsg)
