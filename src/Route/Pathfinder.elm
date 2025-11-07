@@ -1,4 +1,4 @@
-module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, aggEdgeRoute, parser, pathRoute, toUrl, txRoute)
+module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, addressRouteWithFilter, aggEdgeRoute, parser, pathRoute, toUrl, txRoute)
 
 import Iso8601
 import List.Extra
@@ -198,6 +198,11 @@ parsePath =
 addressRoute : { network : String, address : String } -> Route
 addressRoute { network, address } =
     Address address Nothing |> Network network
+
+
+addressRouteWithFilter : { network : String, address : String, filter : Maybe DateFilterRaw } -> Route
+addressRouteWithFilter { network, address, filter } =
+    Address address filter |> Network network
 
 
 txRoute : { network : String, txHash : String } -> Route

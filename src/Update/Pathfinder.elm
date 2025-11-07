@@ -148,7 +148,66 @@ update plugins uc msg model =
         |> markDirty plugins msg
         |> updateByMsg plugins uc msg
         |> and (syncSidePanel uc)
+        |> and syncUrl
         |> and dispatchEventualMessages
+
+
+syncUrl : Model -> ( Model, List Effect )
+syncUrl model =
+    case model.details of
+        Just (AddressDetails id ad) ->
+            let
+                filter =
+                    if not ad.transactionsTableOpen then
+                        Nothing
+
+                    else
+                        case ad.txs of
+                            NotAsked ->
+                                Nothing
+
+                            Failure _ ->
+                                Nothing
+
+                            Loading ->
+                                { fromDate = Nothing
+                                , toDate = Nothing
+                                }
+                                    |> Just
+
+                            Success txs ->
+                                txs.dateRangePicker
+                                    |> Maybe.map
+                                        (\{ fromDate, toDate } ->
+                                            { fromDate = fromDate
+                                            , toDate = toDate
+                                            }
+                                        )
+                                    |> Maybe.withDefault
+                                        { fromDate = Nothing
+                                        , toDate = Nothing
+                                        }
+                                    |> Just
+
+                route =
+                    Route.addressRouteWithFilter
+                        { network = Id.network id
+                        , address = Id.id id
+                        , filter = filter
+                        }
+            in
+            ( model
+            , if model.route /= route then
+                route
+                    |> NavPushRouteEffect
+                    |> List.singleton
+
+              else
+                []
+            )
+
+        _ ->
+            n model
 
 
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
@@ -2871,6 +2930,7 @@ updateByRoute plugins uc route model =
         forcePushHistory (model |> s_isDirty True |> s_route route)
             |> updateByRoute_ plugins uc route
             |> and (syncSidePanel uc)
+            |> and syncUrl
 
 
 addPathsToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool, autolinkInTraceMode : Bool } -> List (List PathHopType) -> ( Model, List Effect )
