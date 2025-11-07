@@ -140,7 +140,7 @@ prepareCSV locModel network row =
     , ( "Token_tx_id", row.tokenTxId |> Maybe.map Util.Csv.int |> Maybe.withDefault (Util.Csv.string "") )
     ]
         ++ Util.Csv.valuesWithBaseCurrencyFloat "Value" row.value locModel { network = network, asset = row.currency }
-        ++ [ ( "Currency", Util.Csv.string row.currency )
+        ++ [ ( "Currency", Util.Csv.string <| String.toUpper row.currency )
            , ( "Height", Util.Csv.int row.height )
            , ( "Timestamp_utc", Locale.timestampNormal { locModel | zone = Time.utc } <| Data.timestampToPosix row.timestamp )
            , ( "Sending_address", Util.Csv.string row.fromAddress )

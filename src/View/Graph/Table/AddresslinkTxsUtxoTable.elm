@@ -61,6 +61,7 @@ prepareCSV : Model.Locale.Model -> String -> Api.Data.LinkUtxo -> List ( String,
 prepareCSV locModel network row =
     ( "Tx_hash", Util.Csv.string row.txHash )
         :: Util.Csv.valuesWithBaseCurrencyFloat "Value" row.outputValue locModel (assetFromBase network)
-        ++ [ ( "Height", Util.Csv.int row.height )
+        ++ [ ( "Currency", Util.Csv.string <| String.toUpper network )
+           , ( "Height", Util.Csv.int row.height )
            , ( "Timestamp_utc", Data.timestampToPosix row.timestamp |> Locale.timestampNormal locModel )
            ]
