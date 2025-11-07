@@ -15,6 +15,7 @@ module Components.InfiniteTable exposing
     , loadFirstPage
     , removeItem
     , reset
+    , resetCurrent
     , sortBy
     , update
     , updateTable
@@ -160,6 +161,8 @@ appendData config filt nextpage data (Model model) =
         |> getRowHeight
 
 
+{-| Resets both sorting's tables
+-}
 reset : Model d -> Model d
 reset (Model model) =
     let
@@ -172,6 +175,18 @@ reset (Model model) =
             , scrollTop = 0
             , data = Dict.insert col initData model.data
         }
+
+
+{-| Resets only the current's sorting table
+-}
+resetCurrent : Model d -> Model d
+resetCurrent (Model model) =
+    { model
+        | iterations = 1
+        , scrollTop = 0
+    }
+        |> setIntDict Nothing IntDict.empty
+        |> Model
 
 
 initData : { asc : ( IntDict d, Maybe String ), desc : ( IntDict d, Maybe String ) }
@@ -341,7 +356,7 @@ update config msg (Model model) =
                                     |> flip s_table newModel
 
                             ( nnnewModel, eff ) =
-                                if IntDict.isEmpty dict then
+                                if IntDict.isEmpty dict |> Debug.log "isEmpty" then
                                     Model nnewModel
                                         |> loadFirstPage config
 
@@ -401,7 +416,8 @@ getNumVisibleItems model =
 
 loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
 loadFirstPage config (Model model) =
-    ( Model model |> setLoading True
+    ( Model model 
+        |> setLoading True
     , config.fetch (Just (T.getSortState model.table.state)) model.pagesize Nothing
         |> Just
     )
@@ -634,6 +650,7 @@ getIntDict model =
     let
         ( col, isReversed ) =
             T.getSortState model.table.state
+                |> Debug.log "getSortSTate"
     in
     Dict.get col model.data
         |> Maybe.map

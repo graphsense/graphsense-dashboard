@@ -149,6 +149,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                     else
                         tbl.table
+                            |> InfiniteTable.reset
                             |> InfiniteTable.loadFirstPage
                                 (tableConfig id isA2b tbl)
             in
@@ -194,7 +195,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                 reset =
                     if fetchedPage == Nothing then
-                        InfiniteTable.reset
+                        InfiniteTable.resetCurrent
 
                     else
                         identity
@@ -324,6 +325,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                 if dateRangeChanged then
                                     udateTbl
                                         |> .table
+                                        |> InfiniteTable.reset
                                         |> InfiniteTable.loadFirstPage
                                             (tableConfig id isA2b udateTbl)
 
@@ -371,6 +373,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 ( table, eff ) =
                     tbl
                         |> .table
+                        |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
                         |> mapSecond Maybe.Extra.toList
@@ -390,6 +393,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 ( table, eff ) =
                     tbl
                         |> .table
+                        |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
                         |> mapSecond Maybe.Extra.toList
@@ -413,6 +417,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 ( table, eff ) =
                     tbl
                         |> .table
+                        |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
                         |> mapSecond Maybe.Extra.toList
@@ -452,6 +457,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     ( ntbl, eff ) =
                         newTxs
                             |> .table
+                            |> InfiniteTable.reset
                             |> InfiniteTable.loadFirstPage
                                 (tableConfig id isA2b newTxs)
                 in

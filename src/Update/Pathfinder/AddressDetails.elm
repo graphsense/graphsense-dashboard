@@ -183,7 +183,7 @@ update uc msg model =
                         let
                             reset =
                                 if fetchedPage == Nothing then
-                                    InfiniteTable.reset
+                                    InfiniteTable.resetCurrent
 
                                 else
                                     identity
@@ -242,7 +242,7 @@ update uc msg model =
                         let
                             reset =
                                 if fetchedPage == Nothing then
-                                    InfiniteTable.reset
+                                    InfiniteTable.resetCurrent
 
                                 else
                                     identity
@@ -733,6 +733,7 @@ loadFirstPage model =
                 let
                     ( tableNew, eff ) =
                         nt.table
+                            |> InfiniteTable.reset
                             |> InfiniteTable.loadFirstPage
                                 (transactionTableConfigWithMsg
                                     GotTxsForAddressDetails
