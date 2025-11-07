@@ -18,7 +18,7 @@ nodeYOffset =
 
 numberOfRowsForCSVExport : Int
 numberOfRowsForCSVExport =
-    50
+    5000
 
 
 type TracingMode

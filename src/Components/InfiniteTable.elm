@@ -356,7 +356,7 @@ update config msg (Model model) =
                                     |> flip s_table newModel
 
                             ( nnnewModel, eff ) =
-                                if IntDict.isEmpty dict |> Debug.log "isEmpty" then
+                                if IntDict.isEmpty dict then
                                     Model nnewModel
                                         |> loadFirstPage config
 
@@ -416,7 +416,7 @@ getNumVisibleItems model =
 
 loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
 loadFirstPage config (Model model) =
-    ( Model model 
+    ( Model model
         |> setLoading True
     , config.fetch (Just (T.getSortState model.table.state)) model.pagesize Nothing
         |> Just
@@ -650,7 +650,6 @@ getIntDict model =
     let
         ( col, isReversed ) =
             T.getSortState model.table.state
-                |> Debug.log "getSortSTate"
     in
     Dict.get col model.data
         |> Maybe.map
