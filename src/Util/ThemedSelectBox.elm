@@ -9,6 +9,7 @@ module Util.ThemedSelectBox exposing
     , getOptions
     , init
     , update
+    , updateOptions
     , view
     , viewDisabled
     , viewWithLabel
@@ -54,6 +55,11 @@ init options =
         { options = options
         , open = False
         }
+
+
+updateOptions : List a -> Model a -> Model a
+updateOptions options (SelectBox m) =
+    SelectBox { m | options = options }
 
 
 getOptions : Model a -> List a

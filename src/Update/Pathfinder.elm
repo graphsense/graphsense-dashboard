@@ -158,7 +158,7 @@ syncUrl model =
         Just (AddressDetails id ad) ->
             let
                 filter =
-                    if not ad.transactionsTableOpen |> Debug.log "open" then
+                    if not ad.transactionsTableOpen then
                         Nothing
 
                     else
@@ -259,9 +259,27 @@ syncSidePanel uc model =
         ( SelectedTx id, _ ) ->
             makeTxDetails id
 
-        ( SelectedAggEdge id, Just (RelationDetails tid _) ) ->
+        ( SelectedAggEdge id, Just (RelationDetails tid d) ) ->
             if id == tid then
-                model.details
+                let
+                    stillLoading =
+                        (RemoteData.isSuccess d.aggEdge.a2b |> not) || (RemoteData.isSuccess d.aggEdge.b2a |> not)
+                in
+                if stillLoading then
+                    case Dict.get tid model.network.aggEdges of
+                        Just aggEdge ->
+                            -- make sure the aggEdge is up to date, to avoid stale data in RelationDetails view
+                            -- needed for asset selection
+                            d
+                                |> RelationDetails.updateAggEdge uc aggEdge
+                                |> RelationDetails tid
+                                |> Just
+
+                        Nothing ->
+                            model.details
+
+                else
+                    model.details
 
             else
                 makeRelationDetails id

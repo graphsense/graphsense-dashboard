@@ -1,4 +1,4 @@
-module Init.Pathfinder.RelationDetails exposing (init)
+module Init.Pathfinder.RelationDetails exposing (getExposedAssetsForNeighbor, getExposedAssetsForNeighborWebData, init)
 
 import Api.Data
 import Dict
@@ -19,22 +19,25 @@ getExposedAssetsForNeighbor data =
            )
 
 
+getExposedAssetsForNeighborWebData : List String -> RemoteData.WebData (Maybe Api.Data.NeighborAddress) -> List String
+getExposedAssetsForNeighborWebData default webData =
+    webData
+        |> RemoteData.toMaybe
+        |> Maybe.Extra.join
+        |> Maybe.map getExposedAssetsForNeighbor
+        |> Maybe.withDefault default
+
+
 init : AggEdge -> RelationDetails.Model
 init edge =
     let
+        -- if data should be missing, fall back to empty asset list
+        -- update later assigns data when available
         a2bAssets =
-            edge.a2b
-                |> RemoteData.toMaybe
-                |> Maybe.Extra.join
-                |> Maybe.map getExposedAssetsForNeighbor
-                |> Maybe.withDefault []
+            edge.a2b |> getExposedAssetsForNeighborWebData []
 
         b2aAssets =
-            edge.b2a
-                |> RemoteData.toMaybe
-                |> Maybe.Extra.join
-                |> Maybe.map getExposedAssetsForNeighbor
-                |> Maybe.withDefault []
+            edge.b2a |> getExposedAssetsForNeighborWebData []
     in
     { a2bTableOpen = False
     , b2aTableOpen = False

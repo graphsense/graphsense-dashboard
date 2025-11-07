@@ -1,4 +1,4 @@
-module Model.Locale exposing (Flags, Model, State(..), ValueDetail(..), getFiatValue, getTokenTickers, isEmpty, locales)
+module Model.Locale exposing (Flags, Model, State(..), ValueDetail(..), getFiatValue, getTokenTickers, getTokenTickersAndBase, isEmpty, locales)
 
 import Api.Data
 import DateFormat.Language
@@ -72,3 +72,8 @@ getTokenTickers m net =
     Dict.get net m.supportedTokens
         |> Maybe.map (.tokenConfigs >> List.map (.ticker >> String.toUpper))
         |> Maybe.withDefault []
+
+
+getTokenTickersAndBase : Model -> String -> List String
+getTokenTickersAndBase m net =
+    (net |> String.toUpper) :: getTokenTickers m net

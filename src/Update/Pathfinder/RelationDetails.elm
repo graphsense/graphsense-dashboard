@@ -1,4 +1,4 @@
-module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, update)
+module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, update, updateAggEdge)
 
 import Api.Data
 import Api.Request.Addresses
@@ -11,17 +11,19 @@ import Config.Update as Update
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.DateRangePicker as DateRangePicker
+import Init.Pathfinder.RelationDetails as Init
 import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
+import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.RelationDetails exposing (Model)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
-import RecordSetter exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_exportCSV, s_isTxFilterViewOpen, s_selectedAsset, s_table)
+import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_exportCSV, s_isTxFilterViewOpen, s_selectedAsset, s_table)
 import Table
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
@@ -116,6 +118,34 @@ gettersAndSetters isA2b =
         , getOpen = .b2aTableOpen
         , setOpen = s_b2aTableOpen
         }
+
+
+updateAggEdge : Update.Config -> AggEdge -> Model -> Model
+updateAggEdge uc edge model =
+    let
+        a2bSelect =
+            edge.a2b
+                |> Init.getExposedAssetsForNeighborWebData (Locale.getTokenTickersAndBase uc.locale (edge.a |> Id.network))
+                |> List.map Just
+                |> (::) Nothing
+
+        b2aSelect =
+            edge.b2a
+                |> Init.getExposedAssetsForNeighborWebData (Locale.getTokenTickersAndBase uc.locale (edge.b |> Id.network))
+                |> List.map Just
+                |> (::) Nothing
+    in
+    { model
+        | aggEdge = edge
+        , a2bTable =
+            model.a2bTable.assetSelectBox
+                |> ThemedSelectBox.updateOptions a2bSelect
+                |> flip Rs.s_assetSelectBox model.a2bTable
+        , b2aTable =
+            model.b2aTable.assetSelectBox
+                |> ThemedSelectBox.updateOptions b2aSelect
+                |> flip Rs.s_assetSelectBox model.b2aTable
+    }
 
 
 update : Update.Config -> ( Id, Id ) -> ( Time.Posix, Time.Posix ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
@@ -387,8 +417,11 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 gs =
                     gettersAndSetters isA2b
 
+                oldTable =
+                    gs.getTable model
+
                 tbl =
-                    RelationTxsTable.init (dir isA2b) (Locale.getTokenTickers uc.locale net)
+                    RelationTxsTable.init (dir isA2b) (oldTable.assetSelectBox |> ThemedSelectBox.getOptions |> List.filterMap identity)
 
                 ( table, eff ) =
                     tbl
