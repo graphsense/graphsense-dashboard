@@ -649,11 +649,8 @@ update uc msg model =
                 |> RemoteData.map
                     (\txs ->
                         let
-                            exportCSVConfig =
-                                makeExportCSVConfig uc model
-
                             ( exportCSVModel, cmd, fetch ) =
-                                ExportCSV.update uc exportCSVConfig ms txs.exportCSV
+                                ExportCSV.update ms txs.exportCSV
                         in
                         updateExportCSVModel exportCSVModel cmd fetch txs model
                     )

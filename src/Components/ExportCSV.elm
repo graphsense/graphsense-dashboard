@@ -61,8 +61,8 @@ init =
         }
 
 
-update : Update.Config -> Config data -> Msg -> Model -> ( Model, Cmd Msg, Bool )
-update uc (Config conf) msg (Model model) =
+update : Msg -> Model -> ( Model, Cmd Msg, Bool )
+update msg (Model model) =
     case msg of
         UserClickedExportCSV ->
             ( Model model

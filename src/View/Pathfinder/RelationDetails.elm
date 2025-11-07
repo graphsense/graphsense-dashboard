@@ -295,7 +295,7 @@ tableTab vc network edgeId viewState isA2b =
                         , resetDirectionFilterMsg = Nothing
                         , toggleFilterView = RelationDetails.ToggleTxFilterView isA2b
                         , resetZeroValueFilterMsg = Nothing
-                        , exportCsv = Nothing
+                        , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b, table.exportCSV )
                         }
                     , tableView
                     ]

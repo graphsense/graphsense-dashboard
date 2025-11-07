@@ -14,8 +14,10 @@ import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
 import Util.Csv
+import Util.Data as Data
 import Util.View
 import View.Graph.Table as T exposing (customizations)
+import View.Locale as Locale
 
 
 config : View.Config -> String -> Table.Config Api.Data.LinkUtxo Msg
@@ -57,9 +59,8 @@ config vc coinCode =
 
 prepareCSV : Model.Locale.Model -> String -> Api.Data.LinkUtxo -> List ( String, String )
 prepareCSV locModel network row =
-    ( "tx_hash", Util.Csv.string row.txHash )
-        :: Util.Csv.valuesWithBaseCurrencyFloat "input_value" row.inputValue locModel (assetFromBase network)
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "output_value" row.outputValue locModel (assetFromBase network)
-        ++ [ ( "height", Util.Csv.int row.height )
-           , ( "timestamp", Util.Csv.timestamp locModel row.timestamp )
+    ( "Tx_hash", Util.Csv.string row.txHash )
+        :: Util.Csv.valuesWithBaseCurrencyFloat "Value" row.outputValue locModel (assetFromBase network)
+        ++ [ ( "Height", Util.Csv.int row.height )
+           , ( "Timestamp_utc", Data.timestampToPosix row.timestamp |> Locale.timestampNormal locModel )
            ]

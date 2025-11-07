@@ -1,9 +1,12 @@
 module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, update)
 
+import Api.Data
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
+import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Config.DateRangePicker exposing (datePickerSettings)
+import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
@@ -18,16 +21,21 @@ import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
-import RecordSetter exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_isTxFilterViewOpen, s_selectedAsset, s_table)
+import RecordSetter exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_exportCSV, s_isTxFilterViewOpen, s_selectedAsset, s_table)
+import Table
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Update.DateRangePicker as DateRangePicker
 import Util exposing (n)
+import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
+import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import View.Graph.Table.TxsAccountTable as TxsAccountTable
+import View.Locale as Locale
 
 
-loadRelationTxs : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
-loadRelationTxs id isA2b txTable sorting nrItems nextpage =
+loadRelationTxs : (Bool -> Maybe String -> Api.Data.Links -> Msg) -> ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
     let
         a =
             first id
@@ -42,20 +50,13 @@ loadRelationTxs id isA2b txTable sorting nrItems nextpage =
             else
                 ( Id.id b, Id.id a )
 
-        msg =
-            if nextpage == Nothing then
-                BrowserGotLinks
-
-            else
-                BrowserGotLinksNextPage
-
         fromD =
             txTable.dateRangePicker |> Maybe.andThen .fromDate
 
         toD =
             txTable.dateRangePicker |> Maybe.andThen .toDate
     in
-    msg isA2b
+    msg isA2b nextpage
         >> RelationDetailsMsg id
         |> Api.GetAddresslinkTxsEffect
             { currency = Id.network a
@@ -88,7 +89,7 @@ loadRelationTxs id isA2b txTable sorting nrItems nextpage =
 
 tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config Effect
 tableConfig id isA2b txTable =
-    { fetch = loadRelationTxs id isA2b txTable
+    { fetch = loadRelationTxs BrowserGotLinks id isA2b txTable
     , triggerOffset = 100
     }
 
@@ -183,7 +184,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                         )
                     )
 
-        BrowserGotLinks isA2b data ->
+        BrowserGotLinks isA2b fetchedPage data ->
             let
                 gs =
                     gettersAndSetters isA2b
@@ -191,39 +192,17 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 tbl =
                     gs.getTable model
 
-                ( table, cmd, eff ) =
-                    tbl
-                        |> .table
-                        |> InfiniteTable.reset
-                        |> InfiniteTable.appendData
-                            (tableConfig id isA2b tbl)
-                            RelationTxsTable.filter
-                            data.nextPage
-                            data.links
-            in
-            ( table, eff )
-                |> mapFirst (flip s_table tbl)
-                |> mapFirst (flip gs.setTable model)
-                |> mapSecond Maybe.Extra.toList
-                |> mapSecond
-                    ((::)
-                        (cmd
-                            |> Cmd.map (TableMsg isA2b >> RelationDetailsMsg id)
-                            |> CmdEffect
-                        )
-                    )
+                reset =
+                    if fetchedPage == Nothing then
+                        InfiniteTable.reset
 
-        BrowserGotLinksNextPage isA2b data ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                tbl =
-                    gs.getTable model
+                    else
+                        identity
 
                 ( table, cmd, eff ) =
                     tbl
                         |> .table
+                        |> reset
                         |> InfiniteTable.appendData
                             (tableConfig id isA2b tbl)
                             RelationTxsTable.filter
@@ -477,3 +456,124 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                 (tableConfig id isA2b newTxs)
                 in
                 ( model |> gs.setTable (newTxs |> s_table ntbl), eff ) |> mapSecond Maybe.Extra.toList
+
+        ExportCSVMsg isA2b ms ->
+            let
+                gs =
+                    gettersAndSetters isA2b
+
+                tbl =
+                    gs.getTable model
+
+                ( exportCSVModel, cmd, fetch ) =
+                    ExportCSV.update ms tbl.exportCSV
+            in
+            updateExportCSVModel isA2b id exportCSVModel cmd fetch tbl model
+
+        BrowserGotLinksForExport isA2b _ { nextPage, links } ->
+            let
+                gs =
+                    gettersAndSetters isA2b
+
+                tbl =
+                    gs.getTable model
+
+                notification =
+                    nextPage
+                        |> Maybe.map
+                            (\_ ->
+                                ExportCSV.makeNotification numberOfRowsForCSVExport
+                                    |> ShowNotificationEffect
+                                    |> List.singleton
+                            )
+                        |> Maybe.withDefault []
+
+                exportCSVConfig =
+                    makeExportCSVConfig uc isA2b model
+
+                ( exportCSVModel, cmd, fetch ) =
+                    ExportCSV.gotData uc exportCSVConfig links tbl.exportCSV
+            in
+            updateExportCSVModel isA2b id exportCSVModel cmd fetch tbl model
+                |> mapSecond ((++) notification)
+
+
+updateExportCSVModel : Bool -> ( Id, Id ) -> ExportCSV.Model -> Cmd ExportCSV.Msg -> Bool -> RelationTxsTable.Model -> Model -> ( Model, List Effect )
+updateExportCSVModel isA2b id exportCSVModel cmd fetch tbl model =
+    let
+        gs =
+            gettersAndSetters isA2b
+    in
+    ( tbl
+        |> s_exportCSV exportCSVModel
+        |> flip gs.setTable model
+    , cmd
+        |> Cmd.map
+            (ExportCSVMsg isA2b >> RelationDetailsMsg id)
+        |> CmdEffect
+        |> flip (::)
+            (if fetch then
+                [ loadRelationTxs
+                    BrowserGotLinksForExport
+                    id
+                    isA2b
+                    tbl
+                    (tbl.table
+                        |> InfiniteTable.getTable
+                        |> .state
+                        |> Table.getSortState
+                        |> Just
+                    )
+                    numberOfRowsForCSVExport
+                    Nothing
+                ]
+
+             else
+                []
+            )
+    )
+
+
+makeExportCSVConfig : Update.Config -> Bool -> Model -> ExportCSV.Config Api.Data.Link
+makeExportCSVConfig uc isA2b model =
+    let
+        ( from, to ) =
+            if isA2b then
+                ( model.aggEdge.a, model.aggEdge.b )
+
+            else
+                ( model.aggEdge.b, model.aggEdge.a )
+
+        nw =
+            Id.network from
+    in
+    ExportCSV.config
+        { filename =
+            Locale.interpolated uc.locale
+                "Transactions from {0} to {1} ({2})"
+                [ Id.id from
+                , Id.id to
+                , String.toUpper nw
+                ]
+        , toCsv =
+            \tx ->
+                if Data.isAccountLike nw then
+                    case tx of
+                        Api.Data.LinkLinkUtxo _ ->
+                            Nothing
+
+                        Api.Data.LinkTxAccount tx_ ->
+                            TxsAccountTable.prepareCSV uc.locale nw tx_
+                                |> List.map (mapFirst (Locale.string uc.locale))
+                                |> Just
+
+                else
+                    case tx of
+                        Api.Data.LinkLinkUtxo tx_ ->
+                            AddresslinkTxsUtxoTable.prepareCSV uc.locale nw tx_
+                                |> List.map (mapFirst (Locale.string uc.locale))
+                                |> Just
+
+                        Api.Data.LinkTxAccount _ ->
+                            Nothing
+        }

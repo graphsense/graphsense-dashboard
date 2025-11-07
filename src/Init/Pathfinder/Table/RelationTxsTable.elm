@@ -1,6 +1,7 @@
 module Init.Pathfinder.Table.RelationTxsTable exposing (emptyDateFilter, init)
 
 import Api.Request.Addresses
+import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Model.DateRangePicker as DateRangePicker
@@ -35,4 +36,5 @@ init dir assets =
     , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
     , selectedAsset = Nothing
     , includeZeroValueTxs = Nothing -- Backend does not support this filter at the moment
+    , exportCSV = ExportCSV.init
     }

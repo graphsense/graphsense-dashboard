@@ -245,10 +245,10 @@ shallPushHistory plugins msg _ =
                 RelationDetails.TableMsg _ _ ->
                     False
 
-                RelationDetails.BrowserGotLinks _ _ ->
+                RelationDetails.BrowserGotLinks _ _ _ ->
                     False
 
-                RelationDetails.BrowserGotLinksNextPage _ _ ->
+                RelationDetails.BrowserGotLinksForExport _ _ _ ->
                     False
 
                 RelationDetails.UserClickedTx _ ->
@@ -282,6 +282,9 @@ shallPushHistory plugins msg _ =
                     False
 
                 RelationDetails.UpdateDateRangePicker _ _ ->
+                    False
+
+                RelationDetails.ExportCSVMsg _ _ ->
                     False
 
         AnimationFrameDeltaForTransform _ ->

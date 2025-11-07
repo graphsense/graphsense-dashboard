@@ -2,6 +2,7 @@ module Model.Pathfinder.Table.RelationTxsTable exposing (Model, filter, titleHas
 
 import Api.Data
 import Api.Request.Addresses
+import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Model.DateRangePicker as DateRangePicker
@@ -19,6 +20,7 @@ type alias Model =
     , assetSelectBox : ThemedSelectBox.Model (Maybe String)
     , selectedAsset : Maybe String
     , includeZeroValueTxs : Maybe Bool -- Backend does not support this filter at the moment
+    , exportCSV : ExportCSV.Model
     }
 
 
