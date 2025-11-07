@@ -3112,18 +3112,26 @@ updateByRoute_ plugins uc route model =
                 id =
                     Id.init network a
             in
-            { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins True id
-                |> and (selectAddress id)
+            if model.selection == SelectedAddress id then
+                n model
+
+            else
+                { model | network = Network.clearSelection model.network }
+                    |> loadAddress plugins True id
+                    |> and (selectAddress id)
 
         Route.Network network (Route.Tx a) ->
             let
                 id =
                     Id.init network a
             in
-            { model | network = Network.clearSelection model.network }
-                |> loadTx True True plugins id
-                |> and (selectTx id)
+            if model.selection == SelectedTx id then
+                n model
+
+            else
+                { model | network = Network.clearSelection model.network }
+                    |> loadTx True True plugins id
+                    |> and (selectTx id)
 
         Route.Network network (Route.Relation a b) ->
             let
@@ -3132,12 +3140,19 @@ updateByRoute_ plugins uc route model =
 
                 bId =
                     Id.init network b
+
+                edgeId =
+                    AggEdge.initId aId bId
             in
-            { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins True aId
-                |> and (loadAddress plugins True bId)
-                |> and (selectAggEdge uc (AggEdge.initId aId bId))
-                |> and (setTracingMode AggregateTracingMode)
+            if model.selection == SelectedAggEdge edgeId then
+                n model
+
+            else
+                { model | network = Network.clearSelection model.network }
+                    |> loadAddress plugins True aId
+                    |> and (loadAddress plugins True bId)
+                    |> and (selectAggEdge uc edgeId)
+                    |> and (setTracingMode AggregateTracingMode)
 
         Route.Path net list ->
             addPathToGraph plugins uc model net { outgoing = True, autolinkInTraceMode = True } list
