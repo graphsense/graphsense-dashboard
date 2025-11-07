@@ -90,6 +90,7 @@ dateTimeFilterHeader vc resetMsg dmodel =
         endDate =
             dmodel.toDate
                 |> Maybe.map (renderDate (Locale.isLastSecondOfTheDay vc.locale))
+
     in
     Maybe.map2
         (\startP endP ->
@@ -98,7 +99,7 @@ dateTimeFilterHeader vc resetMsg dmodel =
                     { iconInstance =
                         closeButtonGrey resetMsg
                     , text1 = endP
-                    , text2 = Locale.string vc.locale "to"
+                    , text2 = "-"
                     , text3 = startP
                     , dateRangeVisible = True
                     }
