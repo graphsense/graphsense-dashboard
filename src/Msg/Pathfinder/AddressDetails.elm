@@ -52,10 +52,8 @@ type Msg
     | UserClickedToggleDisplayAllTagsInDetails
     | TransactionsTableSubTableMsg InfiniteTable.Msg
     | NeighborsTableSubTableMsg Direction InfiniteTable.Msg
-    | GotTxsForAddressDetails ( Maybe Time.Posix, Maybe Time.Posix ) Api.Data.AddressTxs
-    | GotNextPageTxsForAddressDetails Api.Data.AddressTxs
-    | GotNeighborsForAddressDetails Direction Api.Data.NeighborAddresses
-    | GotNeighborsNextPageForAddressDetails Direction Api.Data.NeighborAddresses
+    | GotTxsForAddressDetails (Maybe String) Api.Data.AddressTxs
+    | GotNeighborsForAddressDetails Direction (Maybe String) Api.Data.NeighborAddresses
     | UpdateDateRangePicker DurationDatePicker.Msg
     | ToggleTxFilterView
     | CloseTxFilterView
@@ -88,4 +86,4 @@ type Msg
     | TooltipMsg TooltipMsgs
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)
     | ExportCSVMsg ExportCSV.Msg
-    | GotAddressTxsForExport Api.Data.AddressTxs
+    | GotAddressTxsForExport (Maybe String) Api.Data.AddressTxs

@@ -141,13 +141,7 @@ shallPushHistory plugins msg _ =
                 AddressDetails.CloseTxFilterView ->
                     False
 
-                AddressDetails.GotNextPageTxsForAddressDetails _ ->
-                    False
-
-                AddressDetails.GotNeighborsForAddressDetails _ _ ->
-                    False
-
-                AddressDetails.GotNeighborsNextPageForAddressDetails _ _ ->
+                AddressDetails.GotNeighborsForAddressDetails _ _ _ ->
                     False
 
                 AddressDetails.UpdateDateRangePicker _ ->
@@ -225,7 +219,7 @@ shallPushHistory plugins msg _ =
                 AddressDetails.ExportCSVMsg _ ->
                     False
 
-                AddressDetails.GotAddressTxsForExport _ ->
+                AddressDetails.GotAddressTxsForExport _ _ ->
                     False
 
         TxDetailsMsg _ ->

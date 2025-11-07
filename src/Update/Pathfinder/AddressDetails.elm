@@ -47,11 +47,11 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Locale as Locale
 
 
-neighborsTableConfigWithMsg : (Direction -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
+neighborsTableConfigWithMsg : (Direction -> Maybe String -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
 neighborsTableConfigWithMsg msg addressId dir =
     { fetch =
         \_ pagesize nextpage ->
-            msg dir
+            msg dir nextpage
                 >> Pathfinder.AddressDetailsMsg addressId
                 |> Api.GetAddressNeighborsEffect
                     { currency = Id.network addressId
@@ -70,24 +70,24 @@ neighborsTableConfigWithMsg msg addressId dir =
 
 neighborsTableConfig : Id -> Direction -> InfiniteTable.Config Effect
 neighborsTableConfig =
-    neighborsTableConfigWithMsg GotNeighborsNextPageForAddressDetails
+    neighborsTableConfigWithMsg GotNeighborsForAddressDetails
 
 
 transactionTableConfig : TransactionTable.Model -> Id -> InfiniteTable.Config Effect
 transactionTableConfig =
-    transactionTableConfigWithMsg GotNextPageTxsForAddressDetails
+    transactionTableConfigWithMsg GotTxsForAddressDetails
 
 
-transactionTableConfigWithMsg : (Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
+transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
 transactionTableConfigWithMsg msg txs addressId =
     { fetch = fetchTransactions msg txs addressId
     , triggerOffset = 100
     }
 
 
-fetchTransactions : (Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+fetchTransactions : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
 fetchTransactions msg txs addressId sorting pagesize nextpage =
-    msg
+    msg nextpage
         >> Pathfinder.AddressDetailsMsg addressId
         |> Api.GetAddressTxsByDateEffect
             { currency = Id.network addressId
@@ -176,38 +176,25 @@ update uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        GotNeighborsForAddressDetails dir neighbors ->
+        GotNeighborsForAddressDetails dir fetchedPage neighbors ->
             getNeighborsTableAndSetter model dir
                 |> Maybe.map
                     (\( tbl, setter ) ->
                         let
+                            reset =
+                                if fetchedPage == Nothing then
+                                    InfiniteTable.reset
+
+                                else
+                                    identity
+
                             ( pt, cmd, eff ) =
-                                InfiniteTable.reset tbl
+                                reset tbl
                                     |> InfiniteTable.appendData
                                         (neighborsTableConfig model.address.id dir)
                                         NeighborsTable.filter
                                         neighbors.nextPage
                                         neighbors.neighbors
-                        in
-                        ( setter pt model
-                        , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
-                            :: Maybe.Extra.toList eff
-                        )
-                    )
-                |> Maybe.withDefault (n model)
-
-        GotNeighborsNextPageForAddressDetails dir neighbors ->
-            getNeighborsTableAndSetter model dir
-                |> Maybe.map
-                    (\( tbl, setter ) ->
-                        let
-                            ( pt, cmd, eff ) =
-                                InfiniteTable.appendData
-                                    (neighborsTableConfig model.address.id dir)
-                                    NeighborsTable.filter
-                                    neighbors.nextPage
-                                    neighbors.neighbors
-                                    tbl
                         in
                         ( setter pt model
                         , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
@@ -248,18 +235,25 @@ update uc msg model =
             else
                 openTransactionTable uc Nothing model
 
-        GotNextPageTxsForAddressDetails txs ->
+        GotTxsForAddressDetails fetchedPage txs ->
             model.txs
                 |> RemoteData.map
                     (\txsTable ->
                         let
+                            reset =
+                                if fetchedPage == Nothing then
+                                    InfiniteTable.reset
+
+                                else
+                                    identity
+
                             ( table, cmd, eff ) =
-                                InfiniteTable.appendData
-                                    (transactionTableConfig txsTable model.address.id)
-                                    TransactionTable.filter
-                                    txs.nextPage
-                                    txs.addressTxs
-                                    txsTable.table
+                                reset txsTable.table
+                                    |> InfiniteTable.appendData
+                                        (transactionTableConfig txsTable model.address.id)
+                                        TransactionTable.filter
+                                        txs.nextPage
+                                        txs.addressTxs
                         in
                         ( table, eff )
                             |> mapFirst (flip s_table txsTable)
@@ -275,44 +269,6 @@ update uc msg model =
                                         |> CmdEffect
                                     )
                                 )
-                    )
-                |> RemoteData.withDefault (n model)
-
-        GotTxsForAddressDetails ( min, max ) txs ->
-            model.txs
-                |> RemoteData.map
-                    (\txsTable ->
-                        let
-                            drp =
-                                txsTable.dateRangePicker
-                        in
-                        if Maybe.andThen .fromDate drp == min && Maybe.andThen .toDate drp == max then
-                            let
-                                ( table, cmd, eff ) =
-                                    InfiniteTable.reset txsTable.table
-                                        |> InfiniteTable.appendData
-                                            (transactionTableConfig txsTable model.address.id)
-                                            TransactionTable.filter
-                                            txs.nextPage
-                                            txs.addressTxs
-                            in
-                            ( table, eff )
-                                |> mapFirst (flip s_table txsTable)
-                                |> mapFirst (RemoteData.Success >> flip s_txs model)
-                                |> mapSecond Maybe.Extra.toList
-                                |> mapSecond
-                                    ((::)
-                                        (cmd
-                                            |> Cmd.map
-                                                (TransactionsTableSubTableMsg
-                                                    >> Pathfinder.AddressDetailsMsg model.address.id
-                                                )
-                                            |> CmdEffect
-                                        )
-                                    )
-
-                        else
-                            n model
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -656,7 +612,7 @@ update uc msg model =
                     )
                 |> RemoteData.withDefault (n model)
 
-        GotAddressTxsForExport { nextPage, addressTxs } ->
+        GotAddressTxsForExport _ { nextPage, addressTxs } ->
             model.txs
                 |> RemoteData.map
                     (\txs ->
@@ -775,17 +731,11 @@ loadFirstPage model =
         |> RemoteData.map
             (\nt ->
                 let
-                    fromDate =
-                        Maybe.andThen .fromDate nt.dateRangePicker
-
-                    toDate =
-                        Maybe.andThen .toDate nt.dateRangePicker
-
                     ( tableNew, eff ) =
                         nt.table
                             |> InfiniteTable.loadFirstPage
                                 (transactionTableConfigWithMsg
-                                    (GotTxsForAddressDetails ( fromDate, toDate ))
+                                    GotTxsForAddressDetails
                                     nt
                                     model.address.id
                                 )

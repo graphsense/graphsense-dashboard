@@ -600,7 +600,7 @@ updateByMsg plugins uc msg model =
                         )
                     |> pair newModel2
 
-        BrowserGotClusterData addressId data ->
+        BrowserGotClusterData _ data ->
             let
                 clusterId =
                     Id.initClusterId data.currency data.entity
@@ -796,10 +796,7 @@ updateByMsg plugins uc msg model =
                             )
             in
             case subm of
-                AddressDetails.GotNeighborsForAddressDetails _ { neighbors } ->
-                    fetchTagSummariesForNeigbors neighbors
-
-                AddressDetails.GotNeighborsNextPageForAddressDetails _ { neighbors } ->
+                AddressDetails.GotNeighborsForAddressDetails _ _ { neighbors } ->
                     fetchTagSummariesForNeigbors neighbors
 
                 AddressDetails.BrowserGotAddressesForTags _ addresses ->
