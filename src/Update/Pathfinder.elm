@@ -147,8 +147,8 @@ update plugins uc msg model =
         |> pushHistory plugins msg
         |> markDirty plugins msg
         |> updateByMsg plugins uc msg
-        |> and (syncSidePanel uc)
         |> and syncUrl
+        |> and (syncSidePanel uc)
         |> and dispatchEventualMessages
 
 
@@ -158,7 +158,7 @@ syncUrl model =
         Just (AddressDetails id ad) ->
             let
                 filter =
-                    if not ad.transactionsTableOpen then
+                    if not ad.transactionsTableOpen |> Debug.log "open" then
                         Nothing
 
                     else
@@ -2930,7 +2930,6 @@ updateByRoute plugins uc route model =
         forcePushHistory (model |> s_isDirty True |> s_route route)
             |> updateByRoute_ plugins uc route
             |> and (syncSidePanel uc)
-            |> and syncUrl
 
 
 addPathsToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool, autolinkInTraceMode : Bool } -> List (List PathHopType) -> ( Model, List Effect )
