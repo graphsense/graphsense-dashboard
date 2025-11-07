@@ -3,7 +3,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [25.09.3] - 2025-10-??
+
+## [25.11.0] - 2025-11-07
+
+### Added
+
+- add new tag type attribute hover description
+- add csv download to relation txs and address txs tables
+- show tx hash option
+- UI - Add note to Cluster info that info is based on multiple-input heuristics
+- add help to tracing mode switch
+- Tagging - Some users mistake reporting a tag by connecting to case: added additional warning
+- UI - Add Retirement warning to PF1
+
+### Changed
+
+- use dash in date range filter
+- rename relations->relationships, Relation->Beziehung
+- sync url with transaction table
+- faster actor search
+- improve possible service handling
+- UI - make toolbar components stack on small screens
+- UI - Improve search feedback
+- UI - Shorten Tx hash in Search
+- UI - Rename tx/agg toggle to Transaction level/Relation level
+- improve tx placement, disable autolink for nbrsearch and multiadd
+- Use includeSubTxIdentifiers field in search endpoint
+
+### Fixed
+
+- fix table filters
+- only show loading spinner if table is really loading
+- fix: assets filter incomplete
+- set scrollTop 0 on InfiniteTable.reset
+- show daterangepicker button if not dates set
+- fix: reset all filter in tx table
+- fix missing tooltip in relations table
+- fix: open in new tab only active on single selection
+- fix search bar highlighting
+- fix deletion of conversion edges
+
+
+## [25.09.3] - 2025-10-03
 
 ### Fixed
 - path endpoint was casing sensitive
