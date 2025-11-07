@@ -90,7 +90,6 @@ dateTimeFilterHeader vc resetMsg dmodel =
         endDate =
             dmodel.toDate
                 |> Maybe.map (renderDate (Locale.isLastSecondOfTheDay vc.locale))
-
     in
     Maybe.map2
         (\startP endP ->

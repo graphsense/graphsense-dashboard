@@ -151,9 +151,6 @@ updateAggEdge uc edge model =
 update : Update.Config -> ( Id, Id ) -> ( Time.Posix, Time.Posix ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
 update uc id ( rangeFrom, rangeTo ) msg model =
     let
-        net =
-            id |> Tuple.first |> Id.network
-
         dir isA2b =
             if isA2b then
                 Incoming
@@ -396,7 +393,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     gs.getTable model
 
                 tbl =
-                    RelationTxsTable.init (dir isA2b) (Locale.getTokenTickers uc.locale net)
+                    RelationTxsTable.init (dir isA2b) (oldTable.assetSelectBox |> ThemedSelectBox.getOptions |> List.filterMap identity)
                         |> s_selectedAsset oldTable.selectedAsset
                         |> s_assetSelectBox oldTable.assetSelectBox
 
@@ -444,7 +441,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     gs.getTable model
 
                 tbl =
-                    RelationTxsTable.init (dir isA2b) (Locale.getTokenTickers uc.locale net)
+                    RelationTxsTable.init (dir isA2b) (oldTable.assetSelectBox |> ThemedSelectBox.getOptions |> List.filterMap identity)
                         |> s_dateRangePicker oldTable.dateRangePicker
 
                 ( table, eff ) =
@@ -482,8 +479,9 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                     tbl.selectedAsset
                             )
             in
-            if tbl == newTxs then
-                n model
+            if tbl.selectedAsset == newTxs.selectedAsset then
+                -- no change
+                n (model |> gs.setTable newTxs)
 
             else
                 let
