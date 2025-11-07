@@ -169,6 +169,7 @@ reset (Model model) =
     Model
         { model
             | iterations = 1
+            , scrollTop = 0
             , data = Dict.insert col initData model.data
         }
 
