@@ -1435,7 +1435,7 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault (n model)
 
         UserClickedAddress id ->
-            if model.modPressed then
+            if model.modPressed || model.pointerTool == Select then
                 multiSelect model [ MSelectedAddress id ] True
                     |> n
 
@@ -2699,7 +2699,7 @@ userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
 
 userClickedTx : Id -> Model -> ( Model, List Effect )
 userClickedTx id model =
-    if model.modPressed then
+    if model.modPressed || model.pointerTool == Select then
         let
             modelS =
                 multiSelect model [ MSelectedTx id ] True
