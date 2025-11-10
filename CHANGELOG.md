@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.11.1] - 2025-11-10
+
+### Fixed
+
+- Multiselect tool only works with an existing address selection
+- Closing of transaction table in address side panel
 
 ## [25.11.0] - 2025-11-07
 
