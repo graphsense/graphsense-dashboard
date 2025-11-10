@@ -287,30 +287,8 @@ syncSidePanel uc model =
         ( SelectedAggEdge id, _ ) ->
             makeRelationDetails id
 
-        ( MultiSelect mops, details ) ->
-            case ( List.reverse mops |> List.head, details ) of
-                ( Just (MSelectedAddress id), Just (AddressDetails aid _) ) ->
-                    if id == aid then
-                        model.details
-
-                    else
-                        makeAddressDetails id
-
-                ( Just (MSelectedAddress id), _ ) ->
-                    makeAddressDetails id
-
-                ( Just (MSelectedTx id), Just (TxDetails tid _) ) ->
-                    if id == tid then
-                        model.details
-
-                    else
-                        makeTxDetails id
-
-                ( Just (MSelectedTx id), _ ) ->
-                    makeTxDetails id
-
-                _ ->
-                    Nothing
+        ( MultiSelect _, _ ) ->
+            Nothing
 
         ( WillSelectTx _, _ ) ->
             model.details
