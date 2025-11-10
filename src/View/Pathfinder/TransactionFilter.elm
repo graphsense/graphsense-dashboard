@@ -20,7 +20,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (none)
+import Util.View exposing (fullWidthCss, none)
 import View.Button as Button
 import View.Controls as Controls
 import View.Locale as Locale
@@ -155,6 +155,9 @@ filterHeader : View.Config -> FilterMetadata msg x -> FilterHeaderConfig msg -> 
 filterHeader vc model config =
     SidePanelComponents.sidePanelListFilterRowWithAttributes
         (SidePanelComponents.sidePanelListFilterRowAttributes
+            |> Rs.s_root
+                [ css [ fullWidthCss ]
+                ]
             |> Rs.s_framedFilter
                 [ onClick config.toggleFilterView
                 , Util.View.pointer
