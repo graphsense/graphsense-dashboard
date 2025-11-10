@@ -196,7 +196,7 @@ syncUrl model =
                         , filter = filter
                         }
             in
-            ( model
+            ( { model | route = route }
             , if model.route /= route then
                 route
                     |> NavPushRouteEffect
@@ -2922,6 +2922,9 @@ updateByRoute plugins uc route model =
           ]
         )
 
+    else if model.route == route then
+        n model
+
     else
         forcePushHistory (model |> s_isDirty True |> s_route route)
             |> updateByRoute_ plugins uc route
@@ -3108,26 +3111,18 @@ updateByRoute_ plugins uc route model =
                 id =
                     Id.init network a
             in
-            if model.selection == SelectedAddress id then
-                n model
-
-            else
-                { model | network = Network.clearSelection model.network }
-                    |> loadAddress plugins True id
-                    |> and (selectAddress id)
+            { model | network = Network.clearSelection model.network }
+                |> loadAddress plugins True id
+                |> and (selectAddress id)
 
         Route.Network network (Route.Tx a) ->
             let
                 id =
                     Id.init network a
             in
-            if model.selection == SelectedTx id then
-                n model
-
-            else
-                { model | network = Network.clearSelection model.network }
-                    |> loadTx True True plugins id
-                    |> and (selectTx id)
+            { model | network = Network.clearSelection model.network }
+                |> loadTx True True plugins id
+                |> and (selectTx id)
 
         Route.Network network (Route.Relation a b) ->
             let
@@ -3140,15 +3135,11 @@ updateByRoute_ plugins uc route model =
                 edgeId =
                     AggEdge.initId aId bId
             in
-            if model.selection == SelectedAggEdge edgeId then
-                n model
-
-            else
-                { model | network = Network.clearSelection model.network }
-                    |> loadAddress plugins True aId
-                    |> and (loadAddress plugins True bId)
-                    |> and (selectAggEdge uc edgeId)
-                    |> and (setTracingMode AggregateTracingMode)
+            { model | network = Network.clearSelection model.network }
+                |> loadAddress plugins True aId
+                |> and (loadAddress plugins True bId)
+                |> and (selectAggEdge uc edgeId)
+                |> and (setTracingMode AggregateTracingMode)
 
         Route.Path net list ->
             addPathToGraph plugins uc model net { outgoing = True, autolinkInTraceMode = True } list
