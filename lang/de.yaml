@@ -547,7 +547,7 @@ back: zurück
 pf1_deprecation_notice: "Pathfinder 1.0 ist veraltet und wird bald entfernt. Bitte wechseln Sie zum neuen Pathfinder, der über die Seitenleiste verfügbar ist. Haben Sie Probleme mit der Entfernung des alten Pathfinders? Kontaktieren Sie den Support per E-Mail unter contact@ikna.io."
 "Deprecation Notice": "Ende des Supports"
 "Warning:": "Achtung:"
-"The tags reported will be visible to all users.": "Die gemeldeten Tags sind für alle Benutzer sichtbar."
+tags_release_warnings: "Die von Ihnen hinzugefügten Tags sind für alle Benutzer sichtbar. Bitte stellen Sie sicher, dass Ihre Tags keine urheberrechtsverletzenden Materialien enthalten, wie z. B. Tags oder Inhalte von anderen Tool-Anbietern. Geben Sie außerdem keine fallbezogenen oder sensiblen Informationen öffentlich preis."
 tx-tracing-mode-help-text: "Im transaktionsbasierten Modus können Sie den Fluss von Vermögenswerten durch einzelne Transaktionen nachverfolgen. Dieser Modus ist nützlich, um bestimmte Transaktionen zu verfolgen und deren Verlauf zu verstehen."
 tx-relationship-mode-help-text: "Im beziehungsbasierten Modus können Sie die Beziehungen zwischen verschiedenen Entitäten auf der Grundlage aggregierter Transaktionsdaten erkunden. Dieser Modus hilft, Muster und Verbindungen zwischen Entitäten über mehrere Transaktionen hinweg zu identifizieren."
 cluster-details-info-help-text: "Cluster Info bietet Statistiken über alle Adressen im Cluster, einschließlich aggregierter Salden und Transaktionszahlen. Cluster werden basierend auf der Multi-Input-Heuristik erstellt."
