@@ -25,12 +25,16 @@ willBePublishedAlertView : View.Config -> Html Msg
 willBePublishedAlertView vc =
     Html.div
         [ F.textFieldWithHelpStateDefault_details.styles |> css
-        , Css.property "color" Colors.red500 |> List.singleton |> css
+        , [ Css.property "color" Colors.red400
+          , Css.lineHeight Css.normal
+          , Css.letterSpacing (Css.px 0.15000000596046448)
+          ]
+            |> css
         ]
         [ Html.span []
-            [ Html.span [ Css.fontWeight Css.bold |> List.singleton |> css ] [ Html.text "Warning:" ]
+            [ Html.span [ Css.fontWeight Css.bold |> List.singleton |> css ] [ Html.text (Locale.string vc.locale "Warning:") ]
             , Html.text
-                (" " ++ Locale.string vc.locale "The tags reported will be visible to all users.")
+                (" " ++ Locale.string vc.locale "tags_release_warnings")
             ]
         ]
 
