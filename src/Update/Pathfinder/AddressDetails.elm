@@ -11,13 +11,12 @@ import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Dict exposing (Dict)
 import Effect.Api as Api
-import Effect.Pathfinder exposing (Effect(..))
+import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
-import Maybe.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address exposing (Address)
@@ -35,7 +34,6 @@ import RemoteData exposing (WebData)
 import Set
 import Table
 import Tuple exposing (first, mapFirst, mapSecond, second)
-import Tuple2 exposing (pairTo)
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
@@ -64,7 +62,10 @@ neighborsTableConfigWithMsg msg addressId dir =
                     , includeActors = False
                     }
                 |> ApiEffect
+    , force = False
     , triggerOffset = 100
+    , effectToTracker = effectToTracker
+    , abort = Api.CancelEffect >> ApiEffect
     }
 
 
@@ -81,7 +82,10 @@ transactionTableConfig =
 transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
 transactionTableConfigWithMsg msg txs addressId =
     { fetch = fetchTransactions msg txs addressId
+    , force = False
     , triggerOffset = 100
+    , effectToTracker = effectToTracker
+    , abort = Api.CancelEffect >> ApiEffect
     }
 
 
@@ -134,29 +138,22 @@ update uc msg model =
         UserClickedToggleNeighborsTable dir ->
             getNeighborsTableAndSetter model dir
                 |> Maybe.map
-                    (\( tbl, setter ) ->
+                    (\{ table, setTable, tableOpen, setTableOpen } ->
                         let
+                            conf =
+                                neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.address.id dir
+
                             ( tblNew, eff1 ) =
-                                InfiniteTable.loadFirstPage
-                                    (neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.address.id dir)
-                                    tbl
+                                if tableOpen then
+                                    InfiniteTable.abort conf table
+
+                                else
+                                    InfiniteTable.loadFirstPage conf table
                         in
-                        ( { model
-                            | incomingNeighborsTableOpen =
-                                if dir == Incoming then
-                                    not model.incomingNeighborsTableOpen
-
-                                else
-                                    model.incomingNeighborsTableOpen
-                            , outgoingNeighborsTableOpen =
-                                if dir == Outgoing then
-                                    not model.outgoingNeighborsTableOpen
-
-                                else
-                                    model.outgoingNeighborsTableOpen
-                          }
-                            |> setter tblNew
-                        , Maybe.Extra.toList eff1
+                        ( model
+                            |> setTableOpen (not tableOpen)
+                            |> setTable tblNew
+                        , eff1
                         )
                     )
                 |> Maybe.withDefault (n model)
@@ -164,14 +161,14 @@ update uc msg model =
         NeighborsTableSubTableMsg dir pm ->
             getNeighborsTableAndSetter model dir
                 |> Maybe.map
-                    (\( tbl, setter ) ->
+                    (\{ table, setTable } ->
                         let
                             ( pt, cmd, eff ) =
-                                InfiniteTable.update (neighborsTableConfig model.address.id dir) pm tbl
+                                InfiniteTable.update (neighborsTableConfig model.address.id dir) pm table
                         in
-                        ( setter pt model
+                        ( setTable pt model
                         , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
-                            :: Maybe.Extra.toList eff
+                            :: eff
                         )
                     )
                 |> Maybe.withDefault (n model)
@@ -179,7 +176,7 @@ update uc msg model =
         GotNeighborsForAddressDetails dir fetchedPage neighbors ->
             getNeighborsTableAndSetter model dir
                 |> Maybe.map
-                    (\( tbl, setter ) ->
+                    (\{ table, setTable } ->
                         let
                             reset =
                                 if fetchedPage == Nothing then
@@ -189,16 +186,17 @@ update uc msg model =
                                     identity
 
                             ( pt, cmd, eff ) =
-                                reset tbl
+                                table
+                                    |> reset
                                     |> InfiniteTable.appendData
                                         (neighborsTableConfig model.address.id dir)
                                         NeighborsTable.filter
                                         neighbors.nextPage
                                         neighbors.neighbors
                         in
-                        ( setter pt model
+                        ( setTable pt model
                         , CmdEffect (Cmd.map (NeighborsTableSubTableMsg dir >> Pathfinder.AddressDetailsMsg model.address.id) cmd)
-                            :: Maybe.Extra.toList eff
+                            :: eff
                         )
                     )
                 |> Maybe.withDefault (n model)
@@ -214,7 +212,6 @@ update uc msg model =
                         ( table, eff )
                             |> mapFirst (flip s_table txs)
                             |> mapFirst (RemoteData.Success >> flip s_txs model)
-                            |> mapSecond Maybe.Extra.toList
                             |> mapSecond
                                 ((::)
                                     (cmd
@@ -230,7 +227,7 @@ update uc msg model =
 
         UserClickedToggleTransactionTable ->
             if model.transactionsTableOpen then
-                n { model | transactionsTableOpen = False }
+                closeTransactionTable model
 
             else
                 openTransactionTable uc Nothing model
@@ -258,7 +255,6 @@ update uc msg model =
                         ( table, eff )
                             |> mapFirst (flip s_table txsTable)
                             |> mapFirst (RemoteData.Success >> flip s_txs model)
-                            |> mapSecond Maybe.Extra.toList
                             |> mapSecond
                                 ((::)
                                     (cmd
@@ -436,14 +432,18 @@ update uc msg model =
             model.relatedAddresses
                 |> RemoteData.map
                     (\ra ->
+                        let
+                            conf =
+                                RelatedAddressesTable.tableConfig ra
+                        in
                         nm
-                            |> (if show then
-                                    flip updateRelatedAddressesTable
-                                        (RelatedAddressesTable.loadFirstPage (RelatedAddressesTable.tableConfig ra))
+                            |> flip updateRelatedAddressesTable
+                                (if show then
+                                    RelatedAddressesTable.loadFirstPage conf
 
-                                else
-                                    n
-                               )
+                                 else
+                                    RelatedAddressesTable.abort conf
+                                )
                     )
                 |> RemoteData.withDefault (n nm)
 
@@ -467,7 +467,7 @@ update uc msg model =
                 |> updateRelatedAddressesPubkeyTable model
 
         BrowserGotEntityAddressesForRelatedAddressesTable { nextPage, addresses } ->
-            RelatedAddressesTable.appendAddresses
+            RelatedAddressesTable.appendEntityAddresses
                 (RelatedAddressesTableSubTableMsg
                     >> Pathfinder.AddressDetailsMsg model.address.id
                 )
@@ -639,6 +639,27 @@ update uc msg model =
                 |> RemoteData.withDefault (n model)
 
 
+closeTransactionTable : Model -> ( Model, List Effect )
+closeTransactionTable model =
+    let
+        ( txs, eff ) =
+            model.txs
+                |> RemoteData.toMaybe
+                |> Maybe.map
+                    (\txs_ ->
+                        txs_.table
+                            |> InfiniteTable.abort
+                                (transactionTableConfig txs_ model.address.id)
+                            |> mapFirst (flip s_table txs_)
+                            |> mapFirst RemoteData.Success
+                    )
+                |> Maybe.withDefault ( model.txs, [] )
+    in
+    ( { model | transactionsTableOpen = False, txs = txs }
+    , eff
+    )
+
+
 updateExportCSVModel : ExportCSV.Model -> Cmd ExportCSV.Msg -> Bool -> TransactionTable.Model -> Model -> ( Model, List Effect )
 updateExportCSVModel exportCSVModel cmd fetch txs model =
     ( txs
@@ -745,7 +766,7 @@ loadFirstPage model =
                     | txs =
                         RemoteData.Success { nt | table = tableNew }
                   }
-                , Maybe.Extra.toList eff
+                , eff
                 )
             )
         |> RemoteData.withDefault (n model)
@@ -758,18 +779,41 @@ updateDirectionFilter model dir =
         |> RemoteData.withDefault (n model)
 
 
-getNeighborsTableAndSetter : Model -> Direction -> Maybe ( InfiniteTable.Model Api.Data.NeighborAddress, InfiniteTable.Model Api.Data.NeighborAddress -> Model -> Model )
+getNeighborsTableAndSetter :
+    Model
+    -> Direction
+    ->
+        Maybe
+            { table : InfiniteTable.Model Api.Data.NeighborAddress
+            , setTable : InfiniteTable.Model Api.Data.NeighborAddress -> Model -> Model
+            , tableOpen : Bool
+            , setTableOpen : Bool -> Model -> Model
+            }
 getNeighborsTableAndSetter model dir =
     case dir of
         Incoming ->
             model.neighborsIncoming
                 |> RemoteData.toMaybe
-                |> Maybe.map (pairTo (RemoteData.Success >> s_neighborsIncoming))
+                |> Maybe.map
+                    (\ni ->
+                        { table = ni
+                        , setTable = RemoteData.Success >> s_neighborsIncoming
+                        , tableOpen = model.incomingNeighborsTableOpen
+                        , setTableOpen = s_incomingNeighborsTableOpen
+                        }
+                    )
 
         Outgoing ->
             model.neighborsOutgoing
                 |> RemoteData.toMaybe
-                |> Maybe.map (pairTo (RemoteData.Success >> s_neighborsOutgoing))
+                |> Maybe.map
+                    (\no ->
+                        { table = no
+                        , setTable = RemoteData.Success >> s_neighborsOutgoing
+                        , tableOpen = model.outgoingNeighborsTableOpen
+                        , setTableOpen = s_outgoingNeighborsTableOpen
+                        }
+                    )
 
 
 syncByAddress : Update.Config -> Network -> Dict Id (WebData Api.Data.Entity) -> Maybe DateFilterRaw -> Model -> Address -> ( Model, List Effect )
