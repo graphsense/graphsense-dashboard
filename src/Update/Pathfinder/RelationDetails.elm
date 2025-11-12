@@ -9,11 +9,10 @@ import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Effect.Api as Api
-import Effect.Pathfinder exposing (Effect(..))
+import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.RelationDetails as Init
 import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
 import Model.Pathfinder.AggEdge exposing (AggEdge)
@@ -92,7 +91,10 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
 tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config Effect
 tableConfig id isA2b txTable =
     { fetch = loadRelationTxs BrowserGotLinks id isA2b txTable
+    , force = False
     , triggerOffset = 100
+    , effectToTracker = effectToTracker
+    , abort = Api.CancelEffect >> ApiEffect
     }
 
 
@@ -170,21 +172,24 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 isOpen =
                     gs.getOpen model
 
+                conf =
+                    tableConfig id isA2b tbl
+
                 ( table, eff ) =
                     if isOpen then
-                        ( tbl.table, Nothing )
+                        InfiniteTable.abort conf tbl.table
 
                     else
                         tbl.table
                             |> InfiniteTable.reset
                             |> InfiniteTable.loadFirstPage
-                                (tableConfig id isA2b tbl)
+                                conf
             in
             ( isOpen
                 |> not
                 |> flip gs.setOpen model
                 |> gs.setTable (s_table table tbl)
-            , Maybe.Extra.toList eff
+            , eff
             )
 
         TableMsg isA2b tm ->
@@ -203,7 +208,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             ( m, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
-                |> mapSecond Maybe.Extra.toList
                 |> mapSecond
                     ((::)
                         (cmd
@@ -240,7 +244,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             ( table, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
-                |> mapSecond Maybe.Extra.toList
                 |> mapSecond
                     ((::)
                         (cmd
@@ -357,16 +360,15 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                             (tableConfig id isA2b udateTbl)
 
                                 else
-                                    ( udateTbl.table, Nothing )
+                                    ( udateTbl.table, [] )
                         in
                         ( model |> gs.setTable (udateTbl |> s_table ntbl)
                         , if dateRangeChanged then
                             eff
 
                           else
-                            Nothing
+                            []
                         )
-                            |> mapSecond Maybe.Extra.toList
                     )
                 |> Maybe.withDefault (n model)
 
@@ -403,7 +405,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                         |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
-                        |> mapSecond Maybe.Extra.toList
             in
             ( model |> gs.setTable (tbl |> s_table table)
             , eff
@@ -426,7 +427,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                         |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
-                        |> mapSecond Maybe.Extra.toList
             in
             ( model |> gs.setTable (tbl |> s_table table)
             , eff
@@ -450,7 +450,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                         |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
-                        |> mapSecond Maybe.Extra.toList
             in
             ( model |> gs.setTable (tbl |> s_table table)
             , eff
@@ -492,7 +491,11 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                             |> InfiniteTable.loadFirstPage
                                 (tableConfig id isA2b newTxs)
                 in
-                ( model |> gs.setTable (newTxs |> s_table ntbl), eff ) |> mapSecond Maybe.Extra.toList
+                ( newTxs
+                    |> s_table ntbl
+                    |> flip gs.setTable model
+                , eff
+                )
 
         ExportCSVMsg isA2b ms ->
             let

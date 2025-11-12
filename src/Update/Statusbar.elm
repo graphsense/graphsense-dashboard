@@ -555,6 +555,9 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.CancelEffect _ ->
+            Nothing
+
 
 addLog : ( String, List String, Maybe Http.Error ) -> List ( String, List String, Maybe Http.Error ) -> List ( String, List String, Maybe Http.Error )
 addLog ( key, values, error ) logs =

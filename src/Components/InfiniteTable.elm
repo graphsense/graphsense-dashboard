@@ -4,6 +4,7 @@ module Components.InfiniteTable exposing
     , Model
     , Msg
     , TableConfig
+    , abort
     , appendData
     , getPage
     , getPageSize
@@ -34,6 +35,7 @@ import Html.Styled.Events exposing (on, stopPropagationOn)
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
+import Maybe.Extra
 import RecordSetter exposing (s_asc, s_caption, s_data, s_desc, s_loading, s_nextpage, s_rowAttrs, s_state, s_table, s_tfoot)
 import Result.Extra
 import Table as T
@@ -70,11 +72,15 @@ type alias ModelInternal d =
     , bounce : Bounce
     , direction : Direction
     , loaded : Bool
+    , tracker : Maybe String
     }
 
 
 type alias Config eff =
     { fetch : Fetch eff
+    , force : Bool
+    , effectToTracker : eff -> Maybe String
+    , abort : String -> eff
     , triggerOffset : Float
     }
 
@@ -128,10 +134,11 @@ init tableId pagesize table =
         , hackyFlag = False
         , direction = Bottom
         , loaded = False
+        , tracker = Nothing
         }
 
 
-appendData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, Maybe eff )
+appendData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, List eff )
 appendData config filt nextpage data (Model model) =
     let
         dict =
@@ -157,7 +164,7 @@ appendData config filt nextpage data (Model model) =
         , loaded = True
     }
         |> setIntDict nextpage newDict
-        |> loadMore config False
+        |> loadMore config
         |> getRowHeight
 
 
@@ -216,8 +223,8 @@ setIntDict nextpage dict model =
         |> flip s_data model
 
 
-getRowHeight : ( Model d, Maybe eff ) -> ( Model d, Cmd Msg, Maybe eff )
-getRowHeight ( Model model, maybeEff ) =
+getRowHeight : ( Model d, List eff ) -> ( Model d, Cmd Msg, List eff )
+getRowHeight ( Model model, listEff ) =
     ( Model model
     , [ Dom.getElement model.tableId
             |> Task.attempt GotTableElement
@@ -225,14 +232,14 @@ getRowHeight ( Model model, maybeEff ) =
             |> Task.attempt GotRowElement
       ]
         |> Cmd.batch
-    , maybeEff
+    , listEff
     )
 
 
-loadMore : Config eff -> Bool -> ModelInternal d -> ( Model d, Maybe eff )
-loadMore config force model =
-    if model.loaded && model.table.nextpage == Nothing then
-        ( Model model, Nothing )
+loadMore : Config eff -> ModelInternal d -> ( Model d, List eff )
+loadMore config model =
+    if not config.force && model.loaded && model.table.nextpage == Nothing then
+        ( Model model, [] )
 
     else
         let
@@ -248,16 +255,20 @@ loadMore config force model =
                     , contentHeight = model.rowHeight * toFloat len
                     }
         in
-        if not force && not needsMore then
-            ( Model model, Nothing )
+        if not config.force && not needsMore then
+            ( Model model, [] )
 
         else
+            let
+                eff =
+                    config.fetch (Just (T.getSortState model.table.state)) model.pagesize model.table.nextpage
+            in
             ( Model
                 { model
                     | table = s_loading True model.table
+                    , tracker = config.effectToTracker eff
                 }
-            , config.fetch (Just (T.getSortState model.table.state)) model.pagesize model.table.nextpage
-                |> Just
+            , [ eff ]
             )
 
 
@@ -279,7 +290,7 @@ removeItem predicate (Model model) =
         |> Model
 
 
-update : Config eff -> Msg -> Model d -> ( Model d, Cmd Msg, Maybe eff )
+update : Config eff -> Msg -> Model d -> ( Model d, Cmd Msg, List eff )
 update config msg (Model model) =
     case msg of
         Scroll pos ->
@@ -300,7 +311,7 @@ update config msg (Model model) =
                         scrollUpdate config pos newModel
 
                     else
-                        ( Model newModel, Nothing )
+                        ( Model newModel, [] )
             in
             ( nnewModel, Cmd.none, eff )
 
@@ -312,7 +323,7 @@ update config msg (Model model) =
                 ( Model model
                 , Dom.setViewportOf model.tableId 0 0
                     |> Task.attempt (ScrolledToTop tm)
-                , Nothing
+                , []
                 )
 
         GotTableElement result ->
@@ -322,7 +333,7 @@ update config msg (Model model) =
                 )
                 result
             , Cmd.none
-            , Nothing
+            , []
             )
 
         GotRowElement result ->
@@ -332,7 +343,7 @@ update config msg (Model model) =
                 )
                 result
             , Cmd.none
-            , Nothing
+            , []
             )
 
         NoOp ->
@@ -361,7 +372,7 @@ update config msg (Model model) =
                                         |> loadFirstPage config
 
                                 else
-                                    ( Model nnewModel, Nothing )
+                                    ( Model nnewModel, [] )
                         in
                         ( nnnewModel, Cmd.none, eff )
                     )
@@ -379,9 +390,9 @@ update config msg (Model model) =
             ( newModel, Cmd.none, eff )
 
 
-n : ModelInternal d -> ( Model d, Cmd Msg, Maybe eff )
+n : ModelInternal d -> ( Model d, Cmd Msg, List eff )
 n model =
-    ( Model model, Cmd.none, Nothing )
+    ( Model model, Cmd.none, [] )
 
 
 updateTable : (Table d -> Table d) -> Model d -> Model d
@@ -414,12 +425,17 @@ getNumVisibleItems model =
         + 1
 
 
-loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
+loadFirstPage : Config eff -> Model d -> ( Model d, List eff )
 loadFirstPage config (Model model) =
-    ( Model model
+    let
+        eff =
+            config.fetch (Just (T.getSortState model.table.state)) model.pagesize Nothing
+    in
+    ( { model | tracker = config.effectToTracker eff }
+        |> Model
         |> setLoading True
-    , config.fetch (Just (T.getSortState model.table.state)) model.pagesize Nothing
-        |> Just
+    , eff
+        :: (Maybe.map config.abort model.tracker |> Maybe.Extra.toList)
     )
 
 
@@ -436,7 +452,7 @@ shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
         scrollTop >= (excessHeight - config.triggerOffset)
 
 
-scrollUpdate : Config eff -> ScrollPos -> ModelInternal d -> ( Model d, Maybe eff )
+scrollUpdate : Config eff -> ScrollPos -> ModelInternal d -> ( Model d, List eff )
 scrollUpdate config pos model =
     let
         newModel =
@@ -448,10 +464,10 @@ scrollUpdate config pos model =
             }
     in
     if shouldLoadMore config newModel pos then
-        loadMore config True model
+        loadMore { config | force = True } model
 
     else
-        ( Model newModel, Nothing )
+        ( Model newModel, [] )
 
 
 decodeScrollPos : Json.Decode.Decoder ScrollPos
@@ -660,3 +676,11 @@ getIntDict model =
                 .asc
             )
         |> Maybe.withDefault ( IntDict.empty, Nothing )
+
+
+abort : Config eff -> Model data -> ( Model data, List eff )
+abort conf (Model model) =
+    ( Model { model | tracker = Nothing }
+    , Maybe.map conf.abort model.tracker
+        |> Maybe.Extra.toList
+    )
