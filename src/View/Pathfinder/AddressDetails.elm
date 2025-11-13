@@ -599,14 +599,14 @@ clusterInfoView vc open colors clstr =
                 }
 
 
-transactionTableView : View.Config -> Id -> (Id -> Bool) -> TransactionTable.Model -> Html AddressDetails.Msg
-transactionTableView vc addressId txOnGraphFn model =
+transactionTableView : View.Config -> Id -> (Id -> Bool) -> Pathfinder.Model -> TransactionTable.Model AddressDetails.Msg -> Html AddressDetails.Msg
+transactionTableView vc addressId txOnGraphFn model txs =
     let
         styles =
             Css.Table.styles
 
         allChecked =
-            model.table
+            txs.table
                 |> Inf.getPage
                 |> List.map Tx.getTxIdForAddressTx
                 |> allAndNotEmpty txOnGraphFn
@@ -615,16 +615,16 @@ transactionTableView vc addressId txOnGraphFn model =
             InfiniteTable.view vc
                 []
                 (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
-                model.table
+                txs.table
     in
     [ TransactionFilter.filterHeader vc
-        model
+        txs
         { resetDateFilterMsg = AddressDetails.ResetDateRangePicker
         , resetAssetsFilterMsg = AddressDetails.ResetTxAssetFilter
         , resetDirectionFilterMsg = Just AddressDetails.ResetTxDirectionFilter
         , toggleFilterView = AddressDetails.ToggleTxFilterView
         , resetZeroValueFilterMsg = Nothing
-        , exportCsv = Just ( AddressDetails.ExportCSVMsg, model.exportCSV )
+        , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
         }
     , table
     ]
@@ -676,7 +676,7 @@ transactionsDataTab vc model id viewState =
             if viewState.transactionsTableOpen then
                 viewState.txs
                     |> RemoteData.toMaybe
-                    |> Maybe.map (transactionTableView vc id txOnGraphFn)
+                    |> Maybe.map (transactionTableView vc id txOnGraphFn model)
 
             else
                 Nothing

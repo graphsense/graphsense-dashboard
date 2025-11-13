@@ -216,7 +216,7 @@ shallPushHistory plugins msg _ =
                 AddressDetails.TxTableAssetSelectBoxMsg _ ->
                     False
 
-                AddressDetails.ExportCSVMsg _ ->
+                AddressDetails.ExportCSVMsg _ _ ->
                     False
 
                 AddressDetails.GotAddressTxsForExport _ _ ->
@@ -278,7 +278,7 @@ shallPushHistory plugins msg _ =
                 RelationDetails.UpdateDateRangePicker _ _ ->
                     False
 
-                RelationDetails.ExportCSVMsg _ _ ->
+                RelationDetails.ExportCSVMsg _ _ _ ->
                     False
 
         AnimationFrameDeltaForTransform _ ->

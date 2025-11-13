@@ -2,25 +2,22 @@ module Model.Pathfinder.Table.TransactionTable exposing (Model, filter, resetFil
 
 import Api.Data
 import Api.Request.Addresses
-import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction)
-import Msg.Pathfinder.AddressDetails exposing (Msg)
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
-type alias Model =
+type alias Model msg =
     { table : InfiniteTable.Model Api.Data.AddressTx
     , order : Maybe Api.Request.Addresses.Order_
-    , dateRangePicker : Maybe (DateRangePicker.Model Msg)
+    , dateRangePicker : Maybe (DateRangePicker.Model msg)
     , direction : Maybe Direction
     , isTxFilterViewOpen : Bool
     , assetSelectBox : ThemedSelectBox.Model (Maybe String)
     , selectedAsset : Maybe String
     , includeZeroValueTxs : Maybe Bool -- Backend does not support this filter at the moment
-    , exportCSV : ExportCSV.Model
     }
 
 
@@ -53,7 +50,7 @@ filter =
     }
 
 
-resetFilters : Model -> Model
+resetFilters : Model msg -> Model msg
 resetFilters model =
     { model
         | order = Nothing

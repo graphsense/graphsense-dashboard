@@ -1,5 +1,6 @@
 module Init.Pathfinder exposing (init)
 
+import Components.ExportCSV as ExportCSV
 import Config.Pathfinder exposing (TracingMode(..))
 import Dict
 import Init.Graph.History as History
@@ -48,6 +49,7 @@ init us =
       , name = "graph"
       , checkingNeighbors = CheckingNeighbors.init
       , eventualMessages = EventualMessages.init Network.isConditionMet EventualMessagesHeartBeat
+      , exportCSV = ExportCSV.init
       }
     , Cmd.none
     )

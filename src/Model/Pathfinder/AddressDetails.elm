@@ -6,7 +6,7 @@ import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Msg.Pathfinder.AddressDetails exposing (RelatedAddressTypes)
+import Msg.Pathfinder.AddressDetails exposing (Msg, RelatedAddressTypes)
 import RemoteData exposing (WebData)
 import Util.ThemedSelectBox as ThemedSelectBox
 
@@ -15,7 +15,7 @@ type alias Model =
     { neighborsTableOpen : Bool
     , transactionsTableOpen : Bool
     , tokenBalancesOpen : Bool
-    , txs : WebData TransactionTable.Model
+    , txs : WebData (TransactionTable.Model Msg)
     , neighborsIncoming : WebData (InfiniteTable.Model Api.Data.NeighborAddress)
     , neighborsOutgoing : WebData (InfiniteTable.Model Api.Data.NeighborAddress)
     , address : Address

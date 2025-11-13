@@ -4,6 +4,7 @@ import Animation as A
 import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
+import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Config.Pathfinder exposing (TracingMode(..), nodeXOffset)
 import Config.Update as Update
@@ -828,6 +829,30 @@ updateByMsg plugins uc msg model =
                             )
                         |> Maybe.withDefault (n model)
 
+                RelationDetails.ExportCSVMsg isA2b tbl ms ->
+                    let
+                        config =
+                            RelationDetails.makeExportCSVConfig uc isA2b id tbl
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.update ms config model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
+
+                RelationDetails.BrowserGotLinksForExport isA2b tbl data ->
+                    let
+                        config =
+                            RelationDetails.makeExportCSVConfig uc isA2b id tbl
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.gotData uc config ( data.links, data.nextPage ) model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
+
                 _ ->
                     n model
             )
@@ -898,6 +923,30 @@ updateByMsg plugins uc msg model =
 
                 AddressDetails.TooltipMsg tm ->
                     handleTooltipMsg tm model
+
+                AddressDetails.ExportCSVMsg txs ms ->
+                    let
+                        config =
+                            AddressDetails.makeExportCSVConfig uc addressId txs
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.update ms config model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
+
+                AddressDetails.GotAddressTxsForExport txs data ->
+                    let
+                        config =
+                            AddressDetails.makeExportCSVConfig uc addressId txs
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.gotData uc config ( data.addressTxs, data.nextPage ) model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
 
                 _ ->
                     model

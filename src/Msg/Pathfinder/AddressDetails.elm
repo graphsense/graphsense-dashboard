@@ -7,6 +7,7 @@ import Components.PagedTable as PagedTable
 import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Table
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
@@ -84,5 +85,5 @@ type Msg
     | BrowserGotPubkeyRelations Api.Data.RelatedAddresses
     | TooltipMsg TooltipMsgs
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)
-    | ExportCSVMsg ExportCSV.Msg
-    | GotAddressTxsForExport (Maybe String) Api.Data.AddressTxs
+    | ExportCSVMsg (TransactionTable.Model Msg) ExportCSV.Msg
+    | GotAddressTxsForExport (TransactionTable.Model Msg) Api.Data.AddressTxs

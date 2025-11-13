@@ -569,3 +569,6 @@ total_output: Ausgangswerte Gesamt
 "Multiple search terms detected ({0}). Please hit enter to add.": "Mehrere Suchbegriffe erkannt ({0}). Bitte Enter drücken, um hinzuzufügen."
 there_were_more_rows_for_csv_download: Das Downloaden von CSV Daten ist auf {0} Zeilen beschränkt. 
 there_were_more_rows_for_csv_download_info: Bitte verwenden Sie die Filteroptionen, um den Datenbereich genauer einzugrenzen.
+success_download_csv: "{0} Datensätze als CSV heruntergeladen"
+"Address transactions of {0} ({1})": "Transaktionen der Adresse {0} ({1})"
+"Transactions from {0} to {1} ({2})": "Transaktionen von {0} nach {1} ({2})"

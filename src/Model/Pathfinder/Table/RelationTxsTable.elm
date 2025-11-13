@@ -7,14 +7,13 @@ import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction)
-import Msg.Pathfinder.RelationDetails exposing (Msg)
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
-type alias Model =
+type alias Model msg =
     { table : InfiniteTable.Model Api.Data.Link
     , order : Maybe Api.Request.Addresses.Order_
-    , dateRangePicker : Maybe (DateRangePicker.Model Msg)
+    , dateRangePicker : Maybe (DateRangePicker.Model msg)
     , direction : Maybe Direction
     , isTxFilterViewOpen : Bool
     , assetSelectBox : ThemedSelectBox.Model (Maybe String)

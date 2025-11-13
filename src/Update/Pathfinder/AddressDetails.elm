@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (loadFirstPage, syncByAddress, update)
+module Update.Pathfinder.AddressDetails exposing (loadFirstPage, makeExportCSVConfig, syncByAddress, update)
 
 import Api.Data
 import Api.Request.Addresses
@@ -74,12 +74,12 @@ neighborsTableConfig =
     neighborsTableConfigWithMsg GotNeighborsForAddressDetails
 
 
-transactionTableConfig : TransactionTable.Model -> Id -> InfiniteTable.Config Effect
+transactionTableConfig : TransactionTable.Model Msg -> Id -> InfiniteTable.Config Effect
 transactionTableConfig =
     transactionTableConfigWithMsg GotTxsForAddressDetails
 
 
-transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
+transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model Msg -> Id -> InfiniteTable.Config Effect
 transactionTableConfigWithMsg msg txs addressId =
     { fetch = fetchTransactions msg txs addressId
     , force = False
@@ -89,34 +89,46 @@ transactionTableConfigWithMsg msg txs addressId =
     }
 
 
-fetchTransactions : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+fetchTransactions : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model Msg -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
 fetchTransactions msg txs addressId sorting pagesize nextpage =
-    msg nextpage
-        >> Pathfinder.AddressDetailsMsg addressId
-        |> Api.GetAddressTxsByDateEffect
-            { currency = Id.network addressId
-            , address = Id.id addressId
-            , direction = txs.direction
-            , pagesize = pagesize
-            , nextpage = nextpage
-            , order =
-                sorting
-                    |> Maybe.andThen
-                        (\( column, isReversed ) ->
-                            if column == TransactionTable.titleTimestamp then
-                                if isReversed then
-                                    Just Api.Request.Addresses.Order_Desc
+    fetchTransactionsWithPathfinderMsg
+        (msg nextpage
+            >> Pathfinder.AddressDetailsMsg addressId
+        )
+        txs
+        addressId
+        sorting
+        pagesize
+        nextpage
 
-                                else
-                                    Just Api.Request.Addresses.Order_Asc
+
+fetchTransactionsWithPathfinderMsg : (Api.Data.AddressTxs -> Pathfinder.Msg) -> TransactionTable.Model Msg -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
+    Api.GetAddressTxsByDateEffect
+        { currency = Id.network addressId
+        , address = Id.id addressId
+        , direction = txs.direction
+        , pagesize = pagesize
+        , nextpage = nextpage
+        , order =
+            sorting
+                |> Maybe.andThen
+                    (\( column, isReversed ) ->
+                        if column == TransactionTable.titleTimestamp then
+                            if isReversed then
+                                Just Api.Request.Addresses.Order_Desc
 
                             else
-                                txs.order
-                        )
-            , tokenCurrency = txs.selectedAsset
-            , minDate = txs.dateRangePicker |> Maybe.andThen .fromDate
-            , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate
-            }
+                                Just Api.Request.Addresses.Order_Asc
+
+                        else
+                            txs.order
+                    )
+        , tokenCurrency = txs.selectedAsset
+        , minDate = txs.dateRangePicker |> Maybe.andThen .fromDate
+        , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate
+        }
+        msg
         |> ApiEffect
 
 
@@ -600,43 +612,13 @@ update uc msg model =
                     )
                 |> RemoteData.withDefault (n model)
 
-        ExportCSVMsg ms ->
-            model.txs
-                |> RemoteData.map
-                    (\txs ->
-                        let
-                            ( exportCSVModel, cmd, fetch ) =
-                                ExportCSV.update ms txs.exportCSV
-                        in
-                        updateExportCSVModel exportCSVModel cmd fetch txs model
-                    )
-                |> RemoteData.withDefault (n model)
+        ExportCSVMsg _ _ ->
+            -- handled upstream
+            n model
 
-        GotAddressTxsForExport _ { nextPage, addressTxs } ->
-            model.txs
-                |> RemoteData.map
-                    (\txs ->
-                        let
-                            notification =
-                                nextPage
-                                    |> Maybe.map
-                                        (\_ ->
-                                            ExportCSV.makeNotification numberOfRowsForCSVExport
-                                                |> ShowNotificationEffect
-                                                |> List.singleton
-                                        )
-                                    |> Maybe.withDefault []
-
-                            exportCSVConfig =
-                                makeExportCSVConfig uc model
-
-                            ( exportCSVModel, cmd, fetch ) =
-                                ExportCSV.gotData uc exportCSVConfig addressTxs txs.exportCSV
-                        in
-                        updateExportCSVModel exportCSVModel cmd fetch txs model
-                            |> mapSecond ((++) notification)
-                    )
-                |> RemoteData.withDefault (n model)
+        GotAddressTxsForExport _ _ ->
+            -- handled upstream
+            n model
 
 
 closeTransactionTable : Model -> ( Model, List Effect )
@@ -660,53 +642,19 @@ closeTransactionTable model =
     )
 
 
-updateExportCSVModel : ExportCSV.Model -> Cmd ExportCSV.Msg -> Bool -> TransactionTable.Model -> Model -> ( Model, List Effect )
-updateExportCSVModel exportCSVModel cmd fetch txs model =
-    ( txs
-        |> s_exportCSV exportCSVModel
-        |> RemoteData.Success
-        |> flip s_txs model
-    , cmd
-        |> Cmd.map
-            (ExportCSVMsg
-                >> Pathfinder.AddressDetailsMsg model.address.id
-            )
-        |> CmdEffect
-        |> flip (::)
-            (if fetch then
-                [ fetchTransactions
-                    GotAddressTxsForExport
-                    txs
-                    model.address.id
-                    (txs.table
-                        |> InfiniteTable.getTable
-                        |> .state
-                        |> Table.getSortState
-                        |> Just
-                    )
-                    numberOfRowsForCSVExport
-                    Nothing
-                ]
-
-             else
-                []
-            )
-    )
-
-
-makeExportCSVConfig : Update.Config -> Model -> ExportCSV.Config Api.Data.AddressTx
-makeExportCSVConfig uc model =
+makeExportCSVConfig : Update.Config -> Id -> TransactionTable.Model Msg -> ExportCSV.Config Api.Data.AddressTx Effect
+makeExportCSVConfig uc addressId txs =
     ExportCSV.config
         { filename =
             Locale.interpolated uc.locale
                 "Address transactions of {0} ({1})"
-                [ Id.id model.address.id
-                , Id.network model.address.id |> String.toUpper
+                [ Id.id addressId
+                , Id.network addressId |> String.toUpper
                 ]
         , toCsv =
             let
                 nw =
-                    model.address.id |> Id.network
+                    addressId |> Id.network
             in
             \tx ->
                 if nw |> Data.isAccountLike then
@@ -728,6 +676,26 @@ makeExportCSVConfig uc model =
 
                         Api.Data.AddressTxTxAccount _ ->
                             Nothing
+        , numberOfRows = numberOfRowsForCSVExport
+        , fetch =
+            \nor ->
+                fetchTransactions
+                    (\_ -> GotAddressTxsForExport txs)
+                    txs
+                    addressId
+                    (txs.table
+                        |> InfiniteTable.getTable
+                        |> .state
+                        |> Table.getSortState
+                        |> Just
+                    )
+                    nor
+                    Nothing
+        , cmdToEff =
+            Cmd.map
+                (ExportCSVMsg txs >> Pathfinder.AddressDetailsMsg addressId)
+                >> CmdEffect
+        , notificationToEff = ShowNotificationEffect
         }
 
 
@@ -829,7 +797,12 @@ syncByAddress uc network clusters dateFilterPreset model address =
                         model.txs
                             |> RemoteData.map (\_ -> model.txs)
                             |> RemoteData.withDefault
-                                (TransactionTable.init uc network address.id data assets
+                                (TransactionTable.init uc
+                                    network
+                                    address.id
+                                    data
+                                    assets
+                                    UpdateDateRangePicker
                                     |> RemoteData.Success
                                 )
 
