@@ -70,13 +70,18 @@ perform plugins key statusbarToken apiKey effect =
                 |> Ports.saveToLocalStorage
 
         ApiEffect eff ->
-            Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff
+            Effect.Api.perform apiKey
+                (BrowserGotResponseWithHeaders statusbarToken)
+                BrowserCancelledRequest
+                eff
 
         PathfinderEffect eff ->
             case eff of
                 Pathfinder.ApiEffect apiEff ->
                     Effect.Api.map PathfinderMsg apiEff
-                        |> Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken)
+                        |> Effect.Api.perform apiKey
+                            (BrowserGotResponseWithHeaders statusbarToken)
+                            BrowserCancelledRequest
 
                 Pathfinder.NavPushRouteEffect route ->
                     Route.pathfinderRoute route
@@ -124,7 +129,9 @@ perform plugins key statusbarToken apiKey effect =
             case eff of
                 Graph.ApiEffect apiEff ->
                     Effect.Api.map GraphMsg apiEff
-                        |> Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken)
+                        |> Effect.Api.perform apiKey
+                            (BrowserGotResponseWithHeaders statusbarToken)
+                            BrowserCancelledRequest
 
                 Graph.NavPushRouteEffect route ->
                     Route.graphRoute route
@@ -198,7 +205,9 @@ handleSearchEffect apiKey plugins tag effect =
                 , config = config
                 }
                 (toMsg >> tag)
-                |> Effect.Api.perform apiKey (BrowserGotResponseWithHeaders Nothing)
+                |> Effect.Api.perform apiKey
+                    (BrowserGotResponseWithHeaders Nothing)
+                    BrowserCancelledRequest
             )
                 :: (plugins
                         |> Maybe.map (\p -> Plugin.search p query)

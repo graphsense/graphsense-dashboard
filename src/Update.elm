@@ -367,6 +367,12 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserCancelledRequest statusbarToken ->
+            n
+                { model
+                    | statusbar = Statusbar.update statusbarToken Nothing model.statusbar
+                }
+
         BrowserGotResponseWithHeaders statusbarToken result ->
             let
                 newDialog =

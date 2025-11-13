@@ -21,6 +21,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Pathfinder.Id exposing (Id)
+import Task
 import Time
 import Tuple exposing (pair)
 import Util.Http exposing (Headers)
@@ -611,8 +612,8 @@ map mapMsg effect =
             CancelEffect s
 
 
-perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> Effect msg -> Cmd msg
-perform apiKey wrapMsg effect =
+perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> (String -> msg) -> Effect msg -> Cmd msg
+perform apiKey wrapMsg cancelMsg effect =
     let
         withTracker =
             effectToTracker effect
@@ -984,7 +985,11 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         CancelEffect tracker ->
-            Http.cancel tracker
+            [ Http.cancel tracker
+            , Task.succeed ()
+                |> Task.perform (\_ -> cancelMsg tracker)
+            ]
+                |> Cmd.batch
 
 
 effectToTracker : Effect msg -> Maybe String
