@@ -981,7 +981,7 @@ updateByMsg plugins uc msg model =
                                         )
                         in
                         ( model
-                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs data.nextPage []
+                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs data.nextPage 0 []
                             >> AddressDetailsMsg addressId
                             |> BulkGetTxEffect
                                 { currency = nw
@@ -993,10 +993,13 @@ updateByMsg plugins uc msg model =
                             |> List.singleton
                         )
 
-                AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage fetched txs ->
+                AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage fetchedIOprev fetched txs ->
                     let
+                        all =
+                            fetched ++ txs
+
                         fetchedSize =
-                            List.length fetched
+                            List.length all
 
                         addressTxsDict =
                             addressTxs
@@ -1010,7 +1013,7 @@ updateByMsg plugins uc msg model =
                                         case tx of
                                             Api.Data.TxTxUtxo t ->
                                                 Dict.get txHash addressTxsDict
-                                                    |> Maybe.map
+                                                    |> Maybe.andThen
                                                         (\atx ->
                                                             if atx.value.value > 0 then
                                                                 t.inputs
@@ -1018,8 +1021,12 @@ updateByMsg plugins uc msg model =
                                                             else
                                                                 t.outputs
                                                         )
-                                                    |> Maybe.andThen identity
-                                                    |> Maybe.map List.length
+                                                    |> Maybe.map
+                                                        (List.filterMap
+                                                            (.address >> List.head)
+                                                            >> Set.fromList
+                                                        )
+                                                    |> Maybe.map Set.size
                                                     |> Maybe.withDefault 0
                                                     |> (+) sum
 
@@ -1027,15 +1034,15 @@ updateByMsg plugins uc msg model =
                                                 sum
                                     )
                                     0
+                                |> (+) fetchedIOprev
 
                         config =
                             AddressDetails.makeExportCSVConfig uc addressId table
                     in
-                    if fetchedIO > ExportCSV.getNumberOfRows config then
+                    if fetchedIO >= ExportCSV.getNumberOfRows config then
                         let
                             merged =
-                                fetched
-                                    ++ txs
+                                all
                                     |> mergeAddressTxsAndTxs uc (Id.id addressId) addressTxs
 
                             ( exportCSV, eff ) =
@@ -1047,7 +1054,7 @@ updateByMsg plugins uc msg model =
 
                     else
                         ( model
-                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage (fetched ++ txs)
+                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage fetchedIO all
                             >> AddressDetailsMsg addressId
                             |> BulkGetTxEffect
                                 { currency = Id.network addressId

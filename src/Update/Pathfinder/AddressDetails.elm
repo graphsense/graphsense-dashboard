@@ -621,7 +621,7 @@ update uc msg model =
             -- handled upstream
             n model
 
-        BrowserGotBulkTxsForExport _ _ _ _ _ ->
+        BrowserGotBulkTxsForExport _ _ _ _ _ _ ->
             -- handled upstream
             n model
 

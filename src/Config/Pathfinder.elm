@@ -23,7 +23,7 @@ numberOfRowsForCSVExport =
 
 bulkFetchSizeForExportSize : Int
 bulkFetchSizeForExportSize =
-    500
+    5000
 
 
 type TracingMode
