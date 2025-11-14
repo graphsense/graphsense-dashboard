@@ -222,7 +222,7 @@ shallPushHistory plugins msg _ =
                 AddressDetails.GotAddressTxsForExport _ _ ->
                     False
 
-                AddressDetails.BrowserGotBulkTxsForExport _ _ _ _ ->
+                AddressDetails.BrowserGotBulkTxsForExport _ _ _ _ _ ->
                     False
 
         TxDetailsMsg _ ->

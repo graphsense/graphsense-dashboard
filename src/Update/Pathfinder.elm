@@ -6,7 +6,7 @@ import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
-import Config.Pathfinder exposing (TracingMode(..), nodeXOffset)
+import Config.Pathfinder exposing (TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -981,30 +981,84 @@ updateByMsg plugins uc msg model =
                                         )
                         in
                         ( model
-                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs data.nextPage
+                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs data.nextPage []
                             >> AddressDetailsMsg addressId
                             |> BulkGetTxEffect
                                 { currency = nw
-                                , txs = List.map .txHash addressTxs
+                                , txs =
+                                    List.map .txHash addressTxs
+                                        |> List.take bulkFetchSizeForExportSize
                                 }
                             |> ApiEffect
                             |> List.singleton
                         )
 
-                AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage txs ->
+                AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage fetched txs ->
                     let
+                        fetchedSize =
+                            List.length fetched
+
+                        addressTxsDict =
+                            addressTxs
+                                |> List.map (\t -> ( t.txHash, t ))
+                                |> Dict.fromList
+
+                        fetchedIO =
+                            txs
+                                |> List.foldl
+                                    (\( txHash, tx ) sum ->
+                                        case tx of
+                                            Api.Data.TxTxUtxo t ->
+                                                Dict.get txHash addressTxsDict
+                                                    |> Maybe.map
+                                                        (\atx ->
+                                                            if atx.value.value > 0 then
+                                                                t.inputs
+
+                                                            else
+                                                                t.outputs
+                                                        )
+                                                    |> Maybe.andThen identity
+                                                    |> Maybe.map List.length
+                                                    |> Maybe.withDefault 0
+                                                    |> (+) sum
+
+                                            Api.Data.TxTxAccount _ ->
+                                                sum
+                                    )
+                                    0
+
                         config =
                             AddressDetails.makeExportCSVConfig uc addressId table
-
-                        merged =
-                            mergeAddressTxsAndTxs uc (Id.id addressId) addressTxs txs
-
-                        ( exportCSV, eff ) =
-                            ExportCSV.gotData uc config ( merged, nextPage ) model.exportCSV
                     in
-                    ( { model | exportCSV = exportCSV }
-                    , eff
-                    )
+                    if fetchedIO > ExportCSV.getNumberOfRows config then
+                        let
+                            merged =
+                                fetched
+                                    ++ txs
+                                    |> mergeAddressTxsAndTxs uc (Id.id addressId) addressTxs
+
+                            ( exportCSV, eff ) =
+                                ExportCSV.gotData uc config ( merged, nextPage ) model.exportCSV
+                        in
+                        ( { model | exportCSV = exportCSV }
+                        , eff
+                        )
+
+                    else
+                        ( model
+                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage (fetched ++ txs)
+                            >> AddressDetailsMsg addressId
+                            |> BulkGetTxEffect
+                                { currency = Id.network addressId
+                                , txs =
+                                    List.map .txHash addressTxs
+                                        |> List.drop fetchedSize
+                                        |> List.take bulkFetchSizeForExportSize
+                                }
+                            |> ApiEffect
+                            |> List.singleton
+                        )
 
                 _ ->
                     model

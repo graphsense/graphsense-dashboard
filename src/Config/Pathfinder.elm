@@ -1,4 +1,4 @@
-module Config.Pathfinder exposing (Config, TracingMode(..), addressRadius, nodeXOffset, nodeYOffset, numberOfRowsForCSVExport)
+module Config.Pathfinder exposing (Config, TracingMode(..), addressRadius, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset, numberOfRowsForCSVExport)
 
 
 addressRadius : Float
@@ -19,6 +19,11 @@ nodeYOffset =
 numberOfRowsForCSVExport : Int
 numberOfRowsForCSVExport =
     5000
+
+
+bulkFetchSizeForExportSize : Int
+bulkFetchSizeForExportSize =
+    500
 
 
 type TracingMode
