@@ -87,3 +87,4 @@ type Msg
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)
     | ExportCSVMsg (TransactionTable.Model Msg) ExportCSV.Msg
     | GotAddressTxsForExport (TransactionTable.Model Msg) Api.Data.AddressTxs
+    | BrowserGotBulkTxsForExport (TransactionTable.Model Msg) (List Api.Data.AddressTxUtxo) (Maybe String) (List ( String, Api.Data.Tx ))

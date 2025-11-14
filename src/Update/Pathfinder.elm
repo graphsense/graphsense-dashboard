@@ -25,6 +25,7 @@ import Init.Pathfinder.ConversionDetails as ConversionDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.RelationDetails as RelationDetails
+import Init.Pathfinder.Tx exposing (normalizeUtxo)
 import Init.Pathfinder.TxDetails as TxDetails
 import Json.Decode
 import List.Extra
@@ -53,7 +54,7 @@ import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
-import Model.Pathfinder.Tx as Tx exposing (Tx)
+import Model.Pathfinder.Tx as Tx exposing (Io, Tx)
 import Model.Search as Search
 import Model.Tx as GTx exposing (parseTxIdentifier)
 import Msg.Pathfinder
@@ -924,10 +925,10 @@ updateByMsg plugins uc msg model =
                 AddressDetails.TooltipMsg tm ->
                     handleTooltipMsg tm model
 
-                AddressDetails.ExportCSVMsg txs ms ->
+                AddressDetails.ExportCSVMsg table ms ->
                     let
                         config =
-                            AddressDetails.makeExportCSVConfig uc addressId txs
+                            AddressDetails.makeExportCSVConfig uc addressId table
 
                         ( exportCSV, eff ) =
                             ExportCSV.update ms config model.exportCSV
@@ -936,13 +937,70 @@ updateByMsg plugins uc msg model =
                     , eff
                     )
 
-                AddressDetails.GotAddressTxsForExport txs data ->
+                AddressDetails.GotAddressTxsForExport table data ->
+                    let
+                        nw =
+                            Id.network addressId
+                    in
+                    if nw |> Data.isAccountLike then
+                        let
+                            config =
+                                AddressDetails.makeExportCSVConfig uc addressId table
+
+                            addressTxs =
+                                data.addressTxs
+                                    |> List.filterMap
+                                        (\tx ->
+                                            case tx of
+                                                Api.Data.AddressTxAddressTxUtxo _ ->
+                                                    Nothing
+
+                                                Api.Data.AddressTxTxAccount t ->
+                                                    Just t
+                                        )
+
+                            ( exportCSV, eff ) =
+                                ExportCSV.gotData uc config ( addressTxs, data.nextPage ) model.exportCSV
+                        in
+                        ( { model | exportCSV = exportCSV }
+                        , eff
+                        )
+
+                    else
+                        let
+                            addressTxs =
+                                data.addressTxs
+                                    |> List.filterMap
+                                        (\tx ->
+                                            case tx of
+                                                Api.Data.AddressTxAddressTxUtxo t ->
+                                                    Just t
+
+                                                Api.Data.AddressTxTxAccount _ ->
+                                                    Nothing
+                                        )
+                        in
+                        ( model
+                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs data.nextPage
+                            >> AddressDetailsMsg addressId
+                            |> BulkGetTxEffect
+                                { currency = nw
+                                , txs = List.map .txHash addressTxs
+                                }
+                            |> ApiEffect
+                            |> List.singleton
+                        )
+
+                AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage txs ->
                     let
                         config =
-                            AddressDetails.makeExportCSVConfig uc addressId txs
+                            AddressDetails.makeExportCSVConfig uc addressId table
+
+                        merged =
+                            mergeAddressTxsAndTxs uc (Id.id addressId) addressTxs txs
 
                         ( exportCSV, eff ) =
-                            ExportCSV.gotData uc config ( data.addressTxs, data.nextPage ) model.exportCSV
+                            ExportCSV.gotData uc config ( merged, nextPage ) model.exportCSV
                     in
                     ( { model | exportCSV = exportCSV }
                     , eff
@@ -2221,6 +2279,106 @@ updateByMsg plugins uc msg model =
                 False
                 |> List.singleton
             )
+
+
+{-| Normalize address txs to account tx schema
+-}
+mergeAddressTxsAndTxs : Update.Config -> String -> List Api.Data.AddressTxUtxo -> List ( String, Api.Data.Tx ) -> List Api.Data.TxAccount
+mergeAddressTxsAndTxs uc address addressTxs txs =
+    let
+        dict =
+            Dict.fromList txs
+    in
+    addressTxs
+        |> List.filterMap
+            (\addressTx ->
+                Dict.get addressTx.txHash dict
+                    |> Maybe.andThen
+                        (\t ->
+                            case t of
+                                Api.Data.TxTxUtxo tx ->
+                                    Just <| normalizeUtxo tx
+
+                                Api.Data.TxTxAccount _ ->
+                                    Nothing
+                        )
+                    |> Maybe.map
+                        (\{ inputs, outputs } ->
+                            let
+                                sumInputs =
+                                    Dict.values inputs
+                                        |> List.map .values
+                                        |> Data.sumValues
+
+                                addressTxPortion =
+                                    toFloat addressTx.value.value / toFloat sumInputs.value
+                            in
+                            if addressTx.value.value > 0 then
+                                let
+                                    inputToTxAccount : ( Id, Io ) -> Api.Data.TxAccount
+                                    inputToTxAccount ( addr, io ) =
+                                        { contractCreation = Nothing
+                                        , currency = addressTx.currency
+                                        , fromAddress = Id.id addr
+                                        , height = addressTx.height
+                                        , identifier = ""
+                                        , isExternal = Nothing
+                                        , network = addressTx.currency
+                                        , timestamp = addressTx.timestamp
+                                        , toAddress = address
+                                        , tokenTxId = Nothing
+                                        , txHash = addressTx.txHash
+                                        , txType = "utxo"
+                                        , value = Data.mulValues addressTxPortion io.values
+                                        }
+                                in
+                                inputs
+                                    |> Dict.toList
+                                    |> List.map inputToTxAccount
+
+                            else
+                                let
+                                    sumOutputs =
+                                        Dict.values outputs
+                                            |> List.map .values
+                                            |> Data.sumValues
+
+                                    fee =
+                                        Data.subValues sumInputs sumOutputs
+
+                                    outputToTxAccount : ( Id, Io ) -> Api.Data.TxAccount
+                                    outputToTxAccount ( addr, io ) =
+                                        { contractCreation = Nothing
+                                        , currency = addressTx.currency
+                                        , fromAddress = address
+                                        , height = addressTx.height
+                                        , identifier = ""
+                                        , isExternal = Nothing
+                                        , network = addressTx.currency
+                                        , timestamp = addressTx.timestamp
+                                        , toAddress = Id.id addr
+                                        , tokenTxId = Nothing
+                                        , txHash = addressTx.txHash
+                                        , txType = "utxo"
+                                        , value = Data.mulValues addressTxPortion io.values
+                                        }
+                                in
+                                outputs
+                                    |> Dict.toList
+                                    |> List.map outputToTxAccount
+                                    |> flip (++)
+                                        [ outputToTxAccount
+                                            ( Locale.string uc.locale "fee"
+                                                |> Id.init addressTx.currency
+                                            , { address = Nothing
+                                              , values = fee
+                                              , aggregatesN = 1
+                                              }
+                                            )
+                                        ]
+                        )
+            )
+        |> List.concat
 
 
 checkAllTxs : Plugins -> Update.Config -> Maybe Id -> List Id -> Model -> ( Model, List Effect )

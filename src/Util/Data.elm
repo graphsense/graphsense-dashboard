@@ -1,7 +1,8 @@
-module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, negateTxValue, negateValues, normalizeIdentifier, parseMultiIdentifierInput, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, mulValues, negateTxValue, negateValues, normalizeIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Round
 import Time
 import Util exposing (removeLeading0x)
 
@@ -72,6 +73,26 @@ addValues x y =
             List.map (\( xf, yf ) -> { code = xf.code, value = xf.value + yf.value }) rates
     in
     { value = x.value + y.value, fiatValues = fvalues }
+
+
+subValues : Api.Data.Values -> Api.Data.Values -> Api.Data.Values
+subValues x y =
+    let
+        rates =
+            List.map2 Tuple.pair x.fiatValues y.fiatValues
+
+        fvalues =
+            List.map (\( xf, yf ) -> { code = xf.code, value = xf.value - yf.value }) rates
+    in
+    { value = x.value - y.value, fiatValues = fvalues }
+
+
+mulValues : Float -> Api.Data.Values -> Api.Data.Values
+mulValues mul values =
+    { value = toFloat values.value * mul |> round
+    , fiatValues =
+        List.map (\f -> { f | value = f.value * mul |> Round.roundNum 2 }) values.fiatValues
+    }
 
 
 sumValues : List Api.Data.Values -> Api.Data.Values

@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (loadFirstPage, makeExportCSVConfig, syncByAddress, update)
+module Update.Pathfinder.AddressDetails exposing (loadFirstPage, makeExportCSVConfig, prepareCSV, syncByAddress, update)
 
 import Api.Data
 import Api.Request.Addresses
@@ -19,6 +19,7 @@ import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
+import Model.Locale as Locale
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -33,15 +34,15 @@ import RecordSetter exposing (..)
 import RemoteData exposing (WebData)
 import Set
 import Table
+import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (and, n)
+import Util.Csv
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
-import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
-import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Locale as Locale
 
 
@@ -620,6 +621,10 @@ update uc msg model =
             -- handled upstream
             n model
 
+        BrowserGotBulkTxsForExport _ _ _ _ ->
+            -- handled upstream
+            n model
+
 
 closeTransactionTable : Model -> ( Model, List Effect )
 closeTransactionTable model =
@@ -642,7 +647,7 @@ closeTransactionTable model =
     )
 
 
-makeExportCSVConfig : Update.Config -> Id -> TransactionTable.Model Msg -> ExportCSV.Config Api.Data.AddressTx Effect
+makeExportCSVConfig : Update.Config -> Id -> TransactionTable.Model Msg -> ExportCSV.Config Api.Data.TxAccount Effect
 makeExportCSVConfig uc addressId txs =
     ExportCSV.config
         { filename =
@@ -656,26 +661,9 @@ makeExportCSVConfig uc addressId txs =
                 nw =
                     addressId |> Id.network
             in
-            \tx ->
-                if nw |> Data.isAccountLike then
-                    case tx of
-                        Api.Data.AddressTxAddressTxUtxo _ ->
-                            Nothing
-
-                        Api.Data.AddressTxTxAccount tx_ ->
-                            TxsAccountTable.prepareCSV uc.locale nw tx_
-                                |> List.map (mapFirst (Locale.string uc.locale))
-                                |> Just
-
-                else
-                    case tx of
-                        Api.Data.AddressTxAddressTxUtxo tx_ ->
-                            AddressTxsUtxoTable.prepareCSV uc.locale nw tx_
-                                |> List.map (mapFirst (Locale.string uc.locale))
-                                |> Just
-
-                        Api.Data.AddressTxTxAccount _ ->
-                            Nothing
+            prepareCSV uc.locale nw
+                >> List.map (mapFirst (Locale.string uc.locale))
+                >> Just
         , numberOfRows = numberOfRowsForCSVExport
         , fetch =
             \nor ->
@@ -933,3 +921,43 @@ openTransactionTable uc dfp model =
                 )
                 model.address.data
             |> RemoteData.withDefault (n model)
+
+
+prepareCSV : Locale.Model -> String -> Api.Data.TxAccount -> List ( String, String )
+prepareCSV locModel network row =
+    ( "Tx_hash"
+    , Util.Csv.string row.txHash
+    )
+        :: (if Data.isAccountLike network then
+                [ ( "Token_tx_id"
+                  , row.tokenTxId
+                        |> Maybe.map Util.Csv.int
+                        |> Maybe.withDefault (Util.Csv.string "")
+                  )
+                ]
+
+            else
+                []
+           )
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "Value"
+            row.value
+            locModel
+            { network = network
+            , asset = row.currency
+            }
+        ++ [ ( "Currency"
+             , Util.Csv.string <| String.toUpper row.currency
+             )
+           , ( "Height"
+             , Util.Csv.int row.height
+             )
+           , ( "Timestamp_utc"
+             , Locale.timestampNormal { locModel | zone = Time.utc } <| Data.timestampToPosix row.timestamp
+             )
+           , ( "Sending_address"
+             , Util.Csv.string row.fromAddress
+             )
+           , ( "Receiving_address"
+             , Util.Csv.string row.toAddress
+             )
+           ]
