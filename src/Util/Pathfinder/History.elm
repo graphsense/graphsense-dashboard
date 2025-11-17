@@ -225,6 +225,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.BrowserGotBulkTxsForExport _ _ _ _ _ _ ->
                     False
 
+                AddressDetails.BrowserGotBulkTagsForExport _ _ _ _ ->
+                    False
+
         TxDetailsMsg _ ->
             False
 

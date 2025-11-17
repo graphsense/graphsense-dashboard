@@ -88,3 +88,4 @@ type Msg
     | ExportCSVMsg (TransactionTable.Model Msg) ExportCSV.Msg
     | GotAddressTxsForExport (TransactionTable.Model Msg) Api.Data.AddressTxs
     | BrowserGotBulkTxsForExport (TransactionTable.Model Msg) (List Api.Data.AddressTxUtxo) (Maybe String) Int (List ( String, Api.Data.Tx )) (List ( String, Api.Data.Tx ))
+    | BrowserGotBulkTagsForExport (TransactionTable.Model Msg) ( List Api.Data.TxAccount, Maybe String ) Bool (List ( Id, Api.Data.TagSummary ))

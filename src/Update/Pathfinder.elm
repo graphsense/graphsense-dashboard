@@ -52,6 +52,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Io, Tx)
@@ -867,8 +868,8 @@ updateByMsg plugins uc msg model =
                             Id.network addressId
                     in
                     neighbors
-                        |> List.map (.address >> .address >> Id.init network)
-                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.map (.address >> .address)
+                        |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
                         |> List.singleton
                         |> pair model
                         |> and
@@ -886,8 +887,8 @@ updateByMsg plugins uc msg model =
                             Id.network addressId
                     in
                     addresses
-                        |> List.map (.address >> Id.init network)
-                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.map .address
+                        |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
                         |> List.singleton
                         |> pair model
                         |> and
@@ -944,9 +945,6 @@ updateByMsg plugins uc msg model =
                     in
                     if nw |> Data.isAccountLike then
                         let
-                            config =
-                                AddressDetails.makeExportCSVConfig uc addressId table
-
                             addressTxs =
                                 data.addressTxs
                                     |> List.filterMap
@@ -958,13 +956,8 @@ updateByMsg plugins uc msg model =
                                                 Api.Data.AddressTxTxAccount t ->
                                                     Just t
                                         )
-
-                            ( exportCSV, eff ) =
-                                ExportCSV.gotData uc config ( addressTxs, data.nextPage ) model.exportCSV
                         in
-                        ( { model | exportCSV = exportCSV }
-                        , eff
-                        )
+                        getTagsForExport addressId table ( addressTxs, data.nextPage ) model
 
                     else
                         let
@@ -1038,19 +1031,19 @@ updateByMsg plugins uc msg model =
 
                         config =
                             AddressDetails.makeExportCSVConfig uc addressId table
+
+                        nextTxs =
+                            List.map .txHash addressTxs
+                                |> List.drop fetchedSize
+                                |> List.take bulkFetchSizeForExportSize
                     in
-                    if fetchedIO >= ExportCSV.getNumberOfRows config then
+                    if fetchedIO >= ExportCSV.getNumberOfRows config || List.isEmpty nextTxs then
                         let
                             merged =
                                 all
                                     |> mergeAddressTxsAndTxs uc (Id.id addressId) addressTxs
-
-                            ( exportCSV, eff ) =
-                                ExportCSV.gotData uc config ( merged, nextPage ) model.exportCSV
                         in
-                        ( { model | exportCSV = exportCSV }
-                        , eff
-                        )
+                        getTagsForExport addressId table ( merged, nextPage ) model
 
                     else
                         ( model
@@ -1058,14 +1051,49 @@ updateByMsg plugins uc msg model =
                             >> AddressDetailsMsg addressId
                             |> BulkGetTxEffect
                                 { currency = Id.network addressId
-                                , txs =
-                                    List.map .txHash addressTxs
-                                        |> List.drop fetchedSize
-                                        |> List.take bulkFetchSizeForExportSize
+                                , txs = nextTxs
                                 }
                             |> ApiEffect
                             |> List.singleton
                         )
+
+                AddressDetails.BrowserGotBulkTagsForExport table data includesBestClusterTag tagSummeries ->
+                    let
+                        -- throw away the fetch actor effects
+                        ( modelWithTags, _ ) =
+                            tagSummeries
+                                |> List.foldl
+                                    (\( id, ts ) ->
+                                        addTagSummaryToModel includesBestClusterTag id ts
+                                            |> and
+                                    )
+                                    (n model)
+
+                        dataWithTags =
+                            data
+                                |> mapFirst
+                                    (List.map
+                                        (\tx ->
+                                            ( tx
+                                            , Id.init tx.currency tx.fromAddress
+                                                |> getHavingTags modelWithTags
+                                                |> getTagsummary
+                                            , Id.init tx.currency tx.toAddress
+                                                |> getHavingTags modelWithTags
+                                                |> getTagsummary
+                                            )
+                                        )
+                                    )
+
+                        config =
+                            AddressDetails.makeExportCSVConfig uc addressId table
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.gotData uc config dataWithTags model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
 
                 _ ->
                     model
@@ -1976,14 +2004,16 @@ updateByMsg plugins uc msg model =
                 |> flip (handleWorkflowNextTxByTime plugins uc config neighborId) model
 
         BrowserGotTagSummaries includesBestClusterTag data ->
-            let
-                combine ( id, ts ) r =
-                    addTagSummaryToModel r includesBestClusterTag id ts
-            in
-            List.foldl combine (n model) data
+            List.foldl
+                (\( id, ts ) ->
+                    addTagSummaryToModel includesBestClusterTag id ts
+                        |> and
+                )
+                (n model)
+                data
 
         BrowserGotTagSummary includesBestClusterTag id data ->
-            addTagSummaryToModel (n model) includesBestClusterTag id data
+            addTagSummaryToModel includesBestClusterTag id data model
 
         BrowserGotAddressesTags _ data ->
             let
@@ -3881,20 +3911,21 @@ isTagSummaryLoaded includeBestClusterTag existing id =
             False
 
 
-fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> List Id -> Effect
-fetchTagSummaryForIds includeBestClusterTag existing ids =
+fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> (Bool -> List ( Id, Api.Data.TagSummary ) -> Msg) -> String -> List String -> Effect
+fetchTagSummaryForIds includeBestClusterTag existing toMsg network ids =
     let
         idsToLoad =
-            ids |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
+            ids
+                |> List.map (Id.init network)
+                |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
     in
-    case idsToLoad of
-        [] ->
-            CmdEffect Cmd.none
+    if List.isEmpty idsToLoad then
+        CmdEffect Cmd.none
 
-        x :: _ ->
-            BrowserGotTagSummaries includeBestClusterTag
-                |> Api.BulkGetAddressTagSummaryEffect { currency = Id.network x, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
-                |> ApiEffect
+    else
+        toMsg includeBestClusterTag
+            |> Api.BulkGetAddressTagSummaryEffect { currency = network, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
+            |> ApiEffect
 
 
 fetchTagSummaryForId : Bool -> Dict Id HavingTags -> Id -> Effect
@@ -3912,8 +3943,8 @@ fetchTagSummaryForId includeBestClusterTag existing id =
         fetch
 
 
-addTagSummaryToModel : ( Model, List Effect ) -> Bool -> Id -> Api.Data.TagSummary -> ( Model, List Effect )
-addTagSummaryToModel ( m, e ) includesBestClusterTag id data =
+addTagSummaryToModel : Bool -> Id -> Api.Data.TagSummary -> Model -> ( Model, List Effect )
+addTagSummaryToModel includesBestClusterTag id data m =
     let
         d =
             if data.tagCount > 0 && includesBestClusterTag then
@@ -3932,7 +3963,7 @@ addTagSummaryToModel ( m, e ) includesBestClusterTag id data =
         | tagSummaries = upsertTagSummary id d m.tagSummaries
       }
         |> updateTagDataOnAddress id
-    , e ++ (data.bestActor |> Maybe.map (List.singleton >> flip fetchActors m.actors) |> Maybe.withDefault [])
+    , data.bestActor |> Maybe.map (List.singleton >> flip fetchActors m.actors) |> Maybe.withDefault []
     )
 
 
@@ -4498,3 +4529,22 @@ addMarginPathfinder bbox =
     , width = bbox.width * unit + (2 * unit)
     , height = bbox.height * unit + (8 * unit)
     }
+
+
+getTagsForExport : Id -> TransactionTable.Model AddressDetails.Msg -> ( List Api.Data.TxAccount, Maybe String ) -> Model -> ( Model, List Effect )
+getTagsForExport addressId table data model =
+    let
+        toMsg =
+            \includesBestClusterTag result ->
+                AddressDetails.BrowserGotBulkTagsForExport table data includesBestClusterTag result
+                    |> AddressDetailsMsg addressId
+    in
+    ( model
+    , data
+        |> first
+        |> List.concatMap (\tx -> [ tx.fromAddress, tx.toAddress ])
+        |> Set.fromList
+        |> Set.toList
+        |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
+        |> List.singleton
+    )

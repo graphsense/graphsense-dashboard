@@ -36,6 +36,7 @@ import Set
 import Table
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
+import Tuple3
 import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
@@ -625,6 +626,10 @@ update uc msg model =
             -- handled upstream
             n model
 
+        BrowserGotBulkTagsForExport _ _ _ _ ->
+            -- handled upstream
+            n model
+
 
 closeTransactionTable : Model -> ( Model, List Effect )
 closeTransactionTable model =
@@ -647,7 +652,7 @@ closeTransactionTable model =
     )
 
 
-makeExportCSVConfig : Update.Config -> Id -> TransactionTable.Model Msg -> ExportCSV.Config Api.Data.TxAccount Effect
+makeExportCSVConfig : Update.Config -> Id -> TransactionTable.Model Msg -> ExportCSV.Config ( Api.Data.TxAccount, Maybe Api.Data.TagSummary, Maybe Api.Data.TagSummary ) Effect
 makeExportCSVConfig uc addressId txs =
     ExportCSV.config
         { filename =
@@ -923,8 +928,18 @@ openTransactionTable uc dfp model =
             |> RemoteData.withDefault (n model)
 
 
-prepareCSV : Locale.Model -> String -> Api.Data.TxAccount -> List ( String, String )
-prepareCSV locModel network row =
+prepareCSV : Locale.Model -> String -> ( Api.Data.TxAccount, Maybe Api.Data.TagSummary, Maybe Api.Data.TagSummary ) -> List ( String, String )
+prepareCSV locModel network data =
+    let
+        row =
+            Tuple3.first data
+
+        tagSender =
+            Tuple3.second data
+
+        tagReceiver =
+            Tuple3.third data
+    in
     ( "Tx_hash"
     , Util.Csv.string row.txHash
     )
@@ -957,7 +972,19 @@ prepareCSV locModel network row =
            , ( "Sending_address"
              , Util.Csv.string row.fromAddress
              )
+           , ( "Sending_address_label"
+             , tagSender
+                |> Maybe.andThen .bestActor
+                |> Maybe.withDefault ""
+                |> Util.Csv.string
+             )
            , ( "Receiving_address"
              , Util.Csv.string row.toAddress
+             )
+           , ( "Receiving_address_label"
+             , tagReceiver
+                |> Maybe.andThen .bestActor
+                |> Maybe.withDefault ""
+                |> Util.Csv.string
              )
            ]
