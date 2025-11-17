@@ -869,7 +869,7 @@ updateByMsg plugins uc msg model =
                     in
                     neighbors
                         |> List.map (.address >> .address)
-                        |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
+                        |> fetchTagSummaryForIds True model.tagSummaries BrowserGotTagSummaries network
                         |> List.singleton
                         |> pair model
                         |> and
