@@ -50,3 +50,5 @@ there_were_more_rows_for_csv_download_info: Please use filter options to further
 outgoing relations: outgoing relationships
 incoming relations: incoming relationships
 tags_release_warnings: "The tags you add will be visible to all users. Please ensure that your tags do not include any copyright-infringing material, such as tags or content from other tool providers. Additionally, do not disclose any case-specific or sensitive information to the public."
+sending_address_label: From Actor
+receiving_address_label: To Actor

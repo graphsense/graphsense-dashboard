@@ -573,3 +573,5 @@ success_download_csv: "{0} Datensätze als CSV heruntergeladen"
 "Address transactions of {0} ({1})": "Transaktionen der Adresse {0} ({1})"
 "Transactions from {0} to {1} ({2})": "Transaktionen von {0} nach {1} ({2})"
 fee: Gebühr
+sending_address_label: Sender Akteur
+receiving_address_label: Empfänger Akteur
