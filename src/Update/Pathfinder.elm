@@ -1071,6 +1071,7 @@ updateByMsg plugins uc msg model =
 
                         dataWithTags =
                             data
+                                |> mapFirst (addFeeRows uc addressId)
                                 |> mapFirst
                                     (List.map
                                         (\tx ->
@@ -2372,6 +2373,30 @@ updateByMsg plugins uc msg model =
             )
 
 
+addFeeRows : Update.Config -> Id -> List Api.Data.TxAccount -> List Api.Data.TxAccount
+addFeeRows uc addressId =
+    List.map
+        (\tx ->
+            tx
+                :: (tx.fee
+                        |> Maybe.map
+                            (\fee ->
+                                if tx.fromAddress == Id.id addressId then
+                                    [ { tx
+                                        | value = Data.negateValues fee
+                                        , toAddress = Locale.string uc.locale "fee"
+                                      }
+                                    ]
+
+                                else
+                                    []
+                            )
+                        |> Maybe.withDefault []
+                   )
+        )
+        >> List.concat
+
+
 {-| Normalize address txs to account tx schema
 -}
 mergeAddressTxsAndTxs : Update.Config -> String -> List Api.Data.AddressTxUtxo -> List ( String, Api.Data.Tx ) -> List Api.Data.TxAccount
@@ -2421,6 +2446,7 @@ mergeAddressTxsAndTxs uc address addressTxs txs =
                                         , txHash = addressTx.txHash
                                         , txType = "utxo"
                                         , value = Data.mulValues addressTxPortion io.values
+                                        , fee = Nothing
                                         }
                                 in
                                 inputs
@@ -2452,6 +2478,7 @@ mergeAddressTxsAndTxs uc address addressTxs txs =
                                         , txHash = addressTx.txHash
                                         , txType = "utxo"
                                         , value = Data.mulValues addressTxPortion io.values
+                                        , fee = Nothing
                                         }
                                 in
                                 outputs

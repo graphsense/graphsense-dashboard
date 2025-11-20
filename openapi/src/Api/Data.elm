@@ -679,6 +679,7 @@ type Tx
 type alias TxAccount =
     { contractCreation : Maybe Bool
     , currency : String
+    , fee : Maybe Values
     , fromAddress : String
     , height : Int
     , identifier : String
@@ -2026,6 +2027,7 @@ encodeTxAccountPairs model =
         pairs =
             [ maybeEncode "contract_creation" Json.Encode.bool model.contractCreation
             , encode "currency" Json.Encode.string model.currency
+            , maybeEncode "fee" encodeValues model.fee
             , encode "from_address" Json.Encode.string model.fromAddress
             , encode "height" Json.Encode.int model.height
             , encode "identifier" Json.Encode.string model.identifier
@@ -2845,6 +2847,7 @@ txAccountDecoder =
     Json.Decode.succeed TxAccount
         |> maybeDecode "contract_creation" Json.Decode.bool Nothing
         |> decode "currency" Json.Decode.string 
+        |> maybeDecode "fee" valuesDecoder Nothing
         |> decode "from_address" Json.Decode.string 
         |> decode "height" Json.Decode.int 
         |> decode "identifier" Json.Decode.string 
