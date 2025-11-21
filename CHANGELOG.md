@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [25.11.2] - 2025-11-21
+
+### Fixed
+
+- improve csv download message, add italian
+- fetch tag summeries for csv export
+- merge utxo inputs/outputs into csv output
+- extended warning for add tag
+- allow canceling request on table loading avoiding loading data into table from older requests
+- include best cluster tag in neighbor table tag summary request
+
+
 ## [25.11.1] - 2025-11-10
 
 ### Fixed
