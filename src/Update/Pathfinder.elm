@@ -1142,7 +1142,7 @@ updateByMsg plugins uc msg model =
                     |> and unselect
 
             else
-                unselect m1
+                n m1
 
         UserClickedFitGraph ->
             fitGraph uc model
@@ -2375,7 +2375,7 @@ updateByMsg plugins uc msg model =
 
 addFeeRows : Update.Config -> Id -> List Api.Data.TxAccount -> List Api.Data.TxAccount
 addFeeRows uc addressId =
-    List.map
+    List.concatMap
         (\tx ->
             tx
                 :: (tx.fee
@@ -2394,7 +2394,6 @@ addFeeRows uc addressId =
                         |> Maybe.withDefault []
                    )
         )
-        >> List.concat
 
 
 {-| Normalize address txs to account tx schema
