@@ -157,60 +157,61 @@ update plugins uc msg model =
 
 syncUrl : Model -> ( Model, List Effect )
 syncUrl model =
-    case model.details of
-        Just (AddressDetails id ad) ->
-            let
-                filter =
-                    if not ad.transactionsTableOpen then
-                        Nothing
-
-                    else
-                        case ad.txs of
-                            NotAsked ->
+    let
+        route =
+            case model.details of
+                Just (AddressDetails id ad) ->
+                    let
+                        filter =
+                            if not ad.transactionsTableOpen then
                                 Nothing
 
-                            Failure _ ->
-                                Nothing
+                            else
+                                case ad.txs of
+                                    NotAsked ->
+                                        Nothing
 
-                            Loading ->
-                                { fromDate = Nothing
-                                , toDate = Nothing
-                                }
-                                    |> Just
+                                    Failure _ ->
+                                        Nothing
 
-                            Success txs ->
-                                txs.dateRangePicker
-                                    |> Maybe.map
-                                        (\{ fromDate, toDate } ->
-                                            { fromDate = fromDate
-                                            , toDate = toDate
-                                            }
-                                        )
-                                    |> Maybe.withDefault
+                                    Loading ->
                                         { fromDate = Nothing
                                         , toDate = Nothing
                                         }
-                                    |> Just
+                                            |> Just
 
-                route =
+                                    Success txs ->
+                                        txs.dateRangePicker
+                                            |> Maybe.map
+                                                (\{ fromDate, toDate } ->
+                                                    { fromDate = fromDate
+                                                    , toDate = toDate
+                                                    }
+                                                )
+                                            |> Maybe.withDefault
+                                                { fromDate = Nothing
+                                                , toDate = Nothing
+                                                }
+                                            |> Just
+                    in
                     Route.addressRouteWithFilter
                         { network = Id.network id
                         , address = Id.id id
                         , filter = filter
                         }
-            in
-            ( { model | route = route }
-            , if model.route /= route then
-                route
-                    |> NavPushRouteEffect
-                    |> List.singleton
 
-              else
-                []
-            )
+                _ ->
+                    model.route
+    in
+    ( { model | route = route }
+    , if model.route /= route then
+        route
+            |> NavPushRouteEffect
+            |> List.singleton
 
-        _ ->
-            n model
+      else
+        []
+    )
 
 
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
@@ -3250,7 +3251,15 @@ updateByRoute plugins uc route model =
         n model
 
     else
-        forcePushHistory (model |> s_isDirty True |> s_route route)
+        model
+            |> s_route route
+            |> (if route == Route.Root then
+                    identity
+
+                else
+                    s_isDirty True
+                        >> forcePushHistory
+               )
             |> updateByRoute_ plugins uc route
             |> and (syncSidePanel uc)
 
@@ -3851,7 +3860,10 @@ undoRedo fun model =
                 }
             )
         |> Maybe.withDefault model
-        |> n
+        |> flip pair
+            [ Route.Root
+                |> NavPushRouteEffect
+            ]
 
 
 markDirty : Plugins -> Msg -> Model -> Model
