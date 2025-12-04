@@ -1,4 +1,4 @@
-module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, update, updateAggEdge)
+module Update.Pathfinder.RelationDetails exposing (gettersAndSetters, makeExportCSVConfig, update, updateAggEdge)
 
 import Api.Data
 import Api.Request.Addresses
@@ -9,11 +9,10 @@ import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Effect.Api as Api
-import Effect.Pathfinder exposing (Effect(..))
+import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.RelationDetails as Init
 import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
 import Model.Pathfinder.AggEdge exposing (AggEdge)
@@ -23,7 +22,7 @@ import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
-import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_exportCSV, s_isTxFilterViewOpen, s_selectedAsset, s_table)
+import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_isTxFilterViewOpen, s_selectedAsset, s_table)
 import Table
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
@@ -36,7 +35,7 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Locale as Locale
 
 
-loadRelationTxs : (Bool -> Maybe String -> Api.Data.Links -> Msg) -> ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+loadRelationTxs : (Bool -> Maybe String -> Api.Data.Links -> Msg) -> ( Id, Id ) -> Bool -> RelationTxsTable.Model Msg -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
 loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
     let
         a =
@@ -89,18 +88,21 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
         |> ApiEffect
 
 
-tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config Effect
+tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model Msg -> InfiniteTable.Config Effect
 tableConfig id isA2b txTable =
     { fetch = loadRelationTxs BrowserGotLinks id isA2b txTable
+    , force = False
     , triggerOffset = 100
+    , effectToTracker = effectToTracker
+    , abort = Api.CancelEffect >> ApiEffect
     }
 
 
 gettersAndSetters :
     Bool
     ->
-        { getTable : Model -> RelationTxsTable.Model
-        , setTable : RelationTxsTable.Model -> Model -> Model
+        { getTable : Model -> RelationTxsTable.Model Msg
+        , setTable : RelationTxsTable.Model Msg -> Model -> Model
         , getOpen : Model -> Bool
         , setOpen : Bool -> Model -> Model
         }
@@ -170,21 +172,24 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 isOpen =
                     gs.getOpen model
 
+                conf =
+                    tableConfig id isA2b tbl
+
                 ( table, eff ) =
                     if isOpen then
-                        ( tbl.table, Nothing )
+                        InfiniteTable.abort conf tbl.table
 
                     else
                         tbl.table
                             |> InfiniteTable.reset
                             |> InfiniteTable.loadFirstPage
-                                (tableConfig id isA2b tbl)
+                                conf
             in
             ( isOpen
                 |> not
                 |> flip gs.setOpen model
                 |> gs.setTable (s_table table tbl)
-            , Maybe.Extra.toList eff
+            , eff
             )
 
         TableMsg isA2b tm ->
@@ -203,7 +208,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             ( m, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
-                |> mapSecond Maybe.Extra.toList
                 |> mapSecond
                     ((::)
                         (cmd
@@ -240,7 +244,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             ( table, eff )
                 |> mapFirst (flip s_table tbl)
                 |> mapFirst (flip gs.setTable model)
-                |> mapSecond Maybe.Extra.toList
                 |> mapSecond
                     ((::)
                         (cmd
@@ -357,16 +360,15 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                             (tableConfig id isA2b udateTbl)
 
                                 else
-                                    ( udateTbl.table, Nothing )
+                                    ( udateTbl.table, [] )
                         in
                         ( model |> gs.setTable (udateTbl |> s_table ntbl)
                         , if dateRangeChanged then
                             eff
 
                           else
-                            Nothing
+                            []
                         )
-                            |> mapSecond Maybe.Extra.toList
                     )
                 |> Maybe.withDefault (n model)
 
@@ -403,7 +405,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                         |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
-                        |> mapSecond Maybe.Extra.toList
             in
             ( model |> gs.setTable (tbl |> s_table table)
             , eff
@@ -426,7 +427,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                         |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
-                        |> mapSecond Maybe.Extra.toList
             in
             ( model |> gs.setTable (tbl |> s_table table)
             , eff
@@ -450,7 +450,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                         |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
-                        |> mapSecond Maybe.Extra.toList
             in
             ( model |> gs.setTable (tbl |> s_table table)
             , eff
@@ -492,104 +491,43 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                             |> InfiniteTable.loadFirstPage
                                 (tableConfig id isA2b newTxs)
                 in
-                ( model |> gs.setTable (newTxs |> s_table ntbl), eff ) |> mapSecond Maybe.Extra.toList
+                ( newTxs
+                    |> s_table ntbl
+                    |> flip gs.setTable model
+                , eff
+                )
 
-        ExportCSVMsg isA2b ms ->
-            let
-                gs =
-                    gettersAndSetters isA2b
+        ExportCSVMsg _ _ _ ->
+            -- handled upstream
+            n model
 
-                tbl =
-                    gs.getTable model
-
-                ( exportCSVModel, cmd, fetch ) =
-                    ExportCSV.update ms tbl.exportCSV
-            in
-            updateExportCSVModel isA2b id exportCSVModel cmd fetch tbl model
-
-        BrowserGotLinksForExport isA2b _ { nextPage, links } ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                tbl =
-                    gs.getTable model
-
-                notification =
-                    nextPage
-                        |> Maybe.map
-                            (\_ ->
-                                ExportCSV.makeNotification numberOfRowsForCSVExport
-                                    |> ShowNotificationEffect
-                                    |> List.singleton
-                            )
-                        |> Maybe.withDefault []
-
-                exportCSVConfig =
-                    makeExportCSVConfig uc isA2b model
-
-                ( exportCSVModel, cmd, fetch ) =
-                    ExportCSV.gotData uc exportCSVConfig links tbl.exportCSV
-            in
-            updateExportCSVModel isA2b id exportCSVModel cmd fetch tbl model
-                |> mapSecond ((++) notification)
+        BrowserGotLinksForExport _ _ _ ->
+            -- handled upstream
+            n model
 
 
-updateExportCSVModel : Bool -> ( Id, Id ) -> ExportCSV.Model -> Cmd ExportCSV.Msg -> Bool -> RelationTxsTable.Model -> Model -> ( Model, List Effect )
-updateExportCSVModel isA2b id exportCSVModel cmd fetch tbl model =
+makeExportCSVConfig : Update.Config -> Bool -> ( Id, Id ) -> RelationTxsTable.Model Msg -> ExportCSV.Config Api.Data.Link Effect
+makeExportCSVConfig uc isA2b id tbl =
     let
-        gs =
-            gettersAndSetters isA2b
-    in
-    ( tbl
-        |> s_exportCSV exportCSVModel
-        |> flip gs.setTable model
-    , cmd
-        |> Cmd.map
-            (ExportCSVMsg isA2b >> RelationDetailsMsg id)
-        |> CmdEffect
-        |> flip (::)
-            (if fetch then
-                [ loadRelationTxs
-                    BrowserGotLinksForExport
-                    id
-                    isA2b
-                    tbl
-                    (tbl.table
-                        |> InfiniteTable.getTable
-                        |> .state
-                        |> Table.getSortState
-                        |> Just
-                    )
-                    numberOfRowsForCSVExport
-                    Nothing
-                ]
+        nw =
+            Id.network <| first id
 
-             else
-                []
-            )
-    )
+        ( a, b ) =
+            id
 
-
-makeExportCSVConfig : Update.Config -> Bool -> Model -> ExportCSV.Config Api.Data.Link
-makeExportCSVConfig uc isA2b model =
-    let
-        ( from, to ) =
+        ( source, target ) =
             if isA2b then
-                ( model.aggEdge.a, model.aggEdge.b )
+                ( Id.id a, Id.id b )
 
             else
-                ( model.aggEdge.b, model.aggEdge.a )
-
-        nw =
-            Id.network from
+                ( Id.id b, Id.id a )
     in
     ExportCSV.config
         { filename =
             Locale.interpolated uc.locale
                 "Transactions from {0} to {1} ({2})"
-                [ Id.id from
-                , Id.id to
+                [ source
+                , target
                 , String.toUpper nw
                 ]
         , toCsv =
@@ -613,4 +551,27 @@ makeExportCSVConfig uc isA2b model =
 
                         Api.Data.LinkTxAccount _ ->
                             Nothing
+        , cmdToEff =
+            Cmd.map
+                (ExportCSVMsg isA2b tbl
+                    >> RelationDetailsMsg id
+                )
+                >> CmdEffect
+        , fetch =
+            \nor ->
+                loadRelationTxs
+                    (\isA2b_ _ -> BrowserGotLinksForExport isA2b_ tbl)
+                    id
+                    isA2b
+                    tbl
+                    (tbl.table
+                        |> InfiniteTable.getTable
+                        |> .state
+                        |> Table.getSortState
+                        |> Just
+                    )
+                    nor
+                    Nothing
+        , numberOfRows = numberOfRowsForCSVExport
+        , notificationToEff = ShowNotificationEffect
         }

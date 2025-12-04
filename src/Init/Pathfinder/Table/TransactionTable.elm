@@ -2,11 +2,11 @@ module Init.Pathfinder.Table.TransactionTable exposing (init)
 
 import Api.Data
 import Api.Request.Addresses
-import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
+import DurationDatePicker
 import Init.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
@@ -14,8 +14,6 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
-import Msg.Pathfinder exposing (Msg(..))
-import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import Util.Data exposing (timestampToPosix)
 import Util.ThemedSelectBox as ThemedSelectBox
 
@@ -25,8 +23,8 @@ getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
-init : Update.Config -> Network -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
-init uc network addressId data assets =
+init : Update.Config -> Network -> Id -> Api.Data.Address -> List String -> (DurationDatePicker.Msg -> msg) -> TransactionTable.Model msg
+init uc network addressId data assets dpMsg =
     let
         table isDesc =
             Table.initSorted isDesc TransactionTable.titleTimestamp
@@ -47,7 +45,7 @@ init uc network addressId data assets =
                         ( False
                         , Just Api.Request.Addresses.Order_Asc
                         , datePickerSettings uc.locale mn mmax
-                            |> DateRangePicker.init UpdateDateRangePicker mmax (Just mn) (Just mmax)
+                            |> DateRangePicker.init dpMsg mmax (Just mn) (Just mmax)
                             |> Just
                         )
                     )
@@ -65,5 +63,4 @@ init uc network addressId data assets =
     , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
     , selectedAsset = Nothing
     , includeZeroValueTxs = Nothing -- Backend does not support this filter at the moment
-    , exportCSV = ExportCSV.init
     }

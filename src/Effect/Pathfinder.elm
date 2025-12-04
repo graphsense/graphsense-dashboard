@@ -1,4 +1,4 @@
-module Effect.Pathfinder exposing (Effect(..), perform)
+module Effect.Pathfinder exposing (Effect(..), effectToTracker, perform)
 
 import Effect.Api as Api
 import Effect.Search as Search
@@ -73,3 +73,13 @@ perform eff =
         -- managed in Effect.elm
         InternalEffect _ ->
             Cmd.none
+
+
+effectToTracker : Effect -> Maybe String
+effectToTracker eff =
+    case eff of
+        ApiEffect e ->
+            Api.effectToTracker e
+
+        _ ->
+            Nothing

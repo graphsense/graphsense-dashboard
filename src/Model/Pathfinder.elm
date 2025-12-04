@@ -1,6 +1,7 @@
 module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
 
 import Api.Data exposing (Actor, Entity)
+import Components.ExportCSV as ExportCSV
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
 import Model.Graph exposing (Dragging)
@@ -58,6 +59,7 @@ type alias Model =
     , name : String
     , checkingNeighbors : CheckingNeighbors.Model
     , eventualMessages : EventualMessages NetworkConditions Network Msg
+    , exportCSV : ExportCSV.Model
     }
 
 

@@ -90,6 +90,8 @@ outgoing addresses: indirizzi in uscita
 incoming addresses: indirizzi in entrata
 outgoing entities: entità in uscita
 incoming entities: entità in entrata
+outgoing relations: relazioni in uscita
+incoming relations: relazioni in entrata
 output address: indirizzo output
 input address: indirizzo input
 no. transactions: nr. di transazioni
@@ -423,6 +425,7 @@ attributeTagDescriptionId: Un tag attributo descrive una proprietà dell'indiriz
 "Medium confidence": "Fiducia media"
 "High confidence": "Alta fiducia"
 More: altro
+cluster addresses: indirizzi cluster
 "Removed {0} transactions": "{0} Transaktionen rimosse"
 "Added {0} transactions": "{0} transazioni aggiunte"
 Asset flows: Flussi di cassa
@@ -514,3 +517,11 @@ no_outputs: Uscite
 total_input: Valore totale in ingresso
 total_output: Valore totale in uscita
 "Multiple search terms detected ({0}). Please hit enter to add.": "Rilevati più termini di ricerca ({0}). Premere Invio per aggiungere."
+there_were_more_rows_for_csv_download: Il download dei dati CSV è limitato a circa {0} righe. 
+there_were_more_rows_for_csv_download_info: Utilizza le opzioni di filtro per restringere ulteriormente l'intervallo di dati.
+success_download_csv: "{0} record scaricati come CSV"
+"Address transactions of {0} ({1})": "Transazioni dell'indirizzo {0} ({1})"
+"Transactions from {0} to {1} ({2})": "Transazioni da {0} a {1} ({2})"
+fee: Commissione
+sending_address_label: Attore mittente
+receiving_address_label: Attore destinatario

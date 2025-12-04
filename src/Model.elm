@@ -143,6 +143,7 @@ type Msg
     | UserClosesNavbarSubMenu
     | BrowserGotUncaughtError Json.Encode.Value
     | DebouncePluginOutMsg Plugin.OutMsg
+    | BrowserCancelledRequest String
 
 
 type AddTagDialogMsgs

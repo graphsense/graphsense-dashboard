@@ -23,15 +23,11 @@ messagesFromEffects model effects =
             (\eff ( statusbar, newEffects ) ->
                 messageFromEffect model eff
                     |> Maybe.map
-                        (\( key, message ) ->
-                            let
-                                keyJoined =
-                                    key ++ String.concat message
-                            in
+                        (\( id, key, message ) ->
                             ( { statusbar
-                                | messages = Dict.insert keyJoined ( key, message ) statusbar.messages
+                                | messages = Dict.insert id ( key, message ) statusbar.messages
                               }
-                            , ( Just keyJoined, eff ) :: newEffects
+                            , ( Just id, eff ) :: newEffects
                             )
                         )
                     |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
@@ -43,7 +39,7 @@ messagesFromEffects model effects =
             )
 
 
-messageFromEffect : Model.Model key -> Model.Effect -> Maybe ( String, List String )
+messageFromEffect : Model.Model key -> Model.Effect -> Maybe ( String, String, List String )
 messageFromEffect model effect =
     case effect of
         Model.NavLoadEffect _ ->
@@ -230,330 +226,342 @@ add model key values error =
     }
 
 
-messageFromApiEffect : Model.Model key -> Api.Effect msg -> Maybe ( String, List String )
+messageFromApiEffect : Model.Model key -> Api.Effect msg -> Maybe ( String, String, List String )
 messageFromApiEffect model effect =
-    case effect of
-        Api.AddUserReportedTag t _ ->
-            ( "adding user reported tag for {0} {1}", [ t.address, t.network ] ) |> Just
-
-        Api.GetConceptsEffect taxonomy _ ->
-            ( "loading concepts for taxonomy {0}"
-            , [ taxonomy ]
+    let
+        addTracker ( a, b ) =
+            ( Api.effectToTracker effect
+                |> Maybe.withDefault (a ++ String.concat b)
+            , a
+            , b
             )
-                |> Just
+    in
+    Maybe.map addTracker <|
+        case effect of
+            Api.AddUserReportedTag t _ ->
+                ( "adding user reported tag for {0} {1}", [ t.address, t.network ] ) |> Just
 
-        Api.ListSupportedTokensEffect currency _ ->
-            ( "loading supported token currencies for " ++ currency
-            , []
-            )
-                |> Just
+            Api.GetConceptsEffect taxonomy _ ->
+                ( "loading concepts for taxonomy {0}"
+                , [ taxonomy ]
+                )
+                    |> Just
 
-        Api.GetConversionEffect { currency, txHash } _ ->
-            ( "loading Swaps and Briding events for Tx {0}: {1}"
-            , [ currency |> String.toUpper, txHash ]
-            )
-                |> Just
+            Api.ListSupportedTokensEffect currency _ ->
+                ( "loading supported token currencies for " ++ currency
+                , []
+                )
+                    |> Just
 
-        Api.ListRelatedAddressesEffect _ _ ->
-            Nothing
+            Api.GetConversionEffect { currency, txHash } _ ->
+                ( "loading Swaps and Briding events for Tx {0}: {1}"
+                , [ currency |> String.toUpper, txHash ]
+                )
+                    |> Just
 
-        Api.SearchEffect _ _ ->
-            Nothing
+            Api.ListRelatedAddressesEffect _ _ ->
+                Nothing
 
-        Api.GetAddressTagSummaryEffect _ _ ->
-            Nothing
+            Api.SearchEffect _ _ ->
+                Nothing
 
-        Api.GetStatisticsEffect _ ->
-            Nothing
+            Api.GetAddressTagSummaryEffect _ _ ->
+                Nothing
 
-        Api.GetBlockByDateEffect _ _ ->
-            Nothing
+            Api.GetStatisticsEffect _ ->
+                Nothing
 
-        Api.ListTxFlowsEffect _ _ ->
-            Nothing
+            Api.GetBlockByDateEffect _ _ ->
+                Nothing
 
-        Api.SearchEntityNeighborsEffect e _ ->
-            ( searchNeighborsKey
-            , [ if e.isOutgoing then
-                    "for outgoing neighbors"
+            Api.ListTxFlowsEffect _ _ ->
+                Nothing
 
-                else
-                    "for incoming neighbors"
-              , e.entity |> String.fromInt
-              , case e.key of
-                    Api.Request.Entities.KeyCategory ->
-                        e.value
-                            |> List.head
-                            |> Maybe.map
-                                (\cat ->
-                                    List.Extra.find (.id >> (==) cat) model.config.allConcepts
-                                        |> Maybe.map .label
-                                        |> Maybe.withDefault cat
-                                )
-                            |> Maybe.withDefault ""
-                            |> (\s -> Locale.string model.config.locale "category" ++ " " ++ s)
+            Api.SearchEntityNeighborsEffect e _ ->
+                ( searchNeighborsKey
+                , [ if e.isOutgoing then
+                        "for outgoing neighbors"
 
-                    _ ->
-                        ""
-              , String.fromInt e.depth
-              , String.fromInt e.breadth
-              , String.fromInt e.maxAddresses
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+                    else
+                        "for incoming neighbors"
+                  , e.entity |> String.fromInt
+                  , case e.key of
+                        Api.Request.Entities.KeyCategory ->
+                            e.value
+                                |> List.head
+                                |> Maybe.map
+                                    (\cat ->
+                                        List.Extra.find (.id >> (==) cat) model.config.allConcepts
+                                            |> Maybe.map .label
+                                            |> Maybe.withDefault cat
+                                    )
+                                |> Maybe.withDefault ""
+                                |> (\s -> Locale.string model.config.locale "category" ++ " " ++ s)
 
-        Api.GetActorEffect e _ ->
-            ( loadingActorKey
-            , [ e.actorId ]
-            )
-                |> Just
+                        _ ->
+                            ""
+                  , String.fromInt e.depth
+                  , String.fromInt e.breadth
+                  , String.fromInt e.maxAddresses
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetActorTagsEffect e _ ->
-            ( loadingActorTagsKey
-            , [ e.actorId ]
-            )
-                |> Just
+            Api.GetActorEffect e _ ->
+                ( loadingActorKey
+                , [ e.actorId ]
+                )
+                    |> Just
 
-        Api.GetAddressEffect e _ ->
-            ( loadingAddressKey
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetActorTagsEffect e _ ->
+                ( loadingActorTagsKey
+                , [ e.actorId ]
+                )
+                    |> Just
 
-        Api.GetEntityForAddressEffect e _ ->
-            ( loadingAddressEntityKey
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetAddressEffect e _ ->
+                ( loadingAddressKey
+                , [ e.address
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetEntityEffect e _ ->
-            ( "{1}: loading entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetEntityForAddressEffect e _ ->
+                ( loadingAddressEntityKey
+                , [ e.address
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetEntityEffectWithDetails e _ ->
-            ( "{1}: loading entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetEntityEffect e _ ->
+                ( "{1}: loading entity {0}"
+                , [ String.fromInt e.entity
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetBlockEffect e _ ->
-            ( "{1}: loading block {0}"
-            , [ String.fromInt e.height
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetEntityEffectWithDetails e _ ->
+                ( "{1}: loading entity {0}"
+                , [ String.fromInt e.entity
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetTxEffect e _ ->
-            ( "{1}: loading transactions {0}"
-            , [ e.txHash
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetBlockEffect e _ ->
+                ( "{1}: loading block {0}"
+                , [ String.fromInt e.height
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetTxUtxoAddressesEffect e _ ->
-            ( "{1}: loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
-            , [ e.txHash
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetTxEffect e _ ->
+                ( "{1}: loading transactions {0}"
+                , [ e.txHash
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.ListSpendingTxRefsEffect e _ ->
-            ( "{1}: loading transactions which {0} is spending"
-            , [ e.txHash
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetTxUtxoAddressesEffect e _ ->
+                ( "{1}: loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
+                , [ e.txHash
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.ListSpentInTxRefsEffect e _ ->
-            ( "{1}: loading transactions where {0} got spent"
-            , [ e.txHash
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.ListSpendingTxRefsEffect e _ ->
+                ( "{1}: loading transactions which {0} is spending"
+                , [ e.txHash
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetAddressNeighborsEffect e _ ->
-            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.ListSpentInTxRefsEffect e _ ->
+                ( "{1}: loading transactions where {0} got spent"
+                , [ e.txHash
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetEntityNeighborsEffect e _ ->
-            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of entity {0}"
-            , [ e.entity |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetAddressNeighborsEffect e _ ->
+                ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of address {0}"
+                , [ e.address
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetAddressTagsEffect e _ ->
-            ( "{1}: loading tags of address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetEntityNeighborsEffect e _ ->
+                ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of entity {0}"
+                , [ e.entity |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetEntityAddressTagsEffect e _ ->
-            ( "{1}: loading address tags of entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetAddressTagsEffect e _ ->
+                ( "{1}: loading tags of address {0}"
+                , [ e.address
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetAddressTxsEffect e _ ->
-            ( "{1}: loading transactions of address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetEntityAddressTagsEffect e _ ->
+                ( "{1}: loading address tags of entity {0}"
+                , [ String.fromInt e.entity
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetAddressTxsByDateEffect e _ ->
-            ( "{1}: loading transactions of address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetAddressTxsEffect e _ ->
+                ( "{1}: loading transactions of address {0}"
+                , [ e.address
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetEntityTxsEffect e _ ->
-            ( "{1}: loading transactions of entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetAddressTxsByDateEffect e _ ->
+                ( "{1}: loading transactions of address {0}"
+                , [ e.address
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetBlockTxsEffect e _ ->
-            ( "{1}: loading transactions of block {0}"
-            , [ String.fromInt e.block
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetEntityTxsEffect e _ ->
+                ( "{1}: loading transactions of entity {0}"
+                , [ String.fromInt e.entity
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetTokenTxsEffect e _ ->
-            ( "{1}: loading token transactions of transaction {0}"
-            , [ e.txHash
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetBlockTxsEffect e _ ->
+                ( "{1}: loading transactions of block {0}"
+                , [ String.fromInt e.block
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetEntityAddressesEffect e _ ->
-            ( "{1}: loading addresses of entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetTokenTxsEffect e _ ->
+                ( "{1}: loading token transactions of transaction {0}"
+                , [ e.txHash
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.BulkGetAddressTagSummaryEffect e _ ->
-            ( "{1}: loading {0} tag summaries"
-            , [ List.length e.addresses |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetEntityAddressesEffect e _ ->
+                ( "{1}: loading addresses of entity {0}"
+                , [ String.fromInt e.entity
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.BulkGetAddressEffect e _ ->
-            ( "{1}: loading {0} addresses"
-            , [ List.length e.addresses |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.BulkGetAddressTagSummaryEffect e _ ->
+                ( "{1}: loading {0} tag summaries"
+                , [ List.length e.addresses |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.BulkGetEntityEffect e _ ->
-            ( "{1}: loading {0} entities"
-            , [ List.length e.entities |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.BulkGetAddressEffect e _ ->
+                ( "{1}: loading {0} addresses"
+                , [ List.length e.addresses |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.BulkGetAddressEntityEffect e _ ->
-            ( "{1}: loading entities of {0} addresses"
-            , [ List.length e.addresses |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.BulkGetEntityEffect e _ ->
+                ( "{1}: loading {0} entities"
+                , [ List.length e.entities |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.BulkGetEntityNeighborsEffect e _ ->
-            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} entities"
-            , [ List.length e.entities |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.BulkGetAddressEntityEffect e _ ->
+                ( "{1}: loading entities of {0} addresses"
+                , [ List.length e.addresses |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.BulkGetAddressNeighborsEffect e _ ->
-            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} addresses"
-            , [ List.length e.addresses |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.BulkGetEntityNeighborsEffect e _ ->
+                ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} entities"
+                , [ List.length e.entities |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.ListAddressTagsEffect e _ ->
-            ( "Loading tags with label {0}"
-            , [ e.label ]
-            )
-                |> Just
+            Api.BulkGetAddressNeighborsEffect e _ ->
+                ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} addresses"
+                , [ List.length e.addresses |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.GetAddresslinkTxsEffect e _ ->
-            ( "{2}: loading address link transactions between {0} and {1}"
-            , [ e.source
-              , e.target
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.ListAddressTagsEffect e _ ->
+                ( "Loading tags with label {0}"
+                , [ e.label ]
+                )
+                    |> Just
 
-        Api.GetEntitylinkTxsEffect e _ ->
-            ( "{2}: loading entity link transactions between {0} and {1}"
-            , [ String.fromInt e.source
-              , String.fromInt e.target
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetAddresslinkTxsEffect e _ ->
+                ( "{2}: loading address link transactions between {0} and {1}"
+                , [ e.source
+                  , e.target
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.BulkGetAddressTagsEffect e _ ->
-            ( "{1}: loading tags of {0} addresses"
-            , [ List.length e.addresses |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.GetEntitylinkTxsEffect e _ ->
+                ( "{2}: loading entity link transactions between {0} and {1}"
+                , [ String.fromInt e.source
+                  , String.fromInt e.target
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
 
-        Api.BulkGetTxEffect e _ ->
-            ( "{1}: loading {0} transactions"
-            , [ List.length e.txs |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+            Api.BulkGetAddressTagsEffect e _ ->
+                ( "{1}: loading tags of {0} addresses"
+                , [ List.length e.addresses |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
+
+            Api.BulkGetTxEffect e _ ->
+                ( "{1}: loading {0} transactions"
+                , [ List.length e.txs |> String.fromInt
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
+
+            Api.CancelEffect _ ->
+                Nothing
 
 
 addLog : ( String, List String, Maybe Http.Error ) -> List ( String, List String, Maybe Http.Error ) -> List ( String, List String, Maybe Http.Error )

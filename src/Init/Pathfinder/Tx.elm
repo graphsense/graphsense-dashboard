@@ -1,13 +1,12 @@
-module Init.Pathfinder.Tx exposing (fromTxAccountData, fromTxUtxoData)
+module Init.Pathfinder.Tx exposing (fromTxAccountData, fromTxUtxoData, normalizeUtxo)
 
 import Animation as A
 import Api.Data
 import Dict
 import Dict.Extra
 import Init.Pathfinder.Id as Id
-import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords exposing (Coords)
-import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..))
+import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..), UtxoTx)
 import Util.Data
 
 
@@ -52,7 +51,25 @@ fromTxUtxoData tx coords =
     let
         id =
             Id.init tx.currency tx.txHash
+    in
+    { id = id
+    , hovered = False
+    , selected = False
+    , isStartingPoint = False
+    , x = coords.x
+    , y = A.static coords.y
+    , dx = 0
+    , dy = 0
+    , opacity = A.static 1
+    , clock = 0
+    , conversionType = Nothing
+    , type_ = normalizeUtxo tx |> Utxo
+    }
 
+
+normalizeUtxo : Api.Data.TxUtxo -> UtxoTx
+normalizeUtxo tx =
+    let
         createIoIntermediate isOut x =
             List.head x.address
                 |> Maybe.map
@@ -78,16 +95,17 @@ fromTxUtxoData tx coords =
         sumIoEntries addr l =
             let
                 value =
-                    List.foldl Util.Data.addValues Util.Data.valuesZero (List.map .values l)
+                    List.map .values l
+                        |> Util.Data.sumValues
             in
             { address = addr, cnt = List.length l, value = value, isOutput = value.value > 0 }
 
         summedIo =
             Dict.map sumIoEntries groupedIos
 
-        fn dir =
+        fn isOutgoing =
             Dict.values summedIo
-                |> List.filter (\x -> x.isOutput == (dir == Outgoing))
+                |> List.filter (\x -> x.isOutput == isOutgoing)
                 |> List.map
                     (\ioEntry ->
                         let
@@ -98,33 +116,18 @@ fromTxUtxoData tx coords =
                         , initIo ioEntry.value ioEntry.cnt
                         )
                     )
+
+        inputs =
+            fn False
+                |> Dict.fromList
     in
-    { id = id
-    , hovered = False
-    , selected = False
-    , isStartingPoint = False
-    , x = coords.x
-    , y = A.static coords.y
-    , dx = 0
-    , dy = 0
-    , opacity = A.static 1
-    , clock = 0
-    , conversionType = Nothing
-    , type_ =
-        let
-            inputs =
-                fn Incoming
-                    |> Dict.fromList
-        in
-        Utxo
-            { inputs = inputs
-            , outputs =
-                fn Outgoing
-                    |> List.filter
-                        (\( o, _ ) -> Dict.member o inputs |> not)
-                    |> Dict.fromList
-            , raw = tx
-            }
+    { inputs = inputs
+    , outputs =
+        fn True
+            |> List.filter
+                (\( o, _ ) -> Dict.member o inputs |> not)
+            |> Dict.fromList
+    , raw = tx
     }
 
 

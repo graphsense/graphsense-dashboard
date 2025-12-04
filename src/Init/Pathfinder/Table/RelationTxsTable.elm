@@ -21,7 +21,7 @@ getCompleteAssetList l =
     Nothing :: (l |> List.map Just)
 
 
-init : Direction -> List String -> RelationTxsTable.Model
+init : Direction -> List String -> RelationTxsTable.Model Msg
 init dir assets =
     let
         table isDesc =

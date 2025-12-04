@@ -4,8 +4,9 @@ import Animation as A
 import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
+import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
-import Config.Pathfinder exposing (TracingMode(..), nodeXOffset)
+import Config.Pathfinder exposing (TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -24,6 +25,7 @@ import Init.Pathfinder.ConversionDetails as ConversionDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.RelationDetails as RelationDetails
+import Init.Pathfinder.Tx exposing (normalizeUtxo)
 import Init.Pathfinder.TxDetails as TxDetails
 import Json.Decode
 import List.Extra
@@ -50,9 +52,10 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
-import Model.Pathfinder.Tx as Tx exposing (Tx)
+import Model.Pathfinder.Tx as Tx exposing (Io, Tx)
 import Model.Search as Search
 import Model.Tx as GTx exposing (parseTxIdentifier)
 import Msg.Pathfinder
@@ -154,60 +157,61 @@ update plugins uc msg model =
 
 syncUrl : Model -> ( Model, List Effect )
 syncUrl model =
-    case model.details of
-        Just (AddressDetails id ad) ->
-            let
-                filter =
-                    if not ad.transactionsTableOpen then
-                        Nothing
-
-                    else
-                        case ad.txs of
-                            NotAsked ->
+    let
+        route =
+            case model.details of
+                Just (AddressDetails id ad) ->
+                    let
+                        filter =
+                            if not ad.transactionsTableOpen then
                                 Nothing
 
-                            Failure _ ->
-                                Nothing
+                            else
+                                case ad.txs of
+                                    NotAsked ->
+                                        Nothing
 
-                            Loading ->
-                                { fromDate = Nothing
-                                , toDate = Nothing
-                                }
-                                    |> Just
+                                    Failure _ ->
+                                        Nothing
 
-                            Success txs ->
-                                txs.dateRangePicker
-                                    |> Maybe.map
-                                        (\{ fromDate, toDate } ->
-                                            { fromDate = fromDate
-                                            , toDate = toDate
-                                            }
-                                        )
-                                    |> Maybe.withDefault
+                                    Loading ->
                                         { fromDate = Nothing
                                         , toDate = Nothing
                                         }
-                                    |> Just
+                                            |> Just
 
-                route =
+                                    Success txs ->
+                                        txs.dateRangePicker
+                                            |> Maybe.map
+                                                (\{ fromDate, toDate } ->
+                                                    { fromDate = fromDate
+                                                    , toDate = toDate
+                                                    }
+                                                )
+                                            |> Maybe.withDefault
+                                                { fromDate = Nothing
+                                                , toDate = Nothing
+                                                }
+                                            |> Just
+                    in
                     Route.addressRouteWithFilter
                         { network = Id.network id
                         , address = Id.id id
                         , filter = filter
                         }
-            in
-            ( { model | route = route }
-            , if model.route /= route then
-                route
-                    |> NavPushRouteEffect
-                    |> List.singleton
 
-              else
-                []
-            )
+                _ ->
+                    model.route
+    in
+    ( { model | route = route }
+    , if model.route /= route then
+        route
+            |> NavPushRouteEffect
+            |> List.singleton
 
-        _ ->
-            n model
+      else
+        []
+    )
 
 
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
@@ -828,6 +832,30 @@ updateByMsg plugins uc msg model =
                             )
                         |> Maybe.withDefault (n model)
 
+                RelationDetails.ExportCSVMsg isA2b tbl ms ->
+                    let
+                        config =
+                            RelationDetails.makeExportCSVConfig uc isA2b id tbl
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.update ms config model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
+
+                RelationDetails.BrowserGotLinksForExport isA2b tbl data ->
+                    let
+                        config =
+                            RelationDetails.makeExportCSVConfig uc isA2b id tbl
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.gotData uc config ( data.links, data.nextPage ) model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
+
                 _ ->
                     n model
             )
@@ -841,8 +869,8 @@ updateByMsg plugins uc msg model =
                             Id.network addressId
                     in
                     neighbors
-                        |> List.map (.address >> .address >> Id.init network)
-                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.map (.address >> .address)
+                        |> fetchTagSummaryForIds True model.tagSummaries BrowserGotTagSummaries network
                         |> List.singleton
                         |> pair model
                         |> and
@@ -860,8 +888,8 @@ updateByMsg plugins uc msg model =
                             Id.network addressId
                     in
                     addresses
-                        |> List.map (.address >> Id.init network)
-                        |> fetchTagSummaryForIds False model.tagSummaries
+                        |> List.map .address
+                        |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
                         |> List.singleton
                         |> pair model
                         |> and
@@ -898,6 +926,176 @@ updateByMsg plugins uc msg model =
 
                 AddressDetails.TooltipMsg tm ->
                     handleTooltipMsg tm model
+
+                AddressDetails.ExportCSVMsg table ms ->
+                    let
+                        config =
+                            AddressDetails.makeExportCSVConfig uc addressId table
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.update ms config model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
+
+                AddressDetails.GotAddressTxsForExport table data ->
+                    let
+                        nw =
+                            Id.network addressId
+                    in
+                    if nw |> Data.isAccountLike then
+                        let
+                            addressTxs =
+                                data.addressTxs
+                                    |> List.filterMap
+                                        (\tx ->
+                                            case tx of
+                                                Api.Data.AddressTxAddressTxUtxo _ ->
+                                                    Nothing
+
+                                                Api.Data.AddressTxTxAccount t ->
+                                                    Just t
+                                        )
+                        in
+                        getTagsForExport addressId table ( addressTxs, data.nextPage ) model
+
+                    else
+                        let
+                            addressTxs =
+                                data.addressTxs
+                                    |> List.filterMap
+                                        (\tx ->
+                                            case tx of
+                                                Api.Data.AddressTxAddressTxUtxo t ->
+                                                    Just t
+
+                                                Api.Data.AddressTxTxAccount _ ->
+                                                    Nothing
+                                        )
+                        in
+                        ( model
+                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs data.nextPage 0 []
+                            >> AddressDetailsMsg addressId
+                            |> BulkGetTxEffect
+                                { currency = nw
+                                , txs =
+                                    List.map .txHash addressTxs
+                                        |> List.take bulkFetchSizeForExportSize
+                                }
+                            |> ApiEffect
+                            |> List.singleton
+                        )
+
+                AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage fetchedIOprev fetched txs ->
+                    let
+                        all =
+                            fetched ++ txs
+
+                        fetchedSize =
+                            List.length all
+
+                        addressTxsDict =
+                            addressTxs
+                                |> List.map (\t -> ( t.txHash, t ))
+                                |> Dict.fromList
+
+                        fetchedIO =
+                            txs
+                                |> List.foldl
+                                    (\( txHash, tx ) sum ->
+                                        case tx of
+                                            Api.Data.TxTxUtxo t ->
+                                                Dict.get txHash addressTxsDict
+                                                    |> Maybe.andThen
+                                                        (\atx ->
+                                                            if atx.value.value > 0 then
+                                                                t.inputs
+
+                                                            else
+                                                                t.outputs
+                                                        )
+                                                    |> Maybe.map
+                                                        (List.filterMap
+                                                            (.address >> List.head)
+                                                            >> Set.fromList
+                                                        )
+                                                    |> Maybe.map Set.size
+                                                    |> Maybe.withDefault 0
+                                                    |> (+) sum
+
+                                            Api.Data.TxTxAccount _ ->
+                                                sum
+                                    )
+                                    0
+                                |> (+) fetchedIOprev
+
+                        config =
+                            AddressDetails.makeExportCSVConfig uc addressId table
+
+                        nextTxs =
+                            List.map .txHash addressTxs
+                                |> List.drop fetchedSize
+                                |> List.take bulkFetchSizeForExportSize
+                    in
+                    if fetchedIO >= ExportCSV.getNumberOfRows config || List.isEmpty nextTxs then
+                        let
+                            merged =
+                                all
+                                    |> mergeAddressTxsAndTxs uc (Id.id addressId) addressTxs
+                        in
+                        getTagsForExport addressId table ( merged, nextPage ) model
+
+                    else
+                        ( model
+                        , AddressDetails.BrowserGotBulkTxsForExport table addressTxs nextPage fetchedIO all
+                            >> AddressDetailsMsg addressId
+                            |> BulkGetTxEffect
+                                { currency = Id.network addressId
+                                , txs = nextTxs
+                                }
+                            |> ApiEffect
+                            |> List.singleton
+                        )
+
+                AddressDetails.BrowserGotBulkTagsForExport table data includesBestClusterTag tagSummeries ->
+                    let
+                        -- throw away the fetch actor effects
+                        ( modelWithTags, _ ) =
+                            tagSummeries
+                                |> List.foldl
+                                    (\( id, ts ) ->
+                                        addTagSummaryToModel includesBestClusterTag id ts
+                                            |> and
+                                    )
+                                    (n model)
+
+                        dataWithTags =
+                            data
+                                |> mapFirst (addFeeRows uc addressId)
+                                |> mapFirst
+                                    (List.map
+                                        (\tx ->
+                                            ( tx
+                                            , Id.init tx.currency tx.fromAddress
+                                                |> getHavingTags modelWithTags
+                                                |> getTagsummary
+                                            , Id.init tx.currency tx.toAddress
+                                                |> getHavingTags modelWithTags
+                                                |> getTagsummary
+                                            )
+                                        )
+                                    )
+
+                        config =
+                            AddressDetails.makeExportCSVConfig uc addressId table
+
+                        ( exportCSV, eff ) =
+                            ExportCSV.gotData uc config dataWithTags model.exportCSV
+                    in
+                    ( { model | exportCSV = exportCSV }
+                    , eff
+                    )
 
                 _ ->
                     model
@@ -945,7 +1143,7 @@ updateByMsg plugins uc msg model =
                     |> and unselect
 
             else
-                unselect m1
+                n m1
 
         UserClickedFitGraph ->
             fitGraph uc model
@@ -1808,14 +2006,16 @@ updateByMsg plugins uc msg model =
                 |> flip (handleWorkflowNextTxByTime plugins uc config neighborId) model
 
         BrowserGotTagSummaries includesBestClusterTag data ->
-            let
-                combine ( id, ts ) r =
-                    addTagSummaryToModel r includesBestClusterTag id ts
-            in
-            List.foldl combine (n model) data
+            List.foldl
+                (\( id, ts ) ->
+                    addTagSummaryToModel includesBestClusterTag id ts
+                        |> and
+                )
+                (n model)
+                data
 
         BrowserGotTagSummary includesBestClusterTag id data ->
-            addTagSummaryToModel (n model) includesBestClusterTag id data
+            addTagSummaryToModel includesBestClusterTag id data model
 
         BrowserGotAddressesTags _ data ->
             let
@@ -2172,6 +2372,131 @@ updateByMsg plugins uc msg model =
                 False
                 |> List.singleton
             )
+
+
+addFeeRows : Update.Config -> Id -> List Api.Data.TxAccount -> List Api.Data.TxAccount
+addFeeRows uc addressId =
+    List.concatMap
+        (\tx ->
+            tx
+                :: (tx.fee
+                        |> Maybe.map
+                            (\fee ->
+                                if tx.fromAddress == Id.id addressId then
+                                    [ { tx
+                                        | value = Data.negateValues fee
+                                        , toAddress = Locale.string uc.locale "fee"
+                                      }
+                                    ]
+
+                                else
+                                    []
+                            )
+                        |> Maybe.withDefault []
+                   )
+        )
+
+
+{-| Normalize address txs to account tx schema
+-}
+mergeAddressTxsAndTxs : Update.Config -> String -> List Api.Data.AddressTxUtxo -> List ( String, Api.Data.Tx ) -> List Api.Data.TxAccount
+mergeAddressTxsAndTxs uc address addressTxs txs =
+    let
+        dict =
+            Dict.fromList txs
+    in
+    addressTxs
+        |> List.filterMap
+            (\addressTx ->
+                Dict.get addressTx.txHash dict
+                    |> Maybe.andThen
+                        (\t ->
+                            case t of
+                                Api.Data.TxTxUtxo tx ->
+                                    Just <| normalizeUtxo tx
+
+                                Api.Data.TxTxAccount _ ->
+                                    Nothing
+                        )
+                    |> Maybe.map
+                        (\{ inputs, outputs } ->
+                            let
+                                sumInputs =
+                                    Dict.values inputs
+                                        |> List.map .values
+                                        |> Data.sumValues
+
+                                addressTxPortion =
+                                    toFloat addressTx.value.value / toFloat sumInputs.value
+                            in
+                            if addressTx.value.value > 0 then
+                                let
+                                    inputToTxAccount : ( Id, Io ) -> Api.Data.TxAccount
+                                    inputToTxAccount ( addr, io ) =
+                                        { contractCreation = Nothing
+                                        , currency = addressTx.currency
+                                        , fromAddress = Id.id addr
+                                        , height = addressTx.height
+                                        , identifier = ""
+                                        , isExternal = Nothing
+                                        , network = addressTx.currency
+                                        , timestamp = addressTx.timestamp
+                                        , toAddress = address
+                                        , tokenTxId = Nothing
+                                        , txHash = addressTx.txHash
+                                        , txType = "utxo"
+                                        , value = Data.mulValues addressTxPortion io.values
+                                        , fee = Nothing
+                                        }
+                                in
+                                inputs
+                                    |> Dict.toList
+                                    |> List.map inputToTxAccount
+
+                            else
+                                let
+                                    sumOutputs =
+                                        Dict.values outputs
+                                            |> List.map .values
+                                            |> Data.sumValues
+
+                                    fee =
+                                        Data.subValues sumInputs sumOutputs
+
+                                    outputToTxAccount : ( Id, Io ) -> Api.Data.TxAccount
+                                    outputToTxAccount ( addr, io ) =
+                                        { contractCreation = Nothing
+                                        , currency = addressTx.currency
+                                        , fromAddress = address
+                                        , height = addressTx.height
+                                        , identifier = ""
+                                        , isExternal = Nothing
+                                        , network = addressTx.currency
+                                        , timestamp = addressTx.timestamp
+                                        , toAddress = Id.id addr
+                                        , tokenTxId = Nothing
+                                        , txHash = addressTx.txHash
+                                        , txType = "utxo"
+                                        , value = Data.mulValues addressTxPortion io.values
+                                        , fee = Nothing
+                                        }
+                                in
+                                outputs
+                                    |> Dict.toList
+                                    |> List.map outputToTxAccount
+                                    |> flip (++)
+                                        [ outputToTxAccount
+                                            ( Locale.string uc.locale "fee"
+                                                |> Id.init addressTx.currency
+                                            , { address = Nothing
+                                              , values = fee
+                                              , aggregatesN = 1
+                                              }
+                                            )
+                                        ]
+                        )
+            )
+        |> List.concat
 
 
 checkAllTxs : Plugins -> Update.Config -> Maybe Id -> List Id -> Model -> ( Model, List Effect )
@@ -2926,7 +3251,15 @@ updateByRoute plugins uc route model =
         n model
 
     else
-        forcePushHistory (model |> s_isDirty True |> s_route route)
+        model
+            |> s_route route
+            |> (if route == Route.Root then
+                    identity
+
+                else
+                    s_isDirty True
+                        >> forcePushHistory
+               )
             |> updateByRoute_ plugins uc route
             |> and (syncSidePanel uc)
 
@@ -3527,7 +3860,10 @@ undoRedo fun model =
                 }
             )
         |> Maybe.withDefault model
-        |> n
+        |> flip pair
+            [ Route.Root
+                |> NavPushRouteEffect
+            ]
 
 
 markDirty : Plugins -> Msg -> Model -> Model
@@ -3613,20 +3949,21 @@ isTagSummaryLoaded includeBestClusterTag existing id =
             False
 
 
-fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> List Id -> Effect
-fetchTagSummaryForIds includeBestClusterTag existing ids =
+fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> (Bool -> List ( Id, Api.Data.TagSummary ) -> Msg) -> String -> List String -> Effect
+fetchTagSummaryForIds includeBestClusterTag existing toMsg network ids =
     let
         idsToLoad =
-            ids |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
+            ids
+                |> List.map (Id.init network)
+                |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
     in
-    case idsToLoad of
-        [] ->
-            CmdEffect Cmd.none
+    if List.isEmpty idsToLoad then
+        CmdEffect Cmd.none
 
-        x :: _ ->
-            BrowserGotTagSummaries includeBestClusterTag
-                |> Api.BulkGetAddressTagSummaryEffect { currency = Id.network x, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
-                |> ApiEffect
+    else
+        toMsg includeBestClusterTag
+            |> Api.BulkGetAddressTagSummaryEffect { currency = network, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
+            |> ApiEffect
 
 
 fetchTagSummaryForId : Bool -> Dict Id HavingTags -> Id -> Effect
@@ -3644,8 +3981,8 @@ fetchTagSummaryForId includeBestClusterTag existing id =
         fetch
 
 
-addTagSummaryToModel : ( Model, List Effect ) -> Bool -> Id -> Api.Data.TagSummary -> ( Model, List Effect )
-addTagSummaryToModel ( m, e ) includesBestClusterTag id data =
+addTagSummaryToModel : Bool -> Id -> Api.Data.TagSummary -> Model -> ( Model, List Effect )
+addTagSummaryToModel includesBestClusterTag id data m =
     let
         d =
             if data.tagCount > 0 && includesBestClusterTag then
@@ -3664,7 +4001,7 @@ addTagSummaryToModel ( m, e ) includesBestClusterTag id data =
         | tagSummaries = upsertTagSummary id d m.tagSummaries
       }
         |> updateTagDataOnAddress id
-    , e ++ (data.bestActor |> Maybe.map (List.singleton >> flip fetchActors m.actors) |> Maybe.withDefault [])
+    , data.bestActor |> Maybe.map (List.singleton >> flip fetchActors m.actors) |> Maybe.withDefault []
     )
 
 
@@ -4230,3 +4567,22 @@ addMarginPathfinder bbox =
     , width = bbox.width * unit + (2 * unit)
     , height = bbox.height * unit + (8 * unit)
     }
+
+
+getTagsForExport : Id -> TransactionTable.Model AddressDetails.Msg -> ( List Api.Data.TxAccount, Maybe String ) -> Model -> ( Model, List Effect )
+getTagsForExport addressId table data model =
+    let
+        toMsg =
+            \includesBestClusterTag result ->
+                AddressDetails.BrowserGotBulkTagsForExport table data includesBestClusterTag result
+                    |> AddressDetailsMsg addressId
+    in
+    ( model
+    , data
+        |> first
+        |> List.concatMap (\tx -> [ tx.fromAddress, tx.toAddress ])
+        |> Set.fromList
+        |> Set.toList
+        |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
+        |> List.singleton
+    )

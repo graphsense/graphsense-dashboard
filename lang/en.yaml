@@ -44,8 +44,11 @@ no_inputs: Inputs
 no_outputs: Outputs
 total_input: Total input amount
 total_output: Total output amount
-there_were_more_rows_for_csv_download: Downloading CSV data is limited to {0} rows. 
+success_download_csv: "Downloaded {0} data rows as CSV"
+there_were_more_rows_for_csv_download: Downloading CSV data is limited to roughly {0} rows. 
 there_were_more_rows_for_csv_download_info: Please use filter options to further narrow down the data set.
 outgoing relations: outgoing relationships
 incoming relations: incoming relationships
 tags_release_warnings: "The tags you add will be visible to all users. Please ensure that your tags do not include any copyright-infringing material, such as tags or content from other tool providers. Additionally, do not disclose any case-specific or sensitive information to the public."
+sending_address_label: From Actor
+receiving_address_label: To Actor

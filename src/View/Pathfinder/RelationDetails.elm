@@ -14,7 +14,7 @@ import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Network as Network exposing (Network)
+import Model.Pathfinder.Network as Network
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (Msg(..))
@@ -118,8 +118,8 @@ view vc model id viewState =
                     [ css [ Css.overflowY Css.auto ] ]
             )
             { tabsList =
-                [ tableTab vc model.network id viewState isA2b
-                , tableTab vc model.network id viewState isB2a
+                [ tableTab vc model id viewState isA2b
+                , tableTab vc model id viewState isB2a
                 ]
                     |> List.map (Html.Styled.map (RelationDetailsMsg id))
             , valuesList =
@@ -178,9 +178,12 @@ view vc model id viewState =
         )
 
 
-tableTab : View.Config -> Network -> ( Id, Id ) -> RelationDetails.Model -> Bool -> Html RelationDetails.Msg
-tableTab vc network edgeId viewState isA2b =
+tableTab : View.Config -> Pathfinder.Model -> ( Id, Id ) -> RelationDetails.Model -> Bool -> Html RelationDetails.Msg
+tableTab vc model edgeId viewState isA2b =
     let
+        network =
+            model.network
+
         { open, table, id, relation } =
             if isA2b then
                 { open = viewState.a2bTableOpen
@@ -295,7 +298,7 @@ tableTab vc network edgeId viewState isA2b =
                         , resetDirectionFilterMsg = Nothing
                         , toggleFilterView = RelationDetails.ToggleTxFilterView isA2b
                         , resetZeroValueFilterMsg = Nothing
-                        , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b, table.exportCSV )
+                        , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b table, model.exportCSV )
                         }
                     , tableView
                     ]

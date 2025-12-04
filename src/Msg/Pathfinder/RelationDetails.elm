@@ -5,6 +5,7 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import DurationDatePicker
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Util.ThemedSelectBox as ThemedSelectBox
 
 
@@ -25,5 +26,5 @@ type Msg
     | ResetAllTxFilters Bool
     | ResetTxAssetFilter Bool
     | TxTableAssetSelectBoxMsg Bool (ThemedSelectBox.Msg (Maybe String))
-    | ExportCSVMsg Bool ExportCSV.Msg
-    | BrowserGotLinksForExport Bool (Maybe String) Api.Data.Links
+    | ExportCSVMsg Bool (RelationTxsTable.Model Msg) ExportCSV.Msg
+    | BrowserGotLinksForExport Bool (RelationTxsTable.Model Msg) Api.Data.Links

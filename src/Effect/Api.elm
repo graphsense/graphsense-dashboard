@@ -1,4 +1,4 @@
-module Effect.Api exposing (Effect(..), SearchRequestConfig, defaultSearchConfig, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, listWithMaybes, map, perform, send, withAuthorization)
+module Effect.Api exposing (Effect(..), SearchRequestConfig, defaultSearchConfig, effectToTracker, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, listWithMaybes, map, perform, send, withAuthorization)
 
 import Api
 import Api.Data
@@ -16,10 +16,12 @@ import Http
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
+import Json.Encode.Extra as Encode
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Pathfinder.Id exposing (Id)
+import Task
 import Time
 import Tuple exposing (pair)
 import Util.Http exposing (Headers)
@@ -323,6 +325,7 @@ type Effect msg
         , nextpage : Maybe String
         }
         (Api.Data.Txs -> msg)
+    | CancelEffect String
 
 
 getEntityEgonet :
@@ -605,9 +608,18 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetConversionEffect eff
 
+        CancelEffect s ->
+            CancelEffect s
 
-perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> Effect msg -> Cmd msg
-perform apiKey wrapMsg effect =
+
+perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> (String -> msg) -> Effect msg -> Cmd msg
+perform apiKey wrapMsg cancelMsg effect =
+    let
+        withTracker =
+            effectToTracker effect
+                |> Maybe.map Api.withTracker
+                |> Maybe.withDefault identity
+    in
     case effect of
         AddUserReportedTag data toMsg ->
             Api.Request.Tags.reportTag data |> send apiKey wrapMsg effect toMsg
@@ -651,6 +663,7 @@ perform apiKey wrapMsg effect =
                         Api.Request.Addresses.DirectionIn
             in
             Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) (Just includeActors) nextpage (Just pagesize)
+                |> withTracker
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressEffect { currency, address, includeActors } toMsg ->
@@ -712,6 +725,7 @@ perform apiKey wrapMsg effect =
                             Just Api.Request.Addresses.DirectionOut
             in
             Api.Request.Addresses.listAddressTxs currency address dir Nothing Nothing minDate maxDate order tokenCurrency nextpage (Just pagesize)
+                |> withTracker
                 |> send apiKey wrapMsg effect toMsg
 
         ListSpendingTxRefsEffect { currency, txHash, index } toMsg ->
@@ -724,6 +738,7 @@ perform apiKey wrapMsg effect =
 
         GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, minDate, maxDate, tokenCurrency, order, pagesize, nextpage } toMsg ->
             Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight minDate maxDate order tokenCurrency nextpage (Just pagesize)
+                |> withTracker
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->
@@ -740,10 +755,12 @@ perform apiKey wrapMsg effect =
 
         GetEntityAddressTagsEffect { currency, entity, pagesize, nextpage } toMsg ->
             Api.Request.Entities.listAddressTagsByEntity currency entity nextpage (Just pagesize)
+                |> withTracker
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityAddressesEffect { currency, entity, pagesize, nextpage } toMsg ->
             Api.Request.Entities.listEntityAddresses currency entity nextpage (Just pagesize)
+                |> withTracker
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityTxsEffect { currency, entity, pagesize, nextpage } toMsg ->
@@ -966,6 +983,100 @@ perform apiKey wrapMsg effect =
         ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, token_currency, pagesize, nextpage } toMsg ->
             Api.Request.Txs.listTxFlows currency txHash (Just (not includeZeroValueSubTxs)) Nothing token_currency nextpage pagesize
                 |> send apiKey wrapMsg effect toMsg
+
+        CancelEffect tracker ->
+            [ Http.cancel tracker
+            , Task.succeed ()
+                |> Task.perform (\_ -> cancelMsg tracker)
+            ]
+                |> Cmd.batch
+
+
+effectToTracker : Effect msg -> Maybe String
+effectToTracker effect =
+    let
+        encodePosix =
+            Time.posixToMillis >> Json.Encode.int
+    in
+    case effect of
+        GetAddressTxsByDateEffect { currency, address, direction, minDate, maxDate, order, tokenCurrency, pagesize, nextpage } _ ->
+            "GetAddressTxsByDateEffect"
+                ++ ([ Json.Encode.string currency
+                    , Json.Encode.string address
+                    , Encode.maybe (Model.Direction.toString >> Json.Encode.string) direction
+                    , Encode.maybe encodePosix minDate
+                    , Encode.maybe encodePosix maxDate
+                    , Encode.maybe (Api.Request.Addresses.stringFromOrder_ >> Json.Encode.string) order
+                    , Encode.maybe Json.Encode.string tokenCurrency
+                    , Encode.maybe Json.Encode.string nextpage
+                    , Json.Encode.int pagesize
+                    ]
+                        |> Json.Encode.list identity
+                        |> Json.Encode.encode 0
+                   )
+                |> Just
+
+        GetAddresslinkTxsEffect { currency, source, target, minDate, maxDate, minHeight, maxHeight, order, tokenCurrency, pagesize, nextpage } _ ->
+            "GetAddresslinkTxsEffect"
+                ++ ([ Json.Encode.string currency
+                    , Json.Encode.string source
+                    , Json.Encode.string target
+                    , Encode.maybe encodePosix minDate
+                    , Encode.maybe encodePosix maxDate
+                    , Encode.maybe Json.Encode.int minHeight
+                    , Encode.maybe Json.Encode.int maxHeight
+                    , Encode.maybe (Api.Request.Addresses.stringFromOrder_ >> Json.Encode.string) order
+                    , Encode.maybe Json.Encode.string tokenCurrency
+                    , Encode.maybe Json.Encode.string nextpage
+                    , Json.Encode.int pagesize
+                    ]
+                        |> Json.Encode.list identity
+                        |> Json.Encode.encode 0
+                   )
+                |> Just
+
+        GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, includeActors, nextpage } _ ->
+            "GetAddressNeighborsEffect"
+                ++ ([ Json.Encode.string currency
+                    , Json.Encode.string address
+                    , Json.Encode.bool isOutgoing
+                    , Encode.maybe (Json.Encode.list Json.Encode.string) onlyIds
+                    , Json.Encode.bool includeLabels
+                    , Json.Encode.bool includeActors
+                    , Encode.maybe Json.Encode.string nextpage
+                    , Json.Encode.int pagesize
+                    ]
+                        |> Json.Encode.list identity
+                        |> Json.Encode.encode 0
+                   )
+                |> Just
+
+        GetEntityAddressesEffect { currency, entity, pagesize, nextpage } _ ->
+            "GetEntityAddressesEffect"
+                ++ ([ Json.Encode.string currency
+                    , Json.Encode.int entity
+                    , Encode.maybe Json.Encode.string nextpage
+                    , Json.Encode.int pagesize
+                    ]
+                        |> Json.Encode.list identity
+                        |> Json.Encode.encode 0
+                   )
+                |> Just
+
+        GetEntityAddressTagsEffect { currency, entity, pagesize, nextpage } _ ->
+            "GetEntityAddressTagsEffect"
+                ++ ([ Json.Encode.string currency
+                    , Json.Encode.int entity
+                    , Encode.maybe Json.Encode.string nextpage
+                    , Json.Encode.int pagesize
+                    ]
+                        |> Json.Encode.list identity
+                        |> Json.Encode.encode 0
+                   )
+                |> Just
+
+        _ ->
+            Nothing
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

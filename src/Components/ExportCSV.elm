@@ -1,4 +1,4 @@
-module Components.ExportCSV exposing (Config, Model, Msg, attributes, config, gotData, icon, init, makeNotification, update)
+module Components.ExportCSV exposing (Config, Model, Msg, attributes, config, getNumberOfRows, gotData, icon, init, update)
 
 import Config.Update as Update
 import Config.View as View
@@ -16,13 +16,17 @@ import Util.View exposing (loadingSpinner)
 import View.Locale as Locale
 
 
-type Config data
-    = Config (ConfigInternal data)
+type Config data eff
+    = Config (ConfigInternal data eff)
 
 
-type alias ConfigInternal data =
+type alias ConfigInternal data eff =
     { filename : String
     , toCsv : data -> Maybe (List ( String, String ))
+    , numberOfRows : Int
+    , fetch : Int -> eff
+    , cmdToEff : Cmd Msg -> eff
+    , notificationToEff : Notification -> eff
     }
 
 
@@ -44,12 +48,20 @@ type Msg
 config :
     { filename : String
     , toCsv : data -> Maybe (List ( String, String ))
+    , numberOfRows : Int
+    , fetch : Int -> eff
+    , cmdToEff : Cmd Msg -> eff
+    , notificationToEff : Notification -> eff
     }
-    -> Config data
-config { filename, toCsv } =
+    -> Config data eff
+config { filename, toCsv, fetch, cmdToEff, notificationToEff, numberOfRows } =
     Config
         { filename = filename
         , toCsv = toCsv
+        , fetch = fetch
+        , numberOfRows = numberOfRows
+        , cmdToEff = cmdToEff
+        , notificationToEff = notificationToEff
         }
 
 
@@ -61,14 +73,15 @@ init =
         }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, Bool )
-update msg (Model model) =
+update : Msg -> Config data eff -> Model -> ( Model, List eff )
+update msg (Config conf) (Model model) =
     case msg of
         UserClickedExportCSV ->
             ( Model model
             , Time.now
                 |> Task.perform BrowserGotTime
-            , False
+                |> conf.cmdToEff
+                |> List.singleton
             )
 
         BrowserGotTime posix ->
@@ -77,13 +90,12 @@ update msg (Model model) =
                 , now = posix
               }
                 |> Model
-            , Cmd.none
-            , True
+            , [ conf.fetch conf.numberOfRows ]
             )
 
 
-gotData : Update.Config -> Config data -> List data -> Model -> ( Model, Cmd Msg, Bool )
-gotData uc (Config conf) data (Model model) =
+gotData : Update.Config -> Config data eff -> ( List data, Maybe String ) -> Model -> ( Model, List eff )
+gotData uc (Config conf) ( data, nextPage ) (Model model) =
     let
         asCsv =
             Csv.Encode.encode
@@ -96,28 +108,49 @@ gotData uc (Config conf) data (Model model) =
             conf.filename
                 |> (++) " "
                 |> (++) (Locale.makeTimestampFilename uc.locale model.now)
+
+        notification =
+            makeNotification conf.numberOfRows ( data, nextPage )
+                |> conf.notificationToEff
     in
     ( Model { model | downloading = False }
-    , data
-        |> List.filterMap conf.toCsv
-        |> asCsv
-        |> File.Download.string (filename ++ ".csv") "text/csv"
-    , False
+    , [ data
+            |> List.filterMap conf.toCsv
+            |> asCsv
+            |> File.Download.string (filename ++ ".csv") "text/csv"
+            |> conf.cmdToEff
+      , notification
+      ]
     )
 
 
-makeNotification : Int -> Notification
-makeNotification numberOfRows =
-    "there_were_more_rows_for_csv_download_info"
-        |> Notification.infoDefault
-        |> Notification.map
-            (s_isEphemeral False
-                >> s_title (Just "there_were_more_rows_for_csv_download")
-                >> s_showClose True
-                >> s_variables
-                    [ numberOfRows
-                        |> String.fromInt
-                    ]
+makeNotification : Int -> ( List data, Maybe String ) -> Notification
+makeNotification numberOfRows ( data, nextPage ) =
+    nextPage
+        |> Maybe.map
+            (\_ ->
+                "there_were_more_rows_for_csv_download_info"
+                    |> Notification.infoDefault
+                    |> Notification.map
+                        (s_isEphemeral False
+                            >> s_title (Just "there_were_more_rows_for_csv_download")
+                            >> s_showClose True
+                            >> s_variables
+                                [ numberOfRows
+                                    |> String.fromInt
+                                ]
+                        )
+            )
+        |> Maybe.withDefault
+            (Notification.successDefault "success_download_csv"
+                |> Notification.map
+                    (s_isEphemeral True
+                        >> s_showClose True
+                        >> s_variables
+                            [ List.length data
+                                |> String.fromInt
+                            ]
+                    )
             )
 
 
@@ -139,3 +172,8 @@ icon vc (Model { downloading }) =
 
     else
         HIcons.iconsExport {}
+
+
+getNumberOfRows : Config data eff -> Int
+getNumberOfRows (Config { numberOfRows }) =
+    numberOfRows
