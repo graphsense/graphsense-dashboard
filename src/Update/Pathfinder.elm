@@ -201,7 +201,12 @@ syncUrl model =
                         }
 
                 _ ->
-                    model.route
+                    case model.selection of
+                        NoSelection ->
+                            Route.Root
+
+                        _ ->
+                            model.route
     in
     ( { model | route = route }
     , if model.route /= route then
@@ -1135,12 +1140,7 @@ updateByMsg plugins uc msg model =
                         |> s_contextMenu Nothing
             in
             if click then
-                ( m1
-                , Route.Root
-                    |> NavPushRouteEffect
-                    |> List.singleton
-                )
-                    |> and unselect
+                unselect m1
 
             else
                 n m1
