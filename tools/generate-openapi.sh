@@ -57,3 +57,4 @@ python3 ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/
 sed -i 's/tx_hash/txHash/' "${dir}/../openapi/src/Api/Request/Txs.elm"
 printf "\n\nvaluesDecodervaluesDecoder = valuesDecoder" >> "${dir}/../openapi/src/Api/Data.elm"
 rm ${dir}/../openapi/src/Api/Request/Bulk.elm
+sed -i "s#$resturl#{{VITE_GS_REST_URL}}#" ${dir}/../openapi/src/Api.elm

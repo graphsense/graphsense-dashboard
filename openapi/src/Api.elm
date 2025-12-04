@@ -44,7 +44,7 @@ type Request a
 
 baseUrl : String
 baseUrl =
-    "http://localhost:9000"
+    "{{VITE_GS_REST_URL}}"
 
 
 noExternalTransactions : String

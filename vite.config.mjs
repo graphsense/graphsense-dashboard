@@ -1,6 +1,35 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import elmPlugin from "vite-plugin-elm";
 import fs from 'fs';
+//import plugins_vite from '../generated/plugins/vite.config.js'
+import { createFilter } from 'vite'
+
+function envReplacePlugin(options = {}) {
+  const filter = createFilter(options.include || /\.(js|ts)$/, options.exclude)
+
+  return {
+    name: 'vite-plugin-env-replace',
+    transform(code, id) {
+      if (!filter(id)) return
+
+      return {
+        code: replacePlaceholders(code),
+        map: null
+      }
+    }
+  }
+}
+
+function replacePlaceholders(code) {
+  const envVars = loadEnv(process.env.NODE_ENV, process.cwd())
+  const placeholderRegex = /\{\{\s*([A-Z0-9_]+)\s*\}\}/g
+
+  return code.replace(placeholderRegex, (match, placeholder) => {
+    return envVars[placeholder] !== undefined
+      ? envVars[placeholder]
+      : match
+  })
+}
 
 /** @type {import('vite').Plugin} */
 const base64Loader = {
@@ -18,7 +47,7 @@ const base64Loader = {
 };
 
 export default defineConfig({
-  plugins: [elmPlugin(), base64Loader],
+  plugins: [elmPlugin(), base64Loader, envReplacePlugin({include: /\.elm$/})],
   server: { 
     host: '0.0.0.0',
     port: 3000,
