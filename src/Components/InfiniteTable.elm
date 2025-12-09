@@ -9,6 +9,7 @@ module Components.InfiniteTable exposing
     , getPage
     , getPageSize
     , getTable
+    , gotoFirstPage
     , infiniteScroll
     , init
     , isEmpty
@@ -17,6 +18,7 @@ module Components.InfiniteTable exposing
     , removeItem
     , reset
     , resetCurrent
+    , setData
     , sortBy
     , update
     , updateTable
@@ -36,11 +38,13 @@ import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
 import Maybe.Extra
-import RecordSetter exposing (s_asc, s_caption, s_data, s_desc, s_loading, s_nextpage, s_rowAttrs, s_state, s_table, s_tfoot)
+import RecordSetter exposing (s_asc, s_caption, s_data, s_desc, s_loading, s_rowAttrs, s_state, s_table, s_tfoot)
 import Result.Extra
 import Table as T
 import Task
-import Tuple exposing (first, mapFirst, pair)
+import Tuple exposing (mapFirst, pair)
+import Tuple3 exposing (mapThird)
+import Util exposing (and)
 
 
 type Model d
@@ -66,12 +70,11 @@ type alias ModelInternal d =
     , data :
         Dict
             String
-            { asc : ( IntDict d, Maybe String )
-            , desc : ( IntDict d, Maybe String )
+            { asc : ( IntDict d, Maybe String, Bool )
+            , desc : ( IntDict d, Maybe String, Bool )
             }
     , bounce : Bounce
     , direction : Direction
-    , loaded : Bool
     , tracker : Maybe String
     }
 
@@ -133,9 +136,18 @@ init tableId pagesize table =
         , bounce = Bounce.init
         , hackyFlag = False
         , direction = Bottom
-        , loaded = False
         , tracker = Nothing
         }
+
+
+setData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, List eff )
+setData config filt nextpage data model =
+    let
+        ( m2, eff ) =
+            resetCurrent config model
+    in
+    appendData config filt nextpage data m2
+        |> mapThird ((++) eff)
 
 
 appendData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, List eff )
@@ -143,7 +155,7 @@ appendData config filt nextpage data (Model model) =
     let
         dict =
             getIntDict model
-                |> first
+                |> Tuple3.first
 
         offset =
             IntDict.size dict
@@ -158,20 +170,18 @@ appendData config filt nextpage data (Model model) =
     { model
         | table =
             model.table
-                |> s_nextpage nextpage
                 |> s_loading False
         , iterations = model.iterations + 1
-        , loaded = True
     }
-        |> setIntDict nextpage newDict
+        |> setIntDict nextpage True newDict
         |> loadMore config
         |> getRowHeight
 
 
 {-| Resets both sorting's tables
 -}
-reset : Model d -> Model d
-reset (Model model) =
+reset : Config eff -> Model d -> ( Model d, List eff )
+reset config (Model model) =
     let
         ( col, _ ) =
             T.getSortState model.table.state
@@ -182,29 +192,32 @@ reset (Model model) =
             , scrollTop = 0
             , data = Dict.insert col initData model.data
         }
+        |> abort config
 
 
 {-| Resets only the current's sorting table
 -}
-resetCurrent : Model d -> Model d
-resetCurrent (Model model) =
+resetCurrent : Config eff -> Model d -> ( Model d, List eff )
+resetCurrent config (Model model) =
     { model
         | iterations = 1
         , scrollTop = 0
+        , table = model.table |> s_loading False
     }
-        |> setIntDict Nothing IntDict.empty
+        |> setIntDict Nothing False IntDict.empty
         |> Model
+        |> abort config
 
 
-initData : { asc : ( IntDict d, Maybe String ), desc : ( IntDict d, Maybe String ) }
+initData : { asc : ( IntDict d, Maybe String, Bool ), desc : ( IntDict d, Maybe String, Bool ) }
 initData =
-    { asc = ( IntDict.empty, Nothing )
-    , desc = ( IntDict.empty, Nothing )
+    { asc = ( IntDict.empty, Nothing, False )
+    , desc = ( IntDict.empty, Nothing, False )
     }
 
 
-setIntDict : Maybe String -> IntDict d -> ModelInternal d -> ModelInternal d
-setIntDict nextpage dict model =
+setIntDict : Maybe String -> Bool -> IntDict d -> ModelInternal d -> ModelInternal d
+setIntDict nextpage loaded dict model =
     let
         ( col, isReversed ) =
             T.getSortState model.table.state
@@ -217,7 +230,7 @@ setIntDict nextpage dict model =
                 s_asc
     in
     Maybe.withDefault initData
-        >> set ( dict, nextpage )
+        >> set ( dict, nextpage, loaded )
         >> Just
         |> flip (Dict.update col) model.data
         |> flip s_data model
@@ -238,15 +251,16 @@ getRowHeight ( Model model, listEff ) =
 
 loadMore : Config eff -> ModelInternal d -> ( Model d, List eff )
 loadMore config model =
-    if not config.force && model.loaded && model.table.nextpage == Nothing then
+    let
+        ( len, np, loaded ) =
+            getIntDict model
+                |> Tuple3.mapFirst IntDict.size
+    in
+    if not config.force && loaded && np == Nothing then
         ( Model model, [] )
 
     else
         let
-            ( len, _ ) =
-                getIntDict model
-                    |> mapFirst IntDict.size
-
             needsMore =
                 shouldLoadMore config
                     model
@@ -261,7 +275,7 @@ loadMore config model =
         else
             let
                 eff =
-                    config.fetch (Just (T.getSortState model.table.state)) model.pagesize model.table.nextpage
+                    config.fetch (Just (T.getSortState model.table.state)) model.pagesize np
             in
             ( Model
                 { model
@@ -270,11 +284,6 @@ loadMore config model =
                 }
             , [ eff ]
             )
-
-
-setLoading : Bool -> Model d -> Model d
-setLoading l (Model model) =
-    { model | table = model.table |> s_loading l } |> Model
 
 
 getTable : Model d -> Table d
@@ -320,11 +329,15 @@ update config msg (Model model) =
                 n model
 
             else
-                ( Model model
-                , Dom.setViewportOf model.tableId 0 0
-                    |> Task.attempt (ScrolledToTop tm)
-                , []
-                )
+                Model model
+                    |> abort config
+                    |> (\( m, eff ) ->
+                            ( m
+                            , Dom.setViewportOf model.tableId 0 0
+                                |> Task.attempt (ScrolledToTop tm)
+                            , eff
+                            )
+                       )
 
         GotTableElement result ->
             ( Result.Extra.unwrap (Model model)
@@ -354,40 +367,21 @@ update config msg (Model model) =
                 |> Result.Extra.unwrap (n model)
                     (\_ ->
                         let
-                            newModel =
+                            ( newModel, eff ) =
                                 s_state tm model.table
                                     |> flip s_table model
-
-                            ( dict, nextpage ) =
-                                getIntDict newModel
-
-                            nnewModel =
-                                newModel.table
-                                    |> s_nextpage nextpage
-                                    |> flip s_table newModel
-
-                            ( nnnewModel, eff ) =
-                                if IntDict.isEmpty dict then
-                                    Model nnewModel
-                                        |> loadFirstPage config
-
-                                else
-                                    ( Model nnewModel, [] )
+                                    |> Model
+                                    |> gotoFirstPage config
                         in
-                        ( nnnewModel, Cmd.none, eff )
+                        ( newModel, Cmd.none, eff )
                     )
 
         ContainerLoaded ->
             let
-                ( newModel, eff ) =
-                    scrollUpdate config
-                        { scrollTop = 0
-                        , containerHeight = model.containerHeight
-                        , contentHeight = model.contentHeight
-                        }
-                        model
+                ( m, eff ) =
+                    gotoFirstPage config (Model model)
             in
-            ( newModel, Cmd.none, eff )
+            ( m, Cmd.none, eff )
 
 
 n : ModelInternal d -> ( Model d, Cmd Msg, List eff )
@@ -426,17 +420,19 @@ getNumVisibleItems model =
 
 
 loadFirstPage : Config eff -> Model d -> ( Model d, List eff )
-loadFirstPage config (Model model) =
-    let
-        eff =
-            config.fetch (Just (T.getSortState model.table.state)) model.pagesize Nothing
-    in
-    ( { model | tracker = config.effectToTracker eff }
-        |> Model
-        |> setLoading True
-    , eff
-        :: (Maybe.map config.abort model.tracker |> Maybe.Extra.toList)
-    )
+loadFirstPage config =
+    reset config
+        >> and (gotoFirstPage config)
+
+
+gotoFirstPage : Config eff -> Model d -> ( Model d, List eff )
+gotoFirstPage config (Model model) =
+    scrollUpdate config
+        { scrollTop = 0
+        , containerHeight = model.containerHeight
+        , contentHeight = model.contentHeight
+        }
+        model
 
 
 shouldLoadMore : Config eff -> ModelInternal d -> ScrollPos -> Bool
@@ -463,11 +459,7 @@ scrollUpdate config pos model =
                 , hackyFlag = not model.hackyFlag
             }
     in
-    if shouldLoadMore config newModel pos then
-        loadMore { config | force = True } model
-
-    else
-        ( Model newModel, [] )
+    loadMore config newModel
 
 
 decodeScrollPos : Json.Decode.Decoder ScrollPos
@@ -524,7 +516,7 @@ getStart model =
 getRange : Int -> Int -> ModelInternal data -> List data
 getRange start end =
     getIntDict
-        >> first
+        >> Tuple3.first
         >> IntDict.range start end
         >> IntDict.values
 
@@ -538,7 +530,7 @@ view config attributes (Model model) =
     let
         dict =
             getIntDict model
-                |> first
+                |> Tuple3.first
 
         visibleItems =
             round model.containerHeight
@@ -657,11 +649,11 @@ isLoading =
 isEmpty : Model data -> Bool
 isEmpty (Model model) =
     getIntDict model
-        |> first
+        |> Tuple3.first
         |> IntDict.isEmpty
 
 
-getIntDict : ModelInternal data -> ( IntDict data, Maybe String )
+getIntDict : ModelInternal data -> ( IntDict data, Maybe String, Bool )
 getIntDict model =
     let
         ( col, isReversed ) =
@@ -675,12 +667,16 @@ getIntDict model =
              else
                 .asc
             )
-        |> Maybe.withDefault ( IntDict.empty, Nothing )
+        |> Maybe.withDefault ( IntDict.empty, Nothing, False )
 
 
 abort : Config eff -> Model data -> ( Model data, List eff )
 abort conf (Model model) =
-    ( Model { model | tracker = Nothing }
+    ( Model
+        { model
+            | tracker = Nothing
+            , table = model.table |> s_loading False
+        }
     , Maybe.map conf.abort model.tracker
         |> Maybe.Extra.toList
     )

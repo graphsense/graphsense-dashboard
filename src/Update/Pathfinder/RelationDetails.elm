@@ -12,8 +12,6 @@ import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.RelationDetails as Init
-import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -152,14 +150,6 @@ updateAggEdge uc edge model =
 
 update : Update.Config -> ( Id, Id ) -> ( Time.Posix, Time.Posix ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
 update uc id ( rangeFrom, rangeTo ) msg model =
-    let
-        dir isA2b =
-            if isA2b then
-                Incoming
-
-            else
-                Outgoing
-    in
     case msg of
         UserClickedToggleTable isA2b ->
             let
@@ -181,9 +171,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
 
                     else
                         tbl.table
-                            |> InfiniteTable.reset
-                            |> InfiniteTable.loadFirstPage
-                                conf
+                            |> InfiniteTable.gotoFirstPage conf
             in
             ( isOpen
                 |> not
@@ -224,18 +212,17 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 tbl =
                     gs.getTable model
 
-                reset =
+                setter =
                     if fetchedPage == Nothing then
-                        InfiniteTable.resetCurrent
+                        InfiniteTable.setData
 
                     else
-                        identity
+                        InfiniteTable.appendData
 
                 ( table, cmd, eff ) =
                     tbl
                         |> .table
-                        |> reset
-                        |> InfiniteTable.appendData
+                        |> setter
                             (tableConfig id isA2b tbl)
                             RelationTxsTable.filter
                             data.nextPage
@@ -355,7 +342,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                                 if dateRangeChanged then
                                     udateTbl
                                         |> .table
-                                        |> InfiniteTable.reset
                                         |> InfiniteTable.loadFirstPage
                                             (tableConfig id isA2b udateTbl)
 
@@ -395,14 +381,12 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     gs.getTable model
 
                 tbl =
-                    RelationTxsTable.init (dir isA2b) (oldTable.assetSelectBox |> ThemedSelectBox.getOptions |> List.filterMap identity)
-                        |> s_selectedAsset oldTable.selectedAsset
-                        |> s_assetSelectBox oldTable.assetSelectBox
+                    oldTable
+                        |> s_dateRangePicker Nothing
 
                 ( table, eff ) =
                     tbl
                         |> .table
-                        |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
             in
@@ -419,12 +403,13 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     gs.getTable model
 
                 tbl =
-                    RelationTxsTable.init (dir isA2b) (oldTable.assetSelectBox |> ThemedSelectBox.getOptions |> List.filterMap identity)
+                    oldTable
+                        |> s_selectedAsset Nothing
+                        |> s_dateRangePicker Nothing
 
                 ( table, eff ) =
                     tbl
                         |> .table
-                        |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
             in
@@ -441,13 +426,12 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     gs.getTable model
 
                 tbl =
-                    RelationTxsTable.init (dir isA2b) (oldTable.assetSelectBox |> ThemedSelectBox.getOptions |> List.filterMap identity)
-                        |> s_dateRangePicker oldTable.dateRangePicker
+                    oldTable
+                        |> s_selectedAsset Nothing
 
                 ( table, eff ) =
                     tbl
                         |> .table
-                        |> InfiniteTable.reset
                         |> InfiniteTable.loadFirstPage
                             (tableConfig id isA2b tbl)
             in
@@ -487,7 +471,6 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                     ( ntbl, eff ) =
                         newTxs
                             |> .table
-                            |> InfiniteTable.reset
                             |> InfiniteTable.loadFirstPage
                                 (tableConfig id isA2b newTxs)
                 in
