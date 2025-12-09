@@ -464,7 +464,7 @@ scrollUpdate config pos model =
             }
     in
     if shouldLoadMore config newModel pos then
-        loadMore { config | force = True } model
+        loadMore { config | force = False } newModel
 
     else
         ( Model newModel, [] )
