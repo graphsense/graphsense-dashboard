@@ -52,7 +52,7 @@ perform plugins key statusbarToken apiKey effect =
             Http.riskyRequest
                 { method = "GET"
                 , headers = []
-                , url = "/?logout"
+                , url = "/logout"
                 , body = Http.emptyBody
                 , expect = Http.expectWhatever BrowserGotLoggedOut
                 , timeout = Nothing
