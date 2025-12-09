@@ -1,4 +1,4 @@
-module Update.Pathfinder.Table.RelatedAddressesTable exposing (abort, appendEntityAddresses, appendTaggedAddresses, init, loadFirstPage, tableConfig, updateTable)
+module Update.Pathfinder.Table.RelatedAddressesTable exposing (abort, appendEntityAddresses, appendTaggedAddresses, gotoFirstPage, init, tableConfig, updateTable)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -41,9 +41,13 @@ init addressId entity =
     }
 
 
-loadFirstPage : InfiniteTable.Config Effect -> Model -> ( Model, List Effect )
-loadFirstPage config model =
-    InfiniteTable.loadFirstPage config model.table
+gotoFirstPage : InfiniteTable.Config Effect -> Model -> ( Model, List Effect )
+gotoFirstPage config model =
+    let
+        force =
+            model.allTaggedAddressesFetched
+    in
+    InfiniteTable.gotoFirstPage { config | force = force } model.table
         |> mapFirst (flip s_table model)
 
 

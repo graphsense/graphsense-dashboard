@@ -220,7 +220,7 @@ update msg model =
 
                 ( nt, cmd, meff ) =
                     model.subTxsTable
-                        |> InfiniteTable.appendData config transactionTableFilter txs.nextPage accountTxs
+                        |> InfiniteTable.setData config transactionTableFilter txs.nextPage accountTxs
             in
             ( { model | subTxsTable = nt }, CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: meff )
 

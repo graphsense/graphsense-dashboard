@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (loadFirstPage, makeExportCSVConfig, prepareCSV, syncByAddress, update)
+module Update.Pathfinder.AddressDetails exposing (loadFirstTxsPage, makeExportCSVConfig, prepareCSV, syncByAddress, update)
 
 import Api.Data
 import Api.Request.Addresses
@@ -162,7 +162,7 @@ update uc msg model =
                                     InfiniteTable.abort conf table
 
                                 else
-                                    InfiniteTable.loadFirstPage conf table
+                                    InfiniteTable.gotoFirstPage conf table
                         in
                         ( model
                             |> setTableOpen (not tableOpen)
@@ -192,17 +192,16 @@ update uc msg model =
                 |> Maybe.map
                     (\{ table, setTable } ->
                         let
-                            reset =
+                            setter =
                                 if fetchedPage == Nothing then
-                                    InfiniteTable.resetCurrent
+                                    InfiniteTable.setData
 
                                 else
-                                    identity
+                                    InfiniteTable.appendData
 
                             ( pt, cmd, eff ) =
                                 table
-                                    |> reset
-                                    |> InfiniteTable.appendData
+                                    |> setter
                                         (neighborsTableConfig model.address.id dir)
                                         NeighborsTable.filter
                                         neighbors.nextPage
@@ -251,16 +250,16 @@ update uc msg model =
                 |> RemoteData.map
                     (\txsTable ->
                         let
-                            reset =
+                            setter =
                                 if fetchedPage == Nothing then
-                                    InfiniteTable.resetCurrent
+                                    InfiniteTable.setData
 
                                 else
-                                    identity
+                                    InfiniteTable.appendData
 
                             ( table, cmd, eff ) =
-                                reset txsTable.table
-                                    |> InfiniteTable.appendData
+                                txsTable.table
+                                    |> setter
                                         (transactionTableConfig txsTable model.address.id)
                                         TransactionTable.filter
                                         txs.nextPage
@@ -307,7 +306,7 @@ update uc msg model =
                                         | txs = s_dateRangePicker (Just np) txsTable |> RemoteData.Success
                                     }
                                         |> (if changed then
-                                                loadFirstPage
+                                                loadFirstTxsPage True
 
                                             else
                                                 n
@@ -388,7 +387,7 @@ update uc msg model =
                     (TransactionTable.resetFilters
                         >> RemoteData.Success
                         >> flip s_txs model
-                        >> loadFirstPage
+                        >> loadFirstTxsPage True
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -398,7 +397,7 @@ update uc msg model =
                     (s_dateRangePicker Nothing
                         >> RemoteData.Success
                         >> flip s_txs model
-                        >> loadFirstPage
+                        >> loadFirstTxsPage True
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -408,7 +407,7 @@ update uc msg model =
                     (s_direction Nothing
                         >> RemoteData.Success
                         >> flip s_txs model
-                        >> loadFirstPage
+                        >> loadFirstTxsPage True
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -418,7 +417,7 @@ update uc msg model =
                     (s_selectedAsset Nothing
                         >> RemoteData.Success
                         >> flip s_txs model
-                        >> loadFirstPage
+                        >> loadFirstTxsPage True
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -453,7 +452,7 @@ update uc msg model =
                         nm
                             |> flip updateRelatedAddressesTable
                                 (if show then
-                                    RelatedAddressesTable.loadFirstPage conf
+                                    RelatedAddressesTable.gotoFirstPage conf
 
                                  else
                                     RelatedAddressesTable.abort conf
@@ -606,7 +605,7 @@ update uc msg model =
                         in
                         { model | txs = RemoteData.Success newTxs }
                             |> (if oldTxs.selectedAsset /= newTxs.selectedAsset then
-                                    loadFirstPage
+                                    loadFirstTxsPage True
 
                                 else
                                     n
@@ -707,21 +706,29 @@ updateRelatedAddressesPubkeyTable model upd =
         |> Maybe.withDefault (n model)
 
 
-loadFirstPage : Model -> ( Model, List Effect )
-loadFirstPage model =
+loadFirstTxsPage : Bool -> Model -> ( Model, List Effect )
+loadFirstTxsPage reset model =
     model.txs
         |> RemoteData.map
             (\nt ->
                 let
+                    config =
+                        transactionTableConfigWithMsg
+                            GotTxsForAddressDetails
+                            nt
+                            model.address.id
+
+                    setter =
+                        if reset then
+                            InfiniteTable.loadFirstPage
+
+                        else
+                            InfiniteTable.gotoFirstPage
+
                     ( tableNew, eff ) =
                         nt.table
-                            |> InfiniteTable.reset
-                            |> InfiniteTable.loadFirstPage
-                                (transactionTableConfigWithMsg
-                                    GotTxsForAddressDetails
-                                    nt
-                                    model.address.id
-                                )
+                            |> setter
+                                config
                 in
                 ( { model
                     | txs =
@@ -736,7 +743,7 @@ loadFirstPage model =
 updateDirectionFilter : Model -> Maybe Direction -> ( Model, List Effect )
 updateDirectionFilter model dir =
     model.txs
-        |> RemoteData.map (s_direction dir >> RemoteData.Success >> flip s_txs model >> loadFirstPage)
+        |> RemoteData.map (s_direction dir >> RemoteData.Success >> flip s_txs model >> loadFirstTxsPage True)
         |> RemoteData.withDefault (n model)
 
 
@@ -922,7 +929,7 @@ openTransactionTable uc dfp model =
                                     , order = order
                                 }
                     }
-                        |> loadFirstPage
+                        |> loadFirstTxsPage False
                 )
                 model.address.data
             |> RemoteData.withDefault (n model)
