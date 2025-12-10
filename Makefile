@@ -8,6 +8,7 @@ CONFIG=./config/Config.elm
 CODEGEN_CONFIG=$(CODEGEN)/$(CONFIG)
 FIGMA_JSON=./theme/figma.json
 GENERATED=./generated
+GENERATE_JS=tools/generate.js
 
 CODEGEN=./codegen
 CODEGEN_GENERATED=$(CODEGEN)/$(GENERATED)
@@ -16,7 +17,7 @@ CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
 
 PLUGINS_DIR=./plugins
 
-PLUGINS=$(shell grep "import" $(CONFIG) | awk '{if (system("test -e $(PLUGINS_DIR)/" $$2) == 0) { print $$2 }}')
+PLUGINS=$(shell grep "|> Plugin" $(CONFIG) | grep -v "\-\-" | sed -r 's/\|>\s*Plugin\.\w+\s+\(?(\w+)\)?\..*/\1/' | tr -s ' ')
 SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm)
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
@@ -194,11 +195,12 @@ elm.json: elm.json.base
 
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
-$(GENERATED_PLUGIN_ELM): elm.json generate.js $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
-	node generate.js $(PLUGINS)
+$(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
+	node $(GENERATE_JS) $(PLUGINS)
 
 copy-public: 
 	cp -r $(PUBLIC_DIR) $(GENERATED_PUBLIC)
 	for p in $(PLUGINS); do rsync -r $(PLUGINS_DIR)/$$p/$(PUBLIC_DIR)/ $(GENERATED_PUBLIC)/; done
+
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh 
