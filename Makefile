@@ -181,8 +181,9 @@ plugin-themes: $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER))
 $(GENERATED_PLUGINS)/%/$(PLUGIN_INSTALLED_MARKER): 
 	jq -r '.dependencies | keys[]' $(PLUGINS_DIR)/$*/elm.json \
 		| while read dep; do \
-			yes | npx elm install $$dep; \
-		done 
+			yes | npx elm install $$dep || exit 1; \
+		done;
+		exit $?
 	cd $(PLUGINS_DIR)/$*; test -f package.json && npm install || true
 	mkdir -p $(GENERATED_PLUGINS)/$*
 	touch $@
