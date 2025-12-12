@@ -36,7 +36,7 @@ COPY ./theme $WORKDIR/theme
 COPY ./codegen $WORKDIR/codegen
 COPY ./lib $WORKDIR/lib
 COPY ./docker/site.conf /etc/nginx/http.d/
-COPY ./generate.js $WORKDIR/generate.js
+COPY ./tools/generate.js $WORKDIR/tools/generate.js
 
 RUN mkdir -p /usr/share/nginx/html /run/nginx && \
     rm -f /etc/nginx/http.d/default.conf 
