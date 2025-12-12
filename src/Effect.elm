@@ -49,15 +49,7 @@ perform plugins key statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Http.riskyRequest
-                { method = "GET"
-                , headers = []
-                , url = "/?logout"
-                , body = Http.emptyBody
-                , expect = Http.expectWhatever BrowserGotLoggedOut
-                , timeout = Nothing
-                , tracker = Nothing
-                }
+            Nav.load "/logout"
 
         SetDirtyEffect ->
             Ports.setDirty True
