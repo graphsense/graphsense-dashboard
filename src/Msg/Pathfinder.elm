@@ -169,7 +169,7 @@ type TxDetailsMsg
     | TableMsg IoDirection Table.State
     | TableMsgSubTxTable InfiniteTable.Msg
     | BrowserGotBaseTx Api.Data.Tx
-    | BrowserGotTxFlows Api.Data.Txs
+    | BrowserGotTxFlows (Maybe String) Api.Data.Txs
     | UserClickedToggleSubTxsTable
     | UserClickedResetAllSubTxsTableFilters
     | UserClickedResetZeroValueSubTxsTableFilters
