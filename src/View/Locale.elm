@@ -589,7 +589,7 @@ httpErrorToString model error =
             string model "server error"
 
         Http.BadStatus 429 ->
-            string model "API rate limit exceeded. Please try again later."
+            string model "Api-rate-limit-exceeded"
 
         Http.BadStatus 404 ->
             string model "not found"

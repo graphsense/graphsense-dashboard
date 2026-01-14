@@ -1545,7 +1545,7 @@ update plugins uc msg model =
                                                 tagStats.totalTags - tagStats.applicableTags
 
                                             notification =
-                                                Notification.infoDefault "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder."
+                                                Notification.infoDefault "tag-import-feedback"
                                                     |> Notification.map (s_title (Just "Tag Import"))
                                                     |> Notification.map
                                                         (s_variables

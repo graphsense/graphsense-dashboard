@@ -16,20 +16,35 @@ Outgoing entity: Outgoing cluster
 Exact: Exact
 Magnitude: Magnitude
 Value format: Value Format
-mentionTagDescriptionId: A mention tag expresses that this address was mentioned e.g. on a website. It might be of relevance, but it depends on the context.
-actorTagDescriptionId: An actor tag is a statement about the party controlling the address.
-eventTagDescriptionId: An event tag is a statement about an event taking place with relation to this address e.g. if the address was part of a hack.
-attributeTagDescriptionId: An attribute tag describes a property of the address, e.g. if it is known to be used for a specific purpose.
+mentionTagDescriptionId: A mention tag expresses that this address was mentioned e.g.
+  on a website. It might be of relevance, but it depends on the context.
+actorTagDescriptionId: An actor tag is a statement about the party controlling the
+  address.
+eventTagDescriptionId: An event tag is a statement about an event taking place with
+  relation to this address e.g. if the address was part of a hack.
+attributeTagDescriptionId: An attribute tag describes a property of the address, e.g.
+  if it is known to be used for a specific purpose.
 this table is empty: No entries found.
 Tag Import: Tag Import
-"Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder."
-"Add_Tag_description": "Help improve our data by reporting an entity linked to this address - it will be reviewed and eventually published." 
-"Multi Input Cluster Help": "Addresses have been used in the same transaction (ie. likely by same owner)."
-"Pubkey Cluster Help": "Addresses have been created from the same key (ie. by same owner)."
-pf1_deprecation_notice: "English: Pathfinder 1.0 is deprecated and will be removed soon. Please switch to the new Pathfinder available from the sidebar. Do you have issues with the retirement of the old pathfinder? Contact support by email at contact@ikna.io."
-tx-tracing-mode-help-text: "In transaction mode, you can trace the flow of funds through individual transactions. This mode is useful for following specific transactions and understanding their paths."
-tx-relationship-mode-help-text: "In relationship mode, you can explore the relationships between different entities based on aggregated transaction data. This mode helps identify patterns and connections between entities over multiple transactions."
-cluster-details-info-help-text: "Cluster info provide statistics over all addresses in the cluster, including aggregated balances and transaction counts. Clusters are based on the multi-input heuristic only."
+tag-import-feedback: Only {0} of {1} tags were imported. {2} tags could not be applied
+  because their addresses are not present on the pathfinder.
+Add_Tag_description: Help improve our data by reporting an entity linked to this address
+  - it will be reviewed and eventually published.
+Multi Input Cluster Help: Addresses have been used in the same transaction (ie. likely
+  by same owner).
+Pubkey Cluster Help: Addresses have been created from the same key (ie. by same owner).
+pf1_deprecation_notice: 'English: Pathfinder 1.0 is deprecated and will be removed
+  soon. Please switch to the new Pathfinder available from the sidebar. Do you have
+  issues with the retirement of the old pathfinder? Contact support by email at contact@ikna.io.'
+tx-tracing-mode-help-text: In transaction mode, you can trace the flow of funds through
+  individual transactions. This mode is useful for following specific transactions
+  and understanding their paths.
+tx-relationship-mode-help-text: In relationship mode, you can explore the relationships
+  between different entities based on aggregated transaction data. This mode helps
+  identify patterns and connections between entities over multiple transactions.
+cluster-details-info-help-text: Cluster info provide statistics over all addresses
+  in the cluster, including aggregated balances and transaction counts. Clusters are
+  based on the multi-input heuristic only.
 tx_hash: Transaction hash
 token_tx_id: Sub transaction ID
 value_raw: Amount (raw)
@@ -44,11 +59,581 @@ no_inputs: Inputs
 no_outputs: Outputs
 total_input: Total input amount
 total_output: Total output amount
-success_download_csv: "Downloaded {0} data rows as CSV"
-there_were_more_rows_for_csv_download: Downloading CSV data is limited to roughly {0} rows. 
-there_were_more_rows_for_csv_download_info: Please use filter options to further narrow down the data set.
+success_download_csv: Downloaded {0} data rows as CSV
+there_were_more_rows_for_csv_download: Downloading CSV data is limited to roughly
+  {0} rows.
+there_were_more_rows_for_csv_download_info: Please use filter options to further narrow
+  down the data set.
 outgoing relations: outgoing relationships
 incoming relations: incoming relationships
-tags_release_warnings: "The tags you add will be visible to all users. Please ensure that your tags do not include any copyright-infringing material, such as tags or content from other tool providers. Additionally, do not disclose any case-specific or sensitive information to the public."
+tags_release_warnings: The tags you add will be visible to all users. Please ensure
+  that your tags do not include any copyright-infringing material, such as tags or
+  content from other tool providers. Additionally, do not disclose any case-specific
+  or sensitive information to the public.
 sending_address_label: From Actor
 receiving_address_label: To Actor
+address: address
+addresses: addresses
+'{0} address': '{0} address'
+'{0} addresses': '{0} addresses'
+transaction: transaction
+transactions: transactions
+label: label
+labels: labels
+tag: tag
+tags: tags
+address tags: address tags
+entity tags: entity tags
+block: block
+blocks: blocks
+supported currencies: supported currencies
+ledger statistics: ledger statistics
+last update: last update
+latest block: latest block
+address, transaction, label, block: address, transaction, label, block
+transfers: transfers
+withdrawals: withdrawals
+deposits: deposits
+neighbors: neighbors
+receiving entities: receiving entities
+sending entities: sending entities
+receiving entity: receiving entity
+sending entity: sending entity
+receiving addresses: receiving addresses
+receiving address: receiving address
+sending addresses: sending addresses
+sending address: sending address
+first usage: first usage
+last usage: last usage
+activity period: activity period
+total received: total received
+total sent: total sent
+total received {0}: total received {0}
+total received assets: total received assets
+final balance assets: final balance assets
+balance: balance
+final balance {0}: final balance {0}
+entity balance: entity balance
+entity balance {0}: entity balance {0}
+address balance: address balance
+address balance {0}: address balance {0}
+entity received: entity received
+entity received {0}: entity received {0}
+address received: address received
+address received {0}: address received {0}
+all assets: all assets
+category: category
+categories: categories
+abuse: abuse
+abuses: abuses
+incoming neighbors: incoming neighbors
+outgoing neighbors: outgoing neighbors
+block hash: block hash
+created: created
+no. inputs: no. inputs
+no. outputs: no. outputs
+total input: total input
+total output: total output
+total input {0}: total input {0}
+total output {0}: total output {0}
+year: year
+years: years
+month: month
+months: months
+day: day
+days: days
+hour: hour
+hours: hours
+minute: minute
+minutes: minutes
+second: second
+seconds: seconds
+addresses tagged: addresses tagged
+source: source
+target: target
+value: value
+value {0}: value {0}
+timestamp: timestamp
+outgoing address: outgoing address
+incoming address: incoming address
+outgoing entity: outgoing entity
+incoming entity: incoming entity
+outgoing addresses: outgoing addresses
+incoming addresses: incoming addresses
+outgoing entities: outgoing entities
+incoming entities: incoming entities
+output address: output address
+input address: input address
+no. transactions: no. transactions
+filter table contents: filter table contents
+sort/filter disabled: sort/filter disabled
+download table as csv: download table as csv
+add all to graph: add all to graph
+tagpack: tagpack
+last modified: last modified
+active: active
+download tags as json: download tags as json
+included in block: included in block
+export: export
+graphics (.svg): graphics (.svg)
+full data: full data
+notes only: notes only
+titanium tag sharing schema: titanium tag sharing schema
+rest calls: rest calls
+audit log: audit log
+address label: address label
+transaction label: transaction label
+language: language
+english: english
+german: german
+russian: russian
+import: import
+criterion: criterion
+depth: depth
+by category: by category
+for contained addresses: for contained addresses
+for final balance: for final balance
+for total received: for total received
+breadth: breadth
+max. addresses: max. addresses
+search: search
+save: save
+title: title
+investigator: investigator
+institution: institution
+summary: summary
+cancel: cancel
+creator: creator
+start from scratch: start from scratch
+load from file: load from file
+undo last graph change: undo last graph change
+redo undone graph change: redo undone graph change
+configuration options: configuration options
+legend: legend
+username: username
+password: password
+sign in: sign in
+signing in: signing in
+annotate: annotate
+annotate entity: annotate entity
+annotate address: annotate address
+remove from graph: remove from graph
+remove: remove
+remove link: remove link
+expand: expand
+collapse: collapse
+show address table: show address table
+sort addresses by: sort addresses by
+no. neighbors: no. neighbors
+incoming: incoming
+outgoing: outgoing
+user-defined labels: user-defined labels
+hide logs: hide logs
+show logs: show logs
+notes: notes
+add tag: add tag
+search incoming neighbors: search incoming neighbors
+search outgoing neighbors: search outgoing neighbors
+nothing to display yet: nothing to display yet
+entity_tooltip: entity_tooltip
+address_tooltip: address_tooltip
+link_tooltip: link_tooltip
+shadow_tooltip: shadow_tooltip
+category {0}: category {0}
+searching outgoing: searching outgoing
+searching incoming: searching incoming
+for outgoing neighbors: for outgoing neighbors
+for incoming neighbors: for incoming neighbors
+errors only: errors only
+show more: show more
+loading msg outgoing: loading msg outgoing
+loading msg incoming: loading msg incoming
+saving to file: saving to file
+go to dashboard: go to dashboard
+remove tag: remove tag
+estimated value: estimated value
+estimated value {0}: estimated value {0}
+estimated total transferred: estimated total transferred
+total transferred: total transferred
+reorder to prioritize: reorder to prioritize
+tag coherence: tag coherence
+unknown: unknown
+api-rate-limit-exceeded: API rate limit exceeded. Please try again later.
+legend empty: legend empty
+from: from
+to: to
+pick a color: pick a color
+start highlighting addresses and entities: start highlighting addresses and entities
+api request limit: api request limit
+from address: from address
+to address: to address
+tagged addresses: tagged addresses
+please provide an API key: please provide an API key
+invalid key: invalid key
+unlimited: unlimited
+root address: root address
+direction: direction
+both: both
+search neighbors: search neighbors
+bad status: bad status
+bad URL: bad URL
+request timeout: request timeout
+request error: request error
+network error: network error
+server error: server error
+not found: not found
+data error: data error
+service not reachable.: service not reachable.
+unexpected data format.: unexpected data format.
+unexpected status code.: unexpected status code.
+service does not respond in time: service does not respond in time
+Do you want to start from scratch?: Do you want to start from scratch?
+proprietary tag: proprietary tag
+"loading concepts for taxonomy {0}": "loading concepts for taxonomy {0}"
+'{1}: searching for {0}': '{1}: searching for {0}'
+'{1}: loading address {0}': '{1}: loading address {0}'
+'{1}: loading block {0}': '{1}: loading block {0}'
+'{1}: loading transaction {0}': '{1}: loading transaction {0}'
+'{1}: loading entity {0}': '{1}: loading entity {0}'
+'{1}: loading entity for address {0}': '{1}: loading entity for address {0}'
+'{1}: loading input addresses of transaction {0}': '{1}: loading input addresses of
+  transaction {0}'
+'{1}: loading output addresses of transaction {0}': '{1}: loading output addresses
+  of transaction {0}'
+'{1}: loading outgoing neighbors of entity {0}': '{1}: loading outgoing neighbors
+  of entity {0}'
+'{1}: loading incoming neighbors of entity {0}': '{1}: loading incoming neighbors
+  of entity {0}'
+'{1}: loading outgoing neighbors of address {0}': '{1}: loading outgoing neighbors
+  of address {0}'
+'{1}: loading incoming neighbors of address {0}': '{1}: loading incoming neighbors
+  of address {0}'
+'{1}: loading {0} addresses': '{1}: loading {0} addresses'
+'{1}: loading {0} entities': '{1}: loading {0} entities'
+'{1}: loading entities of {0} addresses': '{1}: loading entities of {0} addresses'
+'{1}: loading outgoing neighbors of {0} entities': '{1}: loading outgoing neighbors
+  of {0} entities'
+'{1}: loading incoming neighbors of {0} entities': '{1}: loading incoming neighbors
+  of {0} entities'
+'{1}: loading outgoing neighbors of {0} addresses': '{1}: loading outgoing neighbors
+  of {0} addresses'
+'{1}: loading incoming neighbors of {0} addresses': '{1}: loading incoming neighbors
+  of {0} addresses'
+'{1}: loading tags of address {0}': '{1}: loading tags of address {0}'
+'{1}: loading tags {0} addresses': '{1}: loading tags {0} addresses'
+'{1}: loading address tags of entity {0}': '{1}: loading address tags of entity {0}'
+'{1}: loading transactions of address {0}': '{1}: loading transactions of address
+  {0}'
+'{1}: loading transactions of block {0}': '{1}: loading transactions of block {0}'
+'{1}: loading addresses of entity {0}': '{1}: loading addresses of entity {0}'
+'{1}: loading tags with label {0}': '{1}: loading tags with label {0}'
+'{2}: loading address link transactions between {0} and {1}': '{2}: loading address
+  link transactions between {0} and {1}'
+'{2}: loading entity link transactions between {0} and {1}': '{2}: loading entity
+  link transactions between {0} and {1}'
+Please try again with a lower depth/breadth setting.: Please try again with a lower
+  depth/breadth setting.
+defines entity: defines entity
+delete: delete
+address statistics not yet computed: address statistics not yet computed
+address statistics might be out of date: address statistics might be out of date
+no external transactions: no external transactions
+show shadow links: show shadow links
+Timezone: Timezone
+User: User
+UTC: UTC
+for addresses: for addresses
+show entity link: show entity link
+hide entity link: hide entity link
+filter table: filter table
+download table as CSV: download table as CSV
+address transactions of {0} ({1}): address transactions of {0} ({1})
+incoming neighbors of address {0} ({1}): incoming neighbors of address {0} ({1})
+outgoing neighbors of address {0} ({1}): outgoing neighbors of address {0} ({1})
+incoming neighbors of entity {0} ({1}): incoming neighbors of entity {0} ({1})
+outgoing neighbors of entity {0} ({1}): outgoing neighbors of entity {0} ({1})
+addresses of entity {0} ({1}): addresses of entity {0} ({1})
+total received assets of address {0} ({1}): total received assets of address {0} ({1})
+final balance assets of address {0} ({1}): final balance assets of address {0} ({1})
+total received assets of entity {0} ({1}): total received assets of entity {0} ({1})
+final balance assets of entity {0} ({1}): final balance assets of entity {0} ({1})
+user address tags: user address tags
+transactions of block {0} ({1}): transactions of block {0} ({1})
+transactions between entities {0} and {1} ({2}): transactions between entities {0}
+  and {1} ({2})
+transactions between addresses {0} and {1} ({2}): transactions between addresses {0}
+  and {1} ({2})
+total assets between entities {0} and {1} ({2}): total assets between entities {0}
+  and {1} ({2})
+total assets between addresses {0} and {1} ({2}): total assets between addresses {0}
+  and {1} ({2})
+Incoming values of transaction {0} ({1}): Incoming values of transaction {0} ({1})
+Outgoing values of transaction {0} ({1}): Outgoing values of transaction {0} ({1})
+'{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)': '{6}:
+  searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)'
+? Address not found. It is possibly not yet in our database (synced up to block {0})
+  or has not received any transactions and is therefore not stored in the blockchain.
+: Address not found. It is possibly not yet in our database (synced up to block {0})
+  or has not received any transactions and is therefore not stored in the blockchain.
+true: true
+false: false
+address not found: address not found
+addresses not found: addresses not found
+'... and {0} more': '... and {0} more'
+there could be various reasons: there could be various reasons
+they are possibly not yet in our database: they are possibly not yet in our database
+it is possibly not yet in our database: it is possibly not yet in our database
+there are no transactions associated with these addresses and they are therefore not found on the blockchain: there
+  are no transactions associated with these addresses and they are therefore not found
+  on the blockchain
+there are no transactions associated with this address and it is therefore not found on the blockchain: there
+  are no transactions associated with this address and it is therefore not found on
+  the blockchain
+there are typos: there are typos
+smart contract: smart contract
+token transactions of {0} ({1}): token transactions of {0} ({1})
+loading supported token currencies: loading supported token currencies
+Actor: Actor
+Actors: Actors
+Other Links: Other Links
+Social: Social
+Jurisdictions: Jurisdictions
+Any Category: Any Category
+Open Etherscan: Open Etherscan
+Open Oklink: Open Oklink
+Open Blockchain.com: Open Blockchain.com
+Open Blockchair: Open Blockchair
+Open Dedaub: Open Dedaub
+Open Palkeo: Open Palkeo
+Graph: Graph
+Statistics: Statistics
+Home: Home
+or try these examples: or try these examples
+Start a new investigation: Start a new investigation
+or: or
+Load graph from .gs file: Load graph from .gs file
+try an example: try an example
+open in new tab: open in new tab
+show zero value transactions: show zero value transactions
+no rows match your filter criteria: no rows match your filter criteria
+add label: add label
+pick a color to highlight things: pick a color to highlight things
+Reset Filter: Reset Filter
+open: open
+restart: restart
+In- and Outputs: In- and Outputs
+Total Input: Total Input
+Total Output: Total Output
+Settings: Settings
+Number of addresses: Number of addresses
+Cluster Information: Cluster Information
+Cluster has additional tags: Cluster has additional tags
+Date: Date
+Show timezone: Show timezone
+Highlight clusters: Highlight clusters
+Show timestamp: Show timestamp
+Selection Tool: Selection Tool
+Move Tool: Move Tool
+more...: more...
+Display: Display
+copy to clipboard: copy to clipboard
+copied!: copied!
+Tag Label: Tag Label
+Confidence: Confidence
+Last Modified: Last Modified
+Sources: Sources
+Mentions: Mentions
+High: High
+Medium: Medium
+Low: Low
+Detailed Tracing: Detailed Tracing
+Aggregated Network: Aggregated Network
+Center graph: Center graph
+Cluster has addidional tags: Cluster has addidional tags
+show more...: show more...
+show less...: show less...
+less...: less...
+less: less
+No records found: No records found
+From Address: From Address
+To Address: To Address
+Token-Transaction: Token-Transaction
+Sub-Transaction: Sub-Transaction
+Sender: Sender
+Receiver: Receiver
+Show date in user locale: Show date in user locale
+Values: Values
+Show Shadow Links ...: Show Shadow Links ...
+Overview Network: Overview Network
+General: General
+Highlight on graph: Highlight on graph
+Request limit: Request limit
+Expiration: Expiration
+Next: Next
+Previous: Previous
+Page: Page
+Snap to Grid: Snap to Grid
+Clear dashboard?: Clear dashboard?
+You will not be able to recover it.: You will not be able to recover it.
+Yes, delete all: Yes, delete all
+Please select...: Please select...
+Please choose a crypto ledger: Please choose a crypto ledger
+contract creation: contract creation
+Token holdings: Token holdings
+Show in fiat: Show in fiat
+Preferred fiat currency: Preferred fiat currency
+Show exact values: Show exact values
+Amount in Fiat: Amount in Fiat
+with zone code: with zone code
+Plan Details: Plan Details
+Never: Never
+Expires on: Expires on
+Usage Limit: Usage Limit
+Color: Color
+Transactions: Transactions
+Save: Save
+Screenshot: Screenshot
+Selection tool: Selection tool
+Display Settings: Display Settings
+Display settings: Display settings
+Open: Open
+? Auto tracing stops at service addresses, as asset flows typically cannot be traced
+  through these services. This limitation occurs because services often act as black
+  boxes, mixing user funds. You can still manually trace outgoing transactions using
+  the tracing options available in the side panel.
+: Auto tracing stops at service addresses, as asset flows typically cannot be traced
+  through these services. This limitation occurs because services often act as black
+  boxes, mixing user funds. You can still manually trace outgoing transactions using
+  the tracing options available in the side panel.
+Copy address ID: Copy address ID
+Copy transaction ID: Copy transaction ID
+Remove from graph: Remove from graph
+victim: victim
+perpetrator: perpetrator
+Auto trace limit: Auto trace limit
+Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.: Could
+  not find a suitable adjacent transaction for address {0}. This is likely because
+  the funds are not yet spent.
+is an exchange: is an exchange
+has tags: has tags
+Tag label: Tag label
+copy: copy
+possible service: possible service
+Save file: Save file
+change: change
+transaction tracing not possible: transaction tracing not possible
+Reset: Reset
+Apply filter: Apply filter
+Mention: Mention
+Tags list: Tags list
+'Note: This tag was inherited from the cluster level.': 'Note: This tag was inherited
+  from the cluster level.'
+Learn more: Learn more
+Low confidence: Low confidence
+Medium confidence: Medium confidence
+High confidence: High confidence
+More: More
+related addresses: related addresses
+cluster addresses: cluster addresses
+tagged cluster addresses: tagged cluster addresses
+all cluster addresses: all cluster addresses
+type: type
+cluster information: cluster information
+'{0} per {1}': '{0} per {1}'
+Request limit exceeded: Request limit exceeded
+The request limit of your API key of {0} per {1} has been exceeded.: The request limit
+  of your API key of {0} per {1} has been exceeded.
+The request limit of your API key has been exceeded.: The request limit of your API
+  key has been exceeded.
+Removed {0} transactions: Removed {0} transactions
+Added {0} transactions: Added {0} transactions
+Asset flows: Asset flows
+Attribution tag on this address.: Attribution tag on this address.
+Direct Tag: Direct Tag
+Attribution tag inferred via clustering.: Attribution tag inferred via clustering.
+Indirect Tag: Indirect Tag
+The first address or transaction added to the graph.: The first address or transaction
+  added to the graph.
+Starting Point: Starting Point
+The address or transaction currently selected.: The address or transaction currently
+  selected.
+You Are Here: You Are Here
+No known identity.: No known identity.
+Unlabeled Address: Unlabeled Address
+Unlabeled Transaction: Unlabeled Transaction
+A direct transfer of an asset from one wallet to another.: A direct transfer of an
+  asset from one wallet to another.
+A simplified path that combines all of a swaps's underlying transfers.: A simplified
+  path that combines all of a swaps's underlying transfers.
+Swap/Bridge Transaction: Swap/Bridge Transaction
+Known cryptoasset exchange.: Known cryptoasset exchange.
+Exchange: Exchange
+Might be a service (e.g. high activity), but not confirmed.: Might be a service (e.g.
+  high activity), but not confirmed.
+Possible Service: Possible Service
+Known entity such as a business or institution.: Known entity such as a business or
+  institution.
+Institution: Institution
+Programmed address for automated transactions.: Programmed address for automated transactions.
+Smart Contract: Smart Contract
+Symbol Guide: Symbol Guide
+Graph Nodes: Graph Nodes
+Additional Icons: Additional Icons
+Transaction Filter: Transaction Filter
+Date Range: Date Range
+Select date range: Select date range
+Transaction Direction: Transaction Direction
+All transactions: All transactions
+Incoming only: Incoming only
+Outgoing only: Outgoing only
+Done: Done
+Asset Type: Asset Type
+e.g. Binance: e.g. Binance
+Start typing to search existing labels.: Start typing to search existing labels.
+Actor Label *: Actor Label *
+Add context, notes, or links to supporting evidence.: Add context, notes, or links
+  to supporting evidence.
+Additional Information (optional): Additional Information (optional)
+e.g. Linked to scam report on xyz.com: e.g. Linked to scam report on xyz.com
+Add Tag: Add Tag
+Add Tag to Address: Add Tag to Address
+Report a tag: Report a tag
+Report tag: Report tag
+Create new actor: Create new actor
+Added Tag: Added Tag
+asset transfers between: asset transfers between
+one more asset: one more asset
+'{0} more assets': '{0} more assets'
+track funds: track funds
+view network: view network
+Relationships: Relationships
+Relationship-based: Relationship-based
+Transaction-based: Transaction-based
+Annotate transaction: Annotate transaction
+'loading Swaps and Briding events for Tx {0}: {1}': 'loading Swaps and Briding events
+  for Tx {0}: {1}'
+Related by Multi-Input Heuristic: Related by Multi-Input Heuristic
+Related by Public Key: Related by Public Key
+Sub Transfers: Sub Transfers
+Exclude Zero Value Transfers: Exclude Zero Value Transfers
+No zero value: No zero value
+All Values: All Values
+Bridge Transaction: Bridge Transaction
+Swap Transaction: Swap Transaction
+Swap Transactions: Swap Transactions
+Bridge Transactions: Bridge Transactions
+Input Values: Input Values
+Output Values: Output Values
+back: back
+Please provide at least {0} characters: Please provide at least {0} characters
+No results found.: No results found.
+Deprecation Notice: Deprecation Notice
+'Warning:': 'Warning:'
+Show transaction hash: Show transaction hash
+Attribute: Attribute
+Multiple search terms detected ({0}). Please hit enter to add.: Multiple search terms
+  detected ({0}). Please hit enter to add.
+Address transactions of {0} ({1}): Address transactions of {0} ({1})
+Transactions from {0} to {1} ({2}): Transactions from {0} to {1} ({2})
+fee: fee
+statusbar-loading-concepts: loading concepts for taxonomy {0}
