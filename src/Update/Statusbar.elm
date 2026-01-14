@@ -242,7 +242,7 @@ messageFromApiEffect model effect =
                 ( "adding user reported tag for {0} {1}", [ t.address, t.network ] ) |> Just
 
             Api.GetConceptsEffect taxonomy _ ->
-                ( "loading concepts for taxonomy {0}"
+                ( "statusbar-loading-concepts"
                 , [ taxonomy ]
                 )
                     |> Just

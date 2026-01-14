@@ -289,7 +289,6 @@ unexpected status code.: unexpected status code.
 service does not respond in time: service does not respond in time
 Do you want to start from scratch?: Do you want to start from scratch?
 proprietary tag: proprietary tag
-"loading concepts for taxonomy {0}": "loading concepts for taxonomy {0}"
 '{1}: searching for {0}': '{1}: searching for {0}'
 '{1}: loading address {0}': '{1}: loading address {0}'
 '{1}: loading block {0}': '{1}: loading block {0}'

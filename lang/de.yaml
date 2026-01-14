@@ -1,7 +1,7 @@
 address: Adresse
 addresses: Adressen
-"{0} address": "{0} Adresse"
-"{0} addresses": "{0} Adressen"
+'{0} address': '{0} Adresse'
+'{0} addresses': '{0} Adressen'
 entity: Cluster
 entities: Clusters
 transaction: Transaktion
@@ -18,7 +18,7 @@ supported currencies: unterstützte Währungen
 ledger statistics: Währungsstatistiken
 last update: letztes Update
 latest block: letzter Block
-"address, transaction, label, block": Adresse, Transaktion, Schlagwort, Block
+address, transaction, label, block: Adresse, Transaktion, Schlagwort, Block
 currency: Cryptoasset
 transfers: Transaktionen
 withdrawals: Abbuchungen
@@ -37,20 +37,20 @@ last usage: letzte Verwendung
 activity period: Nutzungsdauer
 total received: Eingänge
 total sent: Ausgänge
-"total received {0}": Eingänge {0}
+total received {0}: Eingänge {0}
 total received assets: Eingänge Assets
 final balance assets: Bilanz Assets
 final balance: Bilanz
 balance: Saldo
-"final balance {0}": Bilanz {0}
+final balance {0}: Bilanz {0}
 entity balance: Bilanz Cluster
-"entity balance {0}": Bilanz Cluster {0}
+entity balance {0}: Bilanz Cluster {0}
 address balance: Bilanz Adresse
-"address balance {0}": Bilanz Adresse {0}
+address balance {0}: Bilanz Adresse {0}
 entity received: Eingänge Cluster
-"entity received {0}": Eingänge Cluster {0}
+entity received {0}: Eingänge Cluster {0}
 address received: Eingänge Adresse
-"address received {0}": Eingänge Adresse {0}
+address received {0}: Eingänge Adresse {0}
 all assets: alle Assets
 category: Kategorie
 categories: Kategorien
@@ -65,8 +65,8 @@ no. inputs: Anz. Eingehende
 no. outputs: Anz. Ausgehende
 total input: Gesamt Eingang
 total output: Gesamt Ausgang
-"total input {0}": Gesamt Eingang {0}
-"total output {0}": Gesamt Ausgang {0}
+total input {0}: Gesamt Eingang {0}
+total output {0}: Gesamt Ausgang {0}
 year: Jahr
 years: Jahre
 month: Monat
@@ -83,7 +83,7 @@ addresses tagged: beschlagwortete Adressen
 source: Quelle
 target: Ziel
 value: Wert
-"value {0}": Wert {0}
+value {0}: Wert {0}
 timestamp: Zeitstempel
 outgoing address: ausgehende Adresse
 incoming address: eingehende Adresse
@@ -172,10 +172,10 @@ search outgoing neighbors: suche ausgehende Nachbarn
 nothing to display yet: noch nichts anzuzeigen!
 entity_tooltip: Ein Cluster umfasst eine oder mehrere Adressen
 address_tooltip: Eine Adresse kann Coins senden und empfangen
-link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen
-  zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
+link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen zwischen
+  den Knoten gab. Der Geldfluss ist immer von links nach rechts.
 shadow_tooltip: Eine Schattenverbindung verbindet identische Adressen und Cluster.
-"category {0}": Kategorie {0}
+category {0}: Kategorie {0}
 searching outgoing: ausgehenden
 searching incoming: eingehenden
 for outgoing neighbors: nach ausgehenden Nachbarn
@@ -188,13 +188,14 @@ saving to file: speichern in Datei
 go to dashboard: zum Dashboard
 remove tag: Schlagwort löschen
 estimated value: geschätzter Wert
-"estimated value {0}": geschätzter Wert {0}
+estimated value {0}: geschätzter Wert {0}
 estimated total transferred: ungef. transferierter Wert
 total transferred: transferierter Gesamtwert
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
-api-rate-limit-exceeded: API Abfragelimit überschritten. Bitte versuche es später nochmal.
+api-rate-limit-exceeded: API Abfragelimit überschritten. Bitte versuche es später
+  nochmal.
 legend empty: Legende noch leer
 from: von
 to: bis
@@ -227,36 +228,48 @@ service does not respond in time: Service antwortet nicht zeitnah.
 this table is empty: Keine Einträge gefunden.
 Do you want to start from scratch?: Wirklich neu loslegen?
 proprietary tag: Proprietäres Tag
-"loading concepts for taxonomy {0}": lade Konzepte zur Taxonomie {0}
-"{1}: searching for {0}": "{1}: suche nach {0}"
-"{1}: loading address {0}": "{1}: lade Adresse {0}"
-"{1}: loading block {0}": "{1}: lade Block {0}"
-"{1}: loading transaction {0}": "{1}: lade Transaktion {0}"
-"{1}: loading entity {0}": "{1}: lade Cluster {0}"
-"{1}: loading entity for address {0}": "{1}: lade Cluster zur Adresse {0}"
-"{1}: loading input addresses of transaction {0}": "{1}: lade eingehende Adressen der Transaktion {0}"
-"{1}: loading output addresses of transaction {0}": "{1}: lade ausgehende Adressen der Transaktion {0}"
-"{1}: loading outgoing neighbors of entity {0}": "{1}: lade ausgehende Nachbarn von Cluster {0}"
-"{1}: loading incoming neighbors of entity {0}": "{1}: lade eingehende Nachbarn von Cluster {0}"
-"{1}: loading outgoing neighbors of address {0}": "{1}: lade ausgehende Nachbarn von Adresse {0}"
-"{1}: loading incoming neighbors of address {0}": "{1}: lade eingehende Nachbarn von Adresse {0}"
-"{1}: loading {0} addresses": "{1}: lade {0} Adressen"
-"{1}: loading {0} entities": "{1}: lade {0} Cluster"
-"{1}: loading entities of {0} addresses": "{1}: lade Cluster zu {0} Adressen"
-"{1}: loading outgoing neighbors of {0} entities": "{1}: lade ausgehende Nachbarn von {0} Cluster"
-"{1}: loading incoming neighbors of {0} entities": "{1}: lade eingehende Nachbarn von {0} Cluster"
-"{1}: loading outgoing neighbors of {0} addresses": "{1}: lade ausgehende Nachbarn von {0} Adressen"
-"{1}: loading incoming neighbors of {0} addresses": "{1}: lade eingehende Nachbarn von {0} Adressen"
-"{1}: loading tags of address {0}": "{1}: lade Tags der Adresse {0}"
-"{1}: loading tags {0} addresses": "{1}: lade Tags zu {0} Adressen"
-"{1}: loading address tags of entity {0}": "{1}: lade Adress-Tags der Cluster {0}"
-"{1}: loading transactions of address {0}": "{1}: lade Transaktionen der Adresse {0}"
-"{1}: loading transactions of block {0}": "{1}: lade Transaktionen des Blocks {0}"
-"{1}: loading addresses of entity {0}": "{1}: lade Adressen der Cluster {0}"
-"{1}: loading tags with label {0}": "{1}: lade Tags mit Schlagwort {0}"
-"{2}: loading address link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
-"{2}: loading entity link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
-Please try again with a lower depth/breadth setting.: Bitte versuche es mit einem niedrigeren Wert für die Tiefe/Breite.
+'{1}: searching for {0}': '{1}: suche nach {0}'
+'{1}: loading address {0}': '{1}: lade Adresse {0}'
+'{1}: loading block {0}': '{1}: lade Block {0}'
+'{1}: loading transaction {0}': '{1}: lade Transaktion {0}'
+'{1}: loading entity {0}': '{1}: lade Cluster {0}'
+'{1}: loading entity for address {0}': '{1}: lade Cluster zur Adresse {0}'
+'{1}: loading input addresses of transaction {0}': '{1}: lade eingehende Adressen
+  der Transaktion {0}'
+'{1}: loading output addresses of transaction {0}': '{1}: lade ausgehende Adressen
+  der Transaktion {0}'
+'{1}: loading outgoing neighbors of entity {0}': '{1}: lade ausgehende Nachbarn von
+  Cluster {0}'
+'{1}: loading incoming neighbors of entity {0}': '{1}: lade eingehende Nachbarn von
+  Cluster {0}'
+'{1}: loading outgoing neighbors of address {0}': '{1}: lade ausgehende Nachbarn von
+  Adresse {0}'
+'{1}: loading incoming neighbors of address {0}': '{1}: lade eingehende Nachbarn von
+  Adresse {0}'
+'{1}: loading {0} addresses': '{1}: lade {0} Adressen'
+'{1}: loading {0} entities': '{1}: lade {0} Cluster'
+'{1}: loading entities of {0} addresses': '{1}: lade Cluster zu {0} Adressen'
+'{1}: loading outgoing neighbors of {0} entities': '{1}: lade ausgehende Nachbarn
+  von {0} Cluster'
+'{1}: loading incoming neighbors of {0} entities': '{1}: lade eingehende Nachbarn
+  von {0} Cluster'
+'{1}: loading outgoing neighbors of {0} addresses': '{1}: lade ausgehende Nachbarn
+  von {0} Adressen'
+'{1}: loading incoming neighbors of {0} addresses': '{1}: lade eingehende Nachbarn
+  von {0} Adressen'
+'{1}: loading tags of address {0}': '{1}: lade Tags der Adresse {0}'
+'{1}: loading tags {0} addresses': '{1}: lade Tags zu {0} Adressen'
+'{1}: loading address tags of entity {0}': '{1}: lade Adress-Tags der Cluster {0}'
+'{1}: loading transactions of address {0}': '{1}: lade Transaktionen der Adresse {0}'
+'{1}: loading transactions of block {0}': '{1}: lade Transaktionen des Blocks {0}'
+'{1}: loading addresses of entity {0}': '{1}: lade Adressen der Cluster {0}'
+'{1}: loading tags with label {0}': '{1}: lade Tags mit Schlagwort {0}'
+'{2}: loading address link transactions between {0} and {1}': '{2}: lade Transaktionen
+  zwischen {0} and {1}'
+'{2}: loading entity link transactions between {0} and {1}': '{2}: lade Transaktionen
+  zwischen {0} and {1}'
+Please try again with a lower depth/breadth setting.: Bitte versuche es mit einem
+  niedrigeren Wert für die Tiefe/Breite.
 defines entity: definiert Cluster
 delete: löschen
 address statistics not yet computed: Adress-Statistik noch nicht berechnet
@@ -272,48 +285,57 @@ show entity link: Zeige Verbindung der Cluster
 hide entity link: Verberge Verbindung der Cluster
 filter table: Tabelle filtern
 download table as CSV: Tabelle als CSV herunterladen
-"address transactions of {0} ({1})": Transaktionen der Adresse {0} ({1})
-"incoming neighbors of address {0} ({1})": Eingehende Nachbarn der Adresse {0} ({1})
-"outgoing neighbors of address {0} ({1})": Ausgehende Nachbarn der Adresse {0} ({1})
-"incoming neighbors of entity {0} ({1})": Eingehende Nachbarn des Clusters {0} ({1})
-"outgoing neighbors of entity {0} ({1})": Ausgehende Nachbarn des Clusters {0} ({1})
-"addresses of entity {0} ({1})": Adressen des Clusterss {0} ({1})
-"total received assets of address {0} ({1})": Eingänge aller Assets der Adresse {0} ({1})
-"final balance assets of address {0} ({1})": Bilanz aller Assets der Adresse {0} ({1})
-"total received assets of entity {0} ({1})": Eingänge aller Assets des Clusters {0} ({1})
-"final balance assets of entity {0} ({1})": Bilanz aller Assets des Clusters {0} ({1})
+address transactions of {0} ({1}): Transaktionen der Adresse {0} ({1})
+incoming neighbors of address {0} ({1}): Eingehende Nachbarn der Adresse {0} ({1})
+outgoing neighbors of address {0} ({1}): Ausgehende Nachbarn der Adresse {0} ({1})
+incoming neighbors of entity {0} ({1}): Eingehende Nachbarn des Clusters {0} ({1})
+outgoing neighbors of entity {0} ({1}): Ausgehende Nachbarn des Clusters {0} ({1})
+addresses of entity {0} ({1}): Adressen des Clusterss {0} ({1})
+total received assets of address {0} ({1}): Eingänge aller Assets der Adresse {0}
+  ({1})
+final balance assets of address {0} ({1}): Bilanz aller Assets der Adresse {0} ({1})
+total received assets of entity {0} ({1}): Eingänge aller Assets des Clusters {0}
+  ({1})
+final balance assets of entity {0} ({1}): Bilanz aller Assets des Clusters {0} ({1})
 user address tags: Benutzerdefinierte Adress-Schlagwörter
-"transactions of block {0} ({1})": Transaktionen des Blocks {0} ({1})
-"transactions between entities {0} and {1} ({2})": Transaktionen zwischen Clustern {0} und {1} ({2})
-"transactions between addresses {0} and {1} ({2})": Transaktionen zwischen Adressen {0} und {1} ({2})
-"total assets between entities {0} and {1} ({2})": Gesamt Assets zwischen Clustern {0} und {1} ({2})
-"total assets between addresses {0} and {1} ({2})": Gesamt Assets zwischen Adressen {0} und {1} ({2})
-"Incoming values of transaction {0} ({1})": Eingangswerte der Transaktion {0} ({1})
-"Outgoing values of transaction {0} ({1})": Ausgangswerte der Transaktion {0} ({1})
-"{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)":
-  "{6}: Suche {0} von {1} mit {2} (Tiefe: {3}, Breite: {4}, auslassen wenn mehr
-  als {5} Adressen)"
-"Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain.":
-  Adresse nicht gefunden. Entweder ist sie noch nicht in unserer Datenbank
-  eingespielt (aktuell bis Block {0}) oder sie hat bis jetzt noch keine
-  Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert.
-yes: ja
-no: nein
+transactions of block {0} ({1}): Transaktionen des Blocks {0} ({1})
+transactions between entities {0} and {1} ({2}): Transaktionen zwischen Clustern {0}
+  und {1} ({2})
+transactions between addresses {0} and {1} ({2}): Transaktionen zwischen Adressen
+  {0} und {1} ({2})
+total assets between entities {0} and {1} ({2}): Gesamt Assets zwischen Clustern {0}
+  und {1} ({2})
+total assets between addresses {0} and {1} ({2}): Gesamt Assets zwischen Adressen
+  {0} und {1} ({2})
+Incoming values of transaction {0} ({1}): Eingangswerte der Transaktion {0} ({1})
+Outgoing values of transaction {0} ({1}): Ausgangswerte der Transaktion {0} ({1})
+'{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)': '{6}:
+  Suche {0} von {1} mit {2} (Tiefe: {3}, Breite: {4}, auslassen wenn mehr als {5}
+  Adressen)'
+? Address not found. It is possibly not yet in our database (synced up to block {0})
+  or has not received any transactions and is therefore not stored in the blockchain.
+: Adresse nicht gefunden. Entweder ist sie noch nicht in unserer Datenbank eingespielt
+  (aktuell bis Block {0}) oder sie hat bis jetzt noch keine Transaktionen erhalten
+  und ist daher nicht in der Blockchain gespeichert.
+true: ja
+false: nein
 address not found: Adresse nicht gefunden
 addresses not found: Adressen nicht gefunden
-"... and {0} more": ... und {0} weitere
+'... and {0} more': '... und {0} weitere'
 there could be various reasons: Dies kann mehrere Ursachen haben
-they are possibly not yet in our database: Sie sind möglicherweise noch nicht in unsere Datenbank eingespielt
-it is possibly not yet in our database: Sie ist möglicherweise noch nicht in unsere Datenbank eingespielt
-there are no transactions associated with these addresses and they are therefore not found on the blockchain:
-  Sie haben bis jetzt noch keine Transaktionen erhalten und sind daher nicht in
-  der Blockchain gespeichert
-there are no transactions associated with this address and it is therefore not found on the blockchain:
-  Sie hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der
-  Blockchain gespeichert
+they are possibly not yet in our database: Sie sind möglicherweise noch nicht in unsere
+  Datenbank eingespielt
+it is possibly not yet in our database: Sie ist möglicherweise noch nicht in unsere
+  Datenbank eingespielt
+there are no transactions associated with these addresses and they are therefore not found on the blockchain: Sie
+  haben bis jetzt noch keine Transaktionen erhalten und sind daher nicht in der Blockchain
+  gespeichert
+there are no transactions associated with this address and it is therefore not found on the blockchain: Sie
+  hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der Blockchain
+  gespeichert
 there are typos: Es gibt Tippfehler
 smart contract: Smart contract
-"token transactions of {0} ({1})": Token-Transaktionen von {0} ({1})
+token transactions of {0} ({1}): Token-Transaktionen von {0} ({1})
 loading supported token currencies: lade unterstützte Token-Währungen
 Actor: Akteur
 Actors: Akteure
@@ -343,8 +365,9 @@ Load graph from .gs file: Eine bestehende .gs Datei laden
 try an example: Beispiele
 open in new tab: In neuem Tab öffnen
 show zero value transactions: Transaktionen ohne Wert anzeigen
-no rows match your filter criteria: Keine Einträge vorhanden, die Ihren Filtereinstellungen entsprechen
-add label: Beschriftung 
+no rows match your filter criteria: Keine Einträge vorhanden, die Ihren Filtereinstellungen
+  entsprechen
+add label: Beschriftung
 pick a color to highlight things: Bitte Farbe wählen um Dinge einzufärben
 Reset Filter: Filter Zurücksetzen
 open: öffnen
@@ -425,17 +448,27 @@ Selection tool: Auswahl Werkzeug
 Display Settings: Anzeige Einstellungen
 Display settings: Anzeige Einstellungen
 Open: Öffnen
-"Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel.": "Die automatische Nachverfolgung endet an Adressen von Diensten, da die Vermögensströme in der Regel nicht über diese Dienste verfolgt werden können. Diese Einschränkung ist darauf zurückzuführen, dass Dienste oft als Blackboxen fungieren und Gelder von Nutzern vermischen. Sie können ausgehende Transaktionen immer noch manuell verfolgen, indem Sie die im Seitenbereich verfügbaren Verfolgungsoptionen verwenden."
+? Auto tracing stops at service addresses, as asset flows typically cannot be traced
+  through these services. This limitation occurs because services often act as black
+  boxes, mixing user funds. You can still manually trace outgoing transactions using
+  the tracing options available in the side panel.
+: Die automatische Nachverfolgung endet an Adressen von Diensten, da die Vermögensströme
+  in der Regel nicht über diese Dienste verfolgt werden können. Diese Einschränkung
+  ist darauf zurückzuführen, dass Dienste oft als Blackboxen fungieren und Gelder
+  von Nutzern vermischen. Sie können ausgehende Transaktionen immer noch manuell verfolgen,
+  indem Sie die im Seitenbereich verfügbaren Verfolgungsoptionen verwenden.
 Copy address ID: Adress ID kopieren
 Copy transaction ID: Transaktions ID kopieren
 Remove from graph: Vom Graphen entfernen
 victim: Opfer
 perpetrator: Täter
-"Auto trace limit": "Beschränkung der Auto-Nachverfolgung"
-"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Keine passende Anschlusstransaktion für Adresse {0} gefunden. Wahrscheinlich wurde der Betrag noch nicht weiter verwendet."
+Auto trace limit: Beschränkung der Auto-Nachverfolgung
+Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.: Keine
+  passende Anschlusstransaktion für Adresse {0} gefunden. Wahrscheinlich wurde der
+  Betrag noch nicht weiter verwendet.
 is an exchange: ist eine Handelsbörse
 has tags: hat Tags
-"Tag label": "Beschriftung"
+Tag label: Beschriftung
 copy: kopieren
 possible service: mögl. service
 Save file: Als Datei speichen
@@ -445,15 +478,21 @@ Reset: Zurücksetzen
 Apply filter: Filtern
 Mention: Erwähnung
 Tags list: Schlagwortliste
-mentionTagDescriptionId: Ein Erwähnungs-Tag besagt, dass diese Adresse z. B. auf einer Website erwähnt wurde. Das kann von Bedeutung sein, aber es hängt vom Kontext ab.
-actorTagDescriptionId: Ein Akteurs-Tag ist eine Aussage über die Partei, die die Adresse kontrolliert.
-eventTagDescriptionId: Ein Ereignis-Tag ist eine Aussage über ein Ereignis, das in Bezug auf diese Adresse stattgefunden hat, z. B. ob die Adresse Teil eines Hacks war.
-attributeTagDescriptionId: Ein Attribut-Tag beschreibt eine Eigenschaft der Adresse, z. B. ob sie für einen bestimmten Zweck verwendet wird.
-"Note: This tag was inherited from the cluster level.": "Notiz: Dieser Tag wurde vom Cluster vererbt."
-"Learn more": "Mehr info"
-"Low confidence": "Geringe Zuversicht"
-"Medium confidence": "Mittlere Zuversicht"
-"High confidence": "Hohe Zuversicht"
+mentionTagDescriptionId: Ein Erwähnungs-Tag besagt, dass diese Adresse z. B. auf einer
+  Website erwähnt wurde. Das kann von Bedeutung sein, aber es hängt vom Kontext ab.
+actorTagDescriptionId: Ein Akteurs-Tag ist eine Aussage über die Partei, die die Adresse
+  kontrolliert.
+eventTagDescriptionId: Ein Ereignis-Tag ist eine Aussage über ein Ereignis, das in
+  Bezug auf diese Adresse stattgefunden hat, z. B. ob die Adresse Teil eines Hacks
+  war.
+attributeTagDescriptionId: Ein Attribut-Tag beschreibt eine Eigenschaft der Adresse,
+  z. B. ob sie für einen bestimmten Zweck verwendet wird.
+'Note: This tag was inherited from the cluster level.': 'Notiz: Dieser Tag wurde vom
+  Cluster vererbt.'
+Learn more: Mehr info
+Low confidence: Geringe Zuversicht
+Medium confidence: Mittlere Zuversicht
+High confidence: Hohe Zuversicht
 More: Mehr
 related addresses: verwandte Adressen
 cluster addresses: Cluster-Adressen
@@ -461,97 +500,128 @@ tagged cluster addresses: Cluster-Adressen mit Schlagwort
 all cluster addresses: Alle Cluster-Adressen
 type: Typ
 cluster information: Cluster Info
-"{0} per {1}": "{0} pro {1}"
-"Request limit exceeded": "Abfrage-Limit erreicht"
-"The request limit of your API key of {0} per {1} has been exceeded.": "Begrenzung der API Abfragen von {0} pro {1} erreicht."
-"The request limit of your API key has been exceeded.": "Begrenzung der API Abfragen erreicht."
-"Removed {0} transactions": "{0} Transaktionen entfernt"
-"Added {0} transactions": "{0} Transaktionen hinzugefügt"
+'{0} per {1}': '{0} pro {1}'
+Request limit exceeded: Abfrage-Limit erreicht
+The request limit of your API key of {0} per {1} has been exceeded.: Begrenzung der
+  API Abfragen von {0} pro {1} erreicht.
+The request limit of your API key has been exceeded.: Begrenzung der API Abfragen
+  erreicht.
+Removed {0} transactions: '{0} Transaktionen entfernt'
+Added {0} transactions: '{0} Transaktionen hinzugefügt'
 Asset flows: Zahlungsflüsse
-"Attribution tag on this address.": "Attribution an dieser Adresse."
-"Direct Tag": "Direktes Tag"
-"Attribution tag inferred via clustering.": "Über Clusterassoziation abgeleitete Attribution."
-"Indirect Tag": "Indirektes Tag"
-"The first address or transaction added to the graph.": "Die erste Adresse oder Transaktion, die dem Diagramm hinzugefügt wurde."
-"Starting Point": "Startpunkt"
-"The address or transaction currently selected.": "Die aktuell ausgewählte Adresse oder Transaktion."
-"You Are Here": "Sie sind hier"
-"No known identity.": "Keine Identität bekannt."
-"Unlabeled Address": "Unbeschriftete Adresse"
-"Unlabeled Transaction": "Unbeschriftete Transaktion"
-"A direct transfer of an asset from one wallet to another.": "Direkter Transfer eines Assets von einer Wallet zu einer anderen."
-"A simplified path that combines all of a swaps's underlying transfers.": "Ein vereinfachter Pfad, der alle zugrunde liegenden Transfers eines Swaps kombiniert."
-"Swap/Bridge Transaction": "Swap/Bridge Transaktion"
-"Known cryptoasset exchange.": "Bekannte Kryptoasset-Exchange."
-"Exchange": "Exchange"
-"Might be a service (e.g. high activity), but not confirmed.": "Möglicherweise ein Dienst (z. B. hohe Aktivität), aber nicht bestätigt."
-"Possible Service": "Möglicher Service"
-"Known entity such as a business or institution.": "Bekannte Einrichtung wie ein Unternehmen oder eine Institution."
-"Institution": "Einrichtung"
-"Programmed address for automated transactions.": "Programmierte Adresse für automatisierte Transaktionen."
-"Smart Contract": "Smart Contract"
-"Symbol Guide": "Symbol Legende"
-"Graph Nodes": "Graph-Knoten"
-"Additional Icons": "Zusätzliche Icons"
-"Transaction Filter": "Transaktionsfilter"
-"Date Range": "Zeitraum"
-"Select date range": "Zeitraum auswählen"
-"Transaction Direction": "Transaktionsrichtung"
-"All transactions": "Alle Transaktionen"
-"Incoming only": "Nur eingehende"
-"Outgoing only": "Nur ausgehende"
-"Done": "Anwenden"
-"Asset Type": "Asset Typ"
-"e.g. Binance": "z.B. Binance"
-"Start typing to search existing labels.": "Beginnen Sie mit der Eingabe, um nach vorhandenen Akteuren zu suchen."
-"Actor Label *": "Akteur *"
-"Add context, notes, or links to supporting evidence.": "Fügen Sie Kontext, Notizen oder Links zu unterstützenden Beweisen hinzu."
-"Additional Information (optional)": "Zusätzliche Informationen (optional)"
-"e.g. Linked to scam report on xyz.com": "z.B. Verknüpft mit einem Betrugsbericht auf xyz.com"
-"Add Tag": "Tag hinzufügen"
-"Add_Tag_description": "Helfen Sie mit, unsere Daten zu verbessern, indem Sie eine Entität melden, die mit dieser Adresse verbunden ist - Ihre Eingaben werden geprüft und gegebenenfalls veröffentlicht." 
-"Add Tag to Address": "Einen Tag melden"
-"Report a tag": "Ein Tag melden"
-"Report tag": "Tag melden"
-"Create new actor": "Neuen Akteur erstellen"
-"Added Tag": "Tag hinzugefügt"
+Attribution tag on this address.: Attribution an dieser Adresse.
+Direct Tag: Direktes Tag
+Attribution tag inferred via clustering.: Über Clusterassoziation abgeleitete Attribution.
+Indirect Tag: Indirektes Tag
+The first address or transaction added to the graph.: Die erste Adresse oder Transaktion,
+  die dem Diagramm hinzugefügt wurde.
+Starting Point: Startpunkt
+The address or transaction currently selected.: Die aktuell ausgewählte Adresse oder
+  Transaktion.
+You Are Here: Sie sind hier
+No known identity.: Keine Identität bekannt.
+Unlabeled Address: Unbeschriftete Adresse
+Unlabeled Transaction: Unbeschriftete Transaktion
+A direct transfer of an asset from one wallet to another.: Direkter Transfer eines
+  Assets von einer Wallet zu einer anderen.
+A simplified path that combines all of a swaps's underlying transfers.: Ein vereinfachter
+  Pfad, der alle zugrunde liegenden Transfers eines Swaps kombiniert.
+Swap/Bridge Transaction: Swap/Bridge Transaktion
+Known cryptoasset exchange.: Bekannte Kryptoasset-Exchange.
+Exchange: Exchange
+Might be a service (e.g. high activity), but not confirmed.: Möglicherweise ein Dienst
+  (z. B. hohe Aktivität), aber nicht bestätigt.
+Possible Service: Möglicher Service
+Known entity such as a business or institution.: Bekannte Einrichtung wie ein Unternehmen
+  oder eine Institution.
+Institution: Einrichtung
+Programmed address for automated transactions.: Programmierte Adresse für automatisierte
+  Transaktionen.
+Smart Contract: Smart Contract
+Symbol Guide: Symbol Legende
+Graph Nodes: Graph-Knoten
+Additional Icons: Zusätzliche Icons
+Transaction Filter: Transaktionsfilter
+Date Range: Zeitraum
+Select date range: Zeitraum auswählen
+Transaction Direction: Transaktionsrichtung
+All transactions: Alle Transaktionen
+Incoming only: Nur eingehende
+Outgoing only: Nur ausgehende
+Done: Anwenden
+Asset Type: Asset Typ
+e.g. Binance: z.B. Binance
+Start typing to search existing labels.: Beginnen Sie mit der Eingabe, um nach vorhandenen
+  Akteuren zu suchen.
+Actor Label *: Akteur *
+Add context, notes, or links to supporting evidence.: Fügen Sie Kontext, Notizen oder
+  Links zu unterstützenden Beweisen hinzu.
+Additional Information (optional): Zusätzliche Informationen (optional)
+e.g. Linked to scam report on xyz.com: z.B. Verknüpft mit einem Betrugsbericht auf
+  xyz.com
+Add Tag: Tag hinzufügen
+Add_Tag_description: Helfen Sie mit, unsere Daten zu verbessern, indem Sie eine Entität
+  melden, die mit dieser Adresse verbunden ist - Ihre Eingaben werden geprüft und
+  gegebenenfalls veröffentlicht.
+Add Tag to Address: Einen Tag melden
+Report a tag: Ein Tag melden
+Report tag: Tag melden
+Create new actor: Neuen Akteur erstellen
+Added Tag: Tag hinzugefügt
 Tag Import: Tag-Import
-"tag-import-feedback": "Nur {0} von {1} Tags wurden importiert. {2} Tags konnten nicht angewendet werden, da ihre Adressen nicht im Pathfinder vorhanden sind."
+tag-import-feedback: Nur {0} von {1} Tags wurden importiert. {2} Tags konnten nicht
+  angewendet werden, da ihre Adressen nicht im Pathfinder vorhanden sind.
 asset transfers between: Werte-Transfer zwischen
 one more asset: ein weiterer Vermögenswert
-"{0} more assets": "{0} weitere Vermögenswerte"
+'{0} more assets': '{0} weitere Vermögenswerte'
 track funds: Werte verfolgen
 view network: Netzwerk einsehen
 Relationships: Beziehungen
 Relationship-based: Beziehungsbasiert
 Transaction-based: Transaktionsbasiert
 Annotate transaction: Transaktion annotieren
-"loading Swaps and Briding events for Tx {0}: {1}": "Lade Swaps und Bridging-Ereignisse für Transaktion {0}: {1}"
-"Related by Multi-Input Heuristic": "Multi-Input-Heuristik"
-"Related by Public Key": "Gleicher öffentlicher Schlüssel"
-"Sub Transfers": "Untertransfers"
-"Exclude Zero Value Transfers": "Transfers mit Nullwert ausschließen"
-"No zero value": "Ohne Nullwert"
-"All Values": "Alle Werte"
-"Multi Input Cluster Help": "Adressen wurden zusammen in Transaktionen verwendet (dh. wahrscheinlich durch derselben Besitzer)."
-"Pubkey Cluster Help": "Adressen wurden durch denselben Schlüssel erzeugt (dh. durch derselben Besitzer)."
-"Bridge Transaction": "Bridge Transaktion"
-"Swap Transaction": "Swap Transaktion"
-"Swap Transactions": "Swap Transaktionenen"
-"Bridge Transactions": "Bridge Transaktionen"
-"Input Values": "Eingabewerte"
-"Output Values": "Ausgabewerte"
+'loading Swaps and Briding events for Tx {0}: {1}': 'Lade Swaps und Bridging-Ereignisse
+  für Transaktion {0}: {1}'
+Related by Multi-Input Heuristic: Multi-Input-Heuristik
+Related by Public Key: Gleicher öffentlicher Schlüssel
+Sub Transfers: Untertransfers
+Exclude Zero Value Transfers: Transfers mit Nullwert ausschließen
+No zero value: Ohne Nullwert
+All Values: Alle Werte
+Multi Input Cluster Help: Adressen wurden zusammen in Transaktionen verwendet (dh.
+  wahrscheinlich durch derselben Besitzer).
+Pubkey Cluster Help: Adressen wurden durch denselben Schlüssel erzeugt (dh. durch
+  derselben Besitzer).
+Bridge Transaction: Bridge Transaktion
+Swap Transaction: Swap Transaktion
+Swap Transactions: Swap Transaktionenen
+Bridge Transactions: Bridge Transaktionen
+Input Values: Eingabewerte
+Output Values: Ausgabewerte
 back: zurück
-"Please provide at least {0} characters": "Bitte mindestens {0} Zeichen eingeben"
-"No results found.": "Keine Ergebnisse gefunden."
-pf1_deprecation_notice: "Pathfinder 1.0 ist veraltet und wird bald entfernt. Bitte wechseln Sie zum neuen Pathfinder, der über die Seitenleiste verfügbar ist. Haben Sie Probleme mit der Entfernung des alten Pathfinders? Kontaktieren Sie den Support per E-Mail unter contact@ikna.io."
-"Deprecation Notice": "Ende des Supports"
-"Warning:": "Achtung:"
-tags_release_warnings: "Die von Ihnen hinzugefügten Tags sind für alle Benutzer sichtbar. Bitte stellen Sie sicher, dass Ihre Tags keine urheberrechtsverletzenden Materialien enthalten, wie z. B. Tags oder Inhalte von anderen Tool-Anbietern. Geben Sie außerdem keine fallbezogenen oder sensiblen Informationen öffentlich preis."
-tx-tracing-mode-help-text: "Im transaktionsbasierten Modus können Sie den Fluss von Vermögenswerten durch einzelne Transaktionen nachverfolgen. Dieser Modus ist nützlich, um bestimmte Transaktionen zu verfolgen und deren Verlauf zu verstehen."
-tx-relationship-mode-help-text: "Im beziehungsbasierten Modus können Sie die Beziehungen zwischen verschiedenen Entitäten auf der Grundlage aggregierter Transaktionsdaten erkunden. Dieser Modus hilft, Muster und Verbindungen zwischen Entitäten über mehrere Transaktionen hinweg zu identifizieren."
-cluster-details-info-help-text: "Cluster Info bietet Statistiken über alle Adressen im Cluster, einschließlich aggregierter Salden und Transaktionszahlen. Cluster werden basierend auf der Multi-Input-Heuristik erstellt."
-"Show transaction hash": "Tx-Hash anzeigen"
+Please provide at least {0} characters: Bitte mindestens {0} Zeichen eingeben
+No results found.: Keine Ergebnisse gefunden.
+pf1_deprecation_notice: Pathfinder 1.0 ist veraltet und wird bald entfernt. Bitte
+  wechseln Sie zum neuen Pathfinder, der über die Seitenleiste verfügbar ist. Haben
+  Sie Probleme mit der Entfernung des alten Pathfinders? Kontaktieren Sie den Support
+  per E-Mail unter contact@ikna.io.
+Deprecation Notice: Ende des Supports
+'Warning:': 'Achtung:'
+tags_release_warnings: Die von Ihnen hinzugefügten Tags sind für alle Benutzer sichtbar.
+  Bitte stellen Sie sicher, dass Ihre Tags keine urheberrechtsverletzenden Materialien
+  enthalten, wie z. B. Tags oder Inhalte von anderen Tool-Anbietern. Geben Sie außerdem
+  keine fallbezogenen oder sensiblen Informationen öffentlich preis.
+tx-tracing-mode-help-text: Im transaktionsbasierten Modus können Sie den Fluss von
+  Vermögenswerten durch einzelne Transaktionen nachverfolgen. Dieser Modus ist nützlich,
+  um bestimmte Transaktionen zu verfolgen und deren Verlauf zu verstehen.
+tx-relationship-mode-help-text: Im beziehungsbasierten Modus können Sie die Beziehungen
+  zwischen verschiedenen Entitäten auf der Grundlage aggregierter Transaktionsdaten
+  erkunden. Dieser Modus hilft, Muster und Verbindungen zwischen Entitäten über mehrere
+  Transaktionen hinweg zu identifizieren.
+cluster-details-info-help-text: Cluster Info bietet Statistiken über alle Adressen
+  im Cluster, einschließlich aggregierter Salden und Transaktionszahlen. Cluster werden
+  basierend auf der Multi-Input-Heuristik erstellt.
+Show transaction hash: Tx-Hash anzeigen
 Attribute: Attribut
 tx_hash: Transaktionshash
 token_tx_id: Sub-Transaktions-ID
@@ -566,12 +636,16 @@ no_inputs: Eingänge
 no_outputs: Ausgänge
 total_input: Eingangswerte Gesamt
 total_output: Ausgangswerte Gesamt
-"Multiple search terms detected ({0}). Please hit enter to add.": "Mehrere Suchbegriffe erkannt ({0}). Bitte Enter drücken, um hinzuzufügen."
-there_were_more_rows_for_csv_download: Das Downloaden von CSV Daten ist auf ca. {0} Zeilen beschränkt. 
-there_were_more_rows_for_csv_download_info: Bitte verwenden Sie die Filteroptionen, um den Datenbereich genauer einzugrenzen.
-success_download_csv: "{0} Datensätze als CSV heruntergeladen"
-"Address transactions of {0} ({1})": "Transaktionen der Adresse {0} ({1})"
-"Transactions from {0} to {1} ({2})": "Transaktionen von {0} nach {1} ({2})"
+Multiple search terms detected ({0}). Please hit enter to add.: Mehrere Suchbegriffe
+  erkannt ({0}). Bitte Enter drücken, um hinzuzufügen.
+there_were_more_rows_for_csv_download: Das Downloaden von CSV Daten ist auf ca. {0}
+  Zeilen beschränkt.
+there_were_more_rows_for_csv_download_info: Bitte verwenden Sie die Filteroptionen,
+  um den Datenbereich genauer einzugrenzen.
+success_download_csv: '{0} Datensätze als CSV heruntergeladen'
+Address transactions of {0} ({1}): Transaktionen der Adresse {0} ({1})
+Transactions from {0} to {1} ({2}): Transaktionen von {0} nach {1} ({2})
 fee: Gebühr
 sending_address_label: Sender Akteur
 receiving_address_label: Empfänger Akteur
+statusbar-loading-concepts: lade Konzepte zur Taxonomie {0}

@@ -10,20 +10,20 @@ def replace_in_yaml_files(yaml_dir, old_key, new_key):
             continue
         filepath = os.path.join(yaml_dir, filename)
         with open(filepath, 'r') as file:
-            try:
-                data = yaml.safe_load(file)
-                if new_key in data:
-                    print(f"{new_key} already exists in {filename}")
-                    continue
-                if old_key not in data:
-                    print(f"{old_key} not found in {filename}")
-                    continue
-                data[new_key] = data[old_key]
-                data.pop(old_key)
-                with open(filepath, 'w') as outfile:
-                    yaml.dump(data, outfile, default_flow_style=False)
-            except yaml.YAMLError as e:
-                print(f"Error processing {filename}: {e}")
+            data = yaml.safe_load(file)
+        try:
+            if new_key in data:
+                print(f"{new_key} already exists in {filename}")
+                continue
+            if old_key not in data:
+                print(f"{old_key} not found in {filename}")
+                continue
+            data[new_key] = data[old_key]
+            data.pop(old_key)
+            with open(filepath, 'w') as outfile:
+                yaml.dump(data, outfile, default_flow_style=False, allow_unicode=True)
+        except yaml.YAMLError as e:
+            print(f"Error processing {filename}: {e}")
 
 def replace_in_elm_files(elm_dir, old_string, new_string):
     """Replace strings in Elm files."""

@@ -1,7 +1,7 @@
 address: indirizzo
 addresses: indirizzi
-"{0} address": "{0} indirizzo"
-"{0} addresses": "{0} indirizzi"
+'{0} address': '{0} indirizzo'
+'{0} addresses': '{0} indirizzi'
 entity: entità
 entities: entità
 transaction: transazione
@@ -18,7 +18,7 @@ supported currencies: valute supportate
 ledger statistics: statistiche del ledger
 last update: ultimo aggiornamento
 latest block: ultimo blocco
-"address, transaction, label, block": indirizzo, transazione, identificativo, blocco
+address, transaction, label, block: indirizzo, transazione, identificativo, blocco
 currency: cryptoasset
 transfers: trasferimenti
 withdrawals: prelievi
@@ -37,18 +37,18 @@ last usage: ultimo utilizzo
 activity period: periodo di attività
 total received: totale ricevuto
 total sent: totale inviato
-"total received {0}": totale ricevuto {0}
+total received {0}: totale ricevuto {0}
 final balance: saldo finale
-"final balance {0}": saldo finale {0}
+final balance {0}: saldo finale {0}
 entity balance: saldo dell'entità
 Balance: saldo
-"entity balance {0}": saldo dell'entità {0}
+entity balance {0}: saldo dell'entità {0}
 address balance: saldo dell'indirizzo
-"address balance {0}": saldo dell'indirizzo {0}
+address balance {0}: saldo dell'indirizzo {0}
 entity received: ricevuto dall'entità
-"entity received {0}": ricevuto dall'entità {0}
+entity received {0}: ricevuto dall'entità {0}
 address received: ricevuto dall'indirizzo
-"address received {0}": ricevuto dall'indirizzo {0}
+address received {0}: ricevuto dall'indirizzo {0}
 category: categoria
 categories: categorie
 abuse: abuso
@@ -62,8 +62,8 @@ no. inputs: nr. di input
 no. outputs: nr. di output
 total input: input totale
 total output: output totale
-"total input {0}": input totale {0}
-"total output {0}": output totale {0}
+total input {0}: input totale {0}
+total output {0}: output totale {0}
 year: anno
 years: anni
 month: mese
@@ -80,7 +80,7 @@ addresses tagged: indirizzi identificati
 source: fonte
 target: destinatario
 value: valore
-"value {0}": valore {0}
+value {0}: valore {0}
 timestamp: timestamp
 outgoing address: indirizzo in uscita
 incoming address: indirizzo in entrata
@@ -169,9 +169,10 @@ search outgoing neighbors: cerca vicini in uscita
 nothing to display yet: ancora nulla da visualizzare
 entity_tooltip: un'entità comprende uno o più indirizzi
 address_tooltip: un indirizzo può inviare e ricevere monete
-link_tooltip: un collegamento indica che sono presenti una o più transazioni tra i nodi. Il flusso di denaro è sempre da sinistra a destra.
+link_tooltip: un collegamento indica che sono presenti una o più transazioni tra i
+  nodi. Il flusso di denaro è sempre da sinistra a destra.
 shadow_tooltip: un collegamento 'shadow' collega indirizzi e entità identici
-"category {0}": categoria {0}
+category {0}: categoria {0}
 searching outgoing: cerca in uscita
 searching incoming: cerca in entrata
 for outgoing neighbors: per vicini in uscita
@@ -184,11 +185,12 @@ saving to file: salvataggio su file
 go to dashboard: vai alla Dashboard
 remove tag: rimuovi identificativo
 estimated value: valore stimato
-"estimated value {0}": valore stimato {0}
+estimated value {0}: valore stimato {0}
 reorder to prioritize: riordina per priorità
 tag coherence: coerenza dell'identificativo
 unknown: sconosciuto
-API rate limit exceeded. Please try again later.: limite API raggiunto. Riprova più tardi.
+API rate limit exceeded. Please try again later.: limite API raggiunto. Riprova più
+  tardi.
 legend empty: legenda vuota
 from: da
 to: A
@@ -216,40 +218,57 @@ data error: errore nei dati
 this table is empty: questa tabella è vuota
 Do you want to start from scratch?: iniziare davvero dall'inizio?
 proprietary tag: identificativi proprietari
-"loading concepts for taxonomy {0}": caricamento concetti per la tassonomia {0}
-"{1}: Searching for {0}": "{1}: Cerca {0}"
-"{1}: Loading address {0}": "{1}: Caricamento indirizzo {0}"
-"{1}: Loading block {0}": "{1}: Caricamento blocco {0}"
-"{1}: Loading transaction {0}": "{1}: Caricamento transazione {0}"
-"{1}: Loading entity {0}": "{1}: Caricamento entità {0}"
-"{1}: Loading entity for address {0}": "{1}: Caricamento entità per indirizzo {0}"
-"{1}: Loading input addresses of transaction {0}": "{1}: Caricamento indirizzi input della transazione {0}"
-"{1}: Loading output addresses of transaction {0}": "{1}: Caricamento indirizzi output della transazione {0}"
-"{1}: Loading outgoing neighbors of entity {0}": "{1}: Caricamento vicini in uscita dell'entità {0}"
-"{1}: Loading incoming neighbors of entity {0}": "{1}: Caricamento vicini in entrata dell'entità {0}"
-"{1}: Loading outgoing neighbors of address {0}": "{1}: Caricamento vicini in uscita dell'indirizzo {0}"
-"{1}: Loading incoming neighbors of address {0}": "{1}: Caricamento vicini in entrata dell'indirizzo {0}"
-"{1}: loading {0} addresses": "{1}: Caricamento {0} indirizzi"
-"{1}: loading {0} entities": "{1}: Caricamento {0} entità"
-"{1}: loading entities of {0} addresses": "{1}: Caricamento entità di {0} indirizzi"
-"{1}: loading outgoing neighbors of {0} entities": "{1}: Caricamento vicini in uscita di {0} entità"
-"{1}: loading incoming neighbors of {0} entities": "{1}: Caricamento vicini in entrata di {0} entità"
-"{1}: loading outgoing neighbors of {0} addresses": "{1}: Caricamento vicini in uscita di {0} indirizzi"
-"{1}: loading incoming neighbors of {0} addresses": "{1}: Caricamento vicini in entrata di {0} indirizzi"
-"{1}: loading tags of address {0}": "{1}: Caricamento identificativi dell'indirizzo {0}"
-"{1}: loading tags {0} addresses": "{1}: Caricamento identificativi di {0} indirizzi"
-"{1}: loading address tags of entity {0}": "{1}: Caricamento identificativi dell'indirizzo dell'entità {0}"
-"{1}: loading transactions of address {0}": "{1}: Caricamento transazioni dell'indirizzo {0}"
-"{1}: loading transactions of block {0}": "{1}: Caricamento transazioni del blocco {0}"
-"{1}: loading addresses of entity {0}": "{1}: Caricamento indirizzi dell'entità {0}"
-"{1}: loading tags with label {0}": "{1}: Caricamento tags con identificativo {0}"
-"{2}: loading address link transactions between {0} and {1}": "{2}: Caricamento transazioni di collegamento dell'indirizzo tra {0} e {1}"
-"{2}: loading entity link transactions between {0} and {1}": "{2}: Caricamento transazioni di collegamento dell'entità tra {0} e {1}"
-Please try again with a lower depth/breadth setting.: per favore riprova con un parametro di profondità/ampiezza inferiore.
+'{1}: Searching for {0}': '{1}: Cerca {0}'
+'{1}: Loading address {0}': '{1}: Caricamento indirizzo {0}'
+'{1}: Loading block {0}': '{1}: Caricamento blocco {0}'
+'{1}: Loading transaction {0}': '{1}: Caricamento transazione {0}'
+'{1}: Loading entity {0}': '{1}: Caricamento entità {0}'
+'{1}: Loading entity for address {0}': '{1}: Caricamento entità per indirizzo {0}'
+'{1}: Loading input addresses of transaction {0}': '{1}: Caricamento indirizzi input
+  della transazione {0}'
+'{1}: Loading output addresses of transaction {0}': '{1}: Caricamento indirizzi output
+  della transazione {0}'
+'{1}: Loading outgoing neighbors of entity {0}': '{1}: Caricamento vicini in uscita
+  dell''entità {0}'
+'{1}: Loading incoming neighbors of entity {0}': '{1}: Caricamento vicini in entrata
+  dell''entità {0}'
+'{1}: Loading outgoing neighbors of address {0}': '{1}: Caricamento vicini in uscita
+  dell''indirizzo {0}'
+'{1}: Loading incoming neighbors of address {0}': '{1}: Caricamento vicini in entrata
+  dell''indirizzo {0}'
+'{1}: loading {0} addresses': '{1}: Caricamento {0} indirizzi'
+'{1}: loading {0} entities': '{1}: Caricamento {0} entità'
+'{1}: loading entities of {0} addresses': '{1}: Caricamento entità di {0} indirizzi'
+'{1}: loading outgoing neighbors of {0} entities': '{1}: Caricamento vicini in uscita
+  di {0} entità'
+'{1}: loading incoming neighbors of {0} entities': '{1}: Caricamento vicini in entrata
+  di {0} entità'
+'{1}: loading outgoing neighbors of {0} addresses': '{1}: Caricamento vicini in uscita
+  di {0} indirizzi'
+'{1}: loading incoming neighbors of {0} addresses': '{1}: Caricamento vicini in entrata
+  di {0} indirizzi'
+'{1}: loading tags of address {0}': '{1}: Caricamento identificativi dell''indirizzo
+  {0}'
+'{1}: loading tags {0} addresses': '{1}: Caricamento identificativi di {0} indirizzi'
+'{1}: loading address tags of entity {0}': '{1}: Caricamento identificativi dell''indirizzo
+  dell''entità {0}'
+'{1}: loading transactions of address {0}': '{1}: Caricamento transazioni dell''indirizzo
+  {0}'
+'{1}: loading transactions of block {0}': '{1}: Caricamento transazioni del blocco
+  {0}'
+'{1}: loading addresses of entity {0}': '{1}: Caricamento indirizzi dell''entità {0}'
+'{1}: loading tags with label {0}': '{1}: Caricamento tags con identificativo {0}'
+'{2}: loading address link transactions between {0} and {1}': '{2}: Caricamento transazioni
+  di collegamento dell''indirizzo tra {0} e {1}'
+'{2}: loading entity link transactions between {0} and {1}': '{2}: Caricamento transazioni
+  di collegamento dell''entità tra {0} e {1}'
+Please try again with a lower depth/breadth setting.: per favore riprova con un parametro
+  di profondità/ampiezza inferiore.
 defines entity: definisce l'entità
 delete: elimina
 address statistics not yet computed: statistiche dell'indirizzo ancora non completate
-address statistics might be out of date: le statistiche dell'indirizzo potrebbero non essere aggiornate
+address statistics might be out of date: le statistiche dell'indirizzo potrebbero
+  non essere aggiornate
 no external transactions: nessuna transazione esterna
 show shadow links: mostra collegamenti nascosti
 Timezone: fuso orario
@@ -261,33 +280,48 @@ show entity link: mostra collegamento dell'entità
 hide entity link: nascondi collegamento dell'entità
 filter table: filtra tabella
 download table as CSV: scarica la tabella in formato CSV
-"address transactions of {0} ({1})": transazioni dell'indirizzo {0} ({1})
-"incoming neighbors of address {0} ({1})": vicini in entrata dell'indirizzo {0} ({1})
-"outgoing neighbors of address {0} ({1})": vicini in uscita dell'indirizzo {0} ({1})
-"incoming neighbors of entity {0} ({1})": vicini in entrata dell'entità {0} ({1})
-"outgoing neighbors of entity {0} ({1})": vicini in uscita dell'entità {0} ({1})
-"addresses of entity {0} ({1})": indirizzi dell'entità {0} ({1})
+address transactions of {0} ({1}): transazioni dell'indirizzo {0} ({1})
+incoming neighbors of address {0} ({1}): vicini in entrata dell'indirizzo {0} ({1})
+outgoing neighbors of address {0} ({1}): vicini in uscita dell'indirizzo {0} ({1})
+incoming neighbors of entity {0} ({1}): vicini in entrata dell'entità {0} ({1})
+outgoing neighbors of entity {0} ({1}): vicini in uscita dell'entità {0} ({1})
+addresses of entity {0} ({1}): indirizzi dell'entità {0} ({1})
 user address tags: identificativi dell'indirizzo utente
-"transactions of block {0} ({1})": transazioni del blocco {0} ({1})
-"transactions between entities {0} and {1} ({2})": transazioni tra entità {0} e {1} ({2})
-"transactions between addresses {0} and {1} ({2})": transazioni tra indirizzi {0} e {1} ({2})
-"Incoming values of transaction {0} ({1})": valori in entrata della transazione {0} ({1})
-"Outgoing values of transaction {0} ({1})": valori in uscita della transazione {0} ({1})
-"{6}: Searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)": "{6}: Cerca {0} di {1} con {2} (profondità: {3}, ampiezza: {4}, salta se ci sono più di {5} indirizzi)"
-"Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain.": Indirizzo non trovato. Potrebbe non essere ancora nel database (sincronizzato al blocco {0}) oppure non ha ancora ricevuto transazioni e quindi non è archiviato nella blockchain.
-yes: sì
-no: no
+transactions of block {0} ({1}): transazioni del blocco {0} ({1})
+transactions between entities {0} and {1} ({2}): transazioni tra entità {0} e {1}
+  ({2})
+transactions between addresses {0} and {1} ({2}): transazioni tra indirizzi {0} e
+  {1} ({2})
+Incoming values of transaction {0} ({1}): valori in entrata della transazione {0}
+  ({1})
+Outgoing values of transaction {0} ({1}): valori in uscita della transazione {0} ({1})
+'{6}: Searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)': '{6}:
+  Cerca {0} di {1} con {2} (profondità: {3}, ampiezza: {4}, salta se ci sono più di
+  {5} indirizzi)'
+? Address not found. It is possibly not yet in our database (synced up to block {0})
+  or has not received any transactions and is therefore not stored in the blockchain.
+: Indirizzo non trovato. Potrebbe non essere ancora nel database (sincronizzato al
+  blocco {0}) oppure non ha ancora ricevuto transazioni e quindi non è archiviato
+  nella blockchain.
+true: sì
+false: false
 address not found: indirizzo non trovato
 addresses not found: indirizzi non trovati
-"... and {0} more": ... e altri {0}
+'... and {0} more': '... e altri {0}'
 there could be various reasons: potrebbero esserci varie ragioni
-they are possibly not yet in our database: potrebbero non essere ancora presenti nel nostro database
-it is possibly not yet in our database: potrebbe non essere ancora presente nel nostro database
-there are no transactions associated with these addresses and they are therefore not found on the blockchain: non esistono transazioni associate con questi indirizzi e quindi non sono archiviate nella blockchain
-there are no transactions associated with this address and it is therefore not found on the blockchain.: non esistono transazioni associate con questo indirizzo e quindi non sono archiviate nella blockchain
+they are possibly not yet in our database: potrebbero non essere ancora presenti nel
+  nostro database
+it is possibly not yet in our database: potrebbe non essere ancora presente nel nostro
+  database
+there are no transactions associated with these addresses and they are therefore not found on the blockchain: non
+  esistono transazioni associate con questi indirizzi e quindi non sono archiviate
+  nella blockchain
+there are no transactions associated with this address and it is therefore not found on the blockchain.: non
+  esistono transazioni associate con questo indirizzo e quindi non sono archiviate
+  nella blockchain
 there are typos: ci sono errori di battitura
 smart contract: smart contract
-"token transactions of {0} ({1})": transazioni con token di {0} ({1})
+token transactions of {0} ({1}): transazioni con token di {0} ({1})
 loading supported token currencies: caricamento dei token supportati
 Actor: attore
 Actors: attori
@@ -318,7 +352,7 @@ try an example: prova un esempio
 open in new tab: Aprire in una nuova scheda
 show zero value transactions: Visualizzare le transazioni senza valore
 no rows match your filter criteria: O le righe corrispondono ai criteri del filtro
-add label: Aggiungere l'etichetta 
+add label: Aggiungere l'etichetta
 pick a color to highlight things: Scegliere un colore per evidenziare le cose
 Reset Filter: Azzeramento del filtro
 open: Aperto
@@ -404,104 +438,141 @@ Copy transaction ID: Copia dell'ID della transazione
 Remove from Graph: Rimuovere dal grafico
 victim: Vittima
 perpetrator: Autore del reato
-"Auto trace limit": "Limite di tracciamento automatico"
-"Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.": "Impossibile trovare una transazione adiacente adeguata per l'indirizzo {0}. Questo probabilmente perché i fondi non sono ancora stati spesi."
+Auto trace limit: Limite di tracciamento automatico
+Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent.: Impossibile
+  trovare una transazione adiacente adeguata per l'indirizzo {0}. Questo probabilmente
+  perché i fondi non sono ancora stati spesi.
 is an exchange: è uno scambio
 has tags: ha Annotationen
-"Tag label": "Annotazione"
+Tag label: Annotazione
 copy: copia
 possible service: possibile servizio
 Save file: Salva come file
 change: cambiamento
 Reset: Reset
 Apply filter: Filtro
-mentionTagDescriptionId: Un tag mention indica che questo indirizzo è stato citato, ad esempio, in un sito web. Potrebbe essere rilevante, ma dipende dal contesto.
-actorTagDescriptionId: L'etichetta dell'attore è una dichiarazione sul soggetto che controlla l'indirizzo.
-eventTagDescriptionId: Un tag evento è una dichiarazione su un evento che si è verificato in relazione a questo indirizzo, ad esempio se l'indirizzo ha fatto parte di un hack.
-attributeTagDescriptionId: Un tag attributo descrive una proprietà dell'indirizzo, ad esempio se è noto che viene utilizzato per uno scopo specifico.
-"Note: This tag was inherited from the cluster level.": "Nota: Questo tag è stato ereditato dal livello cluster."
-"Learn more": "Di più"
-"Low confidence": "Bassa fiducia"
-"Medium confidence": "Fiducia media"
-"High confidence": "Alta fiducia"
+mentionTagDescriptionId: Un tag mention indica che questo indirizzo è stato citato,
+  ad esempio, in un sito web. Potrebbe essere rilevante, ma dipende dal contesto.
+actorTagDescriptionId: L'etichetta dell'attore è una dichiarazione sul soggetto che
+  controlla l'indirizzo.
+eventTagDescriptionId: Un tag evento è una dichiarazione su un evento che si è verificato
+  in relazione a questo indirizzo, ad esempio se l'indirizzo ha fatto parte di un
+  hack.
+attributeTagDescriptionId: Un tag attributo descrive una proprietà dell'indirizzo,
+  ad esempio se è noto che viene utilizzato per uno scopo specifico.
+'Note: This tag was inherited from the cluster level.': 'Nota: Questo tag è stato
+  ereditato dal livello cluster.'
+Learn more: Di più
+Low confidence: Bassa fiducia
+Medium confidence: Fiducia media
+High confidence: Alta fiducia
 More: altro
 cluster addresses: indirizzi cluster
-"Removed {0} transactions": "{0} Transaktionen rimosse"
-"Added {0} transactions": "{0} transazioni aggiunte"
+Removed {0} transactions: '{0} Transaktionen rimosse'
+Added {0} transactions: '{0} transazioni aggiunte'
 Asset flows: Flussi di cassa
 Related addresses: Indirizzi correlati
-"Attribution tag on this address.": "Etichetta confermata a questo indirizzo."
-"Direct Tag": "Tag diretto"
-"Attribution tag inferred via clustering.": "Tag dedotto tramite associazione di cluster."
-"Indirect Tag": "Tag indiretto"
-"The first address or transaction added to the graph.": "Il primo indirizzo o transazione aggiunto al grafico."
-"Starting Point": "Punto di partenza"
-"The address or transaction currently selected.": "L'indirizzo o la transazione attualmente selezionati."
-"You Are Here": "Sei qui"
-"No known identity.": "Nessuna identità nota."
-"Unlabeled Address": "Indirizzo non etichettato"
-"Unlabeled Transaction": "Transazione non etichettata"
-"A direct transfer of an asset from one wallet to another.": "Un trasferimento diretto di un asset da un portafoglio a un altro."
-"A simplified path that combines all of a swaps's underlying transfers.": "Un percorso semplificato che combina tutti i trasferimenti sottostanti di uno swap."
-"Swap/Bridge Transaction": "Transazione di Swap/Bridge"
-"Known cryptoasset exchange.": "Scambio di criptovalute verificato."
-"Exchange": "Exchange"
-"Might be a service (e.g. high activity), but not confirmed.": "È probabile che si tratti di un servizio (ad es. alta attività), ma non è confermato."
-"Possible Service": "Servizio possibile"
-"Known entity such as a business or institution.": "Entità nota, come un'azienda o un'istituzione."
-"Institution": "Istituzione"
-"Programmed address for automated transactions.": "Indirizzo programmato per le transazioni automatiche."
-"Smart Contract": "Smart Contract"
-"Symbol Guide": "Legenda di visualizzazione"
-"Graph Nodes": "Nodi del grafico"
-"Additional Icons": "Icone aggiuntive"
-"Transaction Filter": "Filtro transazione"
-"Date Range": "Intervallo di date"
-"Select date range": "Selezionare l'intervallo di date"
-"Transaction Direction": "Direzione della transazione"
-"All transactions": "Tutte le transazioni"
-"Incoming only": "Solo in entrata"
-"Outgoing only": "Solo in uscita"
-"Done": "Applicare"
-"Asset Type": "Tipo di valuta"
-"e.g. Binance": "Ad esempio Binance"
-"Start typing to search existing labels.": "Iniziare a digitare per cercare gli attori esistenti."
-"Actor Label *": "Attore *"
-"Add context, notes, or links to supporting evidence.": "Aggiungete il contesto, le note o i link alle prove di supporto."
-"Additional Information (optional)": "Informazioni aggiuntive (opzionale)"
-"e.g. Linked to scam report on xyz.com": "Ad esempio, collegato alla segnalazione di una truffa su xyz.com"
-"Add Tag": "Aggiungi tag"
-"Add Tag to Address": "Aggiungi etichetta all'indirizzo"
-"Create new actor": "Creare un nuovo attore"
-"Added Tag": "Tag aggiunto"
+Attribution tag on this address.: Etichetta confermata a questo indirizzo.
+Direct Tag: Tag diretto
+Attribution tag inferred via clustering.: Tag dedotto tramite associazione di cluster.
+Indirect Tag: Tag indiretto
+The first address or transaction added to the graph.: Il primo indirizzo o transazione
+  aggiunto al grafico.
+Starting Point: Punto di partenza
+The address or transaction currently selected.: L'indirizzo o la transazione attualmente
+  selezionati.
+You Are Here: Sei qui
+No known identity.: Nessuna identità nota.
+Unlabeled Address: Indirizzo non etichettato
+Unlabeled Transaction: Transazione non etichettata
+A direct transfer of an asset from one wallet to another.: Un trasferimento diretto
+  di un asset da un portafoglio a un altro.
+A simplified path that combines all of a swaps's underlying transfers.: Un percorso
+  semplificato che combina tutti i trasferimenti sottostanti di uno swap.
+Swap/Bridge Transaction: Transazione di Swap/Bridge
+Known cryptoasset exchange.: Scambio di criptovalute verificato.
+Exchange: Exchange
+Might be a service (e.g. high activity), but not confirmed.: È probabile che si tratti
+  di un servizio (ad es. alta attività), ma non è confermato.
+Possible Service: Servizio possibile
+Known entity such as a business or institution.: Entità nota, come un'azienda o un'istituzione.
+Institution: Istituzione
+Programmed address for automated transactions.: Indirizzo programmato per le transazioni
+  automatiche.
+Smart Contract: Smart Contract
+Symbol Guide: Legenda di visualizzazione
+Graph Nodes: Nodi del grafico
+Additional Icons: Icone aggiuntive
+Transaction Filter: Filtro transazione
+Date Range: Intervallo di date
+Select date range: Selezionare l'intervallo di date
+Transaction Direction: Direzione della transazione
+All transactions: Tutte le transazioni
+Incoming only: Solo in entrata
+Outgoing only: Solo in uscita
+Done: Applicare
+Asset Type: Tipo di valuta
+e.g. Binance: Ad esempio Binance
+Start typing to search existing labels.: Iniziare a digitare per cercare gli attori
+  esistenti.
+Actor Label *: Attore *
+Add context, notes, or links to supporting evidence.: Aggiungete il contesto, le note
+  o i link alle prove di supporto.
+Additional Information (optional): Informazioni aggiuntive (opzionale)
+e.g. Linked to scam report on xyz.com: Ad esempio, collegato alla segnalazione di
+  una truffa su xyz.com
+Add Tag: Aggiungi tag
+Add Tag to Address: Aggiungi etichetta all'indirizzo
+Create new actor: Creare un nuovo attore
+Added Tag: Tag aggiunto
 Tag Import: Importazione Tag
-"Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder.": "Solo {0} di {1} tag sono stati importati. {2} tag non possono essere applicati perché i loro indirizzi non sono presenti nel pathfinder."
-"loading Swaps and Bridging events for Tx {0}: {1}": "Caricamento eventi di Swaps e Bridging per la transazione {0}: {1}"
-"Related by Multi-Input Heuristic": "Correlato tramite euristica multi-input"
-"Related by Public Key": "Correlato tramite chiave pubblica"
-"Sub Transfers": "Sotto trasferimenti"
-"Exclude Zero Value Transfers": "Escludi trasferimenti a valore zero"
-"No zero value": "Nessuna valore zero"
-"All Values": "Tutti i valori"
-"Group addresses by Transaction: Addresses were used together (likely same owner).": "Raggruppa gli indirizzi per transazione: gli indirizzi sono stati usati insieme (probabilmente lo stesso proprietario)."
-"Group addresses by Public Key: Addresses from the same key (same owner).": "Raggruppa gli indirizzi per chiave pubblica: indirizzi della stessa chiave (stesso proprietario)."
-"Bridge Transaction": "Transazione di Bridge"
-"Swap Transaction": "Transazione di Swap"
-"Bridge Transactions": "Bridge Transazione"
-"Swap Transactions": "Swap Transazione"
+? Only {0} of {1} tags were imported. {2} tags could not be applied because their
+  addresses are not present on the pathfinder.
+: Solo {0} di {1} tag sono stati importati. {2} tag non possono essere applicati perché
+  i loro indirizzi non sono presenti nel pathfinder.
+'loading Swaps and Bridging events for Tx {0}: {1}': 'Caricamento eventi di Swaps
+  e Bridging per la transazione {0}: {1}'
+Related by Multi-Input Heuristic: Correlato tramite euristica multi-input
+Related by Public Key: Correlato tramite chiave pubblica
+Sub Transfers: Sotto trasferimenti
+Exclude Zero Value Transfers: Escludi trasferimenti a valore zero
+No zero value: Nessuna valore zero
+All Values: Tutti i valori
+'Group addresses by Transaction: Addresses were used together (likely same owner).': 'Raggruppa
+  gli indirizzi per transazione: gli indirizzi sono stati usati insieme (probabilmente
+  lo stesso proprietario).'
+'Group addresses by Public Key: Addresses from the same key (same owner).': 'Raggruppa
+  gli indirizzi per chiave pubblica: indirizzi della stessa chiave (stesso proprietario).'
+Bridge Transaction: Transazione di Bridge
+Swap Transaction: Transazione di Swap
+Bridge Transactions: Bridge Transazione
+Swap Transactions: Swap Transazione
 Relationships: Relazioni
 Relationship-based: Basato sulle relazioni
 Transaction-based: Basato sulle transazioni
-"Please provide at least {0} characters": "Fornire almeno {0} caratteri"
-"No results found.": "Nessun risultato trovato."
-pf1_deprecation_notice: "Pathfinder 1.0 è obsoleto e sarà rimosso a breve. Si prega di passare al nuovo Pathfinder disponibile nella barra laterale. Hai problemi con la rimozione del vecchio Pathfinder? Contatta il supporto via email all'indirizzo contact@ikna.io."
-"Deprecation Notice": "Avviso di deprecazione"
-"Warning:": "Attenzione:"
-tags_release_warnings: "I tag che aggiungi saranno visibili a tutti gli utenti. Assicurati che i tuoi tag non includano materiale che violi il copyright, come tag o contenuti di altri fornitori di strumenti. Inoltre, non divulgare informazioni specifiche del caso o sensibili al pubblico."
-tx-tracing-mode-help-text: "Nella modalità basata sulle transazioni è possibile tracciare il flusso di asset attraverso singole transazioni. Questa modalità è utile per seguire transazioni specifiche e comprendere la loro cronologia."
-tx-relationship-mode-help-text: "Nella modalità basata sulle relazioni è possibile esplorare le relazioni tra diverse entità basandosi su dati di transazione aggregati. Questa modalità aiuta a identificare modelli e connessioni tra entità attraverso più transazioni."
-cluster-details-info-help-text: "I dettagli del cluster forniscono statistiche su tutti gli indirizzi nel cluster, inclusi saldi aggregati e conteggi delle transazioni. I cluster si basano esclusivamente sulla heuristica multi-input."
-"Show transaction hash": "Mostra hash della tx"
+Please provide at least {0} characters: Fornire almeno {0} caratteri
+No results found.: Nessun risultato trovato.
+pf1_deprecation_notice: Pathfinder 1.0 è obsoleto e sarà rimosso a breve. Si prega
+  di passare al nuovo Pathfinder disponibile nella barra laterale. Hai problemi con
+  la rimozione del vecchio Pathfinder? Contatta il supporto via email all'indirizzo
+  contact@ikna.io.
+Deprecation Notice: Avviso di deprecazione
+'Warning:': 'Attenzione:'
+tags_release_warnings: I tag che aggiungi saranno visibili a tutti gli utenti. Assicurati
+  che i tuoi tag non includano materiale che violi il copyright, come tag o contenuti
+  di altri fornitori di strumenti. Inoltre, non divulgare informazioni specifiche
+  del caso o sensibili al pubblico.
+tx-tracing-mode-help-text: Nella modalità basata sulle transazioni è possibile tracciare
+  il flusso di asset attraverso singole transazioni. Questa modalità è utile per seguire
+  transazioni specifiche e comprendere la loro cronologia.
+tx-relationship-mode-help-text: Nella modalità basata sulle relazioni è possibile
+  esplorare le relazioni tra diverse entità basandosi su dati di transazione aggregati.
+  Questa modalità aiuta a identificare modelli e connessioni tra entità attraverso
+  più transazioni.
+cluster-details-info-help-text: I dettagli del cluster forniscono statistiche su tutti
+  gli indirizzi nel cluster, inclusi saldi aggregati e conteggi delle transazioni.
+  I cluster si basano esclusivamente sulla heuristica multi-input.
+Show transaction hash: Mostra hash della tx
 Attribute: Attributo
 tx_hash: Hash della transazione
 token_tx_id: ID della sotto-transazione
@@ -516,12 +587,16 @@ no_inputs: Ingressi
 no_outputs: Uscite
 total_input: Valore totale in ingresso
 total_output: Valore totale in uscita
-"Multiple search terms detected ({0}). Please hit enter to add.": "Rilevati più termini di ricerca ({0}). Premere Invio per aggiungere."
-there_were_more_rows_for_csv_download: Il download dei dati CSV è limitato a circa {0} righe. 
-there_were_more_rows_for_csv_download_info: Utilizza le opzioni di filtro per restringere ulteriormente l'intervallo di dati.
-success_download_csv: "{0} record scaricati come CSV"
-"Address transactions of {0} ({1})": "Transazioni dell'indirizzo {0} ({1})"
-"Transactions from {0} to {1} ({2})": "Transazioni da {0} a {1} ({2})"
+Multiple search terms detected ({0}). Please hit enter to add.: Rilevati più termini
+  di ricerca ({0}). Premere Invio per aggiungere.
+there_were_more_rows_for_csv_download: Il download dei dati CSV è limitato a circa
+  {0} righe.
+there_were_more_rows_for_csv_download_info: Utilizza le opzioni di filtro per restringere
+  ulteriormente l'intervallo di dati.
+success_download_csv: '{0} record scaricati come CSV'
+Address transactions of {0} ({1}): Transazioni dell'indirizzo {0} ({1})
+Transactions from {0} to {1} ({2}): Transazioni da {0} a {1} ({2})
 fee: Commissione
 sending_address_label: Attore mittente
 receiving_address_label: Attore destinatario
+statusbar-loading-concepts: caricamento concetti per la tassonomia {0}
