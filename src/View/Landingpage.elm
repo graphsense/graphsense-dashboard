@@ -100,7 +100,7 @@ view plugins vc model =
         [ h2
             [ Css.View.heading2 vc |> css
             ]
-            [ Locale.text vc.locale "Start a new investigation"
+            [ Locale.text vc.locale "Landingpage-start-new"
             ]
         , searchBoxView plugins vc model.search
             |> List.singleton
@@ -125,7 +125,7 @@ view plugins vc model =
                         ]
                 )
             |> List.intersperse (text " / ")
-            |> (::) (Locale.string vc.locale "Try an example" ++ ": " |> text)
+            |> (::) (Locale.string vc.locale "Landingpage-try-example" ++ ": " |> text)
             |> div [ CssLanding.exampleLinkBox vc |> css ]
         , rule
             (if vc.lightmode then
@@ -151,7 +151,7 @@ view plugins vc model =
             , div
                 [ CssLanding.loadBoxText vc |> css
                 ]
-                [ Locale.string vc.locale "Load graph from .gs file" |> text
+                [ Locale.string vc.locale "Landingpage-load-file" |> text
                 ]
             ]
         ]

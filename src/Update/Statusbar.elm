@@ -254,7 +254,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetConversionEffect { currency, txHash } _ ->
-                ( "loading Swaps and Briding events for Tx {0}: {1}"
+                ( "statusbar-loading-swap-bridge-events"
                 , [ currency |> String.toUpper, txHash ]
                 )
                     |> Just
@@ -337,7 +337,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetEntityEffect e _ ->
-                ( "{1}: loading entity {0}"
+                ( "Statusbar-loading-entity"
                 , [ String.fromInt e.entity
                   , e.currency |> String.toUpper
                   ]
@@ -345,7 +345,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetEntityEffectWithDetails e _ ->
-                ( "{1}: loading entity {0}"
+                ( "Statusbar-loading-entity"
                 , [ String.fromInt e.entity
                   , e.currency |> String.toUpper
                   ]
@@ -353,7 +353,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetBlockEffect e _ ->
-                ( "{1}: loading block {0}"
+                ( "Statusbar-loading-block"
                 , [ String.fromInt e.height
                   , e.currency |> String.toUpper
                   ]
@@ -409,7 +409,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetAddressTagsEffect e _ ->
-                ( "{1}: loading tags of address {0}"
+                ( "Statusbar-loading-tags-of-address"
                 , [ e.address
                   , e.currency |> String.toUpper
                   ]
@@ -417,7 +417,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetEntityAddressTagsEffect e _ ->
-                ( "{1}: loading address tags of entity {0}"
+                ( "Statusbar-loading-address-tags-of-entity"
                 , [ String.fromInt e.entity
                   , e.currency |> String.toUpper
                   ]
@@ -425,7 +425,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetAddressTxsEffect e _ ->
-                ( "{1}: loading transactions of address {0}"
+                ( "Statusbar-loading-txs-of-address {0}'"
                 , [ e.address
                   , e.currency |> String.toUpper
                   ]
@@ -433,7 +433,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetAddressTxsByDateEffect e _ ->
-                ( "{1}: loading transactions of address {0}"
+                ( "Statusbar-loading-txs-of-address {0}'"
                 , [ e.address
                   , e.currency |> String.toUpper
                   ]
@@ -449,7 +449,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetBlockTxsEffect e _ ->
-                ( "{1}: loading transactions of block {0}"
+                ( "Statusbar-loading-txs-of-block"
                 , [ String.fromInt e.block
                   , e.currency |> String.toUpper
                   ]
@@ -465,7 +465,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetEntityAddressesEffect e _ ->
-                ( "{1}: loading addresses of entity {0}"
+                ( "Statusbar-loading-addresses-of-entity"
                 , [ String.fromInt e.entity
                   , e.currency |> String.toUpper
                   ]
@@ -481,7 +481,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.BulkGetAddressEffect e _ ->
-                ( "{1}: loading {0} addresses"
+                ( "Statusbar-loading-addresses"
                 , [ List.length e.addresses |> String.fromInt
                   , e.currency |> String.toUpper
                   ]
@@ -489,7 +489,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.BulkGetEntityEffect e _ ->
-                ( "{1}: loading {0} entities"
+                ( "Statusbar-loading-entities"
                 , [ List.length e.entities |> String.fromInt
                   , e.currency |> String.toUpper
                   ]
@@ -497,7 +497,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.BulkGetAddressEntityEffect e _ ->
-                ( "{1}: loading entities of {0} addresses"
+                ( "Statusbar-loading-entities-of-addresses"
                 , [ List.length e.addresses |> String.fromInt
                   , e.currency |> String.toUpper
                   ]
@@ -527,7 +527,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetAddresslinkTxsEffect e _ ->
-                ( "{2}: loading address link transactions between {0} and {1}"
+                ( "Statusbar-loading-txs-between-addresses"
                 , [ e.source
                   , e.target
                   , e.currency |> String.toUpper
@@ -536,7 +536,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetEntitylinkTxsEffect e _ ->
-                ( "{2}: loading entity link transactions between {0} and {1}"
+                ( "Statusbar-loading-txs-between-entities"
                 , [ String.fromInt e.source
                   , String.fromInt e.target
                   , e.currency |> String.toUpper

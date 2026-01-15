@@ -22,7 +22,7 @@ def replace_in_yaml_files(yaml_dir, old_key, new_key):
                 data[new_key] = data[old_key]
             data.pop(old_key)
             with open(filepath, 'w') as outfile:
-                yaml.dump(data, outfile, default_flow_style=False, allow_unicode=True)
+                yaml.dump(data, outfile, default_flow_style=False, allow_unicode=True, sort_keys=False)
         except yaml.YAMLError as e:
             print(f"Error processing {filename}: {e}")
 
@@ -30,6 +30,14 @@ def capitalize_first_letter(input_string):
     if not input_string:
         return input_string
     return input_string[0].upper() + input_string[1:]
+
+def capitalize_first_letter_lower_rest(input_string):
+    if not input_string:
+        return input_string
+    return input_string[0].upper() + input_string[1:].lower()
+
+def enquote(string):
+    return f'"{string}"'
 
 def replace_in_elm_files(elm_dir, old_string, new_string):
     """Replace strings in Elm files."""
@@ -44,14 +52,18 @@ def replace_in_elm_files(elm_dir, old_string, new_string):
                     orig_content = file.read()
                 content = orig_content
                 content = content.replace(
-                    capitalize_first_letter(old_string), 
-                    capitalize_first_letter(new_string))
-                content = content.replace(f'"{old_string}"', f'"{new_string}"')
+                    enquote(capitalize_first_letter(old_string)), 
+                    enquote(capitalize_first_letter(new_string)))
+                content = content.replace(
+                    enquote(capitalize_first_letter_lower_rest(old_string)), 
+                    enquote(capitalize_first_letter(new_string)))
+                content = content.replace(enquote(old_string), enquote(new_string))
                 changed = changed or content != orig_content
                 with open(filepath, 'w') as file:
                     file.write(content)
     if not changed and new_string:
         print(f"{old_string} not found")
+    return changed
 
 
 def main():
@@ -65,8 +77,10 @@ def main():
     with open(args.replacement_file, 'r') as file:
         kv = yaml.safe_load(file)
     for old_key, new_key in kv.items():
+        changed = replace_in_elm_files(args.elm_dir, old_key, new_key)
+        if not changed:
+            new_key = ""
         replace_in_yaml_files(args.yaml_dir, old_key, new_key)
-        replace_in_elm_files(args.elm_dir, old_key, new_key)
 
 if __name__ == '__main__':
     main()

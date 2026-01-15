@@ -2820,12 +2820,12 @@ tableAsCSV locale uc { type_ } =
             case table of
                 Just (AddressTxsUtxoTable t) ->
                     loadableAddressToList loadable
-                        |> Locale.interpolated locale "Address transactions of {0} ({1})"
+                        |> Locale.interpolated locale "Address-transactions-of"
                         |> asCsv (AddressTxsUtxoTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
                 Just (AddressTxsAccountTable t) ->
                     loadableAddressToList loadable
-                        |> Locale.interpolated locale "Address transactions of {0} ({1})"
+                        |> Locale.interpolated locale "Address-transactions-of"
                         |> asCsv (TxsAccountTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
                 Just (AddressTagsTable _) ->
@@ -2833,22 +2833,22 @@ tableAsCSV locale uc { type_ } =
 
                 Just (AddressIncomingNeighborsTable t) ->
                     loadableAddressToList loadable
-                        |> Locale.interpolated locale "Incoming neighbors of address {0} ({1})"
+                        |> Locale.interpolated locale "Incoming-neighbors-of-address"
                         |> asCsv (AddressNeighborsTable.prepareCSV locale False (loadableAddressCurrency loadable)) t
 
                 Just (AddressOutgoingNeighborsTable t) ->
                     loadableAddressToList loadable
-                        |> Locale.interpolated locale "Outgoing neighbors of address {0} ({1})"
+                        |> Locale.interpolated locale "Outgoing-neighbors-of-address"
                         |> asCsv (AddressNeighborsTable.prepareCSV locale True (loadableAddressCurrency loadable)) t
 
                 Just (AddressTotalReceivedAllAssetsTable t) ->
                     loadableAddressToList loadable
-                        |> Locale.interpolated locale "Total received assets of address {0} ({1})"
+                        |> Locale.interpolated locale "Total-received-assets-of-address"
                         |> asCsv (AllAssetsTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
                 Just (AddressFinalBalanceAllAssetsTable t) ->
                     loadableAddressToList loadable
-                        |> Locale.interpolated locale "Final balance assets of address {0} ({1})"
+                        |> Locale.interpolated locale "Final-balance-assets-of-address"
                         |> asCsv (AllAssetsTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
                 Nothing ->
@@ -2858,7 +2858,7 @@ tableAsCSV locale uc { type_ } =
             case table of
                 Just (EntityAddressesTable t) ->
                     loadableEntityToList loadable
-                        |> Locale.interpolated locale "addresses of entity {0} ({1})"
+                        |> Locale.interpolated locale "addresses-of-entity"
                         |> asCsv (EntityAddressesTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
                 Just (EntityTxsUtxoTable t) ->
@@ -2876,22 +2876,22 @@ tableAsCSV locale uc { type_ } =
 
                 Just (EntityIncomingNeighborsTable t) ->
                     loadableEntityToList loadable
-                        |> Locale.interpolated locale "Incoming neighbors of entity {0} ({1})"
+                        |> Locale.interpolated locale "Incoming-neighbors-of-entity"
                         |> asCsv (EntityNeighborsTable.prepareCSV locale False (loadableEntityCurrency loadable)) t
 
                 Just (EntityOutgoingNeighborsTable t) ->
                     loadableEntityToList loadable
-                        |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
+                        |> Locale.interpolated locale "Outgoing-neighbors-of-entity"
                         |> asCsv (EntityNeighborsTable.prepareCSV locale True (loadableEntityCurrency loadable)) t
 
                 Just (EntityTotalReceivedAllAssetsTable t) ->
                     loadableEntityToList loadable
-                        |> Locale.interpolated locale "Total received assets of address {0} ({1})"
+                        |> Locale.interpolated locale "Total-received-assets-of-address"
                         |> asCsv (AllAssetsTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
                 Just (EntityFinalBalanceAllAssetsTable t) ->
                     loadableEntityToList loadable
-                        |> Locale.interpolated locale "Final balance assets of address {0} ({1})"
+                        |> Locale.interpolated locale "Final-balance-assets-of-address"
                         |> asCsv (AllAssetsTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
                 Nothing ->
@@ -2912,12 +2912,12 @@ tableAsCSV locale uc { type_ } =
             case table of
                 Just (TxUtxoInputsTable t) ->
                     loadableTxToList loadable
-                        |> Locale.interpolated locale "Incoming values of transaction {0} ({1})"
+                        |> Locale.interpolated locale "Incoming-values-of-transaction"
                         |> asCsv (TxUtxoTable.prepareCSV locale (loadableCurrency loadable) False) t
 
                 Just (TxUtxoOutputsTable t) ->
                     loadableTxToList loadable
-                        |> Locale.interpolated locale "Outgoing values of transaction {0} ({1})"
+                        |> Locale.interpolated locale "Outgoing-values-of-transaction"
                         |> asCsv (TxUtxoTable.prepareCSV locale (loadableCurrency loadable) False) t
 
                 Nothing ->
@@ -2927,7 +2927,7 @@ tableAsCSV locale uc { type_ } =
             case table of
                 Just (TokenTxsTable t) ->
                     loadableTxAccountToList loadable
-                        |> Locale.interpolated locale "Token transactions of {0} ({1})"
+                        |> Locale.interpolated locale "Token-transactions-of"
                         |> asCsv (TxsAccountTable.prepareCSV locale accountCurrency) t
 
                 Nothing ->
@@ -2943,12 +2943,12 @@ tableAsCSV locale uc { type_ } =
             case table of
                 Just (BlockTxsUtxoTable t) ->
                     loadableBlockToList loadable
-                        |> Locale.interpolated locale "Transactions of block {0} ({1})"
+                        |> Locale.interpolated locale "Transactions-of-block"
                         |> asCsv (TxsUtxoTable.prepareCSV locale (loadableCurrency loadable)) t
 
                 Just (BlockTxsAccountTable t) ->
                     loadableBlockToList loadable
-                        |> Locale.interpolated locale "Transactions of block {0} ({1})"
+                        |> Locale.interpolated locale "Transactions-of-block"
                         |> asCsv (TxsAccountTable.prepareCSV locale (loadableCurrency loadable)) t
 
                 Nothing ->
@@ -2968,11 +2968,11 @@ tableAsCSV locale uc { type_ } =
             in
             case table of
                 Just (AddresslinkTxsUtxoTable t) ->
-                    title "Transactions"
+                    title "transactions"
                         |> asCsv (AddresslinkTxsUtxoTable.prepareCSV locale currency) t
 
                 Just (AddresslinkTxsAccountTable t) ->
-                    title "Transactions"
+                    title "transactions"
                         |> asCsv (TxsAccountTable.prepareCSV locale currency) t
 
                 Just (AddresslinkAllAssetsTable t) ->
@@ -2992,7 +2992,7 @@ tableAsCSV locale uc { type_ } =
                     , String.fromInt lnk.node.entity.entity
                     , String.toUpper src.entity.currency
                     ]
-                        |> Locale.interpolated locale "Transactions between entities {0} and {1} ({2})"
+                        |> Locale.interpolated locale "Transactions-between-entities"
             in
             case table of
                 Just (AddresslinkTxsUtxoTable t) ->

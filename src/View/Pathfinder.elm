@@ -194,13 +194,13 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
-                          , text = "Copy address ID"
+                          , text = "copy address ID"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
                           , icon = HIcons.iconsDeleteS {}
-                          , text = "Remove from graph"
+                          , text = "remove from graph"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
@@ -220,7 +220,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserOpensDialogWindow (AddTags id)
                           , icon = HIcons.iconsAddTagOutlinedS {}
-                          , text = "Report a tag"
+                          , text = "report a tag"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
@@ -248,13 +248,13 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     { shortcutList =
                         [ { msg = UserOpensTxAnnotationDialog id
                           , icon = HIcons.iconsAnnotateS {}
-                          , text = "Annotate transaction"
+                          , text = "annotate transaction"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
-                          , text = "Copy transaction ID"
+                          , text = "copy transaction ID"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
@@ -311,8 +311,8 @@ bottomCenterPanel vc model =
                 |> Rs.s_toggleSwitchText
                     (Controls.toggleWithText
                         { selectedA = model.config.tracingMode == TransactionTracingMode
-                        , titleA = Locale.string vc.locale "Transaction-based" --"Track funds"
-                        , titleB = Locale.string vc.locale "Relationship-based" -- "View network"
+                        , titleA = Locale.string vc.locale "transaction-based" --"Track funds"
+                        , titleB = Locale.string vc.locale "relationship-based" -- "View network"
                         , msg = UserClickedToggleTracingMode
                         }
                         |> Just
@@ -455,7 +455,7 @@ annotationHovercardView vc id annotation hc =
     in
     Sc.annotationWithAttributes
         Sc.annotationAttributes
-        { root = { colorText = Locale.string vc.locale "Color", labelText = Locale.string vc.locale "Label" }
+        { root = { colorText = Locale.string vc.locale "color", labelText = Locale.string vc.locale "Label" }
         , labelField = { variant = inputField }
         , noColor = { variant = colorBtn selectedColor Nothing }
         , color1 = { variant = colorBtn selectedColor (Just Colors.annotation1_color) }
@@ -498,17 +498,17 @@ settingsHovercardView vc pm hc =
                     }
     in
     Sc.displayProperties
-        { exactValueSwitch = { variant = switchWithText True "Show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
-        , amountInFiatSwitch = { variant = switchWithText True "Amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
-        , gridSwitch = { variant = switchWithText True "Snap to Grid" pm.config.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
-        , highlightSwitch = { variant = switchWithText True "Highlight on graph" pm.config.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
+        { exactValueSwitch = { variant = switchWithText True "show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
+        , amountInFiatSwitch = { variant = switchWithText True "amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
+        , gridSwitch = { variant = switchWithText True "Snap to grid" pm.config.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
+        , highlightSwitch = { variant = switchWithText True "highlight on graph" pm.config.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
         , settingsLabelOfClustersSettings = { settingsLabel = Locale.string vc.locale "Clusters" }
-        , settingsLabelOfGeneralSettings = { settingsLabel = Locale.string vc.locale "Graph" }
-        , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "Asset flows" }
-        , timestampSwitch = { variant = switchWithText True "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) }
+        , settingsLabelOfGeneralSettings = { settingsLabel = Locale.string vc.locale "graph" }
+        , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "asset flows" }
+        , timestampSwitch = { variant = switchWithText True "show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) }
         , timezoneSwitch = { variant = switchWithText False "with zone code" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) }
         , utcSwitch = { variant = switchWithText False "in UTC" (not vc.showDatesInUserLocale) (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) }
-        , showHash = { variant = switchWithText True "Show transaction hash" vc.showHash (UserClickedToggleShowHash |> ChangedDisplaySettingsMsg) }
+        , showHash = { variant = switchWithText True "show transaction hash" vc.showHash (UserClickedToggleShowHash |> ChangedDisplaySettingsMsg) }
         }
         |> Html.toUnstyled
         |> List.singleton

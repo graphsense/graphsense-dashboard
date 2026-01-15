@@ -311,10 +311,10 @@ getRelatedAddressTypeLabel : View.Config -> AddressDetails.RelatedAddressTypes -
 getRelatedAddressTypeLabel vc relatedAddressType =
     case relatedAddressType of
         AddressDetails.Pubkey ->
-            Locale.string vc.locale "Related by Public Key"
+            Locale.string vc.locale "Related by public key"
 
         AddressDetails.MultiInputCluster ->
-            Locale.string vc.locale "Related by Multi-Input Heuristic"
+            Locale.string vc.locale "Related by multi-input heuristic"
 
 
 relatedAddressesSelectBoxConfig : View.Config -> Id -> ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
@@ -550,7 +550,7 @@ clusterInfoView vc open colors clstr =
                 ]
 
             label =
-                Locale.string vc.locale "Cluster information"
+                Locale.string vc.locale "Cluster-info"
 
             assetId =
                 assetFromBase clstr.currency
@@ -567,7 +567,7 @@ clusterInfoView vc open colors clstr =
                 { root = { label = label }
                 , titleOfClusterId = { infoLabel = Locale.string vc.locale "Cluster" }
                 , valueOfClusterId = { label = String.fromInt clstr.entity }
-                , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number of addresses" }
+                , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number-of-addresses" }
                 , valueOfNumberOfAddresses =
                     { firstRowText = String.fromInt clstr.noAddresses
                     , secondRowText = ""
@@ -668,7 +668,7 @@ transactionsDataTab vc model id viewState =
                         viewState.address.data
                             |> RemoteData.map (.noOutgoingTxs >> Locale.int vc.locale)
                             |> RemoteData.withDefault ""
-                    , title = Locale.string vc.locale "Transactions"
+                    , title = Locale.string vc.locale "transactions"
                     }
                 }
         , disabled = totalNumber == 0
@@ -846,7 +846,7 @@ account plugins pluginStates vc model id viewState address =
                 (String.toUpper <| Id.network id)
                     ++ " "
                     ++ (if RemoteData.map .isContract viewState.address.data == RemoteData.Success (Just True) then
-                            Locale.string vc.locale "Smart Contract"
+                            Locale.string vc.locale "Smart contract"
 
                         else
                             Locale.string vc.locale "Address"
@@ -1056,22 +1056,22 @@ viewLabelOfTags vc viewState model id =
                     if viewState.displayAllTagsInDetails then
                         Html.span
                             [ Css.tagLinkButtonStyle vc |> css
-                            , HA.title (Locale.string vc.locale "show less...")
+                            , HA.title (Locale.string vc.locale "show-less-hint")
                             , AddressDetails.UserClickedToggleDisplayAllTagsInDetails
                                 |> Pathfinder.AddressDetailsMsg id
                                 |> Svg.onClick
                             ]
-                            [ Html.text (Locale.string vc.locale "less...") ]
+                            [ Html.text (Locale.string vc.locale "less-hint") ]
 
                     else
                         Html.span
                             [ Css.tagLinkButtonStyle vc |> css
-                            , HA.title (Locale.string vc.locale "show more...")
+                            , HA.title (Locale.string vc.locale "show-more-hint")
                             , AddressDetails.UserClickedToggleDisplayAllTagsInDetails
                                 |> Pathfinder.AddressDetailsMsg id
                                 |> Svg.onClick
                             ]
-                            [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
+                            [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more-hint") ]
 
                 else
                     none
@@ -1119,7 +1119,7 @@ viewLabelOfTags vc viewState model id =
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg
 learnMoreButton vc id =
     Button.defaultConfig
-        |> Rs.s_text "Learn more"
+        |> Rs.s_text "learn more"
         |> Rs.s_onClick (Just (Pathfinder.UserOpensDialogWindow (TagsList id)))
         |> Button.linkButtonBlue vc
 
@@ -1275,7 +1275,7 @@ sidePanelAddressCopyIcon vc id =
     , addTagIconInstance =
         iconWithHint
             vc
-            { hint = Locale.string vc.locale "Report tag"
+            { hint = Locale.string vc.locale "report tag"
             , icon =
                 HIcons.iconsAddTagOutlinedSWithAttributes
                     (HIcons.iconsAddTagOutlinedSAttributes

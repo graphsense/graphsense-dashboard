@@ -283,7 +283,7 @@ addressesCount vc gc ent =
             Locale.int vc.locale ent.entity.noAddresses
 
         key =
-            "{0} address"
+            "One-address"
                 ++ (if ent.entity.noAddresses > 1 then
                         "es"
 

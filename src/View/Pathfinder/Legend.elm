@@ -63,79 +63,79 @@ legendView plugins vc closeMsg =
         { additionalIconsItemsList =
             [ legendItem vc
                 IconItem
-                { description = "Attribution tag on this address."
+                { description = "Attribution-tag-on-address"
                 , icon = Icons.iconsTagL { root = { type_ = Icons.IconsTagLTypeDirect } }
-                , label = "Direct Tag"
+                , label = "Direct tag"
                 }
             , legendItem vc
                 IconItem
-                { description = "Attribution tag inferred via clustering."
+                { description = "Attribution-tag-inferred"
                 , icon = Icons.iconsTagL { root = { type_ = Icons.IconsTagLTypeIndirect } }
-                , label = "Indirect Tag"
+                , label = "Indirect tag"
                 }
             ]
                 ++ pluginLegendIconItems
                 ++ [ legendItem vc
                         IconItem
-                        { description = "The first address or transaction added to the graph."
+                        { description = "Hint-first-thing-added"
                         , icon = Icons.iconsNodeMarker { root = { purpose = Icons.IconsNodeMarkerPurposeStartingPoint } }
-                        , label = "Starting Point"
+                        , label = "Hint-starting-point"
                         }
                    , legendItem vc
                         IconItem
-                        { description = "The address or transaction currently selected."
+                        { description = "Hint-thing-selected"
                         , icon = Icons.iconsNodeMarker { root = { purpose = Icons.IconsNodeMarkerPurposeSelectedNode } }
-                        , label = "You Are Here"
+                        , label = "You are here"
                         }
                    ]
         , graphNodesItemsList =
             [ legendItem vc
                 Node
-                { description = "No known identity."
+                { description = "No known identity"
                 , icon = Icons.iconsUntaggesSnoPadding {}
-                , label = "Unlabeled Address"
+                , label = "Unlabeled address"
                 }
             , legendItem vc
                 Node
-                { description = "Known cryptoasset exchange."
+                { description = "Known-exchange"
                 , icon = Icons.iconsExchangeSnoPadding {}
-                , label = "Exchange"
+                , label = "exchange"
                 }
             , legendItem vc
                 Node
-                { description = "Might be a service (e.g. high activity), but not confirmed."
+                { description = "Hint-possible-service"
                 , icon = Icons.iconsUnknownServiceSnoPadding {}
-                , label = "Possible Service"
+                , label = "Possible service"
                 }
             , legendItem vc
                 Node
-                { description = "Known entity such as a business or institution."
+                { description = "Hint-known-entity"
                 , icon = Icons.iconsInstitutionSnoPadding {}
-                , label = "Institution"
+                , label = "institution"
                 }
             , legendItem vc
                 Node
-                { description = "Programmed address for automated transactions."
+                { description = "Hint-smart-contract"
                 , icon = Icons.iconsSmartContractSnoPadding {}
-                , label = "Smart Contract"
+                , label = "Smart contract"
                 }
             , legendItem vc
                 IconItem
-                { description = "A direct transfer of an asset from one wallet to another."
+                { description = "Hint-direct-transfer-of-asset"
                 , icon = Icons.iconsUntagged {}
-                , label = "Unlabeled Transaction"
+                , label = "Unlabeled transaction"
                 }
             , legendItem vc
                 IconItem
-                { description = "A simplified path that combines all of a swaps's underlying transfers."
+                { description = "Hint-simplified-address"
                 , icon = GraphComponents.swapNode { root = { highlightInvisible = False } }
-                , label = "Swap/Bridge Transaction"
+                , label = "Hint-swap-bridge"
                 }
             ]
         }
         { root =
-            { header = Locale.string vc.locale "Symbol Guide"
-            , header2 = Locale.string vc.locale "Graph Nodes"
-            , header3 = Locale.string vc.locale "Additional Icons"
+            { header = Locale.string vc.locale "Symbol guide"
+            , header2 = Locale.string vc.locale "Graph nodes"
+            , header3 = Locale.string vc.locale "Additional icons"
             }
         }

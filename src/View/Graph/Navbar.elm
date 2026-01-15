@@ -112,7 +112,7 @@ navbarRight vc model =
                     else
                         Tool.Disabled
               }
-            , { title = "Center graph"
+            , { title = "center graph"
               , icon = FontAwesome.icon FontAwesome.compress
               , msg = \_ -> UserClickedFitGraph
               , color = Nothing

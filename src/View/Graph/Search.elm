@@ -69,7 +69,7 @@ inputHovercard plugins vc model =
                     []
                 ]
             , Dialog.part vc
-                "Max. addresses"
+                "Max-addresses"
                 [ input
                     [ onInput UserInputsSearchMaxAddresses
                     , Html.Styled.Attributes.min "1"
@@ -156,7 +156,7 @@ partByCriterion vc crit =
                             [ value "--"
                             , "--" == active |> selected
                             ]
-                            [ text (Locale.string vc.locale "Any Category")
+                            [ text (Locale.string vc.locale "Any category")
                             ]
                         ]
                     |> select

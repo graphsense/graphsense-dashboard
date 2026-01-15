@@ -508,7 +508,7 @@ makeExportCSVConfig uc isA2b id tbl =
     ExportCSV.config
         { filename =
             Locale.interpolated uc.locale
-                "Transactions from {0} to {1} ({2})"
+                "Transactions-from-to"
                 [ source
                 , target
                 , String.toUpper nw

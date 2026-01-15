@@ -218,13 +218,13 @@ cell _ c =
                 lbl =
                     case cc.confidence of
                         High ->
-                            "High confidence"
+                            "high confidence"
 
                         Medium ->
-                            "Medium confidence"
+                            "medium confidence"
 
                         Low ->
-                            "Low confidence"
+                            "low confidence"
 
                 cl =
                     case cc.confidence of
@@ -403,7 +403,7 @@ typeColumn vc =
 
                     titleTextWithClusterAddition =
                         if inheritedFromCluster then
-                            titleText ++ " " ++ Locale.string vc.locale "Note: This tag was inherited from the cluster level."
+                            titleText ++ " " ++ Locale.string vc.locale "Note-tag-inherited"
 
                         else
                             titleText

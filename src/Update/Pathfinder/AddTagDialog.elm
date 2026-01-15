@@ -22,7 +22,7 @@ update uc msg model =
     case msg of
         BrowserAddedTag id ->
             ( model
-            , [ Notification.successDefault (Locale.string uc.locale "Added Tag")
+            , [ Notification.successDefault (Locale.string uc.locale "Added tag")
                     |> Notification.map (Rs.s_isEphemeral True)
                     |> Notification.map (Rs.s_showClose False)
                     |> PFEffect.ShowNotificationEffect
@@ -64,7 +64,7 @@ update uc msg model =
                     Search.update m model.search
 
                 last =
-                    Search.Custom { id = addNewId, label = Locale.string uc.locale "Create new actor" }
+                    Search.Custom { id = addNewId, label = Locale.string uc.locale "create new actor" }
 
                 addConst =
                     searchNews |> Search.lastResult |> Maybe.map ((/=) last) |> Maybe.withDefault True

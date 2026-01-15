@@ -113,7 +113,7 @@ configuration vc config =
                     [ value "notxs"
                     , config.txLabelType == Graph.NoTxs |> selected
                     ]
-                    [ Locale.string vc.locale "No. transactions"
+                    [ Locale.string vc.locale "Number-of-transactions"
                         |> text
                     ]
                 , option
@@ -147,10 +147,10 @@ configuration vc config =
                 ""
             ]
         , Dialog.part vc
-            "Timezone"
+            "timezone"
             [ Locale.string vc.locale
                 (if vc.showDatesInUserLocale then
-                    "User"
+                    "user"
 
                  else
                     "UTC"

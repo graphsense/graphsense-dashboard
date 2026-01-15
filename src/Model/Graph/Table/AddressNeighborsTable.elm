@@ -25,7 +25,7 @@ titleAddressReceived =
 
 titleNoTxs : String
 titleNoTxs =
-    "No. transactions"
+    "Number-of-transactions"
 
 
 titleEstimatedValue : String

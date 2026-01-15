@@ -34,7 +34,7 @@ hovercard plugins vc appModel model =
     )
         ++ [ Dialog.part vc "Language" [ localeSwitch vc ]
            , Dialog.part vc
-                "Display"
+                "display"
                 [ (if vc.lightmode then
                     "Light"
 
@@ -82,7 +82,7 @@ hovercard plugins vc appModel model =
 requestLimit : Config -> RequestLimit -> Html Msg
 requestLimit vc rl =
     Dialog.part vc
-        "Request limit"
+        "request limit"
         [ div
             [ Css.requestLimitRoot vc |> css
             ]
@@ -148,7 +148,7 @@ localeSwitch vc =
 apiKeyForm : Config -> Bool -> UserModel -> Html Msg
 apiKeyForm vc loading model =
     Dialog.part vc
-        "Please provide an API key"
+        "Input-api-key"
         [ Html.Styled.form
             [ Events.onSubmit UserSubmitsApiKeyForm
             ]

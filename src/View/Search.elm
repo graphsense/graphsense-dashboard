@@ -153,7 +153,7 @@ searchWithMoreCss plugins vc sc model =
                                 ]
 
                             SearchActorsOnly ->
-                                [ Locale.string vc.locale "Actor"
+                                [ Locale.string vc.locale "actor"
                                     |> placeholder
                                 ]
                        )
@@ -213,14 +213,14 @@ searchResult plugins vc sc model =
                 |> List.length
     in
     if (viewState.query |> removeLeading0x |> String.length) < min_search_length && model.visible then
-        [ text (Locale.interpolated vc.locale "Please provide at least {0} characters" [ String.fromInt min_search_length ]) ]
+        [ text (Locale.interpolated vc.locale "Hint-minimum-input" [ String.fromInt min_search_length ]) ]
             |> Autocomplete.dropdownStyled
                 config1
                 vc
                 config2
 
     else if (viewState.query |> removeLeading0x |> String.length) > 0 && model.visible && noResults then
-        [ text (Locale.string vc.locale "No results found.") ]
+        [ text (Locale.string vc.locale "No-results-found") ]
             |> Autocomplete.dropdownStyled
                 config1
                 vc
@@ -230,7 +230,7 @@ searchResult plugins vc sc model =
                 }
 
     else if (lengthOfMutliInput > 1) && model.visible then
-        [ text (Locale.interpolated vc.locale "Multiple search terms detected ({0}). Please hit enter to add." [ String.fromInt lengthOfMutliInput ]) ]
+        [ text (Locale.interpolated vc.locale "Hint-multiple-search-terms" [ String.fromInt lengthOfMutliInput ]) ]
             |> Autocomplete.dropdownStyled
                 config1
                 vc
@@ -273,7 +273,7 @@ resultList _ vc sc { autocomplete, searchType } =
             }
 
         actorBadge =
-            { title = Locale.string vc.locale "Actors"
+            { title = Locale.string vc.locale "actors"
             , badge =
                 choices
                     |> List.filter

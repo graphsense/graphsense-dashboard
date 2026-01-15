@@ -46,7 +46,7 @@ view vc attributes config tblInfinite =
                     loadingPlaceholderBelow vc
 
                  else
-                    [ tableHint vc "No records found" ]
+                    [ tableHint vc "no records found" ]
                 )
 
           else
