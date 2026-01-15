@@ -362,7 +362,7 @@ more-hint: mehr...
 display: Anzeige
 copied-hint: kopiert!
 tag Label: Schlagwort
-confidence: Zuversicht
+confidence: Vertrauen
 sources: Quellen
 mention: Erwähnung
 mentions: Erwähnungen
@@ -410,9 +410,9 @@ reset: Zurücksetzen
 tags list: Schlagwortliste
 note-tag-inherited: 'Notiz: Dieser Tag wurde vom Cluster vererbt.'
 learn more: Mehr info
-low confidence: Geringe Zuversicht
-medium confidence: Mittlere Zuversicht
-high confidence: Hohe Zuversicht
+low confidence: Wenig Vertrauen
+medium confidence: Mittelm. Vertrauen
+high confidence: Hohes Vertrauen
 more: Mehr
 x-per-y: '{0} pro {1}'
 request limit exceeded: Abfrage-Limit erreicht
