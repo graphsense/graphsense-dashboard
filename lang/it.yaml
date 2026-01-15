@@ -188,24 +188,6 @@ server error: errore del server
 not found: non trovato
 data error: errore nei dati
 this table is empty: questa tabella è vuota
-'{1}: Searching for {0}': '{1}: Cerca {0}'
-'{1}: Loading address {0}': '{1}: Caricamento indirizzo {0}'
-'{1}: Loading block {0}': '{1}: Caricamento blocco {0}'
-'{1}: Loading transaction {0}': '{1}: Caricamento transazione {0}'
-'{1}: Loading entity {0}': '{1}: Caricamento entità {0}'
-'{1}: Loading entity for address {0}': '{1}: Caricamento entità per indirizzo {0}'
-'{1}: Loading input addresses of transaction {0}': '{1}: Caricamento indirizzi input
-  della transazione {0}'
-'{1}: Loading output addresses of transaction {0}': '{1}: Caricamento indirizzi output
-  della transazione {0}'
-'{1}: Loading outgoing neighbors of entity {0}': '{1}: Caricamento vicini in uscita
-  dell''entità {0}'
-'{1}: Loading incoming neighbors of entity {0}': '{1}: Caricamento vicini in entrata
-  dell''entità {0}'
-'{1}: Loading outgoing neighbors of address {0}': '{1}: Caricamento vicini in uscita
-  dell''indirizzo {0}'
-'{1}: Loading incoming neighbors of address {0}': '{1}: Caricamento vicini in entrata
-  dell''indirizzo {0}'
 for entities: per entità
 user address tags: identificativi dell'indirizzo utente
 '{6}: Searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)': '{6}:
@@ -480,3 +462,24 @@ hint-multiple-search-terms: Rilevati più termini di ricerca ({0}). Premere Invi
   aggiungere.
 transactions-from-to: Transazioni da {0} a {1} ({2})
 watch tutorials: guarda i tutorial
+statusbar-loading-actor: 'Caricamento attore {0}'
+statusbar-loading-tags-of-actor: 'Caricamento tag dell''attore {0}'
+statusbar-searching: '{1}: Cerca {0}'
+statusbar-loading-address: '{1}: Caricamento indirizzo {0}'
+statusbar-loading-block: '{1}: Caricamento blocco {0}'
+statusbar-loading-transaction: '{1}: Caricamento transazione {0}'
+statusbar-loading-entity: '{1}: Caricamento entità {0}'
+statusbar-loading-entity-for-address: '{1}: Caricamento entità per indirizzo {0}'
+statusbar-loading-input-addresses-of-tx: '{1}: Caricamento indirizzi input della transazione
+  {0}'
+statusbar-loading-output-addresses-of-tx: '{1}: Caricamento indirizzi output della
+  transazione {0}'
+statusbar-loading-outgoing-neighbors-of-entity: '{1}: Caricamento vicini in uscita
+  dell''entità {0}'
+statusbar-loading-incoming-neighbors-of-entity: '{1}: Caricamento vicini in entrata
+  dell''entità {0}'
+statusbar-loading-outgoing-neighbors-of-address of aDdress {0}': '{1}: Caricamento
+  vicini in uscita dell''indirizzo {0}'
+statusbar-loading-incoming-neighbors-of-address: '{1}: Caricamento vicini in entrata
+  dell''indirizzo {0}'
+supported tokens: token supportati

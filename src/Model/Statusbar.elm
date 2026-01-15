@@ -16,12 +16,12 @@ loadingAddressKey =
 
 loadingActorKey : String
 loadingActorKey =
-    "Loading Actor {0}"
+    "Statusbar-loading-actor"
 
 
 loadingActorTagsKey : String
 loadingActorTagsKey =
-    "Loading Tags of Actor {0}"
+    "Statusbar-loading-tags-of-actor"
 
 
 loadingAddressEntityKey : String

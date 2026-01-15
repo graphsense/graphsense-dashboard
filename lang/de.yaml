@@ -286,6 +286,8 @@ graphics-svg: Grafik (.svg)
 max-addresses: max. Adressen
 input-api-key: Bitte einen API-Schlüssel eingeben
 start-from-scratch: Wirklich neu loslegen?
+statusbar-loading-actor: 'Lade Akteur {0}'
+statusbar-loading-tags-of-actor: 'Lade Tags zu Akteur {0}'
 statusbar-loading-address: '{1}: lade Adresse {0}'
 statusbar-loading-block: '{1}: lade Block {0}'
 statusbar-loading-entity: '{1}: lade Cluster {0}'
@@ -493,3 +495,4 @@ hint-multiple-search-terms: Mehrere Suchbegriffe erkannt ({0}). Bitte Enter drü
   um hinzuzufügen.
 transactions-from-to: Transaktionen von {0} nach {1} ({2})
 watch tutorials: Schulungsvideos
+supported tokens: unterstützte Tokens

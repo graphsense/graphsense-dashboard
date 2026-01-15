@@ -283,6 +283,8 @@ graphics-svg: graphics (.svg)
 max-addresses: max. addresses
 input-api-key: please provide an API key
 start-from-scratch: Do you want to start from scratch?
+statusbar-loading-actor: 'Loading actor {0}'
+statusbar-loading-tags-of-actor: 'Loading tags of actor {0}'
 statusbar-loading-address: '{1}: loading address {0}'
 statusbar-loading-block: '{1}: loading block {0}'
 statusbar-loading-entity: '{1}: loading entity {0}'
@@ -480,3 +482,4 @@ hint-multiple-search-terms: Multiple search terms detected ({0}). Please hit ent
   to add.
 transactions-from-to: Transactions from {0} to {1} ({2})
 watch tutorials: watch tutorials
+supported tokens: supported tokens
