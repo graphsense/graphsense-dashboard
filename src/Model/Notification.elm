@@ -267,26 +267,26 @@ fromHttpErrorWithMoreInfo infoData errorData =
     in
     case errorData of
         Http.NetworkError ->
-            errorDefault "Service not reachable."
+            errorDefault "Service not reachable"
                 |> map (Rs.s_title (Just "Network Error"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
 
         Http.BadBody body ->
-            errorDefault "Unexpected data format."
+            errorDefault "Unexpected data format"
                 |> map (Rs.s_title (Just "Data Error"))
                 |> map (Rs.s_moreInfo (toMoreInfo [ body ]))
 
         Http.BadUrl _ ->
-            errorDefault "Unexpected data format."
+            errorDefault "Unexpected data format"
                 |> map (Rs.s_title (Just "Bad URL"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
 
         Http.BadStatus _ ->
-            errorDefault "Unexpected status code."
+            errorDefault "Unexpected status code"
                 |> map (Rs.s_title (Just "Request error"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
 
         Http.Timeout ->
-            errorDefault "Service does not respond in time."
+            errorDefault "Service does not respond in time"
                 |> map (Rs.s_title (Just "Request timeout"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
