@@ -32,7 +32,7 @@ willBePublishedAlertView vc =
             |> css
         ]
         [ Html.span []
-            [ Html.span [ Css.fontWeight Css.bold |> List.singleton |> css ] [ Html.text (Locale.string vc.locale "Warning:") ]
+            [ Html.span [ Css.fontWeight Css.bold |> List.singleton |> css ] [ Html.text (Locale.string vc.locale "Warning" ++ ":") ]
             , Html.text
                 (" " ++ Locale.string vc.locale "tags_release_warnings")
             ]
@@ -100,7 +100,7 @@ view plugins vc model =
                             |> Rs.s_dropdownFrame
                                 [ Css.property "background-color" Colors.white
                                 ]
-                            |> Rs.s_inputAttributes [ placeholder (Locale.string vc.locale "e.g. Binance") ]
+                            |> Rs.s_inputAttributes [ placeholder (Locale.string vc.locale "e.g." ++ " Binance") ]
                         )
                         model.search
                         |> Html.map (SearchMsgAddTagDialog >> AddTagDialog)
@@ -129,7 +129,7 @@ view plugins vc model =
                 { root =
                     { helpText = Locale.string vc.locale "Start typing to search existing labels."
                     , state = F.TextFieldWithHelpStateDefault
-                    , title = Locale.string vc.locale "Actor Label *"
+                    , title = Locale.titleCase vc.locale "Actor label" ++ " *"
                     }
                 , textField = { variant = actorField }
                 }

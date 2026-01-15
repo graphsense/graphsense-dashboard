@@ -609,9 +609,9 @@ titleCase model =
     if model.locale == "en" then
         String.Extra.toTitleCase
             >> String.split " "
-            >> List.map
-                (\word ->
-                    if String.length word == 1 then
+            >> List.indexedMap
+                (\i word ->
+                    if i > 0 && String.length word <= 2 then
                         String.toLower word
 
                     else
