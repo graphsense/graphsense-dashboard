@@ -129,7 +129,7 @@ view plugins vc model =
                 { root =
                     { helpText = Locale.string vc.locale "Tag-dialog-start-typing-search-labels"
                     , state = F.TextFieldWithHelpStateDefault
-                    , title = Locale.titleCase vc.locale "Actor label" ++ " *"
+                    , title = (Locale.string vc.locale "Actor label" |> Locale.titleCase vc.locale) ++ " *"
                     }
                 , textField = { variant = actorField }
                 }

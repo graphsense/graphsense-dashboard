@@ -364,6 +364,7 @@ copied-hint: kopiert!
 tag Label: Schlagwort
 confidence: Zuversicht
 sources: Quellen
+mention: Erwähnung
 mentions: Erwähnungen
 center graph: Graph zentrieren
 show-more-hint: mehr...
@@ -490,3 +491,4 @@ show transaction hash: Tx-Hash anzeigen
 hint-multiple-search-terms: Mehrere Suchbegriffe erkannt ({0}). Bitte Enter drücken,
   um hinzuzufügen.
 transactions-from-to: Transaktionen von {0} nach {1} ({2})
+watch tutorials: Schulungsvideos

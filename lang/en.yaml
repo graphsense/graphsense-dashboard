@@ -358,7 +358,8 @@ copied-hint: copied!
 tag Label: Tag Label
 confidence: Confidence
 sources: Sources
-mentions: Mentions
+mention: mention
+mentions: mentions
 center graph: Center graph
 show-more-hint: show more...
 show-less-hint: show less...
@@ -477,3 +478,4 @@ show transaction hash: Show transaction hash
 hint-multiple-search-terms: Multiple search terms detected ({0}). Please hit enter
   to add.
 transactions-from-to: Transactions from {0} to {1} ({2})
+watch tutorials: watch tutorials

@@ -76,7 +76,7 @@ linkCellStyle =
 
 
 cell : View.Config -> Cell -> Table.HtmlDetails Msg
-cell _ c =
+cell vc c =
     let
         cellBase =
             [ Css.height Css.auto |> Css.important
@@ -242,7 +242,7 @@ cell _ c =
                         { root =
                             { size = TagsComponents.ConfidenceLevelSizeSmall
                             , confidenceLevel = cl
-                            , text = lbl
+                            , text = Locale.string vc.locale lbl |> Locale.titleCase vc.locale
                             }
                         }
 
@@ -410,7 +410,11 @@ typeColumn vc =
                 in
                 cell vc
                     (TypeCell
-                        { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase)
+                        { label =
+                            data.tagType
+                                |> String.Extra.toTitleCase
+                                |> Locale.string vc.locale
+                                |> Locale.titleCase vc.locale
                         , confidence = r
                         , titletext = titleTextWithClusterAddition
                         , cellid = tagId data ++ "_tag_row"

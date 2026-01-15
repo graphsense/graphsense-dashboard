@@ -370,7 +370,8 @@ copied-hint: copiato!
 tag Label: Annotazione
 confidence: Fiducia
 sources: Fonti
-mentions: Menzioni
+mention: menzione
+mentions: menzioni
 center graph: Grafico centrale
 show-more-hint: di più...
 show-less-hint: meno...
@@ -478,3 +479,4 @@ show transaction hash: Mostra hash della tx
 hint-multiple-search-terms: Rilevati più termini di ricerca ({0}). Premere Invio per
   aggiungere.
 transactions-from-to: Transazioni da {0} a {1} ({2})
+watch tutorials: guarda i tutorial
