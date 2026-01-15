@@ -482,7 +482,7 @@ exclude zero value transfers: Transfers mit Nullwert ausschließen
 no zero value: Ohne Nullwert
 bridge transaction: Bridge Transaktion
 swap transaction: Swap Transaktion
-swap transactions: Swap Transaktionenen
+swap transactions: Swap Transaktionen
 Bridge transactions: Bridge Transaktionen
 hint-minimum-input: Bitte mindestens {0} Zeichen eingeben
 no-results-found: Keine Ergebnisse gefunden.
