@@ -483,3 +483,4 @@ hint-multiple-search-terms: Multiple search terms detected ({0}). Please hit ent
 transactions-from-to: Transactions from {0} to {1} ({2})
 watch tutorials: watch tutorials
 supported tokens: supported tokens
+statusbar-loading-token-currencies: 'loading supported token currencies for {0}'

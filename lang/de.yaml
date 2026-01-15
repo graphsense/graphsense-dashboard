@@ -496,3 +496,4 @@ hint-multiple-search-terms: Mehrere Suchbegriffe erkannt ({0}). Bitte Enter drü
 transactions-from-to: Transaktionen von {0} nach {1} ({2})
 watch tutorials: Schulungsvideos
 supported tokens: unterstützte Tokens
+statusbar-loading-token-currencies: 'Lade unterstützte Tokens für {0}'

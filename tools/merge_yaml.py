@@ -12,7 +12,7 @@ def merge_yaml(file1, file2, output_file):
             en[k] = k
 
     with open(output_file, 'w') as out:
-        yaml.dump(en, out, default_flow_style=False)
+        yaml.dump(en, out, default_flow_style=False, allow_unicode=True)
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:

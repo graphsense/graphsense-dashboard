@@ -248,8 +248,8 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.ListSupportedTokensEffect currency _ ->
-                ( "loading supported token currencies for " ++ currency
-                , []
+                ( "statusbar-loading-token-currencies"
+                , [ String.toUpper currency ]
                 )
                     |> Just
 

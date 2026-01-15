@@ -482,4 +482,5 @@ statusbar-loading-outgoing-neighbors-of-address of aDdress {0}': '{1}: Caricamen
   vicini in uscita dell''indirizzo {0}'
 statusbar-loading-incoming-neighbors-of-address: '{1}: Caricamento vicini in entrata
   dell''indirizzo {0}'
+statusbar-loading-token-currencies: 'Caricamento delle valute token supportate per {0}'
 supported tokens: token supportati
