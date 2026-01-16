@@ -100,7 +100,7 @@ view plugins vc model =
                             |> Rs.s_dropdownFrame
                                 [ Css.property "background-color" Colors.white
                                 ]
-                            |> Rs.s_inputAttributes [ placeholder (Locale.string vc.locale "e.g." ++ " Binance") ]
+                            |> Rs.s_inputAttributes [ placeholder (Locale.interpolated vc.locale "e.g." [ "Binance" ]) ]
                         )
                         model.search
                         |> Html.map (SearchMsgAddTagDialog >> AddTagDialog)

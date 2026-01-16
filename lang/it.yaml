@@ -190,14 +190,9 @@ data error: errore nei dati
 this table is empty: questa tabella è vuota
 for entities: per entità
 user address tags: identificativi dell'indirizzo utente
-'{6}: Searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)': '{6}:
-  Cerca {0} di {1} con {2} (profondità: {3}, ampiezza: {4}, salta se ci sono più di
-  {5} indirizzi)'
+statusbar-search-parameters: 'Cerca {0} di {1} con {2} (profondità: {3}, ampiezza: {4}, salta se ci sono più di {5} indirizzi)'
 true: sì
-false: false
-there are no transactions associated with this address and it is therefore not found on the blockchain.: non
-  esistono transazioni associate con questo indirizzo e quindi non sono archiviate
-  nella blockchain
+false: falso
 list sending entities: elenca entità mittenti
 list receiving entities: elenca entità riceventi
 list entity transactions: elenca transazioni dell'entità
@@ -223,17 +218,10 @@ cluster addresses: indirizzi cluster
 Related addresses: Indirizzi correlati
 Institution: Istituzione
 Tag Import: Importazione Tag
-? Only {0} of {1} tags were imported. {2} tags could not be applied because their
-  addresses are not present on the pathfinder.
-: Solo {0} di {1} tag sono stati importati. {2} tag non possono essere applicati perché
-  i loro indirizzi non sono presenti nel pathfinder.
-'loading Swaps and Bridging events for Tx {0}: {1}': 'Caricamento eventi di Swaps
-  e Bridging per la transazione {0}: {1}'
-'Group addresses by Transaction: Addresses were used together (likely same owner).': 'Raggruppa
-  gli indirizzi per transazione: gli indirizzi sono stati usati insieme (probabilmente
-  lo stesso proprietario).'
-'Group addresses by Public Key: Addresses from the same key (same owner).': 'Raggruppa
-  gli indirizzi per chiave pubblica: indirizzi della stessa chiave (stesso proprietario).'
+tag-import-feedback: Solo {0} di {1} tag sono stati importati. {2} tag non possono essere applicati perché i loro indirizzi non sono presenti nel pathfinder.
+statusbar-loading-swap-bridge-events: 'Caricamento eventi di Swaps e Bridging per la transazione {0}: {1}'
+Multi Input Cluster Help: 'Raggruppa gli indirizzi per transazione: gli indirizzi sono stati usati insieme (probabilmente lo stesso proprietario).'
+Pubkey Cluster Help: 'Raggruppa gli indirizzi per chiave pubblica: indirizzi della stessa chiave (stesso proprietario).'
 pf1_deprecation_notice: Pathfinder 1.0 è obsoleto e sarà rimosso a breve. Si prega
   di passare al nuovo Pathfinder disponibile nella barra laterale. Hai problemi con
   la rimozione del vecchio Pathfinder? Contatta il supporto via email all'indirizzo
@@ -348,6 +336,7 @@ show timestamp: Mostra il timestamp
 selection Tool: Selezionare
 more-hint: di più...
 display: Display
+copy: copiare
 copied-hint: copiato!
 tag Label: Annotazione
 confidence: Fiducia
@@ -484,3 +473,11 @@ statusbar-loading-incoming-neighbors-of-address: '{1}: Caricamento vicini in ent
   dell''indirizzo {0}'
 statusbar-loading-token-currencies: 'Caricamento delle valute token supportate per {0}'
 supported tokens: token supportati
+back: indietro
+mode: modalità
+all our services: tutti i nostri servizi
+logout: esci
+with zone code: con fuso orario
+in UTC: in UTC
+e.g.: ad es. {0}
+actor label: etichetta attore

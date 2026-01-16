@@ -121,12 +121,7 @@ navbarSubMenuView vc model { type_ } =
         ]
         ((case type_ of
             NavbarMore ->
-                GraphComponents.rightClickMenuWithAttributes
-                    (GraphComponents.rightClickMenuAttributes
-                        |> Rs.s_root [ [ Css.width (Css.px fixedWidth) ] |> css ]
-                        |> Rs.s_shortcutList [ [ Css.width (Css.px fixedWidth) ] |> css ]
-                        |> Rs.s_pluginsList [ [ Css.width (Css.px fixedWidth) ] |> css ]
-                    )
+                GraphComponents.rightClickMenu
                     { shortcutList =
                         [ { link = model.graph.route |> Route.graphRoute |> Route.toUrl
                           , icon = Icons.iconsPathfinderStateDefault {}
@@ -252,7 +247,7 @@ sidebar plugins vc model =
             -- [ sidebarMenuItem (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
             sidebarMenuItemWithNewParam (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl) False
                 :: Plugin.sidebar plugins model.plugins model.page vc
-                ++ [ sidebarMenuItemWithSubMenu vc model (UserToggledNavbarSubMenu NavbarMore) (Nb.iconsMoreHorizL {}) (Locale.string vc.locale "more") False False
+                ++ [ sidebarMenuItemWithSubMenu vc model (UserToggledNavbarSubMenu NavbarMore) (Nb.iconsMoreHorizL {}) (Locale.string vc.locale "More") False False
                    ]
 
         statsLinkItem =

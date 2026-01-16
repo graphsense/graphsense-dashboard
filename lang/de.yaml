@@ -363,6 +363,7 @@ show timestamp: Zeitstempel anzeigen
 selection Tool: Selektieren
 more-hint: mehr...
 display: Anzeige
+copy: kopieren
 copied-hint: kopiert!
 tag Label: Schlagwort
 confidence: Vertrauen
@@ -416,7 +417,7 @@ learn more: Mehr info
 low confidence: Wenig Vertrauen
 medium confidence: Mittelm. Vertrauen
 high confidence: Hohes Vertrauen
-more: Mehr
+more: mehr
 x-per-y: '{0} pro {1}'
 request limit exceeded: Abfrage-Limit erreicht
 info-request-limit-exceeded-with-details: Begrenzung der API Abfragen von {0} pro
@@ -497,3 +498,11 @@ transactions-from-to: Transaktionen von {0} nach {1} ({2})
 watch tutorials: Schulungsvideos
 supported tokens: unterstützte Tokens
 statusbar-loading-token-currencies: 'Lade unterstützte Tokens für {0}'
+back: zurück
+mode: Modus
+all our services: weitere Dienstleistungen
+logout: abmelden
+with zone code: mit Zeitzone
+in UTC: in UTC
+e.g.: z.B. {0}
+actor label: Bezeichnung des Akteurs

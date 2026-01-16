@@ -668,7 +668,7 @@ transactionsDataTab vc model id viewState =
                         viewState.address.data
                             |> RemoteData.map (.noOutgoingTxs >> Locale.int vc.locale)
                             |> RemoteData.withDefault ""
-                    , title = Locale.string vc.locale "transactions"
+                    , title = Locale.string vc.locale "Transactions"
                     }
                 }
         , disabled = totalNumber == 0

@@ -98,7 +98,7 @@ generalSettings plugins vc m =
                 (\a ->
                     Locale.locales
                         |> List.Extra.find (first >> (==) a)
-                        |> Maybe.map (second >> Locale.string vc.locale)
+                        |> Maybe.map second
                         |> Maybe.withDefault ""
                 )
 

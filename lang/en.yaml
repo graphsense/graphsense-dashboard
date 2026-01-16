@@ -33,7 +33,7 @@ Add_Tag_description: Help improve our data by reporting an entity linked to this
 Multi Input Cluster Help: Addresses have been used in the same transaction (ie. likely
   by same owner).
 Pubkey Cluster Help: Addresses have been created from the same key (ie. by same owner).
-pf1_deprecation_notice: 'English: Pathfinder 1.0 is deprecated and will be removed
+pf1_deprecation_notice: 'Pathfinder 1.0 is deprecated and will be removed
   soon. Please switch to the new Pathfinder available from the sidebar. Do you have
   issues with the retirement of the old pathfinder? Contact support by email at contact@ikna.io.'
 tx-tracing-mode-help-text: In transaction mode, you can trace the flow of funds through
@@ -257,8 +257,8 @@ unexpected data format: unexpected data format
 unexpected status code: unexpected status code
 service does not respond in time: service does not respond in time
 user address tags: user address tags
-true: true
-false: false
+true: 'true'
+false: 'false'
 Transactions: Transactions
 Save: Save
 Display Settings: Display Settings
@@ -357,6 +357,7 @@ show timestamp: Show timestamp
 selection Tool: Selection Tool
 more-hint: more...
 display: Display
+copy: copy
 copied-hint: copied!
 tag Label: Tag Label
 confidence: Confidence
@@ -408,7 +409,7 @@ learn more: Learn more
 low confidence: Low confidence
 medium confidence: Medium confidence
 high confidence: High confidence
-more: More
+more: more
 x-per-y: '{0} per {1}'
 request limit exceeded: Request limit exceeded
 info-request-limit-exceeded-with-details: The request limit of your API key of {0}
@@ -484,3 +485,11 @@ transactions-from-to: Transactions from {0} to {1} ({2})
 watch tutorials: watch tutorials
 supported tokens: supported tokens
 statusbar-loading-token-currencies: 'loading supported token currencies for {0}'
+back: back
+mode: mode
+all our services: all our services
+logout: logout
+with zone code: with timezone
+in UTC: in UTC
+e.g.: e.g. {0}
+actor label: actor label
