@@ -175,7 +175,7 @@ plugin-theme: check-plugin-exists $(GENERATED_THEME_THEME)/$(PLUGIN_NAME)/$(THEM
 
 $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(GENERATED_THEME_COLORMAPS) $(CODEGEN_RECORDSETTER) $(PLUGINS_DIR)/%/$(FIGMA_JSON)
 	free
-	./tools/codegen.sh --plugin=$* 
+	/usr/bin/time -v ./tools/codegen.sh --plugin=$* 
 	free
 	mkdir -p $(GENERATED_THEME_THEME)/$*
 	touch $@
