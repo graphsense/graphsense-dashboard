@@ -153,7 +153,7 @@ $(FIGMA_JSON):
 
 $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC) $(CODEGEN_RECORDSETTER)
 	free
-	./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
+	/usr/bin/time -v ./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
 	free
 
 check-plugin-exists:
