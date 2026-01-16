@@ -5,6 +5,8 @@ import DateFormat
 import Dict
 import Effect.Locale exposing (Effect)
 import Languages.German
+import Languages.Italian
+import Languages.Spanish
 import Model.Locale exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
@@ -87,12 +89,24 @@ switch locale model =
                 "de" ->
                     Numeral.formatWithLanguage Languages.German.lang
 
+                "it" ->
+                    Numeral.formatWithLanguage Languages.Italian.lang
+
+                "es" ->
+                    Numeral.formatWithLanguage Languages.Spanish.lang
+
                 _ ->
                     Numeral.format
         , timeLang =
             case locale of
                 "de" ->
                     DateFormat.german
+
+                "it" ->
+                    DateFormat.italian
+
+                "es" ->
+                    DateFormat.spanish
 
                 _ ->
                     DateFormat.english
