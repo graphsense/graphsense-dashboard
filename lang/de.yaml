@@ -506,3 +506,6 @@ with zone code: mit Zeitzone
 in UTC: in UTC
 e.g.: z.B. {0}
 actor label: Bezeichnung des Akteurs
+date-time-format: 'DD.MMMM YYYY HH:mm'
+time-format: "HH:mm"
+date-format: "DD.MM.YY"

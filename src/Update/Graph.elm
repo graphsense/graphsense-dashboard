@@ -3362,18 +3362,7 @@ makeTagPack model time =
                               )
                             , ( "lastmod"
                               , DateFormat.format
-                                    [ DateFormat.yearNumber
-                                    , DateFormat.text "-"
-                                    , DateFormat.monthFixed
-                                    , DateFormat.text "-"
-                                    , DateFormat.dayOfMonthFixed
-                                    , DateFormat.text " "
-                                    , DateFormat.hourMilitaryFixed
-                                    , DateFormat.text ":"
-                                    , DateFormat.minuteFixed
-                                    , DateFormat.text ":"
-                                    , DateFormat.secondFixed
-                                    ]
+                                    "YYYY-MM-DD HH:mm:ss"
                                     Time.utc
                                     time
                                     |> (\s -> "\"" ++ s ++ "\"")

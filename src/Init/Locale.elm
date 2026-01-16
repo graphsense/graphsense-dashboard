@@ -1,8 +1,7 @@
 module Init.Locale exposing (init)
 
 import Config.UserSettings exposing (UserSettings)
-import DateFormat.Language
-import DateFormat.Relative
+import DateFormat
 import Dict
 import Effect.Locale exposing (Effect(..))
 import Locale.English
@@ -28,8 +27,7 @@ init uc =
       , numberFormat = Numeral.format
       , valueDetail = uc.valueDetail |> Maybe.withDefault Magnitude
       , zone = Time.utc
-      , timeLang = DateFormat.Language.english
-      , relativeTimeOptions = DateFormat.Relative.defaultRelativeOptions
+      , timeLang = DateFormat.english
       , unitToString = Locale.English.unitToString
       , supportedTokens = Dict.empty
       }

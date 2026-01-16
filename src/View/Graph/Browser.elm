@@ -581,35 +581,14 @@ browseValue vc value =
                 ]
 
         Usage now timestamp ->
-            case vc.locale.valueDetail of
-                Locale.Exact ->
-                    div
-                        []
-                        [ span
-                            [ Css.propertyBoxUsageTimestamp vc |> css
-                            ]
-                            [ timestamp |> Data.timestampToPosix |> Locale.timestamp vc.locale |> text
-                            ]
-                        , span
-                            [ Css.propertyBoxUsageRelative vc |> css
-                            ]
-                            [ " ("
-                                ++ Locale.relativeTime vc.locale now (Data.timestampToPosix timestamp)
-                                ++ ")"
-                                |> text
-                            ]
-                        ]
-
-                Locale.Magnitude ->
-                    div
-                        []
-                        [ span
-                            [ Css.propertyBoxUsageRelative vc |> css
-                            ]
-                            [ Locale.relativeTime vc.locale now (Data.timestampToPosix timestamp)
-                                |> text
-                            ]
-                        ]
+            div
+                []
+                [ span
+                    [ Css.propertyBoxUsageTimestamp vc |> css
+                    ]
+                    [ timestamp |> Data.timestampToPosix |> Locale.timestamp vc.locale |> text
+                    ]
+                ]
 
         Duration dur ->
             span

@@ -481,3 +481,6 @@ with zone code: con fuso orario
 in UTC: in UTC
 e.g.: ad es. {0}
 actor label: etichetta attore
+date-time-format: 'DD MMMM YYYY HH:mm'
+time-format: "HH:mm"
+date-format: "DD/MM/YY"

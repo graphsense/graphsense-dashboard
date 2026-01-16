@@ -1,8 +1,7 @@
 module Model.Locale exposing (Flags, Model, State(..), ValueDetail(..), getFiatValue, getTokenTickers, getTokenTickersAndBase, isEmpty, locales)
 
 import Api.Data
-import DateFormat.Language
-import DateFormat.Relative
+import DateFormat
 import Dict exposing (Dict)
 import Locale.Durations
 import Time
@@ -10,7 +9,11 @@ import Time
 
 locales : List ( String, String )
 locales =
-    [ ( "de", "German" ), ( "en", "English" ), ( "it", "Italiano" ) ]
+    [ ( "de", "Deutsch" )
+    , ( "en", "English" )
+    , ( "it", "Italiano" )
+    , ( "es", "Español" )
+    ]
 
 
 type State
@@ -42,8 +45,7 @@ type alias Model =
     , valueDetail : ValueDetail
     , locale : String
     , zone : Time.Zone
-    , timeLang : DateFormat.Language.Language
-    , relativeTimeOptions : DateFormat.Relative.RelativeTimeOptions
+    , timeLang : DateFormat.Language
     , unitToString : Int -> Locale.Durations.Unit -> String
     , supportedTokens : Dict String Api.Data.TokenConfigs
     }

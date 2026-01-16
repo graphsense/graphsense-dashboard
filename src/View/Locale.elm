@@ -19,7 +19,6 @@ module View.Locale exposing
     , isLastSecondOfTheDay
     , makeTimestampFilename
     , percentage
-    , relativeTime
     , string
     , text
     , time
@@ -39,7 +38,6 @@ import Basics.Extra exposing (flip)
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
-import DateFormat.Relative
 import Dict exposing (Dict)
 import Ease
 import Html.Styled exposing (Html, span)
@@ -226,32 +224,7 @@ timestamp : Model -> Posix -> String
 timestamp model =
     let
         format =
-            case model.locale of
-                "de" ->
-                    [ dayOfMonthNumber
-                    , DateFormat.text ". "
-                    , monthNameFull
-                    , DateFormat.text " "
-                    , yearNumber
-                    , DateFormat.text " "
-                    , hourMilitaryFixed
-                    , DateFormat.text ":"
-                    , minuteFixed
-                    ]
-
-                _ ->
-                    [ monthFixed
-                    , DateFormat.text "/"
-                    , dayOfMonthFixed
-                    , DateFormat.text "/"
-                    , yearNumber
-                    , DateFormat.text " "
-                    , hourFixed
-                    , DateFormat.text ":"
-                    , minuteFixed
-                    , DateFormat.text " "
-                    , amPmUppercase
-                    ]
+            string model "date-time-format"
     in
     timestampWithFormat format model
 
@@ -260,14 +233,7 @@ timestampDateUniform : Model -> Posix -> String
 timestampDateUniform model =
     let
         format =
-            [ monthNameAbbreviated
-            , DateFormat.text " "
-
-            --, dayOfMonthSuffix
-            , dayOfMonthFixed
-            , DateFormat.text ", "
-            , yearNumber
-            ]
+            "MMM dd, yyyy"
     in
     timestampWithFormat format model
 
@@ -287,15 +253,7 @@ timestampTimeUniform model showTimeZoneOffset x =
                 ""
 
         format =
-            [ hourMilitaryFixed
-            , DateFormat.text ":"
-            , minuteFixed
-            , DateFormat.text ":"
-            , secondFixed
-            , DateFormat.text " "
-
-            --, amPmUppercase
-            ]
+            "HH:mm:ss "
     in
     timestampWithFormat format model x ++ timezoneOffset
 
@@ -313,22 +271,7 @@ date : Model -> Posix -> String
 date model =
     let
         format =
-            case model.locale of
-                "de" ->
-                    [ dayOfMonthFixed
-                    , DateFormat.text "."
-                    , monthFixed
-                    , DateFormat.text "."
-                    , yearNumberLastTwo
-                    ]
-
-                _ ->
-                    [ monthFixed
-                    , DateFormat.text "/"
-                    , dayOfMonthFixed
-                    , DateFormat.text "/"
-                    , yearNumberLastTwo
-                    ]
+            string model "date-format"
     in
     timestampWithFormat format model
 
@@ -337,38 +280,14 @@ time : Model -> Posix -> String
 time model =
     let
         format =
-            case model.locale of
-                "de" ->
-                    [ hourMilitaryFixed
-                    , DateFormat.text ":"
-                    , minuteFixed
-                    , DateFormat.text ":"
-                    , secondFixed
-                    ]
-
-                _ ->
-                    [ hourFixed
-                    , DateFormat.text ":"
-                    , minuteFixed
-                    , DateFormat.text ":"
-                    , secondFixed
-                    , DateFormat.text " "
-                    , amPmUppercase
-                    ]
+            string model "time-format"
     in
     timestampWithFormat format model
 
 
-timestampWithFormat : List Token -> Model -> Posix -> String
+timestampWithFormat : String -> Model -> Posix -> String
 timestampWithFormat format { timeLang, zone } =
-    formatWithLanguage timeLang format zone
-
-
-relativeTime : Model -> Posix -> Posix -> String
-relativeTime { relativeTimeOptions } from to =
-    DateFormat.Relative.relativeTimeWithOptions relativeTimeOptions
-        from
-        to
+    DateFormat.formatI18n timeLang format zone
 
 
 percentage : Model -> Float -> String
@@ -625,35 +544,9 @@ titleCase model =
 
 makeTimestampFilename : Model -> Time.Posix -> String
 makeTimestampFilename locale =
-    timestampWithFormat
-        [ DateFormat.yearNumber
-        , DateFormat.text "-"
-        , DateFormat.monthFixed
-        , DateFormat.text "-"
-        , DateFormat.dayOfMonthFixed
-        , DateFormat.text " "
-        , DateFormat.hourMilitaryFixed
-        , DateFormat.text "-"
-        , DateFormat.minuteFixed
-        , DateFormat.text "-"
-        , DateFormat.secondFixed
-        ]
-        locale
+    timestampWithFormat "yyyy-MM-dd HH-mm-ss" locale
 
 
 timestampNormal : Model -> Posix -> String
 timestampNormal locale =
-    timestampWithFormat
-        [ DateFormat.yearNumber
-        , DateFormat.text "-"
-        , DateFormat.monthFixed
-        , DateFormat.text "-"
-        , DateFormat.dayOfMonthFixed
-        , DateFormat.text " "
-        , DateFormat.hourMilitaryFixed
-        , DateFormat.text ":"
-        , DateFormat.minuteFixed
-        , DateFormat.text ":"
-        , DateFormat.secondFixed
-        ]
-        locale
+    timestampWithFormat "yyyy-MM-dd HH:mm:ss" locale

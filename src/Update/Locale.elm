@@ -1,13 +1,10 @@
 module Update.Locale exposing (changeTimeZone, changeValueDetail, setSupportedTokens, switch, update)
 
 import Api.Data
-import DateFormat.Language
-import DateFormat.Relative
+import DateFormat
 import Dict
 import Effect.Locale exposing (Effect)
 import Languages.German
-import Locale.English
-import Locale.German
 import Model.Locale exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
@@ -95,24 +92,10 @@ switch locale model =
         , timeLang =
             case locale of
                 "de" ->
-                    Locale.German.german
+                    DateFormat.german
 
                 _ ->
-                    DateFormat.Language.english
-        , relativeTimeOptions =
-            case locale of
-                "de" ->
-                    Locale.German.relativeTimeOptions
-
-                _ ->
-                    DateFormat.Relative.defaultRelativeOptions
-        , unitToString =
-            case locale of
-                "de" ->
-                    Locale.German.unitToString
-
-                _ ->
-                    Locale.English.unitToString
+                    DateFormat.english
     }
 
 
