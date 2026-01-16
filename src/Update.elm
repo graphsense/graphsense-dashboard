@@ -731,11 +731,6 @@ update plugins uc msg model =
             )
                 |> updateByPluginOutMsg plugins uc outMsg
 
-        BrowserGotLoggedOut _ ->
-            ( model
-            , [ NavLoadEffect "/" ]
-            )
-
         BrowserGotElementForPlugin pmsg element ->
             updatePlugins plugins uc (pmsg element) model
 

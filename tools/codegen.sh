@@ -6,7 +6,7 @@ REFRESH=0
 FIGMA_WHITELIST_FRAMES=[]
 PLUGIN_NAME=""
 
-source .env
+source .env || true
 
 for i in "$@"
 do

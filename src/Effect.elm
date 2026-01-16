@@ -4,6 +4,7 @@ module Effect exposing (perform)
 
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
+import Config
 import Config.UserSettings
 import Effect.Api
 import Effect.Graph as Graph
@@ -49,15 +50,7 @@ perform plugins key statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Http.riskyRequest
-                { method = "GET"
-                , headers = []
-                , url = "/?logout"
-                , body = Http.emptyBody
-                , expect = Http.expectWhatever BrowserGotLoggedOut
-                , timeout = Nothing
-                , tracker = Nothing
-                }
+            Nav.load Config.logoutUrl
 
         SetDirtyEffect ->
             Ports.setDirty True

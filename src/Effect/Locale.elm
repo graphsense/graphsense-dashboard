@@ -28,7 +28,7 @@ perform effect =
 
 getTranslationEffect : String -> Effect
 getTranslationEffect locale =
-    { url = "/lang/" ++ locale ++ ".yaml?{{TRANSLATION_FILES_HASH}}"
+    { url = "/lang/" ++ locale ++ ".yaml?{{CACHE_BUST}}"
     , toMsg =
         Result.andThen
             (fromString (dict string)

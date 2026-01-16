@@ -59,21 +59,6 @@ if(error) {
   process.exit(1)
 }
 
-plugins.sort((a, b) => {
-  // Check if strings end with '_preview'
-  const aEndsWithPreview = a.endsWith("_preview");
-  const bEndsWithPreview = b.endsWith("_preview");
-
-  // If both or neither strings end with '_preview', sort them lexicographically
-  if (aEndsWithPreview === bEndsWithPreview) {
-    return a.localeCompare(b);
-  }
-
-  // If only one string ends with '_preview', place it after the other
-  return aEndsWithPreview ? 1 : -1;
-});
-
-
 plugins = plugins.map(plugin => {
     console.log(plugin)
     const packageName = plugin.charAt(0).toUpperCase() + plugin.slice(1)

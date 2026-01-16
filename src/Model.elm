@@ -107,7 +107,6 @@ type Msg
     | UserClickedLogout
     | UserClickedLightmode
     | TimeUpdateReset Time.Posix
-    | BrowserGotLoggedOut (Result Http.Error ())
     | BrowserGotContentsElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
