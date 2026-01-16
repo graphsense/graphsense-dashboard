@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.01.0] - unreleased
+
+### Changed
+
+- Handling of environment variables
+- Improved error handling at plugin dependency installation
+- Move generate.js to tools/
+- Renamed "TRANSLATION_FILES_HASH" to "CACHE_BUST"
+- Aligned translation files, simplified lookup keys, added couple of missing translation 
+- Changed logout behaviour to browser redirect
+ 
 ## [25.11.5] - 2025-12-16
 
 ### Fixed
