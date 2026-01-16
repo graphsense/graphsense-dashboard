@@ -105,10 +105,6 @@ body plugins vc model =
 
 navbarSubMenuView : Config -> Model key -> NavbarSubMenu -> Html Msg
 navbarSubMenuView vc model { type_ } =
-    let
-        fixedWidth =
-            180
-    in
     div
         [ [ Css.left (Css.px (Nb.navbarMenuNew_details.renderedWidth - 5))
           , Css.top (Css.px 0)

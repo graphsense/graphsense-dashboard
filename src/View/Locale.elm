@@ -37,7 +37,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
-import DateFormat exposing (..)
+import DateFormat
 import Dict exposing (Dict)
 import Ease
 import Html.Styled exposing (Html, span)
