@@ -1,0 +1,511 @@
+the search: buscar
+entity: clúster
+entities: clústeres
+Root Address: raíz del clúster
+Sending entities: envío de clústeres
+Receiving entities: recepción de clústeres
+currency: criptoactivo
+change currency: denominación del valor
+for entities: para clústeres
+final balance: Saldo
+list sending entities: lista de envío de clústeres
+list receiving entities: lista de recepción de clústeres
+list entity transactions: lista de transacciones de clústeres
+Incoming entity: Clúster entrante
+Outgoing entity: Clúster saliente
+Exact: Exacto
+Magnitude: Magnitud
+Value format: Formato del valor
+mentionTagDescriptionId: Una etiqueta de mención expresa que esta dirección fue mencionada,
+  por ejemplo, en un sitio web. Puede ser relevante, pero depende del contexto.
+actorTagDescriptionId: Una etiqueta de actor es una declaración sobre la parte que
+  controla la dirección.
+eventTagDescriptionId: Una etiqueta de evento es una declaración sobre un evento que
+  tiene lugar en relación con esta dirección, por ejemplo, si la dirección formó parte
+  de un hackeo.
+attributeTagDescriptionId: Una etiqueta de atributo describe una propiedad de la dirección,
+  por ejemplo, si se sabe que se utiliza para un fin específico.
+this table is empty: No se han encontrado entradas.
+Tag Import: Importación de etiquetas
+tag-import-feedback: Solo se importaron {0} de {1} etiquetas. No se pudieron aplicar
+  {2} etiquetas porque sus direcciones no están presentes en el Pathfinder.
+Add_Tag_description: Ayude a mejorar nuestros datos informando sobre una entidad vinculada
+  a esta dirección; se revisará y, finalmente, se publicará.
+Multi Input Cluster Help: Traducción realizada con la versión gratuita del traductor
+  DeepL.com
+Pubkey Cluster Help: Las direcciones se han creado a partir de la misma clave (es
+  decir, por el mismo propietario).
+pf1_deprecation_notice: Pathfinder 1.0 está obsoleto y se eliminará pronto. Cambie
+  al nuevo Pathfinder disponible en la barra lateral. ¿Tiene problemas con la retirada
+  del antiguo Pathfinder? Póngase en contacto con el servicio de asistencia por correo
+  electrónico en contact@ikna.io.
+tx-tracing-mode-help-text: En el modo de transacción, puede rastrear el flujo de fondos
+  a través de transacciones individuales. Este modo es útil para seguir transacciones
+  específicas y comprender sus rutas.
+tx-relationship-mode-help-text: En el modo de relación, puede explorar las relaciones
+  entre diferentes entidades basándose en datos de transacciones agregados. Este modo
+  ayuda a identificar patrones y conexiones entre entidades en múltiples transacciones.
+cluster-details-info-help-text: La información del clúster proporciona estadísticas
+  sobre todas las direcciones del clúster, incluidos los saldos agregados y el recuento
+  de transacciones. Los clústeres se basan únicamente en la heurística de múltiples
+  entradas.
+tx_hash: Hash de la transacción
+token_tx_id: ID de la subtranacción
+value_raw: Importe (sin procesar)
+value_in_base_currency: Importe
+height: N.º de bloque
+value_eur: EUR
+value_usd: USD
+timestamp_utc: Fecha y hora (UTC)
+receiving_address: A
+sending_address: De
+no_inputs: Entradas
+no_outputs: Salidas
+total_input: Importe total de las entradas
+total_output: Importe total de las salidas
+success_download_csv: '{0} filas de datos descargadas como CSV'
+outgoing relations: Relaciones salientes
+incoming relations: Relaciones entrantes
+tags_release_warnings: Las etiquetas que añadas serán visibles para todos los usuarios.
+  Asegúrate de que tus etiquetas no incluyan ningún material que infrinja los derechos
+  de autor, como etiquetas o contenido de otros proveedores de herramientas. Además,
+  no reveles al público ninguna información específica de un caso concreto o sensible.
+sending_address_label: De Actor
+receiving_address_label: A Actor
+address: Dirección
+addresses: Direcciones
+transaction: Transacción
+transactions: Transacciones
+label: Etiqueta
+labels: Etiquetas
+tag: Etiqueta
+tags: etiquetas
+address tags: etiquetas de dirección
+entity tags: etiquetas de entidad
+block: bloque
+blocks: bloques
+supported currencies: monedas admitidas
+ledger statistics: estadísticas del libro mayor
+last update: última actualización
+latest block: último bloque
+transfers: transferencias
+withdrawals: retiros
+deposits: depósitos
+neighbors: vecinos
+receiving entities: entidades receptoras
+sending entities: entidades emisoras
+receiving entity: entidad receptora
+sending entity: entidad emisora
+receiving addresses: direcciones receptoras
+receiving address: dirección receptora
+sending addresses: direcciones emisoras
+sending address: dirección emisora
+first usage: primer uso
+last usage: último uso
+activity period: período de actividad
+total received: total recibido
+total sent: total enviado
+total received assets: total de activos recibidos
+final balance assets: saldo final de activos
+balance: saldo
+entity balance: saldo de la entidad
+address balance: saldo de la dirección
+entity received: recibido por la entidad
+address received: recibido por la dirección
+all assets: todos los activos
+category: categoría
+categories: categorías
+abuse: abuso
+abuses: abusos
+incoming neighbors: vecinos entrantes
+outgoing neighbors: vecinos salientes
+block hash: hash del bloque
+created: creado
+total input: entrada total
+total output: salida total
+year: año
+years: años
+month: mes
+months: meses
+day: día
+days: días
+hour: hora
+hours: horas
+minute: minuto
+minutes: minutos
+second: segundo
+seconds: segundos
+addresses tagged: direcciones etiquetadas
+source: fuente
+target: destino
+value: valor
+timestamp: marca de tiempo
+outgoing address: dirección de salida
+incoming address: dirección de entrada
+outgoing entity: entidad de salida
+incoming entity: entidad de entrada
+outgoing addresses: direcciones de salida
+incoming addresses: direcciones de entrada
+outgoing entities: entidades de salida
+incoming entities: entidades de entrada
+output address: dirección de salida
+input address: dirección de entrada
+download table as csv: descargar tabla como csv
+add all to graph: añadir todo al gráfico
+tagpack: tagpack
+last modified: última modificación
+active: activo
+download tags as json: descargar etiquetas como json
+included in block: incluido en bloque
+export: exportar
+full data: datos completos
+notes only: solo notas
+rest calls: llamadas rest
+audit log: registro de auditoría
+address label: etiqueta de dirección
+transaction label: etiqueta de transacción
+language: idioma
+english: inglés
+german: alemán
+russian: ruso
+import: importar
+criterion: criterio
+depth: profundidad
+by category: por categoría
+for contained addresses: para direcciones contenidas
+for final balance: para saldo final
+for total received: para total recibido
+breadth: amplitud
+search: buscar
+save: guardar
+title: título
+investigator: investigador
+institution: institución
+summary: resumen
+cancel: cancelar
+creator: creador
+start from scratch: empezar desde cero
+load from file: cargar desde archivo
+undo last graph change: deshacer último cambio en el gráfico
+redo undone graph change: rehacer cambio deshecho en el gráfico
+configuration options: opciones de configuración
+legend: leyenda
+username: nombre de usuario
+password: contraseña
+sign in: iniciar sesión
+signing in: iniciando sesión
+annotate: anotar
+annotate entity: anotar entidad
+annotate address: anotar dirección
+remove from graph: eliminar del gráfico
+remove: eliminar
+remove link: eliminar enlace
+expand: expandir
+collapse: contraer
+show address table: mostrar tabla de direcciones
+sort addresses by: ordenar direcciones por
+incoming: entrantes
+outgoing: salientes
+user-defined labels: etiquetas definidas por el usuario
+hide logs: ocultar registros
+show logs: mostrar registros
+notes: notas
+add tag: añadir etiqueta
+search incoming neighbors: buscar vecinos entrantes
+search outgoing neighbors: buscar vecinos salientes
+nothing to display yet: aún no hay nada que mostrar
+category {0}: categoría {0}
+searching outgoing: buscando salientes
+searching incoming: buscando entrantes
+for outgoing neighbors: para vecinos salientes
+for incoming neighbors: para vecinos entrantes
+errors only: solo errores
+show more: mostrar más
+loading msg outgoing: cargando mensaje saliente
+loading msg incoming: cargando mensaje entrante
+saving to file: guardando en archivo
+go to dashboard: ir al panel de control
+remove tag: eliminar etiqueta
+estimated value: valor estimado
+estimated value {0}: valor estimado {0}
+estimated total transferred: total estimado transferido
+total transferred: total transferido
+reorder to prioritize: reordenar para priorizar
+tag coherence: coherencia de etiquetas
+unknown: desconocido
+api-rate-limit-exceeded: Se ha superado el límite de la API. Inténtalo de nuevo más
+  tarde.
+legend empty: leyenda vacía
+from: desde
+to: hasta
+pick a color: elegir un color
+api request limit: límite de solicitudes API
+from address: desde dirección
+to address: hasta dirección
+tagged addresses: direcciones etiquetadas
+invalid key: clave no válida
+unlimited: ilimitado
+root address: dirección raíz
+direction: dirección
+both: ambos
+search neighbors: buscar vecinos
+bad status: estado incorrecto
+bad URL: URL incorrecta
+request timeout: tiempo de espera de la solicitud agotado
+request error: error de solicitud
+network error: error de red
+server error: error del servidor
+not found: no encontrado
+data error: error de datos
+service not reachable: servicio no accesible
+unexpected data format: formato de datos inesperado
+unexpected status code: código de estado inesperado
+service does not respond in time: el servicio no responde a tiempo
+user address tags: etiquetas de dirección del usuario
+'True': Verdadero
+'False': Falso
+Transactions: Transacciones
+Save: Guardar
+Display Settings: Configuración de visualización
+Display settings: Configuración de visualización
+Remove from graph: Eliminar del gráfico
+related addresses: direcciones relacionadas
+cluster addresses: direcciones de clúster
+tagged cluster addresses: direcciones de clúster etiquetadas
+all cluster addresses: todas las direcciones de clúster
+type: tipo
+Institution: Institución
+fee: tarifa
+statusbar-loading-concepts: cargando conceptos para la taxonomía {0}
+info-more-rows-for-csv-download: La descarga de datos CSV está limitada a aproximadamente
+  {0} filas.
+info-more-rows-for-csv-download-hint: Utilice las opciones de filtro para reducir
+  aún más el conjunto de datos.
+one-address: '{0} dirección'
+number-of-inputs: n.º de entradas
+number-of-outputs: n.º de salidas
+number-of-transactions: n.º de transacciones
+graphics-svg: gráficos (.svg)
+max-addresses: máx. direcciones
+input-api-key: proporcione una clave API
+start-from-scratch: ¿Desea empezar desde cero?
+statusbar-loading-actor: Cargando actor {0}
+statusbar-loading-tags-of-actor: Cargando etiquetas del actor {0}
+statusbar-loading-address: '{1}: cargando dirección {0}'
+statusbar-loading-block: '{1}: cargando bloque {0}'
+statusbar-loading-entity: '{1}: cargando entidad {0}'
+statusbar-loading-entity-for-address: '{1}: cargando entidad para la dirección {0}'
+statusbar-loading-addresses: '{1}: cargando {0} direcciones'
+statusbar-loading-entities: '{1}: cargando {0} entidades'
+statusbar-loading-entities-of-addresses: '{1}: cargando entidades de {0} direcciones'
+statusbar-loading-tags-of-address: '{1}: cargando etiquetas de la dirección {0}'
+statusbar-loading-address-tags-of-entity: '{1}: cargando etiquetas de dirección de
+  la entidad {0}'
+statusbar-loading-txs-of-address {0}': '{1}: cargando transacciones de la dirección
+  {0}'
+statusbar-loading-txs-of-block: '{1}: cargando transacciones del bloque {0}'
+statusbar-loading-addresses-of-entity: '{1}: cargando direcciones de la entidad {0}'
+statusbar-loading-txs-between-addresses: '{2}: cargando transacciones de enlace de
+  direcciones entre {0} y {1}'
+statusbar-loading-txs-between-entities: '{2}: cargando transacciones de enlace de
+  entidades entre {0} y {1}'
+address-statistics-not-computed: estadísticas de direcciones aún no calculadas
+timezone: Zona horaria
+user: Usuario
+address-transactions-of: transacciones de la dirección {0} ({1})
+incoming-neighbors-of-address: vecinos entrantes de la dirección {0} ({1})
+outgoing-neighbors-of-address: vecinos salientes de la dirección {0} ({1})
+incoming-neighbors-of-entity: vecinos entrantes de la entidad {0} ({1})
+outgoing-neighbors-of-entity: vecinos salientes de la entidad {0} ({1})
+addresses-of-entity: direcciones de la entidad {0} ({1})
+total-received-assets-of-address: total de activos recibidos de la dirección {0} ({1})
+final-balance-assets-of-address: saldo final de activos de la dirección {0} ({1})
+transactions-of-block: transacciones del bloque {0} ({1})
+transactions-between-entities: transacciones entre las entidades {0} y {1} ({2})
+incoming-values-of-transaction: Valores entrantes de la transacción {0} ({1})
+outgoing-values-of-transaction: Valores salientes de la transacción {0} ({1})
+statusbar-search-parameters: '{6}: buscando {0} de {1} con {2} (profundidad: {3},
+  amplitud: {4}, omitir si hay más de {5} direcciones)'
+popup-address-not-found-info: Dirección no encontrada. Es posible que aún no esté
+  en nuestra base de datos (sincronizada hasta el bloque {0}) o que no haya recibido
+  ninguna transacción y, por lo tanto, no esté almacenada en la cadena de bloques.
+and-more: '... y {0} más'
+popup-address-not-found-various-reasons: puede haber varias razones
+popup-addresses-not-found-not-in-database: es posible que aún no estén en nuestra
+  base de datos
+popup-address-not-found-not-in-database: es posible que aún no esté en nuestra base
+  de datos
+popup-addresses-not-found-no-txs: no hay transacciones asociadas a estas direcciones
+  y, por lo tanto, no se encuentran en la cadena de bloques
+popup-address-not-found-no-txs: no hay transacciones asociadas a esta dirección y,
+  por lo tanto, no se encuentra en la cadena de bloques
+popup-address-not-found-typos: hay errores tipográficos
+token-transactions-of: transacciones de tokens de {0} ({1})
+actor: Actor
+actors: Actores
+other Links: Otros enlaces
+social: Social
+jurisdictions: Jurisdicciones
+any category: Cualquier categoría
+open Etherscan: Abrir Etherscan
+open Oklink: Abrir Oklink
+open Blockchain.com: Abrir Blockchain.com
+open Blockchair: Abrir Blockchair
+open Dedaub: Abrir Dedaub
+open Palkeo: Abrir Palkeo
+graph: Gráfico
+statistics: Estadísticas
+landingpage-start-new: Iniciar una nueva investigación
+landingpage-load-file: Cargar gráfico desde archivo .gs
+landingpage-try-example: Probar un ejemplo
+table-no-rows-match-filter: No hay filas que coincidan con sus criterios de filtro
+highlight-pick-color-hint: Elija un color para resaltar elementos
+settings: Configuración
+number-of-addresses: Número de direcciones
+cluster-info: Información del clúster
+show timestamp: Mostrar marca de tiempo
+selection Tool: Herramienta de selección
+more-hint: Más...
+display: Visualización
+copy: copiar
+copied-hint: ¡Copiado!
+tag Label: Etiqueta
+confidence: Confianza
+sources: Fuentes
+mention: Mención
+mentions: Menciones
+center graph: Centrar gráfico
+show-more-hint: Mostrar más...
+show-less-hint: Mostrar menos...
+less-hint: Menos...
+no records found: No se han encontrado registros
+sender: Remitente
+receiver: Receptor
+highlight on graph: Resaltar en el gráfico
+request limit: Límite de solicitudes
+next: Siguiente
+previous: Anterior
+page: Página
+snap to grid: Ajustar a la cuadrícula
+confirm-clear-dashboard: ¿Borrar el panel de control?
+note-not-recoverable: No podrá recuperarlo.
+confirm-delete: Sí, borrar todo
+please-select: Seleccione...
+please-choose-ledger: Elija un libro mayor criptográfico
+preferred fiat currency: Moneda fiduciaria preferida
+show exact values: Mostrar valores exactos
+amount in Fiat: Importe en moneda fiduciaria
+plan Details: Detalles del plan
+never: Nunca
+expires on: Caduca el
+usage limit: Límite de uso
+color: Color
+screenshot: Captura de pantalla
+open: Abrir
+infobox-auto-tracing-stops-at-service: El rastreo automático se detiene en las direcciones
+  de servicio, ya que normalmente no se pueden rastrear los flujos de activos a través
+  de estos servicios. Esta limitación se debe a que los servicios suelen actuar como
+  cajas negras, mezclando los fondos de los usuarios. Aún así, puede rastrear manualmente
+  las transacciones salientes utilizando las opciones de rastreo disponibles en el
+  panel lateral.
+copy address ID: Copiar ID de dirección
+copy transaction ID: Copiar ID de transacción
+auto trace limit: Límite de rastreo automático
+infobox-no-suitable-adjacent-transaction: No se ha encontrado una transacción adyacente
+  adecuada para la dirección {0}. Probablemente se deba a que los fondos aún no se
+  han gastado.
+save file: Guardar archivo
+reset: Restablecer
+tags list: Lista de etiquetas
+note-tag-inherited: 'Nota: Esta etiqueta se ha heredado del nivel de clúster.'
+learn more: Más información
+low confidence: Confianza baja
+medium confidence: Confianza media
+high confidence: Confianza alta
+more: más
+x-per-y: '{0} por {1}'
+request limit exceeded: Límite de solicitudes superado
+info-request-limit-exceeded-with-details: Se ha superado el límite de solicitudes
+  de su clave API de {0} por {1}.
+info-request-limit-exceeded: Se ha superado el límite de solicitudes de su clave API.
+removed-transactions: Se han eliminado {0} transacciones.
+added-transactions: Se han añadido {0} transacciones.
+asset flows: Flujos de activos
+attribution-tag-on-address: Etiqueta de atribución en esta dirección.
+direct tag: Etiqueta directa
+attribution-tag-inferred: Etiqueta de atribución inferida mediante agrupación.
+indirect tag: Etiqueta indirecta
+hint-first-thing-added: La primera dirección o transacción añadida al gráfico.
+hint-starting-point: Punto de partida
+hint-thing-selected: La dirección o transacción seleccionada actualmente.
+you are here: Usted está aquí
+no known identity: Sin identidad conocida.
+unlabeled address: Dirección sin etiquetar
+unlabeled transaction: Transacción sin etiquetar
+hint-direct-transfer-of-asset: Una transferencia directa de un activo de una cartera
+  a otra.
+hint-simplified-address: Una ruta simplificada que combina todas las transferencias
+  subyacentes de un intercambio.
+hint-swap-bridge: Transacción de intercambio/puente
+known-exchange: Intercambio de criptoactivos conocido.
+exchange: Intercambio
+hint-possible-service: Podría ser un servicio (por ejemplo, alta actividad), pero
+  no está confirmado.
+possible service: Posible servicio
+hint-known-entity: Entidad conocida, como una empresa o institución.
+hint-smart-contract: Dirección programada para transacciones automatizadas.
+smart contract: Contrato inteligente
+symbol guide: Guía de símbolos
+graph nodes: Nodos del gráfico
+additional icons: Iconos adicionales
+transaction filter: Filtro de transacciones
+date range: Intervalo de fechas
+select date range: Seleccionar intervalo de fechas
+transaction direction: Dirección de la transacción
+all transactions: Todas las transacciones
+incoming only: Solo entrantes
+outgoing only: Solo salientes
+done: Hecho
+asset type: Tipo de activo
+tag-dialog-start-typing-search-labels: Empiece a escribir para buscar etiquetas existentes.
+tag-dialog-add-context: Añada contexto, notas o enlaces a pruebas de apoyo.
+tag-dialog-additional-info: Información adicional (opcional)
+tag-dialog-additional-info-example: Por ejemplo, vinculado a un informe de estafa
+  en xyz.com
+report a tag: Informar de una etiqueta
+report tag: Informar de una etiqueta
+create new actor: Crear un nuevo actor
+Added tag: Etiqueta añadida
+num-more-assets: '{0} activos más'
+relationship-based: Basado en relaciones
+transaction-based: Basado en transacciones
+annotate transaction: Anotar transacción
+statusbar-loading-swap-bridge-events: 'Cargando eventos de intercambio y puente para
+  Tx {0}: {1}'
+related by multi-input heuristic: Relacionado por heurística multi-input
+related by public key: Relacionado por clave pública
+sub transfers: Subtransferencias
+exclude zero value transfers: Excluir transferencias de valor cero
+no zero value: Sin valor cero
+bridge transaction: Transacción puente
+swap transaction: Transacción de intercambio
+swap transactions: Transacciones de intercambio
+Bridge transactions: Transacciones puente
+hint-minimum-input: Proporcione al menos {0} caracteres
+no-results-found: No se han encontrado resultados.
+deprecation notice: Aviso de obsolescencia
+show transaction hash: Mostrar hash de transacción
+hint-multiple-search-terms: Se han detectado varios términos de búsqueda ({0}). Pulse
+  Intro para añadir.
+transactions-from-to: Transacciones de {0} a {1} ({2})
+watch tutorials: ver tutoriales
+supported tokens: tokens compatibles
+statusbar-loading-token-currencies: cargando monedas token compatibles para {0}
+back: atrás
+mode: modo
+all our services: todos nuestros servicios
+logout: cerrar sesión
+with zone code: con zona horaria
+in UTC: en UTC
+e.g.: p.e. {0}
+actor label: etiqueta de actor
