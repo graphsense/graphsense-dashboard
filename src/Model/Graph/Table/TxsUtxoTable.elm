@@ -11,12 +11,12 @@ titleTx =
 
 titleNoInputs : String
 titleNoInputs =
-    "No. inputs"
+    "Number-of-inputs"
 
 
 titleNoOutputs : String
 titleNoOutputs =
-    "No. outputs"
+    "Number-of-outputs"
 
 
 titleTotalInput : String

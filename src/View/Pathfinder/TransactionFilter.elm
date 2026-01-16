@@ -115,10 +115,10 @@ directionFilterHeader vc resetMsg dir =
         resetMsg
         (case dir of
             Incoming ->
-                "Incoming only"
+                "incoming only"
 
             Outgoing ->
-                "Outgoing only"
+                "outgoing only"
         )
 
 
@@ -148,7 +148,7 @@ zeroValuesHeader vc resetMsg includeZeroValueTxs =
         none
 
     else
-        stringFilterHeader vc resetMsg "No zero value"
+        stringFilterHeader vc resetMsg "no zero value"
 
 
 filterHeader : View.Config -> FilterMetadata msg x -> FilterHeaderConfig msg -> Html msg
@@ -230,9 +230,9 @@ txFilterDialogView vc net config model =
             Data.isAccountLike net
 
         directionRadios =
-            [ config.txTableFilterShowAllTxsMsg |> Maybe.map (toRadio "All transactions" (model.direction == Nothing))
-            , config.txTableFilterShowIncomingTxOnlyMsg |> Maybe.map (toRadio "Incoming only" (model.direction == Just Incoming))
-            , config.txTableFilterShowOutgoingTxOnlyMsg |> Maybe.map (toRadio "Outgoing only" (model.direction == Just Outgoing))
+            [ config.txTableFilterShowAllTxsMsg |> Maybe.map (toRadio "all transactions" (model.direction == Nothing))
+            , config.txTableFilterShowIncomingTxOnlyMsg |> Maybe.map (toRadio "incoming only" (model.direction == Just Incoming))
+            , config.txTableFilterShowOutgoingTxOnlyMsg |> Maybe.map (toRadio "outgoing only" (model.direction == Just Outgoing))
             ]
                 |> List.filterMap identity
     in
@@ -274,21 +274,21 @@ txFilterDialogView vc net config model =
         , cancelButton =
             { variant =
                 Button.defaultConfig
-                    |> Rs.s_text "Reset"
+                    |> Rs.s_text "reset"
                     |> Rs.s_onClick (Just config.resetAllTxFiltersMsg)
                     |> Button.secondaryButton vc
             }
         , confirmButton =
             { variant =
                 Button.defaultConfig
-                    |> Rs.s_text "Done"
+                    |> Rs.s_text "done"
                     |> Rs.s_onClick (Just config.closeTxFilterViewMsg)
                     |> Button.primaryButton vc
             }
         , dropDown =
             { variant =
                 if isAssetFilterVisible then
-                    ThemedSelectBox.viewWithLabel (ThemedSelectBox.defaultConfig (Maybe.withDefault "All assets") |> Rs.s_width (Just (Css.px 200))) model.assetSelectBox model.selectedAsset (Locale.string vc.locale "Asset Type")
+                    ThemedSelectBox.viewWithLabel (ThemedSelectBox.defaultConfig (Maybe.withDefault "All assets") |> Rs.s_width (Just (Css.px 200))) model.assetSelectBox model.selectedAsset (Locale.string vc.locale "Asset type")
                         |> Html.map config.txTableAssetSelectBoxMsg
 
                 else
@@ -313,7 +313,7 @@ txFilterDialogView vc net config model =
                                 )
                         )
                         { root =
-                            { placeholder = Locale.string vc.locale "Select date range"
+                            { placeholder = Locale.string vc.locale "select date range"
                             , state = SidePanelComponents.DatePickerCtaStateDefault
                             }
                         }
@@ -369,10 +369,10 @@ txFilterDialogView vc net config model =
 
                     _ ->
                         drp
-            , dateLabel = Locale.string vc.locale "Date Range"
-            , headerTitle = Locale.string vc.locale "Transaction Filter"
-            , txDirection = Locale.string vc.locale "Transaction Direction"
-            , zeroValues = Locale.string vc.locale "Exclude Zero Value Transfers"
+            , dateLabel = Locale.string vc.locale "Date range"
+            , headerTitle = Locale.string vc.locale "Transaction filter"
+            , txDirection = Locale.string vc.locale "Transaction direction"
+            , zeroValues = Locale.string vc.locale "Exclude zero value transfers"
             }
         , switch =
             { variant =

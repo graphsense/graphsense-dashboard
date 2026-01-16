@@ -29,7 +29,7 @@ view vc closeMsg id tags =
                     |> Rs.s_header fullWidthAttr
                     |> Rs.s_closeIcon [ [ Css.cursor Css.pointer ] |> css, onClickWithStop closeMsg ]
                 )
-                { root = { headerTitle = Locale.string vc.locale "Tags list" }
+                { root = { headerTitle = Locale.string vc.locale "tags list" }
                 , identifierWithCopyIcon =
                     { chevronInstance = none
                     , copyIconInstance = Id.id id |> copyIconPathfinder vc

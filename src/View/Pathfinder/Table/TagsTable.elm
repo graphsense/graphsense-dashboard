@@ -76,7 +76,7 @@ linkCellStyle =
 
 
 cell : View.Config -> Cell -> Table.HtmlDetails Msg
-cell _ c =
+cell vc c =
     let
         cellBase =
             [ Css.height Css.auto |> Css.important
@@ -218,13 +218,13 @@ cell _ c =
                 lbl =
                     case cc.confidence of
                         High ->
-                            "High confidence"
+                            "high confidence"
 
                         Medium ->
-                            "Medium confidence"
+                            "medium confidence"
 
                         Low ->
-                            "Low confidence"
+                            "low confidence"
 
                 cl =
                     case cc.confidence of
@@ -242,7 +242,7 @@ cell _ c =
                         { root =
                             { size = TagsComponents.ConfidenceLevelSizeSmall
                             , confidenceLevel = cl
-                            , text = lbl
+                            , text = Locale.string vc.locale lbl |> Locale.titleCase vc.locale
                             }
                         }
 
@@ -403,14 +403,18 @@ typeColumn vc =
 
                     titleTextWithClusterAddition =
                         if inheritedFromCluster then
-                            titleText ++ " " ++ Locale.string vc.locale "Note: This tag was inherited from the cluster level."
+                            titleText ++ " " ++ Locale.string vc.locale "Note-tag-inherited"
 
                         else
                             titleText
                 in
                 cell vc
                     (TypeCell
-                        { label = Locale.string vc.locale (data.tagType |> String.Extra.toTitleCase)
+                        { label =
+                            data.tagType
+                                |> String.Extra.toTitleCase
+                                |> Locale.string vc.locale
+                                |> Locale.titleCase vc.locale
                         , confidence = r
                         , titletext = titleTextWithClusterAddition
                         , cellid = tagId data ++ "_tag_row"

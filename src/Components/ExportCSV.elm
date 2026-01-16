@@ -129,11 +129,11 @@ makeNotification numberOfRows ( data, nextPage ) =
     nextPage
         |> Maybe.map
             (\_ ->
-                "there_were_more_rows_for_csv_download_info"
+                "info-more-rows-for-csv-download-hint"
                     |> Notification.infoDefault
                     |> Notification.map
                         (s_isEphemeral False
-                            >> s_title (Just "there_were_more_rows_for_csv_download")
+                            >> s_title (Just "info-more-rows-for-csv-download")
                             >> s_showClose True
                             >> s_variables
                                 [ numberOfRows

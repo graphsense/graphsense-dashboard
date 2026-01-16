@@ -6,27 +6,27 @@ import Http
 
 searchNeighborsKey : String
 searchNeighborsKey =
-    "{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)"
+    "Statusbar-search-parameters"
 
 
 loadingAddressKey : String
 loadingAddressKey =
-    "{1}: loading address {0}"
+    "Statusbar-loading-address"
 
 
 loadingActorKey : String
 loadingActorKey =
-    "Loading Actor {0}"
+    "Statusbar-loading-actor"
 
 
 loadingActorTagsKey : String
 loadingActorTagsKey =
-    "Loading Tags of Actor {0}"
+    "Statusbar-loading-tags-of-actor"
 
 
 loadingAddressEntityKey : String
 loadingAddressEntityKey =
-    "{1}: loading entity for address {0}"
+    "Statusbar-loading-entity-for-address"
 
 
 type alias Model =

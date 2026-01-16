@@ -57,7 +57,7 @@ view plugins vc m =
                     )
                     {}
             }
-        , navbarPageTitle = { productLabel = Locale.string vc.locale "Settings" }
+        , navbarPageTitle = { productLabel = Locale.string vc.locale "settings" }
         , root =
             { instance = generalSettings plugins vc m }
         , singleTab1 = { variant = Util.View.none }
@@ -122,21 +122,21 @@ generalSettings plugins vc m =
             , leftCell = { variant = Util.View.none }
             , modeToggle = { variant = modeToggle }
             , rightCell = { variant = Util.View.none }
-            , settingsItemLabelOfSettingsCurrencyItem = { text = Locale.string vc.locale "Preferred fiat currency" }
+            , settingsItemLabelOfSettingsCurrencyItem = { text = Locale.string vc.locale "preferred fiat currency" }
             , settingsItemLabelOfSettingsLanguageItem = { text = Locale.string vc.locale "Language" }
             , settingsItemLabelOfSettingsModeItem = { text = Locale.string vc.locale "Mode" }
-            , settingsItemLabelOfSettingsTimeZoneItem = { text = Locale.string vc.locale "Timezone" }
-            , settingsSectionHeaderOfPlanDetails = { text = Locale.string vc.locale "Plan Details" }
+            , settingsItemLabelOfSettingsTimeZoneItem = { text = Locale.string vc.locale "timezone" }
+            , settingsSectionHeaderOfPlanDetails = { text = Locale.string vc.locale "plan Details" }
             , settingsExpirationRow3 =
                 { secondaryTextVisible = False
                 , secondaryValueText = ""
-                , titleText = Locale.string vc.locale "Expires on"
+                , titleText = Locale.string vc.locale "expires on"
                 , valueText = expr
                 }
             , settingsUsageRow4 =
                 { secondaryTextVisible = True
                 , secondaryValueText = rqlSec |> Maybe.map (\x -> "/" ++ x) |> Maybe.withDefault ""
-                , titleText = Locale.string vc.locale "Usage Limit"
+                , titleText = Locale.string vc.locale "Usage limit"
                 , valueText = rqlPrim
                 }
             }
@@ -191,7 +191,7 @@ authContent : Config -> UserModel -> ( String, ( String, Maybe String ) )
 authContent vc user =
     case user.auth of
         Authorized auth ->
-            ( auth.expiration |> Maybe.map (expiration vc) |> Maybe.withDefault (Locale.string vc.locale "Never")
+            ( auth.expiration |> Maybe.map (expiration vc) |> Maybe.withDefault (Locale.string vc.locale "never")
             , auth.requestLimit |> requestLimit vc
             )
 
@@ -217,7 +217,7 @@ requestLimit vc rl =
                     remaining
             , Just
                 (Locale.interpolated vc.locale
-                    "{0} per {1}"
+                    "X-per-y"
                     [ String.fromInt limit
                     , requestLimitIntervalToString interval
                         |> Locale.string vc.locale

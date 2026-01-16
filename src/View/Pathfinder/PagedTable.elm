@@ -125,12 +125,12 @@ view vc attributes config tblPaged msgTag =
                 }
 
         listPart =
-            { nextLabel = Locale.string vc.locale "Next"
-            , previousLabel = Locale.string vc.locale "Previous"
+            { nextLabel = Locale.string vc.locale "next"
+            , previousLabel = Locale.string vc.locale "previous"
             , pageNumberLabel =
                 PagedTable.getCurrentPage tblPaged
                     |> String.fromInt
-                    |> (++) (Locale.string vc.locale "Page" ++ " ")
+                    |> (++) (Locale.string vc.locale "page" ++ " ")
             , listPart = listPartState
             }
 
@@ -181,11 +181,11 @@ view vc attributes config tblPaged msgTag =
                         |> wrapNote
 
                 else if List.isEmpty tbl.data then
-                    tableHint styles vc "No records found"
+                    tableHint styles vc "no records found"
                         |> wrapNote
 
                 else if List.isEmpty filteredData then
-                    tableHint styles vc "No rows match your filter criteria"
+                    tableHint styles vc "Table-no-rows-match-filter"
                         |> wrapNote
 
                 else

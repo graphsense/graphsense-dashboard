@@ -656,7 +656,7 @@ makeExportCSVConfig uc addressId txs =
     ExportCSV.config
         { filename =
             Locale.interpolated uc.locale
-                "Address transactions of {0} ({1})"
+                "Address-transactions-of"
                 [ Id.id addressId
                 , Id.network addressId |> String.toUpper
                 ]

@@ -6,7 +6,7 @@ import Components.Table as Table
 
 titleConfidence : String
 titleConfidence =
-    "Confidence"
+    "confidence"
 
 
 filter : Table.Filter Api.Data.AddressTag

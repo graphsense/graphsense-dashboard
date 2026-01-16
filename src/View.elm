@@ -252,7 +252,7 @@ sidebar plugins vc model =
             -- [ sidebarMenuItem (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
             sidebarMenuItemWithNewParam (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl) False
                 :: Plugin.sidebar plugins model.plugins model.page vc
-                ++ [ sidebarMenuItemWithSubMenu vc model (UserToggledNavbarSubMenu NavbarMore) (Nb.iconsMoreHorizL {}) (Locale.string vc.locale "More") False False
+                ++ [ sidebarMenuItemWithSubMenu vc model (UserToggledNavbarSubMenu NavbarMore) (Nb.iconsMoreHorizL {}) (Locale.string vc.locale "more") False False
                    ]
 
         statsLinkItem =
@@ -271,7 +271,7 @@ sidebar plugins vc model =
 
                         else
                             Nb.TextItremStateNeutral
-                    , textLabel = Locale.string vc.locale "Statistics"
+                    , textLabel = Locale.string vc.locale "statistics"
                     }
                 }
 
@@ -307,7 +307,7 @@ sidebar plugins vc model =
                 }
                 |> List.singleton
                 |> a
-                    [ title (Locale.string vc.locale "Settings")
+                    [ title (Locale.string vc.locale "settings")
                     , (Route.settingsRoute |> Route.toUrl)
                         |> href
                     , Css.none |> Css.textDecoration |> List.singleton |> css
@@ -333,7 +333,7 @@ sidebar plugins vc model =
         { root =
             { helpLabel = ""
 
-            -- , iconInstance = sidebarMenuItem (Nb.iconsSettingsLargeStateNeutral {}) "" (Locale.string vc.locale "Settings") (model.page == Settings) (Route.settingsRoute |> Route.toUrl)
+            -- , iconInstance = sidebarMenuItem (Nb.iconsSettingsLargeStateNeutral {}) "" (Locale.string vc.locale "settings") (model.page == Settings) (Route.settingsRoute |> Route.toUrl)
             , iconInstance = Util.View.none
             , statisticsLabel = ""
             }

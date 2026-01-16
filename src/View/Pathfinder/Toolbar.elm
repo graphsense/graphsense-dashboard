@@ -69,20 +69,20 @@ view vc config =
                 (iconsAttr "Restart" config.newDisabled UserClickedRestart)
             |> Rs.s_iconsSelectionTool
                 (css (highlightBackground Select)
-                    :: iconsAttr "Selection tool" False UserClickedSelectionTool
+                    :: iconsAttr "selection Tool" False UserClickedSelectionTool
                 )
             |> Rs.s_iconsDisplayConfiguration
                 (id (toolbarHovercardTypeToId Settings)
                     :: iconsAttr "Display settings" False (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
                 )
             |> Rs.s_iconsCenterGraph
-                (iconsAttr "Center graph" False UserClickedFitGraph)
+                (iconsAttr "center graph" False UserClickedFitGraph)
             |> Rs.s_iconsSave
-                (iconsAttr "Save file" False (UserClickedSaveGraph Nothing))
+                (iconsAttr "save file" False (UserClickedSaveGraph Nothing))
             |> Rs.s_iconsScrennshot
-                (iconsAttr "Screenshot" False (UserClickedExportGraphAsImage config.exportName))
+                (iconsAttr "screenshot" False (UserClickedExportGraphAsImage config.exportName))
             |> Rs.s_iconsOpen
-                (iconsAttr "Open" False UserClickedOpenGraph)
+                (iconsAttr "open" False UserClickedOpenGraph)
         )
         { iconsRedo =
             { variant =

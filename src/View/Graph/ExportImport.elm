@@ -19,7 +19,7 @@ export vc =
             "Export"
             [ option vc "GraphSense File (.gs)" (UserClickedExportGS Nothing)
             , option vc "TagPack (.yaml)" (UserClickedExportTagPack Nothing)
-            , option vc "Graphics (.svg)" (UserClickedExportGraphics Nothing)
+            , option vc "Graphics-svg" (UserClickedExportGraphics Nothing)
             ]
         ]
     ]

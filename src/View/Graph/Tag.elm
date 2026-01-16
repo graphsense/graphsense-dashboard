@@ -95,7 +95,7 @@ inputHovercard plugins vc tc model =
             [ input
                 [ type_ "submit"
                 , Css.Button.primary vc |> css
-                , Locale.string vc.locale "Save" |> value
+                , Locale.string vc.locale "save" |> value
                 ]
                 []
             , model.existing

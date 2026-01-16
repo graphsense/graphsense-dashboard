@@ -71,7 +71,7 @@ table styles vc attributes tools config tbl =
                         ]
 
                     else if List.isEmpty tbl.filtered then
-                        [ tableHint styles vc "No rows match your filter criteria"
+                        [ tableHint styles vc "Table-no-rows-match-filter"
                         ]
 
                     else

@@ -64,7 +64,7 @@ accountAssetList vc viewState txExistsFn =
                             |> Rs.s_root [ spread ]
                         )
                         { root =
-                            { label = Locale.string vc.locale "Sub Transfers"
+                            { label = Locale.string vc.locale "Sub transfers"
                             }
                         }
                 , disabled = False
@@ -161,12 +161,12 @@ account vc viewState id txExistsFn =
             , valueOfTimestamp = baseTx |> Maybe.map (timeToCell vc << .timestamp) |> Maybe.withDefault emptyCell
             , titleOfEstimatedValue = { infoLabel = Locale.string vc.locale "Value" }
             , valueOfEstimatedValue = baseTx |> Maybe.map (\b -> valuesToCell vc (asset b.network b.currency) b.value) |> Maybe.withDefault emptyCell
-            , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
+            , titleOfSender = { infoLabel = Locale.string vc.locale "sender" }
             , valueOfSender =
                 { firstRowText = baseTx |> Maybe.map (.fromAddress >> truncateLongIdentifierWithLengths 8 4) |> Maybe.withDefault ""
                 , copyIconInstance = orLoadingSpinner (.fromAddress >> copyIconPathfinderAbove vc)
                 }
-            , titleOfReceiver = { infoLabel = Locale.string vc.locale "Receiver" }
+            , titleOfReceiver = { infoLabel = Locale.string vc.locale "receiver" }
             , valueOfReceiver =
                 { firstRowText = baseTx |> Maybe.map (.toAddress >> truncateLongIdentifierWithLengths 8 4) |> Maybe.withDefault ""
                 , copyIconInstance = orLoadingSpinner (.toAddress >> copyIconPathfinderAbove vc)

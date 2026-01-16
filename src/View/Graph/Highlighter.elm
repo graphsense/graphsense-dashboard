@@ -58,7 +58,7 @@ tool vc model =
             div
                 [ Css.View.hint vc |> css
                 ]
-                [ Locale.string vc.locale "Pick a color to highlight things" ++ "." |> text
+                [ Locale.string vc.locale "Highlight-pick-color-hint" ++ "." |> text
                 ]
 
           else

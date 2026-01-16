@@ -589,7 +589,7 @@ httpErrorToString model error =
             string model "server error"
 
         Http.BadStatus 429 ->
-            string model "API rate limit exceeded. Please try again later."
+            string model "Api-rate-limit-exceeded"
 
         Http.BadStatus 404 ->
             string model "not found"
@@ -609,9 +609,9 @@ titleCase model =
     if model.locale == "en" then
         String.Extra.toTitleCase
             >> String.split " "
-            >> List.map
-                (\word ->
-                    if String.length word == 1 then
+            >> List.indexedMap
+                (\i word ->
+                    if i > 0 && String.length word <= 2 then
                         String.toLower word
 
                     else

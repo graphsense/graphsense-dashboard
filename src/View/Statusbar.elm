@@ -116,7 +116,7 @@ log vc lastBlocks ( key, values, error ) =
                                                         )
                                                     |> Maybe.map
                                                         (List.singleton
-                                                            >> Locale.interpolated vc.locale "Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain."
+                                                            >> Locale.interpolated vc.locale "Popup-address-not-found-info"
                                                         )
                                                     |> Maybe.withDefault (Locale.string vc.locale "not found")
 

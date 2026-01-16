@@ -48,10 +48,10 @@ txTab vc isTxOnGraph viewState =
                             { label =
                                 case viewState.raw.raw.conversionType of
                                     Api.Data.ExternalConversionConversionTypeDexSwap ->
-                                        Locale.string vc.locale "Swap Transactions"
+                                        Locale.string vc.locale "Swap transactions"
 
                                     Api.Data.ExternalConversionConversionTypeBridgeTx ->
-                                        Locale.string vc.locale "Bridge Transactions"
+                                        Locale.string vc.locale "Bridge transactions"
                             }
                         }
                 , disabled = False
@@ -103,10 +103,10 @@ view vc _ isTxOnGraph viewState =
         title =
             case cr.conversionType of
                 Api.Data.ExternalConversionConversionTypeDexSwap ->
-                    Locale.string vc.locale "Swap Transaction"
+                    Locale.string vc.locale "Swap transaction"
 
                 Api.Data.ExternalConversionConversionTypeBridgeTx ->
-                    Locale.string vc.locale "Bridge Transaction"
+                    Locale.string vc.locale "Bridge transaction"
     in
     SidePanelComponents.sidePanelSwapTransactionWithAttributes
         (SidePanelComponents.sidePanelSwapTransactionAttributes
@@ -129,8 +129,8 @@ view vc _ isTxOnGraph viewState =
         , sidePanelSwapHeader = { headerText = title }
         , titleOfInputValue = { infoLabel = Locale.string vc.locale "Input Value" }
         , titleOfOutputValue = { infoLabel = Locale.string vc.locale "Output Value" }
-        , titleOfReceiver = { infoLabel = Locale.string vc.locale "Receiver" }
-        , titleOfSender = { infoLabel = Locale.string vc.locale "Sender" }
+        , titleOfReceiver = { infoLabel = Locale.string vc.locale "receiver" }
+        , titleOfSender = { infoLabel = Locale.string vc.locale "sender" }
         , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
         , valueOfInputValue =
             viewState.raw.rawInputTransaction

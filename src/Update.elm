@@ -875,7 +875,7 @@ update plugins uc msg model =
                                         (\stats ->
                                             { m2
                                                 | dialog =
-                                                    { message = Locale.string model.config.locale "Please choose a crypto ledger"
+                                                    { message = Locale.string model.config.locale "Please-choose-ledger"
                                                     , options =
                                                         stats.currencies
                                                             |> List.map .name
@@ -1001,10 +1001,10 @@ update plugins uc msg model =
                 n
                     { model
                         | dialog =
-                            { message = Locale.string model.config.locale "You will not be able to recover it."
-                            , confirmText = Just "Yes, delete all"
+                            { message = Locale.string model.config.locale "Note-not-recoverable"
+                            , confirmText = Just "Confirm-delete"
                             , cancelText = Just "Cancel"
-                            , title = "Clear dashboard?"
+                            , title = "Confirm-clear-dashboard"
                             , onYes = PathfinderMsg Pathfinder.UserClickedRestartYes
                             , onNo = NoOp
                             }
@@ -1540,7 +1540,7 @@ update plugins uc msg model =
                                                 tagStats.totalTags - tagStats.applicableTags
 
                                             notification =
-                                                Notification.infoDefault "Only {0} of {1} tags were imported. {2} tags could not be applied because their addresses are not present on the pathfinder."
+                                                Notification.infoDefault "tag-import-feedback"
                                                     |> Notification.map (s_title (Just "Tag Import"))
                                                     |> Notification.map
                                                         (s_variables
@@ -1570,7 +1570,7 @@ update plugins uc msg model =
                     if model.dirty then
                         { model
                             | dialog =
-                                { message = Locale.string model.config.locale "Do you want to start from scratch?"
+                                { message = Locale.string model.config.locale "Start-from-scratch"
                                 , title = "Clear Graph?"
                                 , confirmText = Nothing
                                 , cancelText = Nothing
@@ -1714,11 +1714,11 @@ apiRateExceededError locale auth =
         (limited
             |> Maybe.map
                 (\_ ->
-                    "The request limit of your API key of {0} per {1} has been exceeded."
+                    "Info-request-limit-exceeded-with-details"
                 )
-            |> Maybe.withDefault "The request limit of your API key has been exceeded."
+            |> Maybe.withDefault "Info-request-limit-exceeded"
         )
-        |> Notification.map (s_title (Just "Request limit exceeded"))
+        |> Notification.map (s_title (Just "request limit exceeded"))
         |> Notification.map
             (s_variables
                 (limited
@@ -2097,7 +2097,7 @@ updateByUrl plugins uc url model =
                                     ( nm, neff ) =
                                         Notification.add
                                             (Notification.infoDefault "pf1_deprecation_notice"
-                                                |> Notification.map (s_title (Just "Deprecation Notice"))
+                                                |> Notification.map (s_title (Just "Deprecation notice"))
                                             )
                                             model.notifications
                                 in

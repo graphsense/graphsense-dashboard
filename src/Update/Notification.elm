@@ -56,7 +56,7 @@ pathFinderErrorToNotifications err =
                 |> List.singleton
 
         InfoError (NoAdjaccentTxForAddressFound tid) ->
-            Notify.infoDefault "Could not find a suitable adjacent transaction for address {0}. This is likely because the funds are not yet spent."
+            Notify.infoDefault "Infobox-no-suitable-adjacent-transaction"
                 |> Notify.map (Rs.s_title (Just "Transaction tracing not possible"))
                 |> Notify.map (Rs.s_variables (Id.id tid |> truncateLongIdentifier |> List.singleton))
                 |> List.singleton
@@ -74,8 +74,8 @@ pathFinderErrorToNotifications err =
                 |> List.singleton
 
         InfoError (TxTracingThroughService id exchangeLabel) ->
-            Notify.infoDefault "Auto tracing stops at service addresses, as asset flows typically cannot be traced through these services. This limitation occurs because services often act as black boxes, mixing user funds. You can still manually trace outgoing transactions using the tracing options available in the side panel."
-                |> Notify.map (Rs.s_title (Just "Auto trace limit"))
+            Notify.infoDefault "Infobox-auto-tracing-stops-at-service"
+                |> Notify.map (Rs.s_title (Just "auto trace limit"))
                 |> Notify.map
                     (Rs.s_variables
                         ((Id.id id |> truncateLongIdentifier)

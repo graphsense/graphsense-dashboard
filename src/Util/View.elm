@@ -310,7 +310,7 @@ copyIconWithAttrPathfinderInternal fixedHint hp hideHint attr vc value =
         )
         [ Html.Styled.node "copy-icon"
             [ Html.Styled.Attributes.attribute "data-value" value
-            , Locale.string vc.locale "Copied!"
+            , Locale.string vc.locale "Copied-hint"
                 |> Html.Styled.Attributes.attribute "data-copied-label"
             ]
             [ component

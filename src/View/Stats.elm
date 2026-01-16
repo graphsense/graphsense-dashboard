@@ -93,7 +93,7 @@ currency vc cs tokens =
                      , Locale.intWithoutValueDetailFormatting vc.locale (cs.noBlocks - 1)
                         |> statsRow vc "Latest block"
                      , Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
-                        |> statsRow vc "Transactions"
+                        |> statsRow vc "transactions"
                      , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
                         |> statsRow vc "Addresses"
                      , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities

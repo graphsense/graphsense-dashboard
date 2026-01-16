@@ -32,7 +32,7 @@ willBePublishedAlertView vc =
             |> css
         ]
         [ Html.span []
-            [ Html.span [ Css.fontWeight Css.bold |> List.singleton |> css ] [ Html.text (Locale.string vc.locale "Warning:") ]
+            [ Html.span [ Css.fontWeight Css.bold |> List.singleton |> css ] [ Html.text (Locale.string vc.locale "Warning" ++ ":") ]
             , Html.text
                 (" " ++ Locale.string vc.locale "tags_release_warnings")
             ]
@@ -100,7 +100,7 @@ view plugins vc model =
                             |> Rs.s_dropdownFrame
                                 [ Css.property "background-color" Colors.white
                                 ]
-                            |> Rs.s_inputAttributes [ placeholder (Locale.string vc.locale "e.g. Binance") ]
+                            |> Rs.s_inputAttributes [ placeholder (Locale.string vc.locale "e.g." ++ " Binance") ]
                         )
                         model.search
                         |> Html.map (SearchMsgAddTagDialog >> AddTagDialog)
@@ -127,9 +127,9 @@ view plugins vc model =
             F.textFieldWithHelpWithAttributes
                 textFieldAttributes
                 { root =
-                    { helpText = Locale.string vc.locale "Start typing to search existing labels."
+                    { helpText = Locale.string vc.locale "Tag-dialog-start-typing-search-labels"
                     , state = F.TextFieldWithHelpStateDefault
-                    , title = Locale.string vc.locale "Actor Label *"
+                    , title = (Locale.string vc.locale "Actor label" |> Locale.titleCase vc.locale) ++ " *"
                     }
                 , textField = { variant = actorField }
                 }
@@ -138,9 +138,9 @@ view plugins vc model =
             F.textFieldWithHelpWithAttributes
                 textFieldAttributes
                 { root =
-                    { helpText = Locale.string vc.locale "Add context, notes, or links to supporting evidence."
+                    { helpText = Locale.string vc.locale "Tag-dialog-add-context"
                     , state = F.TextFieldWithHelpStateDefault
-                    , title = Locale.string vc.locale "Additional Information (optional)"
+                    , title = Locale.string vc.locale "Tag-dialog-additional-info"
                     }
                 , textField =
                     { variant =
@@ -153,7 +153,7 @@ view plugins vc model =
                               ]
                                 |> css
                             , value model.description
-                            , placeholder (Locale.string vc.locale "e.g. Linked to scam report on xyz.com")
+                            , placeholder (Locale.string vc.locale "tag-dialog-additional-info-example")
                             , onInput (UserInputsDescription >> AddTagDialog)
                             ]
                             []
@@ -187,14 +187,14 @@ view plugins vc model =
         , confirmButton =
             { variant =
                 (Button.defaultConfig
-                    |> Rs.s_text "Report tag"
+                    |> Rs.s_text "report tag"
                     |> Rs.s_disabled (model.selectedActor == Nothing)
                     |> Rs.s_onClick (Just model.addTagMsg)
                 )
                     |> Button.primaryButton vc
             }
         , root =
-            { header = Locale.string vc.locale "Report a tag" |> Locale.titleCase vc.locale
+            { header = Locale.string vc.locale "report a tag" |> Locale.titleCase vc.locale
             , description = Locale.string vc.locale "Add_Tag_description"
             }
         }

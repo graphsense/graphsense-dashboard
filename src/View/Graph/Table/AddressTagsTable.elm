@@ -118,7 +118,7 @@ config vc bestAddressTag entityId entityHasAddress =
                 )
             , T.stringColumn styles
                 vc
-                "Confidence"
+                "confidence"
                 (.confidence >> Maybe.withDefault "")
             , T.htmlColumn styles
                 vc

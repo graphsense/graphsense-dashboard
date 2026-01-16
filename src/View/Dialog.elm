@@ -130,7 +130,7 @@ options_ vc { message, options } =
         , confirmButton = { variant = none }
         , root =
             { bodyText = message
-            , headerText = Locale.string vc.locale "Please select..."
+            , headerText = Locale.string vc.locale "Please-select"
             }
         }
 
@@ -231,7 +231,7 @@ error vc err =
                                     (List.length addrs - take)
                                         |> String.fromInt
                                         |> List.singleton
-                                        |> Locale.interpolated vc.locale "... and {0} more"
+                                        |> Locale.interpolated vc.locale "And-more"
                                         |> text
                                         |> List.singleton
                                         |> li []
@@ -246,7 +246,7 @@ error vc err =
                         |> Util.View.p vc []
                     , div
                         []
-                        [ Locale.string vc.locale "There could be various reasons"
+                        [ Locale.string vc.locale "Popup-address-not-found-various-reasons"
                             |> (\s -> s ++ ":")
                             |> text
                             |> List.singleton
@@ -255,10 +255,10 @@ error vc err =
                             []
                             [ li [ Css.View.listItem vc |> css ]
                                 [ (if List.length addrs > 1 then
-                                    "There are no transactions associated with these addresses and they are therefore not found on the blockchain"
+                                    "Popup-addresses-not-found-no-txs"
 
                                    else
-                                    "There are no transactions associated with this address and it is therefore not found on the blockchain"
+                                    "Popup-address-not-found-no-txs"
                                   )
                                     |> Locale.string vc.locale
                                     |> addDot
@@ -267,17 +267,17 @@ error vc err =
                             , li
                                 [ Css.View.listItem vc |> css ]
                                 [ (if List.length addrs > 1 then
-                                    "They are possibly not yet in our database"
+                                    "Popup-addresses-not-found-not-in-database"
 
                                    else
-                                    "It is possibly not yet in our database"
+                                    "Popup-address-not-found-not-in-database"
                                   )
                                     |> Locale.string vc.locale
                                     |> addDot
                                     |> text
                                 ]
                             , li [ Css.View.listItem vc |> css ]
-                                [ Locale.string vc.locale "There are typos"
+                                [ Locale.string vc.locale "Popup-address-not-found-typos"
                                     |> addDot
                                     |> text
                                 ]

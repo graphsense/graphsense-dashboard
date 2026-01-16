@@ -2527,7 +2527,7 @@ checkAllTxs plugins uc addressId txIds model =
                     , txIds
                         |> List.filter (flip Dict.member newModel.network.txs >> not)
                         |> List.length
-                        |> notify "Removed {0} transactions"
+                        |> notify "Removed-transactions"
                         |> (++) eff
                     )
                )
@@ -2542,7 +2542,7 @@ checkAllTxs plugins uc addressId txIds model =
             |> List.foldl addOrRemoveAcc
                 ( model
                 , List.length toAdd
-                    |> notify "Added {0} transactions"
+                    |> notify "Added-transactions"
                 )
 
 

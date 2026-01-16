@@ -81,13 +81,13 @@ getConfidenceIndicator vc x =
         lbl =
             case r of
                 High ->
-                    "High confidence"
+                    "high confidence"
 
                 Medium ->
-                    "Medium confidence"
+                    "medium confidence"
 
                 Low ->
-                    "Low confidence"
+                    "low confidence"
 
         cl =
             case r of
@@ -165,12 +165,12 @@ showActor vc a =
                 a.uri
     in
     [ tooltipRow
-        { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
+        { tooltipRowLabel = { title = Locale.string vc.locale "actor" }
         , tooltipRowValue = a.label |> val vc
         }
     , tooltipRowCustomValue (Locale.string vc.locale "Url") (Html.Styled.a [ Css.plainLinkStyle vc |> css, href mainUri, target "blank" ] [ text a.uri ])
     , tooltipRowCustomValue
-        (Locale.string vc.locale "Jurisdictions")
+        (Locale.string vc.locale "jurisdictions")
         (let
             jl =
                 List.length a.jurisdictions
@@ -267,15 +267,15 @@ tagConcept vc openDetailsMsg concept tag =
                 )
             |> div [ title (String.join ", " labels), [ Css.displayFlex, Css.flexDirection Css.column, Css.padding (Css.px 5) ] |> css ]
         )
-    , tooltipRowCustomValue (Locale.string vc.locale "Confidence") (getConfidenceIndicator vc maxConfidence)
+    , tooltipRowCustomValue (Locale.string vc.locale "confidence") (getConfidenceIndicator vc maxConfidence)
     , tooltipRow
-        { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
+        { tooltipRowLabel = { title = Locale.string vc.locale "sources" }
         , tooltipRowValue =
             Set.size sources
                 |> String.fromInt
                 |> val vc
         }
-    , openDetailsMsg |> Maybe.map (linkRow vc "Learn more") |> Maybe.withDefault none
+    , openDetailsMsg |> Maybe.map (linkRow vc "learn more") |> Maybe.withDefault none
     ]
 
 
@@ -288,10 +288,10 @@ tagLabel vc lbl tag =
     case mlbldata of
         Just lbldata ->
             [ tooltipRow
-                { tooltipRowLabel = { title = Locale.string vc.locale "Tag label" }
+                { tooltipRowLabel = { title = Locale.string vc.locale "tag Label" }
                 , tooltipRowValue = lbldata.label |> val vc
                 }
-            , tooltipRowCustomValue (Locale.string vc.locale "Confidence") (getConfidenceIndicator vc lbldata.confidence)
+            , tooltipRowCustomValue (Locale.string vc.locale "confidence") (getConfidenceIndicator vc lbldata.confidence)
             ]
                 ++ (if List.isEmpty lbldata.concepts then
                         []
@@ -310,14 +310,14 @@ tagLabel vc lbl tag =
                             |> List.singleton
                    )
                 ++ [ tooltipRow
-                        { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
+                        { tooltipRowLabel = { title = Locale.string vc.locale "sources" }
                         , tooltipRowValue =
                             List.length lbldata.sources
                                 |> String.fromInt
                                 |> val vc
                         }
                    , tooltipRow
-                        { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
+                        { tooltipRowLabel = { title = Locale.string vc.locale "mentions" }
                         , tooltipRowValue = lbldata.count |> String.fromInt |> val vc
                         }
                    , tooltipRow
@@ -469,7 +469,7 @@ aggEdge vc { leftAddress, left, rightAddress, right } =
                 |> Maybe.withDefault 0
                 |> Locale.int vc.locale
                 |> val vc
-        , tooltipRowLabel = { title = Locale.string vc.locale "Transactions" }
+        , tooltipRowLabel = { title = Locale.string vc.locale "transactions" }
         }
     ]
         ++ (let
@@ -524,7 +524,7 @@ aggEdge vc { leftAddress, left, rightAddress, right } =
                                     "+ "
                                         ++ Locale.interpolated vc.locale
                                             (if more > 1 then
-                                                "{0} more assets"
+                                                "Num-more-assets"
 
                                              else
                                                 "one more asset"

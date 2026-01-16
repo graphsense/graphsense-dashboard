@@ -735,7 +735,7 @@ rowsAddress vc now table address =
                 )
             , Rule
             , Row
-                ( "Transactions"
+                ( "transactions"
                 , address
                     |> Loadable.map
                         (\a ->
@@ -836,7 +836,7 @@ rowsAddress vc now table address =
                     case a.address.status of
                         Api.Data.AddressStatusNew ->
                             [ Rule
-                            , Locale.string vc.locale "Address statistics not yet computed"
+                            , Locale.string vc.locale "Address-statistics-not-computed"
                                 |> Note
                             ]
 
@@ -877,7 +877,7 @@ rowsAddress vc now table address =
         )
     , OptionalRow
         (Row
-            ( "Actor"
+            ( "actor"
             , address
                 |> Loadable.map
                     (.address
@@ -1274,7 +1274,7 @@ rowsEntity vc gc now table ent =
 
     {- , OptionalRow
        (Row
-           ( "Actors"
+           ( "actors"
            , ent
                |> Loadable.map
                    (.entity
@@ -1335,7 +1335,7 @@ rowsEntity vc gc now table ent =
         )
     , Rule
     , Row
-        ( "Transactions"
+        ( "transactions"
         , ent
             |> Loadable.map
                 (\entity ->
@@ -1468,7 +1468,7 @@ rowsActor vc gc now table actor =
                 Nothing
         )
     , Rule
-    , Row ( "Actor", actor |> Loadable.map (.label >> String) |> elseLoading, Nothing )
+    , Row ( "actor", actor |> Loadable.map (.label >> String) |> elseLoading, Nothing )
     , Rule
     , Row ( "Url", actor |> Loadable.map (.uri >> (\x -> Uri x x)) |> elseLoading, Nothing )
     , Rule
@@ -1487,7 +1487,7 @@ rowsActor vc gc now table actor =
     , Rule
     , OptionalRow
         (Row
-            ( "Jurisdictions"
+            ( "jurisdictions"
             , actor
                 |> Loadable.map
                     (.jurisdictions
@@ -1508,7 +1508,7 @@ rowsActor vc gc now table actor =
     , Rule
     , OptionalRow
         (Row
-            ( "Social"
+            ( "social"
             , actor
                 |> Loadable.map
                     (getUrisWithoutMain
@@ -1536,7 +1536,7 @@ rowsActor vc gc now table actor =
         )
     , Rule
     , Row
-        ( "Other Links"
+        ( "other Links"
         , actor
             |> Loadable.map
                 ((\_ -> "") >> String)
@@ -1607,7 +1607,7 @@ rowsBlock vc gc now table block =
         , Nothing
         )
     , Row
-        ( "Transactions"
+        ( "transactions"
         , block
             |> Loadable.map (.noTxs >> Locale.int vc.locale >> String)
             |> elseLoading
@@ -1856,7 +1856,7 @@ rowsTxUtxo vc gc now table tx =
         , Nothing
         )
     , Row
-        ( "No. inputs"
+        ( "Number-of-inputs"
         , tx
             |> Loadable.map
                 (.noInputs
@@ -1867,7 +1867,7 @@ rowsTxUtxo vc gc now table tx =
         , mkTableLink "List sending addresses" Route.TxInputsTable
         )
     , Row
-        ( "No. outputs"
+        ( "Number-of-outputs"
         , tx
             |> Loadable.map
                 (.noOutputs
@@ -2054,7 +2054,7 @@ rowsAddresslink vc gc source table link =
         , Nothing
         )
     , Row
-        ( "Transactions"
+        ( "transactions"
         , linkData
             |> Maybe.map
                 (.noTxs >> Locale.int vc.locale)
@@ -2065,7 +2065,7 @@ rowsAddresslink vc gc source table link =
                 unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkTxsTable
           in
           Just
-            { title = Locale.string vc.locale "Transactions"
+            { title = Locale.string vc.locale "transactions"
             , link =
                 addresslinkRouteBase
                     |> s_table
@@ -2153,7 +2153,7 @@ rowsEntitylink vc gc source table link =
         , Nothing
         )
     , Row
-        ( "Transactions"
+        ( "transactions"
         , linkData
             |> Maybe.map
                 (.noTxs >> Locale.int vc.locale)
@@ -2164,7 +2164,7 @@ rowsEntitylink vc gc source table link =
                 unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkTxsTable
           in
           Just
-            { title = Locale.string vc.locale "Transactions"
+            { title = Locale.string vc.locale "transactions"
             , link =
                 entitylinkRouteBase
                     |> s_table
