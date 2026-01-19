@@ -59,7 +59,15 @@ if [ $REFRESH -eq 1 ]; then
     else
         PLUGIN_FIGMA="./plugins/$PLUGIN_NAME/theme/figma.json"
         if [ -e "$PLUGIN_FIGMA" ]; then
-            echo "{\"plugin_name\": \"$PLUGIN_NAME\", \"figma_file\": \"$FIGMA_FILE_ID\", \"api_key\": \"$FIGMA_API_TOKEN\"}" > $tmp_json
+            whitelist=`cat ./plugins/$PLUGIN_NAME/theme/whitelist.json`
+            cat <<EOF > $tmp_json
+{
+  "plugin_name": "$PLUGIN_NAME",
+  "figma_file": "$FIGMA_FILE_ID",
+  "api_key": "$FIGMA_API_TOKEN",
+  "whitelist": ${whitelist:-null}
+}
+EOF
 	        cmd="$ELM_CODEGEN --flags-from=$tmp_json --output plugins/$PLUGIN_NAME/theme" 
         else
             echo "No $PLUGIN_FIGMA found to refresh. Exiting."

@@ -163,7 +163,7 @@ check-plugin-exists:
 	fi
 
 plugin-theme-refresh: 
-	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh
+	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh -w=$(FIGMA_WHITELIST_FRAMES)
 
 $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 	@# only update an existing figma.json

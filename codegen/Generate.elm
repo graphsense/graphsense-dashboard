@@ -19,6 +19,7 @@ import Http
 import Json.Decode
 import Json.Encode as Encode
 import RecordSetter as Rs
+import Regex
 import Result.Extra
 import String.Case exposing (toCamelCaseUpper)
 import String.Extra
@@ -32,6 +33,7 @@ type alias Flags =
     { api_key : String
     , file_id : String
     , plugin_name : Maybe String
+    , whitelist : Maybe Whitelist
     }
 
 
@@ -97,16 +99,18 @@ main : Program Json.Decode.Value Model Msg
 main =
     let
         decodeFlags =
-            Json.Decode.map3
-                (\plugin_name file_id api_key ->
+            Json.Decode.map4
+                (\plugin_name file_id api_key whitelist ->
                     { plugin_name = plugin_name
                     , file_id = file_id
                     , api_key = api_key
+                    , whitelist = whitelist
                     }
                 )
                 (Json.Decode.field "plugin_name" Json.Decode.string |> Json.Decode.maybe)
                 (Json.Decode.field "figma_file" Json.Decode.string)
                 (Json.Decode.field "api_key" Json.Decode.string)
+                (Json.Decode.oneOf [ decodeWhitelist |> Json.Decode.map Just, Json.Decode.succeed Nothing ])
 
         decodeFlagsWithColorMaps =
             Json.Decode.map2 pair
@@ -344,12 +348,17 @@ decodeFigmaNodesFileWithModuleName =
 decodeWithWhitelist : Json.Decode.Decoder ( Whitelist, FigmaContent )
 decodeWithWhitelist =
     Json.Decode.map2 pair
-        (Json.Decode.map2 Whitelist
+        decodeWhitelist
+        (Json.Decode.field "theme" decodeFigmaNodesFileWithModuleName)
+
+
+decodeWhitelist : Json.Decode.Decoder Whitelist
+decodeWhitelist =
+    (Json.Decode.map2 Whitelist
             (Json.Decode.field "frames" (Json.Decode.list Json.Decode.string))
             (Json.Decode.field "components" (Json.Decode.list Json.Decode.string))
             |> Json.Decode.field "whitelist"
         )
-        (Json.Decode.field "theme" decodeFigmaNodesFileWithModuleName)
 
 
 canvasNodeToRequests : Flags -> CanvasNode -> Cmd Msg
@@ -359,7 +368,7 @@ canvasNodeToRequests flags { children } =
             "/nodes?ids={{ ids }}&geometry=paths"
                 |> String.Format.namedValue "ids"
                     (children
-                        |> List.filterMap isFrame
+                        |> List.filterMap (isInterestingFrame flags)
                         |> List.map (.frameTraits >> .isLayerTrait >> .id)
                         |> String.join ","
                     )
@@ -427,11 +436,28 @@ colorsFrameDark =
     colorsFrame ++ " Dark"
 
 
-isFrame : SubcanvasNode -> Maybe FrameNode
-isFrame arg1 =
+matchWhitelist : Whitelist -> String -> Bool
+matchWhitelist { frames } name =
+    let
+        matchRegex str r = 
+            Regex.fromStringWith { caseInsensitive = True, multiline = False } r
+            |> Maybe.map (flip Regex.contains str)
+            |> Maybe.withDefault False
+    in
+    List.isEmpty frames
+        || List.any (matchRegex name) (frames)
+
+isInterestingFrame : Flags -> SubcanvasNode -> Maybe FrameNode
+isInterestingFrame {whitelist} arg1 =
+    let
+        matchOnlyFrames =
+            whitelist
+            |> Maybe.map matchWhitelist
+            |> Maybe.withDefault (always True)
+    in
     case arg1 of
         SubcanvasNodeFrameNode n ->
-            if n.frameTraits.readyForDev then
+            if n.frameTraits.readyForDev && matchOnlyFrames n.frameTraits.isLayerTrait.name then
                 Just n
 
             else
@@ -463,9 +489,6 @@ frameToFiles model ( ( n, children ), htmlDeclarations, svgDeclarations ) =
         nameLowered =
             String.toLower n.frameTraits.isLayerTrait.name
 
-        matchOnlyFrames =
-            List.isEmpty model.whitelist.frames
-                || List.any ((==) nameLowered) (List.map String.toLower model.whitelist.frames)
 
         restFrames =
             List.drop 1 model.frames
@@ -477,7 +500,7 @@ frameToFiles model ( ( n, children ), htmlDeclarations, svgDeclarations ) =
         _ =
             log "decoding frame" nameLowered
     in
-    if matchOnlyFrames && not (String.startsWith (String.toLower colorsFrame) nameLowered) then
+    if matchWhitelist model.whitelist nameLowered && not (String.startsWith (String.toLower colorsFrame) nameLowered) then
         case children of
             child :: rest ->
                 let
