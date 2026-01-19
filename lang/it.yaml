@@ -1,3 +1,4 @@
+Key: Value
 address: indirizzo
 addresses: indirizzi
 entity: entità
@@ -191,9 +192,10 @@ data error: errore nei dati
 this table is empty: questa tabella è vuota
 for entities: per entità
 user address tags: identificativi dell'indirizzo utente
-statusbar-search-parameters: 'Cerca {0} di {1} con {2} (profondità: {3}, ampiezza: {4}, salta se ci sono più di {5} indirizzi)'
-true: sì
-false: falso
+statusbar-search-parameters: 'Cerca {0} di {1} con {2} (profondità: {3}, ampiezza:
+  {4}, salta se ci sono più di {5} indirizzi)'
+'True': sì
+'False': falso
 list sending entities: elenca entità mittenti
 list receiving entities: elenca entità riceventi
 list entity transactions: elenca transazioni dell'entità
@@ -219,10 +221,14 @@ cluster addresses: indirizzi cluster
 Related addresses: Indirizzi correlati
 Institution: Istituzione
 Tag Import: Importazione Tag
-tag-import-feedback: Solo {0} di {1} tag sono stati importati. {2} tag non possono essere applicati perché i loro indirizzi non sono presenti nel pathfinder.
-statusbar-loading-swap-bridge-events: 'Caricamento eventi di Swaps e Bridging per la transazione {0}: {1}'
-Multi Input Cluster Help: 'Raggruppa gli indirizzi per transazione: gli indirizzi sono stati usati insieme (probabilmente lo stesso proprietario).'
-Pubkey Cluster Help: 'Raggruppa gli indirizzi per chiave pubblica: indirizzi della stessa chiave (stesso proprietario).'
+tag-import-feedback: Solo {0} di {1} tag sono stati importati. {2} tag non possono
+  essere applicati perché i loro indirizzi non sono presenti nel pathfinder.
+statusbar-loading-swap-bridge-events: 'Caricamento eventi di Swaps e Bridging per
+  la transazione {0}: {1}'
+Multi Input Cluster Help: 'Raggruppa gli indirizzi per transazione: gli indirizzi
+  sono stati usati insieme (probabilmente lo stesso proprietario).'
+Pubkey Cluster Help: 'Raggruppa gli indirizzi per chiave pubblica: indirizzi della
+  stessa chiave (stesso proprietario).'
 pf1_deprecation_notice: Pathfinder 1.0 è obsoleto e sarà rimosso a breve. Si prega
   di passare al nuovo Pathfinder disponibile nella barra laterale. Hai problemi con
   la rimozione del vecchio Pathfinder? Contatta il supporto via email all'indirizzo
@@ -446,8 +452,8 @@ hint-multiple-search-terms: Rilevati più termini di ricerca ({0}). Premere Invi
   aggiungere.
 transactions-from-to: Transazioni da {0} a {1} ({2})
 watch tutorials: guarda i tutorial
-statusbar-loading-actor: 'Caricamento attore {0}'
-statusbar-loading-tags-of-actor: 'Caricamento tag dell''attore {0}'
+statusbar-loading-actor: Caricamento attore {0}
+statusbar-loading-tags-of-actor: Caricamento tag dell'attore {0}
 statusbar-searching: '{1}: Cerca {0}'
 statusbar-loading-address: '{1}: Caricamento indirizzo {0}'
 statusbar-loading-block: '{1}: Caricamento blocco {0}'
@@ -466,7 +472,8 @@ statusbar-loading-outgoing-neighbors-of-address of aDdress {0}': '{1}: Caricamen
   vicini in uscita dell''indirizzo {0}'
 statusbar-loading-incoming-neighbors-of-address: '{1}: Caricamento vicini in entrata
   dell''indirizzo {0}'
-statusbar-loading-token-currencies: 'Caricamento delle valute token supportate per {0}'
+statusbar-loading-token-currencies: Caricamento delle valute token supportate per
+  {0}
 supported tokens: token supportati
 back: indietro
 mode: modalità
@@ -476,9 +483,52 @@ with zone code: con fuso orario
 in UTC: in UTC
 e.g.: ad es. {0}
 actor label: etichetta attore
-date-time-format: 'DD MMMM YYYY HH:mm'
-time-format: "HH:mm"
-date-format: "DD/MM/YY"
+date-time-format: DD MMMM YYYY HH:mm
+time-format: HH:mm
+date-format: DD/MM/YY
 report a tag: segnalare un tag
 report tag: segnalare un tag
-Add_Tag_description: 'Aiutaci a migliorare i nostri dati segnalando un''entità collegata a questo indirizzo: verrà esaminata e, se del caso, pubblicata.'
+Add_Tag_description: 'Aiutaci a migliorare i nostri dati segnalando un''entità collegata
+  a questo indirizzo: verrà esaminata e, se del caso, pubblicata.'
+open in new tab: apri in una nuova scheda
+Sending entities: invio cluster
+Receiving entities: ricezione cluster
+Incoming entity: Cluster in entrata
+Outgoing entity: Cluster in uscita
+total received assets: totale asset ricevuti
+final balance assets: saldo finale asset
+balance: saldo
+estimated total transferred: totale stimato trasferito
+total transferred: totale trasferito
+api-rate-limit-exceeded: Limite API superato. Riprovare più tardi.
+bad URL: URL non valido
+request timeout: timeout richiesta
+request error: errore richiesta
+service not reachable: servizio non raggiungibile.
+unexpected data format: formato dati non previsto.
+unexpected status code: codice di stato non previsto.
+service does not respond in time: il servizio non risponde in tempo.
+Remove from graph: Rimuovi dal grafico
+related addresses: indirizzi correlati
+tagged cluster addresses: indirizzi cluster contrassegnati
+all cluster addresses: tutti gli indirizzi cluster
+type: tipo
+total-received-assets-of-address: totale delle risorse ricevute dell'indirizzo {0}
+  ({1})
+final-balance-assets-of-address: saldo finale delle risorse dell'indirizzo {0} ({1})
+popup-address-not-found-no-txs: non ci sono transazioni associate a questo indirizzo
+  e quindi non è stato trovato sulla blockchain
+infobox-auto-tracing-stops-at-service: Il tracciamento automatico si interrompe agli
+  indirizzi di servizio, poiché i flussi di risorse in genere non possono essere tracciati
+  attraverso questi servizi. Questa limitazione si verifica perché i servizi spesso
+  agiscono come scatole nere, mescolando i fondi degli utenti. È comunque possibile
+  tracciare manualmente le transazioni in uscita utilizzando le opzioni di tracciamento
+  disponibili nel pannello laterale.
+tags list: elenco tag
+x-per-y: '{0} per {1}'
+request limit exceeded: limite di richieste superato
+info-request-limit-exceeded-with-details: Il limite di richieste della tua chiave
+  API di {0} per {1} è stato superato.
+info-request-limit-exceeded: Il limite di richieste della tua chiave API è stato superato.
+num-more-assets: '{0} altre risorse'
+annotate transaction: annota transazione

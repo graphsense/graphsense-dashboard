@@ -248,13 +248,13 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     { shortcutList =
                         [ { msg = UserOpensTxAnnotationDialog id
                           , icon = HIcons.iconsAnnotateS {}
-                          , text = "annotate transaction"
+                          , text = "Annotate transaction"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
-                          , text = "copy transaction ID"
+                          , text = "Copy transaction ID"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc

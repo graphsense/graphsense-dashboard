@@ -506,3 +506,6 @@ actor label: etiqueta de actor
 date-time-format: 'DD MMMM YYYY HH:mm'
 time-format: "HH:mm"
 date-format: "DD/MM/YY"
+open in new tab: abrir en una nueva pestaña
+true: verdadero
+false: falso

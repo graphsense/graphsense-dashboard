@@ -9,7 +9,7 @@ def merge_yaml(file1, file2, output_file):
 
     for k in de:
         if not en.get(k, None): 
-            en[k] = k
+            en[k] = de[k]
 
     with open(output_file, 'w') as out:
         yaml.dump(en, out, default_flow_style=False, allow_unicode=True)

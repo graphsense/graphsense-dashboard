@@ -503,3 +503,4 @@ actor label: Bezeichnung des Akteurs
 date-time-format: 'DD.MMMM YYYY HH:mm'
 time-format: "HH:mm"
 date-format: "DD.MM.YY"
+open in new tab: in neuem Tab öffnen
