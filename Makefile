@@ -152,7 +152,9 @@ $(FIGMA_JSON):
 	./tools/codegen.sh --refresh
 
 $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC) $(CODEGEN_RECORDSETTER)
-	./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
+	free
+	/usr/bin/time -v ./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
+	free
 
 check-plugin-exists:
 	@if [ ! -z "$(PLUGIN_NAME)" -a ! -e $(PLUGINS_DIR)/$(PLUGIN_NAME) ]; then \
@@ -172,7 +174,9 @@ $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 plugin-theme: check-plugin-exists $(GENERATED_THEME_THEME)/$(PLUGIN_NAME)/$(THEME_GENERATED_MARKER) setem
 
 $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(GENERATED_THEME_COLORMAPS) $(CODEGEN_RECORDSETTER) $(PLUGINS_DIR)/%/$(FIGMA_JSON)
-	./tools/codegen.sh --plugin=$* 
+	free
+	/usr/bin/time -v ./tools/codegen.sh --plugin=$* 
+	free
 	mkdir -p $(GENERATED_THEME_THEME)/$*
 	touch $@
 
