@@ -376,7 +376,7 @@ contextMenu plugins states vc model cm =
             [ UserClickedAnnotateAddress address.id
                 |> optionWithIcon "Annotate address" FontAwesome.userTag
             , UserClickedRemoveAddress address.id
-                |> optionWithIcon "remove from graph" FontAwesome.eraser
+                |> optionWithIcon "Remove from graph" FontAwesome.eraser
             , Route.Graph.addressRoute
                 { currency = address.address.currency
                 , address = address.address.address
@@ -398,7 +398,7 @@ contextMenu plugins states vc model cm =
             , UserClickedSearch entity.id
                 |> optionWithIcon "Search neighbors" FontAwesome.search
             , UserClickedRemoveEntity entity.id
-                |> optionWithIcon "remove from graph" FontAwesome.eraser
+                |> optionWithIcon "Remove from graph" FontAwesome.eraser
             ]
 
         ContextMenu.Transaction txHash currency ->

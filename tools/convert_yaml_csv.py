@@ -11,7 +11,6 @@ def yaml_to_csv(yaml_file_path, csv_file_path):
     # Write to CSV file
     with open(csv_file_path, 'w', newline='') as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(['Key', 'Value'])  # Write header
         for key, value in data.items():
             writer.writerow([key, value])  # Write each key-value pair as a row
 

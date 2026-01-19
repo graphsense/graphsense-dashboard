@@ -257,10 +257,10 @@ network error: error de red
 server error: error del servidor
 not found: no encontrado
 data error: error de datos
-service not reachable: servicio no accesible
-unexpected data format: formato de datos inesperado
-unexpected status code: código de estado inesperado
-service does not respond in time: el servicio no responde a tiempo
+service not reachable: servicio no accesible.
+unexpected data format: formato de datos inesperado.
+unexpected status code: código de estado inesperado.
+service does not respond in time: el servicio no responde a tiempo.
 user address tags: etiquetas de dirección del usuario
 'True': Verdadero
 'False': Falso
