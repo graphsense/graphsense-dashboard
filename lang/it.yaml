@@ -317,12 +317,6 @@ other Links: altri collegamenti
 social: social media
 jurisdictions: giurisdizioni
 any category: qualsiasi categoria
-open Etherscan: apri Etherscan
-open Oklink: apri Oklink
-open Blockchain.com: apri Blockchain.com
-open Blockchair: apri Blockchair
-open Dedaub: apri Dedaub
-open Palkeo: apri Palkeo
 graph: grafico
 statistics: statistiche
 landingpage-start-new: inizia una nuova investigazione
@@ -487,4 +481,4 @@ time-format: "HH:mm"
 date-format: "DD/MM/YY"
 report a tag: segnalare un tag
 report tag: segnalare un tag
-Add_Tag_description: 'Aiutaci a migliorare i nostri dati segnalando un'entità collegata a questo indirizzo: verrà esaminata e, se del caso, pubblicata.'
+Add_Tag_description: 'Aiutaci a migliorare i nostri dati segnalando un''entità collegata a questo indirizzo: verrà esaminata e, se del caso, pubblicata.'

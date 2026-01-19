@@ -11,38 +11,38 @@ blockExplorerLinks : Dict String (List ( String, String ))
 blockExplorerLinks =
     Dict.fromList
         [ ( "trx"
-          , [ ( "https://tronscan.org/#/address/", "Open Tronscan" )
+          , [ ( "https://tronscan.org/#/address/", "Tronscan" )
             ]
           )
         , ( "eth"
-          , [ ( "https://etherscan.io/address/", "open Etherscan" )
-            , ( "https://www.oklink.com/eth/address/", "open Oklink" )
-            , ( "https://www.blockchain.com/eth/address/", "open Blockchain.com" )
-            , ( "https://blockchair.com/ethereum/address/", "open Blockchair" )
-            , ( "https://library.dedaub.com/contracts/Ethereum/", "open Dedaub" )
+          , [ ( "https://etherscan.io/address/", "Etherscan" )
+            , ( "https://www.oklink.com/eth/address/", "Oklink" )
+            , ( "https://www.blockchain.com/eth/address/", "Blockchain.com" )
+            , ( "https://blockchair.com/ethereum/address/", "Blockchair" )
+            , ( "https://library.dedaub.com/contracts/Ethereum/", "Dedaub" )
 
-            -- , ( "https://oko.palkeo.com/", "open Palkeo" )
+            -- , ( "https://oko.palkeo.com/", "Palkeo" )
             ]
           )
         , ( "btc"
-          , [ ( "https://www.oklink.com/btc/address/", "open Oklink" )
-            , ( "https://www.blockchain.com/btc/address/", "open Blockchain.com" )
-            , ( "https://blockchair.com/bitcoin/address/", "open Blockchair" )
+          , [ ( "https://www.oklink.com/btc/address/", "Oklink" )
+            , ( "https://www.blockchain.com/btc/address/", "Blockchain.com" )
+            , ( "https://blockchair.com/bitcoin/address/", "Blockchair" )
             ]
           )
         , ( "zec"
-          , [ ( "https://blockchair.com/zcash/address/", "open Blockchair" )
+          , [ ( "https://blockchair.com/zcash/address/", "Blockchair" )
             ]
           )
         , ( "ltc"
-          , [ ( "https://www.oklink.com/ltc/address/", "open Oklink" )
-            , ( "https://blockchair.com/litecoin/address/", "open Blockchair" )
+          , [ ( "https://www.oklink.com/ltc/address/", "Oklink" )
+            , ( "https://blockchair.com/litecoin/address/", "Blockchair" )
             ]
           )
         , ( "bch"
-          , [ ( "https://www.oklink.com/bch/address/", "open Oklink" )
-            , ( "https://www.blockchain.com/bch/address/", "open Blockchain.com" )
-            , ( "https://blockchair.com/bitcoin-cash/address/", "open Blockchair" )
+          , [ ( "https://www.oklink.com/bch/address/", "Oklink" )
+            , ( "https://www.blockchain.com/bch/address/", "Blockchain.com" )
+            , ( "https://blockchair.com/bitcoin-cash/address/", "Blockchair" )
             ]
           )
         ]
@@ -52,10 +52,10 @@ blockExplorerTransactionLinks : Dict String (List ( String, String ))
 blockExplorerTransactionLinks =
     Dict.fromList
         [ ( "eth"
-          , [ ( "https://etherscan.io/tx/0x", "open Etherscan" )
-            , ( "https://www.oklink.com/eth/tx/", "open Oklink" )
-            , ( "https://www.blockchain.com/eth/tx/", "open Blockchain.com" )
-            , ( "https://blockchair.com/ethereum/transaction/", "open Blockchair" )
+          , [ ( "https://etherscan.io/tx/0x", "Etherscan" )
+            , ( "https://www.oklink.com/eth/tx/", "Oklink" )
+            , ( "https://www.blockchain.com/eth/tx/", "Blockchain.com" )
+            , ( "https://blockchair.com/ethereum/transaction/", "Blockchair" )
             ]
           )
         , ( "trx"
@@ -63,24 +63,24 @@ blockExplorerTransactionLinks =
             ]
           )
         , ( "btc"
-          , [ ( "https://www.oklink.com/btc/tx/", "open Oklink" )
-            , ( "https://www.blockchain.com/btc/tx/", "open Blockchain.com" )
-            , ( "https://blockchair.com/bitcoin/transaction/", "open Blockchair" )
+          , [ ( "https://www.oklink.com/btc/tx/", "Oklink" )
+            , ( "https://www.blockchain.com/btc/tx/", "Blockchain.com" )
+            , ( "https://blockchair.com/bitcoin/transaction/", "Blockchair" )
             ]
           )
         , ( "zec"
-          , [ ( "https://blockchair.com/zcash/transaction/", "open Blockchair" )
+          , [ ( "https://blockchair.com/zcash/transaction/", "Blockchair" )
             ]
           )
         , ( "ltc"
-          , [ ( "https://www.oklink.com/ltc/tx/", "open Oklink" )
-            , ( "https://blockchair.com/litecoin/transaction/", "open Blockchair" )
+          , [ ( "https://www.oklink.com/ltc/tx/", "Oklink" )
+            , ( "https://blockchair.com/litecoin/transaction/", "Blockchair" )
             ]
           )
         , ( "bch"
-          , [ ( "https://www.oklink.com/bch/tx/", "open Oklink" )
-            , ( "https://www.blockchain.com/bch/tx/", "open Blockchain.com" )
-            , ( "https://blockchair.com/bitcoin-cash/transaction/", "open Blockchair" )
+          , [ ( "https://www.oklink.com/bch/tx/", "Oklink" )
+            , ( "https://www.blockchain.com/bch/tx/", "Blockchain.com" )
+            , ( "https://blockchair.com/bitcoin-cash/transaction/", "Blockchair" )
             ]
           )
         ]
