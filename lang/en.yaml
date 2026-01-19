@@ -252,10 +252,10 @@ network error: network error
 server error: server error
 not found: not found
 data error: data error
-service not reachable: service not reachable
-unexpected data format: unexpected data format
-unexpected status code: unexpected status code
-service does not respond in time: service does not respond in time
+service not reachable: service not reachable.
+unexpected data format: unexpected data format.
+unexpected status code: unexpected status code.
+service does not respond in time: service does not respond in time.
 user address tags: user address tags
 true: 'true'
 false: 'false'

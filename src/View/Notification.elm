@@ -90,7 +90,11 @@ view vc model =
 
                 else
                     hide
-            , title = title |> Maybe.withDefault msgText |> flip (Locale.interpolated vc.locale) variables
+            , title =
+                title
+                    |> Maybe.withDefault msgText
+                    |> flip (Locale.interpolated vc.locale) variables
+                    |> Locale.titleCase vc.locale
             , msgTextAttr =
                 if showMsgText then
                     []

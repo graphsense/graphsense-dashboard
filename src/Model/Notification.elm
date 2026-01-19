@@ -268,12 +268,12 @@ fromHttpErrorWithMoreInfo infoData errorData =
     case errorData of
         Http.NetworkError ->
             errorDefault "Service not reachable"
-                |> map (Rs.s_title (Just "Network Error"))
+                |> map (Rs.s_title (Just "Network error"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
 
         Http.BadBody body ->
             errorDefault "Unexpected data format"
-                |> map (Rs.s_title (Just "Data Error"))
+                |> map (Rs.s_title (Just "Data error"))
                 |> map (Rs.s_moreInfo (toMoreInfo [ body ]))
 
         Http.BadUrl _ ->
