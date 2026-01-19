@@ -472,8 +472,8 @@ tag-dialog-add-context: Añada contexto, notas o enlaces a pruebas de apoyo.
 tag-dialog-additional-info: Información adicional (opcional)
 tag-dialog-additional-info-example: Por ejemplo, vinculado a un informe de estafa
   en xyz.com
-report a tag: Informar de una etiqueta
-report tag: Informar de una etiqueta
+report a tag: informar de una etiqueta
+report tag: informar de una etiqueta
 create new actor: Crear un nuevo actor
 Added tag: Etiqueta añadida
 num-more-assets: '{0} activos más'

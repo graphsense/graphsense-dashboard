@@ -288,7 +288,7 @@ txFilterDialogView vc net config model =
         , dropDown =
             { variant =
                 if isAssetFilterVisible then
-                    ThemedSelectBox.viewWithLabel (ThemedSelectBox.defaultConfig (Maybe.withDefault "All assets") |> Rs.s_width (Just (Css.px 200))) model.assetSelectBox model.selectedAsset (Locale.string vc.locale "Asset type")
+                    ThemedSelectBox.viewWithLabel (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets")) |> Rs.s_width (Just (Css.px 200))) model.assetSelectBox model.selectedAsset (Locale.string vc.locale "Asset type")
                         |> Html.map config.txTableAssetSelectBoxMsg
 
                 else

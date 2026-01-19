@@ -40,6 +40,7 @@ Balance: saldo
 address balance: saldo dell'indirizzo
 entity received: ricevuto dall'entità
 address received: ricevuto dall'indirizzo
+all assets: tutti gli asset
 category: categoria
 categories: categorie
 abuse: abuso
@@ -484,3 +485,6 @@ actor label: etichetta attore
 date-time-format: 'DD MMMM YYYY HH:mm'
 time-format: "HH:mm"
 date-format: "DD/MM/YY"
+report a tag: segnalare un tag
+report tag: segnalare un tag
+Add_Tag_description: 'Aiutaci a migliorare i nostri dati segnalando un'entità collegata a questo indirizzo: verrà esaminata e, se del caso, pubblicata.'

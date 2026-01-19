@@ -187,14 +187,14 @@ view plugins vc model =
         , confirmButton =
             { variant =
                 (Button.defaultConfig
-                    |> Rs.s_text "report tag"
+                    |> Rs.s_text "Report tag"
                     |> Rs.s_disabled (model.selectedActor == Nothing)
                     |> Rs.s_onClick (Just model.addTagMsg)
                 )
                     |> Button.primaryButton vc
             }
         , root =
-            { header = Locale.string vc.locale "report a tag" |> Locale.titleCase vc.locale
+            { header = Locale.string vc.locale "Report a tag" |> Locale.titleCase vc.locale
             , description = Locale.string vc.locale "Add_Tag_description"
             }
         }

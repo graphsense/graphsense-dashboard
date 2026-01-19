@@ -3,7 +3,7 @@
   "automatically created by": "elm-review suppress",
   "learn more": "elm-review suppress --help",
   "suppressions": [
-    { "count": 4, "filePath": "src/View/Graph/Browser.elm" },
+    { "count": 5, "filePath": "src/View/Graph/Browser.elm" },
     { "count": 4, "filePath": "src/View/Graph/Link.elm" },
     { "count": 3, "filePath": "src/View/Graph/Table/AllAssetsTable.elm" },
     { "count": 2, "filePath": "src/Update/Graph/Browser.elm" },

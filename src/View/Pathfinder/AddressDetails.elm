@@ -1275,7 +1275,7 @@ sidePanelAddressCopyIcon vc id =
     , addTagIconInstance =
         iconWithHint
             vc
-            { hint = Locale.string vc.locale "report tag"
+            { hint = Locale.string vc.locale "Report tag"
             , icon =
                 HIcons.iconsAddTagOutlinedSWithAttributes
                     (HIcons.iconsAddTagOutlinedSAttributes
