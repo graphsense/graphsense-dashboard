@@ -104,7 +104,7 @@ body plugins vc model =
 
 
 navbarSubMenuView : Config -> Model key -> NavbarSubMenu -> Html Msg
-navbarSubMenuView vc model { type_ } =
+navbarSubMenuView vc _ { type_ } =
     div
         [ [ Css.left (Css.px (Nb.navbarMenuNew_details.renderedWidth - 5))
           , Css.top (Css.px 0)
@@ -118,17 +118,7 @@ navbarSubMenuView vc model { type_ } =
         ((case type_ of
             NavbarMore ->
                 GraphComponents.rightClickMenu
-                    { shortcutList =
-                        [ { link = model.graph.route |> Route.graphRoute |> Route.toUrl
-                          , icon = Icons.iconsPathfinderStateDefault {}
-                          , text1 = "Pathfinder 1.0"
-                          , text2 = Nothing
-                          , blank = False
-                          }
-                            |> ContextMenuItem.initLink2
-                            |> ContextMenuItem.view vc
-                        ]
-                    , pluginsList =
+                    { pluginsList =
                         [ { link = "https://www.iknaio.com/learning#pathfinder20"
                           , icon = Icons.iconsVideoS {}
                           , text1 = "Watch tutorials"
