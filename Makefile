@@ -17,7 +17,7 @@ CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
 
 PLUGINS_DIR=./plugins
 
-PLUGINS=$(shell grep "|> Plugin" $(CONFIG) | grep -v "\-\-" | sed -r 's/\|>\s*Plugin\.\w+\s+\(?(\w+)\)?\..*/\1/' | tr -s ' ')
+PLUGINS=$(shell grep -oP '>\s*Plugin\.\K[^{} ]+' ${CONFIG} | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
 SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm)
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
@@ -207,5 +207,7 @@ copy-public:
 	cp -r $(PUBLIC_DIR) $(GENERATED_PUBLIC)
 	for p in $(PLUGINS); do rsync -r $(PLUGINS_DIR)/$$p/$(PUBLIC_DIR)/ $(GENERATED_PUBLIC)/; done
 
+print-plugins:
+	@echo $(PLUGINS)
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh 
