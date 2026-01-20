@@ -50,7 +50,7 @@ perform plugins key statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Nav.load Config.config.logoutUrl
+            Nav.load Config.logoutUrl
 
         SetDirtyEffect ->
             Ports.setDirty True

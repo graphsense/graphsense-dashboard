@@ -118,7 +118,9 @@ navbarSubMenuView vc _ { type_ } =
         ((case type_ of
             NavbarMore ->
                 GraphComponents.rightClickMenu
-                    { pluginsList =
+                    { shortcutList =
+                        []
+                    , pluginsList =
                         [ { link = "https://www.iknaio.com/learning#pathfinder20"
                           , icon = Icons.iconsVideoS {}
                           , text1 = "Watch tutorials"
