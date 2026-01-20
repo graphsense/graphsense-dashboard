@@ -191,12 +191,28 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                           , text = "Annotate address"
                           }
                             |> ContextMenuItem.init
+                            |> ContextMenuItem.setDisabled
+                                (case model.selection of
+                                    Pathfinder.SelectedAddress _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                                )
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
                           , text = "copy address ID"
                           }
                             |> ContextMenuItem.init
+                            |> ContextMenuItem.setDisabled
+                                (case model.selection of
+                                    Pathfinder.SelectedAddress _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                                )
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
                           , icon = HIcons.iconsDeleteS {}
@@ -223,6 +239,14 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                           , text = "report a tag"
                           }
                             |> ContextMenuItem.init
+                            |> ContextMenuItem.setDisabled
+                                (case model.selection of
+                                    Pathfinder.SelectedAddress _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                                )
                             |> ContextMenuItem.view vc
                         ]
                     , pluginsList = pluginsList

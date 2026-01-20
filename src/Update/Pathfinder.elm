@@ -2088,10 +2088,12 @@ updateByMsg plugins uc msg model =
         UserClickedContextMenuDeleteIcon menuType ->
             case menuType of
                 ContextMenu.AddressContextMenu id ->
-                    removeAddress id model
+                    -- removeAddress id model
+                    deleteSelection model
 
                 ContextMenu.TransactionContextMenu id ->
-                    removeTx id model
+                    -- removeTx id model
+                    deleteSelection model
 
                 ContextMenu.AddressIdChevronActions _ ->
                     n model
