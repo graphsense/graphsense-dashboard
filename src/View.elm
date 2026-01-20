@@ -117,7 +117,10 @@ navbarSubMenuView vc _ { type_ } =
         ]
         ((case type_ of
             NavbarMore ->
-                GraphComponents.rightClickMenu
+                GraphComponents.rightClickMenuWithAttributes
+                    (GraphComponents.rightClickMenuAttributes
+                        |> Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
+                    )
                     { shortcutList =
                         []
                     , pluginsList =
