@@ -39,6 +39,7 @@ type FindPosition
     = Auto
     | NextTo ( Direction, Id )
     | Fixed Float Float
+    | AtViewportCenter Float Float
 
 
 getBoundingBox : Network -> Coords.BBox

@@ -175,6 +175,12 @@ addAddressWithPosition plugins pc position id model =
 
                         Fixed x y ->
                             Just { x = x, y = y }
+
+                        AtViewportCenter x y ->
+                            -- Use viewport center, but check for existing related nodes first
+                            findAddressCoords id model
+                                |> Maybe.Extra.orElseLazy
+                                    (\_ -> Just { x = x, y = y })
                     )
                         |> Maybe.withDefault (findFreeCoords model)
                         |> avoidOverlappingEdges things
@@ -742,6 +748,18 @@ addTxWithPosition pc position tx network =
                                     Fixed x y ->
                                         { x = x, y = y }
 
+                                    AtViewportCenter x y ->
+                                        -- Use viewport center if no related addresses found
+                                        let
+                                            autoCoords =
+                                                findAccountTxCoords network t
+                                        in
+                                        if autoCoords == findFreeCoords network then
+                                            avoidOverlappingEdges things { x = x, y = y }
+
+                                        else
+                                            avoidOverlappingEdges things autoCoords
+
                             newNetwork =
                                 freeSpaceAroundCoords coords network
                         in
@@ -776,6 +794,18 @@ addTxWithPosition pc position tx network =
 
                                     Fixed x y ->
                                         { x = x, y = y }
+
+                                    AtViewportCenter x y ->
+                                        -- Use viewport center if no related addresses found
+                                        let
+                                            autoCoords =
+                                                findUtxoTxCoords network t
+                                        in
+                                        if autoCoords == findFreeCoords network then
+                                            avoidOverlappingEdges things { x = x, y = y }
+
+                                        else
+                                            avoidOverlappingEdges things autoCoords
 
                             newNetwork =
                                 freeSpaceAroundCoords coords network

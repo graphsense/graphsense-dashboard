@@ -678,11 +678,16 @@ updateByMsg plugins uc msg model =
             case m of
                 Search.BrowserGotMultiSearchResult _ result ->
                     let
+                        -- Compute viewport center in graph coordinates for placing new nodes
+                        viewportCenter =
+                            Transform.getCurrent model.transform
+                                |> (\t -> AtViewportCenter (t.x / unit) (t.y / unit))
+
                         addAccAddr aId ( x, eff ) =
-                            loadAddress plugins True aId x |> Tuple.mapSecond ((++) eff)
+                            loadAddressWithPosition plugins True viewportCenter aId x |> Tuple.mapSecond ((++) eff)
 
                         addAccTxs aId ( x, eff ) =
-                            loadTx True True plugins aId x |> Tuple.mapSecond ((++) eff)
+                            loadTxWithPosition viewportCenter True True plugins aId x |> Tuple.mapSecond ((++) eff)
 
                         addressesToAdd =
                             result.currencies
@@ -2830,21 +2835,27 @@ browserGotAddressData uc plugins providedId position data model =
                 )
 
         transform =
-            (uc.size
-                |> Maybe.map
-                    (\{ width, height } ->
-                        { width = width
-                        , height = height
-                        }
+            case position of
+                AtViewportCenter _ _ ->
+                    -- Don't move the viewport when adding at viewport center
+                    model.transform
+
+                _ ->
+                    (uc.size
+                        |> Maybe.map
+                            (\{ width, height } ->
+                                { width = width
+                                , height = height
+                                }
+                            )
+                        |> Maybe.map Transform.politeMove
+                        |> Maybe.withDefault Transform.move
                     )
-                |> Maybe.map Transform.politeMove
-                |> Maybe.withDefault Transform.move
-            )
-                { x = newAddress.x * unit
-                , y = A.getTo newAddress.y * unit
-                , z = Transform.initZ
-                }
-                model.transform
+                        { x = newAddress.x * unit
+                        , y = A.getTo newAddress.y * unit
+                        , z = Transform.initZ
+                        }
+                        model.transform
     in
     model
         |> s_network net
@@ -3435,6 +3446,12 @@ addPathToGraph plugins uc model net config list =
 
 updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
 updateByRoute_ plugins uc route model =
+    let
+        -- Compute viewport center in graph coordinates for placing new nodes
+        viewportCenter =
+            Transform.getCurrent model.transform
+                |> (\t -> AtViewportCenter (t.x / unit) (t.y / unit))
+    in
     case route |> Log.log "route" of
         Route.Root ->
             unselect model
@@ -3445,7 +3462,7 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins True id
+                |> loadAddressWithPosition plugins True viewportCenter id
                 |> and (selectAddress id)
 
         Route.Network network (Route.Tx a) ->
@@ -3454,7 +3471,7 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadTx True True plugins id
+                |> loadTxWithPosition viewportCenter True True plugins id
                 |> and (selectTx id)
 
         Route.Network network (Route.Relation a b) ->
@@ -3469,8 +3486,8 @@ updateByRoute_ plugins uc route model =
                     AggEdge.initId aId bId
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddress plugins True aId
-                |> and (loadAddress plugins True bId)
+                |> loadAddressWithPosition plugins True viewportCenter aId
+                |> and (loadAddressWithPosition plugins True viewportCenter bId)
                 |> and (selectAggEdge uc edgeId)
                 |> and (setTracingMode AggregateTracingMode)
 
