@@ -437,6 +437,10 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
+        UserClickedExportGraphAsPdf _ ->
+            -- handled in src/Update.elm
+            n model
+
         UserClickedSaveGraph _ ->
             -- handled in src/Update.elm
             n model

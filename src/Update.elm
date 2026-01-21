@@ -1179,6 +1179,15 @@ update plugins uc msg model =
                                 |> List.singleton
                             )
 
+                        Pathfinder.UserClickedExportGraphAsPdf name ->
+                            ( model
+                            , (name ++ ".pdf")
+                                |> Ports.exportGraphPdf
+                                |> Pathfinder.CmdEffect
+                                |> PathfinderEffect
+                                |> List.singleton
+                            )
+
                         Pathfinder.UserReleasedEscape ->
                             let
                                 ( pf, pfeff ) =

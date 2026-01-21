@@ -506,3 +506,6 @@ date-time-format: 'DD.MMMM YYYY HH:mm'
 time-format: "HH:mm"
 date-format: "DD.MM.YY"
 open in new tab: in neuem Tab öffnen
+align vertically: Vertikal ausrichten
+align horizontally: Horizontal ausrichten
+export pdf: Als PDF exportieren

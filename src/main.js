@@ -3,6 +3,7 @@ import FileSaver from 'file-saver'
 import { pack, unpack } from 'lzwcompress'
 import { Base64 } from 'js-base64'
 import { fileDialog } from 'file-select-dialog'
+import { jsPDF } from 'jspdf'
 import plugins from '../generated/plugins/index.js'
 import robotoBase64 from "../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64"
 import robotoBoldBase64 from "../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64"
@@ -176,6 +177,100 @@ app.ports.exportGraphImage.subscribe((filename) => {
 
       ctx.drawImage(img, 0, 0, width, height);
       canvas.toBlob((blob) => download(filename, blob))
+    };
+    img.src = "data:image/svg+xml;base64," + svgDataBase64;
+ }
+)
+
+app.ports.exportGraphPdf.subscribe((filename) => {
+    let svg = document.querySelector('svg#graph')
+    if (!svg) {
+      console.error('SVG element not found')
+      return
+    }
+    let canvas = document.createElement("canvas");
+    var svgData = new XMLSerializer().serializeToString(svg)
+
+    // replace css variables with actual values, since
+    // currently css variables are not supported in canvas
+    const cssVariables = getTheme()
+    for (const [key, value] of Object.entries(cssVariables)) {
+      svgData = svgData.replaceAll("var(" + key + ")", value)
+    }
+
+    // Embed fonts into svg as Base64Encoded string
+    let fontStyle = `
+      <style>
+        @font-face {
+          font-family: 'Roboto';
+          font-style: normal;
+          font-weight: 400;
+          src:url(data:application/font-woff;charset=utf-8;base64,${robotoBase64}) format('woff');
+        }
+        @font-face {
+          font-family: 'Roboto';
+          font-style: bold;
+          font-weight: 600;
+          src: url(data:application/font-woff;charset=utf-8;base64,${robotoBoldBase64}) format('woff');
+        }
+      svg {
+        font-family: Roboto;
+      }
+      </style>
+    `
+    
+    svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
+    const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
+    
+    const bgColor = cssVariables["--c-white"]
+
+    const pixelScaleFactor = 6;
+    var width = (svg.innerWidth
+    || window.innerWidth
+    || document.documentElement.clientWidth
+    || document.body.clientWidth) * pixelScaleFactor; 
+
+    var height = (svg.innerHeight 
+    || window.innerHeight
+    || document.documentElement.clientHeight
+    || document.body.clientHeight) * pixelScaleFactor;
+
+    canvas.width = width;
+    canvas.height = height;
+    let img = new Image();
+
+    img.onerror = function(e) {
+      console.error('Failed to load SVG image', e)
+    }
+
+    img.onload = function () {
+      try {
+        let ctx = canvas.getContext("2d");
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Create PDF with dimensions matching the canvas aspect ratio
+        const pdfWidth = width / pixelScaleFactor;
+        const pdfHeight = height / pixelScaleFactor;
+        const orientation = pdfWidth > pdfHeight ? 'landscape' : 'portrait';
+        
+        const pdf = new jsPDF({
+          orientation: orientation,
+          unit: 'px',
+          format: [pdfWidth, pdfHeight]
+        });
+
+        // Add the canvas image to the PDF
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        
+        // Save the PDF using blob and FileSaver for better compatibility
+        const pdfBlob = pdf.output('blob');
+        FileSaver.saveAs(pdfBlob, filename);
+      } catch (e) {
+        console.error('PDF generation failed', e)
+      }
     };
     img.src = "data:image/svg+xml;base64," + svgDataBase64;
  }

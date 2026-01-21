@@ -112,6 +112,7 @@ type Msg
     | UserSelectsAnnotationColor Id (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsImage String
+    | UserClickedExportGraphAsPdf String
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
     | UserClickedSelectionTool
