@@ -123,6 +123,8 @@ type Msg
     | UserClickedContextMenuDeleteIcon ContextMenuType
     | UserClickedContextMenuOpenInNewTab ContextMenuType
     | UserClickedContextMenuIdToClipboard ContextMenuType
+    | UserClickedContextMenuAlignVertically
+    | UserClickedContextMenuAlignHorizontally
     | UserClosesContextMenu
     | RuntimePostponedUpdateByRoute Route
     | BrowserWaitedAfterReleasingMouseButton

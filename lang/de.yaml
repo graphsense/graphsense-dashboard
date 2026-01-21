@@ -488,6 +488,8 @@ deprecation notice: Ende des Supports
 show transaction hash: Tx-Hash anzeigen
 hint-multiple-search-terms: Mehrere Suchbegriffe erkannt ({0}). Bitte Enter drücken,
   um hinzuzufügen.
+align vertically: Vertikal ausrichten
+align horizontally: Horizontal ausrichten
 transactions-from-to: Transaktionen von {0} nach {1} ({2})
 watch tutorials: Schulungsvideos
 supported tokens: unterstützte Tokens

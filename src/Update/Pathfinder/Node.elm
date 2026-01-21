@@ -1,4 +1,4 @@
-module Update.Pathfinder.Node exposing (Node, move, moveAbs, release)
+module Update.Pathfinder.Node exposing (Node, move, moveAbs, release, setX, setY)
 
 import Animation exposing (Animation, Clock)
 import Model.Graph.Coords exposing (Coords)
@@ -43,4 +43,18 @@ release node =
                 |> Animation.static
         , dx = 0
         , dy = 0
+    }
+
+
+setX : Float -> Node a -> Node a
+setX newX node =
+    { node
+        | x = newX
+    }
+
+
+setY : Float -> Node a -> Node a
+setY newY node =
+    { node
+        | y = Animation.static newY
     }

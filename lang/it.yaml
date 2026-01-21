@@ -532,3 +532,5 @@ info-request-limit-exceeded-with-details: Il limite di richieste della tua chiav
 info-request-limit-exceeded: Il limite di richieste della tua chiave API è stato superato.
 num-more-assets: '{0} altre risorse'
 annotate transaction: annota transazione
+align vertically: Allinea verticalmente
+align horizontally: Allinea orizzontalmente

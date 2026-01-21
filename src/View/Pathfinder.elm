@@ -200,6 +200,34 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                                         True
                                 )
                             |> ContextMenuItem.view vc
+
+                        -- , { msg = UserClickedContextMenuAlignVertically
+                        --   , icon = HIcons.iconsLine {}
+                        --   , text = Locale.string vc.locale "align vertically"
+                        --   }
+                        --     |> ContextMenuItem.init
+                        --     |> ContextMenuItem.setDisabled
+                        --         (case model.selection of
+                        --             Pathfinder.MultiSelect _ ->
+                        --                 False
+                        --             _ ->
+                        --                 True
+                        --         )
+                        --     |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuAlignHorizontally
+                          , icon = HIcons.iconsHorizontalAlign {}
+                          , text = Locale.string vc.locale "align horizontally"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.setDisabled
+                                (case model.selection of
+                                    Pathfinder.MultiSelect _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                                )
+                            |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
                           , text = "copy address ID"
@@ -275,6 +303,34 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                           , text = "Annotate transaction"
                           }
                             |> ContextMenuItem.init
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuAlignVertically
+                          , icon = HIcons.iconsLine {}
+                          , text = Locale.string vc.locale "align vertically"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.setDisabled
+                                (case model.selection of
+                                    Pathfinder.MultiSelect _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                                )
+                            |> ContextMenuItem.view vc
+                        , { msg = UserClickedContextMenuAlignHorizontally
+                          , icon = HIcons.iconsLine {}
+                          , text = Locale.string vc.locale "align horizontally"
+                          }
+                            |> ContextMenuItem.init
+                            |> ContextMenuItem.setDisabled
+                                (case model.selection of
+                                    Pathfinder.MultiSelect _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                                )
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
@@ -397,6 +453,13 @@ topCenterPanel plugins pluginStates vc gc model =
                         _ ->
                             False
                 , newDisabled = not model.isDirty
+                , alignHorizontalDisabled =
+                    case model.selection of
+                        Pathfinder.MultiSelect _ ->
+                            False
+
+                        _ ->
+                            True
                 , annotateDisabled =
                     case model.selection of
                         Pathfinder.SelectedAddress _ ->
@@ -490,6 +553,8 @@ annotationHovercardView vc id annotation hc =
         , color6 = { variant = colorBtn selectedColor (Just Colors.annotation6_color) }
         , color7 = { variant = colorBtn selectedColor (Just Colors.annotation7_color) }
         , color8 = { variant = colorBtn selectedColor (Just Colors.annotation8_color) }
+        , color9 = { variant = colorBtn selectedColor (Just Colors.annotation9_color) }
+        , color10 = { variant = colorBtn selectedColor (Just Colors.annotation10_color) }
         }
         |> Html.toUnstyled
         |> List.singleton

@@ -22,6 +22,7 @@ type alias Config =
     , annotateDisabled : Bool
     , pointerTool : PointerTool
     , exportName : String
+    , alignHorizontalDisabled : Bool
     }
 
 
@@ -83,6 +84,8 @@ view vc config =
                 (iconsAttr "screenshot" False (UserClickedExportGraphAsImage config.exportName))
             |> Rs.s_iconsOpen
                 (iconsAttr "open" False UserClickedOpenGraph)
+            |> Rs.s_iconsHorizontalAlign
+                (iconsAttr "align horizontally" config.alignHorizontalDisabled UserClickedContextMenuAlignHorizontally)
         )
         { iconsRedo =
             { variant =

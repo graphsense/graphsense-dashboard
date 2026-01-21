@@ -475,3 +475,9 @@ shallPushHistory plugins msg _ =
 
         ConversionDetailsMsg _ _ ->
             False
+
+        UserClickedContextMenuAlignVertically ->
+            True
+
+        UserClickedContextMenuAlignHorizontally ->
+            True
