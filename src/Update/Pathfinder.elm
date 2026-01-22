@@ -453,22 +453,93 @@ updateByMsg plugins uc msg model =
                     )
 
                 Just t ->
+                    -- First collect all addresses from transactions and check if we need to fetch tag summaries
                     let
-                        config =
-                            makeGraphTxsExportCSVConfig uc model.tagSummaries
-
                         txAccounts =
                             model.network.txs
                                 |> Dict.values
                                 |> List.concatMap (explodeTxToAccounts uc.locale)
 
-                        ( exportCSVWithTime, _ ) =
-                            ExportCSV.update (ExportCSV.BrowserGotTime t) config model.exportCSV
+                        allAddresses =
+                            txAccounts
+                                |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
+                                |> List.filter (\( _, addr ) -> not (String.isEmpty addr))
 
-                        ( exportCSV, eff ) =
-                            ExportCSV.gotData uc config ( txAccounts, Nothing ) exportCSVWithTime
+                        -- Group addresses by network for bulk fetching
+                        addressesByNetwork =
+                            allAddresses
+                                |> List.foldl
+                                    (\( network, addr ) acc ->
+                                        Dict.update network
+                                            (\existing ->
+                                                case existing of
+                                                    Nothing ->
+                                                        Just (Set.singleton addr)
+
+                                                    Just addrs ->
+                                                        Just (Set.insert addr addrs)
+                                            )
+                                            acc
+                                    )
+                                    Dict.empty
+
+                        -- Find addresses missing tag summaries
+                        missingByNetwork =
+                            addressesByNetwork
+                                |> Dict.toList
+                                |> List.filterMap
+                                    (\( network, addrs ) ->
+                                        let
+                                            missing =
+                                                addrs
+                                                    |> Set.toList
+                                                    |> List.filter
+                                                        (\addr ->
+                                                            Id.init network addr
+                                                                |> isTagSummaryLoaded True model.tagSummaries
+                                                                |> not
+                                                        )
+                                        in
+                                        if List.isEmpty missing then
+                                            Nothing
+
+                                        else
+                                            Just ( network, missing )
+                                    )
                     in
-                    ( { model | exportCSV = exportCSV }, eff )
+                    if List.isEmpty missingByNetwork then
+                        -- All tag summaries already loaded, proceed with export
+                        generateGraphTxsExport uc t model
+
+                    else
+                        -- Need to fetch missing tag summaries first
+                        let
+                            toMsg =
+                                BrowserGotTagSummariesForExportGraphTxsAsCSV t
+
+                            fetchEffects =
+                                missingByNetwork
+                                    |> List.map
+                                        (\( network, addrs ) ->
+                                            fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
+                                        )
+                        in
+                        ( model, fetchEffects )
+
+        BrowserGotTagSummariesForExportGraphTxsAsCSV time includesBestClusterTag tagSummaries ->
+            let
+                -- Add received tag summaries to model
+                ( modelWithTags, _ ) =
+                    tagSummaries
+                        |> List.foldl
+                            (\( id, ts ) ->
+                                addTagSummaryToModel includesBestClusterTag id ts
+                                    |> and
+                            )
+                            (n model)
+            in
+            -- Now generate the export with updated tag summaries
+            generateGraphTxsExport uc time modelWithTags
 
         UserClickedSaveGraph _ ->
             -- handled in src/Update.elm
@@ -4764,6 +4835,28 @@ getTagsForExport addressId table data model =
         |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
         |> List.singleton
     )
+
+
+{-| Generate the graph transactions CSV export with current tag summaries
+-}
+generateGraphTxsExport : Update.Config -> Time.Posix -> Model -> ( Model, List Effect )
+generateGraphTxsExport uc t model =
+    let
+        config =
+            makeGraphTxsExportCSVConfig uc model.tagSummaries
+
+        txAccounts =
+            model.network.txs
+                |> Dict.values
+                |> List.concatMap (explodeTxToAccounts uc.locale)
+
+        ( exportCSVWithTime, _ ) =
+            ExportCSV.update (ExportCSV.BrowserGotTime t) config model.exportCSV
+
+        ( exportCSV, eff ) =
+            ExportCSV.gotData uc config ( txAccounts, Nothing ) exportCSVWithTime
+    in
+    ( { model | exportCSV = exportCSV }, eff )
 
 
 {-| Config for exporting all graph transactions as CSV
