@@ -32,6 +32,7 @@ type alias Network =
     , animatedTxs : Set Id
     , conversions : Dict ( Id, Id ) ConversionEdge
     , conversionsEdgeMap : Dict Id (Set ( Id, Id ))
+    , txsIndex : Int
     }
 
 
@@ -210,7 +211,7 @@ getRecentTxForAddress network direction addressId =
         |> Maybe.andThen
             (Set.toList
                 >> List.filterMap (\txId -> Dict.get txId network.txs)
-                >> List.sortBy Tx.getRawTimestamp
+                >> List.sortBy .index
                 >> List.Extra.last
             )
 

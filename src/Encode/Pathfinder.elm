@@ -3,7 +3,7 @@ module Encode.Pathfinder exposing (encode)
 import Animation
 import Color exposing (Color)
 import Dict
-import Json.Encode exposing (Value, bool, float, list, null, string)
+import Json.Encode exposing (Value, bool, float, int, list, null, string)
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
@@ -69,6 +69,7 @@ encodeTx tx =
     , float tx.x
     , float (Animation.getTo tx.y)
     , bool tx.isStartingPoint
+    , int tx.index
     ]
         |> list identity
 

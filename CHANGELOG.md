@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Renamed "TRANSLATION_FILES_HASH" to "CACHE_BUST"
 - Aligned translation files, simplified lookup keys, added couple of missing translation 
 - Changed logout behaviour to browser redirect
+- Auto-tracing of txs depends on the latest tx added to an address instead of the timestamp
  
 ## [25.11.5] - 2025-12-16
 

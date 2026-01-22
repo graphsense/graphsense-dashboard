@@ -47,6 +47,7 @@ oneAddress =
     , animatedTxs = Set.empty
     , conversions = Dict.empty
     , conversionsEdgeMap = Dict.empty
+    , txsIndex = 0
     }
 
 
@@ -71,6 +72,7 @@ oneAddressWithOutgoingTx =
                     )
                 )
                 oneAddress.addresses
+        , txsIndex = 1
     }
 
 
@@ -95,6 +97,7 @@ oneAddressWithIncomingTx =
                     )
                 )
                 oneAddress.addresses
+        , txsIndex = 1
     }
 
 
@@ -116,6 +119,7 @@ oneAddressWithTwoTxs =
                     )
                 )
                 oneAddress.addresses
+        , txsIndex = 2
     }
 
 
@@ -143,6 +147,7 @@ twoConnectedAddresses =
                     )
                 )
                 oneAddressWithOutgoingTx.txs
+        , txsIndex = 1
     }
 
 
@@ -207,6 +212,7 @@ one2TwoTxs2ThreeAddresses =
                             (Tx.updateUtxoIo Incoming Id.address1 (s_address (Just Address.address1)))
                         )
                     )
+        , txsIndex = 2
     }
 
 

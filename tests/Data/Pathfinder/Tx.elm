@@ -30,6 +30,7 @@ tx1 =
                     |> Dict.insert Id.address5 (Io Api.values Nothing 1)
             , raw = Api.tx1
             }
+    , index = 0
     }
 
 
@@ -52,6 +53,7 @@ tx2 =
             , inputs = Dict.singleton Id.address6 <| Io Api.values Nothing 1
             , raw = Api.tx2
             }
+    , index = 1
     }
 
 
@@ -74,6 +76,7 @@ tx3 =
             , inputs = Dict.singleton Id.address1 <| Io Api.values Nothing 1
             , raw = Api.tx3
             }
+    , index = 2
     }
 
 
@@ -96,4 +99,5 @@ tx4 =
             , inputs = Dict.singleton Id.address3 <| Io Api.values Nothing 1
             , raw = Api.tx4
             }
+    , index = 3
     }

@@ -16,4 +16,5 @@ init =
     , animatedTxs = Set.empty
     , conversions = Dict.empty
     , conversionsEdgeMap = Dict.empty
+    , txsIndex = 0
     }

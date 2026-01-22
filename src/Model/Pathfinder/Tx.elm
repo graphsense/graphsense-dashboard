@@ -74,6 +74,7 @@ type alias Tx =
     , opacity : Animation
     , isStartingPoint : Bool
     , conversionType : Maybe ConversionLegType
+    , index : Int
     }
 
 

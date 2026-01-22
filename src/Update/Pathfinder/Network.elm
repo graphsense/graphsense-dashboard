@@ -763,7 +763,7 @@ addTxWithPosition pc position tx network =
                             newNetwork =
                                 freeSpaceAroundCoords coords network
                         in
-                        Tx.fromTxAccountData t coords
+                        Tx.fromTxAccountData network.txsIndex t coords
                             |> s_isStartingPoint (isEmpty network)
                             |> insertTx pc
                                 { newNetwork
@@ -810,7 +810,7 @@ addTxWithPosition pc position tx network =
                             newNetwork =
                                 freeSpaceAroundCoords coords network
                         in
-                        Tx.fromTxUtxoData t coords
+                        Tx.fromTxUtxoData network.txsIndex t coords
                             |> (\tx_i ->
                                     if hasAnimations newNetwork then
                                         tx_i
@@ -841,6 +841,7 @@ insertTx pc network tx =
                         |> List.foldl (setAddressInTx pc tx.id Incoming)
                             { network
                                 | txs = Dict.insert tx.id tx network.txs
+                                , txsIndex = max tx.index network.txsIndex
                             }
                     )
 
@@ -1205,6 +1206,7 @@ ingestTxs pc network things txs =
 
         toUtxo tx th =
             Tx.fromTxUtxoData
+                th.index
                 tx
                 { x = th.x
                 , y = th.y
@@ -1213,6 +1215,7 @@ ingestTxs pc network things txs =
 
         toAccount tx th =
             Tx.fromTxAccountData
+                th.index
                 tx
                 { x = th.x
                 , y = th.y

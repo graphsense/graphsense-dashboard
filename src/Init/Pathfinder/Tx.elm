@@ -10,8 +10,8 @@ import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..), UtxoTx)
 import Util.Data
 
 
-fromTxAccountData : Api.Data.TxAccount -> Coords -> Tx
-fromTxAccountData tx coords =
+fromTxAccountData : Int -> Api.Data.TxAccount -> Coords -> Tx
+fromTxAccountData index tx coords =
     let
         id =
             Id.init tx.network tx.identifier
@@ -43,11 +43,12 @@ fromTxAccountData tx coords =
             , value = tx.value
             , raw = tx
             }
+    , index = index + 1
     }
 
 
-fromTxUtxoData : Api.Data.TxUtxo -> Coords -> Tx
-fromTxUtxoData tx coords =
+fromTxUtxoData : Int -> Api.Data.TxUtxo -> Coords -> Tx
+fromTxUtxoData index tx coords =
     let
         id =
             Id.init tx.currency tx.txHash
@@ -64,6 +65,7 @@ fromTxUtxoData tx coords =
     , clock = 0
     , conversionType = Nothing
     , type_ = normalizeUtxo tx |> Utxo
+    , index = index + 1
     }
 
 

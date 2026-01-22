@@ -34,6 +34,7 @@ type alias DeserializedThing =
     , x : Float
     , y : Float
     , isStartingPoint : Bool
+    , index : Int
     }
 
 
