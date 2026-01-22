@@ -18,6 +18,7 @@ module Update.Pathfinder.Network exposing
     , ingestAggEdges
     , ingestTxs
     , insertFetchedEdge
+    , resolveOverlaps
     , rupsertAggEdge
     , snapToGrid
     , trySetHoverConversionLoop
@@ -138,6 +139,114 @@ snapToGrid =
         >> updateAllTxs coordsToInt
 
 
+{-| Resolve overlapping nodes by pushing them apart.
+Takes a network and iteratively moves nodes that are too close together.
+Uses nodeXOffset and nodeYOffset as minimum distances.
+-}
+resolveOverlaps : Network -> Network
+resolveOverlaps network =
+    let
+        -- Get all node positions (addresses and transactions)
+        getAllNodes : Network -> List { id : Id, x : Float, y : Float, isAddress : Bool }
+        getAllNodes net =
+            let
+                addresses =
+                    Dict.toList net.addresses
+                        |> List.map (\( id, a ) -> { id = id, x = a.x, y = A.getTo a.y, isAddress = True })
+
+                txs =
+                    Dict.toList net.txs
+                        |> List.map (\( id, tx ) -> { id = id, x = tx.x, y = A.getTo tx.y, isAddress = False })
+            in
+            addresses ++ txs
+
+        -- Check if two nodes overlap (too close together)
+        nodesOverlap : { a | x : Float, y : Float } -> { b | x : Float, y : Float } -> Bool
+        nodesOverlap n1 n2 =
+            let
+                dx =
+                    abs (n1.x - n2.x)
+
+                dy =
+                    abs (n1.y - n2.y)
+            in
+            dx < nodeXOffset && dy < nodeYOffset
+
+        -- Push node2 away from node1
+        pushApart : { a | x : Float, y : Float } -> { id : Id, x : Float, y : Float, isAddress : Bool } -> { id : Id, x : Float, y : Float, isAddress : Bool }
+        pushApart n1 n2 =
+            let
+                -- dx =
+                --     n2.x - n1.x
+                dy =
+                    n2.y - n1.y
+
+                -- Determine which direction to push (primarily Y direction)
+                newY =
+                    if dy >= 0 then
+                        n1.y + nodeYOffset
+
+                    else
+                        n1.y - nodeYOffset
+            in
+            { n2 | y = newY }
+
+        -- Apply a single pass of collision resolution
+        resolvePass : List { id : Id, x : Float, y : Float, isAddress : Bool } -> List { id : Id, x : Float, y : Float, isAddress : Bool }
+        resolvePass nodes =
+            case nodes of
+                [] ->
+                    []
+
+                [ single ] ->
+                    [ single ]
+
+                first :: rest ->
+                    let
+                        -- Check first node against all others and push any overlapping nodes
+                        ( _, resolvedRest ) =
+                            List.foldl
+                                (\node ( ref, acc ) ->
+                                    if nodesOverlap ref node then
+                                        let
+                                            pushed =
+                                                pushApart ref node
+                                        in
+                                        ( ref, acc ++ [ pushed ] )
+
+                                    else
+                                        ( ref, acc ++ [ node ] )
+                                )
+                                ( first, [] )
+                                rest
+                    in
+                    first :: resolvePass resolvedRest
+
+        -- Apply node position changes to network
+        applyChanges : List { id : Id, x : Float, y : Float, isAddress : Bool } -> Network -> Network
+        applyChanges nodes net =
+            List.foldl
+                (\node acc ->
+                    if node.isAddress then
+                        updateAddress node.id (\a -> { a | y = A.static node.y }) acc
+
+                    else
+                        updateTx node.id (\tx -> { tx | y = A.static node.y }) acc
+                )
+                net
+                nodes
+
+        -- Sort nodes by Y then X for consistent processing
+        sortedNodes =
+            getAllNodes network
+                |> List.sortBy (\n -> ( n.y, n.x ))
+
+        resolvedNodes =
+            resolvePass sortedNodes
+    in
+    applyChanges resolvedNodes network
+
+
 addAddress : Plugins -> Pathfinder.Config -> Id -> Network -> ( Address, Network )
 addAddress plugins pc =
     addAddressWithPosition plugins pc Auto
@@ -188,11 +297,21 @@ addAddressWithPosition plugins pc position id model =
                 newAddress =
                     Address.init plugins id coords
                         |> s_isStartingPoint (isEmpty model)
+
+                network =
+                    newAddress
+                        |> insertAddress pc (freeSpaceAroundCoords coords model)
+
+                -- Resolve overlaps when adding at viewport center
+                finalNetwork =
+                    case position of
+                        AtViewportCenter _ _ ->
+                            resolveOverlaps network
+
+                        _ ->
+                            network
              in
-             ( newAddress
-             , newAddress
-                |> insertAddress pc (freeSpaceAroundCoords coords model)
-             )
+             ( newAddress, finalNetwork )
             )
 
 
@@ -762,13 +881,22 @@ addTxWithPosition pc position tx network =
 
                             newNetwork =
                                 freeSpaceAroundCoords coords network
+
+                            ( resultTx, resultNet ) =
+                                Tx.fromTxAccountData network.txsIndex t coords
+                                    |> s_isStartingPoint (isEmpty network)
+                                    |> insertTx pc
+                                        { newNetwork
+                                            | animatedTxs = Set.insert id newNetwork.animatedTxs
+                                        }
                         in
-                        Tx.fromTxAccountData network.txsIndex t coords
-                            |> s_isStartingPoint (isEmpty network)
-                            |> insertTx pc
-                                { newNetwork
-                                    | animatedTxs = Set.insert id newNetwork.animatedTxs
-                                }
+                        -- Resolve overlaps when adding at viewport center
+                        case position of
+                            AtViewportCenter _ _ ->
+                                ( resultTx, resolveOverlaps resultNet )
+
+                            _ ->
+                                ( resultTx, resultNet )
 
                     Api.Data.TxTxUtxo t ->
                         let
@@ -809,23 +937,32 @@ addTxWithPosition pc position tx network =
 
                             newNetwork =
                                 freeSpaceAroundCoords coords network
-                        in
-                        Tx.fromTxUtxoData network.txsIndex t coords
-                            |> (\tx_i ->
-                                    if hasAnimations newNetwork then
-                                        tx_i
 
-                                    else
-                                        { tx_i
-                                            | opacity = opacityAnimation
-                                            , clock = 0
+                            ( resultTx, resultNet ) =
+                                Tx.fromTxUtxoData network.txsIndex t coords
+                                    |> (\tx_i ->
+                                            if hasAnimations newNetwork then
+                                                tx_i
+
+                                            else
+                                                { tx_i
+                                                    | opacity = opacityAnimation
+                                                    , clock = 0
+                                                }
+                                       )
+                                    |> s_isStartingPoint (isEmpty network)
+                                    |> insertTx pc
+                                        { newNetwork
+                                            | animatedTxs = Set.insert id newNetwork.animatedTxs
                                         }
-                               )
-                            |> s_isStartingPoint (isEmpty network)
-                            |> insertTx pc
-                                { newNetwork
-                                    | animatedTxs = Set.insert id newNetwork.animatedTxs
-                                }
+                        in
+                        -- Resolve overlaps when adding at viewport center
+                        case position of
+                            AtViewportCenter _ _ ->
+                                ( resultTx, resolveOverlaps resultNet )
+
+                            _ ->
+                                ( resultTx, resultNet )
             )
 
 

@@ -2384,6 +2384,7 @@ updateByMsg plugins uc msg model =
 
                         newNetwork =
                             List.foldl moveToMedianY model.network selections
+                                |> Network.resolveOverlaps
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }
 
@@ -2447,6 +2448,7 @@ updateByMsg plugins uc msg model =
 
                         newNetwork =
                             List.foldl moveToMedianX model.network selections
+                                |> Network.resolveOverlaps
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }
 
