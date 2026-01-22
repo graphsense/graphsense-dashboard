@@ -113,6 +113,7 @@ type Msg
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsImage String
     | UserClickedExportGraphAsPdf String
+    | UserClickedExportGraphTxsAsCSV (Maybe Time.Posix)
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
     | UserClickedSelectionTool

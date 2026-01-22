@@ -404,6 +404,9 @@ shallPushHistory plugins msg _ =
         UserClickedExportGraphAsPdf _ ->
             False
 
+        UserClickedExportGraphTxsAsCSV _ ->
+            False
+
         UserClickedToolbarDeleteIcon ->
             True
 

@@ -491,3 +491,5 @@ align vertically: Align vertically
 align horizontally: Align horizontally
 export pdf: Export PDF
 generating pdf: Generating PDF of Graph...
+export all graph transactions as csv: Export all graph transactions as CSV
+graph_transactions: graph_transactions

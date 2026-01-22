@@ -84,6 +84,8 @@ view vc config =
                 (iconsAttr "screenshot" False (UserClickedExportGraphAsImage config.exportName))
             |> Rs.s_iconExportPdf
                 (iconsAttr "export pdf" False (UserClickedExportGraphAsPdf config.exportName))
+            |> Rs.s_iconExportCsv
+                (iconsAttr "export all graph transactions as csv" False (UserClickedExportGraphTxsAsCSV Nothing))
             |> Rs.s_iconsOpen
                 (iconsAttr "open" False UserClickedOpenGraph)
             |> Rs.s_iconsHorizontalAlign
