@@ -1891,6 +1891,10 @@ updateByMsg plugins uc msg model =
                     -- handled Upstream
                     n model
 
+                UserClickedToggleBothValueDisplay ->
+                    -- handled Upstream
+                    n model
+
                 UserClickedToggleValueDetail ->
                     -- handled Upstream
                     n model

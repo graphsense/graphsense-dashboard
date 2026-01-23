@@ -783,6 +783,20 @@ update plugins uc msg model =
             in
             ( newModel, [ saveUserSettings newModel ] )
 
+        SettingsMsg UserToggledBothValueDisplay ->
+            let
+                showBoth =
+                    not model.config.showBothValues
+
+                newModel =
+                    { model
+                        | config =
+                            model.config
+                                |> s_showBothValues showBoth
+                    }
+            in
+            ( newModel, [ saveUserSettings newModel ] )
+
         AddTagDialog smsg ->
             case model.dialog of
                 Just (Dialog.AddTag conf) ->
@@ -1103,6 +1117,9 @@ update plugins uc msg model =
 
                 Pathfinder.UserClickedToggleValueDisplay ->
                     update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
+
+                Pathfinder.UserClickedToggleBothValueDisplay ->
+                    update plugins uc (UserToggledBothValueDisplay |> SettingsMsg) model
 
         PathfinderMsg (Pathfinder.UserClickedSaveGraph time) ->
             ( model

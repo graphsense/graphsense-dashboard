@@ -63,6 +63,7 @@ init plugins uc flags url key =
             , abuseConcepts = []
             , showConversionEdges = True
             , characterDimensions = cd
+            , showBothValues = False
             }
       , page = Home
       , search = Search.init (Search.initSearchAddressAndTxs Nothing)

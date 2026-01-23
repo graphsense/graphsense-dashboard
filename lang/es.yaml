@@ -388,7 +388,7 @@ please-select: Seleccione...
 please-choose-ledger: Elija un libro mayor criptográfico
 preferred fiat currency: Moneda fiduciaria preferida
 show exact values: Mostrar valores exactos
-amount in Fiat: Importe en moneda fiduciaria
+amount in Fiat: Importe en fiat
 plan Details: Detalles del plan
 never: Nunca
 expires on: Caduca el
@@ -499,8 +499,8 @@ back: atrás
 mode: modo
 all our services: todos nuestros servicios
 logout: cerrar sesión
-with zone code: con zona horaria
-in UTC: en UTC
+with zone code: mostrar diferencia horaria
+in UTC: zona horaria UTC
 e.g.: p.e. {0}
 actor label: etiqueta de actor
 date-time-format: 'DD MMMM YYYY HH:mm'
@@ -513,3 +513,6 @@ align vertically: Alinear verticalmente
 align horizontally: Alinear horizontalmente
 export pdf: Exportar PDF
 generating pdf: Generando PDF del grafo...
+show both on tx: mostrar fiat y cripto
+time: tiempo
+assets: activos

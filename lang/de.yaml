@@ -496,8 +496,8 @@ back: zurück
 mode: Modus
 all our services: weitere Dienstleistungen
 logout: abmelden
-with zone code: mit Zeitzone
-in UTC: in UTC
+with zone code: Zeitverschiebung anzeigen
+in UTC: UTC Zeitzone
 e.g.: z.B. {0}
 actor label: Bezeichnung des Akteurs
 date-time-format: 'DD.MMMM YYYY HH:mm'
@@ -508,4 +508,6 @@ align vertically: Vertikal ausrichten
 align horizontally: Horizontal ausrichten
 export pdf: Als PDF exportieren
 generating pdf: PDF des Graphen wird erstellt...
-
+show both on tx: Fiat und Crypto anzeigen
+time: Zeit
+assets: Assets

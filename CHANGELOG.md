@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [26.01.0] - unreleased
 
+### Added
+- Display option to show both fiat and crypto value on graph
+
 ### Changed
 
 - Handling of environment variables

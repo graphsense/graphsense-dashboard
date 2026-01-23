@@ -479,8 +479,8 @@ back: back
 mode: mode
 all our services: all our services
 logout: logout
-with zone code: with timezone
-in UTC: in UTC
+with zone code: show time difference
+in UTC: UTC time zone
 e.g.: e.g. {0}
 actor label: actor label
 date-time-format: "MM/DD/YYYY hh:mm tt"
@@ -491,3 +491,6 @@ align vertically: Align vertically
 align horizontally: Align horizontally
 export pdf: Export PDF
 generating pdf: Generating PDF of Graph...
+show both on tx: show both on tx
+time: time
+assets: assets

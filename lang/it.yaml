@@ -479,8 +479,8 @@ back: indietro
 mode: modalità
 all our services: tutti i nostri servizi
 logout: esci
-with zone code: con fuso orario
-in UTC: in UTC
+with zone code: mostra diff. di fuso orario
+in UTC: fuso orario UTC
 e.g.: ad es. {0}
 actor label: etichetta attore
 date-time-format: DD MMMM YYYY HH:mm
@@ -536,3 +536,6 @@ align vertically: Allinea verticalmente
 align horizontally: Allinea orizzontalmente
 export pdf: Esporta PDF
 generating pdf: Generazione PDF del grafo...
+show both on tx: mostra fiat e criptovalute
+time: tempo
+assets: valori

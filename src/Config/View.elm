@@ -26,6 +26,7 @@ type alias Config =
     , allConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
     , characterDimensions : Dict String { width : Float, height : Float }
+    , showBothValues : Bool
     }
 
 

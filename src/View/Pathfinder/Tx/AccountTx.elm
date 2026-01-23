@@ -9,7 +9,7 @@ import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Maybe.Extra
-import Model.Currency exposing (asset)
+import Model.Currency exposing (Currency(..), asset)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
@@ -27,7 +27,7 @@ import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
-import Util.View exposing (onClickWithStop)
+import Util.View exposing (ifTrue, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (pickPathFunction)
 import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
@@ -45,14 +45,30 @@ view _ vc _ tx accTx annotation =
         adjY =
             fd.y + fd.height / 2
 
+        offsetSecondValue =
+            if vc.showBothValues then
+                0
+
+            else
+                -GraphComponents.txNodeEthSecondValue_details.renderedHeight - 2
+
+        offsetTxHash =
+            if vc.showHash then
+                0
+
+            else
+                -GraphComponents.txNodeEthTxHash_details.renderedHeight + 2
+
         offset =
             2
                 + (if vc.showTimestampOnTxEdge then
                     3
 
                    else
-                    -GraphComponents.txNodeEthTimestamp_details.height
+                    -GraphComponents.txNodeEthTimestamp_details.height + 4
                   )
+                + offsetTxHash
+                + offsetSecondValue
 
         ( annAttr, label ) =
             annotation
@@ -83,19 +99,22 @@ view _ vc _ tx accTx annotation =
                     )
                 |> Maybe.withDefault Colors.pathMiddle
 
-        ( dateLine, timeLine ) =
+        t =
+            Data.timestampToPosix accTx.raw.timestamp
+
+        ( firstValue, secondValue ) =
             let
-                t =
-                    Data.timestampToPosix accTx.raw.timestamp
+                fmt c =
+                    Locale.currency c vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
             in
-            if not vc.showHash then
-                ( Locale.timestampDateUniform vc.locale t
-                , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t
+            if vc.showBothValues then
+                ( fmt Coin
+                , fmt (Fiat vc.preferredFiatCurrency)
                 )
 
             else
-                ( Util.View.truncateLongIdentifier ("0x" ++ accTx.raw.txHash)
-                , Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset t
+                ( fmt (View.toCurrency vc)
+                , ""
                 )
     in
     g
@@ -126,17 +145,20 @@ view _ vc _ tx accTx annotation =
                     ]
                 , nodeEllipse = annAttr
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
+                , timestamp =
+                    [ translate 0 offsetSecondValue |> transform ]
+                , date =
+                    [ translate 0 offsetTxHash |> transform ]
+                , time =
+                    [ translate 0 offsetTxHash |> transform ]
             }
             { root =
                 { highlightVisible = tx.selected || tx.hovered
-                , date = dateLine
-                , time =
-                    if vc.showTimestampOnTxEdge then
-                        timeLine
-
-                    else
-                        ""
-                , inputValue = Locale.currency (View.toCurrency vc) vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
+                , txHash = Util.View.truncateLongIdentifier ("0x" ++ accTx.raw.txHash) |> ifTrue vc.showHash
+                , date = Locale.timestampDateUniform vc.locale t |> ifTrue vc.showTimestampOnTxEdge
+                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue vc.showTimestampOnTxEdge
+                , firstValue = firstValue
+                , secondValue = secondValue
                 , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
                 , startingPointVisible = tx.isStartingPoint || tx.selected
                 }
@@ -209,7 +231,7 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
                     , pickPathFunction False
                         hovered
                         colorFinal
-                        ""
+                        []
                         { x = fromPos.x * unit + (radA * leftSign), y = fromPos.y * unit }
                         { x = txPos.x * unit - (radTx * leftSign), y = txPos.y * unit }
                         (A.animate aTxPos.clock aTxPos.opacity)
@@ -224,7 +246,7 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
                     , pickPathFunction True
                         hovered
                         colorFinal
-                        ""
+                        []
                         { x = txPos.x * unit + (radTx * rightSign), y = txPos.y * unit }
                         { x = toPos.x * unit - (radA * rightSign), y = toPos.y * unit }
                         (A.animate aTxPos.clock aTxPos.opacity)

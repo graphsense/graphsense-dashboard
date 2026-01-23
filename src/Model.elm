@@ -156,6 +156,7 @@ type AddTagDialogMsgs
 type SettingsMsg
     = UserChangedPreferredCurrency String
     | UserToggledValueDisplay
+    | UserToggledBothValueDisplay
 
 
 type RequestLimit
@@ -253,4 +254,5 @@ userSettingsFromMainModel model =
     , snapToGrid = Just model.pathfinder.config.snapToGrid
     , tracingMode = Just model.pathfinder.config.tracingMode
     , showHash = Just model.config.showHash
+    , showBothValues = Just model.config.showBothValues
     }

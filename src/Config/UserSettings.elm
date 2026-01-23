@@ -29,6 +29,7 @@ type alias UserSettings =
     , snapToGrid : Maybe Bool
     , tracingMode : Maybe TracingMode
     , showHash : Maybe Bool
+    , showBothValues : Maybe Bool
 
     -- , showLabelsInTaggingOverview : Maybe Bool
     }
@@ -110,6 +111,7 @@ decoder =
         |> optional "snapToGrid" (nullable bool |> fromString) Nothing
         |> optional "tracingMode" (Decode.string |> Decode.map stringToTracingMode |> nullable) Nothing
         |> optional "showHash" (nullable bool |> fromString) Nothing
+        |> optional "showBothValues" (nullable bool |> fromString) Nothing
 
 
 stringToTracingMode : String -> TracingMode
@@ -149,6 +151,7 @@ encoder settings =
         , ( "snapToGrid", settings.snapToGrid |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "tracingMode", settings.tracingMode |> Maybe.map tracingModeToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "showHash", settings.showHash |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "showBothValues", settings.showBothValues |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
 
         -- , ( "showLabelsInTaggingOverview", settings.showLabelsInTaggingOverview |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
@@ -183,6 +186,7 @@ default =
     , snapToGrid = Nothing
     , tracingMode = Nothing
     , showHash = Nothing
+    , showBothValues = Nothing
 
     -- , showLabelsInTaggingOverview = Nothing
     }

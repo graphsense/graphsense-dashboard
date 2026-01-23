@@ -163,6 +163,7 @@ type DisplaySettingsMsg
     | UserClickedToggleHighlightClusterFriends
     | UserClickedToggleSnapToGrid
     | UserClickedToggleValueDisplay
+    | UserClickedToggleBothValueDisplay
     | UserClickedToggleValueDetail
     | UserClickedToggleShowHash
 

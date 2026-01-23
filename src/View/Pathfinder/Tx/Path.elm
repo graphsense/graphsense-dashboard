@@ -13,7 +13,7 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Util.Graph exposing (translate)
 
 
-inPath : String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+inPath : List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 inPath label start end opacity isDashed =
     coloredPath
         { label = label
@@ -30,7 +30,7 @@ inPath label start end opacity isDashed =
         }
 
 
-inPathColored : String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+inPathColored : String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 inPathColored color label start end opacity isDashed =
     coloredPath
         { label = label
@@ -47,7 +47,7 @@ inPathColored color label start end opacity isDashed =
         }
 
 
-inPathHovered : String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+inPathHovered : List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 inPathHovered label start end opacity isDashed =
     coloredPath
         { label = label
@@ -64,7 +64,7 @@ inPathHovered label start end opacity isDashed =
         }
 
 
-inPathColoredHovered : String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+inPathColoredHovered : String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 inPathColoredHovered color label start end opacity isDashed =
     coloredPath
         { label = label
@@ -81,7 +81,7 @@ inPathColoredHovered color label start end opacity isDashed =
         }
 
 
-outPath : String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+outPath : List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 outPath label start end opacity isDashed =
     coloredPath
         { label = label
@@ -98,7 +98,7 @@ outPath label start end opacity isDashed =
         }
 
 
-outPathHovered : String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+outPathHovered : List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 outPathHovered label start end opacity isDashed =
     coloredPath
         { label = label
@@ -115,7 +115,7 @@ outPathHovered label start end opacity isDashed =
         }
 
 
-outPathColored : String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+outPathColored : String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 outPathColored color label start end opacity isDashed =
     coloredPath
         { label = label
@@ -132,7 +132,7 @@ outPathColored color label start end opacity isDashed =
         }
 
 
-outPathColoredHovered : String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+outPathColoredHovered : String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 outPathColoredHovered color label start end opacity isDashed =
     coloredPath
         { label = label
@@ -166,7 +166,7 @@ outPathColoredHovered color label start end opacity isDashed =
 
 
 type alias ColoredPathConfig =
-    { label : String
+    { label : List String
     , isOutgoing : Bool
     , highlight : Bool
     , x1 : Float
@@ -456,7 +456,17 @@ coloredPath c =
 
                 -- fix font size to ensure scaling in export (screenshot)
                 ]
-                [ text c.label ]
+                (c.label
+                    |> List.indexedMap
+                        (\i ->
+                            text
+                                >> List.singleton
+                                >> tspan
+                                    [ Svg.Styled.Attributes.x "0"
+                                    , Svg.Styled.Attributes.dy (String.fromInt i ++ "em")
+                                    ]
+                        )
+                )
            ]
         |> g
             ([ c.opacity |> String.fromFloat |> opacity
@@ -471,7 +481,7 @@ coloredPath c =
             )
 
 
-pickPathFunction : Bool -> Bool -> Maybe String -> String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
+pickPathFunction : Bool -> Bool -> Maybe String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
 pickPathFunction isOutgoing hovered color =
     case ( isOutgoing, hovered, color ) of
         ( False, False, Nothing ) ->

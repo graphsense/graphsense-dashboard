@@ -10,6 +10,7 @@ import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Maybe.Extra
+import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
@@ -28,7 +29,7 @@ import Tuple exposing (pair, second)
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
-import Util.View exposing (onClickWithStop)
+import Util.View exposing (ifTrue, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (pickPathFunction)
 import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
@@ -78,21 +79,17 @@ view _ vc _ tx utxo annotation =
                    else
                     -GraphComponents.txNodeUtxoTxText_details.height
                   )
+                + offsetTxHash
 
-        ( dateLine, timeLine ) =
-            let
-                t =
-                    Data.timestampToPosix utxo.raw.timestamp
-            in
-            if not vc.showHash then
-                ( Locale.timestampDateUniform vc.locale t
-                , Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t
-                )
+        offsetTxHash =
+            if vc.showHash then
+                0
 
             else
-                ( Util.View.truncateLongIdentifier utxo.raw.txHash
-                , Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset t
-                )
+                -GraphComponents.txNodeUtxoTxHash_details.renderedHeight
+
+        t =
+            Data.timestampToPosix utxo.raw.timestamp
 
         ( annAttr, label ) =
             annotation
@@ -133,17 +130,17 @@ view _ vc _ tx utxo annotation =
                     ]
                 , txNode = annAttr
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
+                , date =
+                    [ translate 0 offsetTxHash |> transform ]
+                , time =
+                    [ translate 0 offsetTxHash |> transform ]
             }
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
                 , highlightVisible = tx.selected || tx.hovered
-                , date = dateLine
-                , time =
-                    if vc.showTimestampOnTxEdge then
-                        timeLine
-
-                    else
-                        ""
+                , txHash = Util.View.truncateLongIdentifier utxo.raw.txHash |> ifTrue vc.showHash
+                , date = Locale.timestampDateUniform vc.locale t |> ifTrue vc.showTimestampOnTxEdge
+                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue vc.showTimestampOnTxEdge
                 , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
                 , startingPointVisible = tx.isStartingPoint || tx.selected
                 }
@@ -167,6 +164,19 @@ view _ vc _ tx utxo annotation =
 edge : Plugins -> View.Config -> Pathfinder.Config -> { t | hovered : Bool, conversionType : Maybe ConversionLegType } -> UtxoTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
 edge _ vc _ { hovered, conversionType } tx pos annotation =
     let
+        assetToValue asset =
+            let
+                fmt c =
+                    Locale.currency c vc.locale asset
+            in
+            if vc.showBothValues then
+                [ fmt Coin
+                , fmt (Fiat vc.preferredFiatCurrency)
+                ]
+
+            else
+                [ fmt (View.toCurrency vc) ]
+
         toValues =
             Dict.toList
                 >> List.filterMap
@@ -176,7 +186,7 @@ edge _ vc _ { hovered, conversionType } tx pos annotation =
                                 (values
                                     |> pair { network = Id.network id, asset = Id.network id }
                                     |> List.singleton
-                                    |> Locale.currency (View.toCurrency vc) vc.locale
+                                    |> assetToValue
                                     |> pair
                                 )
                     )

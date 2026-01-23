@@ -587,17 +587,19 @@ settingsHovercardView vc pm hc =
                     }
     in
     Sc.displayProperties
-        { exactValueSwitch = { variant = switchWithText True "show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
-        , amountInFiatSwitch = { variant = switchWithText True "amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
+        { exactValueSwitch = { variant = switchWithText True "Show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
+        , amountInFiatSwitch = { variant = switchWithText True "Amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
+        , showBothValuesSwitch = { variant = switchWithText True "Show both on tx" vc.showBothValues (UserClickedToggleBothValueDisplay |> ChangedDisplaySettingsMsg) }
         , gridSwitch = { variant = switchWithText True "Snap to grid" pm.config.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
-        , highlightSwitch = { variant = switchWithText True "highlight on graph" pm.config.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
+        , highlightSwitch = { variant = switchWithText True "Highlight on graph" pm.config.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
         , settingsLabelOfClustersSettings = { settingsLabel = Locale.string vc.locale "Clusters" }
-        , settingsLabelOfGeneralSettings = { settingsLabel = Locale.string vc.locale "graph" }
-        , settingsLabelOfTransactionsSettings = { settingsLabel = Locale.string vc.locale "asset flows" }
-        , timestampSwitch = { variant = switchWithText True "show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) }
-        , timezoneSwitch = { variant = switchWithText False "with zone code" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) }
-        , utcSwitch = { variant = switchWithText False "in UTC" (not vc.showDatesInUserLocale) (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) }
-        , showHash = { variant = switchWithText True "show transaction hash" vc.showHash (UserClickedToggleShowHash |> ChangedDisplaySettingsMsg) }
+        , settingsLabelOfGraphSettings = { settingsLabel = Locale.string vc.locale "Graph" }
+        , settingsLabelOfValueSettings = { settingsLabel = Locale.string vc.locale "Assets" }
+        , settingsLabelOfTimeSettings = { settingsLabel = Locale.string vc.locale "Time" }
+        , timestampSwitch = { variant = switchWithText True "Show timestamp" vc.showTimestampOnTxEdge (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) }
+        , timezoneSwitch = { variant = switchWithText True "With zone code" vc.showTimeZoneOffset (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) }
+        , utcSwitch = { variant = switchWithText True "In UTC" (not vc.showDatesInUserLocale) (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) }
+        , showHash = { variant = switchWithText True "Show transaction hash" vc.showHash (UserClickedToggleShowHash |> ChangedDisplaySettingsMsg) }
         }
         |> Html.toUnstyled
         |> List.singleton
