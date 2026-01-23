@@ -100,6 +100,7 @@ import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
 import Util exposing (and, n, removeLeading0x)
 import Util.Annotations as Annotations
+import Util.Csv
 import Util.Data as Data
 import Util.EventualMessages as EventualMessages
 import Util.Pathfinder.History as History
@@ -440,6 +441,105 @@ updateByMsg plugins uc msg model =
         UserClickedExportGraphAsPdf _ ->
             -- handled in src/Update.elm
             n model
+
+        UserClickedExportGraphTxsAsCSV time ->
+            case time of
+                Nothing ->
+                    ( model
+                    , Time.now
+                        |> Task.perform (Just >> UserClickedExportGraphTxsAsCSV)
+                        |> CmdEffect
+                        |> List.singleton
+                    )
+
+                Just t ->
+                    -- First collect all addresses from transactions and check if we need to fetch tag summaries
+                    let
+                        txAccounts =
+                            model.network.txs
+                                |> Dict.values
+                                |> List.concatMap (explodeTxToAccounts uc.locale)
+
+                        allAddresses =
+                            txAccounts
+                                |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
+                                |> List.filter (\( _, addr ) -> not (String.isEmpty addr))
+
+                        -- Group addresses by network for bulk fetching
+                        addressesByNetwork =
+                            allAddresses
+                                |> List.foldl
+                                    (\( network, addr ) acc ->
+                                        Dict.update network
+                                            (\existing ->
+                                                case existing of
+                                                    Nothing ->
+                                                        Just (Set.singleton addr)
+
+                                                    Just addrs ->
+                                                        Just (Set.insert addr addrs)
+                                            )
+                                            acc
+                                    )
+                                    Dict.empty
+
+                        -- Find addresses missing tag summaries
+                        missingByNetwork =
+                            addressesByNetwork
+                                |> Dict.toList
+                                |> List.filterMap
+                                    (\( network, addrs ) ->
+                                        let
+                                            missing =
+                                                addrs
+                                                    |> Set.toList
+                                                    |> List.filter
+                                                        (\addr ->
+                                                            Id.init network addr
+                                                                |> isTagSummaryLoaded True model.tagSummaries
+                                                                |> not
+                                                        )
+                                        in
+                                        if List.isEmpty missing then
+                                            Nothing
+
+                                        else
+                                            Just ( network, missing )
+                                    )
+                    in
+                    if List.isEmpty missingByNetwork then
+                        -- All tag summaries already loaded, proceed with export
+                        generateGraphTxsExport uc t model
+
+                    else
+                        -- Need to fetch missing tag summaries first
+                        let
+                            toMsg =
+                                BrowserGotTagSummariesForExportGraphTxsAsCSV t
+
+                            fetchEffects =
+                                missingByNetwork
+                                    |> List.map
+                                        (\( network, addrs ) ->
+                                            fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
+                                        )
+                        in
+                        ( model, fetchEffects )
+
+        BrowserGotTagSummariesForExportGraphTxsAsCSV time includesBestClusterTag tagSummaries ->
+            let
+                -- Add received tag summaries to model
+                ( modelWithTags, _ ) =
+                    tagSummaries
+                        |> List.foldl
+                            (\( id, ts ) ->
+                                addTagSummaryToModel includesBestClusterTag id ts
+                                    |> and
+                            )
+                            (n model)
+            in
+            -- Now generate the export with updated tag summaries
+            generateGraphTxsExport uc time modelWithTags
 
         UserClickedSaveGraph _ ->
             -- handled in src/Update.elm
@@ -2288,6 +2388,7 @@ updateByMsg plugins uc msg model =
 
                         newNetwork =
                             List.foldl moveToMedianY model.network selections
+                                |> Network.resolveOverlaps
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }
 
@@ -2351,6 +2452,7 @@ updateByMsg plugins uc msg model =
 
                         newNetwork =
                             List.foldl moveToMedianX model.network selections
+                                |> Network.resolveOverlaps
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }
 
@@ -4739,3 +4841,209 @@ getTagsForExport addressId table data model =
         |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
         |> List.singleton
     )
+
+
+{-| Generate the graph transactions CSV export with current tag summaries
+-}
+generateGraphTxsExport : Update.Config -> Time.Posix -> Model -> ( Model, List Effect )
+generateGraphTxsExport uc t model =
+    let
+        config =
+            makeGraphTxsExportCSVConfig uc model.tagSummaries
+
+        txAccounts =
+            model.network.txs
+                |> Dict.values
+                |> List.concatMap (explodeTxToAccounts uc.locale)
+
+        ( exportCSVWithTime, _ ) =
+            ExportCSV.update (ExportCSV.BrowserGotTime t) config model.exportCSV
+
+        ( exportCSV, eff ) =
+            ExportCSV.gotData uc config ( txAccounts, Nothing ) exportCSVWithTime
+    in
+    ( { model | exportCSV = exportCSV }, eff )
+
+
+{-| Config for exporting all graph transactions as CSV
+-}
+makeGraphTxsExportCSVConfig : Update.Config -> Dict Id HavingTags -> ExportCSV.Config Api.Data.TxAccount Effect
+makeGraphTxsExportCSVConfig uc tagSummaries =
+    ExportCSV.config
+        { filename =
+            Locale.string uc.locale "graph_transactions"
+        , toCsv =
+            txAccountToCsvRow uc.locale tagSummaries
+                >> Maybe.map (List.map (mapFirst (Locale.string uc.locale)))
+        , numberOfRows = 10000
+        , fetch = \_ -> CmdEffect Cmd.none
+        , cmdToEff = Cmd.map (always NoOp) >> CmdEffect
+        , notificationToEff = ShowNotificationEffect
+        }
+
+
+{-| Convert a TxAccount to CSV row format, matching AddressDetails.prepareCSV format
+-}
+txAccountToCsvRow : Locale.Model -> Dict Id HavingTags -> Api.Data.TxAccount -> Maybe (List ( String, String ))
+txAccountToCsvRow locModel tagSummaries raw =
+    let
+        network =
+            raw.network
+
+        tagSender =
+            Id.init raw.currency raw.fromAddress
+                |> flip Dict.get tagSummaries
+                |> Maybe.andThen getTagsummary
+
+        tagReceiver =
+            Id.init raw.currency raw.toAddress
+                |> flip Dict.get tagSummaries
+                |> Maybe.andThen getTagsummary
+    in
+    Just
+        (( "Tx_hash", Util.Csv.string raw.txHash )
+            :: (if Data.isAccountLike network then
+                    [ ( "Token_tx_id"
+                      , raw.tokenTxId
+                            |> Maybe.map Util.Csv.int
+                            |> Maybe.withDefault (Util.Csv.string "")
+                      )
+                    ]
+
+                else
+                    []
+               )
+            ++ Util.Csv.valuesWithBaseCurrencyFloat "Value"
+                raw.value
+                locModel
+                { network = network
+                , asset = raw.currency
+                }
+            ++ [ ( "Currency", Util.Csv.string <| String.toUpper raw.currency )
+               , ( "Height", Util.Csv.int raw.height )
+               , ( "Timestamp_utc", Locale.timestampNormal { locModel | zone = Time.utc } <| Data.timestampToPosix raw.timestamp )
+               , ( "Sending_address", Util.Csv.string raw.fromAddress )
+               , ( "Sending_address_label"
+                 , tagSender
+                    |> Maybe.andThen .bestActor
+                    |> Maybe.withDefault ""
+                    |> Util.Csv.string
+                 )
+               , ( "Receiving_address", Util.Csv.string raw.toAddress )
+               , ( "Receiving_address_label"
+                 , tagReceiver
+                    |> Maybe.andThen .bestActor
+                    |> Maybe.withDefault ""
+                    |> Util.Csv.string
+                 )
+               ]
+        )
+
+
+{-| Explode graph Tx into list of TxAccount records (one per input/output for UTXO)
+-}
+explodeTxToAccounts : Locale.Model -> Tx -> List Api.Data.TxAccount
+explodeTxToAccounts locale tx =
+    case tx.type_ of
+        Tx.Account accountTx ->
+            let
+                raw =
+                    accountTx.raw
+
+                feeRow =
+                    raw.fee
+                        |> Maybe.andThen
+                            (\fee ->
+                                if fee.value /= 0 then
+                                    Just
+                                        { raw
+                                            | value = Data.negateValues fee
+                                            , toAddress = Locale.string locale "fee"
+                                        }
+
+                                else
+                                    Nothing
+                            )
+            in
+            raw :: (feeRow |> Maybe.map List.singleton |> Maybe.withDefault [])
+
+        Tx.Utxo utxoTx ->
+            let
+                raw =
+                    utxoTx.raw
+
+                inputs =
+                    utxoTx.inputs
+
+                outputs =
+                    utxoTx.outputs
+
+                sumInputs =
+                    Dict.values inputs
+                        |> List.map .values
+                        |> Data.sumValues
+
+                sumOutputs =
+                    Dict.values outputs
+                        |> List.map .values
+                        |> Data.sumValues
+
+                fee =
+                    Data.subValues sumInputs sumOutputs
+            in
+            Dict.toList inputs
+                |> List.concatMap
+                    (\( inputId, inputIo ) ->
+                        let
+                            inputPortion =
+                                if sumInputs.value > 0 then
+                                    toFloat inputIo.values.value / toFloat sumInputs.value
+
+                                else
+                                    0
+
+                            outputRows =
+                                Dict.toList outputs
+                                    |> List.map
+                                        (\( outputId, outputIo ) ->
+                                            { contractCreation = Nothing
+                                            , currency = raw.currency
+                                            , fromAddress = Id.id inputId
+                                            , height = raw.height
+                                            , identifier = ""
+                                            , isExternal = Nothing
+                                            , network = raw.currency
+                                            , timestamp = raw.timestamp
+                                            , toAddress = Id.id outputId
+                                            , tokenTxId = Nothing
+                                            , txHash = raw.txHash
+                                            , txType = "utxo"
+                                            , value = Data.mulValues inputPortion outputIo.values
+                                            , fee = Nothing
+                                            }
+                                        )
+
+                            feeRows =
+                                if fee.value /= 0 then
+                                    [ { contractCreation = Nothing
+                                      , currency = raw.currency
+                                      , fromAddress = Id.id inputId
+                                      , height = raw.height
+                                      , identifier = ""
+                                      , isExternal = Nothing
+                                      , network = raw.currency
+                                      , timestamp = raw.timestamp
+                                      , toAddress = Locale.string locale "fee"
+                                      , tokenTxId = Nothing
+                                      , txHash = raw.txHash
+                                      , txType = "utxo"
+                                      , value = Data.mulValues inputPortion (Data.negateValues fee)
+                                      , fee = Nothing
+                                      }
+                                    ]
+
+                                else
+                                    []
+                        in
+                        outputRows ++ feeRows
+                    )

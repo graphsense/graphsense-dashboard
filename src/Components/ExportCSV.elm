@@ -1,4 +1,4 @@
-module Components.ExportCSV exposing (Config, Model, Msg, attributes, config, getNumberOfRows, gotData, icon, init, update)
+module Components.ExportCSV exposing (Config, Model, Msg(..), attributes, config, getNumberOfRows, gotData, icon, init, update)
 
 import Config.Update as Update
 import Config.View as View

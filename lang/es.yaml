@@ -516,3 +516,5 @@ generating pdf: Generando PDF del grafo...
 show both on tx: mostrar fiat y cripto
 time: tiempo
 assets: activos
+export all graph transactions as csv: Exportar todas las transacciones del grafo como CSV
+graph_transactions: transacciones_grafo
