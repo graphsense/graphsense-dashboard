@@ -188,11 +188,52 @@ app.ports.exportGraphPdf.subscribe((filename) => {
       console.error('SVG element not found')
       return
     }
+    
+    // Get the bounding box of the entire graph content by checking all elements
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    
+    // Iterate through all rendered elements to find true bounds
+    const allElements = svg.querySelectorAll('circle, rect, ellipse, path, text, g, polygon, polyline, line')
+    allElements.forEach(el => {
+      try {
+        const elBBox = el.getBBox()
+        if (elBBox.width > 0 || elBBox.height > 0) {
+          minX = Math.min(minX, elBBox.x)
+          minY = Math.min(minY, elBBox.y)
+          maxX = Math.max(maxX, elBBox.x + elBBox.width)
+          maxY = Math.max(maxY, elBBox.y + elBBox.height)
+        }
+      } catch (e) {
+        // Skip elements that can't compute bbox
+      }
+    })
+    
+    // Fallback if no elements found
+    if (!isFinite(minX)) {
+      const fallbackBBox = svg.getBBox()
+      minX = fallbackBBox.x
+      minY = fallbackBBox.y
+      maxX = fallbackBBox.x + fallbackBBox.width
+      maxY = fallbackBBox.y + fallbackBBox.height
+    }
+    
+    // Add generous padding around the content
+    const padding = 100
+    const contentWidth = (maxX - minX) + padding * 2
+    const contentHeight = (maxY - minY) + padding * 2
+    
     let canvas = document.createElement("canvas");
     var svgData = new XMLSerializer().serializeToString(svg)
 
-    // replace css variables with actual values, since
-    // currently css variables are not supported in canvas
+    // Replace the viewBox to show entire content with padding
+    const newViewBox = `${minX - padding} ${minY - padding} ${contentWidth} ${contentHeight}`
+    svgData = svgData.replace(/viewBox="[^"]*"/, `viewBox="${newViewBox}"`)
+    
+    // Also update width/height attributes to match aspect ratio
+    svgData = svgData.replace(/(<svg[^>]*)\swidth="[^"]*"/, `$1 width="${contentWidth}"`)
+    svgData = svgData.replace(/(<svg[^>]*)\sheight="[^"]*"/, `$1 height="${contentHeight}"`)
+
+    // replace css variables with actual values
     const cssVariables = getTheme()
     for (const [key, value] of Object.entries(cssVariables)) {
       svgData = svgData.replaceAll("var(" + key + ")", value)
@@ -224,16 +265,10 @@ app.ports.exportGraphPdf.subscribe((filename) => {
     
     const bgColor = cssVariables["--c-white"]
 
-    const pixelScaleFactor = 6;
-    var width = (svg.innerWidth
-    || window.innerWidth
-    || document.documentElement.clientWidth
-    || document.body.clientWidth) * pixelScaleFactor; 
-
-    var height = (svg.innerHeight 
-    || window.innerHeight
-    || document.documentElement.clientHeight
-    || document.body.clientHeight) * pixelScaleFactor;
+    // Use scale factor of 4 for high quality
+    const pixelScaleFactor = 4;
+    const width = contentWidth * pixelScaleFactor
+    const height = contentHeight * pixelScaleFactor
 
     canvas.width = width;
     canvas.height = height;
@@ -250,22 +285,23 @@ app.ports.exportGraphPdf.subscribe((filename) => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Create PDF with dimensions matching the canvas aspect ratio
-        const pdfWidth = width / pixelScaleFactor;
-        const pdfHeight = height / pixelScaleFactor;
+        // Create PDF with dimensions matching content
+        const pdfWidth = contentWidth;
+        const pdfHeight = contentHeight;
         const orientation = pdfWidth > pdfHeight ? 'landscape' : 'portrait';
         
         const pdf = new jsPDF({
           orientation: orientation,
           unit: 'px',
-          format: [pdfWidth, pdfHeight]
+          format: [pdfWidth, pdfHeight],
+          compress: true
         });
 
-        // Add the canvas image to the PDF
+        // Use PNG for better quality, with compression
         const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         
-        // Save the PDF using blob and FileSaver for better compatibility
+        // Save the PDF
         const pdfBlob = pdf.output('blob');
         FileSaver.saveAs(pdfBlob, filename);
       } catch (e) {
