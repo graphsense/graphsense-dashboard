@@ -2353,12 +2353,21 @@ deserialize plugins _ filename data model =
                 let
                     ( graph, graphEffects ) =
                         Graph.fromDeserialized deser model.graph
+
+                    ( nm, neff ) =
+                        Notification.add
+                            (Notification.infoDefault "pf1_deprecation_notice"
+                                |> Notification.map (s_title (Just "Deprecation notice"))
+                            )
+                            model.notifications
                 in
                 ( { model
                     | graph = graph
                     , page = Graph
+                    , notifications = nm
                   }
                 , List.map GraphEffect graphEffects
+                    ++ (neff |> List.map NotificationEffect)
                 )
             )
         |> Result.Extra.orElseLazy
