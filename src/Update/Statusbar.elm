@@ -361,7 +361,7 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetTxEffect e _ ->
-                ( "{1}: loading transactions {0}"
+                ( loadingTransactionKey
                 , [ e.txHash
                   , e.currency |> String.toUpper
                   ]

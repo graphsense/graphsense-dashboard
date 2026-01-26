@@ -284,6 +284,7 @@ statusbar-loading-tags-of-actor: 'Loading tags of actor {0}'
 statusbar-loading-address: '{1}: loading address {0}'
 statusbar-loading-block: '{1}: loading block {0}'
 statusbar-loading-entity: '{1}: loading entity {0}'
+statusbar-loading-transaction: '{1}: loading transaction {0}'
 statusbar-loading-entity-for-address: '{1}: loading entity for address {0}'
 statusbar-loading-addresses: '{1}: loading {0} addresses'
 statusbar-loading-entities: '{1}: loading {0} entities'
@@ -314,7 +315,7 @@ incoming-values-of-transaction: Incoming values of transaction {0} ({1})
 outgoing-values-of-transaction: Outgoing values of transaction {0} ({1})
 statusbar-search-parameters: '{6}: searching {0} of {1} with {2} (depth: {3}, breadth:
   {4}, skip if more than {5} addresses)'
-popup-address-not-found-info: Address not found. It is possibly not yet in our database
+statusbar-not-found-info: Address not found. It is possibly not yet in our database
   (synced up to block {0}) or has not received any transactions and is therefore not
   stored in the blockchain.
 and-more: '... and {0} more'
@@ -496,3 +497,7 @@ time: time
 assets: assets
 export all graph transactions as csv: Export all graph transactions as CSV
 graph_transactions: graph_transactions
+address not found: address not found
+addresses not found: addresses not found
+transaction not found: transaction not found
+transactions not found: transactions not found

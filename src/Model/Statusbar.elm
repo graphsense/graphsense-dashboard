@@ -1,4 +1,4 @@
-module Model.Statusbar exposing (Model, getMessage, loadingActorKey, loadingActorTagsKey, loadingAddressEntityKey, loadingAddressKey, searchNeighborsKey)
+module Model.Statusbar exposing (Model, getMessage, loadingActorKey, loadingActorTagsKey, loadingAddressEntityKey, loadingAddressKey, loadingTransactionKey, searchNeighborsKey)
 
 import Dict exposing (Dict)
 import Http
@@ -12,6 +12,11 @@ searchNeighborsKey =
 loadingAddressKey : String
 loadingAddressKey =
     "Statusbar-loading-address"
+
+
+loadingTransactionKey : String
+loadingTransactionKey =
+    "Statusbar-loading-transaction"
 
 
 loadingActorKey : String

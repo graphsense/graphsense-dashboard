@@ -384,17 +384,24 @@ update plugins uc msg model =
                                         Statusbar.getMessage token model.statusbar
                                             |> Maybe.andThen
                                                 (\( key, v ) ->
-                                                    if key == Statusbar.loadingAddressKey || key == Statusbar.loadingAddressEntityKey then
-                                                        Just ( key, v )
+                                                    if key == Statusbar.loadingAddressKey || key == Statusbar.loadingAddressEntityKey || key == Statusbar.loadingTransactionKey then
+                                                        List.Extra.getAt 0 v
+                                                            |> Maybe.map
+                                                                (\thing ->
+                                                                    let
+                                                                        notFoundError =
+                                                                            if key == Statusbar.loadingTransactionKey then
+                                                                                Dialog.txNotFoundError
+
+                                                                            else
+                                                                                Dialog.addressNotFoundError
+                                                                    in
+                                                                    UserClosesDialog
+                                                                        |> notFoundError thing model.dialog
+                                                                )
 
                                                     else
                                                         Nothing
-                                                )
-                                            |> Maybe.andThen (second >> List.Extra.getAt 0)
-                                            |> Maybe.map
-                                                (\address ->
-                                                    UserClosesDialog
-                                                        |> Dialog.addressNotFoundError address model.dialog
                                                 )
 
                                     _ ->

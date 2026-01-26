@@ -1,4 +1,4 @@
-module Update.Dialog exposing (addressNotFoundError, confirm, generalError, httpError, info, mapMsg, options)
+module Update.Dialog exposing (addressNotFoundError, confirm, generalError, httpError, info, mapMsg, options, txNotFoundError)
 
 import Html.Styled as Html
 import Http
@@ -24,6 +24,29 @@ addressNotFoundError address model onOk =
                 Just (Error { type_ }) ->
                     case type_ of
                         AddressNotFound addrs ->
+                            addrs
+                                ++ [ address ]
+                                |> Set.fromList
+                                |> Set.toList
+
+                        _ ->
+                            [ address ]
+
+                _ ->
+                    [ address ]
+    , onOk = onOk
+    }
+        |> Error
+
+
+txNotFoundError : String -> Maybe (Model msg) -> msg -> Model msg
+txNotFoundError address model onOk =
+    { type_ =
+        TxNotFound <|
+            case model of
+                Just (Error { type_ }) ->
+                    case type_ of
+                        TxNotFound addrs ->
                             addrs
                                 ++ [ address ]
                                 |> Set.fromList

@@ -304,7 +304,7 @@ transactions-of-block: transazioni del blocco {0} ({1})
 transactions-between-entities: transazioni tra entità {0} e {1} ({2})
 incoming-values-of-transaction: valori in entrata della transazione {0} ({1})
 outgoing-values-of-transaction: valori in uscita della transazione {0} ({1})
-popup-address-not-found-info: Indirizzo non trovato. Potrebbe non essere ancora nel
+statusbar-not-found-info: Indirizzo non trovato. Potrebbe non essere ancora nel
   database (sincronizzato al blocco {0}) oppure non ha ancora ricevuto transazioni
   e quindi non è archiviato nella blockchain.
 and-more: '... e altri {0}'
@@ -541,3 +541,7 @@ time: tempo
 assets: valori
 export all graph transactions as csv: Esporta tutte le transazioni del grafo come CSV
 graph_transactions: transazioni_grafo
+address not found: indirizzo non trovato
+addresses not found: indirizzi non trovati
+transaction not found: transazione non trovata
+transactions not found: transazioni non trovate

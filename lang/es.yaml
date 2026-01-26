@@ -291,23 +291,24 @@ input-api-key: proporcione una clave API
 start-from-scratch: ¿Desea empezar desde cero?
 statusbar-loading-actor: Cargando actor {0}
 statusbar-loading-tags-of-actor: Cargando etiquetas del actor {0}
-statusbar-loading-address: '{1}: cargando dirección {0}'
-statusbar-loading-block: '{1}: cargando bloque {0}'
-statusbar-loading-entity: '{1}: cargando entidad {0}'
-statusbar-loading-entity-for-address: '{1}: cargando entidad para la dirección {0}'
-statusbar-loading-addresses: '{1}: cargando {0} direcciones'
-statusbar-loading-entities: '{1}: cargando {0} entidades'
-statusbar-loading-entities-of-addresses: '{1}: cargando entidades de {0} direcciones'
-statusbar-loading-tags-of-address: '{1}: cargando etiquetas de la dirección {0}'
-statusbar-loading-address-tags-of-entity: '{1}: cargando etiquetas de dirección de
+statusbar-loading-address: '{1}: Cargando dirección {0}'
+statusbar-loading-block: '{1}: Cargando bloque {0}'
+statusbar-loading-entity: '{1}: Cargando entidad {0}'
+statusbar-loading-transaction: '{1}: Cargando transacción {0}'
+statusbar-loading-entity-for-address: '{1}: Cargando entidad para la dirección {0}'
+statusbar-loading-addresses: '{1}: Cargando {0} direcciones'
+statusbar-loading-entities: '{1}: Cargando {0} entidades'
+statusbar-loading-entities-of-addresses: '{1}: Cargando entidades de {0} direcciones'
+statusbar-loading-tags-of-address: '{1}: Cargando etiquetas de la dirección {0}'
+statusbar-loading-address-tags-of-entity: '{1}: Cargando etiquetas de dirección de
   la entidad {0}'
-statusbar-loading-txs-of-address {0}': '{1}: cargando transacciones de la dirección
+statusbar-loading-txs-of-address {0}': '{1}: Cargando transacciones de la dirección
   {0}'
-statusbar-loading-txs-of-block: '{1}: cargando transacciones del bloque {0}'
-statusbar-loading-addresses-of-entity: '{1}: cargando direcciones de la entidad {0}'
-statusbar-loading-txs-between-addresses: '{2}: cargando transacciones de enlace de
+statusbar-loading-txs-of-block: '{1}: Cargando transacciones del bloque {0}'
+statusbar-loading-addresses-of-entity: '{1}: Cargando direcciones de la entidad {0}'
+statusbar-loading-txs-between-addresses: '{2}: Cargando transacciones de enlace de
   direcciones entre {0} y {1}'
-statusbar-loading-txs-between-entities: '{2}: cargando transacciones de enlace de
+statusbar-loading-txs-between-entities: '{2}: Cargando transacciones de enlace de
   entidades entre {0} y {1}'
 address-statistics-not-computed: estadísticas de direcciones aún no calculadas
 timezone: Zona horaria
@@ -326,7 +327,7 @@ incoming-values-of-transaction: Valores entrantes de la transacción {0} ({1})
 outgoing-values-of-transaction: Valores salientes de la transacción {0} ({1})
 statusbar-search-parameters: '{6}: buscando {0} de {1} con {2} (profundidad: {3},
   amplitud: {4}, omitir si hay más de {5} direcciones)'
-popup-address-not-found-info: Dirección no encontrada. Es posible que aún no esté
+statusbar-not-found-info: Dirección no encontrada. Es posible que aún no esté
   en nuestra base de datos (sincronizada hasta el bloque {0}) o que no haya recibido
   ninguna transacción y, por lo tanto, no esté almacenada en la cadena de bloques.
 and-more: '... y {0} más'
@@ -518,3 +519,7 @@ time: tiempo
 assets: activos
 export all graph transactions as csv: Exportar todas las transacciones del grafo como CSV
 graph_transactions: transacciones_grafo
+address not found: dirección no encontrada
+addresses not found: direcciones no encontradas
+transaction not found: transacción no encontrada
+transactions not found: transacciones no encontradas

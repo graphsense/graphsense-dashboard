@@ -288,21 +288,22 @@ input-api-key: Bitte einen API-Schlüssel eingeben
 start-from-scratch: Wirklich neu loslegen?
 statusbar-loading-actor: 'Lade Akteur {0}'
 statusbar-loading-tags-of-actor: 'Lade Tags zu Akteur {0}'
-statusbar-loading-address: '{1}: lade Adresse {0}'
-statusbar-loading-block: '{1}: lade Block {0}'
-statusbar-loading-entity: '{1}: lade Cluster {0}'
-statusbar-loading-entity-for-address: '{1}: lade Cluster zur Adresse {0}'
-statusbar-loading-addresses: '{1}: lade {0} Adressen'
-statusbar-loading-entities: '{1}: lade {0} Cluster'
-statusbar-loading-entities-of-addresses: '{1}: lade Cluster zu {0} Adressen'
-statusbar-loading-tags-of-address: '{1}: lade Tags der Adresse {0}'
-statusbar-loading-address-tags-of-entity: '{1}: lade Adress-Tags der Cluster {0}'
-statusbar-loading-txs-of-address {0}': '{1}: lade Transaktionen der Adresse {0}'
-statusbar-loading-txs-of-block: '{1}: lade Transaktionen des Blocks {0}'
-statusbar-loading-addresses-of-entity: '{1}: lade Adressen der Cluster {0}'
-statusbar-loading-txs-between-addresses: '{2}: lade Transaktionen zwischen {0} and
+statusbar-loading-address: '{1}: Lade Adresse {0}'
+statusbar-loading-block: '{1}: Lade Block {0}'
+statusbar-loading-entity: '{1}: Lade Cluster {0}'
+statusbar-loading-transaction: '{1}: Lade Transaktion {0}'
+statusbar-loading-entity-for-address: '{1}: Lade Cluster zur Adresse {0}'
+statusbar-loading-addresses: '{1}: Lade {0} Adressen'
+statusbar-loading-entities: '{1}: Lade {0} Cluster'
+statusbar-loading-entities-of-addresses: '{1}: Lade Cluster zu {0} Adressen'
+statusbar-loading-tags-of-address: '{1}: Lade Tags der Adresse {0}'
+statusbar-loading-address-tags-of-entity: '{1}: Lade Adress-Tags der Cluster {0}'
+statusbar-loading-txs-of-address {0}': '{1}: Lade Transaktionen der Adresse {0}'
+statusbar-loading-txs-of-block: '{1}: Lade Transaktionen des Blocks {0}'
+statusbar-loading-addresses-of-entity: '{1}: Lade Adressen der Cluster {0}'
+statusbar-loading-txs-between-addresses: '{2}: Lade Transaktionen zwischen {0} and
   {1}'
-statusbar-loading-txs-between-entities: '{2}: lade Transaktionen zwischen {0} and
+statusbar-loading-txs-between-entities: '{2}: Lade Transaktionen zwischen {0} and
   {1}'
 address-statistics-not-computed: Adress-Statistik noch nicht berechnet
 timezone: Zeitzone
@@ -321,7 +322,7 @@ incoming-values-of-transaction: Eingangswerte der Transaktion {0} ({1})
 outgoing-values-of-transaction: Ausgangswerte der Transaktion {0} ({1})
 statusbar-search-parameters: '{6}: Suche {0} von {1} mit {2} (Tiefe: {3}, Breite:
   {4}, auslassen wenn mehr als {5} Adressen)'
-popup-address-not-found-info: Adresse nicht gefunden. Entweder ist sie noch nicht
+statusbar-not-found-info: Adresse nicht gefunden. Entweder ist sie noch nicht
   in unserer Datenbank eingespielt (aktuell bis Block {0}) oder sie hat bis jetzt
   noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert.
 and-more: '... und {0} weitere'
@@ -513,3 +514,7 @@ time: Zeit
 assets: Assets
 export all graph transactions as csv: Alle Graph-Transaktionen als CSV exportieren
 graph_transactions: graph_transaktionen
+address not found: Adresse nicht gefunden
+addresses not found: Adressen nicht gefunden
+transaction not found: Transaktion nicht gefunden
+transactions not found: Transaktionen nicht gefunden

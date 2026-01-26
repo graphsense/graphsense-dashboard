@@ -88,6 +88,7 @@ type alias PluginConfig msg =
 
 type ErrorType
     = AddressNotFound (List String)
+    | TxNotFound (List String)
     | Http String Http.Error
     | General GeneralErrorConfig
 

@@ -197,14 +197,18 @@ error vc err =
                     else
                         "Address not found"
 
+                TxNotFound txs ->
+                    if List.length txs > 1 then
+                        "Transactions not found"
+
+                    else
+                        "Transaction not found"
+
                 Http titl _ ->
                     titl
 
                 General config ->
                     config.title
-
-        take =
-            3
 
         details =
             case err.type_ of
@@ -223,69 +227,30 @@ error vc err =
                         |> List.singleton
 
                 AddressNotFound addrs ->
-                    [ addrs
-                        |> List.take take
-                        |> List.map (text >> List.singleton >> li [ Css.View.listItem vc |> css ])
-                        |> (\lis ->
-                                if List.length addrs > take then
-                                    (List.length addrs - take)
-                                        |> String.fromInt
-                                        |> List.singleton
-                                        |> Locale.interpolated vc.locale "And-more"
-                                        |> text
-                                        |> List.singleton
-                                        |> li []
-                                        |> List.singleton
-                                        |> (++) lis
-
-                                else
-                                    lis
-                           )
-                        |> ul []
-                        |> List.singleton
-                        |> Util.View.p vc []
-                    , div
-                        []
-                        [ Locale.string vc.locale "Popup-address-not-found-various-reasons"
-                            |> (\s -> s ++ ":")
-                            |> text
-                            |> List.singleton
-                            |> Util.View.p vc []
-                        , ul
-                            []
-                            [ li [ Css.View.listItem vc |> css ]
-                                [ (if List.length addrs > 1 then
-                                    "Popup-addresses-not-found-no-txs"
-
-                                   else
-                                    "Popup-address-not-found-no-txs"
-                                  )
-                                    |> Locale.string vc.locale
-                                    |> addDot
-                                    |> text
-                                ]
-                            , li
-                                [ Css.View.listItem vc |> css ]
-                                [ (if List.length addrs > 1 then
-                                    "Popup-addresses-not-found-not-in-database"
-
-                                   else
-                                    "Popup-address-not-found-not-in-database"
-                                  )
-                                    |> Locale.string vc.locale
-                                    |> addDot
-                                    |> text
-                                ]
-                            , li [ Css.View.listItem vc |> css ]
-                                [ Locale.string vc.locale "Popup-address-not-found-typos"
-                                    |> addDot
-                                    |> text
-                                ]
+                    notFoundDetails vc
+                        addrs
+                        (if List.length addrs > 1 then
+                            [ "Popup-addresses-not-found-no-txs"
+                            , "Popup-addresses-not-found-not-in-database"
                             ]
-                            |> List.singleton
-                            |> Util.View.p vc []
-                        ]
-                    ]
+
+                         else
+                            [ "Popup-address-not-found-no-txs"
+                            , "Popup-address-not-found-not-in-database"
+                            ]
+                        )
+
+                TxNotFound txs ->
+                    notFoundDetails vc
+                        txs
+                        (if List.length txs > 1 then
+                            [ "Popup-addresses-not-found-not-in-database"
+                            ]
+
+                         else
+                            [ "Popup-address-not-found-not-in-database"
+                            ]
+                        )
 
         icon =
             Icons.iconsError {}
@@ -306,6 +271,50 @@ error vc err =
             , headlineText = ""
             }
         }
+
+
+notFoundDetails : Config -> List String -> List String -> List (Html msg)
+notFoundDetails vc things details =
+    let
+        take =
+            3
+    in
+    [ things
+        |> List.take take
+        |> List.map (text >> List.singleton >> li [ Css.View.listItem vc |> css ])
+        |> (\lis ->
+                if List.length things > take then
+                    (List.length things - take)
+                        |> String.fromInt
+                        |> List.singleton
+                        |> Locale.interpolated vc.locale "And-more"
+                        |> text
+                        |> List.singleton
+                        |> li []
+                        |> List.singleton
+                        |> (++) lis
+
+                else
+                    lis
+           )
+        |> ul []
+        |> List.singleton
+        |> Util.View.p vc []
+    , div
+        []
+        [ Locale.string vc.locale "Popup-address-not-found-various-reasons"
+            |> (\s -> s ++ ":")
+            |> text
+            |> List.singleton
+            |> Util.View.p vc []
+        , details
+            ++ [ "Popup-address-not-found-typos" ]
+            |> List.map (Locale.string vc.locale >> addDot >> text >> List.singleton >> li [ Css.View.listItem vc |> css ])
+            |> ul []
+            |> List.singleton
+            |> Util.View.p vc []
+        ]
+    ]
 
 
 info : Config -> InfoConfig Msg -> Html Msg

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Display option to show both fiat and crypto value on graph
 - Auto filter transaction table by the asset of the recent tx of the selected address
+- Add error message for not found transactions
 
 ### Changed
 

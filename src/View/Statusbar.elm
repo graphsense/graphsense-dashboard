@@ -116,7 +116,7 @@ log vc lastBlocks ( key, values, error ) =
                                                         )
                                                     |> Maybe.map
                                                         (List.singleton
-                                                            >> Locale.interpolated vc.locale "Popup-address-not-found-info"
+                                                            >> Locale.interpolated vc.locale "Statusbar-not-found-info"
                                                         )
                                                     |> Maybe.withDefault (Locale.string vc.locale "not found")
 
