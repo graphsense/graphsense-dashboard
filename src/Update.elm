@@ -400,29 +400,34 @@ update plugins uc msg model =
                             )
 
                 newDialog =
-                    statusbarToken
-                        |> Maybe.andThen
-                            (\token ->
-                                case result of
-                                    Err ( Http.BadStatus 401, _, _ ) ->
-                                        UserClosesDialog
-                                            |> Dialog.generalError
-                                                { title = "Session expired"
-                                                , message = "popup-session-expired-info"
-                                                , variables = []
-                                                }
-                                            |> Just
+                    case result of
+                        Err ( Http.BadStatus 401, _, _ ) ->
+                            UserClosesDialog
+                                |> Dialog.generalError
+                                    { title = "Session expired"
+                                    , message = "popup-session-expired-info"
+                                    , variables = []
+                                    }
+                                |> Just
 
-                                    Err ( Http.BadStatus 404, _, _ ) ->
-                                        notFound token
+                        Err e ->
+                            statusbarToken
+                                |> Maybe.andThen
+                                    (\token ->
+                                        case e of
+                                            ( Http.BadStatus 404, _, _ ) ->
+                                                notFound token
 
-                                    Err ( Http.BadStatus 400, _, _ ) ->
-                                        notFound token
+                                            ( Http.BadStatus 400, _, _ ) ->
+                                                notFound token
 
-                                    _ ->
-                                        model.dialog
-                            )
-                        |> Maybe.Extra.orElse model.dialog
+                                            _ ->
+                                                model.dialog
+                                    )
+                                |> Maybe.Extra.orElse model.dialog
+
+                        _ ->
+                            model.dialog
 
                 isErrorDialogShown =
                     case newDialog of
