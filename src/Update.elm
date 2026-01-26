@@ -375,6 +375,30 @@ update plugins uc msg model =
 
         BrowserGotResponseWithHeaders statusbarToken result ->
             let
+                notFound token =
+                    Statusbar.getMessage token model.statusbar
+                        |> Maybe.andThen
+                            (\( key, v ) ->
+                                if key == Statusbar.loadingAddressKey || key == Statusbar.loadingAddressEntityKey || key == Statusbar.loadingTransactionKey then
+                                    List.Extra.getAt 0 v
+                                        |> Maybe.map
+                                            (\thing ->
+                                                let
+                                                    notFoundError =
+                                                        if key == Statusbar.loadingTransactionKey then
+                                                            Dialog.txNotFoundError
+
+                                                        else
+                                                            Dialog.addressNotFoundError
+                                                in
+                                                UserClosesDialog
+                                                    |> notFoundError thing model.dialog
+                                            )
+
+                                else
+                                    Nothing
+                            )
+
                 newDialog =
                     statusbarToken
                         |> Maybe.andThen
@@ -390,28 +414,10 @@ update plugins uc msg model =
                                             |> Just
 
                                     Err ( Http.BadStatus 404, _, _ ) ->
-                                        Statusbar.getMessage token model.statusbar
-                                            |> Maybe.andThen
-                                                (\( key, v ) ->
-                                                    if key == Statusbar.loadingAddressKey || key == Statusbar.loadingAddressEntityKey || key == Statusbar.loadingTransactionKey then
-                                                        List.Extra.getAt 0 v
-                                                            |> Maybe.map
-                                                                (\thing ->
-                                                                    let
-                                                                        notFoundError =
-                                                                            if key == Statusbar.loadingTransactionKey then
-                                                                                Dialog.txNotFoundError
+                                        notFound token
 
-                                                                            else
-                                                                                Dialog.addressNotFoundError
-                                                                    in
-                                                                    UserClosesDialog
-                                                                        |> notFoundError thing model.dialog
-                                                                )
-
-                                                    else
-                                                        Nothing
-                                                )
+                                    Err ( Http.BadStatus 400, _, _ ) ->
+                                        notFound token
 
                                     _ ->
                                         model.dialog
