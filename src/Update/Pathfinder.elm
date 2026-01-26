@@ -60,7 +60,8 @@ import Model.Search as Search
 import Model.Tx as GTx exposing (parseTxIdentifier)
 import Msg.Pathfinder
     exposing
-        ( DisplaySettingsMsg(..)
+        ( AddingTxConfig
+        , DisplaySettingsMsg(..)
         , Msg(..)
         , OverlayWindows(..)
         , TxDetailsMsg(..)
@@ -1938,25 +1939,58 @@ updateByMsg plugins uc msg model =
                     )
                     ( model, [] )
 
-        BrowserGotTx { pos, loadAddresses, autoLinkInTraceMode } tx ->
-            if Dict.member (Tx.getTxId tx) model.network.txs then
+        BrowserGotTx ({ requestedTxHash } as loadTxConfig) tx ->
+            let
+                txId =
+                    Tx.getTxId tx
+
+                network =
+                    Id.network txId
+            in
+            if Dict.member txId model.network.txs then
                 n model
 
-            else
-                let
-                    ( newTx, newNetwork ) =
-                        Network.addTxWithPosition model.config pos tx model.network
-                in
-                (model |> s_network newNetwork)
-                    |> checkSelection uc
-                    |> and
-                        (if loadAddresses then
-                            autoLoadAddresses plugins autoLinkInTraceMode newTx
+            else if Data.isAccountLike network && Id.id txId /= requestedTxHash && Tx.isZeroValueTx tx then
+                -- a tx hash without subtx id part was requested
+                ( model
+                , BrowserGotTxFlow loadTxConfig tx
+                    |> Api.ListTxFlowsEffect
+                        { currency = network
+                        , txHash = requestedTxHash
+                        , includeZeroValueSubTxs = False
+                        , pagesize = Just 1
+                        , token_currency = Nothing
+                        , nextpage = Nothing
+                        }
+                    |> ApiEffect
+                    |> List.singleton
+                )
+                    |> and (selectTx txId)
 
-                         else
-                            n
-                        )
-                    |> and (autoLoadConversions plugins newTx)
+            else
+                browserGotTx plugins uc loadTxConfig tx model
+
+        BrowserGotTxFlow loadTxConfig originalTx txs ->
+            txs.nextPage
+                |> Maybe.map
+                    (\_ ->
+                        browserGotTx plugins uc loadTxConfig originalTx model
+                    )
+                |> Maybe.Extra.orElseLazy
+                    (\_ ->
+                        txs.txs
+                            |> List.head
+                            |> Maybe.map
+                                (\tx ->
+                                    n model
+                                        |> and (selectTx (Tx.getTxId tx))
+                                        |> and (browserGotTx plugins uc loadTxConfig tx)
+                                )
+                    )
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        browserGotTx plugins uc loadTxConfig originalTx model
+                    )
 
         UserClickedSelectionTool ->
             n
@@ -2195,11 +2229,11 @@ updateByMsg plugins uc msg model =
 
         UserClickedContextMenuDeleteIcon menuType ->
             case menuType of
-                ContextMenu.AddressContextMenu id ->
+                ContextMenu.AddressContextMenu _ ->
                     -- removeAddress id model
                     deleteSelection model
 
-                ContextMenu.TransactionContextMenu id ->
+                ContextMenu.TransactionContextMenu _ ->
                     -- removeTx id model
                     deleteSelection model
 
@@ -2615,6 +2649,29 @@ updateByMsg plugins uc msg model =
                 False
                 |> List.singleton
             )
+
+
+browserGotTx : Plugins -> Update.Config -> AddingTxConfig -> Api.Data.Tx -> Model -> ( Model, List Effect )
+browserGotTx plugins uc { pos, loadAddresses, autoLinkInTraceMode } tx model =
+    if Dict.member (Tx.getTxId tx) model.network.txs then
+        n model
+
+    else
+        let
+            ( newTx, newNetwork ) =
+                Network.addTxWithPosition model.config pos tx model.network
+        in
+        model
+            |> s_network newNetwork
+            |> checkSelection uc
+            |> and
+                (if loadAddresses then
+                    autoLoadAddresses plugins autoLinkInTraceMode newTx
+
+                 else
+                    n
+                )
+            |> and (autoLoadConversions plugins newTx)
 
 
 addFeeRows : Update.Config -> Id -> List Api.Data.TxAccount -> List Api.Data.TxAccount
@@ -3896,7 +3953,12 @@ loadAddressWithPosition _ autoLinkTxInTraceMode position id model =
 loadTxWithPosition : FindPosition -> Bool -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
 loadTxWithPosition pos autoLinkInTraceMode loadAddresses _ id model =
     ( model
-    , BrowserGotTx { pos = pos, loadAddresses = loadAddresses, autoLinkInTraceMode = autoLinkInTraceMode }
+    , BrowserGotTx
+        { pos = pos
+        , loadAddresses = loadAddresses
+        , autoLinkInTraceMode = autoLinkInTraceMode
+        , requestedTxHash = Id.id id
+        }
         |> Api.GetTxEffect
             { currency = Id.network id
             , txHash = Id.id id

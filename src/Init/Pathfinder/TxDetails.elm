@@ -44,7 +44,18 @@ init assets tx =
     , tx = tx
     , baseTx = RemoteData.NotAsked
     , subTxsTable = initSubTxTable
-    , subTxsTableOpen = tx |> Tx.getAccountTx |> Maybe.map (not << (.raw >> .isExternal >> Maybe.withDefault False)) |> Maybe.withDefault False
+    , subTxsTableOpen =
+        tx
+            |> Tx.getAccountTx
+            |> Maybe.map
+                (\t ->
+                    (t.raw.isExternal
+                        |> Maybe.withDefault False
+                        |> not
+                    )
+                        || (t.value.value == 0)
+                )
+            |> Maybe.withDefault False
     , subTxsTableFilter =
         { includeZeroValueTxs = Just False
         , selectedAsset = Nothing

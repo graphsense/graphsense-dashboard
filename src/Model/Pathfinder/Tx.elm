@@ -35,6 +35,7 @@ module Model.Pathfinder.Tx exposing
     , ioToId
     , isRawInFlow
     , isRawOutFlow
+    , isZeroValueTx
     , listAddressesForTx
     , listSeparatedAddressesForTx
     , toFinalCoords
@@ -470,3 +471,13 @@ getOutputValueForAddressFromRawTx address tx =
                 |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
                 |> List.map .value
                 |> Util.Data.sumValues
+
+
+isZeroValueTx : Api.Data.Tx -> Bool
+isZeroValueTx tx =
+    case tx of
+        Api.Data.TxTxAccount { value } ->
+            value.value == 0
+
+        Api.Data.TxTxUtxo _ ->
+            False

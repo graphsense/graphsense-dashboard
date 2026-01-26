@@ -320,6 +320,9 @@ shallPushHistory plugins msg _ =
         BrowserGotTx _ _ ->
             False
 
+        BrowserGotTxFlow _ _ _ ->
+            False
+
         BrowserGotConversionLoop _ _ _ ->
             False
 

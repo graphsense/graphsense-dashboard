@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Aligned translation files, simplified lookup keys, added couple of missing translation 
 - Changed logout behaviour to browser redirect
 - Auto-tracing of txs depends on the latest tx added to an address instead of the timestamp
+- Load the Sub-Transaction if a requested Account Tx contains only one Sub-Tx
  
 ## [25.11.5] - 2025-12-16
 

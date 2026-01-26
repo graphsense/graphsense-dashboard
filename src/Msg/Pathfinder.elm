@@ -38,6 +38,7 @@ type alias AddingTxConfig =
     { pos : FindPosition
     , loadAddresses : Bool
     , autoLinkInTraceMode : Bool
+    , requestedTxHash : String
     }
 
 
@@ -146,6 +147,7 @@ type Msg
     | UserMovesMouseOutConversionEdge ( Id, Id ) ConversionEdge
     | EventualMessagesHeartBeat
     | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
+    | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
 
 
 type alias TextTooltipConfig =

@@ -152,7 +152,3 @@ parseMultiIdentifierInput input =
         |> List.map (String.trim >> removeLeading0x)
         |> List.filter (not << String.isEmpty)
         |> List.filter (\s -> String.length s >= 15)
-
-
-
--- |> removeLeading0x
