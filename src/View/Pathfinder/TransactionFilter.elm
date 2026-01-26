@@ -138,8 +138,8 @@ stringFilterHeader vc msg str =
 
 
 assetFilterHeader : View.Config -> msg -> String -> Html msg
-assetFilterHeader vc resetMsg asset =
-    stringFilterHeader vc resetMsg asset
+assetFilterHeader vc resetMsg =
+    String.toUpper >> stringFilterHeader vc resetMsg
 
 
 zeroValuesHeader : View.Config -> msg -> Bool -> Html msg

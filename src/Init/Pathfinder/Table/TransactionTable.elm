@@ -33,7 +33,7 @@ init uc network addressId data assets dpMsg =
         ( _, mmax ) =
             Address.getActivityRange data
 
-        ( desc, order, drp ) =
+        { desc, order, drp, selectedAsset } =
             Network.getRecentTxForAddress network Incoming addressId
                 |> Maybe.map
                     (\tx ->
@@ -42,18 +42,24 @@ init uc network addressId data assets dpMsg =
                                 Tx.getRawTimestamp tx
                                     |> timestampToPosix
                         in
-                        ( False
-                        , Just Api.Request.Addresses.Order_Asc
-                        , datePickerSettings uc.locale mn mmax
-                            |> DateRangePicker.init dpMsg mmax (Just mn) (Just mmax)
-                            |> Just
-                        )
+                        { desc = False
+                        , order = Just Api.Request.Addresses.Order_Asc
+                        , drp =
+                            datePickerSettings uc.locale mn mmax
+                                |> DateRangePicker.init dpMsg mmax (Just mn) (Just mmax)
+                                |> Just
+                        , selectedAsset =
+                            tx
+                                |> Tx.getAccountTx
+                                |> Maybe.map (.raw >> .currency)
+                        }
                     )
                 |> Maybe.withDefault
-                    ( True
-                    , Just Api.Request.Addresses.Order_Desc
-                    , Nothing
-                    )
+                    { desc = True
+                    , order = Just Api.Request.Addresses.Order_Desc
+                    , drp = Nothing
+                    , selectedAsset = Nothing
+                    }
     in
     { table = table desc
     , order = order
@@ -61,6 +67,6 @@ init uc network addressId data assets dpMsg =
     , direction = Nothing
     , isTxFilterViewOpen = False
     , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
-    , selectedAsset = Nothing
+    , selectedAsset = selectedAsset
     , includeZeroValueTxs = Nothing -- Backend does not support this filter at the moment
     }
