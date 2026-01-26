@@ -545,3 +545,5 @@ address not found: indirizzo non trovato
 addresses not found: indirizzi non trovati
 transaction not found: transazione non trovata
 transactions not found: transazioni non trovate
+session expired: sessione scaduta
+popup-session-expired-info: La tua sessione è scaduta. Salva e ricarica la pagina.

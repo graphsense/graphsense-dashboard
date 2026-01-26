@@ -523,3 +523,5 @@ address not found: dirección no encontrada
 addresses not found: direcciones no encontradas
 transaction not found: transacción no encontrada
 transactions not found: transacciones no encontradas
+session expired: sesión caducada
+popup-session-expired-info: Su sesión ha caducado. Guarde los datos y vuelva a cargar la página.

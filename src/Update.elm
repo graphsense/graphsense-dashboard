@@ -380,6 +380,15 @@ update plugins uc msg model =
                         |> Maybe.andThen
                             (\token ->
                                 case result of
+                                    Err ( Http.BadStatus 401, _, _ ) ->
+                                        UserClosesDialog
+                                            |> Dialog.generalError
+                                                { title = "Session expired"
+                                                , message = "popup-session-expired-info"
+                                                , variables = []
+                                                }
+                                            |> Just
+
                                     Err ( Http.BadStatus 404, _, _ ) ->
                                         Statusbar.getMessage token model.statusbar
                                             |> Maybe.andThen
