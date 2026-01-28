@@ -109,8 +109,8 @@ type Msg
     | UserMovesMouseOutTagLabel TooltipContext
     | UserMovesMouseOverActorLabel TooltipContext
     | UserMovesMouseOutActorLabel TooltipContext
-    | UserInputsAnnotation Id String
-    | UserSelectsAnnotationColor Id (Maybe Color)
+    | UserInputsAnnotation (List Id) String
+    | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsImage String
     | UserClickedExportGraphAsPdf String

@@ -468,6 +468,9 @@ topCenterPanel plugins pluginStates vc gc model =
                         Pathfinder.SelectedTx _ ->
                             False
 
+                        Pathfinder.MultiSelect _ ->
+                            False
+
                         _ ->
                             True
                 , pointerTool = model.pointerTool
@@ -488,17 +491,38 @@ toolbarHovercardView vc m ( hcid, hc ) =
             settingsHovercardView vc m hc
 
         ( Annotation, Pathfinder.SelectedAddress id ) ->
-            annotationHovercardView vc id (Annotations.getAnnotation id m.annotations) hc
+            annotationHovercardView vc [ id ] (Annotations.getAnnotation id m.annotations) hc
 
         ( Annotation, Pathfinder.SelectedTx id ) ->
-            annotationHovercardView vc id (Annotations.getAnnotation id m.annotations) hc
+            annotationHovercardView vc [ id ] (Annotations.getAnnotation id m.annotations) hc
+
+        ( Annotation, Pathfinder.MultiSelect selections ) ->
+            let
+                ids =
+                    List.map
+                        (\sel ->
+                            case sel of
+                                Pathfinder.MSelectedAddress id ->
+                                    id
+
+                                Pathfinder.MSelectedTx id ->
+                                    id
+                        )
+                        selections
+
+                -- Use first ID's annotation to track the current input value
+                firstAnnotation =
+                    List.head ids
+                        |> Maybe.andThen (\id -> Annotations.getAnnotation id m.annotations)
+            in
+            annotationHovercardView vc ids firstAnnotation hc
 
         _ ->
             none
 
 
-annotationHovercardView : View.Config -> Id -> Maybe Annotations.AnnotationItem -> Hovercard.Model -> Html Msg
-annotationHovercardView vc id annotation hc =
+annotationHovercardView : View.Config -> List Id -> Maybe Annotations.AnnotationItem -> Hovercard.Model -> Html Msg
+annotationHovercardView vc ids annotation hc =
     let
         labelValue =
             annotation |> Maybe.map .label |> Maybe.withDefault ""
@@ -511,7 +535,7 @@ annotationHovercardView vc id annotation hc =
                 [ Sc.labelFieldStateActive_details.styles
                     ++ Sc.labelFieldStateActivePlaceholderText_details.styles
                     |> css
-                , onInput (UserInputsAnnotation id)
+                , onInput (UserInputsAnnotation ids)
                 , HA.value labelValue
                 , HA.placeholder (Locale.string vc.locale "Optional")
                 , HA.autofocus True
@@ -528,7 +552,7 @@ annotationHovercardView vc id annotation hc =
                 Just c ->
                     Sc.colorSquareStyleColorFillWithAttributes
                         (Sc.colorSquareStyleColorFillAttributes
-                            |> Rs.s_root [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor id color) ]
+                            |> Rs.s_root [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor ids color) ]
                             |> Rs.s_vectorShape [ css [ Css.important (Css.fill (c |> Util.View.toCssColor)) ] ]
                         )
                         { root = { selectionVisible = isSelected } }
@@ -536,7 +560,7 @@ annotationHovercardView vc id annotation hc =
                 Nothing ->
                     Sc.colorSquareStyleNoColorWithAttributes
                         (Sc.colorSquareStyleNoColorAttributes
-                            |> Rs.s_root [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor id Nothing) ]
+                            |> Rs.s_root [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor ids Nothing) ]
                         )
                         { root = { selectionVisible = isSelected } }
     in

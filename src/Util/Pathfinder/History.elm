@@ -393,10 +393,10 @@ shallPushHistory plugins msg _ =
             False
 
         UserInputsAnnotation _ _ ->
-            False
+            True
 
         UserSelectsAnnotationColor _ _ ->
-            False
+            True
 
         ToolbarHovercardMsg _ ->
             False

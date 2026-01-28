@@ -1231,7 +1231,7 @@ update plugins uc msg model =
                                             -- |> Notification.map (s_title (Just "PDF Export"))
                                             |> Notification.map (s_isEphemeral True)
                                             |> Notification.map (s_showClose False)
-                                            |> Notification.map (s_removeDelayMs 1000.0)
+                                            |> Notification.map (s_removeDelayMs 4000.0)
                                         )
                                         model.notifications
                             in

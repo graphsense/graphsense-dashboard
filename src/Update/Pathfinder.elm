@@ -2268,11 +2268,11 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
-        UserInputsAnnotation id str ->
-            n { model | annotations = Annotations.setLabel id str model.annotations }
+        UserInputsAnnotation ids str ->
+            n { model | annotations = List.foldl (\id ann -> Annotations.setLabel id str ann) model.annotations ids }
 
-        UserSelectsAnnotationColor id clr ->
-            n { model | annotations = Annotations.setColor id clr model.annotations }
+        UserSelectsAnnotationColor ids clr ->
+            n { model | annotations = List.foldl (\id ann -> Annotations.setColor id clr ann) model.annotations ids }
 
         UserOpensContextMenu coordsNew cmtype ->
             case model.contextMenu of
