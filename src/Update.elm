@@ -1745,8 +1745,9 @@ update plugins uc msg model =
                         let
                             ( notifications, eff ) =
                                 Notification.add
-                                    (Notification.errorDefault message
+                                    (Notification.errorDefault "uncaught-error-message"
                                         |> Notification.map (s_title (Just "An error occurred"))
+                                        |> Notification.map (s_moreInfo [ message ])
                                     )
                                     model.notifications
                         in

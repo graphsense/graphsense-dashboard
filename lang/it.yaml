@@ -3,6 +3,7 @@ address: indirizzo
 addresses: indirizzi
 entity: entità
 entities: entità
+uncaught-error-message: Si è verificato un errore imprevisto. Questo è spesso causato da estensioni del browser che interferiscono con l'applicazione. Prova a disabilitare tutte le estensioni del browser per questo sito e ricarica la pagina.
 transaction: transazione
 transactions: transazioni
 label: identificativo

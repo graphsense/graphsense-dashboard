@@ -2,6 +2,7 @@ address: Adresse
 addresses: Adressen
 entity: Cluster
 entities: Clusters
+uncaught-error-message: Ein unerwarteter Fehler ist aufgetreten. Dies wird häufig durch Browser-Erweiterungen verursacht, die die Anwendung stören. Bitte deaktivieren Sie alle Browser-Erweiterungen für diese Seite und laden Sie die Seite neu.
 transaction: Transaktion
 transactions: Transaktionen
 label: Schlagwort

@@ -1,6 +1,7 @@
 the search: search
 entity: cluster
 entities: clusters
+uncaught-error-message: An unexpected error occurred. This is often caused by browser extensions interfering with the application. Please try disabling all browser extensions for this site and reload the page.
 Root Address: cluster root
 currency: cryptoasset
 change currency: value denomination

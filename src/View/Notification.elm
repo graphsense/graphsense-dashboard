@@ -70,11 +70,20 @@ view vc model =
                 showMsgText =
                     Maybe.Extra.isJust title
 
-                msgText =
-                    message
-                        :: moreInfo
+                mainMsg =
+                    Locale.interpolated vc.locale message variables
+
+                moreInfoMsg =
+                    moreInfo
                         |> List.map (flip (Locale.interpolated vc.locale) variables)
                         |> String.join " "
+
+                msgText =
+                    if String.isEmpty moreInfoMsg then
+                        mainMsg
+
+                    else
+                        mainMsg ++ " --- " ++ moreInfoMsg
             in
             { msg =
                 msgText

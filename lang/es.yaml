@@ -1,6 +1,7 @@
 the search: buscar
 entity: clúster
 entities: clústeres
+uncaught-error-message: Se produjo un error inesperado. Esto suele ser causado por extensiones del navegador que interfieren con la aplicación. Por favor, desactive todas las extensiones del navegador para este sitio y recargue la página.
 Root Address: raíz del clúster
 Sending entities: envío de clústeres
 Receiving entities: recepción de clústeres
