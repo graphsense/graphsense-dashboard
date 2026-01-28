@@ -504,9 +504,9 @@ with zone code: mostrar diferencia horaria
 in UTC: zona horaria UTC
 e.g.: p.e. {0}
 actor label: etiqueta de actor
-date-time-format: 'DD MMMM YYYY HH:mm'
+date-time-format: 'dd MMMM yyyy HH:mm'
 time-format: "HH:mm"
-date-format: "DD/MM/YY"
+date-format: "dd/MM/yy"
 open in new tab: abrir en una nueva pestaña
 true: verdadero
 false: falso

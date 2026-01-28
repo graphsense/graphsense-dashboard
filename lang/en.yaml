@@ -484,9 +484,9 @@ with zone code: show time difference
 in UTC: UTC time zone
 e.g.: e.g. {0}
 actor label: actor label
-date-time-format: "MM/DD/YYYY hh:mm tt"
+date-time-format: "MM/dd/yyyy hh:mm tt"
 time-format: "hh:mm tt"
-date-format: "MM/DD/YY"
+date-format: "MM/dd/yy"
 open in new tab: open in new tab
 align vertically: Align vertically
 align horizontally: Align horizontally

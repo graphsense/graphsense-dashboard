@@ -501,9 +501,9 @@ with zone code: Zeitverschiebung anzeigen
 in UTC: UTC Zeitzone
 e.g.: z.B. {0}
 actor label: Bezeichnung des Akteurs
-date-time-format: 'DD.MMMM YYYY HH:mm'
+date-time-format: 'dd.MMMM yyyy HH:mm'
 time-format: "HH:mm"
-date-format: "DD.MM.YY"
+date-format: "dd.MM.yy"
 open in new tab: in neuem Tab öffnen
 align vertically: Vertikal ausrichten
 align horizontally: Horizontal ausrichten

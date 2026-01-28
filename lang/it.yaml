@@ -483,9 +483,9 @@ with zone code: mostra diff. di fuso orario
 in UTC: fuso orario UTC
 e.g.: ad es. {0}
 actor label: etichetta attore
-date-time-format: DD MMMM YYYY HH:mm
-time-format: HH:mm
-date-format: DD/MM/YY
+date-time-format: dd MMMM yyyy HH:mm
+time-format: "HH:mm"
+date-format: dd/MM/yy
 report a tag: segnalare un tag
 report tag: segnalare un tag
 Add_Tag_description: 'Aiutaci a migliorare i nostri dati segnalando un''entità collegata
