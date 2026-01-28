@@ -19,6 +19,7 @@ module Update.Pathfinder.Network exposing
     , ingestTxs
     , insertFetchedEdge
     , resolveOverlaps
+    , resolveOverlapsExcept
     , rupsertAggEdge
     , snapToGrid
     , trySetHoverConversionLoop
@@ -33,7 +34,7 @@ module Update.Pathfinder.Network exposing
 import Animation as A exposing (Animation)
 import Api.Data
 import Basics.Extra exposing (flip, uncurry)
-import Config.Pathfinder as Pathfinder exposing (nodeXOffset, nodeYOffset)
+import Config.Pathfinder as Pathfinder exposing (addressRadius, nodeXOffset, nodeYOffset)
 import Dict exposing (Dict)
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.AggEdge as AggEdge
@@ -144,7 +145,15 @@ Takes a network and iteratively moves nodes that are too close together.
 Uses nodeXOffset and nodeYOffset as minimum distances.
 -}
 resolveOverlaps : Network -> Network
-resolveOverlaps network =
+resolveOverlaps =
+    resolveOverlapsExcept Nothing
+
+
+{-| Resolve overlapping nodes by pushing them apart, keeping a specific node fixed.
+When fixedId is provided, that node will not be moved - other overlapping nodes will move instead.
+-}
+resolveOverlapsExcept : Maybe Id -> Network -> Network
+resolveOverlapsExcept fixedId network =
     let
         -- Get all node positions (addresses and transactions)
         getAllNodes : Network -> List { id : Id, x : Float, y : Float, isAddress : Bool }
@@ -170,7 +179,7 @@ resolveOverlaps network =
                 dy =
                     abs (n1.y - n2.y)
             in
-            dx < nodeXOffset && dy < nodeYOffset
+            dx < addressRadius && dy < addressRadius
 
         -- Push node2 away from node1
         pushApart : { a | x : Float, y : Float } -> { id : Id, x : Float, y : Float, isAddress : Bool } -> { id : Id, x : Float, y : Float, isAddress : Bool }
@@ -191,6 +200,11 @@ resolveOverlaps network =
             in
             { n2 | y = newY }
 
+        -- Check if a node is the fixed node
+        isFixed : { a | id : Id } -> Bool
+        isFixed node =
+            fixedId == Just node.id
+
         -- Apply a single pass of collision resolution
         resolvePass : List { id : Id, x : Float, y : Float, isAddress : Bool } -> List { id : Id, x : Float, y : Float, isAddress : Bool }
         resolvePass nodes =
@@ -204,15 +218,28 @@ resolveOverlaps network =
                 first :: rest ->
                     let
                         -- Check first node against all others and push any overlapping nodes
-                        ( _, resolvedRest ) =
+                        ( updatedFirst, resolvedRest ) =
                             List.foldl
                                 (\node ( ref, acc ) ->
                                     if nodesOverlap ref node then
-                                        let
-                                            pushed =
-                                                pushApart ref node
-                                        in
-                                        ( ref, acc ++ [ pushed ] )
+                                        -- If node is fixed, push ref instead (unless ref is also fixed)
+                                        if isFixed node && not (isFixed ref) then
+                                            let
+                                                pushed =
+                                                    pushApart node ref
+                                            in
+                                            ( pushed, acc ++ [ node ] )
+
+                                        else if not (isFixed node) then
+                                            let
+                                                pushed =
+                                                    pushApart ref node
+                                            in
+                                            ( ref, acc ++ [ pushed ] )
+
+                                        else
+                                            -- Both are fixed (shouldn't happen with single fixedId), keep both
+                                            ( ref, acc ++ [ node ] )
 
                                     else
                                         ( ref, acc ++ [ node ] )
@@ -220,7 +247,7 @@ resolveOverlaps network =
                                 ( first, [] )
                                 rest
                     in
-                    first :: resolvePass resolvedRest
+                    updatedFirst :: resolvePass resolvedRest
 
         -- Apply node position changes to network
         applyChanges : List { id : Id, x : Float, y : Float, isAddress : Bool } -> Network -> Network

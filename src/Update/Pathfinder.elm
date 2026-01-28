@@ -1372,11 +1372,13 @@ updateByMsg plugins uc msg model =
                                     moveNode id model.network
 
                         nn =
-                            if model.config.snapToGrid then
+                            (if model.config.snapToGrid then
                                 network |> Network.snapToGrid
 
-                            else
+                             else
                                 network
+                            )
+                                |> Network.resolveOverlapsExcept (Just id)
                     in
                     n
                         { model
