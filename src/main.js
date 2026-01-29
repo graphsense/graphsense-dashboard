@@ -3,7 +3,6 @@ import FileSaver from 'file-saver'
 import { pack, unpack } from 'lzwcompress'
 import { Base64 } from 'js-base64'
 import { fileDialog } from 'file-select-dialog'
-import { jsPDF } from 'jspdf'
 import plugins from '../generated/plugins/index.js'
 import robotoBase64 from "../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64"
 import robotoBoldBase64 from "../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64"
@@ -182,6 +181,20 @@ app.ports.exportGraphImage.subscribe((filename) => {
  }
 )
 
+const worker = new Worker('/src/svg-to-pdf-worker.js', {type:'module'});
+
+worker.onmessage = function(e) {
+  if (e.data.error) {
+    console.error(e.data.error, e.data.details);
+  } else {
+    FileSaver.saveAs(e.data.pdfBlob, e.data.filename);
+  }
+};
+
+worker.onerror = function(e) {
+  console.error('Worker error:', e);
+};
+
 app.ports.exportGraphPdf.subscribe((filename) => {
     let svg = document.querySelector('svg#graph')
     if (!svg) {
@@ -222,7 +235,6 @@ app.ports.exportGraphPdf.subscribe((filename) => {
     const contentWidth = (maxX - minX) + padding * 2
     const contentHeight = (maxY - minY) + padding * 2
     
-    let canvas = document.createElement("canvas");
     var svgData = new XMLSerializer().serializeToString(svg)
 
     // Replace the viewBox to show entire content with padding
@@ -260,55 +272,17 @@ app.ports.exportGraphPdf.subscribe((filename) => {
       </style>
     `
     
-    svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
-    const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
-    
     const bgColor = cssVariables["--c-white"]
+    svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
 
-    // Use scale factor of 4 for high quality
-    const pixelScaleFactor = 4;
-    const width = contentWidth * pixelScaleFactor
-    const height = contentHeight * pixelScaleFactor
-
-    canvas.width = width;
-    canvas.height = height;
-    let img = new Image();
-
-    img.onerror = function(e) {
-      console.error('Failed to load SVG image', e)
-    }
-
-    img.onload = function () {
-      try {
-        let ctx = canvas.getContext("2d");
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Create PDF with dimensions matching content
-        const pdfWidth = contentWidth;
-        const pdfHeight = contentHeight;
-        const orientation = pdfWidth > pdfHeight ? 'landscape' : 'portrait';
-        
-        const pdf = new jsPDF({
-          orientation: orientation,
-          unit: 'px',
-          format: [pdfWidth, pdfHeight],
-          compress: true
-        });
-
-        // Use PNG for better quality, with compression
-        const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-        
-        // Save the PDF
-        const pdfBlob = pdf.output('blob');
-        FileSaver.saveAs(pdfBlob, filename);
-      } catch (e) {
-        console.error('PDF generation failed', e)
-      }
-    };
-    img.src = "data:image/svg+xml;base64," + svgDataBase64;
+    console.log(svgData)
+    worker.postMessage({
+      svgData: svgData,
+      contentWidth: contentWidth,
+      contentHeight: contentHeight,
+      filename: filename,
+      bgColor: bgColor
+    });
  }
 )
 
