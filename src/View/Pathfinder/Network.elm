@@ -61,6 +61,10 @@ relations plugins vc gc annotations txs agg conversions =
                 )
             )
         |> (\( agg_, txs_, conversions_ ) ->
+                let
+                    ( txsHighlighted_, txsRegular_ ) =
+                        List.partition (\tx -> tx.hovered || tx.selected) txs_
+                in
                 (if vc.showConversionEdges then
                     [ conversions_
                         |> List.filterMap
@@ -77,7 +81,7 @@ relations plugins vc gc annotations txs agg conversions =
                  else
                     []
                 )
-                    ++ [ txs_
+                    ++ [ txsRegular_
                             |> List.map
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "te"
@@ -86,7 +90,7 @@ relations plugins vc gc annotations txs agg conversions =
                                     )
                                 )
                             |> Keyed.node "g" []
-                       , txs_
+                       , txsRegular_
                             |> List.map
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "tn"
@@ -118,6 +122,24 @@ relations plugins vc gc annotations txs agg conversions =
                                     Maybe.map2 (aggEdgeNodeHighlight plugins vc gc edge)
                                         edge.aAddress
                                         edge.bAddress
+                                )
+                            |> Keyed.node "g" []
+                       , txsHighlighted_
+                            |> List.map
+                                (\tx ->
+                                    ( Id.toString tx.id |> (++) "teh"
+                                    , Annotations.getAnnotation tx.id annotations
+                                        |> Tx.edge plugins vc gc tx
+                                    )
+                                )
+                            |> Keyed.node "g" []
+                       , txsHighlighted_
+                            |> List.map
+                                (\tx ->
+                                    ( Id.toString tx.id |> (++) "tnh"
+                                    , Annotations.getAnnotation tx.id annotations
+                                        |> Svg.lazy5 Tx.view plugins vc gc tx
+                                    )
                                 )
                             |> Keyed.node "g" []
                        ]
