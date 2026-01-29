@@ -1378,7 +1378,7 @@ updateByMsg plugins uc msg model =
                              else
                                 network
                             )
-                                |> Network.resolveOverlapsExcept (Just id)
+                                |> Network.resolveOverlapsExcept Network.Compact (Just id)
                     in
                     n
                         { model
@@ -2424,7 +2424,7 @@ updateByMsg plugins uc msg model =
 
                         newNetwork =
                             List.foldl moveToMedianY model.network selections
-                                |> Network.resolveOverlaps
+                                |> Network.resolveOverlaps Network.Spacious
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }
 
@@ -2488,7 +2488,7 @@ updateByMsg plugins uc msg model =
 
                         newNetwork =
                             List.foldl moveToMedianX model.network selections
-                                |> Network.resolveOverlaps
+                                |> Network.resolveOverlaps Network.Spacious
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }
 

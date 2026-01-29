@@ -1,5 +1,6 @@
 module Update.Pathfinder.Network exposing
-    ( addAddress
+    ( OverlapDistance(..)
+    , addAddress
     , addAddressWithPosition
     , addConversion
     , addTx
@@ -144,17 +145,33 @@ snapToGrid =
 Takes a network and iteratively moves nodes that are too close together.
 Uses nodeXOffset and nodeYOffset as minimum distances.
 -}
-resolveOverlaps : Network -> Network
-resolveOverlaps =
-    resolveOverlapsExcept Nothing
+resolveOverlaps : OverlapDistance -> Network -> Network
+resolveOverlaps distance =
+    resolveOverlapsExcept distance Nothing
+
+
+{-| Configuration for how close nodes can be before they're considered overlapping.
+-}
+type OverlapDistance
+    = Compact -- Uses addressRadius (smaller, tighter spacing)
+    | Spacious -- Uses nodeXOffset/nodeYOffset (larger, looser spacing)
 
 
 {-| Resolve overlapping nodes by pushing them apart, keeping a specific node fixed.
 When fixedId is provided, that node will not be moved - other overlapping nodes will move instead.
 -}
-resolveOverlapsExcept : Maybe Id -> Network -> Network
-resolveOverlapsExcept fixedId network =
+resolveOverlapsExcept : OverlapDistance -> Maybe Id -> Network -> Network
+resolveOverlapsExcept distance fixedId network =
     let
+        -- Get the overlap thresholds based on configuration
+        ( overlapThresholdX, overlapThresholdY ) =
+            case distance of
+                Compact ->
+                    ( addressRadius, addressRadius )
+
+                Spacious ->
+                    ( nodeXOffset, nodeYOffset )
+
         -- Get all node positions (addresses and transactions)
         getAllNodes : Network -> List { id : Id, x : Float, y : Float, isAddress : Bool }
         getAllNodes net =
@@ -179,7 +196,7 @@ resolveOverlapsExcept fixedId network =
                 dy =
                     abs (n1.y - n2.y)
             in
-            dx < addressRadius && dy < addressRadius
+            dx < overlapThresholdX && dy < overlapThresholdY
 
         -- Push node2 away from node1
         pushApart : { a | x : Float, y : Float } -> { id : Id, x : Float, y : Float, isAddress : Bool } -> { id : Id, x : Float, y : Float, isAddress : Bool }
@@ -333,7 +350,7 @@ addAddressWithPosition plugins pc position id model =
                 finalNetwork =
                     case position of
                         AtViewportCenter _ _ ->
-                            resolveOverlaps network
+                            resolveOverlaps Spacious network
 
                         _ ->
                             network
@@ -920,7 +937,7 @@ addTxWithPosition pc position tx network =
                         -- Resolve overlaps when adding at viewport center
                         case position of
                             AtViewportCenter _ _ ->
-                                ( resultTx, resolveOverlaps resultNet )
+                                ( resultTx, resolveOverlaps Spacious resultNet )
 
                             _ ->
                                 ( resultTx, resultNet )
@@ -986,7 +1003,7 @@ addTxWithPosition pc position tx network =
                         -- Resolve overlaps when adding at viewport center
                         case position of
                             AtViewportCenter _ _ ->
-                                ( resultTx, resolveOverlaps resultNet )
+                                ( resultTx, resolveOverlaps Spacious resultNet )
 
                             _ ->
                                 ( resultTx, resultNet )
