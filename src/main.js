@@ -184,7 +184,9 @@ app.ports.exportGraphImage.subscribe((filename) => {
 const worker = new Worker('/src/svg-to-pdf-worker.js', {type:'module'});
 
 worker.onmessage = function(e) {
+  console.log('message', e.data)
   if (e.data.error) {
+    app.ports.uncaughtError.send({message: e.data.error})
     console.error(e.data.error, e.data.details);
   } else {
     FileSaver.saveAs(e.data.pdfBlob, e.data.filename);
@@ -192,6 +194,7 @@ worker.onmessage = function(e) {
 };
 
 worker.onerror = function(e) {
+  app.ports.uncaughtError.send({message: e + ""})
   console.error('Worker error:', e);
 };
 
@@ -235,6 +238,7 @@ app.ports.exportGraphPdf.subscribe((filename) => {
     const contentWidth = (maxX - minX) + padding * 2
     const contentHeight = (maxY - minY) + padding * 2
     
+    let canvas = document.createElement("canvas");
     var svgData = new XMLSerializer().serializeToString(svg)
 
     // Replace the viewBox to show entire content with padding
@@ -272,17 +276,46 @@ app.ports.exportGraphPdf.subscribe((filename) => {
       </style>
     `
     
-    const bgColor = cssVariables["--c-white"]
     svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
+    const blobSvgData = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blobSvgData);
+    
+    const bgColor = cssVariables["--c-white"]
 
-    console.log(svgData)
-    worker.postMessage({
-      svgData: svgData,
-      contentWidth: contentWidth,
-      contentHeight: contentHeight,
-      filename: filename,
-      bgColor: bgColor
-    });
+    // Use scale factor of 4 for high quality
+    const pixelScaleFactor = 4;
+    const width = contentWidth * pixelScaleFactor
+    const height = contentHeight * pixelScaleFactor
+
+    canvas.width = width;
+    canvas.height = height;
+    let img = new Image();
+
+    img.onerror = function(e) {
+      app.ports.uncaughtError.send({message: e + ""})
+      console.error('Failed to load SVG image', e)
+    }
+
+    img.onload = function () {
+      try {
+        let ctx = canvas.getContext("2d");
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Use PNG for better quality, with compression
+        const imgData = canvas.toDataURL('image/png');
+        worker.postMessage({
+          imgData,
+          contentWidth,
+          contentHeight,
+          filename
+        });
+      } catch (e) {
+        console.error('PDF generation failed', e)
+      }
+    };
+    img.src = url //"data:image/svg+xml;base64," + svgDataBase64;
  }
 )
 
