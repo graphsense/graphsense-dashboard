@@ -1,4 +1,4 @@
-module View.Pathfinder.Tx.Path exposing (inPath, inPathColored, inPathColoredHovered, inPathHovered, outPath, outPathColored, outPathColoredHovered, outPathHovered, pickPathFunction)
+module View.Pathfinder.Tx.Path exposing (inPath, inPathColored, inPathColoredHovered, inPathHovered, labelsSep, outPath, outPathColored, outPathColoredHovered, outPathHovered, pickPathFunction)
 
 import Bezier
 import Css
@@ -13,160 +13,285 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Util.Graph exposing (translate)
 
 
-inPath : List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-inPath label start end opacity isDashed =
+labelsSep : String
+labelsSep =
+    "||"
+
+
+inPath : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPath label startX startY endX endY opacity =
     coloredPath
         { label = label
         , highlight = False
         , isOutgoing = False
-        , x1 = start.x
-        , y1 = start.y
-        , x2 = end.x
-        , y2 = end.y
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
         , opacity = opacity
         , isUtxo = True
-        , dashed = isDashed
+        , dashed = False
         , color = Nothing
         }
 
 
-inPathColored : String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-inPathColored color label start end opacity isDashed =
+inPathColored : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPathColored color label startX startY endX endY opacity =
     coloredPath
         { label = label
         , highlight = False
         , isOutgoing = False
-        , x1 = start.x
-        , y1 = start.y
-        , x2 = end.x
-        , y2 = end.y
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
         , opacity = opacity
         , isUtxo = True
-        , dashed = isDashed
+        , dashed = False
         , color = Just color
         }
 
 
-inPathHovered : List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-inPathHovered label start end opacity isDashed =
+inPathHovered : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPathHovered label startX startY endX endY opacity =
     coloredPath
         { label = label
         , highlight = True
         , isOutgoing = False
-        , x1 = start.x
-        , y1 = start.y
-        , x2 = end.x
-        , y2 = end.y
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
         , opacity = opacity
         , isUtxo = True
-        , dashed = isDashed
+        , dashed = False
         , color = Nothing
         }
 
 
-inPathColoredHovered : String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-inPathColoredHovered color label start end opacity isDashed =
+inPathColoredHovered : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPathColoredHovered color label startX startY endX endY opacity =
     coloredPath
         { label = label
         , highlight = True
         , isOutgoing = False
-        , x1 = start.x
-        , y1 = start.y
-        , x2 = end.x
-        , y2 = end.y
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
         , opacity = opacity
         , isUtxo = True
-        , dashed = isDashed
+        , dashed = False
         , color = Just color
         }
 
 
-outPath : List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-outPath label start end opacity isDashed =
+outPath : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPath label startX startY endX endY opacity =
     coloredPath
         { label = label
         , highlight = False
         , isOutgoing = True
-        , x1 = start.x
-        , y1 = start.y
-        , x2 = end.x
-        , y2 = end.y
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
         , opacity = opacity
         , isUtxo = True
-        , dashed = isDashed
+        , dashed = False
         , color = Nothing
         }
 
 
-outPathHovered : List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-outPathHovered label start end opacity isDashed =
+outPathHovered : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPathHovered label startX startY endX endY opacity =
     coloredPath
         { label = label
         , highlight = True
         , isOutgoing = True
-        , x1 = start.x
-        , y1 = start.y
-        , x2 = end.x
-        , y2 = end.y
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
         , opacity = opacity
         , isUtxo = True
-        , dashed = isDashed
+        , dashed = False
         , color = Nothing
         }
 
 
-outPathColored : String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-outPathColored color label start end opacity isDashed =
+outPathColored : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPathColored color label startX startY endX endY opacity =
     coloredPath
         { label = label
         , highlight = False
         , isOutgoing = True
-        , x1 = start.x
-        , y1 = start.y
-        , x2 = end.x
-        , y2 = end.y
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
         , opacity = opacity
         , isUtxo = True
-        , dashed = isDashed
+        , dashed = False
         , color = Just color
         }
 
 
-outPathColoredHovered : String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-outPathColoredHovered color label start end opacity isDashed =
+outPathColoredHovered : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPathColoredHovered color label startX startY endX endY opacity =
     coloredPath
         { label = label
         , highlight = True
         , isOutgoing = True
-        , x1 = start.x
-        , y1 = start.y
-        , x2 = end.x
-        , y2 = end.y
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
         , opacity = opacity
         , isUtxo = True
-        , dashed = isDashed
+        , dashed = False
         , color = Just color
         }
 
 
+inPathConversionLeg : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPathConversionLeg label startX startY endX endY opacity =
+    coloredPath
+        { label = label
+        , highlight = False
+        , isOutgoing = False
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
+        , opacity = opacity
+        , isUtxo = True
+        , dashed = True
+        , color = Nothing
+        }
 
--- accountPath : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
--- accountPath vc label x1 y1 x2 y2 opacity =
---     coloredPath
---         { label = label
---         , highlight = False
---         , isOutgoing = True
---         , x1 = x1
---         , y1 = y1
---         , x2 = x2
---         , y2 = y2
---         , opacity = opacity
---         , isUtxo = False
---         }
+
+inPathColoredConversionLeg : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPathColoredConversionLeg color label startX startY endX endY opacity =
+    coloredPath
+        { label = label
+        , highlight = False
+        , isOutgoing = False
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
+        , opacity = opacity
+        , isUtxo = True
+        , dashed = True
+        , color = Just color
+        }
+
+
+inPathHoveredConversionLeg : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPathHoveredConversionLeg label startX startY endX endY opacity =
+    coloredPath
+        { label = label
+        , highlight = True
+        , isOutgoing = False
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
+        , opacity = opacity
+        , isUtxo = True
+        , dashed = True
+        , color = Nothing
+        }
+
+
+inPathColoredHoveredConversionLeg : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPathColoredHoveredConversionLeg color label startX startY endX endY opacity =
+    coloredPath
+        { label = label
+        , highlight = True
+        , isOutgoing = False
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
+        , opacity = opacity
+        , isUtxo = True
+        , dashed = True
+        , color = Just color
+        }
+
+
+outPathConversionLeg : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPathConversionLeg label startX startY endX endY opacity =
+    coloredPath
+        { label = label
+        , highlight = False
+        , isOutgoing = True
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
+        , opacity = opacity
+        , isUtxo = True
+        , dashed = True
+        , color = Nothing
+        }
+
+
+outPathHoveredConversionLeg : String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPathHoveredConversionLeg label startX startY endX endY opacity =
+    coloredPath
+        { label = label
+        , highlight = True
+        , isOutgoing = True
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
+        , opacity = opacity
+        , isUtxo = True
+        , dashed = True
+        , color = Nothing
+        }
+
+
+outPathColoredConversionLeg : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPathColoredConversionLeg color label startX startY endX endY opacity =
+    coloredPath
+        { label = label
+        , highlight = False
+        , isOutgoing = True
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
+        , opacity = opacity
+        , isUtxo = True
+        , dashed = True
+        , color = Just color
+        }
+
+
+outPathColoredHoveredConversionLeg : String -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPathColoredHoveredConversionLeg color label startX startY endX endY opacity =
+    coloredPath
+        { label = label
+        , highlight = True
+        , isOutgoing = True
+        , x1 = startX
+        , y1 = startY
+        , x2 = endX
+        , y2 = endY
+        , opacity = opacity
+        , isUtxo = True
+        , dashed = True
+        , color = Just color
+        }
 
 
 type alias ColoredPathConfig =
-    { label : List String
+    { label : String
     , isOutgoing : Bool
     , highlight : Bool
     , x1 : Float
@@ -369,138 +494,168 @@ coloredPath c =
             else
                 g [] []
     in
-    [ g
-        (if c.highlight then
-            [ Svg.Styled.Attributes.filter "url(#dropShadowEdgeHighlight)" ]
-
-         else
-            []
-        )
-        ((if c.highlight then
-            [ path
-                (if c.isOutgoing then
-                    GraphComponents.outputPathHighlightLine_details
+    g
+        [ c.opacity |> String.fromFloat |> opacity
+        , Css.cursor Css.pointer |> List.singleton |> css
+        ]
+    <|
+        if String.isEmpty c.label then
+            [ g
+                (if c.highlight then
+                    [ Svg.Styled.Attributes.filter "url(#dropShadowEdgeHighlight)" ]
 
                  else
-                    GraphComponents.inputPathHighlightLine_details
+                    []
                 )
-                False
-            , hackyRect
-            ]
+                ((if c.highlight then
+                    [ path
+                        (if c.isOutgoing then
+                            GraphComponents.outputPathHighlightLine_details
 
-          else
-            []
-         )
-            ++ [ path
-                    (if c.isOutgoing then
-                        GraphComponents.outputPathMainLine_details
-
-                     else
-                        GraphComponents.inputPathMainLine_details
-                    )
-                    True
-               , if c.isOutgoing then
-                    Svg.path
-                        [ d <|
-                            pathD
-                                [ M ( x2 - arrowLength - 2, y2 - arrowLength * 0.7 )
-                                , l ( arrowLength, arrowLength * 0.7 )
-                                , l ( -arrowLength, arrowLength * 0.7 )
-                                , Svg.PathD.z
-                                ]
-                        , "rotate("
-                            ++ ([ if dx < 0 then
-                                    "180"
-
-                                  else
-                                    "0"
-                                , String.fromFloat x2
-                                , String.fromFloat y2
-                                ]
-                                    |> String.join ","
-                               )
-                            ++ ")"
-                            |> transform
-                        , (c.color
-                            |> Maybe.withDefault Colors.pathOut
-                            |> Css.property "stroke"
-                          )
-                            :: (c.color
-                                    |> Maybe.withDefault Colors.pathOut
-                                    |> Css.property "fill"
-                                    |> Css.important
-                               )
-                            :: GraphComponents.outputPathMainLine_details.styles
-                            |> css
-                        ]
-                        []
-
-                 else
-                    text ""
-               ]
-        )
-    , text_
-        [ translate lx ly
-            |> transform
-        , textAnchor "middle"
-        , dominantBaseline "hanging"
-        , ([ Css.px 12 |> Css.fontSize
-           , Css.property "fill" Colors.black0
-           ]
-            ++ (if c.highlight then
-                    [ Css.property "stroke" Colors.greyBlue20
-                    , Css.property "stroke-width" "6px"
-                    , Css.property "paint-order" "stroke fill"
-                    , Css.property "stroke-linejoin" "round"
+                         else
+                            GraphComponents.inputPathHighlightLine_details
+                        )
+                        False
+                    , hackyRect
                     ]
 
-                else
+                  else
                     []
-               )
-          )
-            |> css
-        ]
-        (c.label
-            |> List.indexedMap
-                (\i ->
-                    text
-                        >> List.singleton
-                        >> tspan
-                            [ Svg.Styled.Attributes.x "0"
-                            , Svg.Styled.Attributes.dy (String.fromInt i ++ "em")
-                            ]
+                 )
+                    ++ [ path
+                            (if c.isOutgoing then
+                                GraphComponents.outputPathMainLine_details
+
+                             else
+                                GraphComponents.inputPathMainLine_details
+                            )
+                            True
+                       , if c.isOutgoing then
+                            Svg.path
+                                [ d <|
+                                    pathD
+                                        [ M ( x2 - arrowLength - 2, y2 - arrowLength * 0.7 )
+                                        , l ( arrowLength, arrowLength * 0.7 )
+                                        , l ( -arrowLength, arrowLength * 0.7 )
+                                        , Svg.PathD.z
+                                        ]
+                                , "rotate("
+                                    ++ ([ if dx < 0 then
+                                            "180"
+
+                                          else
+                                            "0"
+                                        , String.fromFloat x2
+                                        , String.fromFloat y2
+                                        ]
+                                            |> String.join ","
+                                       )
+                                    ++ ")"
+                                    |> transform
+                                , (c.color
+                                    |> Maybe.withDefault Colors.pathOut
+                                    |> Css.property "stroke"
+                                  )
+                                    :: (c.color
+                                            |> Maybe.withDefault Colors.pathOut
+                                            |> Css.property "fill"
+                                            |> Css.important
+                                       )
+                                    :: GraphComponents.outputPathMainLine_details.styles
+                                    |> css
+                                ]
+                                []
+
+                         else
+                            text ""
+                       ]
                 )
-        )
-    ]
-        |> g
-            [ c.opacity |> String.fromFloat |> opacity
-            , Css.cursor Css.pointer |> List.singleton |> css
+            ]
+
+        else
+            [ text_
+                [ translate lx ly
+                    |> transform
+                , textAnchor "middle"
+                , dominantBaseline "hanging"
+                , ([ Css.px 12 |> Css.fontSize
+                   , Css.property "fill" Colors.black0
+                   ]
+                    ++ (if c.highlight then
+                            [ Css.property "stroke" Colors.greyBlue20
+                            , Css.property "stroke-width" "6px"
+                            , Css.property "paint-order" "stroke fill"
+                            , Css.property "stroke-linejoin" "round"
+                            ]
+
+                        else
+                            []
+                       )
+                  )
+                    |> css
+                ]
+                (c.label
+                    |> String.split "||"
+                    |> List.indexedMap
+                        (\i ->
+                            text
+                                >> List.singleton
+                                >> tspan
+                                    [ Svg.Styled.Attributes.x "0"
+                                    , Svg.Styled.Attributes.dy (String.fromInt i ++ "em")
+                                    ]
+                        )
+                )
             ]
 
 
-pickPathFunction : Bool -> Bool -> Maybe String -> List String -> { x : Float, y : Float } -> { x : Float, y : Float } -> Float -> Bool -> Svg Msg
-pickPathFunction isOutgoing hovered color =
-    case ( isOutgoing, hovered, color ) of
-        ( False, False, Nothing ) ->
-            Svg.lazy5 inPath
+pickPathFunction : Bool -> Bool -> Maybe String -> Bool -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+pickPathFunction isOutgoing hovered color isConversionLeg =
+    case ( isOutgoing, hovered, ( color, isConversionLeg ) ) of
+        ( False, False, ( Nothing, False ) ) ->
+            Svg.lazy6 inPath
 
-        ( False, True, Nothing ) ->
-            Svg.lazy5 inPathHovered
+        ( False, True, ( Nothing, False ) ) ->
+            Svg.lazy6 inPathHovered
 
-        ( False, False, Just c ) ->
-            Svg.lazy6 inPathColored c
+        ( False, False, ( Just c, False ) ) ->
+            Svg.lazy7 inPathColored c
 
-        ( False, True, Just c ) ->
-            Svg.lazy6 inPathColoredHovered c
+        ( False, True, ( Just c, False ) ) ->
+            Svg.lazy7 inPathColoredHovered c
 
-        ( True, False, Nothing ) ->
-            Svg.lazy5 outPath
+        ( True, False, ( Nothing, False ) ) ->
+            Svg.lazy6 outPath
 
-        ( True, True, Nothing ) ->
-            Svg.lazy5 outPathHovered
+        ( True, True, ( Nothing, False ) ) ->
+            Svg.lazy6 outPathHovered
 
-        ( True, False, Just c ) ->
-            Svg.lazy6 outPathColored c
+        ( True, False, ( Just c, False ) ) ->
+            Svg.lazy7 outPathColored c
 
-        ( True, True, Just c ) ->
-            Svg.lazy6 outPathColoredHovered c
+        ( True, True, ( Just c, False ) ) ->
+            Svg.lazy7 outPathColoredHovered c
+
+        ( False, False, ( Nothing, True ) ) ->
+            Svg.lazy6 inPathConversionLeg
+
+        ( False, True, ( Nothing, True ) ) ->
+            Svg.lazy6 inPathHoveredConversionLeg
+
+        ( False, False, ( Just c, True ) ) ->
+            Svg.lazy7 inPathColoredConversionLeg c
+
+        ( False, True, ( Just c, True ) ) ->
+            Svg.lazy7 inPathColoredHoveredConversionLeg c
+
+        ( True, False, ( Nothing, True ) ) ->
+            Svg.lazy6 outPathConversionLeg
+
+        ( True, True, ( Nothing, True ) ) ->
+            Svg.lazy6 outPathHoveredConversionLeg
+
+        ( True, False, ( Just c, True ) ) ->
+            Svg.lazy7 outPathColoredConversionLeg c
+
+        ( True, True, ( Just c, True ) ) ->
+            Svg.lazy7 outPathColoredHoveredConversionLeg c

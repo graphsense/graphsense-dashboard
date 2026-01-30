@@ -25,6 +25,7 @@ import View.Pathfinder.Address as Address
 import View.Pathfinder.AggEdge as AggEdge
 import View.Pathfinder.ConversionEdge as ConversionEdge
 import View.Pathfinder.Tx as Tx
+import View.Pathfinder.Tx.Utxo exposing (RenderLevel(..))
 
 
 addresses : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Dict Id (WebData Api.Data.Entity) -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
@@ -86,7 +87,16 @@ relations plugins vc gc annotations txs agg conversions =
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "te"
                                     , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc tx
+                                        |> Tx.edge plugins vc gc Edge tx
+                                    )
+                                )
+                            |> Keyed.node "g" []
+                       , txsRegular_
+                            |> List.map
+                                (\tx ->
+                                    ( Id.toString tx.id |> (++) "tl"
+                                    , Annotations.getAnnotation tx.id annotations
+                                        |> Tx.edge plugins vc gc Label tx
                                     )
                                 )
                             |> Keyed.node "g" []
@@ -129,7 +139,16 @@ relations plugins vc gc annotations txs agg conversions =
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "teh"
                                     , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc tx
+                                        |> Tx.edge plugins vc gc Edge tx
+                                    )
+                                )
+                            |> Keyed.node "g" []
+                       , txsHighlighted_
+                            |> List.map
+                                (\tx ->
+                                    ( Id.toString tx.id |> (++) "tlh"
+                                    , Annotations.getAnnotation tx.id annotations
+                                        |> Tx.edge plugins vc gc Label tx
                                     )
                                 )
                             |> Keyed.node "g" []

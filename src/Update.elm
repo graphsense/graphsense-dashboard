@@ -1596,12 +1596,19 @@ update plugins uc msg model =
 
                 Graph.PortDeserializedGS ( filename, data ) ->
                     let
+                        isOld =
+                            Result.Extra.isOk (Graph.deserialize data)
+
                         ( nm, neff ) =
-                            Notification.add
-                                (Notification.infoDefault "pf1_deprecation_notice"
-                                    |> Notification.map (s_title (Just "Deprecation notice"))
-                                )
-                                model.notifications
+                            if isOld then
+                                Notification.add
+                                    (Notification.infoDefault "pf1_deprecation_notice"
+                                        |> Notification.map (s_title (Just "Deprecation notice"))
+                                    )
+                                    model.notifications
+
+                            else
+                                ( model.notifications, [] )
                     in
                     pluginNewGraph plugins ( { model | notifications = nm }, List.map NotificationEffect neff )
                         |> (\( mdl, eff ) ->
