@@ -851,7 +851,7 @@ graphSvg plugins vc gc model bbox =
          , (Css.Graph.svgRoot vc ++ pointerStyle) |> css
          , UserClickedGraph model.dragging
             |> Svg.onClick
-         , id "graph"
+         , id Pathfinder.graphId
          , Svg.custom "wheel"
             (Json.Decode.map3
                 (\y mx my ->

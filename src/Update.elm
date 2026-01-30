@@ -37,6 +37,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Notification as Notification exposing (Notification)
+import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
@@ -1224,25 +1225,45 @@ update plugins uc msg model =
                             )
 
                         Pathfinder.UserClickedExportGraphAsPdf name ->
-                            let
-                                ( nm, neff ) =
-                                    Notification.add
-                                        (Notification.infoDefault "generating pdf"
-                                            -- |> Notification.map (s_title (Just "PDF Export"))
-                                            |> Notification.map (s_isEphemeral True)
-                                            |> Notification.map (s_showClose False)
-                                            |> Notification.map (s_removeDelayMs 4000.0)
-                                        )
-                                        model.notifications
-                            in
-                            ( model |> s_notifications nm
-                            , ((name ++ ".pdf")
-                                |> Ports.exportGraphPdf
+                            ( model
+                            , Ports.getBBox ( name ++ ".pdf", "svg#" ++ Pathfinder.graphId, ":not(g, defs, style, span)" )
                                 |> Pathfinder.CmdEffect
                                 |> PathfinderEffect
-                              )
-                                :: List.map NotificationEffect neff
+                                |> List.singleton
                             )
+
+                        Pathfinder.BrowserSentBBox ( handle, bbox ) ->
+                            bbox
+                                |> Maybe.andThen
+                                    (\bb ->
+                                        if String.endsWith ".pdf" handle then
+                                            let
+                                                ( nm, neff ) =
+                                                    Notification.add
+                                                        (Notification.infoDefault "generating pdf"
+                                                            -- |> Notification.map (s_title (Just "PDF Export"))
+                                                            |> Notification.map (s_isEphemeral True)
+                                                            |> Notification.map (s_showClose False)
+                                                            |> Notification.map (s_removeDelayMs 4000.0)
+                                                        )
+                                                        model.notifications
+                                            in
+                                            ( model |> s_notifications nm
+                                            , ({ filename = handle
+                                               , viewbox = addMarginPdf bb
+                                               }
+                                                |> Ports.exportGraph
+                                                |> Pathfinder.CmdEffect
+                                                |> PathfinderEffect
+                                              )
+                                                :: List.map NotificationEffect neff
+                                            )
+                                                |> Just
+
+                                        else
+                                            Nothing
+                                    )
+                                |> Maybe.withDefault (n model)
 
                         Pathfinder.UserReleasedEscape ->
                             let
@@ -1758,6 +1779,22 @@ update plugins uc msg model =
 
         DebouncePluginOutMsg outMsg ->
             updateByPluginOutMsg plugins uc [ outMsg ] ( model, [] )
+
+
+addMarginPdf : BBox -> BBox
+addMarginPdf bb =
+    let
+        relMargin =
+            0.0
+
+        absMargin =
+            20
+    in
+    { x = bb.x - absMargin - bb.width * relMargin
+    , y = bb.y - absMargin - bb.height * relMargin
+    , width = bb.width + absMargin * 2 + bb.width * relMargin * 2
+    , height = bb.height + absMargin * 2 + bb.height * relMargin * 2
+    }
 
 
 apiRateExceededError : Locale.Model -> Auth -> Notification

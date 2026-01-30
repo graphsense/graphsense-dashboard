@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -441,6 +441,9 @@ updateByMsg plugins uc msg model =
 
         UserClickedExportGraphAsPdf _ ->
             -- handled in src/Update.elm
+            n model
+
+        BrowserSentBBox _ ->
             n model
 
         UserClickedExportGraphTxsAsCSV time ->
@@ -3342,6 +3345,7 @@ fitGraph uc model =
                 |> Maybe.map
                     (\viewport ->
                         Network.getBoundingBox model.network
+                            |> bboxWithUnit
                             |> addMarginPathfinder
                             |> flip (Transform.updateByBoundingBox viewport) model.transform
                     )
@@ -4881,10 +4885,19 @@ addOrRemoveTx plugins addressId txId model =
 
 addMarginPathfinder : BBox -> BBox
 addMarginPathfinder bbox =
-    { x = bbox.x * unit - unit
-    , y = bbox.y * unit - unit * 3
-    , width = bbox.width * unit + (2 * unit)
-    , height = bbox.height * unit + (8 * unit)
+    { x = bbox.x - unit
+    , y = bbox.y - unit * 3
+    , width = bbox.width + (2 * unit)
+    , height = bbox.height + (8 * unit)
+    }
+
+
+bboxWithUnit : BBox -> BBox
+bboxWithUnit bbox =
+    { x = bbox.x * unit
+    , y = bbox.y * unit
+    , width = bbox.width * unit
+    , height = bbox.height * unit
     }
 
 

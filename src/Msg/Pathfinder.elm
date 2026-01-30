@@ -6,7 +6,7 @@ import Components.InfiniteTable as InfiniteTable
 import Hovercard
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
-import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
@@ -115,6 +115,7 @@ type Msg
     | UserClickedExportGraphAsImage String
     | UserClickedExportGraphAsPdf String
     | UserClickedExportGraphTxsAsCSV (Maybe Time.Posix)
+    | BrowserSentBBox ( String, Maybe BBox )
     | BrowserGotTagSummariesForExportGraphTxsAsCSV Time.Posix Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph

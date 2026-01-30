@@ -1,19 +1,33 @@
 import { jsPDF } from 'jspdf'
 self.onmessage = function(e) {
-  let { imgData, contentWidth, contentHeight, filename } = e.data;
+  let { imgDataUrl, width, height, filename } = e.data;
+  console.log('imgDataUrl', imgDataUrl)
       // Create PDF with dimensions matching content
-  const pdfWidth = contentWidth;
-  const pdfHeight = contentHeight;
-  const orientation = pdfWidth > pdfHeight ? 'landscape' : 'portrait';
-  
+  const aspect_ratio = width / height
+  const max_dimension = 14400
+
+  if(width > max_dimension || height > max_dimension) {
+    if(width > height) {
+        width = max_dimension
+        height = width / aspect_ratio
+    } else {
+        height = max_dimension
+        width = height * aspect_ratio
+    }
+  }
+  console.log('topdf width/height', width, height)
+  const orientation = width > height ? 'landscape' : 'portrait';
+
   const pdf = new jsPDF({
     orientation: orientation,
     unit: 'px',
-    format: [pdfWidth, pdfHeight],
-    compress: true
+    format: [width, height],
+    compress: true,
+    hotfixes: ["px_scaling"]
   });
 
-  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+  pdf.addImage(imgDataUrl, 'PNG', 0, 0, width, height, undefined, 'FAST');
+  URL.revokeObjectURL(imgDataUrl)
   
   // Save the PDF
   const pdfBlob = pdf.output('blob');
