@@ -31,8 +31,8 @@ import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (ifTrue, onClickWithStop)
 import View.Locale as Locale
-import View.Pathfinder.Tx.Path exposing (pickPathFunction)
-import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
+import View.Pathfinder.Tx.Path exposing (labelsSep, pickPathFunction)
+import View.Pathfinder.Tx.Utils exposing (signX, toPosition)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> UtxoTx -> Maybe Annotations.AnnotationItem -> Svg Msg
@@ -161,21 +161,23 @@ view _ vc _ tx utxo annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> { t | hovered : Bool, conversionType : Maybe ConversionLegType } -> UtxoTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ vc _ { hovered, conversionType } tx pos annotation =
+edge : Plugins -> View.Config -> Pathfinder.Config -> UtxoTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge _ vc _ utxo tx annotation =
     let
         assetToValue asset =
             let
                 fmt c =
                     Locale.currency c vc.locale asset
             in
-            if vc.showBothValues then
-                [ fmt Coin
-                , fmt (Fiat vc.preferredFiatCurrency)
-                ]
+            String.join labelsSep <|
+                -- join to make lazyable
+                if vc.showBothValues then
+                    [ fmt Coin
+                    , fmt (Fiat vc.preferredFiatCurrency)
+                    ]
 
-            else
-                [ fmt (View.toCurrency vc) ]
+                else
+                    [ fmt (View.toCurrency vc) ]
 
         toValues =
             Dict.toList
@@ -192,11 +194,11 @@ edge _ vc _ { hovered, conversionType } tx pos annotation =
                     )
 
         outputValues =
-            tx.outputs
+            utxo.outputs
                 |> toValues
 
         inputValues =
-            tx.inputs
+            utxo.inputs
                 |> toValues
 
         fd =
@@ -209,10 +211,10 @@ edge _ vc _ { hovered, conversionType } tx pos annotation =
             GraphComponents.txNodeUtxoTxNode_details.width / 2
 
         txPos =
-            pos |> toPosition
+            tx |> toPosition
 
         txId =
-            Id.init tx.raw.currency tx.raw.txHash
+            Id.init utxo.raw.currency utxo.raw.txHash
 
         color =
             annotation
@@ -220,20 +222,21 @@ edge _ vc _ { hovered, conversionType } tx pos annotation =
                 |> Maybe.map Color.toCssString
 
         isConversionLeg =
-            Maybe.Extra.isJust conversionType
+            Maybe.Extra.isJust tx.conversionType
 
         colorFinal =
             color
                 |> Maybe.Extra.or
-                    (case conversionType of
-                        Just InputLegConversion ->
-                            Just Colors.pathIn
+                    (tx.conversionType
+                        |> Maybe.map
+                            (\ct ->
+                                case ct of
+                                    InputLegConversion ->
+                                        Colors.pathIn
 
-                        Just OutputLegConversion ->
-                            Just Colors.pathOut
-
-                        Nothing ->
-                            Nothing
+                                    OutputLegConversion ->
+                                        Colors.pathOut
+                            )
                     )
     in
     (inputValues
@@ -248,13 +251,15 @@ edge _ vc _ { hovered, conversionType } tx pos annotation =
                 in
                 ( Id.toString address.id
                 , pickPathFunction False
-                    hovered
+                    (tx.hovered || tx.selected)
                     colorFinal
-                    values
-                    { x = fromPos.x * unit + (rad * sign), y = fromPos.y * unit }
-                    { x = txPos.x * unit - (txRad * sign), y = txPos.y * unit }
-                    (A.animate pos.clock pos.opacity)
                     isConversionLeg
+                    values
+                    (fromPos.x * unit + (rad * sign))
+                    (fromPos.y * unit)
+                    (txPos.x * unit - (txRad * sign))
+                    (txPos.y * unit)
+                    (A.animate tx.clock tx.opacity)
                 )
             )
     )
@@ -270,13 +275,15 @@ edge _ vc _ { hovered, conversionType } tx pos annotation =
                         in
                         ( Id.toString address.id
                         , pickPathFunction True
-                            hovered
+                            (tx.hovered || tx.selected)
                             colorFinal
-                            values
-                            { x = txPos.x * unit + (txRad * sign), y = txPos.y * unit }
-                            { x = toPos.x * unit - (rad * sign), y = toPos.y * unit }
-                            (A.animate address.clock address.opacity)
                             isConversionLeg
+                            values
+                            (txPos.x * unit + (txRad * sign))
+                            (txPos.y * unit)
+                            (toPos.x * unit - (rad * sign))
+                            (toPos.y * unit)
+                            (A.animate address.clock address.opacity)
                         )
                     )
            )

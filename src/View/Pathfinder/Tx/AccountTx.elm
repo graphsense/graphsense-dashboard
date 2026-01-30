@@ -30,7 +30,7 @@ import Util.Graph exposing (decodeCoords, translate)
 import Util.View exposing (ifTrue, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (pickPathFunction)
-import View.Pathfinder.Tx.Utils exposing (AnimatedPosTrait, signX, toPosition)
+import View.Pathfinder.Tx.Utils exposing (signX, toPosition)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> AccountTx -> Maybe Annotations.AnnotationItem -> Svg Msg
@@ -179,8 +179,8 @@ view _ vc _ tx accTx annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> { t | hovered : Bool, conversionType : Maybe ConversionLegType } -> AccountTx -> AnimatedPosTrait x -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
+edge : Plugins -> View.Config -> Pathfinder.Config -> AccountTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge _ _ _ account tx annotation =
     let
         radTx =
             GraphComponents.txNodeEthNodeEllipse_details.width / 2
@@ -189,14 +189,14 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
             GraphComponents.addressNodeNodeFrame_details.width / 2
 
         isConversionLeg =
-            Maybe.Extra.isJust conversionType
+            Maybe.Extra.isJust tx.conversionType
 
         colorFinal =
             annotation
                 |> Maybe.andThen .color
                 |> Maybe.map Color.toCssString
                 |> Maybe.Extra.or
-                    (conversionType
+                    (tx.conversionType
                         |> Maybe.map
                             (\ct ->
                                 case ct of
@@ -212,10 +212,10 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
         (\fro too ->
             let
                 txId =
-                    Id.init tx.raw.network tx.raw.identifier
+                    Id.init account.raw.network account.raw.identifier
 
                 txPos =
-                    aTxPos |> toPosition
+                    tx |> toPosition
 
                 fromPos =
                     fro |> toPosition
@@ -229,13 +229,15 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
                 leftLeg =
                     ( Id.toString txId
                     , pickPathFunction False
-                        hovered
+                        (tx.hovered || tx.selected)
                         colorFinal
-                        []
-                        { x = fromPos.x * unit + (radA * leftSign), y = fromPos.y * unit }
-                        { x = txPos.x * unit - (radTx * leftSign), y = txPos.y * unit }
-                        (A.animate aTxPos.clock aTxPos.opacity)
                         isConversionLeg
+                        ""
+                        (fromPos.x * unit + (radA * leftSign))
+                        (fromPos.y * unit)
+                        (txPos.x * unit - (radTx * leftSign))
+                        (txPos.y * unit)
+                        (A.animate tx.clock tx.opacity)
                     )
 
                 rightSign =
@@ -244,13 +246,15 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
                 rightLeg =
                     ( Id.toString txId
                     , pickPathFunction True
-                        hovered
+                        (tx.hovered || tx.selected)
                         colorFinal
-                        []
-                        { x = txPos.x * unit + (radTx * rightSign), y = txPos.y * unit }
-                        { x = toPos.x * unit - (radA * rightSign), y = toPos.y * unit }
-                        (A.animate aTxPos.clock aTxPos.opacity)
                         isConversionLeg
+                        ""
+                        (txPos.x * unit + (radTx * rightSign))
+                        (txPos.y * unit)
+                        (toPos.x * unit - (radA * rightSign))
+                        (toPos.y * unit)
+                        (A.animate tx.clock tx.opacity)
                     )
             in
             [ leftLeg, rightLeg ]
@@ -266,6 +270,6 @@ edge _ _ _ { hovered, conversionType } tx aTxPos annotation =
                         |> onClickWithStop
                     ]
         )
-        tx.fromAddress
-        tx.toAddress
+        account.fromAddress
+        account.toAddress
         |> Maybe.withDefault (text "")
