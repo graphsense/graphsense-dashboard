@@ -116,6 +116,7 @@ currency vc cs tokens =
                                 [ viewBox "0 0 100 100"
                                 , attribute "height" "100%"
                                 , attribute "width" "100%"
+                                , attribute "max-height" "10rem"
                                 ]
                                 [ path
                                     [ Css.currencyBackgroundPath vc |> Svg.css
