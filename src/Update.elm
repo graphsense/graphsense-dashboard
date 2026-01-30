@@ -1217,8 +1217,11 @@ update plugins uc msg model =
                     case m of
                         Pathfinder.UserClickedExportGraphAsImage name ->
                             ( model
-                            , (name ++ ".png")
-                                |> Ports.exportGraphImage
+                            , { filename = name ++ ".png"
+                              , graphId = Pathfinder.graphId
+                              , viewbox = Nothing
+                              }
+                                |> Ports.exportGraph
                                 |> Pathfinder.CmdEffect
                                 |> PathfinderEffect
                                 |> List.singleton
@@ -1250,7 +1253,8 @@ update plugins uc msg model =
                                             in
                                             ( model |> s_notifications nm
                                             , ({ filename = handle
-                                               , viewbox = addMarginPdf bb
+                                               , graphId = Pathfinder.graphId
+                                               , viewbox = addMarginPdf bb |> Just
                                                }
                                                 |> Ports.exportGraph
                                                 |> Pathfinder.CmdEffect

@@ -410,6 +410,9 @@ shallPushHistory plugins msg _ =
         BrowserSentBBox _ ->
             False
 
+        BrowserSentExportGraphResult _ ->
+            False
+
         UserClickedExportGraphTxsAsCSV _ ->
             False
 

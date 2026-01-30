@@ -446,6 +446,9 @@ updateByMsg plugins uc msg model =
         BrowserSentBBox _ ->
             n model
 
+        BrowserSentExportGraphResult _ ->
+            n model
+
         UserClickedExportGraphTxsAsCSV time ->
             case time of
                 Nothing ->

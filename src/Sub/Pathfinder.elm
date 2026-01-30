@@ -114,5 +114,6 @@ subscriptions model =
         |> Maybe.map (Tuple.second >> Hovercard.subscriptions >> Sub.map ToolbarHovercardMsg)
         |> Maybe.withDefault Sub.none
     , Ports.sendBBox BrowserSentBBox
+    , Ports.exportGraphResult BrowserSentExportGraphResult
     ]
         |> Sub.batch

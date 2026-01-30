@@ -113,75 +113,6 @@ window.onbeforeunload = function (evt) {
 app.ports.console.subscribe(console.error)
 
 
-app.ports.exportGraphImage.subscribe((filename) => {
-    let svg = document.querySelector('svg#graph')
-    let canvas = document.createElement("canvas");
-    var svgData = new XMLSerializer().serializeToString(svg)
-
-    // replace css variables with actual values, since
-    // currently css variables are not supported in canvas
-    const cssVariables = getTheme()
-    for (const [key, value] of Object.entries(cssVariables)) {
-      svgData = svgData.replaceAll("var(" + key + ")", value)
-    }
-
-    // Looks like loading external files on file rendering
-    // eg. link to our fonts does not work
-    // thus i embedded the data itself
-    // Embed fonts into svg as Base64Encoded string
-    let fontStyle = `
-      <style>
-        @font-face {
-          font-family: 'Roboto';
-          font-style: normal;
-          font-weight: 400;
-          src:url(data:application/font-woff;charset=utf-8;base64,${robotoBase64}) format('woff');
-        }
-        @font-face {
-          font-family: 'Roboto';
-          font-style: bold;
-          font-weight: 600;
-          src: url(data:application/font-woff;charset=utf-8;base64,${robotoBoldBase64}) format('woff');
-        }
-      svg {
-        font-family: Roboto;
-      }
-      </style>
-    `
-    
-    svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
-    const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
-    
-    const bgColor = cssVariables["--c-white"]
-
-    const pixelScaleFactor = 6;
-    var width = (svg.innerWidth
-    || window.innerWidth
-    || document.documentElement.clientWidth
-    || document.body.clientWidth) * pixelScaleFactor; 
-
-    var height = (svg.innerHeight 
-    || window.innerHeight
-    || document.documentElement.clientHeight
-    || document.body.clientHeight) * pixelScaleFactor;
-    console.log('width/height', width, height)
-
-    canvas.width = width; // Set the canvas width
-    canvas.height = height; // Set the canvas height
-    let img = new Image();
-
-    img.onload = function () {
-      let ctx = canvas.getContext("2d");
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height, 0, 0, canvas.width /2, canvas.height/2 );
-
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => download(filename, blob))
-    };
-    img.src = "data:image/svg+xml;base64," + svgDataBase64;
- }
-)
-
 let maxDimensions = null
 const getMaxCanvasDimensions = async () => {
   if(maxDimensions) return maxDimensions
@@ -267,12 +198,26 @@ app.ports.getBBox.subscribe(([handle, graphSelector, subSelector]) => {
   app.ports.sendBBox.send([handle, bbox])
 })
 
-app.ports.exportGraph.subscribe(async ({filename, viewbox}) => {
+app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
   console.log('export graph ', filename, viewbox)
-  let svg = document.querySelector('svg#graph')
+  let svg = document.querySelector('svg#' + graphId)
   if (!svg) {
     console.error('SVG element not found')
     return
+  }
+
+  if(!viewbox) {
+    viewbox = svg.getAttribute('viewBox')
+    // Split the viewBox string into an array of numbers
+    const viewBoxArray = viewbox.split(' ').map(Number);
+
+    // Create an object with x, y, width, and height properties
+    viewbox = {
+      x: viewBoxArray[0],
+      y: viewBoxArray[1],
+      width: viewBoxArray[2],
+      height: viewBoxArray[3]
+    }
   }
 
   const {maxArea, maxWidth, maxHeight} = await getMaxCanvasDimensions()
@@ -345,52 +290,70 @@ app.ports.exportGraph.subscribe(async ({filename, viewbox}) => {
   }
 
   img.onload = async function () {
-    try {
-      console.log('img.onload')
-      URL.revokeObjectURL(url)
-      const bgColor = cssVariables["--c-white"]
+      let imgData 
+      try {
+        console.log('img.onload')
+        URL.revokeObjectURL(url)
+        const bgColor = cssVariables["--c-white"]
 
-      // Use scale factor of 4 for high quality
-      let canvas = new OffscreenCanvas(svgWidth, svgHeight)
-      console.log('width/height', canvas.width, canvas.height)
+        // Use scale factor of 4 for high quality
+        let canvas = new OffscreenCanvas(svgWidth, svgHeight)
+        console.log('width/height', canvas.width, canvas.height)
 
-      let ctx = canvas.getContext("2d");
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
+        let ctx = canvas.getContext("2d");
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
 
-      // Use PNG for better quality, with compression
-      const imgData = await canvas.convertToBlob({type: 'image/png'})
-      console.log('toBlob', imgData)
-      const imgDataUrl = URL.createObjectURL(imgData)
-      console.log('imgDataUrl', imgDataUrl)
+        // Use PNG for better quality, with compression
+        imgData = await canvas.convertToBlob({type: 'image/png'})
+        console.log('toBlob', imgData)
+      } catch (e) {
+        const error = 'Image generation failed'
+        console.error(error, e)
+        app.ports.exportGraphResult.send({filename, error})
+        return
+      }
 
-      const worker = new Worker('/src/svg-to-pdf-worker.js', {type:'module'});
+      if(filename.endsWith(".pdf")) {
+        try {
+          const imgDataUrl = URL.createObjectURL(imgData)
+          console.log('imgDataUrl', imgDataUrl)
+          const worker = new Worker('/src/svg-to-pdf-worker.js', {type:'module'});
+          const error = 'PDF generation failed'
 
-      worker.onmessage = function(e) {
-        console.log('message', e.data)
-        if (e.data.error) {
-          app.ports.uncaughtError.send({message: e.data.error + "onmess"})
-          console.error(e.data.error, e.data.details);
-        } else {
-          FileSaver.saveAs(e.data.pdfBlob, e.data.filename);
+          worker.onmessage = function(e) {
+            console.log('message', e.data)
+            if (e.data.error) {
+              app.ports.exportGraphResult.send({filename, error: e.data.error})
+              console.error(e.data.error, e.data.details);
+            } else {
+              app.ports.exportGraphResult.send({filename, error: null})
+              FileSaver.saveAs(e.data.pdfBlob, e.data.filename)
+            }
+            worker.terminate()
+          };
+
+          worker.onerror = function(e) {
+            app.ports.exportGraphResult.send({filename, error})
+            console.error('Worker error:', e);
+          };
+
+          worker.postMessage({
+            imgDataUrl,
+            width: svgWidth,
+            height: svgHeight,
+            filename
+          });
+        } catch (e) {
+          console.error(error, e)
+          app.ports.exportGraphResult.send({filename, error})
+        } finally {
+          URL.revokeObjectURL(imageDataUrl)
         }
-        worker.terminate()
-      };
-
-      worker.onerror = function(e) {
-        app.ports.uncaughtError.send({message: e + "onerr"})
-        console.error('Worker error:', e);
-      };
-
-      worker.postMessage({
-        imgDataUrl,
-        width: svgWidth,
-        height: svgHeight,
-        filename
-      });
-    } catch (e) {
-      console.error('PDF generation failed', e)
+    } else if (filename.endsWith(".png")) {
+      FileSaver.saveAs(imgData, filename)
+      app.ports.exportGraphResult.send({filename, error: null})
     }
   };
   img.src = url 
