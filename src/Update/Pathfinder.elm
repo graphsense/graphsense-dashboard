@@ -435,16 +435,54 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
-        UserClickedExportGraphAsImage _ ->
-            -- handled in src/Update.elm
-            n model
+        UserClickedExportGraphAsImage name ->
+            ( model
+            , { filename = name ++ ".png"
+              , graphId = graphId
+              , viewbox = Nothing
+              }
+                |> Ports.exportGraph
+                |> Pathfinder.CmdEffect
+                |> List.singleton
+            )
 
-        UserClickedExportGraphAsPdf _ ->
-            -- handled in src/Update.elm
-            n model
+        UserClickedExportGraphAsPdf name ->
+            ( model
+            , Ports.getBBox ( name ++ ".pdf", "svg#" ++ graphId, ":not(g, defs, style, span)" )
+                |> Pathfinder.CmdEffect
+                |> List.singleton
+            )
 
-        BrowserSentBBox _ ->
-            n model
+        BrowserSentBBox ( handle, bbox ) ->
+            bbox
+                |> Maybe.andThen
+                    (\bb ->
+                        if String.endsWith ".pdf" handle then
+                            let
+                                neff =
+                                    Notification.infoDefault "generating pdf"
+                                        -- |> Notification.map (s_title (Just "PDF Export"))
+                                        |> Notification.map (s_isEphemeral True)
+                                        |> Notification.map (s_showClose False)
+                                        |> Notification.map (s_removeDelayMs 4000.0)
+                                        |> ShowNotificationEffect
+                            in
+                            ( model
+                            , [ { filename = handle
+                                , graphId = graphId
+                                , viewbox = addMarginPdf bb |> Just
+                                }
+                                    |> Ports.exportGraph
+                                    |> Pathfinder.CmdEffect
+                              , neff
+                              ]
+                            )
+                                |> Just
+
+                        else
+                            Nothing
+                    )
+                |> Maybe.withDefault (n model)
 
         BrowserSentExportGraphResult _ ->
             n model
@@ -4892,6 +4930,22 @@ addMarginPathfinder bbox =
     , y = bbox.y - unit * 3
     , width = bbox.width + (2 * unit)
     , height = bbox.height + (8 * unit)
+    }
+
+
+addMarginPdf : BBox -> BBox
+addMarginPdf bb =
+    let
+        relMargin =
+            0.0
+
+        absMargin =
+            20
+    in
+    { x = bb.x - absMargin - bb.width * relMargin
+    , y = bb.y - absMargin - bb.height * relMargin
+    , width = bb.width + absMargin * 2 + bb.width * relMargin * 2
+    , height = bb.height + absMargin * 2 + bb.height * relMargin * 2
     }
 
 

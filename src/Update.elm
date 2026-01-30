@@ -37,7 +37,6 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Notification as Notification exposing (Notification)
-import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
@@ -1215,60 +1214,6 @@ update plugins uc msg model =
 
                 ( newModel, newEffects ) =
                     case m of
-                        Pathfinder.UserClickedExportGraphAsImage name ->
-                            ( model
-                            , { filename = name ++ ".png"
-                              , graphId = Pathfinder.graphId
-                              , viewbox = Nothing
-                              }
-                                |> Ports.exportGraph
-                                |> Pathfinder.CmdEffect
-                                |> PathfinderEffect
-                                |> List.singleton
-                            )
-
-                        Pathfinder.UserClickedExportGraphAsPdf name ->
-                            ( model
-                            , Ports.getBBox ( name ++ ".pdf", "svg#" ++ Pathfinder.graphId, ":not(g, defs, style, span)" )
-                                |> Pathfinder.CmdEffect
-                                |> PathfinderEffect
-                                |> List.singleton
-                            )
-
-                        Pathfinder.BrowserSentBBox ( handle, bbox ) ->
-                            bbox
-                                |> Maybe.andThen
-                                    (\bb ->
-                                        if String.endsWith ".pdf" handle then
-                                            let
-                                                ( nm, neff ) =
-                                                    Notification.add
-                                                        (Notification.infoDefault "generating pdf"
-                                                            -- |> Notification.map (s_title (Just "PDF Export"))
-                                                            |> Notification.map (s_isEphemeral True)
-                                                            |> Notification.map (s_showClose False)
-                                                            |> Notification.map (s_removeDelayMs 4000.0)
-                                                        )
-                                                        model.notifications
-                                            in
-                                            ( model |> s_notifications nm
-                                            , ({ filename = handle
-                                               , graphId = Pathfinder.graphId
-                                               , viewbox = addMarginPdf bb |> Just
-                                               }
-                                                |> Ports.exportGraph
-                                                |> Pathfinder.CmdEffect
-                                                |> PathfinderEffect
-                                              )
-                                                :: List.map NotificationEffect neff
-                                            )
-                                                |> Just
-
-                                        else
-                                            Nothing
-                                    )
-                                |> Maybe.withDefault (n model)
-
                         Pathfinder.UserReleasedEscape ->
                             let
                                 ( pf, pfeff ) =
@@ -1783,22 +1728,6 @@ update plugins uc msg model =
 
         DebouncePluginOutMsg outMsg ->
             updateByPluginOutMsg plugins uc [ outMsg ] ( model, [] )
-
-
-addMarginPdf : BBox -> BBox
-addMarginPdf bb =
-    let
-        relMargin =
-            0.0
-
-        absMargin =
-            20
-    in
-    { x = bb.x - absMargin - bb.width * relMargin
-    , y = bb.y - absMargin - bb.height * relMargin
-    , width = bb.width + absMargin * 2 + bb.width * relMargin * 2
-    , height = bb.height + absMargin * 2 + bb.height * relMargin * 2
-    }
 
 
 apiRateExceededError : Locale.Model -> Auth -> Notification
