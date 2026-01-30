@@ -1,6 +1,7 @@
-port module Ports exposing (console, deserialize, deserialized, exportGraphImage, exportGraphPdf, exportGraphics, newTab, pluginsIn, pluginsOut, saveToLocalStorage, serialize, setDirty, toClipboard, uncaughtError)
+port module Ports exposing (console, deserialize, deserialized, exportGraph, exportGraphResult, exportGraphics, getBBox, newTab, pluginsIn, pluginsOut, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError)
 
 import Json.Encode exposing (Value)
+import Model.Graph.Coords as Coords
 
 
 port console : String -> Cmd msg
@@ -9,10 +10,10 @@ port console : String -> Cmd msg
 port exportGraphics : String -> Cmd msg
 
 
-port exportGraphImage : String -> Cmd msg
+port exportGraph : { filename : String, graphId : String, viewbox : Maybe Coords.BBox } -> Cmd msg
 
 
-port exportGraphPdf : String -> Cmd msg
+port exportGraphResult : ({ filename : String, error : Maybe String } -> msg) -> Sub msg
 
 
 port deserialize : () -> Cmd msg
@@ -45,5 +46,7 @@ port saveToLocalStorage : Value -> Cmd msg
 port uncaughtError : (Value -> msg) -> Sub msg
 
 
+port getBBox : ( String, String, String ) -> Cmd msg
 
---port loadFromLocalStorage : String -> Cmd msg
+
+port sendBBox : (( String, Maybe Coords.BBox ) -> msg) -> Sub msg

@@ -492,7 +492,11 @@ open in new tab: open in new tab
 align vertically: Align vertically
 align horizontally: Align horizontally
 export pdf: Export PDF
-generating pdf: Generating PDF of Graph...
+generating pdf: Generating PDF of graph...
+generating image: Generating image of graph...
+generating pdf success: PDF successfully generated.
+generating image success: Image successfully generated.
+check download folder: Please check your download folder
 show both on tx: show both on tx
 time: time
 assets: assets

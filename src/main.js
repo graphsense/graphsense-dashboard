@@ -3,7 +3,6 @@ import FileSaver from 'file-saver'
 import { pack, unpack } from 'lzwcompress'
 import { Base64 } from 'js-base64'
 import { fileDialog } from 'file-select-dialog'
-import { jsPDF } from 'jspdf'
 import plugins from '../generated/plugins/index.js'
 import robotoBase64 from "../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64"
 import robotoBoldBase64 from "../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64"
@@ -114,203 +113,237 @@ window.onbeforeunload = function (evt) {
 app.ports.console.subscribe(console.error)
 
 
-app.ports.exportGraphImage.subscribe((filename) => {
-    let svg = document.querySelector('svg#graph')
-    let canvas = document.createElement("canvas");
-    var svgData = new XMLSerializer().serializeToString(svg)
-
-    // replace css variables with actual values, since
-    // currently css variables are not supported in canvas
-    const cssVariables = getTheme()
-    for (const [key, value] of Object.entries(cssVariables)) {
-      svgData = svgData.replaceAll("var(" + key + ")", value)
-    }
-
-    // Looks like loading external files on file rendering
-    // eg. link to our fonts does not work
-    // thus i embedded the data itself
-    // Embed fonts into svg as Base64Encoded string
-    let fontStyle = `
-      <style>
-        @font-face {
-          font-family: 'Roboto';
-          font-style: normal;
-          font-weight: 400;
-          src:url(data:application/font-woff;charset=utf-8;base64,${robotoBase64}) format('woff');
-        }
-        @font-face {
-          font-family: 'Roboto';
-          font-style: bold;
-          font-weight: 600;
-          src: url(data:application/font-woff;charset=utf-8;base64,${robotoBoldBase64}) format('woff');
-        }
-      svg {
-        font-family: Roboto;
+let maxDimensions = null
+const getMaxCanvasDimensions = async () => {
+  if(maxDimensions) return maxDimensions
+  let options = {
+    max: 32767,
+    min: 1,
+    step: 1024,
+    useWorker: true
+  }
+  const canvasSize = await import('canvas-size')
+  return await Promise.all([
+      canvasSize.default.maxArea(options),
+      canvasSize.default.maxWidth(options),
+      canvasSize.default.maxHeight(options)
+    ]).then(([maxLength, maxWidth, maxHeight]) => {
+      maxDimensions = {
+        maxArea : maxLength.width * maxLength.height,
+        maxWidth: maxWidth.width,
+        maxHeight: maxHeight.height
       }
-      </style>
-    `
-    
-    svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
-    const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
-    
-    const bgColor = cssVariables["--c-white"]
+      return maxDimensions
+    })
+}
 
-    const pixelScaleFactor = 6;
-    var width = (svg.innerWidth
-    || window.innerWidth
-    || document.documentElement.clientWidth
-    || document.body.clientWidth) * pixelScaleFactor; 
-
-    var height = (svg.innerHeight 
-    || window.innerHeight
-    || document.documentElement.clientHeight
-    || document.body.clientHeight) * pixelScaleFactor;
-
-    canvas.width = width; // Set the canvas width
-    canvas.height = height; // Set the canvas height
-    let img = new Image();
-
-    img.onload = function () {
-      let ctx = canvas.getContext("2d");
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height, 0, 0, canvas.width /2, canvas.height/2 );
-
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => download(filename, blob))
-    };
-    img.src = "data:image/svg+xml;base64," + svgDataBase64;
- }
-)
-
-app.ports.exportGraphPdf.subscribe((filename) => {
-    let svg = document.querySelector('svg#graph')
-    if (!svg) {
-      console.error('SVG element not found')
-      return
-    }
-    
+const getGraphBBox = (svg, selector) => {
     // Get the bounding box of the entire graph content by checking all elements
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-    
     // Iterate through all rendered elements to find true bounds
-    const allElements = svg.querySelectorAll('circle, rect, ellipse, path, text, g, polygon, polyline, line')
+    const allElements = svg.querySelectorAll(selector)
     allElements.forEach(el => {
       try {
-        const elBBox = el.getBBox()
-        if (elBBox.width > 0 || elBBox.height > 0) {
-          minX = Math.min(minX, elBBox.x)
-          minY = Math.min(minY, elBBox.y)
-          maxX = Math.max(maxX, elBBox.x + elBBox.width)
-          maxY = Math.max(maxY, elBBox.y + elBBox.height)
-        }
+        // Get the transformation matrix of the element
+        const matrix = element.transform.baseVal.consolidate();
+
+        // Apply the transformation to the bounding box
+        const points = [
+            { x: bbox.x, y: bbox.y },
+            { x: bbox.x + bbox.width, y: bbox.y },
+            { x: bbox.x, y: bbox.y + bbox.height },
+            { x: bbox.x + bbox.width, y: bbox.y + bbox.height }
+        ];
+
+        const transformedPoints = points.map(point => {
+            const x = matrix.a * point.x + matrix.c * point.y + matrix.e;
+            const y = matrix.b * point.x + matrix.d * point.y + matrix.f;
+            return { x, y };
+        });
+
+        // Update min and max coordinates
+        transformedPoints.forEach(point => {
+            minX = Math.min(minX, point.x);
+            minY = Math.min(minY, point.y);
+            maxX = Math.max(maxX, point.x);
+            maxY = Math.max(maxY, point.y);
+        });
       } catch (e) {
         // Skip elements that can't compute bbox
       }
     })
     
-    // Fallback if no elements found
-    if (!isFinite(minX)) {
-      const fallbackBBox = svg.getBBox()
-      minX = fallbackBBox.x
-      minY = fallbackBBox.y
-      maxX = fallbackBBox.x + fallbackBBox.width
-      maxY = fallbackBBox.y + fallbackBBox.height
-    }
-    
-    // Add generous padding around the content
-    const padding = 100
-    const contentWidth = (maxX - minX) + padding * 2
-    const contentHeight = (maxY - minY) + padding * 2
-    
-    let canvas = document.createElement("canvas");
-    var svgData = new XMLSerializer().serializeToString(svg)
-
-    // Replace the viewBox to show entire content with padding
-    const newViewBox = `${minX - padding} ${minY - padding} ${contentWidth} ${contentHeight}`
-    svgData = svgData.replace(/viewBox="[^"]*"/, `viewBox="${newViewBox}"`)
-    
-    // Also update width/height attributes to match aspect ratio
-    svgData = svgData.replace(/(<svg[^>]*)\swidth="[^"]*"/, `$1 width="${contentWidth}"`)
-    svgData = svgData.replace(/(<svg[^>]*)\sheight="[^"]*"/, `$1 height="${contentHeight}"`)
-
-    // replace css variables with actual values
-    const cssVariables = getTheme()
-    for (const [key, value] of Object.entries(cssVariables)) {
-      svgData = svgData.replaceAll("var(" + key + ")", value)
-    }
-
-    // Embed fonts into svg as Base64Encoded string
-    let fontStyle = `
-      <style>
-        @font-face {
-          font-family: 'Roboto';
-          font-style: normal;
-          font-weight: 400;
-          src:url(data:application/font-woff;charset=utf-8;base64,${robotoBase64}) format('woff');
-        }
-        @font-face {
-          font-family: 'Roboto';
-          font-style: bold;
-          font-weight: 600;
-          src: url(data:application/font-woff;charset=utf-8;base64,${robotoBoldBase64}) format('woff');
-        }
-      svg {
-        font-family: Roboto;
+    if (isFinite(minX)) {
+      return {
+        x : minX,
+        y : minY,
+        width : maxX - minX,
+        height : maxY - minY
       }
-      </style>
-    `
-    
-    svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
-    const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
-    
-    const bgColor = cssVariables["--c-white"]
-
-    // Use scale factor of 4 for high quality
-    const pixelScaleFactor = 4;
-    const width = contentWidth * pixelScaleFactor
-    const height = contentHeight * pixelScaleFactor
-
-    canvas.width = width;
-    canvas.height = height;
-    let img = new Image();
-
-    img.onerror = function(e) {
-      console.error('Failed to load SVG image', e)
     }
+    // Fallback if no elements found
+    return svg.getBBox()
+}
 
-    img.onload = function () {
+app.ports.getBBox.subscribe(([handle, graphSelector, subSelector]) => {
+  const graph = document.querySelector(graphSelector)
+  if(!graph) app.ports.sendBBox.send([handle, null])
+  const bbox = getGraphBBox(graph, subSelector)
+  app.ports.sendBBox.send([handle, bbox])
+})
+
+app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
+  let svg = document.querySelector('svg#' + graphId)
+  if (!svg) {
+    console.error('SVG element not found')
+    return
+  }
+
+  if(!viewbox) {
+    viewbox = svg.getAttribute('viewBox')
+    // Split the viewBox string into an array of numbers
+    const viewBoxArray = viewbox.split(' ').map(Number);
+
+    // Create an object with x, y, width, and height properties
+    viewbox = {
+      x: viewBoxArray[0],
+      y: viewBoxArray[1],
+      width: viewBoxArray[2],
+      height: viewBoxArray[3]
+    }
+  }
+
+  const {maxArea, maxWidth, maxHeight} = await getMaxCanvasDimensions()
+  const aspect_ratio = viewbox.width / viewbox.height
+
+  const pixelScaleFactor = 4;
+  let svgWidth = viewbox.width * pixelScaleFactor
+  let svgHeight = viewbox.height * pixelScaleFactor
+
+  if(svgWidth > maxWidth || svgHeight > maxHeight) {
+    if(svgWidth > svgHeight) {
+        svgWidth = maxWidth
+        svgHeight = svgWidth / aspect_ratio
+    } else {
+        svgHeight = maxHeight
+        svgWidth = svgHeight * aspect_ratio
+    }
+  }
+  if(svgWidth * svgHeight > maxArea) {
+    svgWidth = Math.sqrt(maxArea * aspect_ratio)
+    svgHeight = Math.sqrt(maxArea / aspect_ratio)
+  }
+  // Replace the viewBox to show entire content with padding
+  const newViewBox = `${viewbox.x} ${viewbox.y} ${viewbox.width} ${viewbox.height}`
+  var svgData = new XMLSerializer().serializeToString(svg)
+    .replace(/viewBox="[^"]*"/, `viewBox="${newViewBox}"`)
+    .replace(/(<svg[^>]*)\swidth="[^"]*"/, `$1 width="${svgWidth}"`)
+    .replace(/(<svg[^>]*)\sheight="[^"]*"/, `$1 height="${svgHeight}"`)
+
+  // replace css variables with actual values
+  const cssVariables = getTheme()
+  for (const [key, value] of Object.entries(cssVariables)) {
+    svgData = svgData.replaceAll("var(" + key + ")", value)
+  }
+
+  // Embed fonts into svg as Base64Encoded string
+  let fontStyle = `
+    <style>
+      @font-face {
+        font-family: 'Roboto';
+        font-style: normal;
+        font-weight: 400;
+        src:url(data:application/font-woff;charset=utf-8;base64,${robotoBase64}) format('woff');
+      }
+      @font-face {
+        font-family: 'Roboto';
+        font-style: bold;
+        font-weight: 600;
+        src: url(data:application/font-woff;charset=utf-8;base64,${robotoBoldBase64}) format('woff');
+      }
+    svg {
+      font-family: Roboto;
+    }
+    </style>
+  `
+  
+  svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
+  const blobSvgData = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blobSvgData);
+  
+  let img = new Image();
+
+  img.onerror = function(e) {
+    app.ports.uncaughtError.send({message: e + "img"})
+    console.error('Failed to load SVG image', e)
+  }
+
+  img.onload = async function () {
+      let imgData 
       try {
+        URL.revokeObjectURL(url)
+        const bgColor = cssVariables["--c-white"]
+
+        // Use scale factor of 4 for high quality
+        let canvas = new OffscreenCanvas(svgWidth, svgHeight)
+
         let ctx = canvas.getContext("2d");
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Create PDF with dimensions matching content
-        const pdfWidth = contentWidth;
-        const pdfHeight = contentHeight;
-        const orientation = pdfWidth > pdfHeight ? 'landscape' : 'portrait';
-        
-        const pdf = new jsPDF({
-          orientation: orientation,
-          unit: 'px',
-          format: [pdfWidth, pdfHeight],
-          compress: true
-        });
+        ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
 
         // Use PNG for better quality, with compression
-        const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-        
-        // Save the PDF
-        const pdfBlob = pdf.output('blob');
-        FileSaver.saveAs(pdfBlob, filename);
+        imgData = await canvas.convertToBlob({type: 'image/png'})
       } catch (e) {
-        console.error('PDF generation failed', e)
+        const error = 'Image generation failed'
+        console.error(error, e)
+        app.ports.exportGraphResult.send({filename, error})
+        return
       }
-    };
-    img.src = "data:image/svg+xml;base64," + svgDataBase64;
- }
-)
+
+      if(filename.endsWith(".pdf")) {
+        let imgDataUrl
+        try {
+          imgDataUrl = URL.createObjectURL(imgData)
+          const worker = new Worker('/src/svg-to-pdf-worker.js', {type:'module'});
+          const error = 'PDF generation failed'
+
+          worker.onmessage = function(e) {
+            if (e.data.error) {
+              app.ports.exportGraphResult.send({filename, error: e.data.error})
+              console.error(e.data.error, e.data.details);
+            } else {
+              app.ports.exportGraphResult.send({filename, error: null})
+              FileSaver.saveAs(e.data.pdfBlob, e.data.filename)
+            }
+            worker.terminate()
+            URL.revokeObjectURL(imgDataUrl)
+          };
+
+          worker.onerror = function(e) {
+            app.ports.exportGraphResult.send({filename, error})
+            URL.revokeObjectURL(imgDataUrl)
+            console.error('Worker error:', e);
+          };
+
+          worker.postMessage({
+            imgDataUrl,
+            width: svgWidth,
+            height: svgHeight,
+            filename
+          });
+        } catch (e) {
+          console.error(error, e)
+          app.ports.exportGraphResult.send({filename, error})
+          URL.revokeObjectURL(imgDataUrl)
+        }
+    } else if (filename.endsWith(".png")) {
+      FileSaver.saveAs(imgData, filename)
+      app.ports.exportGraphResult.send({filename, error: null})
+    }
+  };
+  img.src = url 
+})
 
 app.ports.exportGraphics.subscribe((filename) => {
   const classMap = new Map()
@@ -487,7 +520,7 @@ app.ports.saveToLocalStorage.subscribe(data => {
 });
 
 window.onerror = (message) => {
-  app.ports.uncaughtError.send({message})
+  app.ports.uncaughtError.send({message: message + 'win'})
   console.error(message)
   return true
 }

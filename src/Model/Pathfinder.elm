@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, unit)
+module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, graphId, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Components.ExportCSV as ExportCSV
@@ -60,6 +60,8 @@ type alias Model =
     , checkingNeighbors : CheckingNeighbors.Model
     , eventualMessages : EventualMessages NetworkConditions Network Msg
     , exportCSV : ExportCSV.Model
+    , exportPNG : Bool
+    , exportPDF : Bool
     }
 
 
@@ -130,3 +132,8 @@ getSortedConceptsByWeight =
         >> List.sortBy (Tuple.second >> .weighted)
         >> List.map Tuple.first
         >> List.reverse
+
+
+graphId : String
+graphId =
+    "graph"

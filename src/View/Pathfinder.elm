@@ -475,6 +475,8 @@ topCenterPanel plugins pluginStates vc gc model =
                             True
                 , pointerTool = model.pointerTool
                 , exportName = model.name
+                , exportPNG = model.exportPNG
+                , exportPDF = model.exportPDF
                 }
             ]
         , div
@@ -851,7 +853,7 @@ graphSvg plugins vc gc model bbox =
          , (Css.Graph.svgRoot vc ++ pointerStyle) |> css
          , UserClickedGraph model.dragging
             |> Svg.onClick
-         , id "graph"
+         , id Pathfinder.graphId
          , Svg.custom "wheel"
             (Json.Decode.map3
                 (\y mx my ->

@@ -1214,36 +1214,6 @@ update plugins uc msg model =
 
                 ( newModel, newEffects ) =
                     case m of
-                        Pathfinder.UserClickedExportGraphAsImage name ->
-                            ( model
-                            , (name ++ ".png")
-                                |> Ports.exportGraphImage
-                                |> Pathfinder.CmdEffect
-                                |> PathfinderEffect
-                                |> List.singleton
-                            )
-
-                        Pathfinder.UserClickedExportGraphAsPdf name ->
-                            let
-                                ( nm, neff ) =
-                                    Notification.add
-                                        (Notification.infoDefault "generating pdf"
-                                            -- |> Notification.map (s_title (Just "PDF Export"))
-                                            |> Notification.map (s_isEphemeral True)
-                                            |> Notification.map (s_showClose False)
-                                            |> Notification.map (s_removeDelayMs 4000.0)
-                                        )
-                                        model.notifications
-                            in
-                            ( model |> s_notifications nm
-                            , ((name ++ ".pdf")
-                                |> Ports.exportGraphPdf
-                                |> Pathfinder.CmdEffect
-                                |> PathfinderEffect
-                              )
-                                :: List.map NotificationEffect neff
-                            )
-
                         Pathfinder.UserReleasedEscape ->
                             let
                                 ( pf, pfeff ) =

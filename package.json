@@ -27,6 +27,7 @@
     "yaml": "^2.3.1"
   },
   "dependencies": {
+    "canvas-size": "^2.0.0",
     "elm-tooling": "^1.13.1",
     "file-saver": "^2.0.5",
     "file-select-dialog": "^1.5.4",

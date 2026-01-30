@@ -50,6 +50,8 @@ init us =
       , checkingNeighbors = CheckingNeighbors.init
       , eventualMessages = EventualMessages.init Network.isConditionMet EventualMessagesHeartBeat
       , exportCSV = ExportCSV.init
+      , exportPNG = False
+      , exportPDF = False
       }
     , Cmd.none
     )

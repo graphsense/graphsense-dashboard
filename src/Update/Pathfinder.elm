@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -435,13 +435,82 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
-        UserClickedExportGraphAsImage _ ->
-            -- handled in src/Update.elm
-            n model
+        UserClickedExportGraphAsImage name ->
+            ( model |> s_exportPNG True
+            , [ { filename = name ++ ".png"
+                , graphId = graphId
+                , viewbox = Nothing
+                }
+                    |> Ports.exportGraph
+                    |> Pathfinder.CmdEffect
+              , Notification.infoDefault "generating image"
+                    -- |> Notification.map (s_title (Just "PDF Export"))
+                    |> Notification.map (s_isEphemeral True)
+                    |> Notification.map (s_showClose False)
+                    |> Notification.map (s_removeDelayMs 4000.0)
+                    |> ShowNotificationEffect
+              ]
+            )
 
-        UserClickedExportGraphAsPdf _ ->
-            -- handled in src/Update.elm
-            n model
+        UserClickedExportGraphAsPdf name ->
+            ( model |> s_exportPDF True
+            , Ports.getBBox ( name ++ ".pdf", "svg#" ++ graphId, ":not(g, defs, style, span)" )
+                |> Pathfinder.CmdEffect
+                |> List.singleton
+            )
+
+        BrowserSentBBox ( handle, bbox ) ->
+            bbox
+                |> Maybe.andThen
+                    (\bb ->
+                        if String.endsWith ".pdf" handle then
+                            ( model
+                            , [ { filename = handle
+                                , graphId = graphId
+                                , viewbox = addMarginPdf bb |> Just
+                                }
+                                    |> Ports.exportGraph
+                                    |> Pathfinder.CmdEffect
+                              , Notification.infoDefault "generating pdf"
+                                    -- |> Notification.map (s_title (Just "PDF Export"))
+                                    |> Notification.map (s_isEphemeral True)
+                                    |> Notification.map (s_showClose False)
+                                    |> Notification.map (s_removeDelayMs 4000.0)
+                                    |> ShowNotificationEffect
+                              ]
+                            )
+                                |> Just
+
+                        else
+                            Nothing
+                    )
+                |> Maybe.withDefault (n model)
+
+        BrowserSentExportGraphResult { filename, error } ->
+            let
+                ( set, type_ ) =
+                    if String.endsWith ".pdf" filename then
+                        ( s_exportPDF, "pdf" )
+
+                    else
+                        ( s_exportPNG, "image" )
+            in
+            ( model |> set False
+            , error
+                |> Maybe.map
+                    (Notification.errorDefault
+                        >> Notification.map (s_title (Just "An error occurred"))
+                    )
+                |> Maybe.withDefault
+                    (Notification.successDefault "check download folder"
+                        |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
+                        |> Notification.map (s_isEphemeral True)
+                        |> Notification.map (s_showClose False)
+                        |> Notification.map (s_removeDelayMs 4000.0)
+                    )
+                |> ShowNotificationEffect
+                |> List.singleton
+            )
 
         UserClickedExportGraphTxsAsCSV time ->
             case time of
@@ -3342,6 +3411,7 @@ fitGraph uc model =
                 |> Maybe.map
                     (\viewport ->
                         Network.getBoundingBox model.network
+                            |> bboxWithUnit
                             |> addMarginPathfinder
                             |> flip (Transform.updateByBoundingBox viewport) model.transform
                     )
@@ -4881,10 +4951,35 @@ addOrRemoveTx plugins addressId txId model =
 
 addMarginPathfinder : BBox -> BBox
 addMarginPathfinder bbox =
-    { x = bbox.x * unit - unit
-    , y = bbox.y * unit - unit * 3
-    , width = bbox.width * unit + (2 * unit)
-    , height = bbox.height * unit + (8 * unit)
+    { x = bbox.x - unit
+    , y = bbox.y - unit * 3
+    , width = bbox.width + (2 * unit)
+    , height = bbox.height + (8 * unit)
+    }
+
+
+addMarginPdf : BBox -> BBox
+addMarginPdf bb =
+    let
+        relMargin =
+            0.0
+
+        absMargin =
+            20
+    in
+    { x = bb.x - absMargin - bb.width * relMargin
+    , y = bb.y - absMargin - bb.height * relMargin
+    , width = bb.width + absMargin * 2 + bb.width * relMargin * 2
+    , height = bb.height + absMargin * 2 + bb.height * relMargin * 2
+    }
+
+
+bboxWithUnit : BBox -> BBox
+bboxWithUnit bbox =
+    { x = bbox.x * unit
+    , y = bbox.y * unit
+    , width = bbox.width * unit
+    , height = bbox.height * unit
     }
 
 
