@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [26.01.0] - unreleased
+## [26.01.0] - 2026-01-30
 
 ### Added
 - Display option to show both fiat and crypto value on graph
