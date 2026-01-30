@@ -112,8 +112,8 @@ type Msg
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg
-    | UserClickedExportGraphAsImage String
-    | UserClickedExportGraphAsPdf String
+    | UserClickedExportGraphAsImage (Maybe Time.Posix)
+    | UserClickedExportGraphAsPdf (Maybe Time.Posix)
     | UserClickedExportGraphTxsAsCSV (Maybe Time.Posix)
     | BrowserSentBBox ( String, Maybe BBox )
     | BrowserSentExportGraphResult { filename : String, error : Maybe String }

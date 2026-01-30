@@ -107,7 +107,7 @@ import Util.EventualMessages as EventualMessages
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
-import View.Locale as Locale
+import View.Locale as Locale exposing (makeTimestampFilename)
 import Workflow
 
 
@@ -435,29 +435,59 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
-        UserClickedExportGraphAsImage name ->
-            ( model |> s_exportPNG True
-            , [ { filename = name ++ ".png"
-                , graphId = graphId
-                , viewbox = Nothing
-                }
-                    |> Ports.exportGraph
-                    |> Pathfinder.CmdEffect
-              , Notification.infoDefault "generating image"
-                    -- |> Notification.map (s_title (Just "PDF Export"))
-                    |> Notification.map (s_isEphemeral True)
-                    |> Notification.map (s_showClose False)
-                    |> Notification.map (s_removeDelayMs 4000.0)
-                    |> ShowNotificationEffect
-              ]
-            )
+        UserClickedExportGraphAsImage time ->
+            case time of
+                Nothing ->
+                    ( model
+                    , Time.now
+                        |> Task.perform (Just >> UserClickedExportGraphAsImage)
+                        |> CmdEffect
+                        |> List.singleton
+                    )
 
-        UserClickedExportGraphAsPdf name ->
-            ( model |> s_exportPDF True
-            , Ports.getBBox ( name ++ ".pdf", "svg#" ++ graphId, ":not(g, defs, style, span)" )
-                |> Pathfinder.CmdEffect
-                |> List.singleton
-            )
+                Just t ->
+                    let
+                        filename =
+                            makeTimestampFilename uc.locale t
+                                |> flip (++) (" " ++ model.name ++ ".png")
+                    in
+                    ( model |> s_exportPNG True
+                    , [ { filename = filename
+                        , graphId = graphId
+                        , viewbox = Nothing
+                        }
+                            |> Ports.exportGraph
+                            |> Pathfinder.CmdEffect
+                      , Notification.infoDefault "generating image"
+                            -- |> Notification.map (s_title (Just "PDF Export"))
+                            |> Notification.map (s_isEphemeral True)
+                            |> Notification.map (s_showClose False)
+                            |> Notification.map (s_removeDelayMs 4000.0)
+                            |> ShowNotificationEffect
+                      ]
+                    )
+
+        UserClickedExportGraphAsPdf time ->
+            case time of
+                Nothing ->
+                    ( model
+                    , Time.now
+                        |> Task.perform (Just >> UserClickedExportGraphAsPdf)
+                        |> CmdEffect
+                        |> List.singleton
+                    )
+
+                Just t ->
+                    let
+                        filename =
+                            makeTimestampFilename uc.locale t
+                                |> flip (++) (" " ++ model.name ++ ".pdf")
+                    in
+                    ( model |> s_exportPDF True
+                    , Ports.getBBox ( filename, "svg#" ++ graphId, ":not(g, defs, style, span)" )
+                        |> Pathfinder.CmdEffect
+                        |> List.singleton
+                    )
 
         BrowserSentBBox ( handle, bbox ) ->
             bbox
