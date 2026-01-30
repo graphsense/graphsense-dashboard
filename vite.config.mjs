@@ -53,6 +53,7 @@ export default defineConfig({
     port: 3000,
     hmr : { overlay : true }
   },
+  worker: { format: 'es' },
   publicDir: "generated/public",
   build: { 
     manifest: true,

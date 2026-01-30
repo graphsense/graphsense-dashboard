@@ -305,7 +305,10 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
         let imgDataUrl
         try {
           imgDataUrl = URL.createObjectURL(imgData)
-          const worker = new Worker('/src/svg-to-pdf-worker.js', {type:'module'});
+          const worker = new Worker(
+            new URL('./svg-to-pdf-worker.js', import.meta.url),
+            {type: 'module'}
+          )
           const error = 'PDF generation failed'
 
           worker.onmessage = function(e) {
