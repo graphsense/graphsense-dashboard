@@ -494,113 +494,118 @@ coloredPath c =
             else
                 g [] []
     in
-    [ g
-        (if c.highlight then
-            [ Svg.Styled.Attributes.filter "url(#dropShadowEdgeHighlight)" ]
-
-         else
-            []
-        )
-        ((if c.highlight then
-            [ path
-                (if c.isOutgoing then
-                    GraphComponents.outputPathHighlightLine_details
+    g
+        [ c.opacity |> String.fromFloat |> opacity
+        , Css.cursor Css.pointer |> List.singleton |> css
+        ]
+    <|
+        if String.isEmpty c.label then
+            [ g
+                (if c.highlight then
+                    [ Svg.Styled.Attributes.filter "url(#dropShadowEdgeHighlight)" ]
 
                  else
-                    GraphComponents.inputPathHighlightLine_details
+                    []
                 )
-                False
-            , hackyRect
-            ]
+                ((if c.highlight then
+                    [ path
+                        (if c.isOutgoing then
+                            GraphComponents.outputPathHighlightLine_details
 
-          else
-            []
-         )
-            ++ [ path
-                    (if c.isOutgoing then
-                        GraphComponents.outputPathMainLine_details
-
-                     else
-                        GraphComponents.inputPathMainLine_details
-                    )
-                    True
-               , if c.isOutgoing then
-                    Svg.path
-                        [ d <|
-                            pathD
-                                [ M ( x2 - arrowLength - 2, y2 - arrowLength * 0.7 )
-                                , l ( arrowLength, arrowLength * 0.7 )
-                                , l ( -arrowLength, arrowLength * 0.7 )
-                                , Svg.PathD.z
-                                ]
-                        , "rotate("
-                            ++ ([ if dx < 0 then
-                                    "180"
-
-                                  else
-                                    "0"
-                                , String.fromFloat x2
-                                , String.fromFloat y2
-                                ]
-                                    |> String.join ","
-                               )
-                            ++ ")"
-                            |> transform
-                        , (c.color
-                            |> Maybe.withDefault Colors.pathOut
-                            |> Css.property "stroke"
-                          )
-                            :: (c.color
-                                    |> Maybe.withDefault Colors.pathOut
-                                    |> Css.property "fill"
-                                    |> Css.important
-                               )
-                            :: GraphComponents.outputPathMainLine_details.styles
-                            |> css
-                        ]
-                        []
-
-                 else
-                    text ""
-               ]
-        )
-    , text_
-        [ translate lx ly
-            |> transform
-        , textAnchor "middle"
-        , dominantBaseline "hanging"
-        , ([ Css.px 12 |> Css.fontSize
-           , Css.property "fill" Colors.black0
-           ]
-            ++ (if c.highlight then
-                    [ Css.property "stroke" Colors.greyBlue20
-                    , Css.property "stroke-width" "6px"
-                    , Css.property "paint-order" "stroke fill"
-                    , Css.property "stroke-linejoin" "round"
+                         else
+                            GraphComponents.inputPathHighlightLine_details
+                        )
+                        False
+                    , hackyRect
                     ]
 
-                else
+                  else
                     []
-               )
-          )
-            |> css
-        ]
-        (c.label
-            |> String.split "||"
-            |> List.indexedMap
-                (\i ->
-                    text
-                        >> List.singleton
-                        >> tspan
-                            [ Svg.Styled.Attributes.x "0"
-                            , Svg.Styled.Attributes.dy (String.fromInt i ++ "em")
-                            ]
+                 )
+                    ++ [ path
+                            (if c.isOutgoing then
+                                GraphComponents.outputPathMainLine_details
+
+                             else
+                                GraphComponents.inputPathMainLine_details
+                            )
+                            True
+                       , if c.isOutgoing then
+                            Svg.path
+                                [ d <|
+                                    pathD
+                                        [ M ( x2 - arrowLength - 2, y2 - arrowLength * 0.7 )
+                                        , l ( arrowLength, arrowLength * 0.7 )
+                                        , l ( -arrowLength, arrowLength * 0.7 )
+                                        , Svg.PathD.z
+                                        ]
+                                , "rotate("
+                                    ++ ([ if dx < 0 then
+                                            "180"
+
+                                          else
+                                            "0"
+                                        , String.fromFloat x2
+                                        , String.fromFloat y2
+                                        ]
+                                            |> String.join ","
+                                       )
+                                    ++ ")"
+                                    |> transform
+                                , (c.color
+                                    |> Maybe.withDefault Colors.pathOut
+                                    |> Css.property "stroke"
+                                  )
+                                    :: (c.color
+                                            |> Maybe.withDefault Colors.pathOut
+                                            |> Css.property "fill"
+                                            |> Css.important
+                                       )
+                                    :: GraphComponents.outputPathMainLine_details.styles
+                                    |> css
+                                ]
+                                []
+
+                         else
+                            text ""
+                       ]
                 )
-        )
-    ]
-        |> g
-            [ c.opacity |> String.fromFloat |> opacity
-            , Css.cursor Css.pointer |> List.singleton |> css
+            ]
+
+        else
+            [ text_
+                [ translate lx ly
+                    |> transform
+                , textAnchor "middle"
+                , dominantBaseline "hanging"
+                , ([ Css.px 12 |> Css.fontSize
+                   , Css.property "fill" Colors.black0
+                   ]
+                    ++ (if c.highlight then
+                            [ Css.property "stroke" Colors.greyBlue20
+                            , Css.property "stroke-width" "6px"
+                            , Css.property "paint-order" "stroke fill"
+                            , Css.property "stroke-linejoin" "round"
+                            ]
+
+                        else
+                            []
+                       )
+                  )
+                    |> css
+                ]
+                (c.label
+                    |> String.split "||"
+                    |> List.indexedMap
+                        (\i ->
+                            text
+                                >> List.singleton
+                                >> tspan
+                                    [ Svg.Styled.Attributes.x "0"
+                                    , Svg.Styled.Attributes.dy (String.fromInt i ++ "em")
+                                    ]
+                        )
+                )
             ]
 
 

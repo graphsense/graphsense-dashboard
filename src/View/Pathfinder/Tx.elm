@@ -9,7 +9,7 @@ import Svg.Styled exposing (Svg)
 import Svg.Styled.Lazy as Svg
 import Util.Annotations as Annotations
 import View.Pathfinder.Tx.AccountTx as AccountTx
-import View.Pathfinder.Tx.Utxo as Utxo
+import View.Pathfinder.Tx.Utxo as Utxo exposing (RenderLevel)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
@@ -24,11 +24,11 @@ view plugins vc gc tx annotation =
                 |> AccountTx.view plugins vc gc tx t
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge plugins vc gc tx annotation =
+edge : Plugins -> View.Config -> Pathfinder.Config -> RenderLevel -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge plugins vc gc level tx annotation =
     case tx.type_ of
         Utxo t ->
-            Svg.lazy6 Utxo.edge plugins vc gc t tx annotation
+            Svg.lazy7 Utxo.edge plugins vc gc level t tx annotation
 
         Account t ->
             Svg.lazy6 AccountTx.edge plugins vc gc t tx annotation

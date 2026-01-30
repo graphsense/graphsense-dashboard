@@ -1,4 +1,4 @@
-module View.Pathfinder.Tx.Utxo exposing (edge, view)
+module View.Pathfinder.Tx.Utxo exposing (RenderLevel(..), edge, view)
 
 import Animation as A
 import Color
@@ -161,8 +161,13 @@ view _ vc _ tx utxo annotation =
         )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> UtxoTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ vc _ utxo tx annotation =
+type RenderLevel
+    = Label
+    | Edge
+
+
+edge : Plugins -> View.Config -> Pathfinder.Config -> RenderLevel -> UtxoTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge _ vc _ level utxo tx annotation =
     let
         assetToValue asset =
             let
@@ -183,14 +188,20 @@ edge _ vc _ utxo tx annotation =
             Dict.toList
                 >> List.filterMap
                     (\( id, { values, address } ) ->
-                        address
-                            |> Maybe.map
-                                (values
-                                    |> pair { network = Id.network id, asset = Id.network id }
-                                    |> List.singleton
-                                    |> assetToValue
-                                    |> pair
-                                )
+                        case level of
+                            Label ->
+                                address
+                                    |> Maybe.map
+                                        (values
+                                            |> pair { network = Id.network id, asset = Id.network id }
+                                            |> List.singleton
+                                            |> assetToValue
+                                            |> pair
+                                        )
+
+                            Edge ->
+                                -- on edge level label is empty
+                                address |> Maybe.map (pair "")
                     )
 
         outputValues =
