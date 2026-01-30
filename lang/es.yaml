@@ -67,6 +67,7 @@ total_output: Importe total de las salidas
 success_download_csv: '{0} filas de datos descargadas como CSV'
 outgoing relations: Relaciones salientes
 incoming relations: Relaciones entrantes
+asset transfers between: transferencias de activos entre
 tags_release_warnings: Las etiquetas que añadas serán visibles para todos los usuarios.
   Asegúrate de que tus etiquetas no incluyan ningún material que infrinja los derechos
   de autor, como etiquetas o contenido de otros proveedores de herramientas. Además,

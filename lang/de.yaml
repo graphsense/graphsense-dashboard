@@ -82,6 +82,7 @@ outgoing relations: ausgehende Beziehungen
 incoming relations: eingehende Beziehungen
 outgoing entities: ausgehende Cluster
 incoming entities: eingehende Cluster
+asset transfers between: Asset Transfers zwischen
 output address: ausgehende Adresse
 input address: eingehende Adresse
 download table as csv: Tabelle als CSV herunterladen

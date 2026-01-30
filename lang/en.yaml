@@ -59,6 +59,7 @@ total_output: Total output amount
 success_download_csv: Downloaded {0} data rows as CSV
 outgoing relations: outgoing relationships
 incoming relations: incoming relationships
+asset transfers between: asset transfers between
 tags_release_warnings: The tags you add will be visible to all users. Please ensure
   that your tags do not include any copyright-infringing material, such as tags or
   content from other tool providers. Additionally, do not disclose any case-specific
