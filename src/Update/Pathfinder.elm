@@ -644,9 +644,34 @@ updateByMsg plugins uc msg model =
                                     |> and
                             )
                             (n model)
+
+                -- Check if all addresses now have their tag summaries loaded
+                txAccounts =
+                    modelWithTags.network.txs
+                        |> Dict.values
+                        |> List.concatMap (explodeTxToAccounts uc.locale)
+
+                allAddresses =
+                    txAccounts
+                        |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
+                        |> List.filter (\( _, addr ) -> not (String.isEmpty addr))
+
+                stillMissing =
+                    allAddresses
+                        |> List.filter
+                            (\( network, addr ) ->
+                                Id.init network addr
+                                    |> isTagSummaryLoaded True modelWithTags.tagSummaries
+                                    |> not
+                            )
             in
-            -- Now generate the export with updated tag summaries
-            generateGraphTxsExport uc modelWithTags
+            -- Only generate export when ALL tag summaries are loaded
+            if List.isEmpty stillMissing then
+                generateGraphTxsExport uc modelWithTags
+
+            else
+                -- Still waiting for more tag summaries, just update the model
+                n modelWithTags
 
         UserClickedSaveGraph _ ->
             -- handled in src/Update.elm
