@@ -35,7 +35,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Better node adding spacing
 - Better readability for UTXO edge labels
 - Don't allow overlapping nodes on user move
-- Better collision detection on adding nodes and center horizontal
+- Better collision detection on adding nodes
+- center nodes horizontal button
 - More colors in annotation dialog
 - Improved context menu handling
 - Search adds new txs and addresses to viewport center
