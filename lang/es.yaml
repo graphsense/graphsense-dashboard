@@ -524,7 +524,7 @@ show both on tx: mostrar fiat y cripto
 time: tiempo
 assets: activos
 export all graph transactions as csv: Exportar todas las transacciones del grafo como CSV
-graph_transactions: transacciones_grafo
+graph_transactions: Transacciones Grafo
 address not found: dirección no encontrada
 addresses not found: direcciones no encontradas
 transaction not found: transacción no encontrada

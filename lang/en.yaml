@@ -502,7 +502,7 @@ show both on tx: show both on tx
 time: time
 assets: assets
 export all graph transactions as csv: Export all graph transactions as CSV
-graph_transactions: graph_transactions
+graph_transactions: Graph Transactions
 address not found: address not found
 addresses not found: addresses not found
 transaction not found: transaction not found
