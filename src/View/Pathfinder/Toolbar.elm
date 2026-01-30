@@ -2,7 +2,7 @@ module View.Pathfinder.Toolbar exposing (Config, view)
 
 import Config.View as View
 import Css
-import Html.Styled exposing (Html)
+import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes as HA exposing (css, id)
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..))
@@ -10,7 +10,7 @@ import RecordSetter as Rs
 import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as SettingsComponents
-import Util.View exposing (onClickWithStop)
+import Util.View exposing (loadingSpinner, onClickWithStop)
 import View.Locale as Locale
 
 
@@ -23,6 +23,8 @@ type alias Config =
     , pointerTool : PointerTool
     , exportName : String
     , alignHorizontalDisabled : Bool
+    , exportPNG : Bool
+    , exportPDF : Bool
     }
 
 
@@ -58,7 +60,7 @@ view vc config =
             Locale.string vc.locale str
                 |> HA.title
     in
-    SettingsComponents.toolbarWithAttributes
+    SettingsComponents.toolbarWithInstances
         (SettingsComponents.toolbarAttributes
             |> Rs.s_iconsDelete
                 (iconsAttr "Delete" config.deleteDisabled UserClickedToolbarDeleteIcon)
@@ -90,6 +92,41 @@ view vc config =
                 (iconsAttr "open" False UserClickedOpenGraph)
             |> Rs.s_iconsHorizontalAlign
                 (iconsAttr "align horizontally" config.alignHorizontalDisabled UserClickedContextMenuAlignHorizontally)
+        )
+        (let
+            ls =
+                loadingSpinner vc
+                    (\_ ->
+                        [ Css.width <| Css.px 22
+                        , Css.position Css.absolute
+                        , Css.top (Css.px 1)
+                        , Css.left (Css.px 1)
+                        ]
+                    )
+                    |> List.singleton
+                    |> div
+                        [ css
+                            [ Css.width (Css.px 24)
+                            , Css.height (Css.px 24)
+                            , Css.position Css.relative
+                            ]
+                        ]
+         in
+         SettingsComponents.toolbarInstances
+            |> Rs.s_iconExportPdf
+                (if config.exportPDF then
+                    Just ls
+
+                 else
+                    Nothing
+                )
+            |> Rs.s_iconsScrennshot
+                (if config.exportPNG then
+                    Just ls
+
+                 else
+                    Nothing
+                )
         )
         { iconsRedo =
             { variant =

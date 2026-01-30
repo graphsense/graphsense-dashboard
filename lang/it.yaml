@@ -537,6 +537,10 @@ align vertically: Allinea verticalmente
 align horizontally: Allinea orizzontalmente
 export pdf: Esporta PDF
 generating pdf: Generazione PDF del grafo...
+generating image: Creazione dell'immagine del grafico in corso...
+generating pdf success: PDF creato con successo
+generating image success: Immagine creata con successo
+check download folder: Controllare la cartella dei download.
 show both on tx: mostra fiat e criptovalute
 time: tempo
 assets: valori

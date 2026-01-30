@@ -436,18 +436,24 @@ updateByMsg plugins uc msg model =
             n model
 
         UserClickedExportGraphAsImage name ->
-            ( model
-            , { filename = name ++ ".png"
-              , graphId = graphId
-              , viewbox = Nothing
-              }
-                |> Ports.exportGraph
-                |> Pathfinder.CmdEffect
-                |> List.singleton
+            ( model |> s_exportPNG True
+            , [ { filename = name ++ ".png"
+                , graphId = graphId
+                , viewbox = Nothing
+                }
+                    |> Ports.exportGraph
+                    |> Pathfinder.CmdEffect
+              , Notification.infoDefault "generating image"
+                    -- |> Notification.map (s_title (Just "PDF Export"))
+                    |> Notification.map (s_isEphemeral True)
+                    |> Notification.map (s_showClose False)
+                    |> Notification.map (s_removeDelayMs 4000.0)
+                    |> ShowNotificationEffect
+              ]
             )
 
         UserClickedExportGraphAsPdf name ->
-            ( model
+            ( model |> s_exportPDF True
             , Ports.getBBox ( name ++ ".pdf", "svg#" ++ graphId, ":not(g, defs, style, span)" )
                 |> Pathfinder.CmdEffect
                 |> List.singleton
@@ -458,15 +464,6 @@ updateByMsg plugins uc msg model =
                 |> Maybe.andThen
                     (\bb ->
                         if String.endsWith ".pdf" handle then
-                            let
-                                neff =
-                                    Notification.infoDefault "generating pdf"
-                                        -- |> Notification.map (s_title (Just "PDF Export"))
-                                        |> Notification.map (s_isEphemeral True)
-                                        |> Notification.map (s_showClose False)
-                                        |> Notification.map (s_removeDelayMs 4000.0)
-                                        |> ShowNotificationEffect
-                            in
                             ( model
                             , [ { filename = handle
                                 , graphId = graphId
@@ -474,7 +471,12 @@ updateByMsg plugins uc msg model =
                                 }
                                     |> Ports.exportGraph
                                     |> Pathfinder.CmdEffect
-                              , neff
+                              , Notification.infoDefault "generating pdf"
+                                    -- |> Notification.map (s_title (Just "PDF Export"))
+                                    |> Notification.map (s_isEphemeral True)
+                                    |> Notification.map (s_showClose False)
+                                    |> Notification.map (s_removeDelayMs 4000.0)
+                                    |> ShowNotificationEffect
                               ]
                             )
                                 |> Just
@@ -484,8 +486,31 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        BrowserSentExportGraphResult _ ->
-            n model
+        BrowserSentExportGraphResult { filename, error } ->
+            let
+                ( set, type_ ) =
+                    if String.endsWith ".pdf" filename then
+                        ( s_exportPDF, "pdf" )
+
+                    else
+                        ( s_exportPNG, "image" )
+            in
+            ( model |> set False
+            , error
+                |> Maybe.map
+                    (Notification.errorDefault
+                        >> Notification.map (s_title (Just "An error occurred"))
+                    )
+                |> Maybe.withDefault
+                    (Notification.successDefault "check download folder"
+                        |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
+                        |> Notification.map (s_isEphemeral True)
+                        |> Notification.map (s_showClose False)
+                        |> Notification.map (s_removeDelayMs 4000.0)
+                    )
+                |> ShowNotificationEffect
+                |> List.singleton
+            )
 
         UserClickedExportGraphTxsAsCSV time ->
             case time of

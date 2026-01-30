@@ -1,7 +1,6 @@
 import { jsPDF } from 'jspdf'
 self.onmessage = function(e) {
   let { imgDataUrl, width, height, filename } = e.data;
-  console.log('imgDataUrl', imgDataUrl)
       // Create PDF with dimensions matching content
   const aspect_ratio = width / height
   const max_dimension = 14400
@@ -15,7 +14,6 @@ self.onmessage = function(e) {
         width = height * aspect_ratio
     }
   }
-  console.log('topdf width/height', width, height)
   const orientation = width > height ? 'landscape' : 'portrait';
 
   const pdf = new jsPDF({
@@ -31,6 +29,5 @@ self.onmessage = function(e) {
   
   // Save the PDF
   const pdfBlob = pdf.output('blob');
-  console.log('pdfBlob', pdfBlob)
   self.postMessage({ pdfBlob, filename });
 };

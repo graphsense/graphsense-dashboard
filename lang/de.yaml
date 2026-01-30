@@ -510,6 +510,10 @@ align vertically: Vertikal ausrichten
 align horizontally: Horizontal ausrichten
 export pdf: Als PDF exportieren
 generating pdf: PDF des Graphen wird erstellt...
+generating image: Abbild des Graphen wird erstellt...
+generating pdf success: PDF erfolgreich erstellt
+generating image success: Abbild erfolgreich erstellt
+check download folder: Bitte überprüfen Sie Ihren Download-Ordner.
 show both on tx: Fiat und Crypto anzeigen
 time: Zeit
 assets: Assets

@@ -60,6 +60,8 @@ type alias Model =
     , checkingNeighbors : CheckingNeighbors.Model
     , eventualMessages : EventualMessages NetworkConditions Network Msg
     , exportCSV : ExportCSV.Model
+    , exportPNG : Bool
+    , exportPDF : Bool
     }
 
 

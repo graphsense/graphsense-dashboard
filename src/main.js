@@ -116,7 +116,6 @@ app.ports.console.subscribe(console.error)
 let maxDimensions = null
 const getMaxCanvasDimensions = async () => {
   if(maxDimensions) return maxDimensions
-  console.log('determine max dimensions')
   let options = {
     max: 32767,
     min: 1,
@@ -129,13 +128,11 @@ const getMaxCanvasDimensions = async () => {
       canvasSize.default.maxWidth(options),
       canvasSize.default.maxHeight(options)
     ]).then(([maxLength, maxWidth, maxHeight]) => {
-      console.log('maxLenght', maxLength)
       maxDimensions = {
         maxArea : maxLength.width * maxLength.height,
         maxWidth: maxWidth.width,
         maxHeight: maxHeight.height
       }
-      console.log('maxDimensions', maxDimensions)
       return maxDimensions
     })
 }
@@ -171,9 +168,7 @@ const getGraphBBox = (svg, selector) => {
             maxX = Math.max(maxX, point.x);
             maxY = Math.max(maxY, point.y);
         });
-        console.log(el, minX, minY)
       } catch (e) {
-        console.warn(el)
         // Skip elements that can't compute bbox
       }
     })
@@ -194,12 +189,10 @@ app.ports.getBBox.subscribe(([handle, graphSelector, subSelector]) => {
   const graph = document.querySelector(graphSelector)
   if(!graph) app.ports.sendBBox.send([handle, null])
   const bbox = getGraphBBox(graph, subSelector)
-  console.log(bbox)
   app.ports.sendBBox.send([handle, bbox])
 })
 
 app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
-  console.log('export graph ', filename, viewbox)
   let svg = document.querySelector('svg#' + graphId)
   if (!svg) {
     console.error('SVG element not found')
@@ -236,15 +229,12 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
         svgWidth = svgHeight * aspect_ratio
     }
   }
-  console.log('svgWidth/Height', svgWidth, svgHeight, maxArea, aspect_ratio)
   if(svgWidth * svgHeight > maxArea) {
     svgWidth = Math.sqrt(maxArea * aspect_ratio)
     svgHeight = Math.sqrt(maxArea / aspect_ratio)
   }
-  console.log('svgWidth/Height', svgWidth, svgHeight)
   // Replace the viewBox to show entire content with padding
   const newViewBox = `${viewbox.x} ${viewbox.y} ${viewbox.width} ${viewbox.height}`
-  console.log('newViewBox ', newViewBox)
   var svgData = new XMLSerializer().serializeToString(svg)
     .replace(/viewBox="[^"]*"/, `viewBox="${newViewBox}"`)
     .replace(/(<svg[^>]*)\swidth="[^"]*"/, `$1 width="${svgWidth}"`)
@@ -278,7 +268,6 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
   `
   
   svgData = svgData.replace("<defs>", "<defs>" + fontStyle)
-  console.log('svgData', svgData)
   const blobSvgData = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blobSvgData);
   
@@ -292,13 +281,11 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
   img.onload = async function () {
       let imgData 
       try {
-        console.log('img.onload')
         URL.revokeObjectURL(url)
         const bgColor = cssVariables["--c-white"]
 
         // Use scale factor of 4 for high quality
         let canvas = new OffscreenCanvas(svgWidth, svgHeight)
-        console.log('width/height', canvas.width, canvas.height)
 
         let ctx = canvas.getContext("2d");
         ctx.fillStyle = bgColor;
@@ -307,7 +294,6 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
 
         // Use PNG for better quality, with compression
         imgData = await canvas.convertToBlob({type: 'image/png'})
-        console.log('toBlob', imgData)
       } catch (e) {
         const error = 'Image generation failed'
         console.error(error, e)
@@ -316,14 +302,13 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
       }
 
       if(filename.endsWith(".pdf")) {
+        let imgDataUrl
         try {
-          const imgDataUrl = URL.createObjectURL(imgData)
-          console.log('imgDataUrl', imgDataUrl)
+          imgDataUrl = URL.createObjectURL(imgData)
           const worker = new Worker('/src/svg-to-pdf-worker.js', {type:'module'});
           const error = 'PDF generation failed'
 
           worker.onmessage = function(e) {
-            console.log('message', e.data)
             if (e.data.error) {
               app.ports.exportGraphResult.send({filename, error: e.data.error})
               console.error(e.data.error, e.data.details);
@@ -332,10 +317,12 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
               FileSaver.saveAs(e.data.pdfBlob, e.data.filename)
             }
             worker.terminate()
+            URL.revokeObjectURL(imgDataUrl)
           };
 
           worker.onerror = function(e) {
             app.ports.exportGraphResult.send({filename, error})
+            URL.revokeObjectURL(imgDataUrl)
             console.error('Worker error:', e);
           };
 
@@ -348,8 +335,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
         } catch (e) {
           console.error(error, e)
           app.ports.exportGraphResult.send({filename, error})
-        } finally {
-          URL.revokeObjectURL(imageDataUrl)
+          URL.revokeObjectURL(imgDataUrl)
         }
     } else if (filename.endsWith(".png")) {
       FileSaver.saveAs(imgData, filename)
