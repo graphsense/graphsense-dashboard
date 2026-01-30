@@ -563,7 +563,7 @@ updateByMsg plugins uc msg model =
                         allAddresses =
                             txAccounts
                                 |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
-                                |> List.filter (\( _, addr ) -> not (String.isEmpty addr))
+                                |> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= Locale.string uc.locale "fee")
 
                         -- Group addresses by network for bulk fetching
                         addressesByNetwork =
@@ -654,7 +654,7 @@ updateByMsg plugins uc msg model =
                 allAddresses =
                     txAccounts
                         |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
-                        |> List.filter (\( _, addr ) -> not (String.isEmpty addr))
+                        |> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= Locale.string uc.locale "fee")
 
                 stillMissing =
                     allAddresses
