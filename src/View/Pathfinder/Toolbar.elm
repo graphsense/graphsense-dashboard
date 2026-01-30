@@ -23,6 +23,7 @@ type alias Config =
     , pointerTool : PointerTool
     , exportName : String
     , alignHorizontalDisabled : Bool
+    , exportCSV : Bool
     , exportPNG : Bool
     , exportPDF : Bool
     }
@@ -113,6 +114,13 @@ view vc config =
                         ]
          in
          SettingsComponents.toolbarInstances
+            |> Rs.s_iconExportCsv
+                (if config.exportCSV then
+                    Just ls
+
+                 else
+                    Nothing
+                )
             |> Rs.s_iconExportPdf
                 (if config.exportPDF then
                     Just ls

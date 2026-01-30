@@ -416,7 +416,7 @@ shallPushHistory plugins msg _ =
         UserClickedExportGraphTxsAsCSV _ ->
             False
 
-        BrowserGotTagSummariesForExportGraphTxsAsCSV _ _ _ ->
+        BrowserGotTagSummariesForExportGraphTxsAsCSV _ _ ->
             False
 
         UserClickedToolbarDeleteIcon ->

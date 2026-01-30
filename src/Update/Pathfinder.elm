@@ -576,16 +576,23 @@ updateByMsg plugins uc msg model =
                                         else
                                             Just ( network, missing )
                                     )
+
+                        config =
+                            makeGraphTxsExportCSVConfig uc model.tagSummaries
+
+                        ( newModel, _ ) =
+                            ExportCSV.update (ExportCSV.BrowserGotTime t) config model.exportCSVGraph
+                                |> mapFirst (flip s_exportCSVGraph model)
                     in
                     if List.isEmpty missingByNetwork then
                         -- All tag summaries already loaded, proceed with export
-                        generateGraphTxsExport uc t model
+                        generateGraphTxsExport uc newModel
 
                     else
                         -- Need to fetch missing tag summaries first
                         let
                             toMsg =
-                                BrowserGotTagSummariesForExportGraphTxsAsCSV t
+                                BrowserGotTagSummariesForExportGraphTxsAsCSV
 
                             fetchEffects =
                                 missingByNetwork
@@ -594,9 +601,9 @@ updateByMsg plugins uc msg model =
                                             fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
                                         )
                         in
-                        ( model, fetchEffects )
+                        ( newModel, fetchEffects )
 
-        BrowserGotTagSummariesForExportGraphTxsAsCSV time includesBestClusterTag tagSummaries ->
+        BrowserGotTagSummariesForExportGraphTxsAsCSV includesBestClusterTag tagSummaries ->
             let
                 -- Add received tag summaries to model
                 ( modelWithTags, _ ) =
@@ -609,7 +616,7 @@ updateByMsg plugins uc msg model =
                             (n model)
             in
             -- Now generate the export with updated tag summaries
-            generateGraphTxsExport uc time modelWithTags
+            generateGraphTxsExport uc modelWithTags
 
         UserClickedSaveGraph _ ->
             -- handled in src/Update.elm
@@ -4334,6 +4341,9 @@ isTagSummaryLoaded includeBestClusterTag existing id =
         Just NoTagsWithoutCluster ->
             includeBestClusterTag == False
 
+        Just NoTags ->
+            True
+
         _ ->
             False
 
@@ -5004,8 +5014,8 @@ getTagsForExport addressId table data model =
 
 {-| Generate the graph transactions CSV export with current tag summaries
 -}
-generateGraphTxsExport : Update.Config -> Time.Posix -> Model -> ( Model, List Effect )
-generateGraphTxsExport uc t model =
+generateGraphTxsExport : Update.Config -> Model -> ( Model, List Effect )
+generateGraphTxsExport uc model =
     let
         config =
             makeGraphTxsExportCSVConfig uc model.tagSummaries
@@ -5015,13 +5025,10 @@ generateGraphTxsExport uc t model =
                 |> Dict.values
                 |> List.concatMap (explodeTxToAccounts uc.locale)
 
-        ( exportCSVWithTime, _ ) =
-            ExportCSV.update (ExportCSV.BrowserGotTime t) config model.exportCSV
-
         ( exportCSV, eff ) =
-            ExportCSV.gotData uc config ( txAccounts, Nothing ) exportCSVWithTime
+            ExportCSV.gotData uc config ( txAccounts, Nothing ) model.exportCSVGraph
     in
-    ( { model | exportCSV = exportCSV }, eff )
+    ( { model | exportCSVGraph = exportCSV }, eff )
 
 
 {-| Config for exporting all graph transactions as CSV

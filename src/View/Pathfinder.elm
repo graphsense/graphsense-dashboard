@@ -1,6 +1,7 @@
 module View.Pathfinder exposing (view)
 
 import Basics.Extra exposing (flip)
+import Components.ExportCSV as ExportCSV
 import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -475,6 +476,7 @@ topCenterPanel plugins pluginStates vc gc model =
                             True
                 , pointerTool = model.pointerTool
                 , exportName = model.name
+                , exportCSV = ExportCSV.isDownloading model.exportCSVGraph
                 , exportPNG = model.exportPNG
                 , exportPDF = model.exportPDF
                 }

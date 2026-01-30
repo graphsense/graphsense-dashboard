@@ -1,4 +1,4 @@
-module Components.ExportCSV exposing (Config, Model, Msg(..), attributes, config, getNumberOfRows, gotData, icon, init, update)
+module Components.ExportCSV exposing (Config, Model, Msg(..), attributes, config, getNumberOfRows, gotData, icon, init, isDownloading, update)
 
 import Config.Update as Update
 import Config.View as View
@@ -142,9 +142,10 @@ makeNotification numberOfRows ( data, nextPage ) =
                         )
             )
         |> Maybe.withDefault
-            (Notification.successDefault "success_download_csv"
+            (Notification.successDefault "check download folder"
                 |> Notification.map
                     (s_isEphemeral True
+                        >> s_title (Just "success_download_csv")
                         >> s_showClose True
                         >> s_variables
                             [ List.length data
@@ -177,3 +178,8 @@ icon vc (Model { downloading }) =
 getNumberOfRows : Config data eff -> Int
 getNumberOfRows (Config { numberOfRows }) =
     numberOfRows
+
+
+isDownloading : Model -> Bool
+isDownloading (Model { downloading }) =
+    downloading

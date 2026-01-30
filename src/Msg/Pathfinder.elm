@@ -117,7 +117,7 @@ type Msg
     | UserClickedExportGraphTxsAsCSV (Maybe Time.Posix)
     | BrowserSentBBox ( String, Maybe BBox )
     | BrowserSentExportGraphResult { filename : String, error : Maybe String }
-    | BrowserGotTagSummariesForExportGraphTxsAsCSV Time.Posix Bool (List ( Id, Api.Data.TagSummary ))
+    | BrowserGotTagSummariesForExportGraphTxsAsCSV Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
     | UserClickedSelectionTool
