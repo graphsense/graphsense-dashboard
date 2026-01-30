@@ -10,6 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Auto filter transaction table by the asset of the recent tx of the selected address
 - Add error message for not found transactions
 - Add error message for 401 (not authorized) errors
+- Add loading spinner when exporting graph as image/pdf
+- Add notification on export success/error
+- Add timestamp to pdf/png export filename
+- Export graph as PDF
+- Download graph transactions as CSV with fees
+- Allow annotation of multiple nodes at once
+- Spanish translation
+- Show PF1 deprecation notice on loading old gs files
 
 ### Changed
 
@@ -17,11 +25,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved error handling at plugin dependency installation
 - Move generate.js to tools/
 - Renamed "TRANSLATION_FILES_HASH" to "CACHE_BUST"
-- Aligned translation files, simplified lookup keys, added couple of missing translation 
+- Aligned translation files, simplified lookup keys, added couple of missing translations 
 - Changed logout behaviour to browser redirect
 - Auto-tracing of txs depends on the latest tx added to an address instead of the timestamp
 - Load the Sub-Transaction if a requested Account Tx contains only one Sub-Tx
 - Handle 400 errors like 404 errors
+- Offload pdf/image export to web worker for better performance
+- Optimize pdf export size
+- Better node adding spacing
+- Better readability for UTXO edge labels
+- Don't allow overlapping nodes on user move
+- Better collision detection on adding nodes and center horizontal
+- More colors in annotation dialog
+- Improved context menu handling
+- Search adds new txs and addresses to viewport center
+- Improved error message for unhandled JS exceptions
+
+### Fixed
+
+- Fix multiple CSV downloads when exporting graph transactions with addresses from multiple networks
+- Filter commented plugins
+- Fix date format
+- Fix 401 error message
  
 ## [25.11.5] - 2025-12-16
 
