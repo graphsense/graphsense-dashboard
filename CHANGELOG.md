@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved context menu handling
 - Search adds new txs and addresses to viewport center
 - Improved error message for unhandled JS exceptions
+- Draw edge label on top of edges to improve readability
 
 ### Fixed
 
