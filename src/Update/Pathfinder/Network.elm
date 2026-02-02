@@ -21,6 +21,7 @@ module Update.Pathfinder.Network exposing
     , insertFetchedEdge
     , resolveOverlaps
     , resolveOverlapsExcept
+    , resolveOverlapsOnly
     , rupsertAggEdge
     , snapToGrid
     , trySetHoverConversionLoop
@@ -291,6 +292,106 @@ resolveOverlapsExcept distance fixedId network =
     applyChanges resolvedNodes network
 
 
+{-| Resolve overlapping nodes by pushing only the specified node away from others.
+The opposite of resolveOverlapsExcept - only the node with movingId will be moved,
+all other nodes stay fixed.
+-}
+resolveOverlapsOnly : OverlapDistance -> Id -> Network -> Network
+resolveOverlapsOnly distance movingId network =
+    let
+        -- Get the overlap thresholds based on configuration
+        ( overlapThresholdX, overlapThresholdY ) =
+            case distance of
+                Compact ->
+                    ( addressRadius, addressRadius )
+
+                Spacious ->
+                    ( nodeXOffset, nodeYOffset )
+
+        -- Get all node positions (addresses and transactions)
+        getAllNodes : Network -> List { id : Id, x : Float, y : Float, isAddress : Bool }
+        getAllNodes net =
+            let
+                addresses =
+                    Dict.toList net.addresses
+                        |> List.map (\( id, a ) -> { id = id, x = a.x, y = A.getTo a.y, isAddress = True })
+
+                txs =
+                    Dict.toList net.txs
+                        |> List.map (\( id, tx ) -> { id = id, x = tx.x, y = A.getTo tx.y, isAddress = False })
+            in
+            addresses ++ txs
+
+        -- Check if two nodes overlap (too close together)
+        nodesOverlap : { a | x : Float, y : Float } -> { b | x : Float, y : Float } -> Bool
+        nodesOverlap n1 n2 =
+            let
+                dx =
+                    abs (n1.x - n2.x)
+
+                dy =
+                    abs (n1.y - n2.y)
+            in
+            dx < overlapThresholdX && dy < overlapThresholdY
+
+        -- Find the moving node
+        allNodes =
+            getAllNodes network
+
+        maybeMovingNode =
+            List.filter (\n -> n.id == movingId) allNodes |> List.head
+
+        otherNodes =
+            List.filter (\n -> n.id /= movingId) allNodes
+
+        -- Push the moving node away from a fixed node
+        pushMovingNodeAway : { a | x : Float, y : Float } -> { id : Id, x : Float, y : Float, isAddress : Bool } -> { id : Id, x : Float, y : Float, isAddress : Bool }
+        pushMovingNodeAway fixedNode movingNode =
+            let
+                dy =
+                    movingNode.y - fixedNode.y
+
+                -- Determine which direction to push (primarily Y direction)
+                newY =
+                    if dy >= 0 then
+                        fixedNode.y + nodeYOffset
+
+                    else
+                        fixedNode.y - nodeYOffset
+            in
+            { movingNode | y = newY }
+
+        -- Keep pushing the moving node until it doesn't overlap with any other node
+        resolveMovingNode : { id : Id, x : Float, y : Float, isAddress : Bool } -> { id : Id, x : Float, y : Float, isAddress : Bool }
+        resolveMovingNode movingNode =
+            let
+                overlappingNode =
+                    List.filter (nodesOverlap movingNode) otherNodes |> List.head
+            in
+            case overlappingNode of
+                Just fixedNode ->
+                    resolveMovingNode (pushMovingNodeAway fixedNode movingNode)
+
+                Nothing ->
+                    movingNode
+
+        -- Apply node position change to network
+        applyChange : { id : Id, x : Float, y : Float, isAddress : Bool } -> Network -> Network
+        applyChange node net =
+            if node.isAddress then
+                updateAddress node.id (\a -> { a | y = A.static node.y }) net
+
+            else
+                updateTx node.id (\tx -> { tx | y = A.static node.y }) net
+    in
+    case maybeMovingNode of
+        Just movingNode ->
+            applyChange (resolveMovingNode movingNode) network
+
+        Nothing ->
+            network
+
+
 addAddress : Plugins -> Pathfinder.Config -> Id -> Network -> ( Address, Network )
 addAddress plugins pc =
     addAddressWithPosition plugins pc Auto
@@ -350,7 +451,7 @@ addAddressWithPosition plugins pc position id model =
                 finalNetwork =
                     case position of
                         AtViewportCenter _ _ ->
-                            resolveOverlaps Spacious network
+                            resolveOverlapsOnly Spacious id network
 
                         _ ->
                             network
@@ -937,7 +1038,7 @@ addTxWithPosition pc position tx network =
                         -- Resolve overlaps when adding at viewport center
                         case position of
                             AtViewportCenter _ _ ->
-                                ( resultTx, resolveOverlaps Spacious resultNet )
+                                ( resultTx, resolveOverlapsOnly Spacious id resultNet )
 
                             _ ->
                                 ( resultTx, resultNet )
@@ -1003,7 +1104,7 @@ addTxWithPosition pc position tx network =
                         -- Resolve overlaps when adding at viewport center
                         case position of
                             AtViewportCenter _ _ ->
-                                ( resultTx, resolveOverlaps Spacious resultNet )
+                                ( resultTx, resolveOverlapsOnly Spacious id resultNet )
 
                             _ ->
                                 ( resultTx, resultNet )
