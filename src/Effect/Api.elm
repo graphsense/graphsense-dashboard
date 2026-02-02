@@ -960,8 +960,10 @@ perform apiKey wrapMsg cancelMsg effect =
                             Json.Decode.map
                                 (\ts -> ( ( currency, requestAddress ), ts ))
                                 Api.Data.tagSummaryDecoder
+                                |> Json.Decode.maybe
                         )
                 )
+                |> Json.Decode.map (List.filterMap identity)
                 |> Api.Request.MyBulk.bulkJson
                     currency
                     Api.Request.MyBulk.OperationGetAddressTagSummary

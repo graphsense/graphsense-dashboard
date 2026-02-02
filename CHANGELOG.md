@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.01.1] - 2026-01-30
+
+### Fixed
+
+- Handle errors in tag summary bulk retrieval 
+
 ## [26.01.0] - 2026-01-30
 
 ### Added
@@ -41,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved context menu handling
 - Search adds new txs and addresses to viewport center
 - Improved error message for unhandled JS exceptions
+- Draw edge label on top of edges to improve readability
 
 ### Fixed
 
