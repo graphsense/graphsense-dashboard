@@ -1033,8 +1033,14 @@ addTxWithPosition pc position tx network =
                                         else
                                             avoidOverlappingEdges things autoCoords
 
+                            -- When adding at viewport center, don't move other nodes - only the new node should move
                             newNetwork =
-                                freeSpaceAroundCoords coords network
+                                case position of
+                                    AtViewportCenter _ _ ->
+                                        network
+
+                                    _ ->
+                                        freeSpaceAroundCoords coords network
 
                             ( resultTx, resultNet ) =
                                 Tx.fromTxAccountData network.txsIndex t coords
@@ -1043,14 +1049,17 @@ addTxWithPosition pc position tx network =
                                         { newNetwork
                                             | animatedTxs = Set.insert id newNetwork.animatedTxs
                                         }
-                        in
-                        -- Resolve overlaps when adding at viewport center
-                        case position of
-                            AtViewportCenter _ _ ->
-                                ( resultTx, resolveOverlapsOnly Spacious id resultNet )
 
-                            _ ->
-                                ( resultTx, resultNet )
+                            -- Resolve overlaps when adding at viewport center (only move the new node)
+                            finalNetwork =
+                                case position of
+                                    AtViewportCenter _ _ ->
+                                        resolveOverlapsOnly Spacious id resultNet
+
+                                    _ ->
+                                        resultNet
+                        in
+                        ( resultTx, finalNetwork )
 
                     Api.Data.TxTxUtxo t ->
                         let
@@ -1089,8 +1098,14 @@ addTxWithPosition pc position tx network =
                                         else
                                             avoidOverlappingEdges things autoCoords
 
+                            -- When adding at viewport center, don't move other nodes - only the new node should move
                             newNetwork =
-                                freeSpaceAroundCoords coords network
+                                case position of
+                                    AtViewportCenter _ _ ->
+                                        network
+
+                                    _ ->
+                                        freeSpaceAroundCoords coords network
 
                             ( resultTx, resultNet ) =
                                 Tx.fromTxUtxoData network.txsIndex t coords
@@ -1109,14 +1124,17 @@ addTxWithPosition pc position tx network =
                                         { newNetwork
                                             | animatedTxs = Set.insert id newNetwork.animatedTxs
                                         }
-                        in
-                        -- Resolve overlaps when adding at viewport center
-                        case position of
-                            AtViewportCenter _ _ ->
-                                ( resultTx, resolveOverlapsOnly Spacious id resultNet )
 
-                            _ ->
-                                ( resultTx, resultNet )
+                            -- Resolve overlaps when adding at viewport center (only move the new node)
+                            finalNetwork =
+                                case position of
+                                    AtViewportCenter _ _ ->
+                                        resolveOverlapsOnly Spacious id resultNet
+
+                                    _ ->
+                                        resultNet
+                        in
+                        ( resultTx, finalNetwork )
             )
 
 
