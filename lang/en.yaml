@@ -370,6 +370,7 @@ next: Next
 previous: Previous
 page: Page
 snap to grid: Snap to Grid
+avoid overlapping nodes: Avoid overlapping nodes
 confirm-clear-dashboard: Clear dashboard?
 note-not-recoverable: You will not be able to recover it.
 confirm-delete: Yes, delete all

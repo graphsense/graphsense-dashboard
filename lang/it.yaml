@@ -359,6 +359,7 @@ next: Ulteriori
 previous: Indietro
 page: Pagina
 snap to grid: Allineamento alla griglia
+avoid overlapping nodes: Evita la sovrapposizione dei nodi
 confirm-clear-dashboard: Cruscotto chiaro?
 note-not-recoverable: Le modifiche non salvate vengono scartate.
 confirm-delete: Sì, eliminare tutti

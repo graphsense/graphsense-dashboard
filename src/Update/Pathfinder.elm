@@ -1515,7 +1515,12 @@ updateByMsg plugins uc msg model =
                              else
                                 network
                             )
-                                |> Network.resolveOverlapsExcept Network.Compact (Just id)
+                                |> (if model.config.avoidOverlapingNodes then
+                                        Network.resolveOverlapsExcept Network.Compact (Just id)
+
+                                    else
+                                        identity
+                                   )
                     in
                     n
                         { model
@@ -2173,6 +2178,10 @@ updateByMsg plugins uc msg model =
                     n model
 
                 UserClickedToggleShowHash ->
+                    -- handled Upstream
+                    n model
+
+                UserClickedToggleAvoidOverlapingNodes ->
                     -- handled Upstream
                     n model
 
@@ -4842,6 +4851,7 @@ fromDeserialized plugins deserialized model =
                 { snapToGrid = Just model.config.snapToGrid
                 , highlightClusterFriends = Just model.config.highlightClusterFriends
                 , tracingMode = Just model.config.tracingMode
+                , avoidOverlapingNodes = Just model.config.avoidOverlapingNodes
                 }
     in
     ( { newAndEmptyPathfinder

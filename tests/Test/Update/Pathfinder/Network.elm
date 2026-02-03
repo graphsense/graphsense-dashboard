@@ -21,6 +21,7 @@ config =
     { snapToGrid = False
     , highlightClusterFriends = False
     , tracingMode = TransactionTracingMode
+    , avoidOverlapingNodes = True
     }
 
 

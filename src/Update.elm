@@ -1110,6 +1110,9 @@ update plugins uc msg model =
                 Pathfinder.UserClickedToggleHighlightClusterFriends ->
                     toggleHighlightClusterFriends nm |> Tuple.mapSecond ((++) neff)
 
+                Pathfinder.UserClickedToggleAvoidOverlapingNodes ->
+                    toggleAvoidOverlapingNodes nm |> Tuple.mapSecond ((++) neff)
+
                 Pathfinder.UserClickedToggleShowTxTimestamp ->
                     togglShowTimestampOnTxEdge nm |> Tuple.mapSecond ((++) neff)
 
@@ -2513,6 +2516,18 @@ toggleHighlightClusterFriends m =
         nm =
             not m.pathfinder.config.highlightClusterFriends
                 |> flip s_highlightClusterFriends m.pathfinder.config
+                |> flip s_config m.pathfinder
+                |> flip s_pathfinder m
+    in
+    ( nm, saveUserSettings nm |> List.singleton )
+
+
+toggleAvoidOverlapingNodes : Model key -> ( Model key, List Effect )
+toggleAvoidOverlapingNodes m =
+    let
+        nm =
+            not m.pathfinder.config.avoidOverlapingNodes
+                |> flip s_avoidOverlapingNodes m.pathfinder.config
                 |> flip s_config m.pathfinder
                 |> flip s_pathfinder m
     in

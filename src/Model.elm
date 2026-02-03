@@ -255,4 +255,5 @@ userSettingsFromMainModel model =
     , tracingMode = Just model.pathfinder.config.tracingMode
     , showHash = Just model.config.showHash
     , showBothValues = Just model.config.showBothValues
+    , avoidOverlapingNodes = Just model.pathfinder.config.avoidOverlapingNodes
     }

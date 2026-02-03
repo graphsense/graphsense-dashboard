@@ -19,7 +19,7 @@ import Util.Annotations as Annotations
 import Util.EventualMessages as EventualMessages
 
 
-init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool, tracingMode : Maybe TracingMode } -> ( Model, Cmd Msg )
+init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool, tracingMode : Maybe TracingMode, avoidOverlapingNodes : Maybe Bool } -> ( Model, Cmd Msg )
 init us =
     ( { route = Route.Root
       , network = Network.init
@@ -39,6 +39,7 @@ init us =
             { snapToGrid = us.snapToGrid |> Maybe.withDefault False
             , highlightClusterFriends = us.highlightClusterFriends |> Maybe.withDefault True
             , tracingMode = us.tracingMode |> Maybe.withDefault TransactionTracingMode
+            , avoidOverlapingNodes = us.avoidOverlapingNodes |> Maybe.withDefault True
             }
       , pointerTool = Drag
       , modPressed = False

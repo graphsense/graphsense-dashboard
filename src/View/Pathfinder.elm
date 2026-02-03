@@ -618,8 +618,9 @@ settingsHovercardView vc pm hc =
         { exactValueSwitch = { variant = switchWithText True "Show exact values" (vc.locale.valueDetail == Locale.Exact) (UserClickedToggleValueDetail |> ChangedDisplaySettingsMsg) }
         , amountInFiatSwitch = { variant = switchWithText True "Amount in Fiat" vc.showValuesInFiat (UserClickedToggleValueDisplay |> ChangedDisplaySettingsMsg) }
         , showBothValuesSwitch = { variant = switchWithText True "Show both on tx" vc.showBothValues (UserClickedToggleBothValueDisplay |> ChangedDisplaySettingsMsg) }
-        , gridSwitch = { variant = switchWithText True "Snap to grid" pm.config.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
-        , highlightSwitch = { variant = switchWithText True "Highlight on graph" pm.config.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
+        , gridSwitch = { variant = switchWithText True "snap to grid" pm.config.snapToGrid (UserClickedToggleSnapToGrid |> ChangedDisplaySettingsMsg) }
+        , highlightSwitch = { variant = switchWithText True "highlight on graph" pm.config.highlightClusterFriends (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) }
+        , avoidOverlapingNodes = { variant = switchWithText True "avoid overlapping nodes" pm.config.avoidOverlapingNodes (UserClickedToggleAvoidOverlapingNodes |> ChangedDisplaySettingsMsg) }
         , settingsLabelOfClustersSettings = { settingsLabel = Locale.string vc.locale "Clusters" }
         , settingsLabelOfGraphSettings = { settingsLabel = Locale.string vc.locale "Graph" }
         , settingsLabelOfValueSettings = { settingsLabel = Locale.string vc.locale "Assets" }

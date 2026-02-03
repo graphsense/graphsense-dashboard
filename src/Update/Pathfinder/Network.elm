@@ -460,7 +460,11 @@ addAddressWithPosition plugins pc position id model =
                 finalNetwork =
                     case position of
                         AtViewportCenter _ _ ->
-                            resolveOverlapsOnly Spacious id network
+                            if pc.avoidOverlapingNodes then
+                                resolveOverlapsOnly Spacious id network
+
+                            else
+                                network
 
                         _ ->
                             network
@@ -1054,7 +1058,11 @@ addTxWithPosition pc position tx network =
                             finalNetwork =
                                 case position of
                                     AtViewportCenter _ _ ->
-                                        resolveOverlapsOnly Spacious id resultNet
+                                        if pc.avoidOverlapingNodes then
+                                            resolveOverlapsOnly Spacious id resultNet
+
+                                        else
+                                            resultNet
 
                                     _ ->
                                         resultNet
@@ -1129,7 +1137,11 @@ addTxWithPosition pc position tx network =
                             finalNetwork =
                                 case position of
                                     AtViewportCenter _ _ ->
-                                        resolveOverlapsOnly Spacious id resultNet
+                                        if pc.avoidOverlapingNodes then
+                                            resolveOverlapsOnly Spacious id resultNet
+
+                                        else
+                                            resultNet
 
                                     _ ->
                                         resultNet

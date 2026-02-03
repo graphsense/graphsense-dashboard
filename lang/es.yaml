@@ -384,6 +384,7 @@ next: Siguiente
 previous: Anterior
 page: Página
 snap to grid: Ajustar a la cuadrícula
+avoid overlapping nodes: Evitar nodos superpuestos
 confirm-clear-dashboard: ¿Borrar el panel de control?
 note-not-recoverable: No podrá recuperarlo.
 confirm-delete: Sí, borrar todo

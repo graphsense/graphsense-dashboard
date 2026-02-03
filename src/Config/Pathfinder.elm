@@ -35,4 +35,5 @@ type alias Config =
     { snapToGrid : Bool
     , highlightClusterFriends : Bool
     , tracingMode : TracingMode
+    , avoidOverlapingNodes : Bool
     }

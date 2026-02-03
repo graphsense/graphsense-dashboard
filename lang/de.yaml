@@ -380,6 +380,7 @@ next: Weiter
 previous: Zurück
 page: Seite
 snap to grid: Am Raster ausrichten
+avoid overlapping nodes: Überlappung vermeiden
 confirm-clear-dashboard: Dashboard leeren?
 note-not-recoverable: Nicht gespeichtere Änderungen werden verworfen.
 confirm-delete: Ja, alles löschen

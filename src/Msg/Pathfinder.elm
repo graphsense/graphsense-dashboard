@@ -172,6 +172,7 @@ type DisplaySettingsMsg
     | UserClickedToggleBothValueDisplay
     | UserClickedToggleValueDetail
     | UserClickedToggleShowHash
+    | UserClickedToggleAvoidOverlapingNodes
 
 
 type TxDetailsMsg
