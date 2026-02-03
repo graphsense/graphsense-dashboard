@@ -443,11 +443,20 @@ addAddressWithPosition plugins pc position id model =
                     Address.init plugins id coords
                         |> s_isStartingPoint (isEmpty model)
 
+                -- When adding at viewport center, don't move other nodes - only the new node should move
+                networkBeforeInsert =
+                    case position of
+                        AtViewportCenter _ _ ->
+                            model
+
+                        _ ->
+                            freeSpaceAroundCoords coords model
+
                 network =
                     newAddress
-                        |> insertAddress pc (freeSpaceAroundCoords coords model)
+                        |> insertAddress pc networkBeforeInsert
 
-                -- Resolve overlaps when adding at viewport center
+                -- Resolve overlaps when adding at viewport center (only move the new node)
                 finalNetwork =
                     case position of
                         AtViewportCenter _ _ ->
