@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Avoid moving graph on adding new nodes.
 
+### Added
+
+- Option to disable collision avoidance for nodes
+
 ## [26.01.1] - 2026-01-30
 
 ### Fixed
