@@ -4870,20 +4870,24 @@ fromDeserialized plugins deserialized model =
 
 autoLoadConversions : Plugins -> Tx -> Model -> ( Model, List Effect )
 autoLoadConversions _ tx model =
-    case tx.type_ of
-        Tx.Utxo _ ->
-            n model
+    let
+        ( currency, txHash ) =
+            case tx.type_ of
+                Tx.Account atx ->
+                    ( atx.raw.network, atx.raw.identifier )
 
-        Tx.Account atx ->
-            ( model
-            , BrowserGotConversions tx
-                |> Api.GetConversionEffect
-                    { currency = atx.raw.network
-                    , txHash = atx.raw.identifier
-                    }
-                |> ApiEffect
-                |> List.singleton
-            )
+                Tx.Utxo utxoTx ->
+                    ( utxoTx.raw.currency, utxoTx.raw.txHash )
+    in
+    ( model
+    , BrowserGotConversions tx
+        |> Api.GetConversionEffect
+            { currency = currency
+            , txHash = txHash
+            }
+        |> ApiEffect
+        |> List.singleton
+    )
 
 
 autoLoadAddresses : Plugins -> Bool -> Tx -> Model -> ( Model, List Effect )
