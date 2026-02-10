@@ -1,11 +1,5 @@
 import { Elm } from './Main.elm'
-import FileSaver from 'file-saver'
-import { pack, unpack } from 'lzwcompress'
-import { Base64 } from 'js-base64'
-import { fileDialog } from 'file-select-dialog'
 import plugins from '../generated/plugins/index.js'
-import robotoBase64 from "../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64"
-import robotoBoldBase64 from "../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64"
 
 function measureCharacterDimensions() {
     // Create a temporary canvas element for text measurement
@@ -122,11 +116,11 @@ const getMaxCanvasDimensions = async () => {
     step: 1024,
     useWorker: true
   }
-  const canvasSize = await import('canvas-size')
+  const canvasSize = (await import('canvas-size')).default
   return await Promise.all([
-      canvasSize.default.maxArea(options),
-      canvasSize.default.maxWidth(options),
-      canvasSize.default.maxHeight(options)
+      canvasSize.maxArea(options),
+      canvasSize.maxWidth(options),
+      canvasSize.maxHeight(options)
     ]).then(([maxLength, maxWidth, maxHeight]) => {
       maxDimensions = {
         maxArea : maxLength.width * maxLength.height,
@@ -193,6 +187,7 @@ app.ports.getBBox.subscribe(([handle, graphSelector, subSelector]) => {
 })
 
 app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
+  const FileSaver = (await import('file-saver')).default
   let svg = document.querySelector('svg#' + graphId)
   if (!svg) {
     console.error('SVG element not found')
@@ -245,6 +240,9 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
   for (const [key, value] of Object.entries(cssVariables)) {
     svgData = svgData.replaceAll("var(" + key + ")", value)
   }
+
+  const robotoBase64 = (await import("../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64")).default
+  const robotoBoldBase64 = (await import("../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64")).default
 
   // Embed fonts into svg as Base64Encoded string
   let fontStyle = `
@@ -348,7 +346,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
   img.src = url 
 })
 
-app.ports.exportGraphics.subscribe((filename) => {
+app.ports.exportGraphics.subscribe(async (filename) => {
   const classMap = new Map()
   const sheets = ([...document.styleSheets]).filter(({ href }) => !href)
   if (!sheets) return
@@ -383,17 +381,20 @@ app.ports.exportGraphics.subscribe((filename) => {
   // merge double style definitions
   svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
   svg = svg.replace('<svg', '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg"')
-  download(filename, svg)
+  await download(filename, svg)
 })
 
-const download = (filename, buffer) => {
+const download = async (filename, buffer) => {
   const blob = new Blob([buffer], { type: 'application/octet-stream' }) // eslint-disable-line no-undef
+  const FileSaver = (await import('file-saver')).default
   FileSaver.saveAs(blob, filename)
 }
 
-const compress = (data) => {
+const compress = async (data) => {
+  const lzw = (await import('lzwcompress')).default
+  const { Base64 } = await import('js-base64')
   return new Uint32Array(
-    pack(
+    lzw.pack(
       // convert to base64 (utf-16 safe)
       Base64.encode(
         JSON.stringify(data)
@@ -402,33 +403,35 @@ const compress = (data) => {
   ).buffer
 }
 
-const decompress = (data) => {
+const decompress = async (data) => {
+  const lzw = (await import('lzwcompress')).default
+  const { Base64 } = await import('js-base64')
   return JSON.parse(
     Base64.decode(
-      unpack(
+      lzw.unpack(
         [...new Uint32Array(data)]
       )
     )
   )
 }
 
-app.ports.deserialize.subscribe(() => {
-  fileDialog({ strict: true })
-    .then(file => {
-      const reader = new FileReader() // eslint-disable-line no-undef
-      reader.onload = () => {
-        let data = reader.result
-        data = decompress(data)
-        data[0] = data[0].split(' ')[0]
-        data[0] = data[0].split('-')[0]
-        app.ports.deserialized.send([file.name, data])
-      }
-      reader.readAsArrayBuffer(file)
-    })
+
+app.ports.deserialize.subscribe(async () => {
+  const { fileDialog } = await import('file-select-dialog')
+  const file = await fileDialog({ strict: true })
+  const reader = new FileReader() // eslint-disable-line no-undef
+  reader.onload = async () => {
+    let data = reader.result
+    data = await decompress(data)
+    data[0] = data[0].split(' ')[0]
+    data[0] = data[0].split('-')[0]
+    app.ports.deserialized.send([file.name, data])
+  }
+  reader.readAsArrayBuffer(file)
 })
 
-app.ports.serialize.subscribe(([filename, body]) => {
-  download(filename, compress(body))
+app.ports.serialize.subscribe(async ([filename, body]) => {
+  await download(filename, await compress(body))
 })
 
 app.ports.pluginsOut.subscribe(packetWithKey => {
