@@ -344,36 +344,32 @@ resolveOverlapsOnly distance movingId network =
         otherNodes =
             List.filter (\n -> n.id /= movingId) allNodes
 
-        -- Push the moving node away from a fixed node
+        -- Push the moving node away from a fixed node (always increase Y to avoid oscillation)
         pushMovingNodeAway : { a | x : Float, y : Float } -> { id : Id, x : Float, y : Float, isAddress : Bool } -> { id : Id, x : Float, y : Float, isAddress : Bool }
         pushMovingNodeAway fixedNode movingNode =
-            let
-                dy =
-                    movingNode.y - fixedNode.y
+            { movingNode | y = fixedNode.y + nodeYOffset }
 
-                -- Determine which direction to push (primarily Y direction)
-                newY =
-                    if dy >= 0 then
-                        fixedNode.y + nodeYOffset
-
-                    else
-                        fixedNode.y - nodeYOffset
-            in
-            { movingNode | y = newY }
+        -- Maximum iterations to prevent infinite loops
+        maxIterations =
+            100
 
         -- Keep pushing the moving node until it doesn't overlap with any other node
-        resolveMovingNode : { id : Id, x : Float, y : Float, isAddress : Bool } -> { id : Id, x : Float, y : Float, isAddress : Bool }
-        resolveMovingNode movingNode =
-            let
-                overlappingNode =
-                    List.filter (nodesOverlap movingNode) otherNodes |> List.head
-            in
-            case overlappingNode of
-                Just fixedNode ->
-                    resolveMovingNode (pushMovingNodeAway fixedNode movingNode)
+        resolveMovingNode : Int -> { id : Id, x : Float, y : Float, isAddress : Bool } -> { id : Id, x : Float, y : Float, isAddress : Bool }
+        resolveMovingNode iterations movingNode =
+            if iterations <= 0 then
+                movingNode
 
-                Nothing ->
-                    movingNode
+            else
+                let
+                    overlappingNode =
+                        List.filter (nodesOverlap movingNode) otherNodes |> List.head
+                in
+                case overlappingNode of
+                    Just fixedNode ->
+                        resolveMovingNode (iterations - 1) (pushMovingNodeAway fixedNode movingNode)
+
+                    Nothing ->
+                        movingNode
 
         -- Apply node position change to network
         applyChange : { id : Id, x : Float, y : Float, isAddress : Bool } -> Network -> Network
@@ -386,7 +382,7 @@ resolveOverlapsOnly distance movingId network =
     in
     case maybeMovingNode of
         Just movingNode ->
-            applyChange (resolveMovingNode movingNode) network
+            applyChange (resolveMovingNode maxIterations movingNode) network
 
         Nothing ->
             network

@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.01.3] - 2026-02-12
+
+### Fixed
+
+- Infinite loop in collision avoidance.
+
 ## [26.01.2] - 2026-02-03
 
 ### Fixed
