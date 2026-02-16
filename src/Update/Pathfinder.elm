@@ -555,18 +555,9 @@ updateByMsg plugins uc msg model =
                 Just t ->
                     -- First collect all addresses from transactions and check if we need to fetch tag summaries
                     let
-                        txAccounts =
-                            model.network.txs
-                                |> Dict.values
-                                |> List.concatMap (explodeTxToAccounts uc.locale)
-
-                        feeAddress =
-                            Locale.string uc.locale "fee"
-
                         allAddresses =
-                            txAccounts
-                                |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
-                                |> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
+                            Dict.values model.network.txs
+                                |> getToAndFromAddresses uc
 
                         -- Group addresses by network for bulk fetching
                         addressesByNetwork =
@@ -648,20 +639,11 @@ updateByMsg plugins uc msg model =
                             )
                             (n model)
 
-                -- Check if all addresses now have their tag summaries loaded
-                txAccounts =
-                    modelWithTags.network.txs
-                        |> Dict.values
-                        |> List.concatMap (explodeTxToAccounts uc.locale)
-
-                feeAddress =
-                    Locale.string uc.locale "fee"
-
                 allAddresses =
-                    txAccounts
-                        |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
-                        |> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
+                    Dict.values modelWithTags.network.txs
+                        |> getToAndFromAddresses uc
 
+                -- Check if all addresses now have their tag summaries loaded
                 stillMissing =
                     allAddresses
                         |> List.filter
@@ -4426,13 +4408,9 @@ fetchTagSummaryForIds includeBestClusterTag existing toMsg network ids =
                 |> List.map (Id.init network)
                 |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
     in
-    if List.isEmpty idsToLoad then
-        CmdEffect Cmd.none
-
-    else
-        toMsg includeBestClusterTag
-            |> Api.BulkGetAddressTagSummaryEffect { currency = network, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
-            |> ApiEffect
+    toMsg includeBestClusterTag
+        |> Api.BulkGetAddressTagSummaryEffect { currency = network, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
+        |> ApiEffect
 
 
 fetchTagSummaryForId : Bool -> Dict Id HavingTags -> Id -> Effect
@@ -5288,3 +5266,14 @@ explodeTxToAccounts locale tx =
                         in
                         outputRows ++ feeRows
                     )
+
+
+getToAndFromAddresses : Update.Config -> List Tx -> List ( String, String )
+getToAndFromAddresses uc =
+    let
+        feeAddress =
+            Locale.string uc.locale "fee"
+    in
+    List.concatMap (explodeTxToAccounts uc.locale)
+        >> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
+        >> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
