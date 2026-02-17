@@ -133,13 +133,21 @@ const getMaxCanvasDimensions = async () => {
 
 const getGraphBBox = (svg, selector) => {
     // Get the bounding box of the entire graph content by checking all elements
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    const bounds = 
+      { minX : Infinity, 
+        minY : Infinity, 
+        maxX : -Infinity, 
+        maxY : -Infinity
+    }
     // Iterate through all rendered elements to find true bounds
     const allElements = svg.querySelectorAll(selector)
     allElements.forEach(el => {
       try {
+        console.log(el)
         // Get the transformation matrix of the element
-        const matrix = element.transform.baseVal.consolidate();
+        const matrix = el.transform.baseVal.consolidate();
+
+        const bbox = el.getBBox()
 
         // Apply the transformation to the bounding box
         const points = [
@@ -155,24 +163,25 @@ const getGraphBBox = (svg, selector) => {
             return { x, y };
         });
 
+        console.log(transformedPoints) 
         // Update min and max coordinates
         transformedPoints.forEach(point => {
-            minX = Math.min(minX, point.x);
-            minY = Math.min(minY, point.y);
-            maxX = Math.max(maxX, point.x);
-            maxY = Math.max(maxY, point.y);
+            bounds.minX = Math.min(bounds.minX, point.x);
+            bounds.minY = Math.min(bounds.minY, point.y);
+            bounds.maxX = Math.max(bounds.maxX, point.x);
+            bounds.maxY = Math.max(bounds.maxY, point.y);
         });
       } catch (e) {
         // Skip elements that can't compute bbox
       }
     })
-    
-    if (isFinite(minX)) {
+    console.log(bounds) 
+    if (isFinite(bounds.minX)) {
       return {
-        x : minX,
-        y : minY,
-        width : maxX - minX,
-        height : maxY - minY
+        x : bounds.minX,
+        y : bounds.minY,
+        width : bounds.maxX - bounds.minX,
+        height : bounds.maxY - bounds.minY
       }
     }
     // Fallback if no elements found

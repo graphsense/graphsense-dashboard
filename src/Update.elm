@@ -11,7 +11,6 @@ import Dict exposing (Dict)
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
-import Effect.Pathfinder as Pathfinder
 import Encode.Graph as Graph
 import Encode.Pathfinder as Pathfinder
 import File.Download
@@ -1065,7 +1064,9 @@ update plugins uc msg model =
                     PluginInterface.Reset
                         |> Plugin.updateByCoreMsg plugins uc model.plugins
             in
-            ( { model | pathfinder = m, plugins = newPluginsState }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
+            ( { model | pathfinder = m, plugins = newPluginsState }
+            , [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ]
+            )
                 |> updateByPluginOutMsg plugins uc outMsg
                 |> Tuple.mapSecond
                     ((++)
@@ -1074,6 +1075,7 @@ update plugins uc msg model =
                             |> Route.pathfinderRoute
                             |> Route.toUrl
                             |> NavPushUrlEffect
+                        , Ports.setDirty False |> CmdEffect
                         ]
                     )
 
@@ -1150,27 +1152,6 @@ update plugins uc msg model =
 
                 Pathfinder.UserClickedToggleBothValueDisplay ->
                     update plugins uc (UserToggledBothValueDisplay |> SettingsMsg) model
-
-        PathfinderMsg (Pathfinder.UserClickedSaveGraph time) ->
-            ( model
-            , [ (case time of
-                    Nothing ->
-                        Time.now
-                            |> Task.perform (Just >> Pathfinder.UserClickedSaveGraph)
-
-                    Just t ->
-                        Pathfinder.encode model.pathfinder
-                            |> pair
-                                (makeTimestampFilename model.config.locale t
-                                    |> (\tt -> tt ++ ".gs")
-                                )
-                            |> Ports.serialize
-                )
-                    |> Pathfinder.CmdEffect
-                    |> PathfinderEffect
-              , SetCleanEffect
-              ]
-            )
 
         PathfinderMsg (Pathfinder.UserGotDataForTagsListDialog id tags) ->
             let
@@ -1350,7 +1331,7 @@ update plugins uc msg model =
                         , dirty = True
                       }
                     , PluginEffect cmd
-                        :: SetDirtyEffect
+                        :: (Ports.setDirty True |> CmdEffect)
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins uc outMsg
@@ -1373,7 +1354,7 @@ update plugins uc msg model =
                         , dirty = True
                       }
                     , PluginEffect cmd
-                        :: SetDirtyEffect
+                        :: (Ports.setDirty True |> CmdEffect)
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins uc outMsg
@@ -1496,7 +1477,7 @@ update plugins uc msg model =
                         )
                             |> Graph.CmdEffect
                             |> GraphEffect
-                      , SetCleanEffect
+                      , Ports.setDirty False |> CmdEffect
                       ]
                     )
 

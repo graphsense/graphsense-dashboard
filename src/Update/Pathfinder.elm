@@ -14,6 +14,7 @@ import Dict exposing (Dict)
 import Effect.Api as Api exposing (Effect(..))
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Effect.Search
+import Encode.Pathfinder as Pathfinder
 import Hovercard
 import Iknaio.ColorScheme exposing (annotationGreen, annotationRed)
 import Init.Graph.History as History
@@ -150,8 +151,7 @@ update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
         |> pushHistory plugins msg
-        |> markDirty plugins msg
-        |> updateByMsg plugins uc msg
+        |> and (updateByMsg plugins uc msg)
         |> and syncUrl
         |> and (syncSidePanel uc)
         |> and dispatchEventualMessages
@@ -482,9 +482,17 @@ updateByMsg plugins uc msg model =
                         filename =
                             makeTimestampFilename uc.locale t
                                 |> flip (++) (" " ++ model.name ++ ".pdf")
+
+                        selector =
+                            case model.selection of
+                                MultiSelect (_ :: _) ->
+                                    "g[data-selected=true]"
+
+                                _ ->
+                                    ":not(g, defs, style, span)"
                     in
                     ( model |> s_exportPDF True
-                    , Ports.getBBox ( filename, "svg#" ++ graphId, ":not(g, defs, style, span)" )
+                    , Ports.getBBox ( filename, "svg#" ++ graphId, selector )
                         |> Pathfinder.CmdEffect
                         |> List.singleton
                     )
@@ -661,9 +669,25 @@ updateByMsg plugins uc msg model =
                 -- Still waiting for more tag summaries, just update the model
                 n modelWithTags
 
-        UserClickedSaveGraph _ ->
-            -- handled in src/Update.elm
-            n model
+        UserClickedSaveGraph time ->
+            ( model
+            , [ (case time of
+                    Nothing ->
+                        Time.now
+                            |> Task.perform (Just >> UserClickedSaveGraph)
+
+                    Just t ->
+                        Pathfinder.encode model
+                            |> pair
+                                (makeTimestampFilename uc.locale t
+                                    |> (\tt -> tt ++ ".gs")
+                                )
+                            |> Ports.serialize
+                )
+                    |> Pathfinder.CmdEffect
+              ]
+            )
+                |> and setClean
 
         NoOp ->
             n model
@@ -3691,13 +3715,12 @@ updateByRoute plugins uc route model =
         model
             |> s_route route
             |> (if route == Route.Root then
-                    identity
+                    n
 
                 else
-                    s_isDirty True
-                        >> forcePushHistory
+                    forcePushHistory
                )
-            |> updateByRoute_ plugins uc route
+            |> and (updateByRoute_ plugins uc route)
             |> and (syncSidePanel uc)
 
 
@@ -4269,22 +4292,58 @@ unhover model =
         |> s_hovered NoHover
 
 
-pushHistory : Plugins -> Msg -> Model -> Model
+pushHistory : Plugins -> Msg -> Model -> ( Model, List Effect )
 pushHistory plugins msg model =
     if History.shallPushHistory plugins msg model then
         forcePushHistory model
 
     else
-        model
+        n model
 
 
-forcePushHistory : Model -> Model
+forcePushHistory : Model -> ( Model, List Effect )
 forcePushHistory model =
-    { model
-        | history =
+    let
+        newHistory =
             makeHistoryEntry model
                 |> History.push model.history
+
+        isDirty =
+            newHistory /= model.history
+    in
+    { model
+        | history = newHistory
     }
+        |> setDirty isDirty
+
+
+setDirty : Bool -> Model -> ( Model, List Effect )
+setDirty isDirty model =
+    let
+        isD =
+            model.isDirty
+                || isDirty
+    in
+    ( { model
+        | isDirty = isD
+      }
+    , if isD then
+        Ports.setDirty isD
+            |> CmdEffect
+            |> List.singleton
+
+      else
+        []
+    )
+
+
+setClean : Model -> ( Model, List Effect )
+setClean model =
+    ( { model | isDirty = False }
+    , [ Ports.setDirty False
+            |> CmdEffect
+      ]
+    )
 
 
 makeHistoryEntry : Model -> Entry.Model
@@ -4312,15 +4371,6 @@ undoRedo fun model =
             [ Route.Root
                 |> NavPushRouteEffect
             ]
-
-
-markDirty : Plugins -> Msg -> Model -> Model
-markDirty plugins msg model =
-    if History.shallPushHistory plugins msg model then
-        model |> s_isDirty True
-
-    else
-        model
 
 
 fetchActor : String -> Effect

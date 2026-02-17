@@ -32,7 +32,7 @@ main =
                 |> mapSecond
                     (List.map
                         (\( statusbarToken, eff ) ->
-                            perform (Plugin.effectsPlugins plugins) model.key statusbarToken model.user.apiKey eff
+                            perform (Plugin.effectsPlugins plugins) model statusbarToken model.user.apiKey eff
                         )
                     )
                 |> mapSecond Cmd.batch

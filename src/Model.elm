@@ -224,8 +224,6 @@ type Effect
     | PortsConsoleEffect String
     | CmdEffect (Cmd Msg)
     | LogoutEffect
-    | SetDirtyEffect
-    | SetCleanEffect
     | SaveUserSettingsEffect UserSettings
     | NotificationEffect Model.Notification.Effect
     | PostponeUpdateByUrlEffect Url

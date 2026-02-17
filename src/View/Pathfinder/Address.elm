@@ -10,6 +10,7 @@ import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
+import Json.Encode
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Entity exposing (isPossibleServiceUtxo)
@@ -167,6 +168,10 @@ view plugins vc pc colors address getCluster annotation =
             ((address.x + address.dx) * unit - adjX)
             ((A.animate address.clock address.y + address.dy) * unit - adjY)
             |> transform
+        , address.selected
+            |> Json.Encode.bool
+            |> Json.Encode.encode 0
+            |> Html.attribute "data-selected"
         ]
         (GraphComponents.addressNodeWithInstances
             (GraphComponents.addressNodeAttributes
