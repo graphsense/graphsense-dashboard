@@ -12,6 +12,6 @@ services:
     ports:
       - ${DASHBOARD_PORT}:8000
     environment:
-      REST_URL: "${REST_URL}"
+      VITE_GS_REST_URL: "${VITE_GS_REST_URL}"
     command: ["nginx", "-g", "daemon off;"]
     restart: always
