@@ -72,10 +72,10 @@ Copy `docker/env.template` to `.env`:
 
     cp docker/env.template .env
 
-Edit the file `.env` and set the URL of the [graphsense-REST][graphsense-rest]
+Edit the file `.env` and set the URL of the [graphsense-lib Web Api][graphsense-rest]
 service, e.g.:
 
-    REST_URL="https://api.ikna.io"
+    VITE_GS_REST_URL="https://api.ikna.io"
 
 ### Usage
 
@@ -94,5 +94,5 @@ Finally, test the application in a web browser:
 [nodejs]: https://nodejs.org
 [pre-commit]: https://pre-commit.com/#install
 [npm]: https://www.npmjs.com
-[graphsense-rest]: https://github.com/graphsense/graphsense-rest
+[graphsense-rest]: https://github.com/graphsense/graphsense-lib
 [docker]: https://www.docker.com
