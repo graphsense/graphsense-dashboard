@@ -539,7 +539,7 @@ update uc msg model =
             in
             if not <| List.isEmpty addressesToLoad then
                 ( model
-                , BrowserGotAddressesForTags tags.nextPage
+                , BrowserGotAddressesForTags tags
                     >> Pathfinder.AddressDetailsMsg model.address.id
                     |> Api.BulkGetAddressEffect
                         { currency = currency
@@ -558,13 +558,23 @@ update uc msg model =
                     []
                     |> updateRelatedAddressesTable model
 
-        BrowserGotAddressesForTags nextpage addresses ->
+        BrowserGotAddressesForTags tags addresses ->
+            let
+                addressDict =
+                    addresses
+                        |> List.map (\a -> ( a.address, a ))
+                        |> Dict.fromList
+
+                addressesSorted =
+                    tags.addressTags
+                        |> List.filterMap (.address >> flip Dict.get addressDict)
+            in
             RelatedAddressesTable.appendTaggedAddresses
                 (RelatedAddressesTableSubTableMsg
                     >> Pathfinder.AddressDetailsMsg model.address.id
                 )
-                nextpage
-                addresses
+                tags.nextPage
+                addressesSorted
                 |> updateRelatedAddressesTable model
 
         TooltipMsg _ ->

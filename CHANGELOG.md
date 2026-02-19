@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.01.4] - 2026-02-19
+
+### Fixed
+
+- Show cluster addresses sorted by tag confidence as served by the REST API
+
 ## [26.01.3] - 2026-02-12
 
 ### Fixed
