@@ -7,7 +7,7 @@ if [[ -z "${GS_API_KEY:-}" ]]; then
     exit 1
 fi
 
-docker run --replace -d --name nginx-proxy-iknaio-prod-api -p 8080:80 nginx /bin/bash -c '
+docker run -d --name nginx-proxy-iknaio-prod-api -p 8080:80 nginx /bin/bash -c '
 cat << "EOF" > /etc/nginx/conf.d/default.conf
 server {
     listen 80;
