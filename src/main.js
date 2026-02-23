@@ -92,16 +92,11 @@ const app = Elm.Main.init(
 
 let isDirty = false
 
-window.onbeforeunload = function (evt) {
+window.onbeforeunload = (evt) => {
+  if (import.meta.env.DEV) return
   if (!isDirty) return
-  const message = 'You are about to leave the site. Your work will be lost. Sure?'
-  if (typeof evt === 'undefined') {
-    evt = window.event
-  }
-  if (evt) {
-    evt.returnValue = message
-  }
-  return message
+  evt.preventDefault()
+  evt.returnValue = true
 }
 
 app.ports.console.subscribe(console.error)
