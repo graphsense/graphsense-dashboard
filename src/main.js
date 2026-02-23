@@ -145,7 +145,7 @@ const getGraphBBox = (svg, selector) => {
       try {
         console.log(el)
         // Get the transformation matrix of the element
-        const matrix = el.transform.baseVal.consolidate();
+        const matrix = el.transform.baseVal.consolidate().matrix;
 
         const bbox = el.getBBox()
 
@@ -163,7 +163,6 @@ const getGraphBBox = (svg, selector) => {
             return { x, y };
         });
 
-        console.log(transformedPoints) 
         // Update min and max coordinates
         transformedPoints.forEach(point => {
             bounds.minX = Math.min(bounds.minX, point.x);
@@ -175,7 +174,6 @@ const getGraphBBox = (svg, selector) => {
         // Skip elements that can't compute bbox
       }
     })
-    console.log(bounds) 
     if (isFinite(bounds.minX)) {
       return {
         x : bounds.minX,
