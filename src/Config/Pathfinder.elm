@@ -36,4 +36,5 @@ type alias Config =
     , highlightClusterFriends : Bool
     , tracingMode : TracingMode
     , avoidOverlapingNodes : Bool
+    , hideSelectionForExport : Bool
     }

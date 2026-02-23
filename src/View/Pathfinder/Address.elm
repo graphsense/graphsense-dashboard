@@ -212,14 +212,14 @@ view plugins vc pc colors address getCluster annotation =
                     address.id
                         |> Id.id
                         |> truncateLongIdentifierWithLengths 8 4
-                , highlightVisible = address.selected
+                , highlightVisible = not pc.hideSelectionForExport && address.selected
                 , clusterVisible = (clusterColor /= Nothing) && pc.highlightClusterFriends
                 , expandLeftVisible = expandVisible Incoming
                 , expandRightVisible = expandVisible Outgoing
                 , iconInstance = toNodeIcon address cluster
                 , exchangeLabel = nodeLabel |> Maybe.withDefault ""
                 , exchangeLabelVisible = nodeLabel /= Nothing
-                , isStartingPoint = address.isStartingPoint || address.selected
+                , isStartingPoint = address.isStartingPoint || not pc.hideSelectionForExport && address.selected
                 , tagIconVisible = address.hasTags || List.length replacementTagIcons > 0
                 , tagIconInstance =
                     (replacementIconCombined |> Maybe.map (g []))

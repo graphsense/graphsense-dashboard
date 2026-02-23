@@ -138,7 +138,6 @@ const getGraphBBox = (svg, selector) => {
     const allElements = svg.querySelectorAll(selector)
     allElements.forEach(el => {
       try {
-        console.log(el)
         // Get the transformation matrix of the element
         const matrix = el.transform.baseVal.consolidate().matrix;
 
@@ -275,6 +274,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
 
   img.onerror = function(e) {
     app.ports.uncaughtError.send({message: e + "img"})
+    app.ports.renderedImageForExport.send(false)
     console.error('Failed to load SVG image', e)
   }
 
@@ -291,6 +291,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
+        app.ports.renderedImageForExport.send(true)
 
         // Use PNG for better quality, with compression
         imgData = await canvas.convertToBlob({type: 'image/png'})

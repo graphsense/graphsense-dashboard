@@ -6,9 +6,11 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Dict
+import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Json.Decode
+import Json.Encode
 import Maybe.Extra
 import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords as Coords
@@ -36,7 +38,7 @@ import View.Pathfinder.Tx.Utils exposing (signX, toPosition)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> UtxoTx -> Maybe Annotations.AnnotationItem -> Svg Msg
-view _ vc _ tx utxo annotation =
+view _ vc pc tx utxo annotation =
     let
         id =
             tx.id
@@ -110,6 +112,10 @@ view _ vc _ tx utxo annotation =
         , A.animate tx.clock tx.opacity
             |> String.fromFloat
             |> opacity
+        , tx.selected
+            |> Json.Encode.bool
+            |> Json.Encode.encode 0
+            |> Html.attribute "data-selected"
         ]
         (GraphComponents.txNodeUtxoWithAttributes
             { txNodeUtxoAttributes
@@ -137,12 +143,12 @@ view _ vc _ tx utxo annotation =
             }
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
-                , highlightVisible = tx.selected || tx.hovered
+                , highlightVisible = not pc.hideSelectionForExport && (tx.selected || tx.hovered)
                 , txHash = Util.View.truncateLongIdentifier utxo.raw.txHash |> ifTrue vc.showHash
                 , date = Locale.timestampDateUniform vc.locale t |> ifTrue vc.showTimestampOnTxEdge
                 , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue vc.showTimestampOnTxEdge
                 , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
-                , startingPointVisible = tx.isStartingPoint || tx.selected
+                , startingPointVisible = tx.isStartingPoint || not pc.hideSelectionForExport && tx.selected
                 }
             , iconsNodeMarker =
                 { variant =
@@ -167,7 +173,7 @@ type RenderLevel
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> RenderLevel -> UtxoTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ vc _ level utxo tx annotation =
+edge _ vc pc level utxo tx annotation =
     let
         assetToValue asset =
             let
@@ -249,6 +255,9 @@ edge _ vc _ level utxo tx annotation =
                                         Colors.pathOut
                             )
                     )
+
+        highlight =
+            not pc.hideSelectionForExport && (tx.hovered || tx.selected)
     in
     (inputValues
         |> List.map
@@ -262,7 +271,7 @@ edge _ vc _ level utxo tx annotation =
                 in
                 ( Id.toString address.id
                 , pickPathFunction False
-                    (tx.hovered || tx.selected)
+                    highlight
                     colorFinal
                     isConversionLeg
                     values
@@ -286,7 +295,7 @@ edge _ vc _ level utxo tx annotation =
                         in
                         ( Id.toString address.id
                         , pickPathFunction True
-                            (tx.hovered || tx.selected)
+                            highlight
                             colorFinal
                             isConversionLeg
                             values

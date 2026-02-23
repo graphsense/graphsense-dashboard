@@ -410,6 +410,9 @@ shallPushHistory plugins msg _ =
         BrowserSentBBox _ ->
             False
 
+        BrowserRenderedGraphForExport ->
+            False
+
         BrowserSentExportGraphResult _ ->
             False
 

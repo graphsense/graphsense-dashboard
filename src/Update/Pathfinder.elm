@@ -451,21 +451,11 @@ updateByMsg plugins uc msg model =
                             makeTimestampFilename uc.locale t
                                 |> flip (++) (" " ++ model.name ++ ".png")
                     in
-                    ( model |> s_exportPNG True
-                    , [ { filename = filename
-                        , graphId = graphId
-                        , viewbox = Nothing
-                        }
-                            |> Ports.exportGraph
-                            |> Pathfinder.CmdEffect
-                      , Notification.infoDefault "generating image"
-                            -- |> Notification.map (s_title (Just "PDF Export"))
-                            |> Notification.map (s_isEphemeral True)
-                            |> Notification.map (s_showClose False)
-                            |> Notification.map (s_removeDelayMs 4000.0)
-                            |> ShowNotificationEffect
-                      ]
-                    )
+                    model.config
+                        |> s_hideSelectionForExport True
+                        |> flip s_config model
+                        |> s_exportPNG (PrepareImageForExport |> Just)
+                        |> exportGraph ( filename, Nothing )
 
         UserClickedExportGraphAsPdf time ->
             case time of
@@ -489,51 +479,30 @@ updateByMsg plugins uc msg model =
                                     "g[data-selected=true]"
 
                                 _ ->
-                                    ":not(g, defs, style, span)"
+                                    "g[data-selected]"
                     in
-                    ( model |> s_exportPDF True
+                    ( model
+                        |> s_exportPDF (PrepareImageForExport |> Just)
                     , Ports.getBBox ( filename, "svg#" ++ graphId, selector )
                         |> Pathfinder.CmdEffect
                         |> List.singleton
                     )
 
-        BrowserSentBBox ( handle, bbox ) ->
-            bbox
-                |> Maybe.andThen
-                    (\bb ->
-                        if String.endsWith ".pdf" handle then
-                            ( model
-                            , [ { filename = handle
-                                , graphId = graphId
-                                , viewbox = addMarginPdf bb |> Just
-                                }
-                                    |> Ports.exportGraph
-                                    |> Pathfinder.CmdEffect
-                              , Notification.infoDefault "generating pdf"
-                                    -- |> Notification.map (s_title (Just "PDF Export"))
-                                    |> Notification.map (s_isEphemeral True)
-                                    |> Notification.map (s_showClose False)
-                                    |> Notification.map (s_removeDelayMs 4000.0)
-                                    |> ShowNotificationEffect
-                              ]
-                            )
-                                |> Just
+        BrowserSentBBox ( filename, bbox ) ->
+            exportGraph ( filename, bbox ) model
 
-                        else
-                            Nothing
-                    )
-                |> Maybe.withDefault (n model)
+        BrowserRenderedGraphForExport ->
+            model.config
+                |> s_hideSelectionForExport False
+                |> flip s_config model
+                |> n
 
         BrowserSentExportGraphResult { filename, error } ->
             let
                 ( set, type_ ) =
-                    if String.endsWith ".pdf" filename then
-                        ( s_exportPDF, "pdf" )
-
-                    else
-                        ( s_exportPNG, "image" )
+                    getSetterAndTypeForExport filename
             in
-            ( model |> set False
+            ( model |> set Nothing
             , error
                 |> Maybe.map
                     (Notification.errorDefault
@@ -2805,6 +2774,32 @@ updateByMsg plugins uc msg model =
             )
 
 
+exportGraph : ( String, Maybe BBox ) -> Model -> ( Model, List Effect )
+exportGraph ( filename, bbox ) model =
+    let
+        ( set, type_ ) =
+            getSetterAndTypeForExport filename
+    in
+    ( model.config
+        |> s_hideSelectionForExport True
+        |> flip s_config model
+        |> set (Just ExportingImage)
+    , [ { filename = filename
+        , graphId = graphId
+        , viewbox = bbox |> Maybe.map addMarginForExport
+        }
+            |> Ports.exportGraph
+            |> Pathfinder.CmdEffect
+      , Notification.infoDefault ("generating " ++ type_)
+            -- |> Notification.map (s_title (Just "PDF Export"))
+            |> Notification.map (s_isEphemeral True)
+            |> Notification.map (s_showClose False)
+            |> Notification.map (s_removeDelayMs 4000.0)
+            |> ShowNotificationEffect
+      ]
+    )
+
+
 browserGotTx : Plugins -> Update.Config -> AddingTxConfig -> Api.Data.Tx -> Model -> ( Model, List Effect )
 browserGotTx plugins uc { pos, loadAddresses, autoLinkInTraceMode } tx model =
     if Dict.member (Tx.getTxId tx) model.network.txs then
@@ -5071,8 +5066,8 @@ addMarginPathfinder bbox =
     }
 
 
-addMarginPdf : BBox -> BBox
-addMarginPdf bb =
+addMarginForExport : BBox -> BBox
+addMarginForExport bb =
     let
         relMargin =
             0.0
@@ -5327,3 +5322,12 @@ getToAndFromAddresses uc =
     List.concatMap (explodeTxToAccounts uc.locale)
         >> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
         >> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
+
+
+getSetterAndTypeForExport : String -> ( Maybe ExportImage -> Model -> Model, String )
+getSetterAndTypeForExport filename =
+    if String.endsWith ".pdf" filename then
+        ( s_exportPDF, "pdf" )
+
+    else
+        ( s_exportPNG, "image" )

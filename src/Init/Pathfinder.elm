@@ -40,6 +40,7 @@ init us =
             , highlightClusterFriends = us.highlightClusterFriends |> Maybe.withDefault True
             , tracingMode = us.tracingMode |> Maybe.withDefault TransactionTracingMode
             , avoidOverlapingNodes = us.avoidOverlapingNodes |> Maybe.withDefault True
+            , hideSelectionForExport = False
             }
       , pointerTool = Drag
       , modPressed = False
@@ -52,8 +53,8 @@ init us =
       , eventualMessages = EventualMessages.init Network.isConditionMet EventualMessagesHeartBeat
       , exportCSV = ExportCSV.init
       , exportCSVGraph = ExportCSV.init
-      , exportPNG = False
-      , exportPDF = False
+      , exportPNG = Nothing
+      , exportPDF = Nothing
       }
     , Cmd.none
     )

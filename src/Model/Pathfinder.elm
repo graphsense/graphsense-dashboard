@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, graphId, unit)
+module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, graphId, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Components.ExportCSV as ExportCSV
@@ -61,8 +61,8 @@ type alias Model =
     , eventualMessages : EventualMessages NetworkConditions Network Msg
     , exportCSV : ExportCSV.Model
     , exportCSVGraph : ExportCSV.Model
-    , exportPNG : Bool
-    , exportPDF : Bool
+    , exportPNG : Maybe ExportImage
+    , exportPDF : Maybe ExportImage
     }
 
 
@@ -108,6 +108,11 @@ type Details
     | TxDetails Id TxDetails.Model
     | RelationDetails ( Id, Id ) RelationDetails.Model
     | ConversionDetails ( Id, Id ) ConversionDetailsModel
+
+
+type ExportImage
+    = PrepareImageForExport
+    | ExportingImage
 
 
 getLoadedAddress : Model -> Id -> Maybe Address

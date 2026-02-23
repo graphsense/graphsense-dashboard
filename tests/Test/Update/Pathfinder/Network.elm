@@ -22,6 +22,7 @@ config =
     , highlightClusterFriends = False
     , tracingMode = TransactionTracingMode
     , avoidOverlapingNodes = True
+    , hideSelectionForExport = False
     }
 
 
