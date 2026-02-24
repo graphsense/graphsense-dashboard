@@ -21,7 +21,6 @@
             "TSFoster/elm-tuple-extra": "2.0.0",
             "arturopala/elm-monocle": "2.2.0",
             "avh4/elm-color": "1.0.0",
-            "avh4/elm-program-test": "3.8.0",
             "billstclair/elm-sha256": "1.0.9",
             "danhandrea/elm-date-format": "2.0.2",
             "elm/browser": "1.0.2",
@@ -45,6 +44,7 @@
             "elm-community/maybe-extra": "5.3.0",
             "elm-community/result-extra": "2.4.0",
             "elm-community/string-extra": "4.0.1",
+            "elm-explorations/test": "2.2.1",
             "gregziegan/elm-font-awesome-5": "1.0.1",
             "grotsev/elm-debouncer": "1.0.0",
             "hmsk/elm-vite-plugin-helper": "1.0.1",
@@ -54,7 +54,6 @@
             "justinmimbs/time-extra": "1.2.0",
             "krisajenkins/remotedata": "6.1.0",
             "lukewestby/elm-string-interpolate": "1.0.4",
-            "mathiajusth/nonempty-dict": "1.1.1",
             "mdgriffith/elm-bezier": "1.0.0",
             "mercurymedia/elm-datetime-picker": "8.0.1",
             "mgold/elm-animation": "2.0.0",
@@ -69,21 +68,16 @@
             "rtfeldman/elm-iso8601-date-strings": "1.1.4"
         },
         "indirect": {
-            "avh4/elm-fifo": "1.0.4",
             "elm/bytes": "1.0.8",
             "elm/random": "1.0.0",
             "elm/virtual-dom": "1.0.5",
-            "elm-explorations/test": "1.2.2",
             "fredcy/elm-parseint": "2.0.1",
-            "hecrj/html-parser": "2.4.0",
             "myrho/elm-parser-extras": "1.0.1",
             "robinheghan/murmur3": "1.0.0"
         }
     },
     "test-dependencies": {
-        "direct": {
-            "elm-explorations/test": "1.2.2"
-        },
+        "direct": {},
         "indirect": {}
     }
 }

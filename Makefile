@@ -77,6 +77,7 @@ clean-all: clean-install clean-generated
 
 clean-install:
 	rm -rf node_modules
+	rm -rf $(ELM_PACKAGES_DIR)
 	rm -rf ./elm-stuff
 
 clean-generated: clean-generated-themes clean-generated-plugins clean-generated-utils
@@ -103,7 +104,7 @@ clean-public:
 
 setem: $(RECORDSETTER_ELM)
 
-$(RECORDSETTER_ELM): elm.json $(SRC_FILES) $(GENERATED_THEME_COLORMAPS) $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER)) $(GENERATED_PLUGIN_ELM)
+$(RECORDSETTER_ELM): elm.json virtual-dom-fix $(SRC_FILES) $(GENERATED_THEME_COLORMAPS) $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER)) $(GENERATED_PLUGIN_ELM)
 	$(SETEM)
 
 setem-codegen: $(CODEGEN_RECORDSETTER)
