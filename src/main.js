@@ -1,4 +1,4 @@
-import { Elm } from './Main.elm'
+import Main from './Main.elm'
 import FileSaver from 'file-saver'
 import { pack, unpack } from 'lzwcompress'
 import { Base64 } from 'js-base64'
@@ -85,7 +85,7 @@ for (const plugin in plugins) {
   pluginFlags[plugin] = plugins[plugin].flags()
 }
 
-const app = Elm.Main.init(
+const app = Main.init(
   { flags: 
     { localStorage: {...localStorage}
     , characterDimensions
@@ -96,7 +96,7 @@ const app = Elm.Main.init(
     } 
   })
 
-!!document.body.elmTree && console.warn('safe virtual dom not installed!')
+!!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
 let isDirty = false
 

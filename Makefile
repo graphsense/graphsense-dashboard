@@ -40,14 +40,14 @@ PUBLIC_FILES=$(shell find $(PUBLIC_DIR) -type f)
 
 SETEM=npx setem --output $(GENERATED_UTILS) && touch $(RECORDSETTER_ELM)
 
-ELM_HOME=./elm_packages
+export ELM_HOME=$(PWD)/elm_packages
 ELM_PACKAGES_DIR=$(ELM_HOME)/0.19.1/packages
 
 serve: prepare gen
-	ELM_HOME=$(ELM_HOME) npm run dev
+	npm run dev
 
 build: prepare gen
-	ELM_HOME=$(ELM_HOME) npm run build
+	npm run build
 
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in `ls -1`; do \
@@ -209,15 +209,20 @@ copy-public:
 print-plugins:
 	@echo $(PLUGINS)
 
+define clone-repo
+	test -d $(4) || \
+		git clone --depth=1 --branch=$(2) https://github.com/$(1) $(4) && \
+		cd $(4) && \
+		git reset --hard $(3) && \
+		git clean -df
+endef
+
 virtual-dom-fix:
 	mkdir -p $(ELM_PACKAGES_DIR) 
-	test -d $(ELM_PACKAGES_DIR)/rtfeldman/elm-css/18.0.0 || git clone --revision=e54998ce73b64c374b1457d5734c85d3f5b909fb --depth=1 https://github.com/omnibs/elm-css $(ELM_PACKAGES_DIR)/rtfeldman/elm-css/18.0.0
-	test -d $(ELM_PACKAGES_DIR)/elm/html/1.0.1 || git clone --revision=b35c476a69f0ba9bf8282d8c15df65e63aefea8f --depth=1 https://github.com/lydell/html $(ELM_PACKAGES_DIR)/elm/html/1.0.1
-	test -d $(ELM_PACKAGES_DIR)/elm/virtual-dom/1.0.5 || git clone --revision=e1fae6aabd65539db2c94a98220a45cfc624b633 --depth=1 https://github.com/lydell/virtual-dom $(ELM_PACKAGES_DIR)/elm/virtual-dom/1.0.5
-	test -d $(ELM_PACKAGES_DIR)/elm/browser/1.0.2 || git clone --revision=f5de544c8033d934285501f78f09e2eaf0171d55 --depth=1 https://github.com/lydell/browser $(ELM_PACKAGES_DIR)/elm/browser/1.0.2
-	
-	
-
+	$(call clone-repo,omnibs/elm-css,safe,e54998ce73b64c374b1457d5734c85d3f5b909fb,$(ELM_PACKAGES_DIR)/rtfeldman/elm-css/18.0.0)
+	$(call clone-repo,lydell/html,safe,b35c476a69f0ba9bf8282d8c15df65e63aefea8f,$(ELM_PACKAGES_DIR)/elm/html/1.0.1)
+	$(call clone-repo,lydell/virtual-dom,safe,e1fae6aabd65539db2c94a98220a45cfc624b633,$(ELM_PACKAGES_DIR)/elm/virtual-dom/1.0.5)
+	$(call clone-repo,lydell/browser,safe,f5de544c8033d934285501f78f09e2eaf0171d55,$(ELM_PACKAGES_DIR)/elm/browser/1.0.2)
 
 
 .PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix
