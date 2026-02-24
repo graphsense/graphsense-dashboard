@@ -1,5 +1,6 @@
 *.sw?
 node_modules
+elm_packages
 dist
 .vimrc
 tags
