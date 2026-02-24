@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.01.5] - 2026-02-24
+
+### Fixed
+
+- Use lydell/elm-safe-virtual-dom to fix runtime issues with browser extensions.
+- Improve wording on tooltip.
+
 ## [26.01.4] - 2026-02-19
 
 ### Fixed
