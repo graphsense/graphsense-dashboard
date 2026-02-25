@@ -1,9 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import elmPlugin from "vite-plugin-elm";
 import fs from 'fs';
-//import plugins_vite from '../generated/plugins/vite.config.js'
 import { createFilter } from 'vite'
-//import elm from 'vite-plugin-elm-watch'
 
 function envReplacePlugin(options = {}) {
   const filter = createFilter(options.include || /\.(js|ts)$/, options.exclude)
