@@ -94,7 +94,7 @@ view _ vc _ tx utxo annotation =
         ( annAttr, label ) =
             annotation
                 |> Maybe.map
-                    (annotationToAttrAndLabel
+                    (annotationToAttrAndLabel vc
                         tx
                         GraphComponents.txNodeUtxo_details
                         offset

@@ -154,7 +154,7 @@ view plugins vc pc colors address getCluster annotation =
         ( annAttr, label ) =
             annotation
                 |> Maybe.map
-                    (annotationToAttrAndLabel
+                    (annotationToAttrAndLabel vc
                         address
                         GraphComponents.addressNode_details
                         offset
