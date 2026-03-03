@@ -1,7 +1,6 @@
 module Api exposing
     ( Request
     , baseUrl
-    , effect
     , map
     , noExternalTransactions
     , request
@@ -21,8 +20,6 @@ import Dict
 import Http
 import Json.Decode
 import Json.Encode
-import ProgramTest
-import SimulatedEffect.Http
 import Task
 import Url.Builder
 import Util.Http exposing (Headers)
@@ -70,19 +67,6 @@ request method path pathParams queryParams headerParams body decoder =
 send : (Result Http.Error a -> msg) -> Request a -> Cmd msg
 send toMsg req =
     sendWithCustomError identity toMsg req
-
-
-effect : (Result Http.Error a -> msg) -> Request a -> ProgramTest.SimulatedEffect msg
-effect toMsg (Request req) =
-    SimulatedEffect.Http.request
-        { method = req.method
-        , headers = effectHeaders req.headers
-        , url = Url.Builder.crossOrigin req.basePath req.pathParams req.queryParams
-        , body = Maybe.withDefault SimulatedEffect.Http.emptyBody (Maybe.map SimulatedEffect.Http.jsonBody req.body)
-        , expect = effectExpectJson identity toMsg req.decoder
-        , timeout = req.timeout
-        , tracker = req.tracker
-        }
 
 
 sendWithCustomError : (Http.Error -> e) -> (Result e a -> msg) -> Request a -> Cmd msg
@@ -207,11 +191,6 @@ headers =
     List.filterMap (\( key, value ) -> Maybe.map (Http.header key) value)
 
 
-effectHeaders : List ( String, Maybe String ) -> List SimulatedEffect.Http.Header
-effectHeaders =
-    List.filterMap (\( key, value ) -> Maybe.map (SimulatedEffect.Http.header key) value)
-
-
 interpolatePath : String -> List ( String, String ) -> List String
 interpolatePath rawPath pathParams =
     let
@@ -231,11 +210,6 @@ queries =
 expectJson : (Http.Error -> e) -> (Result e a -> msg) -> Json.Decode.Decoder a -> Http.Expect msg
 expectJson mapError toMsg decoder =
     Http.expectStringResponse toMsg (Result.mapError mapError << decodeResponse decoder)
-
-
-effectExpectJson : (SimulatedEffect.Http.Error -> e) -> (Result e a -> msg) -> Json.Decode.Decoder a -> SimulatedEffect.Http.Expect msg
-effectExpectJson mapError toMsg decoder =
-    SimulatedEffect.Http.expectStringResponse toMsg (Result.mapError mapError << decodeResponse decoder)
 
 
 jsonResolver : Json.Decode.Decoder a -> Http.Resolver Http.Error a

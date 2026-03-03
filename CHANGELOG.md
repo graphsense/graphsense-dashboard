@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.01.6] - 2026-02-26
+
+### Fixed
+
+- Get rid of foreignObject in annotation labels to fix image generation from SVG in Chrome
+
+## [26.01.5] - 2026-02-24
+
+### Fixed
+
+- Use lydell/elm-safe-virtual-dom to fix runtime issues with browser extensions.
+- Improve wording on tooltip.
+
+## [26.01.4] - 2026-02-19
+
+### Fixed
+
+- Show cluster addresses sorted by tag confidence as served by the REST API
+
 ## [26.01.3] - 2026-02-12
 
 ### Fixed

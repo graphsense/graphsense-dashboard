@@ -14,9 +14,8 @@ ENV REST_URL=http://localhost:9000
 ENV WORKDIR=/app
 
 RUN mkdir $WORKDIR && \
-    apk --no-cache --update add bash nginx nodejs npm rsync && \
+    apk --no-cache --update add bash nginx nodejs npm rsync git && \
     apk --no-cache --update --virtual build-dependendencies add python3 make g++ jq
-
 
 WORKDIR $WORKDIR
 

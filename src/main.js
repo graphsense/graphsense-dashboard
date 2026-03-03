@@ -90,6 +90,8 @@ const app = Elm.Main.init(
     } 
   })
 
+!!document.body.elmTree || console.warn('safe virtual dom not installed!')
+
 let isDirty = false
 
 window.onbeforeunload = (evt) => {

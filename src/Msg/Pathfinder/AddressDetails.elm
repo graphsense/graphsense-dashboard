@@ -81,7 +81,7 @@ type Msg
     | UserClickedAllTxCheckboxInTable
     | UserClickedTx Id
     | NoOp
-    | BrowserGotAddressesForTags (Maybe String) (List Api.Data.Address)
+    | BrowserGotAddressesForTags Api.Data.AddressTags (List Api.Data.Address)
     | BrowserGotPubkeyRelations Api.Data.RelatedAddresses
     | TooltipMsg TooltipMsgs
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)

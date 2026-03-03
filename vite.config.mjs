@@ -1,7 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import elmPlugin from "vite-plugin-elm";
 import fs from 'fs';
-//import plugins_vite from '../generated/plugins/vite.config.js'
 import { createFilter } from 'vite'
 
 function envReplacePlugin(options = {}) {

@@ -75,7 +75,7 @@ view _ vc pc tx accTx annotation =
         ( annAttr, label ) =
             annotation
                 |> Maybe.map
-                    (annotationToAttrAndLabel
+                    (annotationToAttrAndLabel vc
                         tx
                         GraphComponents.txNodeEth_details
                         offset

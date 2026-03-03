@@ -40,6 +40,9 @@ PUBLIC_FILES=$(shell find $(PUBLIC_DIR) -type f)
 
 SETEM=npx setem --output $(GENERATED_UTILS) && touch $(RECORDSETTER_ELM)
 
+export ELM_HOME=$(PWD)/elm_packages
+ELM_PACKAGES_DIR=$(ELM_HOME)/0.19.1/packages
+
 serve: prepare gen
 	npm run dev
 
@@ -74,6 +77,7 @@ clean-all: clean-install clean-generated
 
 clean-install:
 	rm -rf node_modules
+	rm -rf $(ELM_PACKAGES_DIR)
 	rm -rf ./elm-stuff
 
 clean-generated: clean-generated-themes clean-generated-plugins clean-generated-utils
@@ -100,7 +104,7 @@ clean-public:
 
 setem: $(RECORDSETTER_ELM)
 
-$(RECORDSETTER_ELM): elm.json $(SRC_FILES) $(GENERATED_THEME_COLORMAPS) $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER)) $(GENERATED_PLUGIN_ELM)
+$(RECORDSETTER_ELM): elm.json virtual-dom-fix $(SRC_FILES) $(GENERATED_THEME_COLORMAPS) $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER)) $(GENERATED_PLUGIN_ELM)
 	$(SETEM)
 
 setem-codegen: $(CODEGEN_RECORDSETTER)
@@ -113,7 +117,7 @@ $(CODEGEN_RECORDSETTER): $(CODEGEN_SRC)
 test:
 	npx elm-test-rs
 
-prepare: check-plugin-folders node_modules elm.json plugins-install theme plugin-themes
+prepare: check-plugin-folders node_modules elm.json virtual-dom-fix plugins-install theme plugin-themes
 
 build-docker:
 	docker build . -t graphsense-dashboard
@@ -206,4 +210,21 @@ copy-public:
 print-plugins:
 	@echo $(PLUGINS)
 
-.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh 
+define clone-repo
+	test -d $(4) || \
+		git clone --depth=1 --branch=$(2) https://github.com/$(1) $(4) && \
+		cd $(4) && \
+		git reset --hard $(3) && \
+		git clean -df
+endef
+
+virtual-dom-fix:
+	mkdir -p $(ELM_PACKAGES_DIR) 
+	$(call clone-repo,omnibs/elm-css,safe,e54998ce73b64c374b1457d5734c85d3f5b909fb,$(ELM_PACKAGES_DIR)/rtfeldman/elm-css/18.0.0)
+	$(call clone-repo,lydell/html,safe,b35c476a69f0ba9bf8282d8c15df65e63aefea8f,$(ELM_PACKAGES_DIR)/elm/html/1.0.1)
+	$(call clone-repo,lydell/virtual-dom,safe,e1fae6aabd65539db2c94a98220a45cfc624b633,$(ELM_PACKAGES_DIR)/elm/virtual-dom/1.0.5)
+	$(call clone-repo,lydell/browser,safe,f5de544c8033d934285501f78f09e2eaf0171d55,$(ELM_PACKAGES_DIR)/elm/browser/1.0.2)
+
+
+.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix
+
