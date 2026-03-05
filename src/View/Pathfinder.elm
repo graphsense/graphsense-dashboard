@@ -478,9 +478,10 @@ topCenterPanel plugins pluginStates vc gc model =
                             True
                 , pointerTool = model.pointerTool
                 , exportName = model.name
-                , exportCSV = ExportCSV.isDownloading model.exportCSVGraph
-                , exportPNG = model.exportPNG /= Nothing
-                , exportPDF = model.exportPDF /= Nothing
+                , export =
+                    ExportCSV.isDownloading model.exportCSVGraph
+                        || (model.exportPNG /= Nothing)
+                        || (model.exportPDF /= Nothing)
                 }
             ]
         , div

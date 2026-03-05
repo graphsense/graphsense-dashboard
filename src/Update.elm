@@ -36,6 +36,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Notification as Notification exposing (Notification)
+import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
@@ -68,10 +69,11 @@ import Update.Locale as Locale
 import Update.Notification as Notification
 import Update.Pathfinder as Pathfinder
 import Update.Pathfinder.AddTagDialog as AddTagDialog
+import Update.Pathfinder.ExportDialog as ExportDialog
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
-import Util exposing (n)
+import Util exposing (and, n)
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale exposing (makeTimestampFilename)
@@ -864,6 +866,29 @@ update plugins uc msg model =
                 _ ->
                     n model
 
+        ExportDialogMsg smsg ->
+            case model.dialog of
+                Just (Dialog.Export conf) ->
+                    let
+                        ( export, eff ) =
+                            ExportDialog.update uc smsg conf
+
+                        ( pathfinder, pathfinderEff ) =
+                            Pathfinder.updateByExportMsg uc smsg conf model.pathfinder
+                    in
+                    ( { model
+                        | pathfinder = pathfinder
+                        , dialog =
+                            export
+                                |> Dialog.Export
+                                |> Just
+                      }
+                    , eff ++ List.map PathfinderEffect pathfinderEff
+                    )
+
+                _ ->
+                    n model
+
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
@@ -1212,6 +1237,23 @@ update plugins uc msg model =
                                 }
                             )
                 }
+
+        PathfinderMsg (Pathfinder.UserClickedExportGraph time) ->
+            time
+                |> Maybe.map
+                    (Dialog.initExportConfig uc model.pathfinder.name UserClosesDialog
+                        >> Dialog.Export
+                        >> Just
+                        >> flip s_dialog model
+                        >> n
+                    )
+                |> Maybe.withDefault
+                    ( model
+                    , Time.now
+                        |> Task.perform (Just >> Pathfinder.UserClickedExportGraph >> PathfinderMsg)
+                        |> CmdEffect
+                        |> List.singleton
+                    )
 
         PathfinderMsg m ->
             let

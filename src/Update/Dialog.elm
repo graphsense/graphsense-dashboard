@@ -148,6 +148,16 @@ mapMsg map model =
             }
                 |> AddTag
 
+        Export conf ->
+            { closeMsg = map conf.closeMsg
+            , keepSelectionHighlight = conf.keepSelectionHighlight
+            , area = conf.area
+            , fileFormat = conf.fileFormat
+            , filename = conf.filename
+            , time = conf.time
+            }
+                |> Export
+
         Plugin conf ->
             { defaultMsg = map conf.defaultMsg
             }

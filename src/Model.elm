@@ -22,6 +22,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType)
 import Model.Search
 import Model.Statusbar
+import Msg.ExportDialog
 import Msg.Graph
 import Msg.Locale
 import Msg.Pathfinder
@@ -143,6 +144,7 @@ type Msg
     | BrowserGotUncaughtError Json.Encode.Value
     | DebouncePluginOutMsg Plugin.OutMsg
     | BrowserCancelledRequest String
+    | ExportDialogMsg Msg.ExportDialog.Msg
 
 
 type AddTagDialogMsgs

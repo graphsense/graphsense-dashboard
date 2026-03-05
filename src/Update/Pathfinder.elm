@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -32,6 +32,7 @@ import Json.Decode
 import List.Extra
 import Log
 import Maybe.Extra
+import Model.Dialog as Dialog
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, relativeToGraphZero)
@@ -59,6 +60,7 @@ import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Io, Tx)
 import Model.Search as Search
 import Model.Tx as GTx exposing (parseTxIdentifier)
+import Msg.ExportDialog as ExportDialog
 import Msg.Pathfinder
     exposing
         ( AddingTxConfig
@@ -435,58 +437,8 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
-        UserClickedExportGraphAsImage time ->
-            case time of
-                Nothing ->
-                    ( model
-                    , Time.now
-                        |> Task.perform (Just >> UserClickedExportGraphAsImage)
-                        |> CmdEffect
-                        |> List.singleton
-                    )
-
-                Just t ->
-                    let
-                        filename =
-                            makeTimestampFilename uc.locale t
-                                |> flip (++) (" " ++ model.name ++ ".png")
-                    in
-                    model.config
-                        |> s_hideSelectionForExport True
-                        |> flip s_config model
-                        |> s_exportPNG (PrepareImageForExport |> Just)
-                        |> exportGraph ( filename, Nothing )
-
-        UserClickedExportGraphAsPdf time ->
-            case time of
-                Nothing ->
-                    ( model
-                    , Time.now
-                        |> Task.perform (Just >> UserClickedExportGraphAsPdf)
-                        |> CmdEffect
-                        |> List.singleton
-                    )
-
-                Just t ->
-                    let
-                        filename =
-                            makeTimestampFilename uc.locale t
-                                |> flip (++) (" " ++ model.name ++ ".pdf")
-
-                        selector =
-                            case model.selection of
-                                MultiSelect (_ :: _) ->
-                                    "g[data-selected=true]"
-
-                                _ ->
-                                    "g[data-selected]"
-                    in
-                    ( model
-                        |> s_exportPDF (PrepareImageForExport |> Just)
-                    , Ports.getBBox ( filename, "svg#" ++ graphId, selector )
-                        |> Pathfinder.CmdEffect
-                        |> List.singleton
-                    )
+        UserClickedExportGraph _ ->
+            n model
 
         BrowserSentBBox ( filename, bbox ) ->
             exportGraph ( filename, bbox ) model
@@ -518,91 +470,6 @@ updateByMsg plugins uc msg model =
                 |> ShowNotificationEffect
                 |> List.singleton
             )
-
-        UserClickedExportGraphTxsAsCSV time ->
-            case time of
-                Nothing ->
-                    ( model
-                    , Time.now
-                        |> Task.perform (Just >> UserClickedExportGraphTxsAsCSV)
-                        |> CmdEffect
-                        |> List.singleton
-                    )
-
-                Just t ->
-                    -- First collect all addresses from transactions and check if we need to fetch tag summaries
-                    let
-                        allAddresses =
-                            Dict.values model.network.txs
-                                |> getToAndFromAddresses uc
-
-                        -- Group addresses by network for bulk fetching
-                        addressesByNetwork =
-                            allAddresses
-                                |> List.foldl
-                                    (\( network, addr ) acc ->
-                                        Dict.update network
-                                            (\existing ->
-                                                case existing of
-                                                    Nothing ->
-                                                        Just (Set.singleton addr)
-
-                                                    Just addrs ->
-                                                        Just (Set.insert addr addrs)
-                                            )
-                                            acc
-                                    )
-                                    Dict.empty
-
-                        -- Find addresses missing tag summaries
-                        missingByNetwork =
-                            addressesByNetwork
-                                |> Dict.toList
-                                |> List.filterMap
-                                    (\( network, addrs ) ->
-                                        let
-                                            missing =
-                                                addrs
-                                                    |> Set.toList
-                                                    |> List.filter
-                                                        (\addr ->
-                                                            Id.init network addr
-                                                                |> isTagSummaryLoaded True model.tagSummaries
-                                                                |> not
-                                                        )
-                                        in
-                                        if List.isEmpty missing then
-                                            Nothing
-
-                                        else
-                                            Just ( network, missing )
-                                    )
-
-                        config =
-                            makeGraphTxsExportCSVConfig uc model.tagSummaries
-
-                        ( newModel, _ ) =
-                            ExportCSV.update (ExportCSV.BrowserGotTime t) config model.exportCSVGraph
-                                |> mapFirst (flip s_exportCSVGraph model)
-                    in
-                    if List.isEmpty missingByNetwork then
-                        -- All tag summaries already loaded, proceed with export
-                        generateGraphTxsExport uc newModel
-
-                    else
-                        -- Need to fetch missing tag summaries first
-                        let
-                            toMsg =
-                                BrowserGotTagSummariesForExportGraphTxsAsCSV
-
-                            fetchEffects =
-                                missingByNetwork
-                                    |> List.map
-                                        (\( network, addrs ) ->
-                                            fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
-                                        )
-                        in
-                        ( newModel, fetchEffects )
 
         BrowserGotTagSummariesForExportGraphTxsAsCSV includesBestClusterTag tagSummaries ->
             let
@@ -5331,3 +5198,129 @@ getSetterAndTypeForExport filename =
 
     else
         ( s_exportPNG, "image" )
+
+
+updateByExportMsg : Update.Config -> ExportDialog.Msg -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )
+updateByExportMsg uc msg conf model =
+    case msg of
+        ExportDialog.UserClickedExport ->
+            case conf.fileFormat of
+                Dialog.ExportFormatCSV ->
+                    exportGraphTxs uc conf model
+
+                Dialog.ExportFormatPDF ->
+                    exportGraphImage uc conf model
+
+                Dialog.ExportFormatPNG ->
+                    exportGraphImage uc conf model
+
+
+exportGraphTxs : Update.Config -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )
+exportGraphTxs uc conf model =
+    -- First collect all addresses from transactions and check if we need to fetch tag summaries
+    let
+        allAddresses =
+            Dict.values model.network.txs
+                |> getToAndFromAddresses uc
+
+        -- Group addresses by network for bulk fetching
+        addressesByNetwork =
+            allAddresses
+                |> List.foldl
+                    (\( network, addr ) acc ->
+                        Dict.update network
+                            (\existing ->
+                                case existing of
+                                    Nothing ->
+                                        Just (Set.singleton addr)
+
+                                    Just addrs ->
+                                        Just (Set.insert addr addrs)
+                            )
+                            acc
+                    )
+                    Dict.empty
+
+        -- Find addresses missing tag summaries
+        missingByNetwork =
+            addressesByNetwork
+                |> Dict.toList
+                |> List.filterMap
+                    (\( network, addrs ) ->
+                        let
+                            missing =
+                                addrs
+                                    |> Set.toList
+                                    |> List.filter
+                                        (\addr ->
+                                            Id.init network addr
+                                                |> isTagSummaryLoaded True model.tagSummaries
+                                                |> not
+                                        )
+                        in
+                        if List.isEmpty missing then
+                            Nothing
+
+                        else
+                            Just ( network, missing )
+                    )
+
+        config =
+            makeGraphTxsExportCSVConfig uc model.tagSummaries
+
+        ( newModel, _ ) =
+            ExportCSV.update (ExportCSV.BrowserGotTime conf.time) config model.exportCSVGraph
+                |> mapFirst (flip s_exportCSVGraph model)
+    in
+    if List.isEmpty missingByNetwork then
+        -- All tag summaries already loaded, proceed with export
+        generateGraphTxsExport uc newModel
+
+    else
+        -- Need to fetch missing tag summaries first
+        let
+            toMsg =
+                BrowserGotTagSummariesForExportGraphTxsAsCSV
+
+            fetchEffects =
+                missingByNetwork
+                    |> List.map
+                        (\( network, addrs ) ->
+                            fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
+                        )
+        in
+        ( newModel, fetchEffects )
+
+
+exportGraphImage : Update.Config -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )
+exportGraphImage _ conf model =
+    let
+        selector =
+            case conf.area of
+                Dialog.ExportAreaSelected ->
+                    Just "g[data-selected=true]"
+
+                Dialog.ExportAreaWhole ->
+                    Just "g[data-selected]"
+
+                Dialog.ExportAreaVisible ->
+                    Nothing
+    in
+    model
+        |> s_exportPDF
+            (PrepareImageForExport
+                |> Just
+            )
+        |> n
+        |> and
+            (case selector of
+                Just sel ->
+                    \mo ->
+                        Ports.getBBox ( conf.filename, "svg#" ++ graphId, sel )
+                            |> CmdEffect
+                            |> List.singleton
+                            |> pair mo
+
+                Nothing ->
+                    exportGraph ( conf.filename, Nothing )
+            )

@@ -1,12 +1,16 @@
-module Model.Dialog exposing (AddTagConfig, ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg)
+module Model.Dialog exposing (AddTagConfig, ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg, initExportConfig)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Components.Table exposing (Table)
+import Config.Update as Update
 import Config.View exposing (Config)
 import Html.Styled exposing (Html)
 import Http
 import Model.Pathfinder.Id exposing (Id)
 import Model.Search as Search
+import Time
+import View.Locale exposing (makeTimestampFilename)
 
 
 type Model msg
@@ -16,6 +20,7 @@ type Model msg
     | Info (InfoConfig msg)
     | TagsList (TagListConfig msg)
     | AddTag (AddTagConfig msg)
+    | Export (ExportConfig msg)
     | Custom (CustomConfig msg)
     | CustomWithVc (CustomConfigWithVc msg)
     | Plugin (PluginConfig msg)
@@ -81,6 +86,28 @@ type alias AddTagConfig msg =
     }
 
 
+type alias ExportConfig msg =
+    { closeMsg : msg
+    , area : ExportArea
+    , keepSelectionHighlight : Bool
+    , fileFormat : ExportFormat
+    , filename : String
+    , time : Time.Posix
+    }
+
+
+type ExportArea
+    = ExportAreaVisible
+    | ExportAreaSelected
+    | ExportAreaWhole
+
+
+type ExportFormat
+    = ExportFormatPDF
+    | ExportFormatPNG
+    | ExportFormatCSV
+
+
 type alias PluginConfig msg =
     { defaultMsg : msg
     }
@@ -124,8 +151,24 @@ defaultMsg model =
         TagsList c ->
             c.closeMsg
 
+        Export c ->
+            c.closeMsg
+
         AddTag c ->
             c.closeMsg
 
         Plugin c ->
             c.defaultMsg
+
+
+initExportConfig : Update.Config -> String -> msg -> Time.Posix -> ExportConfig msg
+initExportConfig uc filenameBase closeMsg time =
+    { closeMsg = closeMsg
+    , area = ExportAreaVisible
+    , keepSelectionHighlight = True
+    , fileFormat = ExportFormatPDF
+    , filename =
+        makeTimestampFilename uc.locale time
+            |> flip (++) (" " ++ filenameBase ++ ".pdf")
+    , time = time
+    }
