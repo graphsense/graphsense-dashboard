@@ -20,8 +20,8 @@ type alias ToggleConfig msg =
 
 radioSmall : String -> Bool -> msg -> Html msg
 radioSmall name selected msg =
-    Sc.radioLabelWithAttributes
-        (Sc.radioLabelAttributes
+    Sc.radioItemWithAttributes
+        (Sc.radioItemAttributes
             |> Rs.s_root [ onClick msg, [ Css.cursor Css.pointer ] |> css ]
         )
         { radio =

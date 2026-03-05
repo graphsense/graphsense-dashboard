@@ -11,44 +11,44 @@ module Util.Checkbox exposing
 import Html.Styled exposing (Attribute, Html)
 import Html.Styled.Events exposing (onClick)
 import RecordSetter as Rs
-import Theme.Html.Icons as Icons
+import Theme.Html.SelectionControls exposing (CheckboxesSize(..), CheckboxesState(..), checkboxesAttributes, checkboxesWithAttributes)
 import Util.View exposing (pointer)
 
 
 type alias Config msg =
-    { state : Icons.CheckboxesState
-    , size : Icons.CheckboxesSize
+    { state : CheckboxesState
+    , size : CheckboxesSize
     , msg : msg
     }
 
 
-stateFromBool : Bool -> Icons.CheckboxesState
+stateFromBool : Bool -> CheckboxesState
 stateFromBool checked =
     if checked then
-        Icons.CheckboxesStateSelected
+        CheckboxesStateSelected
 
     else
-        Icons.CheckboxesStateDeselected
+        CheckboxesStateDeselected
 
 
-disabledState : Icons.CheckboxesState
+disabledState : CheckboxesState
 disabledState =
-    Icons.CheckboxesStateDisabled
+    CheckboxesStateDisabled
 
 
-removeState : Icons.CheckboxesState
+removeState : CheckboxesState
 removeState =
-    Icons.CheckboxesStateRemove
+    CheckboxesStateRemove
 
 
-smallSize : Icons.CheckboxesSize
+smallSize : CheckboxesSize
 smallSize =
-    Icons.CheckboxesSize14px
+    CheckboxesSize14px
 
 
-bigSize : Icons.CheckboxesSize
+bigSize : CheckboxesSize
 bigSize =
-    Icons.CheckboxesSize18px
+    CheckboxesSize18px
 
 
 checkbox : Config msg -> List (Attribute msg) -> Html msg
@@ -60,8 +60,8 @@ checkbox { state, size, msg } attrs =
             ]
                 ++ attrs
     in
-    Icons.checkboxesWithAttributes
-        (Icons.checkboxesAttributes
+    checkboxesWithAttributes
+        (checkboxesAttributes
             |> Rs.s_root attributes
         )
         { root =
