@@ -324,6 +324,16 @@ update plugins uc msg model =
                 ( newPluginsState, outMsg, cmd ) =
                     PluginInterface.CoreGotStatsUpdate stats
                         |> Plugin.updateByCoreMsg plugins uc model.plugins
+
+                tokenCurrencyEffects =
+                    stats.currencies
+                        |> List.map .name
+                        |> List.filter (\currency -> not (Dict.member currency model.supportedTokens))
+                        |> List.map
+                            (\currency ->
+                                Effect.Api.ListSupportedTokensEffect currency (BrowserGotSupportedTokens currency)
+                                    |> ApiEffect
+                            )
             in
             n
                 { model
@@ -341,7 +351,7 @@ update plugins uc msg model =
                                     (Search.initSearchAddressAndTxs Nothing)
                     , plugins = newPluginsState
                 }
-                |> Tuple.mapSecond ((::) (PluginEffect cmd))
+                |> Tuple.mapSecond (\effects -> PluginEffect cmd :: (tokenCurrencyEffects ++ effects))
                 |> updateByPluginOutMsg plugins uc outMsg
 
         -- Plugin handling
@@ -436,9 +446,17 @@ update plugins uc msg model =
                         _ ->
                             False
 
+                isSupportedTokensError =
+                    case result of
+                        Err ( _, _, Effect.Api.ListSupportedTokensEffect _ _ ) ->
+                            True
+
+                        _ ->
+                            False
+
                 ( notifications, notificationEffects ) =
-                    case ( isErrorDialogShown, result ) of
-                        ( False, Err ( httpErr, _, _ ) ) ->
+                    case ( isErrorDialogShown, isSupportedTokensError, result ) of
+                        ( False, False, Err ( httpErr, _, _ ) ) ->
                             case httpErr of
                                 Http.BadStatus 429 ->
                                     Notification.add
@@ -470,13 +488,17 @@ update plugins uc msg model =
                                 model.statusbar
 
                         Nothing ->
-                            case result of
-                                Err ( Http.BadStatus 429, _, _ ) ->
-                                    Just (Http.BadStatus 429)
-                                        |> Statusbar.add model.statusbar "search" []
+                            if isSupportedTokensError then
+                                model.statusbar
 
-                                _ ->
-                                    model.statusbar
+                            else
+                                case result of
+                                    Err ( Http.BadStatus 429, _, _ ) ->
+                                        Just (Http.BadStatus 429)
+                                            |> Statusbar.add model.statusbar "search" []
+
+                                    _ ->
+                                        model.statusbar
                 , dialog = newDialog
                 , notifications = notifications
             }
@@ -2336,33 +2358,45 @@ handleResponse plugins uc result model =
                 |> List.singleton
             )
 
-        Err ( BadBody err, headers, _ ) ->
-            let
-                ( notifications, notificationEffects ) =
-                    Notification.addHttpError model.notifications Nothing (Http.BadBody err)
-            in
-            ( { model
-                | statusbar =
-                    if err == Api.noExternalTransactions then
-                        model.statusbar
+        Err ( BadBody err, headers, eff ) ->
+            case eff of
+                Effect.Api.ListSupportedTokensEffect _ _ ->
+                    { model | user = updateRequestLimit headers model.user }
+                        |> n
 
-                    else
-                        Http.BadBody err
-                            |> Just
-                            |> Statusbar.add model.statusbar "error" []
-                , notifications = notifications
-                , user = updateRequestLimit headers model.user
-              }
-            , PortsConsoleEffect err
-                :: List.map NotificationEffect notificationEffects
-            )
+                _ ->
+                    let
+                        ( notifications, notificationEffects ) =
+                            Notification.addHttpError model.notifications Nothing (Http.BadBody err)
+                    in
+                    ( { model
+                        | statusbar =
+                            if err == Api.noExternalTransactions then
+                                model.statusbar
 
-        Err ( BadStatus 404, headers, _ ) ->
-            { model
-                | graph = Graph.handleNotFound model.graph
-                , user = updateRequestLimit headers model.user
-            }
-                |> n
+                            else
+                                Http.BadBody err
+                                    |> Just
+                                    |> Statusbar.add model.statusbar "error" []
+                        , notifications = notifications
+                        , user = updateRequestLimit headers model.user
+                      }
+                    , PortsConsoleEffect err
+                        :: List.map NotificationEffect notificationEffects
+                    )
+
+        Err ( BadStatus 404, headers, eff ) ->
+            case eff of
+                Effect.Api.ListSupportedTokensEffect _ _ ->
+                    { model | user = updateRequestLimit headers model.user }
+                        |> n
+
+                _ ->
+                    { model
+                        | graph = Graph.handleNotFound model.graph
+                        , user = updateRequestLimit headers model.user
+                    }
+                        |> n
 
         Err ( BadStatus _, headers, _ ) ->
             { model | user = updateRequestLimit headers model.user }

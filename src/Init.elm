@@ -93,10 +93,6 @@ init plugins uc flags url key =
                 |> ApiEffect
            , Effect.Api.GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
                 |> ApiEffect
-           , Effect.Api.ListSupportedTokensEffect "eth" (BrowserGotSupportedTokens "eth")
-                |> ApiEffect
-           , Effect.Api.ListSupportedTokensEffect "trx" (BrowserGotSupportedTokens "trx")
-                |> ApiEffect
            , PluginEffect cmd
            , CmdEffect (pathfinderCmd |> Cmd.map PathfinderMsg)
            ]
