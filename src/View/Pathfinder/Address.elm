@@ -1,4 +1,4 @@
-module View.Pathfinder.Address exposing (toNodeIconHtml, view)
+module View.Pathfinder.Address exposing (ClusterContext, toNodeIconHtml, view)
 
 import Animation as A
 import Api.Data
@@ -36,8 +36,15 @@ import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe (WebData Api.Data.Entity)) -> Maybe Annotations.AnnotationItem -> Svg Msg
-view plugins vc pc colors address getCluster annotation =
+type alias ClusterContext =
+    { getCluster : Id -> Maybe (WebData Api.Data.Entity)
+    , hoveredAddressId : Maybe Id
+    , hoveredClusterId : Maybe Id
+    }
+
+
+view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> ClusterContext -> Maybe Annotations.AnnotationItem -> Svg Msg
+view plugins vc pc colors address clusterContext annotation =
     let
         data =
             RemoteData.toMaybe address.data
@@ -56,8 +63,42 @@ view plugins vc pc colors address getCluster annotation =
 
         cluster =
             clusterid
-                |> Maybe.andThen getCluster
+                |> Maybe.andThen clusterContext.getCluster
                 |> Maybe.andThen RemoteData.toMaybe
+
+        isDirectlyHovered =
+            clusterContext.hoveredAddressId == Just address.id
+
+        isHoveredClusterMate =
+            pc.highlightClusterFriends
+                && not isDirectlyHovered
+                && (clusterContext.hoveredClusterId
+                        |> Maybe.map (\hoveredId -> Just hoveredId == clusterid)
+                        |> Maybe.withDefault False
+                   )
+
+        highlightVisible =
+            (not pc.hideSelectionForExport && address.selected)
+                || isDirectlyHovered
+
+        clusterStroke =
+            case ( clusterColorLight, pc.highlightClusterFriends ) of
+                ( Just color, True ) ->
+                    [ css
+                        [ Css.property "stroke" (Color.toCssString color) |> Css.important
+                        , Css.property "stroke-width"
+                            (if isHoveredClusterMate then
+                                "5"
+
+                             else
+                                "3"
+                            )
+                            |> Css.important
+                        ]
+                    ]
+
+                _ ->
+                    []
 
         directionToField direction =
             case direction of
@@ -196,14 +237,7 @@ view plugins vc pc colors address getCluster annotation =
                         |> onMouseLeave
                     ]
                 |> Rs.s_nodeFrame annAttr
-                |> Rs.s_clusterColor
-                    (case ( clusterColorLight, pc.highlightClusterFriends ) of
-                        ( Just c, True ) ->
-                            [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
-
-                        _ ->
-                            []
-                    )
+                |> Rs.s_clusterColor clusterStroke
              -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
             )
             GraphComponents.addressNodeInstances
@@ -212,7 +246,7 @@ view plugins vc pc colors address getCluster annotation =
                     address.id
                         |> Id.id
                         |> truncateLongIdentifierWithLengths 8 4
-                , highlightVisible = not pc.hideSelectionForExport && address.selected
+                , highlightVisible = highlightVisible
                 , clusterVisible = (clusterColor /= Nothing) && pc.highlightClusterFriends
                 , expandLeftVisible = expandVisible Incoming
                 , expandRightVisible = expandVisible Outgoing
