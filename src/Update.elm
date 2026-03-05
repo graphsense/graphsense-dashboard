@@ -1700,9 +1700,48 @@ update plugins uc msg model =
             )
 
         BrowserGotUncaughtError value ->
+            let
+                uncaughtStructuredDecoder =
+                    Json.Decode.map4
+                        (\messageKey titleKey variables moreInfo ->
+                            { messageKey = messageKey
+                            , titleKey = titleKey
+                            , variables = variables
+                            , moreInfo = moreInfo
+                            }
+                        )
+                        (Json.Decode.field "messageKey" Json.Decode.string)
+                        (Json.Decode.maybe (Json.Decode.field "titleKey" Json.Decode.string))
+                        (Json.Decode.oneOf
+                            [ Json.Decode.field "variables" (Json.Decode.list Json.Decode.string)
+                            , Json.Decode.succeed []
+                            ]
+                        )
+                        (Json.Decode.oneOf
+                            [ Json.Decode.field "moreInfo" (Json.Decode.list Json.Decode.string)
+                            , Json.Decode.succeed []
+                            ]
+                        )
+
+                uncaughtLegacyDecoder =
+                    Json.Decode.map
+                        (\message ->
+                            { messageKey = "uncaught-error-message"
+                            , titleKey = Just "An error occurred"
+                            , variables = []
+                            , moreInfo = [ message ]
+                            }
+                        )
+                        (Json.Decode.field "message" Json.Decode.string)
+
+                uncaughtDecoder =
+                    Json.Decode.oneOf
+                        [ uncaughtStructuredDecoder
+                        , uncaughtLegacyDecoder
+                        ]
+            in
             value
-                |> Json.Decode.decodeValue
-                    (Json.Decode.field "message" Json.Decode.string)
+                |> Json.Decode.decodeValue uncaughtDecoder
                 |> Result.Extra.unpack
                     (Json.Decode.errorToString
                         >> Ports.console
@@ -1710,15 +1749,23 @@ update plugins uc msg model =
                         >> List.singleton
                         >> pair model
                     )
-                    (\message ->
+                    (\decoded ->
                         let
+                            notification =
+                                Notification.errorDefault decoded.messageKey
+                                    |> (\n ->
+                                            case decoded.titleKey of
+                                                Just titleKey ->
+                                                    Notification.map (s_title (Just titleKey)) n
+
+                                                Nothing ->
+                                                    n
+                                       )
+                                    |> Notification.map (s_variables decoded.variables)
+                                    |> Notification.map (s_moreInfo decoded.moreInfo)
+
                             ( notifications, eff ) =
-                                Notification.add
-                                    (Notification.errorDefault "uncaught-error-message"
-                                        |> Notification.map (s_title (Just "An error occurred"))
-                                        |> Notification.map (s_moreInfo [ message ])
-                                    )
-                                    model.notifications
+                                Notification.add notification model.notifications
                         in
                         ( { model | notifications = notifications }
                         , List.map NotificationEffect eff

@@ -3,7 +3,7 @@ address: indirizzo
 addresses: indirizzi
 entity: entità
 entities: entità
-uncaught-error-message: Si è verificato un errore imprevisto. Questo è spesso causato da estensioni del browser che interferiscono con l'applicazione. Prova a disabilitare tutte le estensioni del browser per questo sito e ricarica la pagina.
+uncaught-error-message: Si è verificato un errore imprevisto.
 transaction: transazione
 transactions: transazioni
 label: identificativo
@@ -509,6 +509,7 @@ request timeout: timeout richiesta
 request error: errore richiesta
 service not reachable: servizio non raggiungibile.
 unexpected data format: formato dati non previsto.
+unsupported-gs-file-format: Formato file non supportato. Importa un file .gs valido di GraphSense.
 unexpected status code: codice di stato non previsto.
 service does not respond in time: il servizio non risponde in tempo.
 Remove from graph: Rimuovi dal grafico

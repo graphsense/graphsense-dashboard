@@ -409,29 +409,85 @@ const compress = async (data) => {
 }
 
 const decompress = async (data) => {
+  if (!(data instanceof ArrayBuffer) || data.byteLength === 0 || data.byteLength % 4 !== 0) {
+    throw new Error('unsupported-file-format')
+  }
+
   const lzw = (await import('lzwcompress')).default
   const { Base64 } = await import('js-base64')
-  return JSON.parse(
-    Base64.decode(
-      lzw.unpack(
-        [...new Uint32Array(data)]
-      )
-    )
-  )
+  try {
+    const unpacked = lzw.unpack([...new Uint32Array(data)])
+    if (typeof unpacked !== 'string' || unpacked.length === 0) {
+      throw new Error('unsupported-file-format')
+    }
+
+    const decoded = Base64.decode(unpacked)
+    if (typeof decoded !== 'string' || decoded.length === 0) {
+      throw new Error('unsupported-file-format')
+    }
+
+    return JSON.parse(decoded)
+  } catch (_) {
+    throw new Error('unsupported-file-format')
+  }
+}
+
+const unsupportedImportFileMessage = 'Unsupported file format. Please import a valid GraphSense .gs file.'
+
+const reportImportFileError = (error, fileName = '') => {
+  const message = fileName
+    ? unsupportedImportFileMessage + ' File: ' + fileName
+    : unsupportedImportFileMessage
+
+  app.ports.uncaughtError.send({
+    message,
+    messageKey: 'unsupported-gs-file-format',
+    titleKey: 'data error',
+    variables: [],
+    moreInfo: fileName ? [ fileName ] : []
+  })
+
+  const detail =
+    error && typeof error.message === 'string'
+      ? error.message
+      : String(error)
+  console.warn('Failed to import GraphSense file', fileName, detail)
 }
 
 
 app.ports.deserialize.subscribe(async () => {
   const { fileDialog } = await import('file-select-dialog')
-  const file = await fileDialog({ strict: true })
+  let file
+  try {
+    file = await fileDialog({ strict: true })
+  } catch (_) {
+    return
+  }
+  if (!file) {
+    return
+  }
+  if (!file.name.toLowerCase().endsWith('.gs')) {
+    reportImportFileError(new Error('unsupported-extension'), file.name)
+    return
+  }
   const reader = new FileReader() // eslint-disable-line no-undef
   reader.onload = async () => {
-    let data = reader.result
-    data = await decompress(data)
-    data[0] = data[0].split(' ')[0]
-    data[0] = data[0].split('-')[0]
-    app.ports.deserialized.send([file.name, data])
+    try {
+      let data = reader.result
+      data = await decompress(data)
+
+      if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'string') {
+        throw new Error('invalid-import-payload')
+      }
+
+      data[0] = data[0].split(' ')[0]
+      data[0] = data[0].split('-')[0]
+      app.ports.deserialized.send([file.name, data])
+    } catch (error) {
+      reportImportFileError(error, file.name)
+    }
   }
+  reader.onerror = () => reportImportFileError(new Error('file-read-error'), file.name)
   reader.readAsArrayBuffer(file)
 })
 

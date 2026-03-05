@@ -1,7 +1,7 @@
 the search: search
 entity: cluster
 entities: clusters
-uncaught-error-message: An unexpected error occurred. This is often caused by browser extensions interfering with the application. Please try disabling all browser extensions for this site and reload the page.
+uncaught-error-message: An unexpected error occurred.
 Root Address: cluster root
 currency: cryptoasset
 change currency: value denomination
@@ -252,6 +252,7 @@ not found: not found
 data error: data error
 service not reachable: service not reachable.
 unexpected data format: unexpected data format.
+unsupported-gs-file-format: Unsupported file format. Please import a valid GraphSense .gs file.
 unexpected status code: unexpected status code.
 service does not respond in time: service does not respond in time.
 user address tags: user address tags

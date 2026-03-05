@@ -2,7 +2,7 @@ address: Adresse
 addresses: Adressen
 entity: Cluster
 entities: Clusters
-uncaught-error-message: Ein unerwarteter Fehler ist aufgetreten. Dies wird häufig durch Browser-Erweiterungen verursacht, die die Anwendung stören. Bitte deaktivieren Sie alle Browser-Erweiterungen für diese Seite und laden Sie die Seite neu.
+uncaught-error-message: Ein unerwarteter Fehler ist aufgetreten.
 transaction: Transaktion
 transactions: Transaktionen
 label: Schlagwort
@@ -197,6 +197,7 @@ not found: Nicht gefunden
 data error: Datenfehler
 service not reachable: Service nicht erreichbar.
 unexpected data format: unerwartetes Datenformat.
+unsupported-gs-file-format: Nicht unterstuetztes Dateiformat. Bitte importieren Sie eine gueltige GraphSense-.gs-Datei.
 unexpected status code: unerwarteter Statuscode.
 service does not respond in time: Service antwortet nicht zeitnah.
 this table is empty: Keine Einträge gefunden.
