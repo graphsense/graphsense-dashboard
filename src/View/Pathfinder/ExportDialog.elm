@@ -2,21 +2,19 @@ module View.Pathfinder.ExportDialog exposing (view)
 
 import Config.View as View
 import Css
-import Html.Styled as Html exposing (Html, textarea)
+import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes exposing (autocomplete, css, placeholder, spellcheck, value)
-import Html.Styled.Events exposing (onClick, onInput)
+import Html.Styled.Events exposing (onBlur, onClick, onInput)
 import Model exposing (Msg(..))
-import Model.Dialog exposing (ExportConfig)
+import Model.Dialog exposing (ExportArea(..), ExportConfig, ExportFormat(..))
 import Msg.ExportDialog exposing (Msg(..))
 import RecordSetter as Rs
-import Theme.Colors as Colors
 import Theme.Html.Dialogs as Dialogs
 import Theme.Html.Fields as F
-import Theme.Html.SettingsComponents as Sc
-import Tuple exposing (second)
 import Util.Css exposing (alignItemsStretch)
 import Util.View exposing (inputFieldStyles)
 import View.Button as Button
+import View.Controls as Controls exposing (radioSmall)
 import View.Locale as Locale
 
 
@@ -37,19 +35,53 @@ view vc model =
 
         areaSelect =
             F.radioOptionsWithTitle
-                { radioItemsList = [] }
+                { radioItemsList =
+                    [ Controls.radioSmall
+                        (Locale.string vc.locale "Export-dialog-area-visible")
+                        (model.area == ExportAreaVisible)
+                        (UserClickedAreaOption ExportAreaVisible)
+                    , Controls.radioSmall
+                        (Locale.string vc.locale "Export-dialog-area-selected")
+                        (model.area == ExportAreaSelected)
+                        (UserClickedAreaOption ExportAreaSelected)
+                    , Controls.radioSmall
+                        (Locale.string vc.locale "Export-dialog-area-whole")
+                        (model.area == ExportAreaWhole)
+                        (UserClickedAreaOption ExportAreaWhole)
+                    ]
+                }
                 { root = { title = Locale.string vc.locale "Export-dialog-area-title" }
                 }
 
-        keepHighlightSwitch =
+        displayOptions =
             F.optionsWithTitle
-                { optionsList = [] }
-                { root = { title = Locale.string vc.locale "Export-dialog-keephighlight-title" }
+                { optionsList =
+                    [ Controls.checkboxLargeWithLabel
+                        (Locale.string vc.locale "Export-dialog-display-keephighlight")
+                        model.keepSelectionHighlight
+                        UserClickedKeepSelected
+                    ]
+                }
+                { root = { title = Locale.string vc.locale "Export-dialog-display-title" }
                 }
 
         formatSelect =
             F.radioOptionsWithTitle
-                { radioItemsList = [] }
+                { radioItemsList =
+                    [ Controls.radioSmall
+                        "PDF"
+                        (model.fileFormat == ExportFormatPDF)
+                        (UserClickedFormatOption ExportFormatPDF)
+                    , Controls.radioSmall
+                        "PNG"
+                        (model.fileFormat == ExportFormatPNG)
+                        (UserClickedFormatOption ExportFormatPNG)
+                    , Controls.radioSmall
+                        "CSV"
+                        (model.fileFormat == ExportFormatCSV)
+                        (UserClickedFormatOption ExportFormatCSV)
+                    ]
+                }
                 { root = { title = Locale.string vc.locale "Export-dialog-format-title" }
                 }
 
@@ -67,8 +99,8 @@ view vc model =
                             [ value model.filename
                             , spellcheck False
                             , autocomplete False
-
-                            --, onInput UserInputsCaseDescription
+                            , onInput UserInputsFilename
+                            , onBlur UserLeavesFilename
                             , css (inputFieldStyles False)
                             , placeholder <| Locale.string vc.locale "Export-dialog-filename-placeholder"
                             ]
@@ -86,10 +118,11 @@ view vc model =
         )
         { inputList =
             [ areaSelect
-            , keepHighlightSwitch
+            , displayOptions
             , formatSelect
             , filenameText
             ]
+                |> List.map (Html.map ExportDialogMsg)
         }
         { cancelButton =
             { variant =

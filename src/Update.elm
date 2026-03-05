@@ -41,6 +41,7 @@ import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
 import Model.Statusbar as Statusbar
+import Msg.ExportDialog as ExportDialog
 import Msg.Graph as Graph
 import Msg.Locale as LocaleMsg
 import Msg.Pathfinder as Pathfinder
@@ -879,9 +880,14 @@ update plugins uc msg model =
                     ( { model
                         | pathfinder = pathfinder
                         , dialog =
-                            export
-                                |> Dialog.Export
-                                |> Just
+                            case smsg of
+                                ExportDialog.BrowserSentExportGraphResult Nothing ->
+                                    Nothing
+
+                                _ ->
+                                    export
+                                        |> Dialog.Export
+                                        |> Just
                       }
                     , eff ++ List.map PathfinderEffect pathfinderEff
                     )

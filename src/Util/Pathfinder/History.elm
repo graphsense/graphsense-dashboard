@@ -404,15 +404,6 @@ shallPushHistory plugins msg _ =
         UserClickedExportGraph _ ->
             False
 
-        BrowserSentBBox _ ->
-            False
-
-        BrowserRenderedGraphForExport ->
-            False
-
-        BrowserSentExportGraphResult _ ->
-            False
-
         BrowserGotTagSummariesForExportGraphTxsAsCSV _ _ ->
             False
 

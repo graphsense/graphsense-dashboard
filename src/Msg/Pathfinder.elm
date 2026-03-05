@@ -113,9 +113,6 @@ type Msg
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraph (Maybe Time.Posix)
-    | BrowserSentBBox ( String, Maybe BBox )
-    | BrowserRenderedGraphForExport
-    | BrowserSentExportGraphResult { filename : String, error : Maybe String }
     | BrowserGotTagSummariesForExportGraphTxsAsCSV Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph

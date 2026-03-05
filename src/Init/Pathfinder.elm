@@ -53,8 +53,7 @@ init us =
       , eventualMessages = EventualMessages.init Network.isConditionMet EventualMessagesHeartBeat
       , exportCSV = ExportCSV.init
       , exportCSVGraph = ExportCSV.init
-      , exportPNG = Nothing
-      , exportPDF = Nothing
+      , exportImage = Nothing
       }
     , Cmd.none
     )

@@ -480,8 +480,7 @@ topCenterPanel plugins pluginStates vc gc model =
                 , exportName = model.name
                 , export =
                     ExportCSV.isDownloading model.exportCSVGraph
-                        || (model.exportPNG /= Nothing)
-                        || (model.exportPDF /= Nothing)
+                        || (model.exportImage /= Nothing)
                 }
             ]
         , div

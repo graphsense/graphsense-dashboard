@@ -1,4 +1,4 @@
-module Model.Dialog exposing (AddTagConfig, ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg, initExportConfig)
+module Model.Dialog exposing (AddTagConfig, ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg, exportFormatToString, initExportConfig)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -106,6 +106,19 @@ type ExportFormat
     = ExportFormatPDF
     | ExportFormatPNG
     | ExportFormatCSV
+
+
+exportFormatToString : ExportFormat -> String
+exportFormatToString format =
+    case format of
+        ExportFormatPDF ->
+            "pdf"
+
+        ExportFormatPNG ->
+            "png"
+
+        ExportFormatCSV ->
+            "csv"
 
 
 type alias PluginConfig msg =

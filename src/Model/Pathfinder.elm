@@ -61,8 +61,7 @@ type alias Model =
     , eventualMessages : EventualMessages NetworkConditions Network Msg
     , exportCSV : ExportCSV.Model
     , exportCSVGraph : ExportCSV.Model
-    , exportPNG : Maybe ExportImage
-    , exportPDF : Maybe ExportImage
+    , exportImage : Maybe ExportImage
     }
 
 

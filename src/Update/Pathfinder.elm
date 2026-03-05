@@ -440,37 +440,6 @@ updateByMsg plugins uc msg model =
         UserClickedExportGraph _ ->
             n model
 
-        BrowserSentBBox ( filename, bbox ) ->
-            exportGraph ( filename, bbox ) model
-
-        BrowserRenderedGraphForExport ->
-            model.config
-                |> s_hideSelectionForExport False
-                |> flip s_config model
-                |> n
-
-        BrowserSentExportGraphResult { filename, error } ->
-            let
-                ( set, type_ ) =
-                    getSetterAndTypeForExport filename
-            in
-            ( model |> set Nothing
-            , error
-                |> Maybe.map
-                    (Notification.errorDefault
-                        >> Notification.map (s_title (Just "An error occurred"))
-                    )
-                |> Maybe.withDefault
-                    (Notification.successDefault "check download folder"
-                        |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
-                        |> Notification.map (s_isEphemeral True)
-                        |> Notification.map (s_showClose False)
-                        |> Notification.map (s_removeDelayMs 4000.0)
-                    )
-                |> ShowNotificationEffect
-                |> List.singleton
-            )
-
         BrowserGotTagSummariesForExportGraphTxsAsCSV includesBestClusterTag tagSummaries ->
             let
                 -- Add received tag summaries to model
@@ -2641,28 +2610,18 @@ updateByMsg plugins uc msg model =
             )
 
 
-exportGraph : ( String, Maybe BBox ) -> Model -> ( Model, List Effect )
-exportGraph ( filename, bbox ) model =
-    let
-        ( set, type_ ) =
-            getSetterAndTypeForExport filename
-    in
+exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
+exportGraph conf bbox model =
     ( model.config
-        |> s_hideSelectionForExport True
+        |> s_hideSelectionForExport (not conf.keepSelectionHighlight)
         |> flip s_config model
-        |> set (Just ExportingImage)
-    , [ { filename = filename
+        |> s_exportImage (Just ExportingImage)
+    , [ { filename = conf.filename
         , graphId = graphId
         , viewbox = bbox |> Maybe.map addMarginForExport
         }
             |> Ports.exportGraph
             |> Pathfinder.CmdEffect
-      , Notification.infoDefault ("generating " ++ type_)
-            -- |> Notification.map (s_title (Just "PDF Export"))
-            |> Notification.map (s_isEphemeral True)
-            |> Notification.map (s_showClose False)
-            |> Notification.map (s_removeDelayMs 4000.0)
-            |> ShowNotificationEffect
       ]
     )
 
@@ -5191,15 +5150,6 @@ getToAndFromAddresses uc =
         >> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
 
 
-getSetterAndTypeForExport : String -> ( Maybe ExportImage -> Model -> Model, String )
-getSetterAndTypeForExport filename =
-    if String.endsWith ".pdf" filename then
-        ( s_exportPDF, "pdf" )
-
-    else
-        ( s_exportPNG, "image" )
-
-
 updateByExportMsg : Update.Config -> ExportDialog.Msg -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )
 updateByExportMsg uc msg conf model =
     case msg of
@@ -5213,6 +5163,40 @@ updateByExportMsg uc msg conf model =
 
                 Dialog.ExportFormatPNG ->
                     exportGraphImage uc conf model
+
+        ExportDialog.BrowserRenderedGraphForExport ->
+            model.config
+                |> s_hideSelectionForExport False
+                |> flip s_config model
+                |> n
+
+        ExportDialog.BrowserSentBBox bbox ->
+            exportGraph conf bbox model
+
+        ExportDialog.BrowserSentExportGraphResult error ->
+            let
+                type_ =
+                    Dialog.exportFormatToString conf.fileFormat
+            in
+            ( { model | exportImage = Nothing }
+            , error
+                |> Maybe.map
+                    (Notification.errorDefault
+                        >> Notification.map (s_title (Just "An error occurred"))
+                    )
+                |> Maybe.withDefault
+                    (Notification.successDefault "check download folder"
+                        |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
+                        |> Notification.map (s_isEphemeral True)
+                        |> Notification.map (s_showClose False)
+                        |> Notification.map (s_removeDelayMs 4000.0)
+                    )
+                |> ShowNotificationEffect
+                |> List.singleton
+            )
+
+        _ ->
+            n model
 
 
 exportGraphTxs : Update.Config -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )
@@ -5306,21 +5290,21 @@ exportGraphImage _ conf model =
                 Dialog.ExportAreaVisible ->
                     Nothing
     in
-    model
-        |> s_exportPDF
-            (PrepareImageForExport
+    { model
+        | exportImage =
+            PrepareImageForExport
                 |> Just
-            )
+    }
         |> n
         |> and
             (case selector of
                 Just sel ->
                     \mo ->
-                        Ports.getBBox ( conf.filename, "svg#" ++ graphId, sel )
+                        Ports.getBBox ( "svg#" ++ graphId, sel )
                             |> CmdEffect
                             |> List.singleton
                             |> pair mo
 
                 Nothing ->
-                    exportGraph ( conf.filename, Nothing )
+                    exportGraph conf Nothing
             )

@@ -182,11 +182,11 @@ const getGraphBBox = (svg, selector) => {
     return svg.getBBox()
 }
 
-app.ports.getBBox.subscribe(([handle, graphSelector, subSelector]) => {
+app.ports.getBBox.subscribe(([graphSelector, subSelector]) => {
   const graph = document.querySelector(graphSelector)
-  if(!graph) app.ports.sendBBox.send([handle, null])
+  if(!graph) app.ports.sendBBox.send(null)
   const bbox = getGraphBBox(graph, subSelector)
-  app.ports.sendBBox.send([handle, bbox])
+  app.ports.sendBBox.send(bbox)
 })
 
 app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
@@ -300,7 +300,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
       } catch (e) {
         const error = 'Image generation failed'
         console.error(error, e)
-        app.ports.exportGraphResult.send({filename, error})
+        app.ports.exportGraphResult.send(error)
         return
       }
 
@@ -316,10 +316,10 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
 
           worker.onmessage = function(e) {
             if (e.data.error) {
-              app.ports.exportGraphResult.send({filename, error: e.data.error})
+              app.ports.exportGraphResult.send(e.data.error)
               console.error(e.data.error, e.data.details);
             } else {
-              app.ports.exportGraphResult.send({filename, error: null})
+              app.ports.exportGraphResult.send(null)
               FileSaver.saveAs(e.data.pdfBlob, e.data.filename)
             }
             worker.terminate()
@@ -327,7 +327,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
           };
 
           worker.onerror = function(e) {
-            app.ports.exportGraphResult.send({filename, error})
+            app.ports.exportGraphResult.send(error)
             URL.revokeObjectURL(imgDataUrl)
             console.error('Worker error:', e);
           };
@@ -340,12 +340,12 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
           });
         } catch (e) {
           console.error(error, e)
-          app.ports.exportGraphResult.send({filename, error})
+          app.ports.exportGraphResult.send(error)
           URL.revokeObjectURL(imgDataUrl)
         }
     } else if (filename.endsWith(".png")) {
       FileSaver.saveAs(imgData, filename)
-      app.ports.exportGraphResult.send({filename, error: null})
+      app.ports.exportGraphResult.send(null)
     }
   };
   img.src = url 
