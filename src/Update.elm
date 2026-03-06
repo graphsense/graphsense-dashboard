@@ -1273,6 +1273,14 @@ update plugins uc msg model =
                         |> List.singleton
                     )
 
+        PathfinderMsg Pathfinder.InternalExportGraphTxsCompleted ->
+            case model.dialog of
+                Just (Dialog.Export _) ->
+                    n { model | dialog = Nothing }
+
+                _ ->
+                    n model
+
         PathfinderMsg m ->
             let
                 pathfinderOld =

@@ -487,3 +487,6 @@ shallPushHistory plugins msg _ =
 
         UserClickedContextMenuAlignHorizontally ->
             True
+
+        InternalExportGraphTxsCompleted ->
+            False

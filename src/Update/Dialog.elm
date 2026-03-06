@@ -155,6 +155,7 @@ mapMsg map model =
             , fileFormat = conf.fileFormat
             , filename = conf.filename
             , time = conf.time
+            , exporting = conf.exporting
             }
                 |> Export
 

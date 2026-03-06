@@ -147,6 +147,7 @@ type Msg
     | EventualMessagesHeartBeat
     | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
+    | InternalExportGraphTxsCompleted
 
 
 type alias TextTooltipConfig =

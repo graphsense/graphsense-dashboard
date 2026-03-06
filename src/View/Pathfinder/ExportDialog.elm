@@ -108,9 +108,18 @@ view vc model =
                     }
                 }
 
-        invalid =
+        disabled =
             -- TODO move to central validation function
             String.isEmpty model.filename
+                || model.exporting
+
+        buttonText =
+            Locale.string vc.locale <|
+                if model.exporting then
+                    "Export-dialog-button-loading"
+
+                else
+                    "Export-dialog-button"
     in
     Dialogs.dialogGenericWithAttributes
         (Dialogs.dialogGenericAttributes
@@ -135,8 +144,8 @@ view vc model =
         , confirmButton =
             { variant =
                 (Button.defaultConfig
-                    |> Rs.s_text (Locale.string vc.locale "Export")
-                    |> Rs.s_disabled invalid
+                    |> Rs.s_text buttonText
+                    |> Rs.s_disabled disabled
                     |> Rs.s_onClick (UserClickedExport |> ExportDialogMsg |> Just)
                 )
                     |> Button.primaryButton vc

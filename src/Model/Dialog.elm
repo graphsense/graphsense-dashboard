@@ -93,6 +93,7 @@ type alias ExportConfig msg =
     , fileFormat : ExportFormat
     , filename : String
     , time : Time.Posix
+    , exporting : Bool
     }
 
 
@@ -197,4 +198,5 @@ initExportConfig uc { hasSelections, filenameBase, closeMsg, time } =
         makeTimestampFilename uc.locale time
             |> flip (++) (" " ++ filenameBase ++ ".pdf")
     , time = time
+    , exporting = False
     }

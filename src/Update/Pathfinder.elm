@@ -2604,6 +2604,10 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        InternalExportGraphTxsCompleted ->
+            -- handled upstream
+            n model
+
 
 exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
 exportGraph conf bbox model =
@@ -4979,6 +4983,7 @@ makeGraphTxsExportCSVConfig uc tagSummaries =
         , cmdToEff = Cmd.map (always NoOp) >> CmdEffect
         , notificationToEff = ShowNotificationEffect
         }
+        |> ExportCSV.onCompleted (InternalEffect InternalExportGraphTxsCompleted)
 
 
 {-| Convert a TxAccount to CSV row format, matching AddressDetails.prepareCSV format

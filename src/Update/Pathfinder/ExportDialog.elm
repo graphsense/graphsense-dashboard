@@ -7,13 +7,14 @@ import Model.Dialog exposing (ExportConfig, ExportFormat, exportFormatToString)
 import Msg.ExportDialog as ExportDialog exposing (Msg(..))
 import Regex
 import Util exposing (n)
+import View.Locale as Locale
 
 
 update : Update.Config -> ExportDialog.Msg -> ExportConfig Model.Msg -> ( ExportConfig Model.Msg, List Effect )
-update _ msg model =
+update uc msg model =
     case msg of
         UserClickedExport ->
-            n model
+            n { model | exporting = True }
 
         UserClickedAreaOption area ->
             n { model | area = area }
@@ -22,7 +23,7 @@ update _ msg model =
             n
                 { model
                     | fileFormat = format
-                    , filename = normalizeFilename format model.filename
+                    , filename = normalizeFilename uc format model.filename
                 }
 
         UserClickedKeepSelected ->
@@ -46,12 +47,12 @@ update _ msg model =
         UserLeavesFilename ->
             n
                 { model
-                    | filename = normalizeFilename model.fileFormat model.filename
+                    | filename = normalizeFilename uc model.fileFormat model.filename
                 }
 
 
-normalizeFilename : ExportFormat -> String -> String
-normalizeFilename format filename =
+normalizeFilename : Update.Config -> ExportFormat -> String -> String
+normalizeFilename uc format filename =
     let
         match =
             Regex.contains (Regex.fromString "\\.\\w{3}$" |> Maybe.withDefault Regex.never) filename
@@ -62,5 +63,12 @@ normalizeFilename format filename =
 
             else
                 identity
+           )
+        |> (\fn ->
+                if String.isEmpty fn then
+                    Locale.string uc.locale "Export-dialog-unknown-filename"
+
+                else
+                    fn
            )
         |> flip (++) ("." ++ exportFormatToString format)

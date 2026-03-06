@@ -1,4 +1,4 @@
-module Components.ExportCSV exposing (Config, Model, Msg(..), attributes, config, getNumberOfRows, gotData, icon, init, isDownloading, update)
+module Components.ExportCSV exposing (Config, Model, Msg(..), attributes, config, getNumberOfRows, gotData, icon, init, isDownloading, onCompleted, update)
 
 import Config.Update as Update
 import Config.View as View
@@ -7,6 +7,7 @@ import Csv.Encode
 import File.Download
 import Html.Styled exposing (Attribute, Html)
 import Html.Styled.Events exposing (onClick)
+import Maybe.Extra
 import Model.Notification as Notification exposing (Notification)
 import RecordSetter exposing (s_isEphemeral, s_showClose, s_title, s_variables)
 import Task
@@ -27,6 +28,7 @@ type alias ConfigInternal data eff =
     , fetch : Int -> eff
     , cmdToEff : Cmd Msg -> eff
     , notificationToEff : Notification -> eff
+    , onCompleted : Maybe eff
     }
 
 
@@ -62,7 +64,13 @@ config { filename, toCsv, fetch, cmdToEff, notificationToEff, numberOfRows } =
         , numberOfRows = numberOfRows
         , cmdToEff = cmdToEff
         , notificationToEff = notificationToEff
+        , onCompleted = Nothing
         }
+
+
+onCompleted : eff -> Config data eff -> Config data eff
+onCompleted eff (Config conf) =
+    Config { conf | onCompleted = Just eff }
 
 
 init : Model
@@ -121,6 +129,7 @@ gotData uc (Config conf) ( data, nextPage ) (Model model) =
             |> conf.cmdToEff
       , notification
       ]
+        ++ (conf.onCompleted |> Maybe.Extra.toList)
     )
 
 
