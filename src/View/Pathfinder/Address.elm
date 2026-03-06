@@ -3,7 +3,7 @@ module View.Pathfinder.Address exposing (ClusterContext, toNodeIconHtml, view)
 import Animation as A
 import Api.Data
 import Color
-import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
+import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Config.View as View
 import Css
 import Html.Styled.Attributes as Html
@@ -32,7 +32,7 @@ import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Data exposing (isAccountLike)
 import Util.Graph exposing (decodeCoords, translate)
-import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
+import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
@@ -78,8 +78,8 @@ view plugins vc pc colors address clusterContext annotation =
                    )
 
         highlightVisible =
-            (not pc.hideSelectionForExport && address.selected)
-                || isDirectlyHovered
+            pc.hideForExport /= Exporting True && (address.selected
+                || isDirectlyHovered)
 
         clusterStroke =
             case ( clusterColorLight, pc.highlightClusterFriends ) of
@@ -253,7 +253,7 @@ view plugins vc pc colors address clusterContext annotation =
                 , iconInstance = toNodeIcon address cluster
                 , exchangeLabel = nodeLabel |> Maybe.withDefault ""
                 , exchangeLabelVisible = nodeLabel /= Nothing
-                , isStartingPoint = address.isStartingPoint || not pc.hideSelectionForExport && address.selected
+                , isStartingPoint = address.isStartingPoint || (pc.hideForExport /= Exporting True && address.selected)
                 , tagIconVisible = address.hasTags || List.length replacementTagIcons > 0
                 , tagIconInstance =
                     (replacementIconCombined |> Maybe.map (g []))
@@ -261,41 +261,49 @@ view plugins vc pc colors address clusterContext annotation =
                 }
             , iconsNodeOpenLeft =
                 { variant =
-                    expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
-                        |> Maybe.withDefault
-                            (Icons.iconsNodeOpenLeftWithAttributes
-                                (Icons.iconsNodeOpenLeftAttributes
-                                    |> Rs.s_root (expand Incoming)
-                                )
-                                { root =
-                                    { state =
-                                        if expandAllowed address then
-                                            Icons.IconsNodeOpenLeftStateActiv
+                    if pc.hideForExport /= NoExport then
+                        none
 
-                                        else
-                                            Icons.IconsNodeOpenLeftStateDisabled
+                    else
+                        expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
+                            |> Maybe.withDefault
+                                (Icons.iconsNodeOpenLeftWithAttributes
+                                    (Icons.iconsNodeOpenLeftAttributes
+                                        |> Rs.s_root (expand Incoming)
+                                    )
+                                    { root =
+                                        { state =
+                                            if expandAllowed address then
+                                                Icons.IconsNodeOpenLeftStateActiv
+
+                                            else
+                                                Icons.IconsNodeOpenLeftStateDisabled
+                                        }
                                     }
-                                }
-                            )
+                                )
                 }
             , iconsNodeOpenRight =
                 { variant =
-                    expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
-                        |> Maybe.withDefault
-                            (Icons.iconsNodeOpenRightWithAttributes
-                                (Icons.iconsNodeOpenRightAttributes
-                                    |> Rs.s_root (expand Outgoing)
-                                )
-                                { root =
-                                    { state =
-                                        if expandAllowed address then
-                                            Icons.IconsNodeOpenRightStateActiv
+                    if pc.hideForExport /= NoExport then
+                        none
 
-                                        else
-                                            Icons.IconsNodeOpenRightStateDisabled
+                    else
+                        expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
+                            |> Maybe.withDefault
+                                (Icons.iconsNodeOpenRightWithAttributes
+                                    (Icons.iconsNodeOpenRightAttributes
+                                        |> Rs.s_root (expand Outgoing)
+                                    )
+                                    { root =
+                                        { state =
+                                            if expandAllowed address then
+                                                Icons.IconsNodeOpenRightStateActiv
+
+                                            else
+                                                Icons.IconsNodeOpenRightStateDisabled
+                                        }
                                     }
-                                }
-                            )
+                                )
                 }
             , iconsNodeMarker =
                 { variant =

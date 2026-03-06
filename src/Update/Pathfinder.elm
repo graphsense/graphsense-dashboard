@@ -6,7 +6,7 @@ import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
-import Config.Pathfinder exposing (TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -2612,7 +2612,7 @@ updateByMsg plugins uc msg model =
 exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
 exportGraph conf bbox model =
     ( model.config
-        |> s_hideSelectionForExport (not conf.keepSelectionHighlight)
+        |> s_hideForExport (Exporting <| not conf.keepSelectionHighlight)
         |> flip s_config model
         |> s_exportImage (Just ExportingImage)
     , [ { filename = conf.filename
@@ -5181,7 +5181,7 @@ updateByExportMsg uc msg conf model =
 
         ExportDialog.BrowserRenderedGraphForExport ->
             model.config
-                |> s_hideSelectionForExport False
+                |> s_hideForExport NoExport
                 |> flip s_config model
                 |> n
 

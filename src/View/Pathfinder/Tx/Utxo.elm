@@ -2,7 +2,7 @@ module View.Pathfinder.Tx.Utxo exposing (RenderLevel(..), edge, view)
 
 import Animation as A
 import Color
-import Config.Pathfinder as Pathfinder
+import Config.Pathfinder as Pathfinder exposing (HideForExport(..))
 import Config.View as View
 import Css
 import Dict
@@ -48,15 +48,16 @@ view _ vc pc tx utxo annotation =
                 |> Maybe.andThen .color
                 |> Maybe.map Color.toCssString
                 |> Maybe.Extra.or
-                    (case tx.conversionType of
-                        Just InputLegConversion ->
-                            Just Colors.pathIn
+                    (tx.conversionType
+                        |> Maybe.map
+                            (\ct ->
+                                case ct of
+                                    InputLegConversion ->
+                                        Colors.pathIn
 
-                        Just OutputLegConversion ->
-                            Just Colors.pathOut
-
-                        Nothing ->
-                            Nothing
+                                    OutputLegConversion ->
+                                        Colors.pathOut
+                            )
                     )
                 |> Maybe.withDefault Colors.pathMiddle
 
@@ -143,12 +144,12 @@ view _ vc pc tx utxo annotation =
             }
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
-                , highlightVisible = not pc.hideSelectionForExport && (tx.selected || tx.hovered)
+                , highlightVisible = pc.hideForExport /= Exporting True && (tx.selected || tx.hovered)
                 , txHash = Util.View.truncateLongIdentifier utxo.raw.txHash |> ifTrue vc.showHash
                 , date = Locale.timestampDateUniform vc.locale t |> ifTrue vc.showTimestampOnTxEdge
                 , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue vc.showTimestampOnTxEdge
                 , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
-                , startingPointVisible = tx.isStartingPoint || not pc.hideSelectionForExport && tx.selected
+                , startingPointVisible = tx.isStartingPoint || pc.hideForExport /= Exporting True && tx.selected
                 }
             , iconsNodeMarker =
                 { variant =
@@ -257,7 +258,7 @@ edge _ vc pc level utxo tx annotation =
                     )
 
         highlight =
-            not pc.hideSelectionForExport && (tx.hovered || tx.selected)
+            pc.hideForExport /= Exporting True && (tx.hovered || tx.selected)
     in
     (inputValues
         |> List.map

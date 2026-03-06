@@ -1,4 +1,4 @@
-module Config.Pathfinder exposing (Config, TracingMode(..), addressRadius, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset, numberOfRowsForCSVExport)
+module Config.Pathfinder exposing (Config, HideForExport(..), TracingMode(..), addressRadius, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset, numberOfRowsForCSVExport)
 
 
 addressRadius : Float
@@ -31,10 +31,15 @@ type TracingMode
     | AggregateTracingMode
 
 
+type HideForExport
+    = NoExport
+    | Exporting Bool
+
+
 type alias Config =
     { snapToGrid : Bool
     , highlightClusterFriends : Bool
     , tracingMode : TracingMode
     , avoidOverlapingNodes : Bool
-    , hideSelectionForExport : Bool
+    , hideForExport : HideForExport
     }

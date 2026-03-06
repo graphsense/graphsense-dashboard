@@ -1,7 +1,7 @@
 module Init.Pathfinder exposing (init)
 
 import Components.ExportCSV as ExportCSV
-import Config.Pathfinder exposing (TracingMode(..))
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Dict
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
@@ -40,7 +40,7 @@ init us =
             , highlightClusterFriends = us.highlightClusterFriends |> Maybe.withDefault True
             , tracingMode = us.tracingMode |> Maybe.withDefault TransactionTracingMode
             , avoidOverlapingNodes = us.avoidOverlapingNodes |> Maybe.withDefault True
-            , hideSelectionForExport = False
+            , hideForExport = NoExport
             }
       , pointerTool = Drag
       , modPressed = False

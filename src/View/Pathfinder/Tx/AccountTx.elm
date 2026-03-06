@@ -2,7 +2,7 @@ module View.Pathfinder.Tx.AccountTx exposing (edge, view)
 
 import Animation as A
 import Color
-import Config.Pathfinder as Pathfinder
+import Config.Pathfinder as Pathfinder exposing (HideForExport(..))
 import Config.View as View
 import Css
 import Html.Styled.Attributes as Html
@@ -159,14 +159,14 @@ view _ vc pc tx accTx annotation =
                     [ translate 0 offsetTxHash |> transform ]
             }
             { root =
-                { highlightVisible = not pc.hideSelectionForExport && (tx.selected || tx.hovered)
+                { highlightVisible = pc.hideForExport /= Exporting True && (tx.selected || tx.hovered)
                 , txHash = Util.View.truncateLongIdentifier ("0x" ++ accTx.raw.txHash) |> ifTrue vc.showHash
                 , date = Locale.timestampDateUniform vc.locale t |> ifTrue vc.showTimestampOnTxEdge
                 , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue vc.showTimestampOnTxEdge
                 , firstValue = firstValue
                 , secondValue = secondValue
                 , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
-                , startingPointVisible = tx.isStartingPoint || not pc.hideSelectionForExport && tx.selected
+                , startingPointVisible = tx.isStartingPoint || pc.hideForExport /= Exporting True && tx.selected
                 }
             , iconsNodeMarker =
                 { variant =
@@ -215,7 +215,7 @@ edge _ _ pc account tx annotation =
                     )
 
         highlight =
-            not pc.hideSelectionForExport && (tx.hovered || tx.selected)
+            pc.hideForExport /= Exporting True && (tx.hovered || tx.selected)
     in
     Maybe.map2
         (\fro too ->

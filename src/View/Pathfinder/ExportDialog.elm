@@ -64,7 +64,7 @@ view vc model =
                         , msg = UserClickedKeepSelected
                         }
                     , Controls.checkboxWithLabel
-                        { label = Locale.string vc.locale "Export-dialog-display-transparent-background"
+                        { label = Locale.string vc.locale "Export-dialog-transparent-background"
                         , checked = model.transparentBackground
                         , disabled = model.fileFormat == ExportFormatCSV
                         , size = Controls.CheckboxSmall

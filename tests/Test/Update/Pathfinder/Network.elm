@@ -2,7 +2,7 @@ module Test.Update.Pathfinder.Network exposing (suite)
 
 import Animation
 import Api.Data
-import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
+import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Data.Api as Api
 import Data.Pathfinder.Id as Id
 import Data.Pathfinder.Network as Data
@@ -22,7 +22,7 @@ config =
     , highlightClusterFriends = False
     , tracingMode = TransactionTracingMode
     , avoidOverlapingNodes = True
-    , hideSelectionForExport = False
+    , hideForExport = NoExport
     }
 
 
