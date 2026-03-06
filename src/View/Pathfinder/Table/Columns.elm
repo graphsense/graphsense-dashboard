@@ -67,7 +67,7 @@ setHeaderCheckbox checkboxTitle checked msg =
             Util.Checkbox.checkbox
                 { state = Util.Checkbox.stateFromBool checked
                 , size = Util.Checkbox.smallSize
-                , msg = msg
+                , msg = Just msg
                 }
                 []
     in
@@ -282,7 +282,7 @@ checkboxColumn _ name { isChecked, onClick, readonly } =
                     [ Util.Checkbox.checkbox
                         { state = isChecked data |> Util.Checkbox.stateFromBool
                         , size = Util.Checkbox.smallSize
-                        , msg = onClick data
+                        , msg = onClick data |> Just
                         }
                         attrs
                     ]

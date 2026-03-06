@@ -57,9 +57,11 @@ view vc model =
             F.optionsWithTitle
                 { optionsList =
                     [ Controls.checkboxLargeWithLabel
-                        (Locale.string vc.locale "Export-dialog-display-keephighlight")
-                        model.keepSelectionHighlight
-                        UserClickedKeepSelected
+                        { label = Locale.string vc.locale "Export-dialog-display-keephighlight"
+                        , checked = model.keepSelectionHighlight
+                        , disabled = model.fileFormat == ExportFormatCSV
+                        , msg = UserClickedKeepSelected
+                        }
                     ]
                 }
                 { root = { title = Locale.string vc.locale "Export-dialog-display-title" |> Locale.titleCase vc.locale }
@@ -126,9 +128,9 @@ view vc model =
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick model.closeMsg ]
         )
         { inputList =
-            [ areaSelect
+            [ formatSelect
+            , areaSelect
             , displayOptions
-            , formatSelect
             , filenameText
             ]
                 |> List.map (Html.map ExportDialogMsg)

@@ -19,21 +19,29 @@ type alias ToggleConfig msg =
     }
 
 
-checkboxLargeWithLabel : String -> Bool -> msg -> Html msg
-checkboxLargeWithLabel label checked msg =
+checkboxLargeWithLabel : { label : String, checked : Bool, disabled : Bool, msg : msg } -> Html msg
+checkboxLargeWithLabel { label, checked, disabled, msg } =
     Sc.checkboxWithLabel
         { root = { label = label }
         , checkboxes =
             { variant =
                 Checkbox.checkbox
                     { state =
-                        if checked then
+                        if checked && not disabled then
                             Sc.CheckboxesStateSelected
+
+                        else if disabled then
+                            Sc.CheckboxesStateDisabled
 
                         else
                             Sc.CheckboxesStateDeselected
                     , size = Sc.CheckboxesSize18px
-                    , msg = msg
+                    , msg =
+                        if disabled then
+                            Nothing
+
+                        else
+                            Just msg
                     }
                     []
             }
