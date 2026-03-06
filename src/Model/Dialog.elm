@@ -174,11 +174,24 @@ defaultMsg model =
             c.defaultMsg
 
 
-initExportConfig : Update.Config -> String -> msg -> Time.Posix -> ExportConfig msg
-initExportConfig uc filenameBase closeMsg time =
+initExportConfig :
+    Update.Config
+    ->
+        { hasSelections : Bool
+        , filenameBase : String
+        , closeMsg : msg
+        , time : Time.Posix
+        }
+    -> ExportConfig msg
+initExportConfig uc { hasSelections, filenameBase, closeMsg, time } =
     { closeMsg = closeMsg
-    , area = ExportAreaVisible
-    , keepSelectionHighlight = True
+    , area =
+        if hasSelections then
+            ExportAreaSelected
+
+        else
+            ExportAreaVisible
+    , keepSelectionHighlight = False
     , fileFormat = ExportFormatPDF
     , filename =
         makeTimestampFilename uc.locale time

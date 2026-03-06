@@ -74,7 +74,7 @@ import Update.Pathfinder.ExportDialog as ExportDialog
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
-import Util exposing (and, n)
+import Util exposing (n)
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale exposing (makeTimestampFilename)
@@ -1247,11 +1247,23 @@ update plugins uc msg model =
         PathfinderMsg (Pathfinder.UserClickedExportGraph time) ->
             time
                 |> Maybe.map
-                    (Dialog.initExportConfig uc model.pathfinder.name UserClosesDialog
-                        >> Dialog.Export
-                        >> Just
-                        >> flip s_dialog model
-                        >> n
+                    (\t ->
+                        Dialog.initExportConfig uc
+                            { filenameBase = model.pathfinder.name
+                            , closeMsg = UserClosesDialog
+                            , time = t
+                            , hasSelections =
+                                case model.pathfinder.selection of
+                                    Pathfinder.MultiSelect (_ :: _) ->
+                                        True
+
+                                    _ ->
+                                        False
+                            }
+                            |> Dialog.Export
+                            |> Just
+                            |> flip s_dialog model
+                            |> n
                     )
                 |> Maybe.withDefault
                     ( model

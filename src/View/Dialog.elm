@@ -4,7 +4,6 @@ import Config.View exposing (Config)
 import Css.Dialog as Css
 import Css.View
 import FontAwesome
-import Html
 import Html.Styled exposing (Html, button, div, h4, li, span, text, ul)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick, stopPropagationOn)

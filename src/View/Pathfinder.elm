@@ -1,4 +1,4 @@
-module View.Pathfinder exposing (view)
+module View.Pathfinder exposing (originShiftX, view)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -15,7 +15,7 @@ import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave
 import Init.Pathfinder.Id as InitId
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords as Coords exposing (BBox, Coords)
+import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
@@ -63,6 +63,15 @@ import View.Search
 
 -- Helpers
 -- View
+
+
+originShiftX : Float
+originShiftX =
+    0
+
+
+
+--Css.searchBoxMinWidth / 2
 
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
@@ -770,12 +779,9 @@ detailsView plugin pluginStates vc model =
             none
 
 
-graphSvg : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> BBox -> Svg Msg
-graphSvg plugins vc gc model bbox =
+graphSvg : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> { a | width : Float, height : Float } -> Svg Msg
+graphSvg plugins vc gc model dim =
     let
-        dim =
-            { width = bbox.width, height = bbox.height }
-
         pointer =
             case ( model.dragging, model.pointerTool ) of
                 ( Dragging _ _ _, Drag ) ->
@@ -863,9 +869,6 @@ graphSvg plugins vc gc model bbox =
                             |> Maybe.andThen (.data >> RemoteData.toMaybe)
                             |> Maybe.map InitId.initClusterIdFromRecord
                     )
-
-        originShiftX =
-            Css.searchBoxMinWidth / 2
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
@@ -987,9 +990,6 @@ drawDragSelector _ m =
     case ( m.dragging, m.pointerTool ) of
         ( Dragging tm start now, Select ) ->
             let
-                originShiftX =
-                    Css.searchBoxMinWidth / 2
-
                 crd =
                     case tm.state of
                         Settled c ->

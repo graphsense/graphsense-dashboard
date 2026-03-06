@@ -35,7 +35,7 @@ import Maybe.Extra
 import Model.Dialog as Dialog
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords exposing (BBox, relativeToGraphZero)
+import Model.Graph.Coords exposing (BBox, isInBBox, relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale as Locale
@@ -111,6 +111,7 @@ import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
 import View.Locale as Locale exposing (makeTimestampFilename)
+import View.Pathfinder exposing (originShiftX)
 import Workflow
 
 
@@ -440,7 +441,7 @@ updateByMsg plugins uc msg model =
         UserClickedExportGraph _ ->
             n model
 
-        BrowserGotTagSummariesForExportGraphTxsAsCSV includesBestClusterTag tagSummaries ->
+        BrowserGotTagSummariesForExportGraphTxsAsCSV area includesBestClusterTag tagSummaries ->
             let
                 -- Add received tag summaries to model
                 ( modelWithTags, _ ) =
@@ -468,7 +469,7 @@ updateByMsg plugins uc msg model =
             in
             -- Only generate export when ALL tag summaries are loaded
             if List.isEmpty stillMissing then
-                generateGraphTxsExport uc modelWithTags
+                generateGraphTxsExport uc area modelWithTags
 
             else
                 -- Still waiting for more tag summaries, just update the model
@@ -1216,9 +1217,6 @@ updateByMsg plugins uc msg model =
                     case model.pointerTool of
                         Select ->
                             let
-                                xoffset =
-                                    searchBoxMinWidth / 2
-
                                 crd =
                                     case tm.state of
                                         Transform.Settled c ->
@@ -1230,35 +1228,32 @@ updateByMsg plugins uc msg model =
                                 z =
                                     value crd.z
 
-                                xn =
-                                    ((Basics.min start.x now.x + xoffset) * z) + crd.x
+                                bbox =
+                                    { x =
+                                        ((Basics.min start.x now.x + originShiftX) * z) + crd.x
+                                    , y =
+                                        (Basics.min start.y now.y * z) + crd.y
+                                    , width =
+                                        abs (start.x - now.x) * z
+                                    , height =
+                                        abs (start.y - now.y) * z
+                                    }
 
-                                yn =
-                                    (Basics.min start.y now.y * z) + crd.y
+                                isInBBoxTx =
+                                    Tx.getCoords
+                                        >> Maybe.map (coordsWithUnit >> isInBBox bbox)
+                                        >> Maybe.withDefault False
 
-                                widthn =
-                                    abs (start.x - now.x) * z
-
-                                heightn =
-                                    abs (start.y - now.y) * z
-
-                                isIn x1 y1 x2 y2 x y =
-                                    x > x1 && x < x2 && y > y1 && y < y2
-
-                                isinRect c =
-                                    isIn xn yn (xn + widthn) (yn + heightn) (c.x * unit) (c.y * unit)
-
-                                isinRectTx tx =
-                                    tx |> Tx.getCoords |> Maybe.map isinRect |> Maybe.withDefault False
-
-                                isinRectAddr adr =
-                                    adr |> Address.getCoords |> isinRect
+                                isInBBoxAddr =
+                                    Address.getCoords
+                                        >> coordsWithUnit
+                                        >> isInBBox bbox
 
                                 selectedTxs =
-                                    List.filter isinRectTx (Dict.values model.network.txs) |> List.map (.id >> MSelectedTx)
+                                    List.filter isInBBoxTx (Dict.values model.network.txs) |> List.map (.id >> MSelectedTx)
 
                                 selectedAdr =
-                                    List.filter isinRectAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
+                                    List.filter isInBBoxAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
 
                                 modelS =
                                     multiSelect model (selectedTxs ++ selectedAdr) False
@@ -4938,21 +4933,35 @@ getTagsForExport addressId table data model =
 
 {-| Generate the graph transactions CSV export with current tag summaries
 -}
-generateGraphTxsExport : Update.Config -> Model -> ( Model, List Effect )
-generateGraphTxsExport uc model =
+generateGraphTxsExport : Update.Config -> Dialog.ExportArea -> Model -> ( Model, List Effect )
+generateGraphTxsExport uc exportSelection model =
     let
         config =
             makeGraphTxsExportCSVConfig uc model.tagSummaries
 
         txAccounts =
-            model.network.txs
-                |> Dict.values
+            getTxsByExportSelection uc exportSelection model
                 |> List.concatMap (explodeTxToAccounts uc.locale)
 
         ( exportCSV, eff ) =
             ExportCSV.gotData uc config ( txAccounts, Nothing ) model.exportCSVGraph
     in
     ( { model | exportCSVGraph = exportCSV }, eff )
+
+
+getTxsByExportSelection : Update.Config -> Dialog.ExportArea -> Model -> List Tx
+getTxsByExportSelection uc area model =
+    case area of
+        Dialog.ExportAreaWhole ->
+            Dict.values model.network.txs
+
+        Dialog.ExportAreaVisible ->
+            uc.size
+                |> Maybe.map (getVisibleTxs model)
+                |> Maybe.withDefault []
+
+        Dialog.ExportAreaSelected ->
+            getSelectedTxs model
 
 
 {-| Config for exporting all graph transactions as CSV
@@ -5204,7 +5213,7 @@ exportGraphTxs uc conf model =
     -- First collect all addresses from transactions and check if we need to fetch tag summaries
     let
         allAddresses =
-            Dict.values model.network.txs
+            getTxsByExportSelection uc conf.area model
                 |> getToAndFromAddresses uc
 
         -- Group addresses by network for bulk fetching
@@ -5258,13 +5267,13 @@ exportGraphTxs uc conf model =
     in
     if List.isEmpty missingByNetwork then
         -- All tag summaries already loaded, proceed with export
-        generateGraphTxsExport uc newModel
+        generateGraphTxsExport uc conf.area newModel
 
     else
         -- Need to fetch missing tag summaries first
         let
             toMsg =
-                BrowserGotTagSummariesForExportGraphTxsAsCSV
+                BrowserGotTagSummariesForExportGraphTxsAsCSV conf.area
 
             fetchEffects =
                 missingByNetwork

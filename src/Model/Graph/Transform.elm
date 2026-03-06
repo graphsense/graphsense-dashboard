@@ -1,4 +1,4 @@
-module Model.Graph.Transform exposing (Coords, Model, Transition(..), coordsToBBox, defaultDuration, equals, getBoundingBox, getCurrent, getZ)
+module Model.Graph.Transform exposing (Coords, Model, Transition(..), coordsToBBox, defaultDuration, equals, getCurrent, getSettled, getZ)
 
 import Bounce exposing (Bounce)
 import Model.Graph.Coords exposing (BBox)
@@ -57,29 +57,6 @@ getCurrent model =
             c
 
 
-getBoundingBox : Model comparable -> { width : Float, height : Float } -> BBox
-getBoundingBox model { width, height } =
-    let
-        current =
-            getCurrent model
-
-        bbwidth =
-            current.z
-                |> Bounded.value
-                |> (*) width
-
-        bbheight =
-            current.z
-                |> Bounded.value
-                |> (*) height
-    in
-    { x = current.x - bbwidth / 2
-    , y = current.y - bbheight / 2
-    , width = bbwidth
-    , height = bbheight
-    }
-
-
 equals : Coords -> Coords -> Bool
 equals a b =
     a.x
@@ -90,7 +67,7 @@ equals a b =
         == Bounded.value b.z
 
 
-coordsToBBox : { width : Float, height : Float } -> Coords -> BBox
+coordsToBBox : { a | width : Float, height : Float } -> Coords -> BBox
 coordsToBBox { width, height } coords =
     let
         z =
@@ -101,3 +78,13 @@ coordsToBBox { width, height } coords =
     , width = max 0 <| width * z
     , height = max 0 <| height * z
     }
+
+
+getSettled : Model comparable -> Coords
+getSettled { state } =
+    case state of
+        Transitioning { to } ->
+            to
+
+        Settled c ->
+            c

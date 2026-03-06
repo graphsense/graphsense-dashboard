@@ -7,7 +7,6 @@ import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Model)
 import Msg.ExportDialog exposing (Msg(..))
 import Msg.Pathfinder exposing (Msg(..))
-import Ports
 import Set
 import Sub.Graph.Transform as Transform
 

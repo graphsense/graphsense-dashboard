@@ -14,7 +14,7 @@ import Theme.Html.Fields as F
 import Util.Css exposing (alignItemsStretch)
 import Util.View exposing (inputFieldStyles)
 import View.Button as Button
-import View.Controls as Controls exposing (radioSmall)
+import View.Controls as Controls
 import View.Locale as Locale
 
 
