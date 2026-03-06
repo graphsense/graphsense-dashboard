@@ -1,4 +1,4 @@
-module View.Controls exposing (ToggleConfig, checkboxLargeWithLabel, lightModeToggle, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
+module View.Controls exposing (CheckboxSize(..), ToggleConfig, checkboxWithLabel, lightModeToggle, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -19,8 +19,13 @@ type alias ToggleConfig msg =
     }
 
 
-checkboxLargeWithLabel : { label : String, checked : Bool, disabled : Bool, msg : msg } -> Html msg
-checkboxLargeWithLabel { label, checked, disabled, msg } =
+type CheckboxSize
+    = CheckboxSmall
+    | CheckboxLarge
+
+
+checkboxWithLabel : { label : String, checked : Bool, disabled : Bool, msg : msg, size : CheckboxSize } -> Html msg
+checkboxWithLabel { label, checked, disabled, size, msg } =
     Sc.checkboxWithLabel
         { root = { label = label }
         , checkboxes =
@@ -35,7 +40,13 @@ checkboxLargeWithLabel { label, checked, disabled, msg } =
 
                         else
                             Sc.CheckboxesStateDeselected
-                    , size = Sc.CheckboxesSize18px
+                    , size =
+                        case size of
+                            CheckboxLarge ->
+                                Sc.CheckboxesSize18px
+
+                            CheckboxSmall ->
+                                Sc.CheckboxesSize14px
                     , msg =
                         if disabled then
                             Nothing

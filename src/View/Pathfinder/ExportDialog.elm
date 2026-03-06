@@ -56,10 +56,11 @@ view vc model =
         displayOptions =
             F.optionsWithTitle
                 { optionsList =
-                    [ Controls.checkboxLargeWithLabel
+                    [ Controls.checkboxWithLabel
                         { label = Locale.string vc.locale "Export-dialog-display-keephighlight"
                         , checked = model.keepSelectionHighlight
                         , disabled = model.fileFormat == ExportFormatCSV
+                        , size = Controls.CheckboxSmall
                         , msg = UserClickedKeepSelected
                         }
                     ]
