@@ -156,6 +156,7 @@ mapMsg map model =
             , filename = conf.filename
             , time = conf.time
             , exporting = conf.exporting
+            , transparentBackground = conf.transparentBackground
             }
                 |> Export
 

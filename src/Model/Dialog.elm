@@ -94,6 +94,7 @@ type alias ExportConfig msg =
     , filename : String
     , time : Time.Posix
     , exporting : Bool
+    , transparentBackground : Bool
     }
 
 
@@ -199,4 +200,5 @@ initExportConfig uc { hasSelections, filenameBase, closeMsg, time } =
             |> flip (++) (" " ++ filenameBase ++ ".pdf")
     , time = time
     , exporting = False
+    , transparentBackground = False
     }

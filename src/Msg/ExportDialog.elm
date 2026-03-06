@@ -14,3 +14,4 @@ type Msg
     | BrowserSentExportGraphResult (Maybe String)
     | UserInputsFilename String
     | UserLeavesFilename
+    | UserClickedTransparentBackground

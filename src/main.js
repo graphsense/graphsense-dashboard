@@ -189,7 +189,7 @@ app.ports.getBBox.subscribe(([graphSelector, subSelector]) => {
   app.ports.sendBBox.send(bbox)
 })
 
-app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
+app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox, transparentBackground}) => {
   const FileSaver = (await import('file-saver')).default
   let svg = document.querySelector('svg#' + graphId)
   if (!svg) {
@@ -284,7 +284,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
       let imgData 
       try {
         URL.revokeObjectURL(url)
-        const bgColor = cssVariables["--c-white"]
+        const bgColor = transparentBackground ? 'transparent' : cssVariables["--c-white"]
 
         // Use scale factor of 4 for high quality
         let canvas = new OffscreenCanvas(svgWidth, svgHeight)

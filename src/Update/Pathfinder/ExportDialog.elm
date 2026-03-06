@@ -29,6 +29,9 @@ update uc msg model =
         UserClickedKeepSelected ->
             n { model | keepSelectionHighlight = not model.keepSelectionHighlight }
 
+        UserClickedTransparentBackground ->
+            n { model | transparentBackground = not model.transparentBackground }
+
         BrowserSentBBox _ ->
             -- handled in Update/Pathfinder.elm
             n model

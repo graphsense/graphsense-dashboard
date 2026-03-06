@@ -10,7 +10,13 @@ port console : String -> Cmd msg
 port exportGraphics : String -> Cmd msg
 
 
-port exportGraph : { filename : String, graphId : String, viewbox : Maybe Coords.BBox } -> Cmd msg
+port exportGraph :
+    { filename : String
+    , graphId : String
+    , viewbox : Maybe Coords.BBox
+    , transparentBackground : Bool
+    }
+    -> Cmd msg
 
 
 port exportGraphResult : (Maybe String -> msg) -> Sub msg

@@ -2618,6 +2618,7 @@ exportGraph conf bbox model =
     , [ { filename = conf.filename
         , graphId = graphId
         , viewbox = bbox |> Maybe.map addMarginForExport
+        , transparentBackground = conf.transparentBackground
         }
             |> Ports.exportGraph
             |> Pathfinder.CmdEffect

@@ -63,6 +63,13 @@ view vc model =
                         , size = Controls.CheckboxSmall
                         , msg = UserClickedKeepSelected
                         }
+                    , Controls.checkboxWithLabel
+                        { label = Locale.string vc.locale "Export-dialog-display-transparent-background"
+                        , checked = model.transparentBackground
+                        , disabled = model.fileFormat == ExportFormatCSV
+                        , size = Controls.CheckboxSmall
+                        , msg = UserClickedTransparentBackground
+                        }
                     ]
                 }
                 { root = { title = Locale.string vc.locale "Export-dialog-display-title" |> Locale.titleCase vc.locale }
