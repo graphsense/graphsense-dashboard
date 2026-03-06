@@ -21,6 +21,7 @@ import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Selection as Pathfinder
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
 import Number.Bounded exposing (value)

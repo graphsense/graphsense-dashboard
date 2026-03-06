@@ -54,6 +54,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip

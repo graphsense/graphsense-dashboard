@@ -36,18 +36,27 @@ view vc model =
         areaSelect =
             F.radioOptionsWithTitle
                 { radioItemsList =
-                    [ Controls.radioSmall
-                        (Locale.string vc.locale "Export-dialog-area-visible")
-                        (model.area == ExportAreaVisible)
-                        (UserClickedAreaOption ExportAreaVisible)
-                    , Controls.radioSmall
-                        (Locale.string vc.locale "Export-dialog-area-selected")
-                        (model.area == ExportAreaSelected)
-                        (UserClickedAreaOption ExportAreaSelected)
-                    , Controls.radioSmall
-                        (Locale.string vc.locale "Export-dialog-area-whole")
-                        (model.area == ExportAreaWhole)
-                        (UserClickedAreaOption ExportAreaWhole)
+                    [ Controls.radio
+                        { label = Locale.string vc.locale "Export-dialog-area-whole"
+                        , selected = model.area == ExportAreaWhole
+                        , disabled = False
+                        , size = Controls.Small
+                        , msg = UserClickedAreaOption ExportAreaWhole
+                        }
+                    , Controls.radio
+                        { label = Locale.string vc.locale "Export-dialog-area-visible"
+                        , selected = model.area == ExportAreaVisible
+                        , disabled = False
+                        , size = Controls.Small
+                        , msg = UserClickedAreaOption ExportAreaVisible
+                        }
+                    , Controls.radio
+                        { label = Locale.string vc.locale "Export-dialog-area-selected"
+                        , selected = model.area == ExportAreaSelected
+                        , disabled = not model.hasSelections
+                        , size = Controls.Small
+                        , msg = UserClickedAreaOption ExportAreaSelected
+                        }
                     ]
                 }
                 { root = { title = Locale.string vc.locale "Export-dialog-area-title" |> Locale.titleCase vc.locale }
@@ -60,14 +69,14 @@ view vc model =
                         { label = Locale.string vc.locale "Export-dialog-display-keephighlight"
                         , checked = model.keepSelectionHighlight
                         , disabled = model.fileFormat == ExportFormatCSV
-                        , size = Controls.CheckboxSmall
+                        , size = Controls.Small
                         , msg = UserClickedKeepSelected
                         }
                     , Controls.checkboxWithLabel
                         { label = Locale.string vc.locale "Export-dialog-transparent-background"
                         , checked = model.transparentBackground
                         , disabled = model.fileFormat == ExportFormatCSV
-                        , size = Controls.CheckboxSmall
+                        , size = Controls.Small
                         , msg = UserClickedTransparentBackground
                         }
                     ]

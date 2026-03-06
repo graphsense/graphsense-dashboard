@@ -8,10 +8,11 @@ import Init.Graph.Transform as Transform
 import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
-import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
+import Model.Pathfinder exposing (Hovered(..), Model)
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Network as Network
+import Model.Pathfinder.Selection exposing (Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Route.Pathfinder as Route

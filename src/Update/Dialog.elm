@@ -157,6 +157,7 @@ mapMsg map model =
             , time = conf.time
             , exporting = conf.exporting
             , transparentBackground = conf.transparentBackground
+            , hasSelections = conf.hasSelections
             }
                 |> Export
 

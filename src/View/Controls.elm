@@ -1,4 +1,4 @@
-module View.Controls exposing (CheckboxSize(..), ToggleConfig, checkboxWithLabel, lightModeToggle, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
+module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, lightModeToggle, radio, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
@@ -19,12 +19,12 @@ type alias ToggleConfig msg =
     }
 
 
-type CheckboxSize
-    = CheckboxSmall
-    | CheckboxLarge
+type Size
+    = Small
+    | Large
 
 
-checkboxWithLabel : { label : String, checked : Bool, disabled : Bool, msg : msg, size : CheckboxSize } -> Html msg
+checkboxWithLabel : { label : String, checked : Bool, disabled : Bool, msg : msg, size : Size } -> Html msg
 checkboxWithLabel { label, checked, disabled, size, msg } =
     Sc.checkboxWithLabel
         { root = { label = label }
@@ -42,10 +42,10 @@ checkboxWithLabel { label, checked, disabled, size, msg } =
                             Sc.CheckboxesStateDeselected
                     , size =
                         case size of
-                            CheckboxLarge ->
+                            Large ->
                                 Sc.CheckboxesSize18px
 
-                            CheckboxSmall ->
+                            Small ->
                                 Sc.CheckboxesSize14px
                     , msg =
                         if disabled then
@@ -61,19 +61,51 @@ checkboxWithLabel { label, checked, disabled, size, msg } =
 
 radioSmall : String -> Bool -> msg -> Html msg
 radioSmall name selected msg =
+    radio
+        { label = name
+        , selected = selected
+        , disabled = False
+        , msg = msg
+        , size = Small
+        }
+
+
+radio : { label : String, selected : Bool, disabled : Bool, size : Size, msg : msg } -> Html msg
+radio { label, selected, disabled, size, msg } =
     Sc.radioItemWithAttributes
         (Sc.radioItemAttributes
-            |> Rs.s_root [ onClick msg, [ Css.cursor Css.pointer ] |> css ]
+            |> Rs.s_root
+                (if disabled then
+                    []
+
+                 else
+                    [ onClick msg, [ Css.cursor Css.pointer ] |> css ]
+                )
         )
         { radio =
             { variant =
-                if selected then
-                    Sc.radioStateOnSizeSmall {}
+                Sc.radio
+                    { root =
+                        { state =
+                            if selected && not disabled then
+                                Sc.RadioStateOn
 
-                else
-                    Sc.radioStateOffSizeSmall {}
+                            else if disabled then
+                                Sc.RadioStateDisabled
+
+                            else
+                                Sc.RadioStateOff
+                        , size =
+                            case size of
+                                Small ->
+                                    Sc.RadioSizeSmall
+
+                                Large ->
+                                    Sc.RadioSizeLarge
+                        }
+                    }
             }
-        , root = { radioLabel = name }
+        , root = { radioLabel = label }
         }
 
 

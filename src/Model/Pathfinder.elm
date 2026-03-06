@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getVisibleTxs, graphId, unit)
 
 import Api.Data exposing (Actor, Entity)
 import Basics.Extra exposing (flip)
@@ -19,6 +19,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
@@ -80,29 +81,12 @@ type HavingTags
     | NoTags
 
 
-type Selection
-    = SelectedAddress Id
-    | SelectedTx Id
-    | SelectedAggEdge ( Id, Id )
-    | MultiSelect (List MultiSelectOptions)
-    | WillSelectTx Id
-    | WillSelectAddress Id
-    | WillSelectAggEdge ( Id, Id )
-    | SelectedConversionEdge ( Id, Id )
-    | NoSelection
-
-
 type Hovered
     = HoveredTx Id
     | HoveredAggEdge ( Id, Id )
     | HoveredConversionEdge ( Id, Id )
     | HoveredAddress Id
     | NoHover
-
-
-type MultiSelectOptions
-    = MSelectedAddress Id
-    | MSelectedTx Id
 
 
 type Details

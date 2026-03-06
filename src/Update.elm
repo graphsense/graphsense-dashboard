@@ -36,7 +36,6 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Notification as Notification exposing (Notification)
-import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
@@ -1252,13 +1251,7 @@ update plugins uc msg model =
                             { filenameBase = model.pathfinder.name
                             , closeMsg = UserClosesDialog
                             , time = t
-                            , hasSelections =
-                                case model.pathfinder.selection of
-                                    Pathfinder.MultiSelect (_ :: _) ->
-                                        True
-
-                                    _ ->
-                                        False
+                            , selection = model.pathfinder.selection
                             }
                             |> Dialog.Export
                             |> Just

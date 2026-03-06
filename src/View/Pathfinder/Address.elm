@@ -78,8 +78,11 @@ view plugins vc pc colors address clusterContext annotation =
                    )
 
         highlightVisible =
-            pc.hideForExport /= Exporting True && (address.selected
-                || isDirectlyHovered)
+            pc.hideForExport
+                /= Exporting True
+                && (address.selected
+                        || isDirectlyHovered
+                   )
 
         clusterStroke =
             case ( clusterColorLight, pc.highlightClusterFriends ) of

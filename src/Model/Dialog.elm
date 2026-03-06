@@ -8,6 +8,7 @@ import Config.View exposing (Config)
 import Html.Styled exposing (Html)
 import Http
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Selection as Selection exposing (Selection(..))
 import Model.Search as Search
 import Time
 import View.Locale exposing (makeTimestampFilename)
@@ -89,6 +90,7 @@ type alias AddTagConfig msg =
 type alias ExportConfig msg =
     { closeMsg : msg
     , area : ExportArea
+    , hasSelections : Bool
     , keepSelectionHighlight : Bool
     , fileFormat : ExportFormat
     , filename : String
@@ -179,20 +181,21 @@ defaultMsg model =
 initExportConfig :
     Update.Config
     ->
-        { hasSelections : Bool
+        { selection : Selection
         , filenameBase : String
         , closeMsg : msg
         , time : Time.Posix
         }
     -> ExportConfig msg
-initExportConfig uc { hasSelections, filenameBase, closeMsg, time } =
+initExportConfig uc { selection, filenameBase, closeMsg, time } =
     { closeMsg = closeMsg
     , area =
-        if hasSelections then
-            ExportAreaSelected
+        case selection of
+            Selection.MultiSelect (_ :: _) ->
+                ExportAreaSelected
 
-        else
-            ExportAreaVisible
+            _ ->
+                ExportAreaWhole
     , keepSelectionHighlight = False
     , fileFormat = ExportFormatPDF
     , filename =
@@ -201,4 +204,5 @@ initExportConfig uc { hasSelections, filenameBase, closeMsg, time } =
     , time = time
     , exporting = False
     , transparentBackground = False
+    , hasSelections = selection /= NoSelection
     }
