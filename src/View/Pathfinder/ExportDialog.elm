@@ -50,7 +50,7 @@ view vc model =
                         (UserClickedAreaOption ExportAreaWhole)
                     ]
                 }
-                { root = { title = Locale.string vc.locale "Export-dialog-area-title" }
+                { root = { title = Locale.string vc.locale "Export-dialog-area-title" |> Locale.titleCase vc.locale }
                 }
 
         displayOptions =
@@ -62,7 +62,7 @@ view vc model =
                         UserClickedKeepSelected
                     ]
                 }
-                { root = { title = Locale.string vc.locale "Export-dialog-display-title" }
+                { root = { title = Locale.string vc.locale "Export-dialog-display-title" |> Locale.titleCase vc.locale }
                 }
 
         formatSelect =
@@ -82,7 +82,7 @@ view vc model =
                         (UserClickedFormatOption ExportFormatCSV)
                     ]
                 }
-                { root = { title = Locale.string vc.locale "Export-dialog-format-title" }
+                { root = { title = Locale.string vc.locale "Export-dialog-format-title" |> Locale.titleCase vc.locale }
                 }
 
         filenameText =

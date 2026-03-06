@@ -528,3 +528,17 @@ transaction not found: Transaktion nicht gefunden
 transactions not found: Transaktionen nicht gefunden
 session expired: Sitzung abgelaufen
 popup-session-expired-info: Ihre Sitzung ist abgelaufen. Bitte speichern Sie Ihren Stand und laden Sie anschließend die Seite neu.
+export-dialog-area-visible: "sichtbarer Bereich"
+export-dialog-area-selected: "ausgewählte Knoten"
+export-dialog-area-whole: "ganzer Graph"
+export-dialog-area-title: "Bereich zum Exportieren"
+export-dialog-display-keephighlight: "Auswahl-Hervorhebung beibehalten"
+export-dialog-display-title: "Anzeigeoptionen"
+export-dialog-format-title: "Format"
+export-dialog-filename-help: "Geben Sie einen Dateinamen für die exportierte Datei ein"
+export-dialog-filename-label: "Dateiname"
+export-dialog-filename-placeholder: "Dateinamen hier eingeben"
+export-dialog-button-loading: "Wird exportiert..."
+export-dialog-button: "Exportieren"
+export-dialog-title: "Exportieren"
+export-dialog-description: "Exportieren Sie den aktuellen Graphen in verschiedene Formate"

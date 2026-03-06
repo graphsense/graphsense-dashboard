@@ -511,3 +511,17 @@ transaction not found: transaction not found
 transactions not found: transactions not found
 session expired: session expired
 popup-session-expired-info: Your session has expired. Please save your work and refresh the page.
+export-dialog-area-visible: "visible area"
+export-dialog-area-selected: "selected nodes"
+export-dialog-area-whole: "whole graph"
+export-dialog-area-title: "area to export"
+export-dialog-display-keephighlight: "keep selection highlight"
+export-dialog-display-title: "display options"
+export-dialog-format-title: "format"
+export-dialog-filename-help: "enter a filename for the exported file"
+export-dialog-filename-label: "filename"
+export-dialog-filename-placeholder: "enter filename here"
+export-dialog-button-loading: "exporting..."
+export-dialog-button: "export"
+export-dialog-title: "export"
+export-dialog-description: "export the current graph to a various formats"

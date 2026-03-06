@@ -533,3 +533,17 @@ transaction not found: transacción no encontrada
 transactions not found: transacciones no encontradas
 session expired: sesión caducada
 popup-session-expired-info: Su sesión ha caducado. Guarde los datos y vuelva a cargar la página.
+export-dialog-area-visible: "área visible"
+export-dialog-area-selected: "nodos seleccionados"
+export-dialog-area-whole: "grafo completo"
+export-dialog-area-title: "área para exportar"
+export-dialog-display-keephighlight: "mantener resaltado de selección"
+export-dialog-display-title: "opciones de visualización"
+export-dialog-format-title: "formato"
+export-dialog-filename-help: "ingrese un nombre de archivo para el archivo exportado"
+export-dialog-filename-label: "nombre de archivo"
+export-dialog-filename-placeholder: "ingrese el nombre de archivo aquí"
+export-dialog-button-loading: "exportando..."
+export-dialog-button: "exportar"
+export-dialog-title: "exportar"
+export-dialog-description: "exportar el gráfico actual a varios formatos"

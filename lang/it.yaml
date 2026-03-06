@@ -555,3 +555,17 @@ transaction not found: transazione non trovata
 transactions not found: transazioni non trovate
 session expired: sessione scaduta
 popup-session-expired-info: La tua sessione è scaduta. Salva e ricarica la pagina.
+export-dialog-area-visible: "area visibile"
+export-dialog-area-selected: "nodi selezionati"
+export-dialog-area-whole: "grafico completo"
+export-dialog-area-title: "area da esportare"
+export-dialog-display-keephighlight: "mantieni evidenziazione selezione"
+export-dialog-display-title: "opzioni di visualizzazione"
+export-dialog-format-title: "formato"
+export-dialog-filename-help: "inserisci un nome file per il file esportato"
+export-dialog-filename-label: "nome file"
+export-dialog-filename-placeholder: "inserisci nome file qui"
+export-dialog-button-loading: "in esportazione..."
+export-dialog-button: "esporta"
+export-dialog-title: "esporta"
+export-dialog-description: "esporta il grafico corrente in vari formati"
