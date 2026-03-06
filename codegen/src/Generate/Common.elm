@@ -476,10 +476,10 @@ componentSetNodeToDeclarations ({ elementAnnotation, attributeAnnotation } as fo
 
 variantNameToComparisionExpression : Expression -> String -> String -> Expression
 variantNameToComparisionExpression propertiesRecord parentName name =
-    String.split ", " name
+    String.split "," name
         |> List.filterMap
             (\part ->
-                case String.split "=" part of
+                case String.split "=" <| String.trim part of
                     prop :: value :: [] ->
                         (parentName
                             ++ " "
