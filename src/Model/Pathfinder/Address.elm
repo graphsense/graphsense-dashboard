@@ -1,9 +1,11 @@
 module Model.Pathfinder.Address exposing
     ( Address
+    , AddressServiceType(..)
     , Txs(..)
     , expandAllowed
     , getActivityRange
     , getActivityRangeAddress
+    , getAddressType
     , getBalance
     , getClusterId
     , getCoords
@@ -21,16 +23,19 @@ module Model.Pathfinder.Address exposing
 
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
+import Color exposing (Color)
 import Init.Pathfinder.Id as Id
+import Maybe.Extra
 import Model.Direction exposing (Direction(..))
+import Model.Entity exposing (isPossibleServiceUtxo)
 import Model.Graph.Coords exposing (Coords)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Plugin.Model as Plugin
 import RecordSetter exposing (s_incomingTxs, s_outgoingTxs)
 import RemoteData exposing (RemoteData(..), WebData)
 import Set exposing (Set)
 import Time exposing (Posix)
-import Util.Data exposing (timestampToPosix)
+import Util.Data exposing (isAccountLike, timestampToPosix)
 
 
 type alias Address =
@@ -51,6 +56,8 @@ type alias Address =
     , actor : Maybe String
     , isStartingPoint : Bool
     , plugins : Plugin.AddressState
+    , clusterColor : Maybe Color
+    , addressServiceType : AddressServiceType
     }
 
 
@@ -59,6 +66,12 @@ type Txs
     | TxsLastCheckedChangeTx Api.Data.TxUtxo
     | TxsLoading
     | TxsNotFetched
+
+
+type AddressServiceType
+    = KnownService
+    | LikelyUnknownService
+    | UnknownService
 
 
 txsGetSet : Txs -> Maybe (Set Id)
@@ -169,3 +182,40 @@ getClusterId { data } =
         |> RemoteData.toMaybe
         |> Maybe.map
             (\{ entity, currency } -> Id.initClusterId currency entity)
+
+
+getAddressType : Address -> Maybe Api.Data.Entity -> AddressServiceType
+getAddressType address cluster =
+    if Maybe.map isPossibleServiceUtxo cluster |> Maybe.withDefault False then
+        if address.actor == Nothing then
+            LikelyUnknownService
+
+        else
+            KnownService
+
+    else if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
+        KnownService
+
+    else if (address.id |> Id.network |> isAccountLike) && isPossibleServiceAccountLike address then
+        LikelyUnknownService
+
+    else
+        UnknownService
+
+
+isPossibleServiceAccountLike : Address -> Bool
+isPossibleServiceAccountLike address =
+    address.data
+        |> RemoteData.toMaybe
+        |> Maybe.map
+            (\apiAddress ->
+                let
+                    maxDegree =
+                        7500
+
+                    maxTxs =
+                        500
+                in
+                apiAddress.inDegree > maxDegree || apiAddress.noIncomingTxs > maxTxs
+            )
+        |> Maybe.withDefault False

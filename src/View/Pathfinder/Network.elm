@@ -1,14 +1,13 @@
 module View.Pathfinder.Network exposing (ClusterContext, addresses, relations)
 
 import Api.Data
-import Basics.Extra exposing (flip, uncurry)
+import Basics.Extra exposing (uncurry)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict exposing (Dict)
 import List.Extra
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
-import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx)
@@ -35,20 +34,13 @@ type alias ClusterContext =
     }
 
 
-addresses : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> ClusterContext -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses plugins vc pc colors clusterContext annotations =
-    let
-        addressClusterContext =
-            { getCluster = flip Dict.get clusterContext.clusters
-            , hoveredAddressId = clusterContext.hoveredAddressId
-            , hoveredClusterId = clusterContext.hoveredClusterId
-            }
-    in
+addresses : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses plugins vc pc annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
             , Annotations.getAnnotation id annotations
-                |> Svg.lazy7 Address.view plugins vc pc colors address addressClusterContext
+                |> Svg.lazy5 Address.view plugins vc pc address
             )
                 :: svg
         )

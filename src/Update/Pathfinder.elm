@@ -41,7 +41,7 @@ import Model.Graph.Transform as Transform
 import Model.Locale as Locale
 import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
+import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getAddressType, getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.AggEdge as AggEdge
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
@@ -723,10 +723,17 @@ updateByMsg plugins uc msg model =
             let
                 clusterId =
                     Id.initClusterId data.currency data.entity
+
+                setServiceType addr =
+                    Just data
+                        |> getAddressType addr
+                        |> flip s_addressServiceType addr
             in
             n
                 { model
                     | clusters = Dict.insert clusterId (Success data) model.clusters
+                    , network =
+                        Network.updateAddressesByClusterId clusterId setServiceType model.network
                 }
 
         SearchMsg m ->
@@ -3082,10 +3089,6 @@ browserGotAddressData uc plugins providedId position data model =
         id =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
-        ( newAddress, net ) =
-            Network.addAddressWithPosition plugins model.config position id model.network
-                |> mapSecond (Network.updateAddress id (s_data (Success data)))
-
         clusterId =
             Id.initClusterId data.currency data.entity
 
@@ -3100,6 +3103,15 @@ browserGotAddressData uc plugins providedId position data model =
 
             else
                 model.colors
+
+        clusterColor =
+            Colors.getAssignedColor Colors.Clusters clusterId ncolors
+                |> Maybe.map .color
+
+        ( newAddress, net ) =
+            Network.addAddressWithPosition plugins model.config position id model.network
+                |> mapSecond (Network.updateAddress id (s_data (Success data)))
+                |> mapSecond (Network.updateAddressesByClusterId clusterId (s_clusterColor clusterColor))
 
         ( clusters, effCluster ) =
             if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
@@ -3433,6 +3445,12 @@ updateTagDataOnAddress addressId m =
         tag =
             Dict.get addressId m.tagSummaries
 
+        cluster =
+            Dict.get addressId m.network.addresses
+                |> Maybe.andThen Address.getClusterId
+                |> Maybe.andThen (flip Dict.get m.clusters)
+                |> Maybe.andThen RemoteData.toMaybe
+
         updateTagsummaryData tagdata =
             let
                 actorlabel =
@@ -3455,6 +3473,10 @@ updateTagDataOnAddress addressId m =
             )
                 |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
                 |> Network.updateAddress addressId (s_actor actorlabel)
+                |> Network.updateAddress addressId
+                    (\addr ->
+                        { addr | addressServiceType = getAddressType addr cluster }
+                    )
 
         net td =
             case td of

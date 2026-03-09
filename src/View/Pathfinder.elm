@@ -12,7 +12,6 @@ import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
-import Init.Pathfinder.Id as InitId
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -28,7 +27,6 @@ import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import RemoteData
 import Sha256
 import String.Format
 import Svg.Styled exposing (Svg, defs, feComposite, feFlood, feGaussianBlur, feMerge, feMergeNode, feOffset, filter, linearGradient, stop, svg)
@@ -852,24 +850,6 @@ graphSvg plugins vc gc model dim =
                     ]
                     []
                 ]
-
-        hoveredAddressId =
-            case model.hovered of
-                Pathfinder.HoveredAddress id_ ->
-                    Just id_
-
-                _ ->
-                    Nothing
-
-        hoveredClusterId =
-            hoveredAddressId
-                |> Maybe.andThen
-                    (\id_ ->
-                        model.network.addresses
-                            |> Dict.get id_
-                            |> Maybe.andThen (.data >> RemoteData.toMaybe)
-                            |> Maybe.map InitId.initClusterIdFromRecord
-                    )
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
@@ -926,7 +906,7 @@ graphSvg plugins vc gc model dim =
             , dropShadowEdgeHighlight
             ]
         , Svg.lazy7 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy7 Network.addresses plugins vc gc model.colors { clusters = model.clusters, hoveredAddressId = hoveredAddressId, hoveredClusterId = hoveredClusterId } model.annotations model.network.addresses
+        , Svg.lazy5 Network.addresses plugins vc gc model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

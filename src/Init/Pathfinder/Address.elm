@@ -2,7 +2,7 @@ module Init.Pathfinder.Address exposing (init)
 
 import Animation
 import Model.Graph.Coords exposing (Coords)
-import Model.Pathfinder.Address exposing (Address, Txs(..))
+import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..))
 import Model.Pathfinder.Id exposing (Id)
 import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
@@ -27,4 +27,6 @@ init plugins id { x, y } =
     , hasTags = False
     , isStartingPoint = False
     , plugins = Plugin.initAddress plugins
+    , clusterColor = Nothing
+    , addressServiceType = UnknownService
     }
