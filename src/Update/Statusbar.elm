@@ -265,6 +265,9 @@ messageFromApiEffect model effect =
             Api.GetStatisticsEffect _ ->
                 Nothing
 
+            Api.GetMeEffect _ ->
+                Nothing
+
             Api.GetBlockByDateEffect _ _ ->
                 Nothing
 

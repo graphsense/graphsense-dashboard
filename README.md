@@ -95,6 +95,10 @@ For local development against the upstream Iknaio API, use
 
     VITE_GS_REST_URL="http://localhost:8080"
 
+   Optional: set the initial user-info endpoint path (empty disables startup call):
+
+    VITE_GS_USER_ENDPOINT_URL="/user"
+
 4. Run the dashboard as usual (`make serve` or Docker setup).
 
 Notes:
@@ -104,6 +108,8 @@ Notes:
   If you use a different frontend dev origin (for example Vite default
   `http://localhost:5173`), update the origin in
   `tools/proxy-iknaio-api.sh`.
+* The dashboard only performs the initial user-info request when
+    `VITE_GS_USER_ENDPOINT_URL` is configured.
 * Stop/remove the proxy container with:
 
       docker rm -f nginx-proxy-iknaio-prod-api

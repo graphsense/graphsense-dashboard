@@ -1,4 +1,4 @@
-module Effect.Api exposing (Effect(..), SearchRequestConfig, defaultSearchConfig, effectToTracker, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, listWithMaybes, map, perform, send, withAuthorization)
+module Effect.Api exposing (Effect(..), SearchRequestConfig, UserInfo, defaultSearchConfig, effectToTracker, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, isUserEndpointConfigured, listWithMaybes, map, perform, send, withAuthorization)
 
 import Api
 import Api.Data
@@ -11,7 +11,7 @@ import Api.Request.MyBulk
 import Api.Request.Tags
 import Api.Request.Tokens
 import Api.Request.Txs
-import Api.Time exposing (Posix)
+import Api.Time exposing (Posix, dateTimeDecoder)
 import Http
 import IntDict exposing (IntDict)
 import Json.Decode
@@ -36,6 +36,11 @@ type alias SearchRequestConfig =
     }
 
 
+type alias UserInfo =
+    { expiration : Maybe Time.Posix
+    }
+
+
 defaultSearchConfig : SearchRequestConfig
 defaultSearchConfig =
     { includeSubTxIdentifiers = Nothing
@@ -44,6 +49,17 @@ defaultSearchConfig =
     , includeTxs = Nothing
     , includeAddresses = Nothing
     }
+
+
+userEndpointUrl : String
+userEndpointUrl =
+    "{{VITE_GS_USER_ENDPOINT_URL}}"
+
+
+isUserEndpointConfigured : Bool
+isUserEndpointConfigured =
+    not (String.isEmpty userEndpointUrl)
+        && not (String.contains "{{" userEndpointUrl)
 
 
 type Effect msg
@@ -57,6 +73,7 @@ type Effect msg
     | GetStatisticsEffect (Api.Data.Stats -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
     | ListSupportedTokensEffect String (Api.Data.TokenConfigs -> msg)
+    | GetMeEffect (UserInfo -> msg)
     | GetAddressEffect
         { currency : String
         , address : String
@@ -433,6 +450,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> ListSupportedTokensEffect eff
 
+        GetMeEffect m ->
+            m
+                >> mapMsg
+                |> GetMeEffect
+
         GetAddressEffect eff m ->
             m
                 >> mapMsg
@@ -644,6 +666,14 @@ perform apiKey wrapMsg cancelMsg effect =
         ListSupportedTokensEffect currency toMsg ->
             Api.Request.Tokens.listSupportedTokens currency
                 |> send apiKey wrapMsg effect toMsg
+
+        GetMeEffect toMsg ->
+            if isUserEndpointConfigured then
+                Api.request "GET" userEndpointUrl [] [] [] Nothing userInfoDecoder
+                    |> send apiKey wrapMsg effect toMsg
+
+            else
+                Cmd.none
 
         GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, nextpage } toMsg ->
             let
@@ -1160,6 +1190,30 @@ isOutgoingToAddressDirection isOutgoing =
 
     else
         Api.Request.Addresses.DirectionIn
+
+
+userInfoDecoder : Json.Decode.Decoder UserInfo
+userInfoDecoder =
+    Json.Decode.map
+        (\expiration ->
+            { expiration = expiration
+            }
+        )
+        (Json.Decode.oneOf
+            [ Json.Decode.field "expires" expiresDecoder
+            , Json.Decode.succeed Nothing
+            ]
+        )
+
+
+expiresDecoder : Json.Decode.Decoder (Maybe Time.Posix)
+expiresDecoder =
+    Json.Decode.oneOf
+        [ Json.Decode.null Nothing
+        , dateTimeDecoder
+            |> Json.Decode.map Just
+        , Json.Decode.succeed Nothing
+        ]
 
 
 listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)

@@ -115,6 +115,7 @@ type Msg
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
     | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotSupportedTokens String Api.Data.TokenConfigs
+    | BrowserGotUserInfo Effect.Api.UserInfo
     | UserClickedStatusbar
     | UserClosesDialog
     | TagsListDialogTableUpdateMsg Table.State

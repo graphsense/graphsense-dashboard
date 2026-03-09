@@ -378,6 +378,24 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserGotUserInfo userInfo ->
+            { model
+                | user =
+                    model.user
+                        |> s_auth
+                            (case model.user.auth of
+                                Authorized auth ->
+                                    Authorized
+                                        { auth
+                                            | expiration = userInfo.expiration
+                                        }
+
+                                _ ->
+                                    model.user.auth
+                            )
+            }
+                |> n
+
         BrowserCancelledRequest statusbarToken ->
             n
                 { model
@@ -412,6 +430,9 @@ update plugins uc msg model =
 
                 newDialog =
                     case result of
+                        Err ( Http.BadStatus 401, _, Effect.Api.GetMeEffect _ ) ->
+                            model.dialog
+
                         Err ( Http.BadStatus 401, _, _ ) ->
                             UserClosesDialog
                                 |> Dialog.generalError
@@ -448,16 +469,19 @@ update plugins uc msg model =
                         _ ->
                             False
 
-                isSupportedTokensError =
+                isNonCriticalApiError =
                     case result of
                         Err ( _, _, Effect.Api.ListSupportedTokensEffect _ _ ) ->
+                            True
+
+                        Err ( _, _, Effect.Api.GetMeEffect _ ) ->
                             True
 
                         _ ->
                             False
 
                 ( notifications, notificationEffects ) =
-                    case ( isErrorDialogShown, isSupportedTokensError, result ) of
+                    case ( isErrorDialogShown, isNonCriticalApiError, result ) of
                         ( False, False, Err ( httpErr, _, _ ) ) ->
                             case httpErr of
                                 Http.BadStatus 429 ->
@@ -490,7 +514,7 @@ update plugins uc msg model =
                                 model.statusbar
 
                         Nothing ->
-                            if isSupportedTokensError then
+                            if isNonCriticalApiError then
                                 model.statusbar
 
                             else
@@ -2345,6 +2369,14 @@ updateRequestLimit headers model =
             Dict.get key headers
                 |> Maybe.andThen String.toInt
 
+        expiration =
+            case model.auth of
+                Authorized auth ->
+                    auth.expiration
+
+                _ ->
+                    Nothing
+
         limitInterval =
             if Dict.member "x-ratelimit-limit-minute" headers then
                 Just Minute
@@ -2378,7 +2410,7 @@ updateRequestLimit headers model =
                     (get "ratelimit-reset")
                     limitInterval
                     |> Maybe.withDefault Unlimited
-            , expiration = Nothing
+            , expiration = expiration
             , loggingOut = False
             }
                 |> Authorized
@@ -2389,14 +2421,38 @@ handleResponse : Plugins -> Config -> Result ( Http.Error, Headers, Effect.Api.E
 handleResponse plugins uc result model =
     case result of
         Ok ( headers, message ) ->
-            update plugins
-                uc
-                message
-                { model
-                    | user =
-                        updateRequestLimit headers model.user
-                            |> s_hovercard Nothing
-                }
+            let
+                shouldFetchMeExpiration =
+                    Effect.Api.isUserEndpointConfigured
+                        && (case model.user.auth of
+                                Authorized _ ->
+                                    False
+
+                                _ ->
+                                    True
+                           )
+
+                ( nextModel, nextEffects ) =
+                    update plugins
+                        uc
+                        message
+                        { model
+                            | user =
+                                updateRequestLimit headers model.user
+                                    |> s_hovercard Nothing
+                        }
+            in
+            if shouldFetchMeExpiration then
+                ( nextModel
+                , ApiEffect (Effect.Api.GetMeEffect BrowserGotUserInfo)
+                    :: nextEffects
+                )
+
+            else
+                ( nextModel, nextEffects )
+
+        Err ( _, _, Effect.Api.GetMeEffect _ ) ->
+            n model
 
         Err ( BadStatus 401, headers, eff ) ->
             ( { model
