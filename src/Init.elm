@@ -29,7 +29,7 @@ init plugins uc flags url key =
         settings =
             flags.localStorage
                 |> Json.Decode.decodeValue Config.UserSettings.decoder
-                |> Result.withDefault Config.UserSettings.default
+                |> Result.withDefault (Config.UserSettings.default flags.locale)
 
         cd =
             flags.characterDimensions

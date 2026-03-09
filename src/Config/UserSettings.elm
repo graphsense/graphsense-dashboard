@@ -170,9 +170,9 @@ tracingModeToString arg1 =
             "aggregate"
 
 
-default : UserSettings
-default =
-    { selectedLanguage = "en"
+default : String -> UserSettings
+default locale =
+    { selectedLanguage = locale
     , lightMode = Nothing
     , valueDetail = Nothing
     , preferredFiatCurrency = Nothing

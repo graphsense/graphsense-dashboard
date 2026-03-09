@@ -87,6 +87,7 @@ const app = Elm.Main.init(
     , height
     , now
     , pluginFlags 
+    , locale
     } 
   })
 

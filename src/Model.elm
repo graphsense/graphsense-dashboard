@@ -44,6 +44,7 @@ type alias Flags =
     , width : Int
     , height : Int
     , pluginFlags : Plugin.Flags
+    , locale : String
     }
 
 
