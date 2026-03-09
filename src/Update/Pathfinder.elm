@@ -1470,9 +1470,17 @@ updateByMsg plugins uc msg model =
                                                         Nothing
                                                 )
                                         )
+
+                            nw2 =
+                                unhovered.network.addresses
+                                    |> Dict.get id
+                                    |> Maybe.andThen Address.getClusterId
+                                    |> Maybe.map (\e -> Network.updateAddressesByClusterId e (s_clusterSiblingHovered True) unhovered.network)
+                                    |> Maybe.withDefault model.network
                         in
                         ( { unhovered
                             | hovered = HoveredAddress id
+                            , network = nw2
                           }
                         , case maybeTT of
                             Just tt ->
@@ -1494,7 +1502,12 @@ updateByMsg plugins uc msg model =
                         showHover ()
 
         UserMovesMouseOutAddress id ->
-            ( unhover model, CloseTooltipEffect (Just { context = Id.toString id, domId = Id.toString id }) False |> List.singleton )
+            ( unhover model
+            , CloseTooltipEffect
+                (Just { context = Id.toString id, domId = Id.toString id })
+                False
+                |> List.singleton
+            )
 
         ShowTextTooltip config ->
             ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
@@ -4022,12 +4035,23 @@ selectAddress id model =
                 |> n
 
 
+unselectAddress : Id -> Network -> Network
+unselectAddress a nw =
+    Network.updateAddress a (s_selected False) nw
+
+
+unhoverAddress : Id -> Network -> Network
+unhoverAddress a nw =
+    nw.addresses
+        |> Dict.get a
+        |> Maybe.andThen Address.getClusterId
+        |> Maybe.map (\e -> Network.updateAddressesByClusterId e (s_clusterSiblingHovered False) nw)
+        |> Maybe.withDefault nw
+
+
 unselect : Model -> ( Model, List Effect )
 unselect model =
     let
-        unselectAddress a nw =
-            Network.updateAddress a (s_selected False) nw
-
         unselectTx a nw =
             Network.updateTx a (s_selected False) nw
 
@@ -4092,10 +4116,9 @@ unhover model =
     let
         network =
             case model.hovered of
-                HoveredAddress _ ->
-                    model.network
+                HoveredAddress a ->
+                    unhoverAddress a model.network
 
-                --Network.updateAddress a (s_hovered False) model.network
                 HoveredTx a ->
                     Network.updateTx a (s_hovered False) model.network
                         |> Network.trySetHoverConversionLoop a False

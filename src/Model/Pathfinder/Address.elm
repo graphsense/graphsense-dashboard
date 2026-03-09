@@ -5,6 +5,7 @@ module Model.Pathfinder.Address exposing
     , getActivityRange
     , getActivityRangeAddress
     , getBalance
+    , getClusterId
     , getCoords
     , getInDegree
     , getNrTxs
@@ -20,6 +21,7 @@ module Model.Pathfinder.Address exposing
 
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
+import Init.Pathfinder.Id as Id
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
@@ -43,6 +45,7 @@ type alias Address =
     , outgoingTxs : Txs
     , data : WebData Api.Data.Address
     , selected : Bool
+    , clusterSiblingHovered : Bool
     , exchange : Maybe String
     , hasTags : Bool
     , actor : Maybe String
@@ -158,3 +161,11 @@ txsSetter direction =
 expandAllowed : Address -> Bool
 expandAllowed address =
     address.exchange == Nothing && (address |> isSmartContract |> not)
+
+
+getClusterId : Address -> Maybe Id
+getClusterId { data } =
+    data
+        |> RemoteData.toMaybe
+        |> Maybe.map
+            (\{ entity, currency } -> Id.initClusterId currency entity)

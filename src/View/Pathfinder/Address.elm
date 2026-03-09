@@ -66,23 +66,14 @@ view plugins vc pc colors address clusterContext annotation =
                 |> Maybe.andThen clusterContext.getCluster
                 |> Maybe.andThen RemoteData.toMaybe
 
-        isDirectlyHovered =
-            clusterContext.hoveredAddressId == Just address.id
-
-        isHoveredClusterMate =
+        clusterSiblingHovered =
             pc.highlightClusterFriends
-                && not isDirectlyHovered
-                && (clusterContext.hoveredClusterId
-                        |> Maybe.map (\hoveredId -> Just hoveredId == clusterid)
-                        |> Maybe.withDefault False
-                   )
+                && address.clusterSiblingHovered
 
         highlightVisible =
             pc.hideForExport
                 /= Exporting True
-                && (address.selected
-                        || isDirectlyHovered
-                   )
+                && address.selected
 
         clusterStroke =
             case ( clusterColorLight, pc.highlightClusterFriends ) of
@@ -90,7 +81,7 @@ view plugins vc pc colors address clusterContext annotation =
                     [ css
                         [ Css.property "stroke" (Color.toCssString color) |> Css.important
                         , Css.property "stroke-width"
-                            (if isHoveredClusterMate then
+                            (if clusterSiblingHovered then
                                 "5"
 
                              else

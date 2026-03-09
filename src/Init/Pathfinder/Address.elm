@@ -21,6 +21,7 @@ init plugins id { x, y } =
     , outgoingTxs = TxsNotFetched
     , data = NotAsked
     , selected = False
+    , clusterSiblingHovered = False
     , exchange = Nothing
     , actor = Nothing
     , hasTags = False
