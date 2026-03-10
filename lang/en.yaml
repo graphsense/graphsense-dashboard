@@ -499,7 +499,7 @@ generating image: Generating image of graph...
 generating pdf success: PDF successfully generated.
 generating image success: Image successfully generated.
 check download folder: Please check your download folder
-show both on tx: show both on tx
+show both on tx: Show fiat and crypto
 time: time
 assets: assets
 export all graph transactions as csv: Export all graph transactions as CSV
