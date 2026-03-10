@@ -7,7 +7,7 @@ import Components.PagedTable as PagedTable
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
-import Css.Pathfinder as Css exposing (fullWidth, sidePanelCss)
+import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict exposing (Dict)
@@ -40,9 +40,9 @@ import RemoteData exposing (WebData)
 import Sha256
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
-import Svg.Styled.Events as Svg
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Theme.Html.TagsComponents as TagsComponents
 import Util exposing (allAndNotEmpty)
 import Util.Css exposing (spread)
 import Util.Data as Data exposing (isAccountLike)
@@ -111,6 +111,11 @@ view plugins pluginStates vc model id viewState =
             _ ->
                 none
         ]
+
+
+categoriesMaxWidth : Float
+categoriesMaxWidth =
+    300
 
 
 utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
@@ -184,7 +189,7 @@ utxo plugins pluginStates vc model id viewState address =
             |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
-            |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
+            |> Rs.s_categoriesList [ css [ Css.maxWidth <| Css.px categoriesMaxWidth ] ]
             |> Rs.s_tagsLayout
                 (if sidePanelData.actorVisible || sidePanelData.tagsVisible then
                     []
@@ -201,8 +206,7 @@ utxo plugins pluginStates vc model id viewState address =
                 )
         )
         (SidePanelComponents.sidePanelAddressInstances
-            |> setTags vc viewState model id
-            |> Rs.s_learnMore (Just none)
+            |> Rs.s_labelOfActor (labelOfActor vc model id)
             |> Rs.s_sidePanelAddressDetails
                 (viewState.address.data
                     |> RemoteData.map
@@ -215,6 +219,7 @@ utxo plugins pluginStates vc model id viewState address =
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
+        , categoriesList = tagsList vc model id
         }
         { root = sidePanelData
         , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
@@ -233,9 +238,6 @@ utxo plugins pluginStates vc model id viewState address =
         , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
         , valueOfFirstUsage = viewState.address.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
-
-        -- , learnMoreButton = { variant = none }
-        , categoryTags = { tagLabel = "", closeVisible = False }
         }
 
 
@@ -921,7 +923,7 @@ account plugins pluginStates vc model id viewState address =
             |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
-            |> Rs.s_learnMore [ css [ Css.display Css.none ] ]
+            |> Rs.s_categoriesList [ css [ Css.maxWidth <| Css.px categoriesMaxWidth ] ]
             |> Rs.s_tagsLayout
                 (if sidePanelData.actorVisible || sidePanelData.tagsVisible then
                     []
@@ -945,8 +947,7 @@ account plugins pluginStates vc model id viewState address =
                 )
         )
         (SidePanelComponents.sidePanelEthAddressInstances
-            |> setTags vc viewState model id
-            |> Rs.s_learnMore (Just none)
+            |> Rs.s_labelOfActor (labelOfActor vc model id)
             |> Rs.s_totalReceivedRow totalReceivedRundown
             |> Rs.s_totalSentRow totalSentRundown
             |> Rs.s_balanceRow balanceRundown
@@ -961,6 +962,7 @@ account plugins pluginStates vc model id viewState address =
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
         , tokensList = []
+        , categoriesList = tagsList vc model id
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
         , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
@@ -976,7 +978,6 @@ account plugins pluginStates vc model id viewState address =
         , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
         , valueOfFirstUsage = viewState.address.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
-        , categoryTags = { tagLabel = "", closeVisible = False }
         , balanceRow = { iconInstance = none, title = "", value = "" }
         , totalSentRow = { iconInstance = none, title = "", value = "" }
         , sidePanelRowChevronOpen = { iconInstance = none, title = "", value = "" }
@@ -996,15 +997,29 @@ transactionsOrNeighborsDataTabs vc model id viewState =
             ]
 
 
-viewLabelOfTags : View.Config -> AddressDetails.Model -> Pathfinder.Model -> Id -> Html Pathfinder.Msg
-viewLabelOfTags vc viewState model id =
+tagsList : View.Config -> Pathfinder.Model -> Id -> List (Html Pathfinder.Msg)
+tagsList vc model id =
     let
         ts =
             getTagSummary model id
+
+        nMaxTags =
+            2
+
+        tagsTruncated renderItem items =
+            (items |> List.take nMaxTags |> List.map renderItem)
+                ++ (if List.length items > nMaxTags then
+                        [ TagsComponents.moreItemsInfo
+                            { root = { number = String.fromInt (List.length items - nMaxTags) } }
+                        ]
+
+                    else
+                        []
+                   )
     in
     if vc.showLabelsInTaggingOverview then
         let
-            showTag i ( tid, t ) =
+            showTag ( tid, t ) =
                 let
                     ctx =
                         { context = tid, domId = tid }
@@ -1017,17 +1032,8 @@ viewLabelOfTags vc viewState model id =
                     , css [ Css.cursor Css.pointer ]
                     , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
                     ]
-                    (Html.text t.label
-                        :: (if i < (lenTagLabels - 1) then
-                                [ Html.text "," ]
-
-                            else
-                                []
-                           )
-                    )
-
-            nMaxTags =
-                3
+                    [ Html.text t.label
+                    ]
 
             tagLabels =
                 ts
@@ -1040,53 +1046,9 @@ viewLabelOfTags vc viewState model id =
                                 getSortedLabelSummariesByRelevance x
                         )
                     |> Maybe.withDefault []
-
-            lenTagLabels =
-                List.length tagLabels
-
-            nTagsToShow =
-                if viewState.displayAllTagsInDetails then
-                    lenTagLabels
-
-                else
-                    nMaxTags
-
-            tagsControl =
-                if lenTagLabels > nMaxTags then
-                    if viewState.displayAllTagsInDetails then
-                        Html.span
-                            [ Css.tagLinkButtonStyle vc |> css
-                            , HA.title (Locale.string vc.locale "show-less-hint")
-                            , AddressDetails.UserClickedToggleDisplayAllTagsInDetails
-                                |> Pathfinder.AddressDetailsMsg id
-                                |> Svg.onClick
-                            ]
-                            [ Html.text (Locale.string vc.locale "less-hint") ]
-
-                    else
-                        Html.span
-                            [ Css.tagLinkButtonStyle vc |> css
-                            , HA.title (Locale.string vc.locale "show-more-hint")
-                            , AddressDetails.UserClickedToggleDisplayAllTagsInDetails
-                                |> Pathfinder.AddressDetailsMsg id
-                                |> Svg.onClick
-                            ]
-                            [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more-hint") ]
-
-                else
-                    none
         in
-        div
-            [ css
-                [ Css.displayFlex
-                , Css.flexDirection Css.row
-                , Css.flexWrap Css.wrap
-                , Css.property "gap" "1ex"
-                , Css.alignItems Css.center
-                , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
-                ]
-            ]
-            ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
+        tagLabels
+            |> tagsTruncated showTag
 
     else
         let
@@ -1095,25 +1057,14 @@ viewLabelOfTags vc viewState model id =
                     |> Maybe.map getSortedConceptsByWeight
                     |> Maybe.withDefault []
         in
-        div
-            [ css
-                [ Css.displayFlex
-                , Css.flexDirection Css.row
-                , Css.flexWrap Css.wrap
-                , Css.property "gap" "1ex"
-                , Css.alignItems Css.center
-                , Css.width <| Css.px (SidePanelComponents.sidePanelAddress_details.width * 0.8)
-                ]
-            ]
-            ((concepts
-                |> List.map
-                    (Tag.conceptItem vc id
-                        >> Html.map (TagTooltipMsg >> AddressDetails.TooltipMsg)
-                        >> Html.map (Pathfinder.AddressDetailsMsg id)
-                    )
-             )
-                ++ [ learnMoreButton vc id ]
-            )
+        (concepts
+            |> tagsTruncated
+                (Tag.conceptItem vc id
+                    >> Html.map (TagTooltipMsg >> AddressDetails.TooltipMsg)
+                    >> Html.map (Pathfinder.AddressDetailsMsg id)
+                )
+        )
+            ++ [ learnMoreButton vc id ]
 
 
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg
@@ -1210,8 +1161,8 @@ makeSidePanelData model id pluginTagsVisible =
     }
 
 
-setTags : View.Config -> AddressDetails.Model -> Pathfinder.Model -> Id -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) } -> { a | categoryTags : Maybe (Html Pathfinder.Msg), labelOfActor : Maybe (Html Pathfinder.Msg) }
-setTags vc viewState model id =
+labelOfActor : View.Config -> Pathfinder.Model -> Id -> Maybe (Html Msg)
+labelOfActor vc model id =
     let
         ts =
             getTagSummary model id
@@ -1226,46 +1177,37 @@ setTags vc viewState model id =
         actorText =
             actor
                 |> Maybe.map .label
-
-        labelOfTags =
-            viewLabelOfTags vc viewState model id
-
-        labelOfActor =
-            actor_id
-                |> Maybe.map
-                    (\aid ->
-                        let
-                            text =
-                                actorText |> Maybe.withDefault ""
-
-                            ctx =
-                                { context = aid, domId = aid ++ "_actor" }
-                        in
-                        Html.div
-                            [ HA.css
-                                SidePanelComponents.sidePanelAddressTags_details.styles
-                            ]
-                            [ Html.div
-                                [ css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
-                                , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
-                                , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
-                                , css [ Css.cursor Css.default ]
-                                , HA.id ctx.domId
-                                ]
-                                [ Html.text text
-                                ]
-                            , if Maybe.map hasOnlyExchangeTags ts == Just True then
-                                learnMoreButton vc id
-
-                              else
-                                none
-                            ]
-                    )
     in
-    Rs.s_categoryTags
-        (Just labelOfTags)
-        >> Rs.s_labelOfActor
-            labelOfActor
+    actor_id
+        |> Maybe.map
+            (\aid ->
+                let
+                    text =
+                        actorText |> Maybe.withDefault ""
+
+                    ctx =
+                        { context = aid, domId = aid ++ "_actor" }
+                in
+                Html.div
+                    [ HA.css
+                        SidePanelComponents.sidePanelAddressTags_details.styles
+                    ]
+                    [ Html.div
+                        [ css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
+                        , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
+                        , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
+                        , css [ Css.cursor Css.default ]
+                        , HA.id ctx.domId
+                        ]
+                        [ Html.text text
+                        ]
+                    , if Maybe.map hasOnlyExchangeTags ts == Just True then
+                        learnMoreButton vc id
+
+                      else
+                        none
+                    ]
+            )
 
 
 sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html Pathfinder.Msg, addTagIconInstance : Html Pathfinder.Msg, chevronInstance : Html Pathfinder.Msg }

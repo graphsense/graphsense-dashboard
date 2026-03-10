@@ -53,7 +53,7 @@ conceptItem vc id k =
                     []
                )
         )
-        [ TagComponents.categoryTags
+        [ TagComponents.categoryTag
             { root =
                 { tagLabel = lbl_truncated
                 , closeVisible = False
