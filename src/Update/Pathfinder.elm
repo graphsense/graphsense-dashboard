@@ -782,7 +782,7 @@ updateByMsg plugins uc msg model =
                         selectedValue =
                             Search.selectedValue model.search
 
-                        ( search, _ ) =
+                        ( search, eff ) =
                             Search.update m model.search
 
                         m2 =
@@ -797,7 +797,8 @@ updateByMsg plugins uc msg model =
                                 value
                                     |> resultLineToRoute
                                     |> NavPushRouteEffect
-                                    |> List.singleton
+                                    |> flip (::)
+                                        (List.map Pathfinder.SearchEffect eff)
                                     |> Tuple.pair m2
 
                             Nothing ->
@@ -825,6 +826,7 @@ updateByMsg plugins uc msg model =
                                                         }
                                                     )
                                             )
+                                        |> (++) (List.map Pathfinder.SearchEffect eff)
                                     )
 
                                 else

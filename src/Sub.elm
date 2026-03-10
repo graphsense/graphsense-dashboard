@@ -17,10 +17,17 @@ subscriptions : Model Nav.Key -> Sub Msg
 subscriptions model =
     [ Locale.subscriptions model.config.locale
         |> Sub.map LocaleMsg
-    , Graph.subscriptions model.graph
-        |> Sub.map GraphMsg
-    , Pathfinder.subscriptions model.pathfinder
-        |> Sub.map PathfinderMsg
+    , case model.page of
+        Model.Graph ->
+            Graph.subscriptions model.graph
+                |> Sub.map GraphMsg
+
+        Model.Pathfinder ->
+            Pathfinder.subscriptions model.pathfinder
+                |> Sub.map PathfinderMsg
+
+        _ ->
+            Sub.none
     , Browser.Events.onResize
         BrowserChangedWindowSize
     , case model.user.auth of

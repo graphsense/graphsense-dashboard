@@ -592,3 +592,10 @@ window.onerror = (message) => {
   console.error(message)
   return true
 }
+
+app.ports.blur.subscribe(id => {
+  const el = document.getElementById(id)
+  if (!el) return
+  if (typeof el.blur !== 'function') return
+  el.blur()
+})

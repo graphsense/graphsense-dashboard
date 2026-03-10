@@ -17,6 +17,7 @@ import Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import List.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
@@ -567,6 +568,7 @@ update uc msg model =
 
                 addressesSorted =
                     tags.addressTags
+                        |> List.Extra.uniqueBy .address
                         |> List.filterMap (.address >> flip Dict.get addressDict)
             in
             RelatedAddressesTable.appendTaggedAddresses

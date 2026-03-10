@@ -8,6 +8,7 @@ import Effect.Search exposing (Effect(..))
 import Init.Search exposing (init)
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
+import Ports
 import RecordSetter as Rs
 import Tuple exposing (pair)
 import Util exposing (n, removeLeading0x)
@@ -211,8 +212,9 @@ update msg model =
             n model
 
         UserClicksResultLine ->
-            clear model
-                |> n
+            ( clear model
+            , [ Ports.blur searchInputId |> CmdEffect ]
+            )
 
         PluginMsg _ ->
             -- handled in src/Update.elm

@@ -17,7 +17,6 @@ module Css.Pathfinder exposing
     , tagConfidenceTextHighStyle
     , tagConfidenceTextLowStyle
     , tagConfidenceTextMediumStyle
-    , tagLinkButtonStyle
     , tooltipMargin
     , topPanelStyle
     , topRightPanelStyle
@@ -43,7 +42,6 @@ import Css
         , display
         , displayFlex
         , flexEnd
-        , fontSize
         , height
         , hex
         , important
@@ -74,11 +72,6 @@ import Css
         )
 import Theme.Colors as TColors
 import Util.View
-
-
-xsGap : Px
-xsGap =
-    px 1
 
 
 sGap : Px
@@ -226,11 +219,6 @@ linkButtonStyle vc enabled =
     , mGap |> paddingRight
     , clr |> property "color"
     ]
-
-
-tagLinkButtonStyle : View.Config -> List Style
-tagLinkButtonStyle _ =
-    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, TColors.blue400 |> property "color" ]
 
 
 topPanelStyle : List Style

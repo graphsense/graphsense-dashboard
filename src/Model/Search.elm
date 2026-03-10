@@ -1,4 +1,4 @@
-module Model.Search exposing (Model, ResultLine(..), SearchType(..), addToAutoComplete, firstResult, getLatestBlocks, getMulti, isLikelyPathSearchInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, query, selectedValue, setIsPickingCurrency, setQuery)
+module Model.Search exposing (Model, ResultLine(..), SearchType(..), addToAutoComplete, firstResult, getLatestBlocks, getMulti, isLikelyPathSearchInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, query, searchInputId, selectedValue, setIsPickingCurrency, setQuery)
 
 import Api.Data
 import Autocomplete exposing (Autocomplete)
@@ -136,3 +136,8 @@ setIsPickingCurrency model =
                 SearchActorsOnly ->
                     SearchActorsOnly
     }
+
+
+searchInputId : String
+searchInputId =
+    "search_input"

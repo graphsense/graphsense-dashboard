@@ -128,6 +128,7 @@ searchWithMoreCss plugins vc sc model =
                  , onBlur UserLeavesSearch
                  , onFocus UserFocusSearch
                  , value query
+                 , id searchInputId
                  ]
                     ++ inputEvents
                     ++ (case model.searchType of
