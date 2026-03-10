@@ -369,7 +369,7 @@ request limit: Request limit
 next: Next
 previous: Previous
 page: Page
-snap to grid: Snap to Grid
+snap to grid: Snap to grid
 avoid overlapping nodes: Avoid overlapping nodes
 confirm-clear-dashboard: Clear dashboard?
 note-not-recoverable: You will not be able to recover it.
@@ -378,7 +378,7 @@ please-select: Please select...
 please-choose-ledger: Please choose a crypto ledger
 preferred fiat currency: Preferred fiat currency
 show exact values: Show exact values
-amount in Fiat: Amount in Fiat
+amount in Fiat: Amount in fiat
 plan Details: Plan Details
 never: Never
 expires on: Expires on
