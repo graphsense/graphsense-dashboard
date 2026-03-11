@@ -224,48 +224,24 @@ tagConcept vc openDetailsMsg concept tag =
             "Labels"
         )
         (let
-            jl =
-                List.length labels
-
             max_labels =
                 7
          in
          labels
-            |> List.indexedMap
-                (\i z ->
-                    if i <= max_labels then
-                        div
-                            [ Css.mGap
-                                |> Css.paddingRight
-                                |> List.singleton
-                                |> css
-                            ]
-                            [ text
-                                (z
-                                    ++ (if i /= (jl - 1) then
-                                            ", "
+            |> List.take max_labels
+            |> List.intersperse ", "
+            |> flip (++)
+                (if List.length labels > max_labels then
+                    [ "..." ]
 
-                                        else
-                                            ""
-                                       )
-                                )
-                            ]
-
-                    else if i == (max_labels + 1) then
-                        div
-                            [ title (String.join ", " labels)
-                            , Css.mGap
-                                |> Css.paddingRight
-                                |> List.singleton
-                                |> css
-                            ]
-                            [ text "..."
-                            ]
-
-                    else
-                        none
+                 else
+                    []
                 )
-            |> div [ title (String.join ", " labels), [ Css.displayFlex, Css.flexDirection Css.column, Css.padding (Css.px 5) ] |> css ]
+            |> List.map text
+            |> div
+                [ title (String.join ", " labels)
+                , css [ Css.textAlign Css.right ]
+                ]
         )
     , tooltipRowCustomValue (Locale.string vc.locale "confidence") (getConfidenceIndicator vc maxConfidence)
     , tooltipRow
