@@ -124,8 +124,8 @@ utxo plugins pluginStates vc model id viewState address =
         pluginTagsVisible =
             List.length pluginTagsList > 0
 
-        sidePanelData =
-            makeSidePanelData model id pluginTagsVisible
+        { sidePanelData, categoriesList } =
+            makeSidePanelData vc model id pluginTagsVisible
 
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
@@ -217,7 +217,7 @@ utxo plugins pluginStates vc model id viewState address =
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
-        , categoriesList = tagsList vc model id
+        , categoriesList = categoriesList
         }
         { root = sidePanelData
         , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
@@ -836,8 +836,8 @@ account plugins pluginStates vc model id viewState address =
         pluginTagsVisible =
             List.length pluginTagsList > 0
 
-        sidePanelData =
-            makeSidePanelData model id pluginTagsVisible
+        { sidePanelData, categoriesList } =
+            makeSidePanelData vc model id pluginTagsVisible
 
         sidePanelAddressHeader =
             { iconInstance =
@@ -960,7 +960,7 @@ account plugins pluginStates vc model id viewState address =
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
         , tokensList = []
-        , categoriesList = tagsList vc model id
+        , categoriesList = categoriesList
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
         , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
@@ -1089,8 +1089,8 @@ getTagSummary model id =
             Nothing
 
 
-makeSidePanelData : Pathfinder.Model -> Id -> Bool -> { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }
-makeSidePanelData model id pluginTagsVisible =
+makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Msg) }
+makeSidePanelData vc model id pluginTagsVisible =
     let
         ts =
             getTagSummary model id
@@ -1118,44 +1118,50 @@ makeSidePanelData model id pluginTagsVisible =
         nrTagsAddress =
             ts |> Maybe.map .tagCount |> Maybe.withDefault 0
 
+        categoriesList =
+            tagsList vc model id
+
         showOtherTag =
-            nrTagsAddress > 0 && (ts |> Maybe.map (hasOnlyExchangeTags >> not) |> Maybe.withDefault True)
+            nrTagsAddress > 0
     in
-    { actorIconInstance =
-        actorImg
-            |> Maybe.map
-                (\imgSrc ->
-                    let
-                        iconDetails =
-                            HIcons.iconsAssign_details
-                    in
-                    img
-                        [ src imgSrc
-                        , HA.alt <| Maybe.withDefault "" <| actorText
-                        , HA.width <| round iconDetails.width
-                        , HA.height <| round iconDetails.height
-                        , HA.css iconDetails.styles
-                        ]
-                        []
-                        |> List.singleton
-                        |> div
-                            [ HA.css iconDetails.styles
-                            , HA.css
-                                [ iconDetails.width
-                                    |> Css.px
-                                    |> Css.width
-                                , iconDetails.height
-                                    |> Css.px
-                                    |> Css.height
-                                ]
+    { sidePanelData =
+        { actorIconInstance =
+            actorImg
+                |> Maybe.map
+                    (\imgSrc ->
+                        let
+                            iconDetails =
+                                HIcons.iconsAssign_details
+                        in
+                        img
+                            [ src imgSrc
+                            , HA.alt <| Maybe.withDefault "" <| actorText
+                            , HA.width <| round iconDetails.width
+                            , HA.height <| round iconDetails.height
+                            , HA.css iconDetails.styles
                             ]
-                )
-            |> Maybe.withDefault (HIcons.iconsAssign {})
-    , tabsVisible = False
-    , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible
-    , pluginSTagVisible = pluginTagsVisible
-    , actorVisible = showExchangeTag
-    , tagsVisible = showOtherTag
+                            []
+                            |> List.singleton
+                            |> div
+                                [ HA.css iconDetails.styles
+                                , HA.css
+                                    [ iconDetails.width
+                                        |> Css.px
+                                        |> Css.width
+                                    , iconDetails.height
+                                        |> Css.px
+                                        |> Css.height
+                                    ]
+                                ]
+                    )
+                |> Maybe.withDefault (HIcons.iconsAssign {})
+        , tabsVisible = False
+        , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible
+        , pluginSTagVisible = pluginTagsVisible
+        , actorVisible = showExchangeTag
+        , tagsVisible = showOtherTag
+        }
+    , categoriesList = categoriesList
     }
 
 
@@ -1166,7 +1172,8 @@ labelOfActor vc model id =
             getTagSummary model id
 
         actor_id =
-            ts |> Maybe.andThen .bestActor
+            ts
+                |> Maybe.andThen .bestActor
 
         actor =
             actor_id
