@@ -4526,32 +4526,62 @@ checkSelection uc model =
 
 removeAddress : Id -> Model -> ( Model, List Effect )
 removeAddress id model =
-    { model
-        | network = Network.deleteAddress id model.network
-        , details =
-            case model.details of
-                Just (AddressDetails addressId _) ->
-                    if addressId == id then
-                        Nothing
+    Dict.get id model.network.addresses
+        |> Maybe.map
+            (\addr ->
+                let
+                    nw2 =
+                        let
+                            clusterId =
+                                Address.getClusterId addr
 
-                    else
-                        model.details
+                            onlyTwoClusterSiblingsOngraph =
+                                clusterId
+                                    |> Maybe.map (flip Network.getAddressIdsInCluster model.network)
+                                    |> Maybe.map (List.length >> (==) 2)
+                                    |> Maybe.withDefault False
+                        in
+                        clusterId
+                            |> Maybe.map
+                                (\clid ->
+                                    if onlyTwoClusterSiblingsOngraph then
+                                        Network.updateAddressesByClusterId clid (s_clusterColor Nothing) model.network
 
-                _ ->
-                    model.details
-        , selection =
-            case model.selection of
-                SelectedAddress addressId ->
-                    if addressId == id then
-                        NoSelection
+                                    else
+                                        model.network
+                                )
+                            |> Maybe.withDefault model.network
+                in
+                { model
+                    | network =
+                        unhoverAddress id nw2
+                            |> Network.deleteAddress id
+                    , details =
+                        case model.details of
+                            Just (AddressDetails addressId _) ->
+                                if addressId == id then
+                                    Nothing
 
-                    else
-                        model.selection
+                                else
+                                    model.details
 
-                _ ->
-                    model.selection
-    }
-        |> removeIsolatedTransactions
+                            _ ->
+                                model.details
+                    , selection =
+                        case model.selection of
+                            SelectedAddress addressId ->
+                                if addressId == id then
+                                    NoSelection
+
+                                else
+                                    model.selection
+
+                            _ ->
+                                model.selection
+                }
+                    |> removeIsolatedTransactions
+            )
+        |> Maybe.withDefault (n model)
 
 
 removeTx : Id -> Model -> ( Model, List Effect )
