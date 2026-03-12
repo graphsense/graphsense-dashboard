@@ -5,8 +5,8 @@ import Hovercard
 import Json.Decode as Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Model)
+import Msg.ExportDialog exposing (Msg(..))
 import Msg.Pathfinder exposing (Msg(..))
-import Ports
 import Set
 import Sub.Graph.Transform as Transform
 
@@ -113,7 +113,5 @@ subscriptions model =
     , model.toolbarHovercard
         |> Maybe.map (Tuple.second >> Hovercard.subscriptions >> Sub.map ToolbarHovercardMsg)
         |> Maybe.withDefault Sub.none
-    , Ports.sendBBox BrowserSentBBox
-    , Ports.exportGraphResult BrowserSentExportGraphResult
     ]
         |> Sub.batch

@@ -401,22 +401,10 @@ shallPushHistory plugins msg _ =
         ToolbarHovercardMsg _ ->
             False
 
-        UserClickedExportGraphAsImage _ ->
+        UserClickedExportGraph _ ->
             False
 
-        UserClickedExportGraphAsPdf _ ->
-            False
-
-        BrowserSentBBox _ ->
-            False
-
-        BrowserSentExportGraphResult _ ->
-            False
-
-        UserClickedExportGraphTxsAsCSV _ ->
-            False
-
-        BrowserGotTagSummariesForExportGraphTxsAsCSV _ _ ->
+        BrowserGotTagSummariesForExportGraphTxsAsCSV _ _ _ ->
             False
 
         UserClickedToolbarDeleteIcon ->
@@ -499,3 +487,6 @@ shallPushHistory plugins msg _ =
 
         UserClickedContextMenuAlignHorizontally ->
             True
+
+        InternalExportGraphTxsCompleted ->
+            False

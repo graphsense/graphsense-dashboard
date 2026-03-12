@@ -72,10 +72,48 @@ Copy `docker/env.template` to `.env`:
 
     cp docker/env.template .env
 
-Edit the file `.env` and set the URL of the [graphsense-REST][graphsense-rest]
+Edit the file `.env` and set the URL of the [graphsense-lib Web Api][graphsense-rest]
 service, e.g.:
 
-    REST_URL="https://api.ikna.io"
+    VITE_GS_REST_URL="https://api.iknaio.com"
+
+### Using Iknaio Backend via a Proxy
+
+For local development against the upstream Iknaio API, use
+`tools/proxy-iknaio-api.sh`. The script starts an Nginx container on
+`http://localhost:8080` and injects your API key as `Authorization` header.
+
+1. Export your Iknaio API key:
+
+    export GS_API_KEY="<your_iknaio_api_key>"
+
+2. Start the proxy:
+
+    ./tools/proxy-iknaio-api.sh
+
+3. Point the dashboard to the local proxy (for example in `.env`):
+
+    VITE_GS_REST_URL="http://localhost:8080"
+
+   Optional: set the initial user-info endpoint path (empty disables startup call):
+
+    VITE_GS_USER_ENDPOINT_URL="/user"
+
+4. Run the dashboard as usual (`make serve` or Docker setup).
+
+Notes:
+
+* The proxy container name is `nginx-proxy-iknaio-prod-api`.
+* CORS in the script is currently configured for `http://localhost:3000`.
+  If you use a different frontend dev origin (for example Vite default
+  `http://localhost:5173`), update the origin in
+  `tools/proxy-iknaio-api.sh`.
+* The dashboard only performs the initial user-info request when
+    `VITE_GS_USER_ENDPOINT_URL` is configured.
+* Stop/remove the proxy container with:
+
+      docker rm -f nginx-proxy-iknaio-prod-api
+
 
 ### Usage
 
@@ -94,5 +132,5 @@ Finally, test the application in a web browser:
 [nodejs]: https://nodejs.org
 [pre-commit]: https://pre-commit.com/#install
 [npm]: https://www.npmjs.com
-[graphsense-rest]: https://github.com/graphsense/graphsense-rest
+[graphsense-rest]: https://github.com/graphsense/graphsense-lib
 [docker]: https://www.docker.com

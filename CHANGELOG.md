@@ -3,6 +3,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.03.0] - 2026-03-12
+
+### Changed
+
+- Unified export options dialog instead of separate toolbar options
+- Highlight cluster sibling addresses on hover
+- Supported token currencies loaded on startup
+- Rename "unknown" category
+
+### Fixed
+
+- Remove cluster color after removal of siblings
+- Improve lazy rendering
+- Fix docker build with symlinked plugins
+
 ## [26.01.7] - 2026-03-11
 
 ### Fixed

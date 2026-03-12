@@ -116,7 +116,7 @@ vector a b model =
     }
 
 
-updateByBoundingBox : { width : Float, height : Float } -> BBox -> Model comparable -> Model comparable
+updateByBoundingBox : { a | width : Float, height : Float } -> BBox -> Model comparable -> Model comparable
 updateByBoundingBox viewport bbox model =
     let
         current =

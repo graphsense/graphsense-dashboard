@@ -1,4 +1,4 @@
-module Effect.Api exposing (Effect(..), SearchRequestConfig, defaultSearchConfig, effectToTracker, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, listWithMaybes, map, perform, send, withAuthorization)
+module Effect.Api exposing (Effect(..), SearchRequestConfig, UserInfo, defaultSearchConfig, effectToTracker, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, isUserEndpointConfigured, listWithMaybes, map, perform, send, withAuthorization)
 
 import Api
 import Api.Data
@@ -11,7 +11,7 @@ import Api.Request.MyBulk
 import Api.Request.Tags
 import Api.Request.Tokens
 import Api.Request.Txs
-import Api.Time exposing (Posix)
+import Api.Time exposing (Posix, dateTimeDecoder)
 import Http
 import IntDict exposing (IntDict)
 import Json.Decode
@@ -36,6 +36,11 @@ type alias SearchRequestConfig =
     }
 
 
+type alias UserInfo =
+    { expiration : Maybe Time.Posix
+    }
+
+
 defaultSearchConfig : SearchRequestConfig
 defaultSearchConfig =
     { includeSubTxIdentifiers = Nothing
@@ -44,6 +49,17 @@ defaultSearchConfig =
     , includeTxs = Nothing
     , includeAddresses = Nothing
     }
+
+
+userEndpointUrl : String
+userEndpointUrl =
+    "{{VITE_GS_USER_ENDPOINT_URL}}"
+
+
+isUserEndpointConfigured : Bool
+isUserEndpointConfigured =
+    not (String.isEmpty userEndpointUrl)
+        && not (String.contains "{{" userEndpointUrl)
 
 
 type Effect msg
@@ -57,6 +73,7 @@ type Effect msg
     | GetStatisticsEffect (Api.Data.Stats -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
     | ListSupportedTokensEffect String (Api.Data.TokenConfigs -> msg)
+    | GetMeEffect (UserInfo -> msg)
     | GetAddressEffect
         { currency : String
         , address : String
@@ -433,6 +450,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> ListSupportedTokensEffect eff
 
+        GetMeEffect m ->
+            m
+                >> mapMsg
+                |> GetMeEffect
+
         GetAddressEffect eff m ->
             m
                 >> mapMsg
@@ -645,6 +667,14 @@ perform apiKey wrapMsg cancelMsg effect =
             Api.Request.Tokens.listSupportedTokens currency
                 |> send apiKey wrapMsg effect toMsg
 
+        GetMeEffect toMsg ->
+            if isUserEndpointConfigured then
+                Api.request "GET" userEndpointUrl [] [] [] Nothing userInfoDecoder
+                    |> send apiKey wrapMsg effect toMsg
+
+            else
+                Cmd.none
+
         GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, nextpage } toMsg ->
             let
                 direction =
@@ -804,175 +834,223 @@ perform apiKey wrapMsg cancelMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressEffect e toMsg ->
-            listWithMaybes Api.Data.addressDecoder
-                |> Api.Request.MyBulk.bulkJson
-                    e.currency
-                    Api.Request.MyBulk.OperationGetAddress
-                    (Json.Encode.object
-                        [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
-                        ]
-                    )
-                |> send apiKey wrapMsg effect toMsg
+            if List.isEmpty e.addresses then
+                []
+                    |> Task.succeed
+                    |> Task.perform toMsg
+
+            else
+                listWithMaybes Api.Data.addressDecoder
+                    |> Api.Request.MyBulk.bulkJson
+                        e.currency
+                        Api.Request.MyBulk.OperationGetAddress
+                        (Json.Encode.object
+                            [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                            ]
+                        )
+                    |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressTagsEffect e toMsg ->
-            Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.field "_request_address" Json.Decode.string |> Json.Decode.map (Tuple.pair e.currency)) (Json.Decode.maybe Api.Data.addressTagDecoder))
-                |> Api.Request.MyBulk.bulkJson
-                    e.currency
-                    Api.Request.MyBulk.OperationListTagsByAddress
-                    (Json.Encode.object
-                        [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
-                        , ( "pagesize"
-                          , e.pagesize
-                                |> Maybe.map Json.Encode.int
-                                |> Maybe.withDefault Json.Encode.null
-                          )
-                        , ( "include_best_cluster_tag", Json.Encode.bool e.includeBestClusterTag )
-                        ]
-                    )
-                |> send apiKey wrapMsg effect toMsg
+            if List.isEmpty e.addresses then
+                []
+                    |> Task.succeed
+                    |> Task.perform toMsg
+
+            else
+                Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.field "_request_address" Json.Decode.string |> Json.Decode.map (Tuple.pair e.currency)) (Json.Decode.maybe Api.Data.addressTagDecoder))
+                    |> Api.Request.MyBulk.bulkJson
+                        e.currency
+                        Api.Request.MyBulk.OperationListTagsByAddress
+                        (Json.Encode.object
+                            [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                            , ( "pagesize"
+                              , e.pagesize
+                                    |> Maybe.map Json.Encode.int
+                                    |> Maybe.withDefault Json.Encode.null
+                              )
+                            , ( "include_best_cluster_tag", Json.Encode.bool e.includeBestClusterTag )
+                            ]
+                        )
+                    |> send apiKey wrapMsg effect toMsg
 
         BulkGetEntityEffect e toMsg ->
-            listWithMaybes Api.Data.entityDecoder
-                |> Api.Request.MyBulk.bulkJson
-                    e.currency
-                    Api.Request.MyBulk.OperationGetEntity
-                    (Json.Encode.object
-                        [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
-                        ]
-                    )
-                |> send apiKey wrapMsg effect toMsg
+            if List.isEmpty e.entities then
+                []
+                    |> Task.succeed
+                    |> Task.perform toMsg
+
+            else
+                listWithMaybes Api.Data.entityDecoder
+                    |> Api.Request.MyBulk.bulkJson
+                        e.currency
+                        Api.Request.MyBulk.OperationGetEntity
+                        (Json.Encode.object
+                            [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
+                            ]
+                        )
+                    |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressEntityEffect e toMsg ->
-            listWithMaybes
-                (Json.Decode.field "_request_address" Json.Decode.string
-                    |> Json.Decode.andThen
-                        (\requestAddress ->
-                            Json.Decode.map
-                                (\entity -> ( requestAddress, entity ))
-                                Api.Data.entityDecoder
-                        )
-                )
-                |> Api.Request.MyBulk.bulkJson
-                    e.currency
-                    Api.Request.MyBulk.OperationGetAddressEntity
-                    (Json.Encode.object
-                        [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
-                        ]
+            if List.isEmpty e.addresses then
+                []
+                    |> Task.succeed
+                    |> Task.perform toMsg
+
+            else
+                listWithMaybes
+                    (Json.Decode.field "_request_address" Json.Decode.string
+                        |> Json.Decode.andThen
+                            (\requestAddress ->
+                                Json.Decode.map
+                                    (\entity -> ( requestAddress, entity ))
+                                    Api.Data.entityDecoder
+                            )
                     )
-                |> send apiKey wrapMsg effect toMsg
+                    |> Api.Request.MyBulk.bulkJson
+                        e.currency
+                        Api.Request.MyBulk.OperationGetAddressEntity
+                        (Json.Encode.object
+                            [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                            ]
+                        )
+                    |> send apiKey wrapMsg effect toMsg
 
         BulkGetEntityNeighborsEffect e toMsg ->
-            listWithMaybes
-                (Json.Decode.field "_request_entity" Json.Decode.int
-                    |> Json.Decode.andThen
-                        (\requestEntity ->
-                            Json.Decode.map
-                                (\entity -> ( requestEntity, entity ))
-                                Api.Data.neighborEntityDecoder
-                        )
-                )
-                |> Api.Request.MyBulk.bulkJson
-                    e.currency
-                    Api.Request.MyBulk.OperationListEntityNeighbors
-                    (Json.Encode.object <|
-                        [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
-                        , ( "direction"
-                          , Json.Encode.string <|
-                                Api.Request.Entities.stringFromDirection <|
-                                    if e.isOutgoing then
-                                        Api.Request.Entities.DirectionOut
+            if List.isEmpty e.entities then
+                []
+                    |> Task.succeed
+                    |> Task.perform toMsg
+
+            else
+                listWithMaybes
+                    (Json.Decode.field "_request_entity" Json.Decode.int
+                        |> Json.Decode.andThen
+                            (\requestEntity ->
+                                Json.Decode.map
+                                    (\entity -> ( requestEntity, entity ))
+                                    Api.Data.neighborEntityDecoder
+                            )
+                    )
+                    |> Api.Request.MyBulk.bulkJson
+                        e.currency
+                        Api.Request.MyBulk.OperationListEntityNeighbors
+                        (Json.Encode.object <|
+                            [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
+                            , ( "direction"
+                              , Json.Encode.string <|
+                                    Api.Request.Entities.stringFromDirection <|
+                                        if e.isOutgoing then
+                                            Api.Request.Entities.DirectionOut
+
+                                        else
+                                            Api.Request.Entities.DirectionIn
+                              )
+                            ]
+                                ++ (if e.onlyIds then
+                                        [ ( "only_ids", Json.Encode.list Json.Encode.int e.entities )
+                                        ]
 
                                     else
-                                        Api.Request.Entities.DirectionIn
-                          )
-                        ]
-                            ++ (if e.onlyIds then
-                                    [ ( "only_ids", Json.Encode.list Json.Encode.int e.entities )
-                                    ]
-
-                                else
-                                    []
-                               )
-                    )
-                |> send apiKey wrapMsg effect toMsg
+                                        []
+                                   )
+                        )
+                    |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressNeighborsEffect e toMsg ->
-            listWithMaybes
-                (Json.Decode.field "_request_address" Json.Decode.string
-                    |> Json.Decode.andThen
-                        (\requestAddress ->
-                            Json.Decode.map
-                                (\address -> ( requestAddress, address ))
-                                Api.Data.neighborAddressDecoder
-                        )
-                )
-                |> Api.Request.MyBulk.bulkJson
-                    e.currency
-                    Api.Request.MyBulk.OperationListAddressNeighbors
-                    (Json.Encode.object <|
-                        [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
-                        , ( "direction"
-                          , Json.Encode.string <|
-                                Api.Request.Entities.stringFromDirection <|
-                                    if e.isOutgoing then
-                                        Api.Request.Entities.DirectionOut
+            if List.isEmpty e.addresses then
+                []
+                    |> Task.succeed
+                    |> Task.perform toMsg
 
-                                    else
-                                        Api.Request.Entities.DirectionIn
-                          )
-                        ]
-                            ++ (e.onlyIds
-                                    |> Maybe.map
-                                        (Json.Encode.list Json.Encode.string
-                                            >> pair "only_ids"
-                                            >> List.singleton
-                                        )
-                                    |> Maybe.withDefault []
-                               )
+            else
+                listWithMaybes
+                    (Json.Decode.field "_request_address" Json.Decode.string
+                        |> Json.Decode.andThen
+                            (\requestAddress ->
+                                Json.Decode.map
+                                    (\address -> ( requestAddress, address ))
+                                    Api.Data.neighborAddressDecoder
+                            )
                     )
-                |> send apiKey wrapMsg effect toMsg
+                    |> Api.Request.MyBulk.bulkJson
+                        e.currency
+                        Api.Request.MyBulk.OperationListAddressNeighbors
+                        (Json.Encode.object <|
+                            [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                            , ( "direction"
+                              , Json.Encode.string <|
+                                    Api.Request.Entities.stringFromDirection <|
+                                        if e.isOutgoing then
+                                            Api.Request.Entities.DirectionOut
+
+                                        else
+                                            Api.Request.Entities.DirectionIn
+                              )
+                            ]
+                                ++ (e.onlyIds
+                                        |> Maybe.map
+                                            (Json.Encode.list Json.Encode.string
+                                                >> pair "only_ids"
+                                                >> List.singleton
+                                            )
+                                        |> Maybe.withDefault []
+                                   )
+                        )
+                    |> send apiKey wrapMsg effect toMsg
 
         BulkGetTxEffect e toMsg ->
-            listWithMaybes
-                (Json.Decode.field "_request_tx_hash" Json.Decode.string
-                    |> Json.Decode.andThen
-                        (\requestTxHash ->
-                            Json.Decode.map
-                                (\tx -> ( requestTxHash, tx ))
-                                Api.Data.txDecoder
-                        )
-                )
-                |> Api.Request.MyBulk.bulkJson
-                    e.currency
-                    Api.Request.MyBulk.OperationGetTx
-                    (Json.Encode.object
-                        [ ( "tx_hash", Json.Encode.list Json.Encode.string e.txs )
-                        , ( "include_io", Json.Encode.bool True )
-                        ]
+            if List.isEmpty e.txs then
+                []
+                    |> Task.succeed
+                    |> Task.perform toMsg
+
+            else
+                listWithMaybes
+                    (Json.Decode.field "_request_tx_hash" Json.Decode.string
+                        |> Json.Decode.andThen
+                            (\requestTxHash ->
+                                Json.Decode.map
+                                    (\tx -> ( requestTxHash, tx ))
+                                    Api.Data.txDecoder
+                            )
                     )
-                |> send apiKey wrapMsg effect toMsg
+                    |> Api.Request.MyBulk.bulkJson
+                        e.currency
+                        Api.Request.MyBulk.OperationGetTx
+                        (Json.Encode.object
+                            [ ( "tx_hash", Json.Encode.list Json.Encode.string e.txs )
+                            , ( "include_io", Json.Encode.bool True )
+                            ]
+                        )
+                    |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressTagSummaryEffect { currency, addresses, includeBestClusterTag } toMsg ->
-            Json.Decode.list
-                (Json.Decode.field "_request_address" Json.Decode.string
-                    |> Json.Decode.andThen
-                        (\requestAddress ->
-                            Json.Decode.map
-                                (\ts -> ( ( currency, requestAddress ), ts ))
-                                Api.Data.tagSummaryDecoder
-                                |> Json.Decode.maybe
-                        )
-                )
-                |> Json.Decode.map (List.filterMap identity)
-                |> Api.Request.MyBulk.bulkJson
-                    currency
-                    Api.Request.MyBulk.OperationGetAddressTagSummary
-                    (Json.Encode.object
-                        [ ( "address", Json.Encode.list Json.Encode.string addresses )
-                        , ( "include_best_cluster_tag", Json.Encode.bool includeBestClusterTag )
-                        ]
+            if List.isEmpty addresses then
+                []
+                    |> Task.succeed
+                    |> Task.perform toMsg
+
+            else
+                Json.Decode.list
+                    (Json.Decode.field "_request_address" Json.Decode.string
+                        |> Json.Decode.andThen
+                            (\requestAddress ->
+                                Json.Decode.map
+                                    (\ts -> ( ( currency, requestAddress ), ts ))
+                                    Api.Data.tagSummaryDecoder
+                                    |> Json.Decode.maybe
+                            )
                     )
-                |> send apiKey wrapMsg effect toMsg
+                    |> Json.Decode.map (List.filterMap identity)
+                    |> Api.Request.MyBulk.bulkJson
+                        currency
+                        Api.Request.MyBulk.OperationGetAddressTagSummary
+                        (Json.Encode.object
+                            [ ( "address", Json.Encode.list Json.Encode.string addresses )
+                            , ( "include_best_cluster_tag", Json.Encode.bool includeBestClusterTag )
+                            ]
+                        )
+                    |> send apiKey wrapMsg effect toMsg
 
         ListRelatedAddressesEffect { currency, address, reltype, pagesize, nextpage } toMsg ->
             Api.Request.Addresses.listRelatedAddresses currency address (Just reltype) nextpage (Just pagesize)
@@ -1112,6 +1190,30 @@ isOutgoingToAddressDirection isOutgoing =
 
     else
         Api.Request.Addresses.DirectionIn
+
+
+userInfoDecoder : Json.Decode.Decoder UserInfo
+userInfoDecoder =
+    Json.Decode.map
+        (\expiration ->
+            { expiration = expiration
+            }
+        )
+        (Json.Decode.oneOf
+            [ Json.Decode.field "expires" expiresDecoder
+            , Json.Decode.succeed Nothing
+            ]
+        )
+
+
+expiresDecoder : Json.Decode.Decoder (Maybe Time.Posix)
+expiresDecoder =
+    Json.Decode.oneOf
+        [ Json.Decode.null Nothing
+        , dateTimeDecoder
+            |> Json.Decode.map Just
+        , Json.Decode.succeed Nothing
+        ]
 
 
 listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)

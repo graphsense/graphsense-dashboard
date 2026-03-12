@@ -1,4 +1,4 @@
-module Model.Graph.Coords exposing (BBox, Coords, avg, betrag, relativeToGraph, relativeToGraphZero)
+module Model.Graph.Coords exposing (BBox, Coords, avg, betrag, isInBBox, relativeToGraph, relativeToGraphZero)
 
 import List.Nonempty as NList
 
@@ -52,3 +52,11 @@ avg coords =
     { x = (NList.map .x coords |> NList.toList |> List.sum) / toFloat (NList.length coords)
     , y = (NList.map .y coords |> NList.toList |> List.sum) / toFloat (NList.length coords)
     }
+
+
+isInBBox : BBox -> Coords -> Bool
+isInBBox bbox c =
+    (c.x > bbox.x)
+        && (c.x < (bbox.x + bbox.width))
+        && (c.y > bbox.y)
+        && (c.y < (bbox.y + bbox.height))

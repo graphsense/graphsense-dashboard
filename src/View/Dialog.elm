@@ -30,6 +30,7 @@ import Util.View exposing (addDot, none, onClickWithStop)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.AddTagDialog as AddTagDialog
+import View.Pathfinder.ExportDialog as ExportDialog
 import View.Pathfinder.TagDetailsList as TagsDetailList
 
 
@@ -62,6 +63,9 @@ view plugins pluginStates vc model =
 
             AddTag conf ->
                 AddTagDialog.view plugins vc conf
+
+            Export conf ->
+                ExportDialog.view vc conf
 
             Plugin conf ->
                 plugin plugins pluginStates vc conf

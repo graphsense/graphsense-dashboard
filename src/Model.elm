@@ -22,6 +22,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType)
 import Model.Search
 import Model.Statusbar
+import Msg.ExportDialog
 import Msg.Graph
 import Msg.Locale
 import Msg.Pathfinder
@@ -43,6 +44,7 @@ type alias Flags =
     , width : Int
     , height : Int
     , pluginFlags : Plugin.Flags
+    , locale : String
     }
 
 
@@ -113,6 +115,7 @@ type Msg
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
     | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotSupportedTokens String Api.Data.TokenConfigs
+    | BrowserGotUserInfo Effect.Api.UserInfo
     | UserClickedStatusbar
     | UserClosesDialog
     | TagsListDialogTableUpdateMsg Table.State
@@ -143,6 +146,7 @@ type Msg
     | BrowserGotUncaughtError Json.Encode.Value
     | DebouncePluginOutMsg Plugin.OutMsg
     | BrowserCancelledRequest String
+    | ExportDialogMsg Msg.ExportDialog.Msg
 
 
 type AddTagDialogMsgs
@@ -224,8 +228,6 @@ type Effect
     | PortsConsoleEffect String
     | CmdEffect (Cmd Msg)
     | LogoutEffect
-    | SetDirtyEffect
-    | SetCleanEffect
     | SaveUserSettingsEffect UserSettings
     | NotificationEffect Model.Notification.Effect
     | PostponeUpdateByUrlEffect Url

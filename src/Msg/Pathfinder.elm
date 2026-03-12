@@ -4,9 +4,10 @@ import Api.Data
 import Color exposing (Color)
 import Components.InfiniteTable as InfiniteTable
 import Hovercard
+import Model.Dialog as Dialog
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
-import Model.Graph.Coords exposing (BBox, Coords)
+import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
@@ -112,12 +113,8 @@ type Msg
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg
-    | UserClickedExportGraphAsImage (Maybe Time.Posix)
-    | UserClickedExportGraphAsPdf (Maybe Time.Posix)
-    | UserClickedExportGraphTxsAsCSV (Maybe Time.Posix)
-    | BrowserSentBBox ( String, Maybe BBox )
-    | BrowserSentExportGraphResult { filename : String, error : Maybe String }
-    | BrowserGotTagSummariesForExportGraphTxsAsCSV Bool (List ( Id, Api.Data.TagSummary ))
+    | UserClickedExportGraph (Maybe Time.Posix)
+    | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
     | UserClickedSelectionTool
@@ -150,6 +147,7 @@ type Msg
     | EventualMessagesHeartBeat
     | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
+    | InternalExportGraphTxsCompleted
 
 
 type alias TextTooltipConfig =

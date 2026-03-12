@@ -1,11 +1,5 @@
 import { Elm } from './Main.elm'
-import FileSaver from 'file-saver'
-import { pack, unpack } from 'lzwcompress'
-import { Base64 } from 'js-base64'
-import { fileDialog } from 'file-select-dialog'
 import plugins from '../generated/plugins/index.js'
-import robotoBase64 from "../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64"
-import robotoBoldBase64 from "../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64"
 
 function measureCharacterDimensions() {
     // Create a temporary canvas element for text measurement
@@ -93,6 +87,7 @@ const app = Elm.Main.init(
     , height
     , now
     , pluginFlags 
+    , locale
     } 
   })
 
@@ -100,16 +95,11 @@ const app = Elm.Main.init(
 
 let isDirty = false
 
-window.onbeforeunload = function (evt) {
+window.onbeforeunload = (evt) => {
+  if (import.meta.env.DEV) return
   if (!isDirty) return
-  const message = 'You are about to leave the site. Your work will be lost. Sure?'
-  if (typeof evt === 'undefined') {
-    evt = window.event
-  }
-  if (evt) {
-    evt.returnValue = message
-  }
-  return message
+  evt.preventDefault()
+  evt.returnValue = true
 }
 
 app.ports.console.subscribe(console.error)
@@ -124,11 +114,11 @@ const getMaxCanvasDimensions = async () => {
     step: 1024,
     useWorker: true
   }
-  const canvasSize = await import('canvas-size')
+  const canvasSize = (await import('canvas-size')).default
   return await Promise.all([
-      canvasSize.default.maxArea(options),
-      canvasSize.default.maxWidth(options),
-      canvasSize.default.maxHeight(options)
+      canvasSize.maxArea(options),
+      canvasSize.maxWidth(options),
+      canvasSize.maxHeight(options)
     ]).then(([maxLength, maxWidth, maxHeight]) => {
       maxDimensions = {
         maxArea : maxLength.width * maxLength.height,
@@ -141,13 +131,20 @@ const getMaxCanvasDimensions = async () => {
 
 const getGraphBBox = (svg, selector) => {
     // Get the bounding box of the entire graph content by checking all elements
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    const bounds = 
+      { minX : Infinity, 
+        minY : Infinity, 
+        maxX : -Infinity, 
+        maxY : -Infinity
+    }
     // Iterate through all rendered elements to find true bounds
     const allElements = svg.querySelectorAll(selector)
     allElements.forEach(el => {
       try {
         // Get the transformation matrix of the element
-        const matrix = element.transform.baseVal.consolidate();
+        const matrix = el.transform.baseVal.consolidate().matrix;
+
+        const bbox = el.getBBox()
 
         // Apply the transformation to the bounding box
         const points = [
@@ -165,36 +162,36 @@ const getGraphBBox = (svg, selector) => {
 
         // Update min and max coordinates
         transformedPoints.forEach(point => {
-            minX = Math.min(minX, point.x);
-            minY = Math.min(minY, point.y);
-            maxX = Math.max(maxX, point.x);
-            maxY = Math.max(maxY, point.y);
+            bounds.minX = Math.min(bounds.minX, point.x);
+            bounds.minY = Math.min(bounds.minY, point.y);
+            bounds.maxX = Math.max(bounds.maxX, point.x);
+            bounds.maxY = Math.max(bounds.maxY, point.y);
         });
       } catch (e) {
         // Skip elements that can't compute bbox
       }
     })
-    
-    if (isFinite(minX)) {
+    if (isFinite(bounds.minX)) {
       return {
-        x : minX,
-        y : minY,
-        width : maxX - minX,
-        height : maxY - minY
+        x : bounds.minX,
+        y : bounds.minY,
+        width : bounds.maxX - bounds.minX,
+        height : bounds.maxY - bounds.minY
       }
     }
     // Fallback if no elements found
     return svg.getBBox()
 }
 
-app.ports.getBBox.subscribe(([handle, graphSelector, subSelector]) => {
+app.ports.getBBox.subscribe(([graphSelector, subSelector]) => {
   const graph = document.querySelector(graphSelector)
-  if(!graph) app.ports.sendBBox.send([handle, null])
+  if(!graph) app.ports.sendBBox.send(null)
   const bbox = getGraphBBox(graph, subSelector)
-  app.ports.sendBBox.send([handle, bbox])
+  app.ports.sendBBox.send(bbox)
 })
 
-app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
+app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox, transparentBackground}) => {
+  const FileSaver = (await import('file-saver')).default
   let svg = document.querySelector('svg#' + graphId)
   if (!svg) {
     console.error('SVG element not found')
@@ -248,6 +245,9 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
     svgData = svgData.replaceAll("var(" + key + ")", value)
   }
 
+  const robotoBase64 = (await import("../public/fonts/roboto/fonts/Regular/Roboto-Regular.woff2?raw-base64")).default
+  const robotoBoldBase64 = (await import("../public/fonts/roboto/fonts/Bold/Roboto-Bold.woff2?raw-base64")).default
+
   // Embed fonts into svg as Base64Encoded string
   let fontStyle = `
     <style>
@@ -277,6 +277,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
 
   img.onerror = function(e) {
     app.ports.uncaughtError.send({message: e + "img"})
+    app.ports.renderedImageForExport.send(false)
     console.error('Failed to load SVG image', e)
   }
 
@@ -284,7 +285,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
       let imgData 
       try {
         URL.revokeObjectURL(url)
-        const bgColor = cssVariables["--c-white"]
+        const bgColor = transparentBackground ? 'transparent' : cssVariables["--c-white"]
 
         // Use scale factor of 4 for high quality
         let canvas = new OffscreenCanvas(svgWidth, svgHeight)
@@ -293,13 +294,14 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
+        app.ports.renderedImageForExport.send(true)
 
         // Use PNG for better quality, with compression
         imgData = await canvas.convertToBlob({type: 'image/png'})
       } catch (e) {
         const error = 'Image generation failed'
         console.error(error, e)
-        app.ports.exportGraphResult.send({filename, error})
+        app.ports.exportGraphResult.send(error)
         return
       }
 
@@ -315,10 +317,10 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
 
           worker.onmessage = function(e) {
             if (e.data.error) {
-              app.ports.exportGraphResult.send({filename, error: e.data.error})
+              app.ports.exportGraphResult.send(e.data.error)
               console.error(e.data.error, e.data.details);
             } else {
-              app.ports.exportGraphResult.send({filename, error: null})
+              app.ports.exportGraphResult.send(null)
               FileSaver.saveAs(e.data.pdfBlob, e.data.filename)
             }
             worker.terminate()
@@ -326,7 +328,7 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
           };
 
           worker.onerror = function(e) {
-            app.ports.exportGraphResult.send({filename, error})
+            app.ports.exportGraphResult.send(error)
             URL.revokeObjectURL(imgDataUrl)
             console.error('Worker error:', e);
           };
@@ -339,18 +341,18 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox}) => {
           });
         } catch (e) {
           console.error(error, e)
-          app.ports.exportGraphResult.send({filename, error})
+          app.ports.exportGraphResult.send(error)
           URL.revokeObjectURL(imgDataUrl)
         }
     } else if (filename.endsWith(".png")) {
       FileSaver.saveAs(imgData, filename)
-      app.ports.exportGraphResult.send({filename, error: null})
+      app.ports.exportGraphResult.send(null)
     }
   };
   img.src = url 
 })
 
-app.ports.exportGraphics.subscribe((filename) => {
+app.ports.exportGraphics.subscribe(async (filename) => {
   const classMap = new Map()
   const sheets = ([...document.styleSheets]).filter(({ href }) => !href)
   if (!sheets) return
@@ -385,17 +387,20 @@ app.ports.exportGraphics.subscribe((filename) => {
   // merge double style definitions
   svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
   svg = svg.replace('<svg', '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg"')
-  download(filename, svg)
+  await download(filename, svg)
 })
 
-const download = (filename, buffer) => {
+const download = async (filename, buffer) => {
   const blob = new Blob([buffer], { type: 'application/octet-stream' }) // eslint-disable-line no-undef
+  const FileSaver = (await import('file-saver')).default
   FileSaver.saveAs(blob, filename)
 }
 
-const compress = (data) => {
+const compress = async (data) => {
+  const lzw = (await import('lzwcompress')).default
+  const { Base64 } = await import('js-base64')
   return new Uint32Array(
-    pack(
+    lzw.pack(
       // convert to base64 (utf-16 safe)
       Base64.encode(
         JSON.stringify(data)
@@ -404,33 +409,91 @@ const compress = (data) => {
   ).buffer
 }
 
-const decompress = (data) => {
-  return JSON.parse(
-    Base64.decode(
-      unpack(
-        [...new Uint32Array(data)]
-      )
-    )
-  )
+const decompress = async (data) => {
+  if (!(data instanceof ArrayBuffer) || data.byteLength === 0 || data.byteLength % 4 !== 0) {
+    throw new Error('unsupported-file-format')
+  }
+
+  const lzw = (await import('lzwcompress')).default
+  const { Base64 } = await import('js-base64')
+  try {
+    const unpacked = lzw.unpack([...new Uint32Array(data)])
+    if (typeof unpacked !== 'string' || unpacked.length === 0) {
+      throw new Error('unsupported-file-format')
+    }
+
+    const decoded = Base64.decode(unpacked)
+    if (typeof decoded !== 'string' || decoded.length === 0) {
+      throw new Error('unsupported-file-format')
+    }
+
+    return JSON.parse(decoded)
+  } catch (_) {
+    throw new Error('unsupported-file-format')
+  }
 }
 
-app.ports.deserialize.subscribe(() => {
-  fileDialog({ strict: true })
-    .then(file => {
-      const reader = new FileReader() // eslint-disable-line no-undef
-      reader.onload = () => {
-        let data = reader.result
-        data = decompress(data)
-        data[0] = data[0].split(' ')[0]
-        data[0] = data[0].split('-')[0]
-        app.ports.deserialized.send([file.name, data])
+const unsupportedImportFileMessage = 'Unsupported file format. Please import a valid GraphSense .gs file.'
+
+const reportImportFileError = (error, fileName = '') => {
+  const message = fileName
+    ? unsupportedImportFileMessage + ' File: ' + fileName
+    : unsupportedImportFileMessage
+
+  app.ports.uncaughtError.send({
+    message,
+    messageKey: 'unsupported-gs-file-format',
+    titleKey: 'data error',
+    variables: [],
+    moreInfo: fileName ? [ fileName ] : []
+  })
+
+  const detail =
+    error && typeof error.message === 'string'
+      ? error.message
+      : String(error)
+  console.warn('Failed to import GraphSense file', fileName, detail)
+}
+
+
+app.ports.deserialize.subscribe(async () => {
+  const { fileDialog } = await import('file-select-dialog')
+  let file
+  try {
+    file = await fileDialog({ strict: true })
+  } catch (_) {
+    return
+  }
+  if (!file) {
+    return
+  }
+  if (!file.name.toLowerCase().endsWith('.gs')) {
+    reportImportFileError(new Error('unsupported-extension'), file.name)
+    return
+  }
+  const reader = new FileReader() // eslint-disable-line no-undef
+  reader.onload = async () => {
+    try {
+      let data = reader.result
+      data = await decompress(data)
+
+      if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'string') {
+        throw new Error('invalid-import-payload')
       }
-      reader.readAsArrayBuffer(file)
-    })
+
+      data[0] = data[0].split(' ')[0]
+      data[0] = data[0].split('-')[0]
+      app.ports.deserialized.send([file.name, data])
+    } catch (error) {
+      reportImportFileError(error, file.name)
+    }
+  }
+  reader.onerror = () => reportImportFileError(new Error('file-read-error'), file.name)
+  reader.readAsArrayBuffer(file)
 })
 
-app.ports.serialize.subscribe(([filename, body]) => {
-  download(filename, compress(body))
+app.ports.serialize.subscribe(async ([filename, body]) => {
+  await download(filename, await compress(body))
 })
 
 app.ports.pluginsOut.subscribe(packetWithKey => {

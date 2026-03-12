@@ -62,8 +62,15 @@ characterDimensionsDecoder =
 
 getConceptName : { t | allConcepts : List Api.Data.Concept } -> String -> Maybe String
 getConceptName vc cat =
-    List.Extra.find (.id >> (==) cat) vc.allConcepts
-        |> Maybe.map .label
+    if cat == "" then
+        Just "Uncategorized"
+
+    else if cat == "unknown" then
+        Just "Uncategorized"
+
+    else
+        List.Extra.find (.id >> (==) cat) vc.allConcepts
+            |> Maybe.map .label
 
 
 getAbuseName : { t | abuseConcepts : List Api.Data.Concept } -> Maybe String -> Maybe String

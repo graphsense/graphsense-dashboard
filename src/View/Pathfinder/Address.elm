@@ -1,62 +1,75 @@
 module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 
 import Animation as A
-import Api.Data
 import Color
-import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
+import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Config.View as View
 import Css
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
-import Init.Pathfinder.Id as Id
 import Json.Decode
+import Json.Encode
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
-import Model.Entity exposing (isPossibleServiceUtxo)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
-import Model.Pathfinder.Address exposing (Address, Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
-import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
-import RemoteData exposing (WebData)
+import RemoteData
 import Svg.Styled as Svg exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
-import Util.Data exposing (isAccountLike)
 import Util.Graph exposing (decodeCoords, translate)
-import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
+import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe (WebData Api.Data.Entity)) -> Maybe Annotations.AnnotationItem -> Svg Msg
-view plugins vc pc colors address getCluster annotation =
+view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
+view plugins vc pc address annotation =
     let
         data =
             RemoteData.toMaybe address.data
-
-        clusterid =
-            data |> Maybe.map (\z -> Id.initClusterId z.currency z.entity)
-
-        clusterColor =
-            clusterid |> Maybe.andThen (\x -> Colors.getAssignedColor Colors.Clusters x colors) |> Maybe.map .color
 
         halfAlpha x =
             Color.fromRgba { red = x.red, green = x.green, blue = x.blue, alpha = x.alpha / 2 }
 
         clusterColorLight =
-            clusterColor |> Maybe.map (Color.toRgba >> halfAlpha)
+            address.clusterColor |> Maybe.map (Color.toRgba >> halfAlpha)
 
-        cluster =
-            clusterid
-                |> Maybe.andThen getCluster
-                |> Maybe.andThen RemoteData.toMaybe
+        clusterSiblingHovered =
+            pc.highlightClusterFriends
+                && address.clusterSiblingHovered
+
+        highlightVisible =
+            pc.hideForExport
+                /= Exporting True
+                && address.selected
+
+        clusterStroke =
+            case ( clusterColorLight, pc.highlightClusterFriends ) of
+                ( Just color, True ) ->
+                    [ css
+                        [ Css.property "stroke" (Color.toCssString color) |> Css.important
+                        , Css.property "stroke-width"
+                            (if clusterSiblingHovered then
+                                "5"
+
+                             else
+                                "3"
+                            )
+                            |> Css.important
+                        ]
+                    ]
+
+                _ ->
+                    []
 
         directionToField direction =
             case direction of
@@ -107,7 +120,7 @@ view plugins vc pc colors address getCluster annotation =
             address.actor
                 |> Maybe.Extra.orElse address.exchange
                 |> Maybe.Extra.orElse
-                    (case getAddressType address cluster of
+                    (case address.addressServiceType of
                         LikelyUnknownService ->
                             if address |> isSmartContract then
                                 Nothing
@@ -167,6 +180,10 @@ view plugins vc pc colors address getCluster annotation =
             ((address.x + address.dx) * unit - adjX)
             ((A.animate address.clock address.y + address.dy) * unit - adjY)
             |> transform
+        , address.selected
+            |> Json.Encode.bool
+            |> Json.Encode.encode 0
+            |> Html.attribute "data-selected"
         ]
         (GraphComponents.addressNodeWithInstances
             (GraphComponents.addressNodeAttributes
@@ -191,14 +208,7 @@ view plugins vc pc colors address getCluster annotation =
                         |> onMouseLeave
                     ]
                 |> Rs.s_nodeFrame annAttr
-                |> Rs.s_clusterColor
-                    (case ( clusterColorLight, pc.highlightClusterFriends ) of
-                        ( Just c, True ) ->
-                            [ css [ Css.property "stroke" (Color.toCssString c) |> Css.important ] ]
-
-                        _ ->
-                            []
-                    )
+                |> Rs.s_clusterColor clusterStroke
              -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
             )
             GraphComponents.addressNodeInstances
@@ -207,14 +217,14 @@ view plugins vc pc colors address getCluster annotation =
                     address.id
                         |> Id.id
                         |> truncateLongIdentifierWithLengths 8 4
-                , highlightVisible = address.selected
-                , clusterVisible = (clusterColor /= Nothing) && pc.highlightClusterFriends
+                , highlightVisible = highlightVisible
+                , clusterVisible = (address.clusterColor /= Nothing) && pc.highlightClusterFriends
                 , expandLeftVisible = expandVisible Incoming
                 , expandRightVisible = expandVisible Outgoing
-                , iconInstance = toNodeIcon address cluster
+                , iconInstance = toNodeIcon address
                 , exchangeLabel = nodeLabel |> Maybe.withDefault ""
                 , exchangeLabelVisible = nodeLabel /= Nothing
-                , isStartingPoint = address.isStartingPoint || address.selected
+                , isStartingPoint = address.isStartingPoint || (pc.hideForExport /= Exporting True && address.selected)
                 , tagIconVisible = address.hasTags || List.length replacementTagIcons > 0
                 , tagIconInstance =
                     (replacementIconCombined |> Maybe.map (g []))
@@ -222,41 +232,49 @@ view plugins vc pc colors address getCluster annotation =
                 }
             , iconsNodeOpenLeft =
                 { variant =
-                    expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
-                        |> Maybe.withDefault
-                            (Icons.iconsNodeOpenLeftWithAttributes
-                                (Icons.iconsNodeOpenLeftAttributes
-                                    |> Rs.s_root (expand Incoming)
-                                )
-                                { root =
-                                    { state =
-                                        if expandAllowed address then
-                                            Icons.IconsNodeOpenLeftStateActiv
+                    if pc.hideForExport /= NoExport then
+                        none
 
-                                        else
-                                            Icons.IconsNodeOpenLeftStateDisabled
+                    else
+                        expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
+                            |> Maybe.withDefault
+                                (Icons.iconsNodeOpenLeftWithAttributes
+                                    (Icons.iconsNodeOpenLeftAttributes
+                                        |> Rs.s_root (expand Incoming)
+                                    )
+                                    { root =
+                                        { state =
+                                            if expandAllowed address then
+                                                Icons.IconsNodeOpenLeftStateActiv
+
+                                            else
+                                                Icons.IconsNodeOpenLeftStateDisabled
+                                        }
                                     }
-                                }
-                            )
+                                )
                 }
             , iconsNodeOpenRight =
                 { variant =
-                    expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
-                        |> Maybe.withDefault
-                            (Icons.iconsNodeOpenRightWithAttributes
-                                (Icons.iconsNodeOpenRightAttributes
-                                    |> Rs.s_root (expand Outgoing)
-                                )
-                                { root =
-                                    { state =
-                                        if expandAllowed address then
-                                            Icons.IconsNodeOpenRightStateActiv
+                    if pc.hideForExport /= NoExport then
+                        none
 
-                                        else
-                                            Icons.IconsNodeOpenRightStateDisabled
+                    else
+                        expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
+                            |> Maybe.withDefault
+                                (Icons.iconsNodeOpenRightWithAttributes
+                                    (Icons.iconsNodeOpenRightAttributes
+                                        |> Rs.s_root (expand Outgoing)
+                                    )
+                                    { root =
+                                        { state =
+                                            if expandAllowed address then
+                                                Icons.IconsNodeOpenRightStateActiv
+
+                                            else
+                                                Icons.IconsNodeOpenRightStateDisabled
+                                        }
                                     }
-                                }
-                            )
+                                )
                 }
             , iconsNodeMarker =
                 { variant =
@@ -304,9 +322,9 @@ expandHandleLoadingSpinner vc address direction details =
         Nothing
 
 
-toNodeIconHtml : Address -> Maybe Api.Data.Entity -> Svg msg
-toNodeIconHtml address cluster =
-    toNodeIcon address cluster
+toNodeIconHtml : Address -> Svg msg
+toNodeIconHtml address =
+    toNodeIcon address
         |> List.singleton
         |> Svg.svg
             [ Svg.width "24"
@@ -314,51 +332,8 @@ toNodeIconHtml address cluster =
             ]
 
 
-type AddressServiceType
-    = KnownService
-    | LikelyUnknownService
-    | Unknown
-
-
-isPossibleServiceAccountLike : Address -> Bool
-isPossibleServiceAccountLike address =
-    address.data
-        |> RemoteData.toMaybe
-        |> Maybe.map
-            (\apiAddress ->
-                let
-                    maxDegree =
-                        7500
-
-                    maxTxs =
-                        500
-                in
-                apiAddress.inDegree > maxDegree || apiAddress.noIncomingTxs > maxTxs
-            )
-        |> Maybe.withDefault False
-
-
-getAddressType : Address -> Maybe Api.Data.Entity -> AddressServiceType
-getAddressType address cluster =
-    if Maybe.map isPossibleServiceUtxo cluster |> Maybe.withDefault False then
-        if address.actor == Nothing then
-            LikelyUnknownService
-
-        else
-            KnownService
-
-    else if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
-        KnownService
-
-    else if (address.id |> Id.network |> isAccountLike) && isPossibleServiceAccountLike address then
-        LikelyUnknownService
-
-    else
-        Unknown
-
-
-toNodeIcon : Address -> Maybe Api.Data.Entity -> Svg msg
-toNodeIcon address cluster =
+toNodeIcon : Address -> Svg msg
+toNodeIcon address =
     case ( address.exchange, address.data |> RemoteData.toMaybe |> Maybe.andThen .isContract ) of
         ( Just _, _ ) ->
             Icons.iconsExchangeL {}
@@ -367,12 +342,12 @@ toNodeIcon address cluster =
             Icons.iconsSmartContractL {}
 
         ( Nothing, _ ) ->
-            case getAddressType address cluster of
+            case address.addressServiceType of
                 KnownService ->
                     Icons.iconsInstitutionL {}
 
                 LikelyUnknownService ->
                     Icons.iconsUnknownServiceL {}
 
-                Unknown ->
+                UnknownService ->
                     Icons.iconsUntagged {}

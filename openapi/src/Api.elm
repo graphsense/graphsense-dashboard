@@ -1,9 +1,9 @@
 module Api exposing
     ( Request
     , baseUrl
+    , request
     , map
     , noExternalTransactions
-    , request
     , send
     , sendAndAlsoReceiveHeaders
     , sendWithCustomError

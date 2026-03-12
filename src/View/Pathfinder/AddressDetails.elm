@@ -155,9 +155,7 @@ utxo plugins pluginStates vc model id viewState address =
 
         sidePanelAddressHeader =
             { iconInstance =
-                cluster
-                    |> Maybe.andThen RemoteData.toMaybe
-                    |> Address.toNodeIconHtml address
+                Address.toNodeIconHtml address
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "
@@ -843,7 +841,7 @@ account plugins pluginStates vc model id viewState address =
 
         sidePanelAddressHeader =
             { iconInstance =
-                Address.toNodeIconHtml address Nothing
+                Address.toNodeIconHtml address
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "

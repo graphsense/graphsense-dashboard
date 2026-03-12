@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -6,7 +6,7 @@ import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
-import Config.Pathfinder exposing (TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -14,6 +14,7 @@ import Dict exposing (Dict)
 import Effect.Api as Api exposing (Effect(..))
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Effect.Search
+import Encode.Pathfinder as Pathfinder
 import Hovercard
 import Iknaio.ColorScheme exposing (annotationGreen, annotationRed)
 import Init.Graph.History as History
@@ -31,15 +32,16 @@ import Json.Decode
 import List.Extra
 import Log
 import Maybe.Extra
+import Model.Dialog as Dialog
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords exposing (BBox, relativeToGraphZero)
+import Model.Graph.Coords exposing (BBox, isInBBox, relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale as Locale
 import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getTxs, txsSetter)
+import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getAddressType, getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.AggEdge as AggEdge
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
@@ -52,12 +54,14 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Io, Tx)
 import Model.Search as Search
 import Model.Tx as GTx exposing (parseTxIdentifier)
+import Msg.ExportDialog as ExportDialog
 import Msg.Pathfinder
     exposing
         ( AddingTxConfig
@@ -108,6 +112,7 @@ import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
 import View.Locale as Locale exposing (makeTimestampFilename)
+import View.Pathfinder exposing (originShiftX)
 import Workflow
 
 
@@ -150,8 +155,7 @@ update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
         |> pushHistory plugins msg
-        |> markDirty plugins msg
-        |> updateByMsg plugins uc msg
+        |> and (updateByMsg plugins uc msg)
         |> and syncUrl
         |> and (syncSidePanel uc)
         |> and dispatchEventualMessages
@@ -435,208 +439,10 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
-        UserClickedExportGraphAsImage time ->
-            case time of
-                Nothing ->
-                    ( model
-                    , Time.now
-                        |> Task.perform (Just >> UserClickedExportGraphAsImage)
-                        |> CmdEffect
-                        |> List.singleton
-                    )
+        UserClickedExportGraph _ ->
+            n model
 
-                Just t ->
-                    let
-                        filename =
-                            makeTimestampFilename uc.locale t
-                                |> flip (++) (" " ++ model.name ++ ".png")
-                    in
-                    ( model |> s_exportPNG True
-                    , [ { filename = filename
-                        , graphId = graphId
-                        , viewbox = Nothing
-                        }
-                            |> Ports.exportGraph
-                            |> Pathfinder.CmdEffect
-                      , Notification.infoDefault "generating image"
-                            -- |> Notification.map (s_title (Just "PDF Export"))
-                            |> Notification.map (s_isEphemeral True)
-                            |> Notification.map (s_showClose False)
-                            |> Notification.map (s_removeDelayMs 4000.0)
-                            |> ShowNotificationEffect
-                      ]
-                    )
-
-        UserClickedExportGraphAsPdf time ->
-            case time of
-                Nothing ->
-                    ( model
-                    , Time.now
-                        |> Task.perform (Just >> UserClickedExportGraphAsPdf)
-                        |> CmdEffect
-                        |> List.singleton
-                    )
-
-                Just t ->
-                    let
-                        filename =
-                            makeTimestampFilename uc.locale t
-                                |> flip (++) (" " ++ model.name ++ ".pdf")
-                    in
-                    ( model |> s_exportPDF True
-                    , Ports.getBBox ( filename, "svg#" ++ graphId, ":not(g, defs, style, span)" )
-                        |> Pathfinder.CmdEffect
-                        |> List.singleton
-                    )
-
-        BrowserSentBBox ( handle, bbox ) ->
-            bbox
-                |> Maybe.andThen
-                    (\bb ->
-                        if String.endsWith ".pdf" handle then
-                            ( model
-                            , [ { filename = handle
-                                , graphId = graphId
-                                , viewbox = addMarginPdf bb |> Just
-                                }
-                                    |> Ports.exportGraph
-                                    |> Pathfinder.CmdEffect
-                              , Notification.infoDefault "generating pdf"
-                                    -- |> Notification.map (s_title (Just "PDF Export"))
-                                    |> Notification.map (s_isEphemeral True)
-                                    |> Notification.map (s_showClose False)
-                                    |> Notification.map (s_removeDelayMs 4000.0)
-                                    |> ShowNotificationEffect
-                              ]
-                            )
-                                |> Just
-
-                        else
-                            Nothing
-                    )
-                |> Maybe.withDefault (n model)
-
-        BrowserSentExportGraphResult { filename, error } ->
-            let
-                ( set, type_ ) =
-                    if String.endsWith ".pdf" filename then
-                        ( s_exportPDF, "pdf" )
-
-                    else
-                        ( s_exportPNG, "image" )
-            in
-            ( model |> set False
-            , error
-                |> Maybe.map
-                    (Notification.errorDefault
-                        >> Notification.map (s_title (Just "An error occurred"))
-                    )
-                |> Maybe.withDefault
-                    (Notification.successDefault "check download folder"
-                        |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
-                        |> Notification.map (s_isEphemeral True)
-                        |> Notification.map (s_showClose False)
-                        |> Notification.map (s_removeDelayMs 4000.0)
-                    )
-                |> ShowNotificationEffect
-                |> List.singleton
-            )
-
-        UserClickedExportGraphTxsAsCSV time ->
-            case time of
-                Nothing ->
-                    ( model
-                    , Time.now
-                        |> Task.perform (Just >> UserClickedExportGraphTxsAsCSV)
-                        |> CmdEffect
-                        |> List.singleton
-                    )
-
-                Just t ->
-                    -- First collect all addresses from transactions and check if we need to fetch tag summaries
-                    let
-                        txAccounts =
-                            model.network.txs
-                                |> Dict.values
-                                |> List.concatMap (explodeTxToAccounts uc.locale)
-
-                        feeAddress =
-                            Locale.string uc.locale "fee"
-
-                        allAddresses =
-                            txAccounts
-                                |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
-                                |> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
-
-                        -- Group addresses by network for bulk fetching
-                        addressesByNetwork =
-                            allAddresses
-                                |> List.foldl
-                                    (\( network, addr ) acc ->
-                                        Dict.update network
-                                            (\existing ->
-                                                case existing of
-                                                    Nothing ->
-                                                        Just (Set.singleton addr)
-
-                                                    Just addrs ->
-                                                        Just (Set.insert addr addrs)
-                                            )
-                                            acc
-                                    )
-                                    Dict.empty
-
-                        -- Find addresses missing tag summaries
-                        missingByNetwork =
-                            addressesByNetwork
-                                |> Dict.toList
-                                |> List.filterMap
-                                    (\( network, addrs ) ->
-                                        let
-                                            missing =
-                                                addrs
-                                                    |> Set.toList
-                                                    |> List.filter
-                                                        (\addr ->
-                                                            Id.init network addr
-                                                                |> isTagSummaryLoaded True model.tagSummaries
-                                                                |> not
-                                                        )
-                                        in
-                                        if List.isEmpty missing then
-                                            Nothing
-
-                                        else
-                                            Just ( network, missing )
-                                    )
-
-                        config =
-                            makeGraphTxsExportCSVConfig uc model.tagSummaries
-
-                        ( newModel, _ ) =
-                            ExportCSV.update (ExportCSV.BrowserGotTime t) config model.exportCSVGraph
-                                |> mapFirst (flip s_exportCSVGraph model)
-                    in
-                    if List.isEmpty missingByNetwork then
-                        -- All tag summaries already loaded, proceed with export
-                        generateGraphTxsExport uc newModel
-
-                    else
-                        -- Need to fetch missing tag summaries first
-                        let
-                            toMsg =
-                                BrowserGotTagSummariesForExportGraphTxsAsCSV
-
-                            fetchEffects =
-                                missingByNetwork
-                                    |> List.map
-                                        (\( network, addrs ) ->
-                                            fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
-                                        )
-                        in
-                        ( newModel, fetchEffects )
-
-        BrowserGotTagSummariesForExportGraphTxsAsCSV includesBestClusterTag tagSummaries ->
+        BrowserGotTagSummariesForExportGraphTxsAsCSV area includesBestClusterTag tagSummaries ->
             let
                 -- Add received tag summaries to model
                 ( modelWithTags, _ ) =
@@ -648,20 +454,11 @@ updateByMsg plugins uc msg model =
                             )
                             (n model)
 
-                -- Check if all addresses now have their tag summaries loaded
-                txAccounts =
-                    modelWithTags.network.txs
-                        |> Dict.values
-                        |> List.concatMap (explodeTxToAccounts uc.locale)
-
-                feeAddress =
-                    Locale.string uc.locale "fee"
-
                 allAddresses =
-                    txAccounts
-                        |> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
-                        |> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
+                    Dict.values modelWithTags.network.txs
+                        |> getToAndFromAddresses uc
 
+                -- Check if all addresses now have their tag summaries loaded
                 stillMissing =
                     allAddresses
                         |> List.filter
@@ -673,15 +470,31 @@ updateByMsg plugins uc msg model =
             in
             -- Only generate export when ALL tag summaries are loaded
             if List.isEmpty stillMissing then
-                generateGraphTxsExport uc modelWithTags
+                generateGraphTxsExport uc area modelWithTags
 
             else
                 -- Still waiting for more tag summaries, just update the model
                 n modelWithTags
 
-        UserClickedSaveGraph _ ->
-            -- handled in src/Update.elm
-            n model
+        UserClickedSaveGraph time ->
+            ( model
+            , [ (case time of
+                    Nothing ->
+                        Time.now
+                            |> Task.perform (Just >> UserClickedSaveGraph)
+
+                    Just t ->
+                        Pathfinder.encode model
+                            |> pair
+                                (makeTimestampFilename uc.locale t
+                                    |> (\tt -> tt ++ ".gs")
+                                )
+                            |> Ports.serialize
+                )
+                    |> Pathfinder.CmdEffect
+              ]
+            )
+                |> and setClean
 
         NoOp ->
             n model
@@ -910,10 +723,17 @@ updateByMsg plugins uc msg model =
             let
                 clusterId =
                     Id.initClusterId data.currency data.entity
+
+                setServiceType addr =
+                    Just data
+                        |> getAddressType addr
+                        |> flip s_addressServiceType addr
             in
             n
                 { model
                     | clusters = Dict.insert clusterId (Success data) model.clusters
+                    , network =
+                        Network.updateAddressesByClusterId clusterId setServiceType model.network
                 }
 
         SearchMsg m ->
@@ -1407,9 +1227,6 @@ updateByMsg plugins uc msg model =
                     case model.pointerTool of
                         Select ->
                             let
-                                xoffset =
-                                    searchBoxMinWidth / 2
-
                                 crd =
                                     case tm.state of
                                         Transform.Settled c ->
@@ -1421,35 +1238,32 @@ updateByMsg plugins uc msg model =
                                 z =
                                     value crd.z
 
-                                xn =
-                                    ((Basics.min start.x now.x + xoffset) * z) + crd.x
+                                bbox =
+                                    { x =
+                                        ((Basics.min start.x now.x + originShiftX) * z) + crd.x
+                                    , y =
+                                        (Basics.min start.y now.y * z) + crd.y
+                                    , width =
+                                        abs (start.x - now.x) * z
+                                    , height =
+                                        abs (start.y - now.y) * z
+                                    }
 
-                                yn =
-                                    (Basics.min start.y now.y * z) + crd.y
+                                isInBBoxTx =
+                                    Tx.getCoords
+                                        >> Maybe.map (coordsWithUnit >> isInBBox bbox)
+                                        >> Maybe.withDefault False
 
-                                widthn =
-                                    abs (start.x - now.x) * z
-
-                                heightn =
-                                    abs (start.y - now.y) * z
-
-                                isIn x1 y1 x2 y2 x y =
-                                    x > x1 && x < x2 && y > y1 && y < y2
-
-                                isinRect c =
-                                    isIn xn yn (xn + widthn) (yn + heightn) (c.x * unit) (c.y * unit)
-
-                                isinRectTx tx =
-                                    tx |> Tx.getCoords |> Maybe.map isinRect |> Maybe.withDefault False
-
-                                isinRectAddr adr =
-                                    adr |> Address.getCoords |> isinRect
+                                isInBBoxAddr =
+                                    Address.getCoords
+                                        >> coordsWithUnit
+                                        >> isInBBox bbox
 
                                 selectedTxs =
-                                    List.filter isinRectTx (Dict.values model.network.txs) |> List.map (.id >> MSelectedTx)
+                                    List.filter isInBBoxTx (Dict.values model.network.txs) |> List.map (.id >> MSelectedTx)
 
                                 selectedAdr =
-                                    List.filter isinRectAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
+                                    List.filter isInBBoxAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
 
                                 modelS =
                                     multiSelect model (selectedTxs ++ selectedAdr) False
@@ -1665,9 +1479,17 @@ updateByMsg plugins uc msg model =
                                                         Nothing
                                                 )
                                         )
+
+                            nw2 =
+                                unhovered.network.addresses
+                                    |> Dict.get id
+                                    |> Maybe.andThen Address.getClusterId
+                                    |> Maybe.map (\e -> Network.updateAddressesByClusterId e (s_clusterSiblingHovered True) unhovered.network)
+                                    |> Maybe.withDefault model.network
                         in
                         ( { unhovered
                             | hovered = HoveredAddress id
+                            , network = nw2
                           }
                         , case maybeTT of
                             Just tt ->
@@ -1689,7 +1511,12 @@ updateByMsg plugins uc msg model =
                         showHover ()
 
         UserMovesMouseOutAddress id ->
-            ( unhover model, CloseTooltipEffect (Just { context = Id.toString id, domId = Id.toString id }) False |> List.singleton )
+            ( unhover model
+            , CloseTooltipEffect
+                (Just { context = Id.toString id, domId = Id.toString id })
+                False
+                |> List.singleton
+            )
 
         ShowTextTooltip config ->
             ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
@@ -2800,6 +2627,27 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        InternalExportGraphTxsCompleted ->
+            -- handled upstream
+            n model
+
+
+exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
+exportGraph conf bbox model =
+    ( model.config
+        |> s_hideForExport (Exporting <| not conf.keepSelectionHighlight)
+        |> flip s_config model
+        |> s_exportImage (Just ExportingImage)
+    , [ { filename = conf.filename
+        , graphId = graphId
+        , viewbox = bbox |> Maybe.map addMarginForExport
+        , transparentBackground = conf.transparentBackground
+        }
+            |> Ports.exportGraph
+            |> Pathfinder.CmdEffect
+      ]
+    )
+
 
 browserGotTx : Plugins -> Update.Config -> AddingTxConfig -> Api.Data.Tx -> Model -> ( Model, List Effect )
 browserGotTx plugins uc { pos, loadAddresses, autoLinkInTraceMode } tx model =
@@ -3243,10 +3091,6 @@ browserGotAddressData uc plugins providedId position data model =
         id =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
-        ( newAddress, net ) =
-            Network.addAddressWithPosition plugins model.config position id model.network
-                |> mapSecond (Network.updateAddress id (s_data (Success data)))
-
         clusterId =
             Id.initClusterId data.currency data.entity
 
@@ -3261,6 +3105,15 @@ browserGotAddressData uc plugins providedId position data model =
 
             else
                 model.colors
+
+        clusterColor =
+            Colors.getAssignedColor Colors.Clusters clusterId ncolors
+                |> Maybe.map .color
+
+        ( newAddress, net ) =
+            Network.addAddressWithPosition plugins model.config position id model.network
+                |> mapSecond (Network.updateAddress id (s_data (Success data)))
+                |> mapSecond (Network.updateAddressesByClusterId clusterId (s_clusterColor clusterColor))
 
         ( clusters, effCluster ) =
             if Dict.member clusterId model.clusters || Data.isAccountLike data.currency then
@@ -3594,6 +3447,12 @@ updateTagDataOnAddress addressId m =
         tag =
             Dict.get addressId m.tagSummaries
 
+        cluster =
+            Dict.get addressId m.network.addresses
+                |> Maybe.andThen Address.getClusterId
+                |> Maybe.andThen (flip Dict.get m.clusters)
+                |> Maybe.andThen RemoteData.toMaybe
+
         updateTagsummaryData tagdata =
             let
                 actorlabel =
@@ -3616,6 +3475,10 @@ updateTagDataOnAddress addressId m =
             )
                 |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (TagSummary.hasOnlyExchangeTags tagdata)))
                 |> Network.updateAddress addressId (s_actor actorlabel)
+                |> Network.updateAddress addressId
+                    (\addr ->
+                        { addr | addressServiceType = getAddressType addr cluster }
+                    )
 
         net td =
             case td of
@@ -3711,13 +3574,12 @@ updateByRoute plugins uc route model =
         model
             |> s_route route
             |> (if route == Route.Root then
-                    identity
+                    n
 
                 else
-                    s_isDirty True
-                        >> forcePushHistory
+                    forcePushHistory
                )
-            |> updateByRoute_ plugins uc route
+            |> and (updateByRoute_ plugins uc route)
             |> and (syncSidePanel uc)
 
 
@@ -4197,12 +4059,23 @@ selectAddress id model =
                 |> n
 
 
+unselectAddress : Id -> Network -> Network
+unselectAddress a nw =
+    Network.updateAddress a (s_selected False) nw
+
+
+unhoverAddress : Id -> Network -> Network
+unhoverAddress a nw =
+    nw.addresses
+        |> Dict.get a
+        |> Maybe.andThen Address.getClusterId
+        |> Maybe.map (\e -> Network.updateAddressesByClusterId e (s_clusterSiblingHovered False) nw)
+        |> Maybe.withDefault nw
+
+
 unselect : Model -> ( Model, List Effect )
 unselect model =
     let
-        unselectAddress a nw =
-            Network.updateAddress a (s_selected False) nw
-
         unselectTx a nw =
             Network.updateTx a (s_selected False) nw
 
@@ -4267,10 +4140,9 @@ unhover model =
     let
         network =
             case model.hovered of
-                HoveredAddress _ ->
-                    model.network
+                HoveredAddress a ->
+                    unhoverAddress a model.network
 
-                --Network.updateAddress a (s_hovered False) model.network
                 HoveredTx a ->
                     Network.updateTx a (s_hovered False) model.network
                         |> Network.trySetHoverConversionLoop a False
@@ -4289,22 +4161,58 @@ unhover model =
         |> s_hovered NoHover
 
 
-pushHistory : Plugins -> Msg -> Model -> Model
+pushHistory : Plugins -> Msg -> Model -> ( Model, List Effect )
 pushHistory plugins msg model =
     if History.shallPushHistory plugins msg model then
         forcePushHistory model
 
     else
-        model
+        n model
 
 
-forcePushHistory : Model -> Model
+forcePushHistory : Model -> ( Model, List Effect )
 forcePushHistory model =
-    { model
-        | history =
+    let
+        newHistory =
             makeHistoryEntry model
                 |> History.push model.history
+
+        isDirty =
+            newHistory /= model.history
+    in
+    { model
+        | history = newHistory
     }
+        |> setDirty isDirty
+
+
+setDirty : Bool -> Model -> ( Model, List Effect )
+setDirty isDirty model =
+    let
+        isD =
+            model.isDirty
+                || isDirty
+    in
+    ( { model
+        | isDirty = isD
+      }
+    , if isD then
+        Ports.setDirty isD
+            |> CmdEffect
+            |> List.singleton
+
+      else
+        []
+    )
+
+
+setClean : Model -> ( Model, List Effect )
+setClean model =
+    ( { model | isDirty = False }
+    , [ Ports.setDirty False
+            |> CmdEffect
+      ]
+    )
 
 
 makeHistoryEntry : Model -> Entry.Model
@@ -4332,15 +4240,6 @@ undoRedo fun model =
             [ Route.Root
                 |> NavPushRouteEffect
             ]
-
-
-markDirty : Plugins -> Msg -> Model -> Model
-markDirty plugins msg model =
-    if History.shallPushHistory plugins msg model then
-        model |> s_isDirty True
-
-    else
-        model
 
 
 fetchActor : String -> Effect
@@ -4428,13 +4327,9 @@ fetchTagSummaryForIds includeBestClusterTag existing toMsg network ids =
                 |> List.map (Id.init network)
                 |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
     in
-    if List.isEmpty idsToLoad then
-        CmdEffect Cmd.none
-
-    else
-        toMsg includeBestClusterTag
-            |> Api.BulkGetAddressTagSummaryEffect { currency = network, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
-            |> ApiEffect
+    toMsg includeBestClusterTag
+        |> Api.BulkGetAddressTagSummaryEffect { currency = network, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
+        |> ApiEffect
 
 
 fetchTagSummaryForId : Bool -> Dict Id HavingTags -> Id -> Effect
@@ -4631,32 +4526,62 @@ checkSelection uc model =
 
 removeAddress : Id -> Model -> ( Model, List Effect )
 removeAddress id model =
-    { model
-        | network = Network.deleteAddress id model.network
-        , details =
-            case model.details of
-                Just (AddressDetails addressId _) ->
-                    if addressId == id then
-                        Nothing
+    Dict.get id model.network.addresses
+        |> Maybe.map
+            (\addr ->
+                let
+                    nw2 =
+                        let
+                            clusterId =
+                                Address.getClusterId addr
 
-                    else
-                        model.details
+                            onlyTwoClusterSiblingsOngraph =
+                                clusterId
+                                    |> Maybe.map (flip Network.getAddressIdsInCluster model.network)
+                                    |> Maybe.map (List.length >> (==) 2)
+                                    |> Maybe.withDefault False
+                        in
+                        clusterId
+                            |> Maybe.map
+                                (\clid ->
+                                    if onlyTwoClusterSiblingsOngraph then
+                                        Network.updateAddressesByClusterId clid (s_clusterColor Nothing) model.network
 
-                _ ->
-                    model.details
-        , selection =
-            case model.selection of
-                SelectedAddress addressId ->
-                    if addressId == id then
-                        NoSelection
+                                    else
+                                        model.network
+                                )
+                            |> Maybe.withDefault model.network
+                in
+                { model
+                    | network =
+                        unhoverAddress id nw2
+                            |> Network.deleteAddress id
+                    , details =
+                        case model.details of
+                            Just (AddressDetails addressId _) ->
+                                if addressId == id then
+                                    Nothing
 
-                    else
-                        model.selection
+                                else
+                                    model.details
 
-                _ ->
-                    model.selection
-    }
-        |> removeIsolatedTransactions
+                            _ ->
+                                model.details
+                    , selection =
+                        case model.selection of
+                            SelectedAddress addressId ->
+                                if addressId == id then
+                                    NoSelection
+
+                                else
+                                    model.selection
+
+                            _ ->
+                                model.selection
+                }
+                    |> removeIsolatedTransactions
+            )
+        |> Maybe.withDefault (n model)
 
 
 removeTx : Id -> Model -> ( Model, List Effect )
@@ -4872,20 +4797,24 @@ fromDeserialized plugins deserialized model =
 
 autoLoadConversions : Plugins -> Tx -> Model -> ( Model, List Effect )
 autoLoadConversions _ tx model =
-    case tx.type_ of
-        Tx.Utxo _ ->
-            n model
+    let
+        ( currency, txHash ) =
+            case tx.type_ of
+                Tx.Account atx ->
+                    ( atx.raw.network, atx.raw.identifier )
 
-        Tx.Account atx ->
-            ( model
-            , BrowserGotConversions tx
-                |> Api.GetConversionEffect
-                    { currency = atx.raw.network
-                    , txHash = atx.raw.identifier
-                    }
-                |> ApiEffect
-                |> List.singleton
-            )
+                Tx.Utxo utxoTx ->
+                    ( utxoTx.raw.currency, utxoTx.raw.txHash )
+    in
+    ( model
+    , BrowserGotConversions tx
+        |> Api.GetConversionEffect
+            { currency = currency
+            , txHash = txHash
+            }
+        |> ApiEffect
+        |> List.singleton
+    )
 
 
 autoLoadAddresses : Plugins -> Bool -> Tx -> Model -> ( Model, List Effect )
@@ -5041,8 +4970,8 @@ addMarginPathfinder bbox =
     }
 
 
-addMarginPdf : BBox -> BBox
-addMarginPdf bb =
+addMarginForExport : BBox -> BBox
+addMarginForExport bb =
     let
         relMargin =
             0.0
@@ -5087,21 +5016,35 @@ getTagsForExport addressId table data model =
 
 {-| Generate the graph transactions CSV export with current tag summaries
 -}
-generateGraphTxsExport : Update.Config -> Model -> ( Model, List Effect )
-generateGraphTxsExport uc model =
+generateGraphTxsExport : Update.Config -> Dialog.ExportArea -> Model -> ( Model, List Effect )
+generateGraphTxsExport uc exportSelection model =
     let
         config =
             makeGraphTxsExportCSVConfig uc model.tagSummaries
 
         txAccounts =
-            model.network.txs
-                |> Dict.values
+            getTxsByExportSelection uc exportSelection model
                 |> List.concatMap (explodeTxToAccounts uc.locale)
 
         ( exportCSV, eff ) =
             ExportCSV.gotData uc config ( txAccounts, Nothing ) model.exportCSVGraph
     in
     ( { model | exportCSVGraph = exportCSV }, eff )
+
+
+getTxsByExportSelection : Update.Config -> Dialog.ExportArea -> Model -> List Tx
+getTxsByExportSelection uc area model =
+    case area of
+        Dialog.ExportAreaWhole ->
+            Dict.values model.network.txs
+
+        Dialog.ExportAreaVisible ->
+            uc.size
+                |> Maybe.map (getVisibleTxs model)
+                |> Maybe.withDefault []
+
+        Dialog.ExportAreaSelected ->
+            getSelectedTxs model
 
 
 {-| Config for exporting all graph transactions as CSV
@@ -5119,6 +5062,7 @@ makeGraphTxsExportCSVConfig uc tagSummaries =
         , cmdToEff = Cmd.map (always NoOp) >> CmdEffect
         , notificationToEff = ShowNotificationEffect
         }
+        |> ExportCSV.onCompleted (InternalEffect InternalExportGraphTxsCompleted)
 
 
 {-| Convert a TxAccount to CSV row format, matching AddressDetails.prepareCSV format
@@ -5286,3 +5230,174 @@ explodeTxToAccounts locale tx =
                         in
                         outputRows ++ feeRows
                     )
+
+
+getToAndFromAddresses : Update.Config -> List Tx -> List ( String, String )
+getToAndFromAddresses uc =
+    let
+        feeAddress =
+            Locale.string uc.locale "fee"
+    in
+    List.concatMap (explodeTxToAccounts uc.locale)
+        >> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
+        >> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
+
+
+updateByExportMsg : Update.Config -> ExportDialog.Msg -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )
+updateByExportMsg uc msg conf model =
+    case msg of
+        ExportDialog.UserClickedExport ->
+            case conf.fileFormat of
+                Dialog.ExportFormatCSV ->
+                    exportGraphTxs uc conf model
+
+                Dialog.ExportFormatPDF ->
+                    exportGraphImage uc conf model
+
+                Dialog.ExportFormatPNG ->
+                    exportGraphImage uc conf model
+
+        ExportDialog.BrowserRenderedGraphForExport ->
+            model.config
+                |> s_hideForExport NoExport
+                |> flip s_config model
+                |> n
+
+        ExportDialog.BrowserSentBBox bbox ->
+            exportGraph conf bbox model
+
+        ExportDialog.BrowserSentExportGraphResult error ->
+            let
+                type_ =
+                    Dialog.exportFormatToString conf.fileFormat
+            in
+            ( { model | exportImage = Nothing }
+            , error
+                |> Maybe.map
+                    (Notification.errorDefault
+                        >> Notification.map (s_title (Just "An error occurred"))
+                    )
+                |> Maybe.withDefault
+                    (Notification.successDefault "check download folder"
+                        |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
+                        |> Notification.map (s_isEphemeral True)
+                        |> Notification.map (s_showClose False)
+                        |> Notification.map (s_removeDelayMs 4000.0)
+                    )
+                |> ShowNotificationEffect
+                |> List.singleton
+            )
+
+        _ ->
+            n model
+
+
+exportGraphTxs : Update.Config -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )
+exportGraphTxs uc conf model =
+    -- First collect all addresses from transactions and check if we need to fetch tag summaries
+    let
+        allAddresses =
+            getTxsByExportSelection uc conf.area model
+                |> getToAndFromAddresses uc
+
+        -- Group addresses by network for bulk fetching
+        addressesByNetwork =
+            allAddresses
+                |> List.foldl
+                    (\( network, addr ) acc ->
+                        Dict.update network
+                            (\existing ->
+                                case existing of
+                                    Nothing ->
+                                        Just (Set.singleton addr)
+
+                                    Just addrs ->
+                                        Just (Set.insert addr addrs)
+                            )
+                            acc
+                    )
+                    Dict.empty
+
+        -- Find addresses missing tag summaries
+        missingByNetwork =
+            addressesByNetwork
+                |> Dict.toList
+                |> List.filterMap
+                    (\( network, addrs ) ->
+                        let
+                            missing =
+                                addrs
+                                    |> Set.toList
+                                    |> List.filter
+                                        (\addr ->
+                                            Id.init network addr
+                                                |> isTagSummaryLoaded True model.tagSummaries
+                                                |> not
+                                        )
+                        in
+                        if List.isEmpty missing then
+                            Nothing
+
+                        else
+                            Just ( network, missing )
+                    )
+
+        config =
+            makeGraphTxsExportCSVConfig uc model.tagSummaries
+
+        ( newModel, _ ) =
+            ExportCSV.update (ExportCSV.BrowserGotTime conf.time) config model.exportCSVGraph
+                |> mapFirst (flip s_exportCSVGraph model)
+    in
+    if List.isEmpty missingByNetwork then
+        -- All tag summaries already loaded, proceed with export
+        generateGraphTxsExport uc conf.area newModel
+
+    else
+        -- Need to fetch missing tag summaries first
+        let
+            toMsg =
+                BrowserGotTagSummariesForExportGraphTxsAsCSV conf.area
+
+            fetchEffects =
+                missingByNetwork
+                    |> List.map
+                        (\( network, addrs ) ->
+                            fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
+                        )
+        in
+        ( newModel, fetchEffects )
+
+
+exportGraphImage : Update.Config -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )
+exportGraphImage _ conf model =
+    let
+        selector =
+            case conf.area of
+                Dialog.ExportAreaSelected ->
+                    Just "g[data-selected=true]"
+
+                Dialog.ExportAreaWhole ->
+                    Just "g[data-selected]"
+
+                Dialog.ExportAreaVisible ->
+                    Nothing
+    in
+    { model
+        | exportImage =
+            PrepareImageForExport
+                |> Just
+    }
+        |> n
+        |> and
+            (case selector of
+                Just sel ->
+                    \mo ->
+                        Ports.getBBox ( "svg#" ++ graphId, sel )
+                            |> CmdEffect
+                            |> List.singleton
+                            |> pair mo
+
+                Nothing ->
+                    exportGraph conf Nothing
+            )

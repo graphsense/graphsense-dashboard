@@ -50,16 +50,31 @@ build: prepare gen
 	npm run build
 
 check-plugin-folders:
-	@bash -c 'cd $(PLUGINS_DIR); for i in `ls -1`; do \
-		if [ ! -e "$${i^}" ]; then \
-			echo "Plugins need to starts with an uppercase letter: $$i"; \
-			echo "Run \"make fix-plugin-folders\" to fix."; \
-			exit 1; \
-		fi; done'
+	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \
+		if [ ! -e "$$i" ] && [ ! -L "$$i" ]; then \
+			continue; \
+		fi; \
+		case "$$i" in \
+			[A-Z]*) ;; \
+			*) \
+				echo "Plugins need to starts with an uppercase letter: $$i"; \
+				echo "Run \"make fix-plugin-folders\" to fix."; \
+				exit 1; \
+				;; \
+		esac; \
+		done'
 
 fix-plugin-folders:
 	# ensure plugin folder start with uppercase letter
-	bash -c 'cd $(PLUGINS_DIR); for i in `ls -1`; do [ -e "$${i^}" ] || mv $$i $${i^}; done'
+	bash -c 'cd $(PLUGINS_DIR); for i in *; do \
+		if [ ! -e "$$i" ] && [ ! -L "$$i" ]; then \
+			continue; \
+		fi; \
+		case "$$i" in \
+			[A-Z]*) ;; \
+			*) mv "$$i" "$${i^}" ;; \
+		esac; \
+		done'
 
 install: 
 	pre-commit install --hook-type pre-commit --hook-type pre-push

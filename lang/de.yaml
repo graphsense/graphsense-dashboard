@@ -2,7 +2,7 @@ address: Adresse
 addresses: Adressen
 entity: Cluster
 entities: Clusters
-uncaught-error-message: Ein unerwarteter Fehler ist aufgetreten. Dies wird häufig durch Browser-Erweiterungen verursacht, die die Anwendung stören. Bitte deaktivieren Sie alle Browser-Erweiterungen für diese Seite und laden Sie die Seite neu.
+uncaught-error-message: Ein unerwarteter Fehler ist aufgetreten.
 transaction: Transaktion
 transactions: Transaktionen
 label: Schlagwort
@@ -197,6 +197,7 @@ not found: Nicht gefunden
 data error: Datenfehler
 service not reachable: Service nicht erreichbar.
 unexpected data format: unerwartetes Datenformat.
+unsupported-gs-file-format: Nicht unterstuetztes Dateiformat. Bitte importieren Sie eine gueltige GraphSense-.gs-Datei.
 unexpected status code: unerwarteter Statuscode.
 service does not respond in time: Service antwortet nicht zeitnah.
 this table is empty: Keine Einträge gefunden.
@@ -512,9 +513,9 @@ align vertically: Vertikal ausrichten
 align horizontally: Horizontal ausrichten
 export pdf: Als PDF exportieren
 generating pdf: PDF des Graphen wird erstellt...
-generating image: Abbild des Graphen wird erstellt...
+generating png: Abbild des Graphen wird erstellt...
 generating pdf success: PDF erfolgreich erstellt
-generating image success: Abbild erfolgreich erstellt
+generating png success: Abbild erfolgreich erstellt
 check download folder: Bitte überprüfen Sie Ihren Download-Ordner.
 show both on tx: Fiat und Crypto anzeigen
 time: Zeit
@@ -527,3 +528,18 @@ transaction not found: Transaktion nicht gefunden
 transactions not found: Transaktionen nicht gefunden
 session expired: Sitzung abgelaufen
 popup-session-expired-info: Ihre Sitzung ist abgelaufen. Bitte speichern Sie Ihren Stand und laden Sie anschließend die Seite neu.
+export-dialog-area-visible: "sichtbarer Bereich"
+export-dialog-area-selected: "ausgewählte Knoten"
+export-dialog-area-whole: "ganzer Graph"
+export-dialog-area-title: "Bereich zum Exportieren"
+export-dialog-display-keephighlight: "Auswahl-Hervorhebung beibehalten"
+export-dialog-display-title: "Anzeigeoptionen"
+export-dialog-format-title: "Format"
+export-dialog-filename-help: "Geben Sie einen Dateinamen für die exportierte Datei ein"
+export-dialog-filename-label: "Dateiname"
+export-dialog-filename-placeholder: "Dateinamen hier eingeben"
+export-dialog-button-loading: "Wird exportiert..."
+export-dialog-button: "Exportieren"
+export-dialog-title: "Exportieren"
+export-dialog-description: "Exportieren Sie den aktuellen Graphen in verschiedene Formate"
+export-dialog-transparent-background: "transparenter Hintergrund"

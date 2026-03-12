@@ -1,17 +1,18 @@
 module Init.Pathfinder exposing (init)
 
 import Components.ExportCSV as ExportCSV
-import Config.Pathfinder exposing (TracingMode(..))
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Dict
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
 import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
-import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
+import Model.Pathfinder exposing (Hovered(..), Model)
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Network as Network
+import Model.Pathfinder.Selection exposing (Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Route.Pathfinder as Route
@@ -40,6 +41,7 @@ init us =
             , highlightClusterFriends = us.highlightClusterFriends |> Maybe.withDefault True
             , tracingMode = us.tracingMode |> Maybe.withDefault TransactionTracingMode
             , avoidOverlapingNodes = us.avoidOverlapingNodes |> Maybe.withDefault True
+            , hideForExport = NoExport
             }
       , pointerTool = Drag
       , modPressed = False
@@ -52,8 +54,7 @@ init us =
       , eventualMessages = EventualMessages.init Network.isConditionMet EventualMessagesHeartBeat
       , exportCSV = ExportCSV.init
       , exportCSVGraph = ExportCSV.init
-      , exportPNG = False
-      , exportPDF = False
+      , exportImage = Nothing
       }
     , Cmd.none
     )

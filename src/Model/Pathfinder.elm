@@ -1,10 +1,12 @@
-module Model.Pathfinder exposing (Details(..), HavingTags(..), Hovered(..), Model, MultiSelectOptions(..), Selection(..), getHavingTags, getLoadedAddress, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, graphId, unit)
+module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getVisibleTxs, graphId, unit)
 
 import Api.Data exposing (Actor, Entity)
+import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
 import Model.Graph exposing (Dragging)
+import Model.Graph.Coords exposing (isInBBox)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Pathfinder.Address exposing (Address)
@@ -17,7 +19,9 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
+import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import Msg.Pathfinder exposing (Msg)
@@ -61,8 +65,7 @@ type alias Model =
     , eventualMessages : EventualMessages NetworkConditions Network Msg
     , exportCSV : ExportCSV.Model
     , exportCSVGraph : ExportCSV.Model
-    , exportPNG : Bool
-    , exportPDF : Bool
+    , exportImage : Maybe ExportImage
     }
 
 
@@ -78,18 +81,6 @@ type HavingTags
     | NoTags
 
 
-type Selection
-    = SelectedAddress Id
-    | SelectedTx Id
-    | SelectedAggEdge ( Id, Id )
-    | MultiSelect (List MultiSelectOptions)
-    | WillSelectTx Id
-    | WillSelectAddress Id
-    | WillSelectAggEdge ( Id, Id )
-    | SelectedConversionEdge ( Id, Id )
-    | NoSelection
-
-
 type Hovered
     = HoveredTx Id
     | HoveredAggEdge ( Id, Id )
@@ -98,16 +89,16 @@ type Hovered
     | NoHover
 
 
-type MultiSelectOptions
-    = MSelectedAddress Id
-    | MSelectedTx Id
-
-
 type Details
     = AddressDetails Id AddressDetails.Model
     | TxDetails Id TxDetails.Model
     | RelationDetails ( Id, Id ) RelationDetails.Model
     | ConversionDetails ( Id, Id ) ConversionDetailsModel
+
+
+type ExportImage
+    = PrepareImageForExport
+    | ExportingImage
 
 
 getLoadedAddress : Model -> Id -> Maybe Address
@@ -138,3 +129,44 @@ getSortedConceptsByWeight =
 graphId : String
 graphId =
     "graph"
+
+
+coordsWithUnit : { a | x : Float, y : Float } -> { a | x : Float, y : Float }
+coordsWithUnit a =
+    { a | x = a.x * unit, y = a.y * unit }
+
+
+getVisibleTxs : Model -> { d | width : Float, height : Float } -> List Tx
+getVisibleTxs { transform, network } viewport =
+    let
+        bbox =
+            Transform.getSettled transform
+                |> Transform.coordsToBBox viewport
+    in
+    network.txs
+        |> Dict.values
+        |> List.filter (Tx.getCoords >> Maybe.map (coordsWithUnit >> isInBBox bbox) >> Maybe.withDefault False)
+
+
+getSelectedTxs : Model -> List Tx
+getSelectedTxs { network, selection } =
+    (case selection of
+        MultiSelect sel ->
+            sel
+                |> List.filterMap
+                    (\s ->
+                        case s of
+                            MSelectedTx txId ->
+                                Just txId
+
+                            MSelectedAddress _ ->
+                                Nothing
+                    )
+
+        SelectedTx txId ->
+            [ txId ]
+
+        _ ->
+            []
+    )
+        |> List.filterMap (flip Dict.get network.txs)

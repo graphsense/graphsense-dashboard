@@ -32,7 +32,7 @@ main =
                 |> mapSecond
                     (List.map
                         (\( statusbarToken, eff ) ->
-                            perform (Plugin.effectsPlugins plugins) model.key statusbarToken model.user.apiKey eff
+                            perform (Plugin.effectsPlugins plugins) model statusbarToken model.user.apiKey eff
                         )
                     )
                 |> mapSecond Cmd.batch
@@ -41,7 +41,7 @@ main =
             { defaultColor = config.theme.graph.defaultColor
             , categoryToColor = config.theme.graph.categoryToColor
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
-            , locale = Locale.init default |> first
+            , locale = Locale.init (default "en") |> first
             , size = Nothing
             , abuseConcepts = []
             , allConcepts = []

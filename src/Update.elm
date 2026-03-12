@@ -11,7 +11,6 @@ import Dict exposing (Dict)
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
-import Effect.Pathfinder as Pathfinder
 import Encode.Graph as Graph
 import Encode.Pathfinder as Pathfinder
 import File.Download
@@ -41,6 +40,7 @@ import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
 import Model.Statusbar as Statusbar
+import Msg.ExportDialog as ExportDialog
 import Msg.Graph as Graph
 import Msg.Locale as LocaleMsg
 import Msg.Pathfinder as Pathfinder
@@ -69,6 +69,7 @@ import Update.Locale as Locale
 import Update.Notification as Notification
 import Update.Pathfinder as Pathfinder
 import Update.Pathfinder.AddTagDialog as AddTagDialog
+import Update.Pathfinder.ExportDialog as ExportDialog
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
@@ -325,6 +326,16 @@ update plugins uc msg model =
                 ( newPluginsState, outMsg, cmd ) =
                     PluginInterface.CoreGotStatsUpdate stats
                         |> Plugin.updateByCoreMsg plugins uc model.plugins
+
+                tokenCurrencyEffects =
+                    stats.currencies
+                        |> List.map .name
+                        |> List.filter (\currency -> not (Dict.member currency model.supportedTokens))
+                        |> List.map
+                            (\currency ->
+                                Effect.Api.ListSupportedTokensEffect currency (BrowserGotSupportedTokens currency)
+                                    |> ApiEffect
+                            )
             in
             n
                 { model
@@ -342,7 +353,7 @@ update plugins uc msg model =
                                     (Search.initSearchAddressAndTxs Nothing)
                     , plugins = newPluginsState
                 }
-                |> Tuple.mapSecond ((::) (PluginEffect cmd))
+                |> Tuple.mapSecond (\effects -> PluginEffect cmd :: (tokenCurrencyEffects ++ effects))
                 |> updateByPluginOutMsg plugins uc outMsg
 
         -- Plugin handling
@@ -364,6 +375,24 @@ update plugins uc msg model =
                 , config =
                     model.config
                         |> s_locale locale
+            }
+                |> n
+
+        BrowserGotUserInfo userInfo ->
+            { model
+                | user =
+                    model.user
+                        |> s_auth
+                            (case model.user.auth of
+                                Authorized auth ->
+                                    Authorized
+                                        { auth
+                                            | expiration = userInfo.expiration
+                                        }
+
+                                _ ->
+                                    model.user.auth
+                            )
             }
                 |> n
 
@@ -401,6 +430,9 @@ update plugins uc msg model =
 
                 newDialog =
                     case result of
+                        Err ( Http.BadStatus 401, _, Effect.Api.GetMeEffect _ ) ->
+                            model.dialog
+
                         Err ( Http.BadStatus 401, _, _ ) ->
                             UserClosesDialog
                                 |> Dialog.generalError
@@ -437,9 +469,20 @@ update plugins uc msg model =
                         _ ->
                             False
 
+                isNonCriticalApiError =
+                    case result of
+                        Err ( _, _, Effect.Api.ListSupportedTokensEffect _ _ ) ->
+                            True
+
+                        Err ( _, _, Effect.Api.GetMeEffect _ ) ->
+                            True
+
+                        _ ->
+                            False
+
                 ( notifications, notificationEffects ) =
-                    case ( isErrorDialogShown, result ) of
-                        ( False, Err ( httpErr, _, _ ) ) ->
+                    case ( isErrorDialogShown, isNonCriticalApiError, result ) of
+                        ( False, False, Err ( httpErr, _, _ ) ) ->
                             case httpErr of
                                 Http.BadStatus 429 ->
                                     Notification.add
@@ -471,13 +514,17 @@ update plugins uc msg model =
                                 model.statusbar
 
                         Nothing ->
-                            case result of
-                                Err ( Http.BadStatus 429, _, _ ) ->
-                                    Just (Http.BadStatus 429)
-                                        |> Statusbar.add model.statusbar "search" []
+                            if isNonCriticalApiError then
+                                model.statusbar
 
-                                _ ->
-                                    model.statusbar
+                            else
+                                case result of
+                                    Err ( Http.BadStatus 429, _, _ ) ->
+                                        Just (Http.BadStatus 429)
+                                            |> Statusbar.add model.statusbar "search" []
+
+                                    _ ->
+                                        model.statusbar
                 , dialog = newDialog
                 , notifications = notifications
             }
@@ -843,6 +890,34 @@ update plugins uc msg model =
                 _ ->
                     n model
 
+        ExportDialogMsg smsg ->
+            case model.dialog of
+                Just (Dialog.Export conf) ->
+                    let
+                        ( export, eff ) =
+                            ExportDialog.update uc smsg conf
+
+                        ( pathfinder, pathfinderEff ) =
+                            Pathfinder.updateByExportMsg uc smsg conf model.pathfinder
+                    in
+                    ( { model
+                        | pathfinder = pathfinder
+                        , dialog =
+                            case smsg of
+                                ExportDialog.BrowserSentExportGraphResult Nothing ->
+                                    Nothing
+
+                                _ ->
+                                    export
+                                        |> Dialog.Export
+                                        |> Just
+                      }
+                    , eff ++ List.map PathfinderEffect pathfinderEff
+                    )
+
+                _ ->
+                    n model
+
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
@@ -1065,7 +1140,9 @@ update plugins uc msg model =
                     PluginInterface.Reset
                         |> Plugin.updateByCoreMsg plugins uc model.plugins
             in
-            ( { model | pathfinder = m, plugins = newPluginsState }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
+            ( { model | pathfinder = m, plugins = newPluginsState }
+            , [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ]
+            )
                 |> updateByPluginOutMsg plugins uc outMsg
                 |> Tuple.mapSecond
                     ((++)
@@ -1074,6 +1151,7 @@ update plugins uc msg model =
                             |> Route.pathfinderRoute
                             |> Route.toUrl
                             |> NavPushUrlEffect
+                        , Ports.setDirty False |> CmdEffect
                         ]
                     )
 
@@ -1151,27 +1229,6 @@ update plugins uc msg model =
                 Pathfinder.UserClickedToggleBothValueDisplay ->
                     update plugins uc (UserToggledBothValueDisplay |> SettingsMsg) model
 
-        PathfinderMsg (Pathfinder.UserClickedSaveGraph time) ->
-            ( model
-            , [ (case time of
-                    Nothing ->
-                        Time.now
-                            |> Task.perform (Just >> Pathfinder.UserClickedSaveGraph)
-
-                    Just t ->
-                        Pathfinder.encode model.pathfinder
-                            |> pair
-                                (makeTimestampFilename model.config.locale t
-                                    |> (\tt -> tt ++ ".gs")
-                                )
-                            |> Ports.serialize
-                )
-                    |> Pathfinder.CmdEffect
-                    |> PathfinderEffect
-              , SetCleanEffect
-              ]
-            )
-
         PathfinderMsg (Pathfinder.UserGotDataForTagsListDialog id tags) ->
             let
                 ( pathfinder, eff ) =
@@ -1209,6 +1266,37 @@ update plugins uc msg model =
                                 }
                             )
                 }
+
+        PathfinderMsg (Pathfinder.UserClickedExportGraph time) ->
+            time
+                |> Maybe.map
+                    (\t ->
+                        Dialog.initExportConfig uc
+                            { filenameBase = model.pathfinder.name
+                            , closeMsg = UserClosesDialog
+                            , time = t
+                            , selection = model.pathfinder.selection
+                            }
+                            |> Dialog.Export
+                            |> Just
+                            |> flip s_dialog model
+                            |> n
+                    )
+                |> Maybe.withDefault
+                    ( model
+                    , Time.now
+                        |> Task.perform (Just >> Pathfinder.UserClickedExportGraph >> PathfinderMsg)
+                        |> CmdEffect
+                        |> List.singleton
+                    )
+
+        PathfinderMsg Pathfinder.InternalExportGraphTxsCompleted ->
+            case model.dialog of
+                Just (Dialog.Export _) ->
+                    n { model | dialog = Nothing }
+
+                _ ->
+                    n model
 
         PathfinderMsg m ->
             let
@@ -1350,7 +1438,7 @@ update plugins uc msg model =
                         , dirty = True
                       }
                     , PluginEffect cmd
-                        :: SetDirtyEffect
+                        :: (Ports.setDirty True |> CmdEffect)
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins uc outMsg
@@ -1373,7 +1461,7 @@ update plugins uc msg model =
                         , dirty = True
                       }
                     , PluginEffect cmd
-                        :: SetDirtyEffect
+                        :: (Ports.setDirty True |> CmdEffect)
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins uc outMsg
@@ -1496,7 +1584,7 @@ update plugins uc msg model =
                         )
                             |> Graph.CmdEffect
                             |> GraphEffect
-                      , SetCleanEffect
+                      , Ports.setDirty False |> CmdEffect
                       ]
                     )
 
@@ -1719,9 +1807,48 @@ update plugins uc msg model =
             )
 
         BrowserGotUncaughtError value ->
+            let
+                uncaughtStructuredDecoder =
+                    Json.Decode.map4
+                        (\messageKey titleKey variables moreInfo ->
+                            { messageKey = messageKey
+                            , titleKey = titleKey
+                            , variables = variables
+                            , moreInfo = moreInfo
+                            }
+                        )
+                        (Json.Decode.field "messageKey" Json.Decode.string)
+                        (Json.Decode.maybe (Json.Decode.field "titleKey" Json.Decode.string))
+                        (Json.Decode.oneOf
+                            [ Json.Decode.field "variables" (Json.Decode.list Json.Decode.string)
+                            , Json.Decode.succeed []
+                            ]
+                        )
+                        (Json.Decode.oneOf
+                            [ Json.Decode.field "moreInfo" (Json.Decode.list Json.Decode.string)
+                            , Json.Decode.succeed []
+                            ]
+                        )
+
+                uncaughtLegacyDecoder =
+                    Json.Decode.map
+                        (\message ->
+                            { messageKey = "uncaught-error-message"
+                            , titleKey = Just "An error occurred"
+                            , variables = []
+                            , moreInfo = [ message ]
+                            }
+                        )
+                        (Json.Decode.field "message" Json.Decode.string)
+
+                uncaughtDecoder =
+                    Json.Decode.oneOf
+                        [ uncaughtStructuredDecoder
+                        , uncaughtLegacyDecoder
+                        ]
+            in
             value
-                |> Json.Decode.decodeValue
-                    (Json.Decode.field "message" Json.Decode.string)
+                |> Json.Decode.decodeValue uncaughtDecoder
                 |> Result.Extra.unpack
                     (Json.Decode.errorToString
                         >> Ports.console
@@ -1729,15 +1856,23 @@ update plugins uc msg model =
                         >> List.singleton
                         >> pair model
                     )
-                    (\message ->
+                    (\decoded ->
                         let
+                            notification =
+                                Notification.errorDefault decoded.messageKey
+                                    |> (\n ->
+                                            case decoded.titleKey of
+                                                Just titleKey ->
+                                                    Notification.map (s_title (Just titleKey)) n
+
+                                                Nothing ->
+                                                    n
+                                       )
+                                    |> Notification.map (s_variables decoded.variables)
+                                    |> Notification.map (s_moreInfo decoded.moreInfo)
+
                             ( notifications, eff ) =
-                                Notification.add
-                                    (Notification.errorDefault "uncaught-error-message"
-                                        |> Notification.map (s_title (Just "An error occurred"))
-                                        |> Notification.map (s_moreInfo [ message ])
-                                    )
-                                    model.notifications
+                                Notification.add notification model.notifications
                         in
                         ( { model | notifications = notifications }
                         , List.map NotificationEffect eff
@@ -2234,6 +2369,14 @@ updateRequestLimit headers model =
             Dict.get key headers
                 |> Maybe.andThen String.toInt
 
+        expiration =
+            case model.auth of
+                Authorized auth ->
+                    auth.expiration
+
+                _ ->
+                    Nothing
+
         limitInterval =
             if Dict.member "x-ratelimit-limit-minute" headers then
                 Just Minute
@@ -2267,7 +2410,7 @@ updateRequestLimit headers model =
                     (get "ratelimit-reset")
                     limitInterval
                     |> Maybe.withDefault Unlimited
-            , expiration = Nothing
+            , expiration = expiration
             , loggingOut = False
             }
                 |> Authorized
@@ -2278,14 +2421,38 @@ handleResponse : Plugins -> Config -> Result ( Http.Error, Headers, Effect.Api.E
 handleResponse plugins uc result model =
     case result of
         Ok ( headers, message ) ->
-            update plugins
-                uc
-                message
-                { model
-                    | user =
-                        updateRequestLimit headers model.user
-                            |> s_hovercard Nothing
-                }
+            let
+                shouldFetchMeExpiration =
+                    Effect.Api.isUserEndpointConfigured
+                        && (case model.user.auth of
+                                Authorized _ ->
+                                    False
+
+                                _ ->
+                                    True
+                           )
+
+                ( nextModel, nextEffects ) =
+                    update plugins
+                        uc
+                        message
+                        { model
+                            | user =
+                                updateRequestLimit headers model.user
+                                    |> s_hovercard Nothing
+                        }
+            in
+            if shouldFetchMeExpiration then
+                ( nextModel
+                , ApiEffect (Effect.Api.GetMeEffect BrowserGotUserInfo)
+                    :: nextEffects
+                )
+
+            else
+                ( nextModel, nextEffects )
+
+        Err ( _, _, Effect.Api.GetMeEffect _ ) ->
+            n model
 
         Err ( BadStatus 401, headers, eff ) ->
             ( { model
@@ -2308,33 +2475,45 @@ handleResponse plugins uc result model =
                 |> List.singleton
             )
 
-        Err ( BadBody err, headers, _ ) ->
-            let
-                ( notifications, notificationEffects ) =
-                    Notification.addHttpError model.notifications Nothing (Http.BadBody err)
-            in
-            ( { model
-                | statusbar =
-                    if err == Api.noExternalTransactions then
-                        model.statusbar
+        Err ( BadBody err, headers, eff ) ->
+            case eff of
+                Effect.Api.ListSupportedTokensEffect _ _ ->
+                    { model | user = updateRequestLimit headers model.user }
+                        |> n
 
-                    else
-                        Http.BadBody err
-                            |> Just
-                            |> Statusbar.add model.statusbar "error" []
-                , notifications = notifications
-                , user = updateRequestLimit headers model.user
-              }
-            , PortsConsoleEffect err
-                :: List.map NotificationEffect notificationEffects
-            )
+                _ ->
+                    let
+                        ( notifications, notificationEffects ) =
+                            Notification.addHttpError model.notifications Nothing (Http.BadBody err)
+                    in
+                    ( { model
+                        | statusbar =
+                            if err == Api.noExternalTransactions then
+                                model.statusbar
 
-        Err ( BadStatus 404, headers, _ ) ->
-            { model
-                | graph = Graph.handleNotFound model.graph
-                , user = updateRequestLimit headers model.user
-            }
-                |> n
+                            else
+                                Http.BadBody err
+                                    |> Just
+                                    |> Statusbar.add model.statusbar "error" []
+                        , notifications = notifications
+                        , user = updateRequestLimit headers model.user
+                      }
+                    , PortsConsoleEffect err
+                        :: List.map NotificationEffect notificationEffects
+                    )
+
+        Err ( BadStatus 404, headers, eff ) ->
+            case eff of
+                Effect.Api.ListSupportedTokensEffect _ _ ->
+                    { model | user = updateRequestLimit headers model.user }
+                        |> n
+
+                _ ->
+                    { model
+                        | graph = Graph.handleNotFound model.graph
+                        , user = updateRequestLimit headers model.user
+                    }
+                        |> n
 
         Err ( BadStatus _, headers, _ ) ->
             { model | user = updateRequestLimit headers model.user }

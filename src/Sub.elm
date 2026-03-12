@@ -4,6 +4,7 @@ import Browser.Events
 import Browser.Navigation as Nav
 import Hovercard
 import Model exposing (Model, Msg(..))
+import Msg.ExportDialog as ExportDialog
 import Plugin.Sub as Plugin
 import Ports
 import Sub.Graph as Graph
@@ -50,6 +51,9 @@ subscriptions model =
     , model.tooltip
         |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map HovercardMsg)
         |> Maybe.withDefault Sub.none
+    , Ports.sendBBox (ExportDialog.BrowserSentBBox >> ExportDialogMsg)
+    , Ports.renderedImageForExport (\_ -> ExportDialog.BrowserRenderedGraphForExport |> ExportDialogMsg)
+    , Ports.exportGraphResult (ExportDialog.BrowserSentExportGraphResult >> ExportDialogMsg)
     , Ports.uncaughtError BrowserGotUncaughtError
     , Plugin.subscriptions Ports.pluginsIn model.plugins
         |> Sub.map PluginMsg

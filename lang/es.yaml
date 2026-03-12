@@ -1,7 +1,7 @@
 the search: buscar
 entity: clúster
 entities: clústeres
-uncaught-error-message: Se produjo un error inesperado. Esto suele ser causado por extensiones del navegador que interfieren con la aplicación. Por favor, desactive todas las extensiones del navegador para este sitio y recargue la página.
+uncaught-error-message: Se produjo un error inesperado.
 Root Address: raíz del clúster
 Sending entities: envío de clústeres
 Receiving entities: recepción de clústeres
@@ -261,6 +261,7 @@ not found: no encontrado
 data error: error de datos
 service not reachable: servicio no accesible.
 unexpected data format: formato de datos inesperado.
+unsupported-gs-file-format: Formato de archivo no compatible. Importe un archivo .gs válido de GraphSense.
 unexpected status code: código de estado inesperado.
 service does not respond in time: el servicio no responde a tiempo.
 user address tags: etiquetas de dirección del usuario
@@ -517,9 +518,9 @@ align vertically: Alinear verticalmente
 align horizontally: Alinear horizontalmente
 export pdf: Exportar PDF
 generating pdf: Generando PDF del grafo...
-generating image: Se está creando la imagen del gráfico...
+generating png: Se está creando la imagen del gráfico...
 generating pdf success: PDF creado correctamente.
-generating image success: Imagen creada correctamente.
+generating png success: Imagen creada correctamente.
 check download folder: Compruebe su carpeta de descargas.
 show both on tx: mostrar fiat y cripto
 time: tiempo
@@ -532,3 +533,18 @@ transaction not found: transacción no encontrada
 transactions not found: transacciones no encontradas
 session expired: sesión caducada
 popup-session-expired-info: Su sesión ha caducado. Guarde los datos y vuelva a cargar la página.
+export-dialog-area-visible: "área visible"
+export-dialog-area-selected: "nodos seleccionados"
+export-dialog-area-whole: "grafo completo"
+export-dialog-area-title: "área para exportar"
+export-dialog-display-keephighlight: "mantener resaltado de selección"
+export-dialog-display-title: "opciones de visualización"
+export-dialog-format-title: "formato"
+export-dialog-filename-help: "ingrese un nombre de archivo para el archivo exportado"
+export-dialog-filename-label: "nombre de archivo"
+export-dialog-filename-placeholder: "ingrese el nombre de archivo aquí"
+export-dialog-button-loading: "exportando..."
+export-dialog-button: "exportar"
+export-dialog-title: "exportar"
+export-dialog-description: "exportar el gráfico actual a varios formatos"
+export-dialog-transparent-background: "fondo transparente"

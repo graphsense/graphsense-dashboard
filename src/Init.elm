@@ -29,7 +29,7 @@ init plugins uc flags url key =
         settings =
             flags.localStorage
                 |> Json.Decode.decodeValue Config.UserSettings.decoder
-                |> Result.withDefault Config.UserSettings.default
+                |> Result.withDefault (Config.UserSettings.default flags.locale)
 
         cd =
             flags.characterDimensions
@@ -92,10 +92,6 @@ init plugins uc flags url key =
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy
                 |> ApiEffect
            , Effect.Api.GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
-                |> ApiEffect
-           , Effect.Api.ListSupportedTokensEffect "eth" (BrowserGotSupportedTokens "eth")
-                |> ApiEffect
-           , Effect.Api.ListSupportedTokensEffect "trx" (BrowserGotSupportedTokens "trx")
                 |> ApiEffect
            , PluginEffect cmd
            , CmdEffect (pathfinderCmd |> Cmd.map PathfinderMsg)

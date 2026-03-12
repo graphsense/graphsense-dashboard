@@ -84,13 +84,7 @@ messageFromEffect model effect =
         Model.LogoutEffect ->
             Nothing
 
-        Model.SetDirtyEffect ->
-            Nothing
-
         Model.SaveUserSettingsEffect _ ->
-            Nothing
-
-        Model.SetCleanEffect ->
             Nothing
 
         Model.ApiEffect eff ->
@@ -269,6 +263,9 @@ messageFromApiEffect model effect =
                 Nothing
 
             Api.GetStatisticsEffect _ ->
+                Nothing
+
+            Api.GetMeEffect _ ->
                 Nothing
 
             Api.GetBlockByDateEffect _ _ ->

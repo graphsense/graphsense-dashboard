@@ -3,7 +3,7 @@ address: indirizzo
 addresses: indirizzi
 entity: entità
 entities: entità
-uncaught-error-message: Si è verificato un errore imprevisto. Questo è spesso causato da estensioni del browser che interferiscono con l'applicazione. Prova a disabilitare tutte le estensioni del browser per questo sito e ricarica la pagina.
+uncaught-error-message: Si è verificato un errore imprevisto.
 transaction: transazione
 transactions: transazioni
 label: identificativo
@@ -509,6 +509,7 @@ request timeout: timeout richiesta
 request error: errore richiesta
 service not reachable: servizio non raggiungibile.
 unexpected data format: formato dati non previsto.
+unsupported-gs-file-format: Formato file non supportato. Importa un file .gs valido di GraphSense.
 unexpected status code: codice di stato non previsto.
 service does not respond in time: il servizio non risponde in tempo.
 Remove from graph: Rimuovi dal grafico
@@ -539,9 +540,9 @@ align vertically: Allinea verticalmente
 align horizontally: Allinea orizzontalmente
 export pdf: Esporta PDF
 generating pdf: Generazione PDF del grafo...
-generating image: Creazione dell'immagine del grafico in corso...
+generating png: Creazione dell'immagine del grafico in corso...
 generating pdf success: PDF creato con successo
-generating image success: Immagine creata con successo
+generating png success: Immagine creata con successo
 check download folder: Controllare la cartella dei download.
 show both on tx: mostra fiat e criptovalute
 time: tempo
@@ -554,3 +555,18 @@ transaction not found: transazione non trovata
 transactions not found: transazioni non trovate
 session expired: sessione scaduta
 popup-session-expired-info: La tua sessione è scaduta. Salva e ricarica la pagina.
+export-dialog-area-visible: "area visibile"
+export-dialog-area-selected: "nodi selezionati"
+export-dialog-area-whole: "grafico completo"
+export-dialog-area-title: "area da esportare"
+export-dialog-display-keephighlight: "mantieni evidenziazione selezione"
+export-dialog-display-title: "opzioni di visualizzazione"
+export-dialog-format-title: "formato"
+export-dialog-filename-help: "inserisci un nome file per il file esportato"
+export-dialog-filename-label: "nome file"
+export-dialog-filename-placeholder: "inserisci nome file qui"
+export-dialog-button-loading: "in esportazione..."
+export-dialog-button: "esporta"
+export-dialog-title: "esporta"
+export-dialog-description: "esporta il grafico corrente in vari formati"
+export-dialog-transparent-background: "sfondo trasparente"

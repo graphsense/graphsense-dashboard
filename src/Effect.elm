@@ -12,7 +12,7 @@ import Effect.Locale as Locale
 import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
 import Http
-import Model exposing (Effect(..), Msg(..))
+import Model exposing (Effect(..), Model, Msg(..))
 import Model.Notification
 import Model.Pathfinder.Tooltip
 import Msg.Graph as Graph
@@ -25,17 +25,17 @@ import Route
 import Task
 
 
-perform : Plugins -> Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg
-perform plugins key statusbarToken apiKey effect =
+perform : Plugins -> Model Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg
+perform plugins model statusbarToken apiKey effect =
     case effect of
         NavLoadEffect url ->
             Nav.load url
 
         NavPushUrlEffect url ->
-            Nav.pushUrl key url
+            Nav.pushUrl model.key url
 
         NavBackEffect ->
-            Nav.back key 1
+            Nav.back model.key 1
 
         GetElementEffect { id, msg } ->
             Dom.getElement id
@@ -52,14 +52,8 @@ perform plugins key statusbarToken apiKey effect =
         LogoutEffect ->
             Nav.load Config.logoutUrl
 
-        SetDirtyEffect ->
-            Ports.setDirty True
-
-        SetCleanEffect ->
-            Ports.setDirty False
-
-        SaveUserSettingsEffect model ->
-            Config.UserSettings.encoder model
+        SaveUserSettingsEffect m ->
+            Config.UserSettings.encoder m
                 |> Ports.saveToLocalStorage
 
         ApiEffect eff ->
@@ -79,7 +73,7 @@ perform plugins key statusbarToken apiKey effect =
                 Pathfinder.NavPushRouteEffect route ->
                     Route.pathfinderRoute route
                         |> Route.toUrl
-                        |> Nav.pushUrl key
+                        |> Nav.pushUrl model.key
 
                 Pathfinder.PluginEffect _ ->
                     Pathfinder.perform eff
@@ -129,7 +123,7 @@ perform plugins key statusbarToken apiKey effect =
                 Graph.NavPushRouteEffect route ->
                     Route.graphRoute route
                         |> Route.toUrl
-                        |> Nav.pushUrl key
+                        |> Nav.pushUrl model.key
 
                 Graph.GetBrowserElementEffect ->
                     Graph.perform eff

@@ -22,7 +22,7 @@
     "mustache": "^4.2.0",
     "setem": "^0.7.0",
     "terser": "^5.36.0",
-    "vite": "^6.3.4",
+    "vite": "^6.4.1",
     "vite-plugin-elm": "github:myrho/vite-plugin-elm#fix-hmr",
     "yaml": "^2.3.1"
   },
@@ -32,7 +32,7 @@
     "file-saver": "^2.0.5",
     "file-select-dialog": "^1.5.4",
     "js-base64": "^3.7.2",
-    "jspdf": "^4.0.0",
+    "jspdf": "^4.1.0",
     "lzwcompress": "^1.1.0"
   },
   "overrides": {

@@ -1,4 +1,4 @@
-module View.Pathfinder exposing (view)
+module View.Pathfinder exposing (originShiftX, view)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -14,12 +14,13 @@ import Html.Styled.Attributes as HA
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords as Coords exposing (BBox, Coords)
+import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Selection as Pathfinder
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
 import Number.Bounded exposing (value)
@@ -61,6 +62,15 @@ import View.Search
 
 -- Helpers
 -- View
+
+
+originShiftX : Float
+originShiftX =
+    0
+
+
+
+--Css.searchBoxMinWidth / 2
 
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
@@ -476,9 +486,9 @@ topCenterPanel plugins pluginStates vc gc model =
                             True
                 , pointerTool = model.pointerTool
                 , exportName = model.name
-                , exportCSV = ExportCSV.isDownloading model.exportCSVGraph
-                , exportPNG = model.exportPNG
-                , exportPDF = model.exportPDF
+                , export =
+                    ExportCSV.isDownloading model.exportCSVGraph
+                        || (model.exportImage /= Nothing)
                 }
             ]
         , div
@@ -768,12 +778,9 @@ detailsView plugin pluginStates vc model =
             none
 
 
-graphSvg : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> BBox -> Svg Msg
-graphSvg plugins vc gc model bbox =
+graphSvg : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> { a | width : Float, height : Float } -> Svg Msg
+graphSvg plugins vc gc model dim =
     let
-        dim =
-            { width = bbox.width, height = bbox.height }
-
         pointer =
             case ( model.dragging, model.pointerTool ) of
                 ( Dragging _ _ _, Drag ) ->
@@ -843,9 +850,6 @@ graphSvg plugins vc gc model bbox =
                     ]
                     []
                 ]
-
-        originShiftX =
-            Css.searchBoxMinWidth / 2
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
@@ -902,7 +906,7 @@ graphSvg plugins vc gc model bbox =
             , dropShadowEdgeHighlight
             ]
         , Svg.lazy7 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy7 Network.addresses plugins vc gc model.colors model.clusters model.annotations model.network.addresses
+        , Svg.lazy5 Network.addresses plugins vc gc model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system
@@ -967,9 +971,6 @@ drawDragSelector _ m =
     case ( m.dragging, m.pointerTool ) of
         ( Dragging tm start now, Select ) ->
             let
-                originShiftX =
-                    Css.searchBoxMinWidth / 2
-
                 crd =
                     case tm.state of
                         Settled c ->

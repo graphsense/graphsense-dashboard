@@ -18,7 +18,7 @@ import Util.View exposing (pointer)
 type alias Config msg =
     { state : CheckboxesState
     , size : CheckboxesSize
-    , msg : msg
+    , msg : Maybe msg
     }
 
 
@@ -55,9 +55,7 @@ checkbox : Config msg -> List (Attribute msg) -> Html msg
 checkbox { state, size, msg } attrs =
     let
         attributes =
-            [ pointer
-            , onClick msg
-            ]
+            (msg |> Maybe.map (onClick >> List.singleton >> (::) pointer) |> Maybe.withDefault [])
                 ++ attrs
     in
     checkboxesWithAttributes

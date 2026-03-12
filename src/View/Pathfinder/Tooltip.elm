@@ -128,6 +128,7 @@ tooltipRow =
         (GraphComponents.tooltipRowAttributes
             |> Rs.s_root [ css baseRowStyle ]
             |> Rs.s_tooltipRowLabel [ css [ Css.minWidth (Css.px 90) ] ]
+            |> Rs.s_firstValue [ css [ Css.property "white-space" "wrap", Css.textAlign Css.right ] ]
         )
 
 
@@ -218,31 +219,28 @@ tagConcept vc openDetailsMsg concept tag =
         sources =
             relevantLabels |> List.map .sources |> List.foldr (++) [] |> Set.fromList
     in
-    [ tooltipRowCustomValue
-        (Locale.string
-            vc.locale
-            "Labels"
-        )
-        (let
-            max_labels =
-                7
-         in
-         labels
-            |> List.take max_labels
-            |> List.intersperse ", "
-            |> flip (++)
-                (if List.length labels > max_labels then
-                    [ "..." ]
+    [ tooltipRow
+        { tooltipRowLabel =
+            { title = Locale.string vc.locale "Labels"
+            }
+        , tooltipRowValue =
+            let
+                max_labels =
+                    7
+            in
+            labels
+                |> List.take max_labels
+                |> List.intersperse ", "
+                |> flip (++)
+                    (if List.length labels > max_labels then
+                        [ "..." ]
 
-                 else
-                    []
-                )
-            |> List.map text
-            |> div
-                [ title (String.join ", " labels)
-                , css [ Css.textAlign Css.right ]
-                ]
-        )
+                     else
+                        []
+                    )
+                |> String.concat
+                |> val vc
+        }
     , tooltipRowCustomValue (Locale.string vc.locale "confidence") (getConfidenceIndicator vc maxConfidence)
     , tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "sources" }

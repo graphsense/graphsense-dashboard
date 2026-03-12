@@ -23,9 +23,7 @@ type alias Config =
     , pointerTool : PointerTool
     , exportName : String
     , alignHorizontalDisabled : Bool
-    , exportCSV : Bool
-    , exportPNG : Bool
-    , exportPDF : Bool
+    , export : Bool
     }
 
 
@@ -83,12 +81,8 @@ view vc config =
                 (iconsAttr "center graph" False UserClickedFitGraph)
             |> Rs.s_iconsSave
                 (iconsAttr "save file" False (UserClickedSaveGraph Nothing))
-            |> Rs.s_iconsScrennshot
-                (iconsAttr "screenshot" False (UserClickedExportGraphAsImage Nothing))
-            |> Rs.s_iconExportPdf
-                (iconsAttr "export pdf" False (UserClickedExportGraphAsPdf Nothing))
-            |> Rs.s_iconExportCsv
-                (iconsAttr "export all graph transactions as csv" False (UserClickedExportGraphTxsAsCSV Nothing))
+            |> Rs.s_iconsExport
+                (iconsAttr "export" False (UserClickedExportGraph Nothing))
             |> Rs.s_iconsOpen
                 (iconsAttr "open" False UserClickedOpenGraph)
             |> Rs.s_iconsHorizontalAlign
@@ -114,22 +108,8 @@ view vc config =
                         ]
          in
          SettingsComponents.toolbarInstances
-            |> Rs.s_iconExportCsv
-                (if config.exportCSV then
-                    Just ls
-
-                 else
-                    Nothing
-                )
-            |> Rs.s_iconExportPdf
-                (if config.exportPDF then
-                    Just ls
-
-                 else
-                    Nothing
-                )
-            |> Rs.s_iconsScrennshot
-                (if config.exportPNG then
+            |> Rs.s_iconsExport
+                (if config.export then
                     Just ls
 
                  else
