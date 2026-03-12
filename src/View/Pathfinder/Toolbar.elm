@@ -59,8 +59,8 @@ view vc config =
             Locale.string vc.locale str
                 |> HA.title
     in
-    SettingsComponents.toolbarDevWithInstances
-        (SettingsComponents.toolbarDevAttributes
+    SettingsComponents.toolbarWithInstances
+        (SettingsComponents.toolbarAttributes
             |> Rs.s_iconsDelete
                 (iconsAttr "Delete" config.deleteDisabled UserClickedToolbarDeleteIcon)
             |> Rs.s_iconsAnnotate
@@ -107,7 +107,7 @@ view vc config =
                             ]
                         ]
          in
-         SettingsComponents.toolbarDevInstances
+         SettingsComponents.toolbarInstances
             |> Rs.s_iconsExport
                 (if config.export then
                     Just ls
