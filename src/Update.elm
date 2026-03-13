@@ -1724,7 +1724,7 @@ update plugins uc msg model =
                             |> n
 
                     else
-                        n model
+                        update plugins uc (GraphMsg Graph.UserClickedNewYes) model
 
                 Graph.UserClickedNewYes ->
                     let
@@ -1742,12 +1742,14 @@ update plugins uc msg model =
                     in
                     ( { model
                         | graph = newGraph
+                        , dirty = False
                       }
-                    , (Route.Graph.Root
-                        |> Route.graphRoute
-                        |> Route.toUrl
-                        |> NavPushUrlEffect
-                      )
+                    , (Ports.setDirty False |> CmdEffect)
+                        :: (Route.Graph.Root
+                                |> Route.graphRoute
+                                |> Route.toUrl
+                                |> NavPushUrlEffect
+                           )
                         :: List.map GraphEffect graphEffects
                     )
                         |> pluginNewGraph plugins

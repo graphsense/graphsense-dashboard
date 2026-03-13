@@ -46,6 +46,9 @@ subscriptions model =
 
         _ ->
             Sub.none
+
+    -- fixes file import, all file imports are currently routed throught the Graph subsystem which is not expecte (TODO change)
+    , Ports.deserialized (MsgGraph.PortDeserializedGS >> GraphMsg)
     , model.user.hovercard
         |> Maybe.map (Hovercard.subscriptions >> Sub.map UserHovercardMsg)
         |> Maybe.withDefault Sub.none
@@ -55,7 +58,6 @@ subscriptions model =
     , Ports.sendBBox (ExportDialog.BrowserSentBBox >> ExportDialogMsg)
     , Ports.renderedImageForExport (\_ -> ExportDialog.BrowserRenderedGraphForExport |> ExportDialogMsg)
     , Ports.exportGraphResult (ExportDialog.BrowserSentExportGraphResult >> ExportDialogMsg)
-    , Ports.deserialized (MsgGraph.PortDeserializedGS >> GraphMsg)
     , Ports.uncaughtError BrowserGotUncaughtError
     , Plugin.subscriptions Ports.pluginsIn model.plugins
         |> Sub.map PluginMsg
