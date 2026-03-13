@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Hovercard
 import Model exposing (Model, Msg(..))
 import Msg.ExportDialog as ExportDialog
+import Msg.Graph as MsgGraph
 import Plugin.Sub as Plugin
 import Ports
 import Sub.Graph as Graph
@@ -54,6 +55,7 @@ subscriptions model =
     , Ports.sendBBox (ExportDialog.BrowserSentBBox >> ExportDialogMsg)
     , Ports.renderedImageForExport (\_ -> ExportDialog.BrowserRenderedGraphForExport |> ExportDialogMsg)
     , Ports.exportGraphResult (ExportDialog.BrowserSentExportGraphResult >> ExportDialogMsg)
+    , Ports.deserialized (MsgGraph.PortDeserializedGS >> GraphMsg)
     , Ports.uncaughtError BrowserGotUncaughtError
     , Plugin.subscriptions Ports.pluginsIn model.plugins
         |> Sub.map PluginMsg
