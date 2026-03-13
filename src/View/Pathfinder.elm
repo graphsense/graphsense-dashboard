@@ -463,7 +463,7 @@ topCenterPanel plugins pluginStates vc gc model =
 
                         _ ->
                             False
-                , newDisabled = not model.isDirty
+                , newDisabled = False
                 , alignHorizontalDisabled =
                     case model.selection of
                         Pathfinder.MultiSelect _ ->

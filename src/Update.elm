@@ -1129,7 +1129,7 @@ update plugins uc msg model =
                     }
 
             else
-                n model
+                update plugins uc (PathfinderMsg Pathfinder.UserClickedRestartYes) model
 
         PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let
