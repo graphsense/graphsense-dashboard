@@ -21,7 +21,7 @@ function envReplacePlugin(options = {}) {
 
 function replacePlaceholders(code) {
   const envVars = loadEnv(process.env.NODE_ENV, process.cwd())
-  const placeholderRegex = /\{\{\s*([A-Z0-9_]+)\s*\}\}/g
+  const placeholderRegex = /\{\{([A-Za-z_][A-Za-z0-9_]*)\}\}/g
 
   return code.replace(placeholderRegex, (match, placeholder) => {
     return envVars[placeholder] !== undefined
