@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Hovercard
 import Model exposing (Model, Msg(..))
 import Msg.ExportDialog as ExportDialog
+import Msg.Graph as MsgGraph
 import Plugin.Sub as Plugin
 import Ports
 import Sub.Graph as Graph
@@ -45,6 +46,9 @@ subscriptions model =
 
         _ ->
             Sub.none
+
+    -- fixes file import, all file imports are currently routed throught the Graph subsystem which is not expecte (TODO change)
+    , Ports.deserialized (MsgGraph.PortDeserializedGS >> GraphMsg)
     , model.user.hovercard
         |> Maybe.map (Hovercard.subscriptions >> Sub.map UserHovercardMsg)
         |> Maybe.withDefault Sub.none
