@@ -25,6 +25,9 @@ shallPushHistory plugins msg _ =
         UserPushesLeftMouseButtonOnGraph _ ->
             False
 
+        UserPushesRightMouseButtonOnGraph _ ->
+            False
+
         UserMovesMouseOnGraph _ ->
             False
 

@@ -873,9 +873,24 @@ graphSvg plugins vc gc model dim =
                 (Json.Decode.field "offsetX" Json.Decode.float)
                 (Json.Decode.field "offsetY" Json.Decode.float)
             )
-         , Svg.on "mousedown"
-            (Util.Graph.decodeCoords Coords
-                |> Json.Decode.map UserPushesLeftMouseButtonOnGraph
+         , Svg.custom "mousedown"
+            (Json.Decode.map2
+                (\button coords ->
+                    { message =
+                        if button == 2 then
+                            UserPushesRightMouseButtonOnGraph coords
+
+                        else if button == 0 then
+                            UserPushesLeftMouseButtonOnGraph coords
+
+                        else
+                            NoOp
+                    , stopPropagation = False
+                    , preventDefault = button == 2
+                    }
+                )
+                (Json.Decode.field "button" Json.Decode.int)
+                (Util.Graph.decodeCoords Coords)
             )
          , Util.Graph.decodeCoords Coords.Coords
             |> Json.Decode.map (\_ -> ( NoOp, True ))
