@@ -1376,6 +1376,20 @@ updateByMsg plugins uc msg model =
             , CloseTooltipEffect Nothing False |> List.singleton
             )
 
+        UserPushesRightMouseButtonOnGraph coords ->
+            ( { model
+                | pointerTool = Select
+                , dragging =
+                    case ( model.dragging, model.transform.state ) of
+                        ( NoDragging, Transform.Settled _ ) ->
+                            Dragging model.transform (relativeToGraphZero uc.size coords) (relativeToGraphZero uc.size coords)
+
+                        _ ->
+                            NoDragging
+              }
+            , CloseTooltipEffect Nothing False |> List.singleton
+            )
+
         UserPushesLeftMouseButtonOnAddress id coords ->
             ( { model
                 | dragging =

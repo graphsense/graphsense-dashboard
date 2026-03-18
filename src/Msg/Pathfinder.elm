@@ -55,6 +55,7 @@ type Msg
     = UserClickedGraph (Dragging Id)
     | UserWheeledOnGraph Float Float Float
     | UserPushesLeftMouseButtonOnGraph Coords
+    | UserPushesRightMouseButtonOnGraph Coords
     | UserPushesLeftMouseButtonOnAddress Id Coords
     | UserMovesMouseOnGraph Coords
     | UserReleasesMouseButton
