@@ -22,10 +22,14 @@ module Api.Data exposing
     , AddressTx(..)
     , AddressTxUtxo
     , AddressTxs
+    , AddressOutput
     , Block
     , BlockAtDate
+    , ChangeHeuristics
     , Concept
+    , ConsensusEntry
     , CurrencyStats
+    , DirectChangeHeuristic
     , Entity
     , EntityAddresses
     , ExternalConversion, ExternalConversionConversionType(..), externalConversionConversionTypeVariants
@@ -34,10 +38,12 @@ module Api.Data exposing
     , Link(..)
     , LinkUtxo
     , Links
+    , MultiInputChangeHeuristic
     , NeighborAddress
     , NeighborAddresses
     , NeighborEntities
     , NeighborEntity
+    , OneTimeChangeHeuristic
     , Rate
     , Rates
     , RelatedAddress, RelatedAddressRelationType(..), relatedAddressRelationTypeVariants
@@ -65,6 +71,7 @@ module Api.Data exposing
     , TxUtxo
     , TxValue
     , Txs
+    , UtxoHeuristics
     , UserReportedTag
     , UserTagReportResponse
     , Values
@@ -76,10 +83,14 @@ module Api.Data exposing
     , encodeAddressTx
     , encodeAddressTxUtxo
     , encodeAddressTxs
+    , encodeAddressOutput
     , encodeBlock
     , encodeBlockAtDate
+    , encodeChangeHeuristics
     , encodeConcept
+    , encodeConsensusEntry
     , encodeCurrencyStats
+    , encodeDirectChangeHeuristic
     , encodeEntity
     , encodeEntityAddresses
     , encodeExternalConversion
@@ -88,10 +99,12 @@ module Api.Data exposing
     , encodeLink
     , encodeLinkUtxo
     , encodeLinks
+    , encodeMultiInputChangeHeuristic
     , encodeNeighborAddress
     , encodeNeighborAddresses
     , encodeNeighborEntities
     , encodeNeighborEntity
+    , encodeOneTimeChangeHeuristic
     , encodeRate
     , encodeRates
     , encodeRelatedAddress
@@ -119,6 +132,7 @@ module Api.Data exposing
     , encodeTxUtxo
     , encodeTxValue
     , encodeTxs
+    , encodeUtxoHeuristics
     , encodeUserReportedTag
     , encodeUserTagReportResponse
     , encodeValues
@@ -130,10 +144,14 @@ module Api.Data exposing
     , addressTxDecoder
     , addressTxUtxoDecoder
     , addressTxsDecoder
+    , addressOutputDecoder
     , blockDecoder
     , blockAtDateDecoder
+    , changeHeuristicsDecoder
     , conceptDecoder
+    , consensusEntryDecoder
     , currencyStatsDecoder
+    , directChangeHeuristicDecoder
     , entityDecoder
     , entityAddressesDecoder
     , externalConversionDecoder
@@ -142,10 +160,12 @@ module Api.Data exposing
     , linkDecoder
     , linkUtxoDecoder
     , linksDecoder
+    , multiInputChangeHeuristicDecoder
     , neighborAddressDecoder
     , neighborAddressesDecoder
     , neighborEntitiesDecoder
     , neighborEntityDecoder
+    , oneTimeChangeHeuristicDecoder
     , rateDecoder
     , ratesDecoder
     , relatedAddressDecoder
@@ -173,6 +193,7 @@ module Api.Data exposing
     , txUtxoDecoder
     , txValueDecoder
     , txsDecoder
+    , utxoHeuristicsDecoder
     , userReportedTagDecoder
     , userTagReportResponseDecoder
     , valuesDecoder
@@ -312,6 +333,12 @@ type alias AddressTxs =
     }
 
 
+type alias AddressOutput =
+    { address : String
+    , index : Int
+    }
+
+
 type alias Block =
     { blockHash : String
     , currency : String
@@ -326,6 +353,44 @@ type alias BlockAtDate =
     , afterTimestamp : Maybe Int
     , beforeBlock : Maybe Int
     , beforeTimestamp : Maybe Int
+    }
+
+
+type alias ConsensusEntry =
+    { output : AddressOutput
+    , confidence : Int
+    , sources : List String
+    }
+
+
+type alias DirectChangeHeuristic =
+    { summary : List AddressOutput
+    , confidence : Maybe Int
+    }
+
+
+type alias MultiInputChangeHeuristic =
+    { summary : List AddressOutput
+    , confidence : Maybe Int
+    }
+
+
+type alias OneTimeChangeHeuristic =
+    { summary : List AddressOutput
+    , confidence : Maybe Int
+    }
+
+
+type alias ChangeHeuristics =
+    { consensus : List ConsensusEntry
+    , oneTimeChange : Maybe OneTimeChangeHeuristic
+    , directChange : Maybe DirectChangeHeuristic
+    , multiInputChange : Maybe MultiInputChangeHeuristic
+    }
+
+
+type alias UtxoHeuristics =
+    { changeHeuristics : Maybe ChangeHeuristics
     }
 
 
@@ -721,6 +786,7 @@ type alias TxUtxo =
     , totalOutput : Values
     , txHash : String
     , txType : String
+    , heuristics : Maybe UtxoHeuristics
     }
 
 
@@ -1038,6 +1104,27 @@ encodeAddressTxsPairs model =
     pairs
 
 
+encodeAddressOutput : AddressOutput -> Json.Encode.Value
+encodeAddressOutput =
+    encodeObject << encodeAddressOutputPairs
+
+
+encodeAddressOutputWithTag : ( String, String ) -> AddressOutput -> Json.Encode.Value
+encodeAddressOutputWithTag (tagField, tag) model =
+    encodeObject (encodeAddressOutputPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeAddressOutputPairs : AddressOutput -> List EncodedField
+encodeAddressOutputPairs model =
+    let
+        pairs =
+            [ encode "address" Json.Encode.string model.address
+            , encode "index" Json.Encode.int model.index
+            ]
+    in
+    pairs
+
+
 encodeBlock : Block -> Json.Encode.Value
 encodeBlock =
     encodeObject << encodeBlockPairs
@@ -1080,6 +1167,134 @@ encodeBlockAtDatePairs model =
             , maybeEncode "after_timestamp" Json.Encode.int model.afterTimestamp
             , maybeEncode "before_block" Json.Encode.int model.beforeBlock
             , maybeEncode "before_timestamp" Json.Encode.int model.beforeTimestamp
+            ]
+    in
+    pairs
+
+
+encodeConsensusEntry : ConsensusEntry -> Json.Encode.Value
+encodeConsensusEntry =
+    encodeObject << encodeConsensusEntryPairs
+
+
+encodeConsensusEntryWithTag : ( String, String ) -> ConsensusEntry -> Json.Encode.Value
+encodeConsensusEntryWithTag (tagField, tag) model =
+    encodeObject (encodeConsensusEntryPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeConsensusEntryPairs : ConsensusEntry -> List EncodedField
+encodeConsensusEntryPairs model =
+    let
+        pairs =
+            [ encode "output" encodeAddressOutput model.output
+            , encode "confidence" Json.Encode.int model.confidence
+            , encode "sources" (Json.Encode.list Json.Encode.string) model.sources
+            ]
+    in
+    pairs
+
+
+encodeDirectChangeHeuristic : DirectChangeHeuristic -> Json.Encode.Value
+encodeDirectChangeHeuristic =
+    encodeObject << encodeDirectChangeHeuristicPairs
+
+
+encodeDirectChangeHeuristicWithTag : ( String, String ) -> DirectChangeHeuristic -> Json.Encode.Value
+encodeDirectChangeHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeDirectChangeHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeDirectChangeHeuristicPairs : DirectChangeHeuristic -> List EncodedField
+encodeDirectChangeHeuristicPairs model =
+    let
+        pairs =
+            [ encode "summary" (Json.Encode.list encodeAddressOutput) model.summary
+            , maybeEncode "confidence" Json.Encode.int model.confidence
+            ]
+    in
+    pairs
+
+
+encodeMultiInputChangeHeuristic : MultiInputChangeHeuristic -> Json.Encode.Value
+encodeMultiInputChangeHeuristic =
+    encodeObject << encodeMultiInputChangeHeuristicPairs
+
+
+encodeMultiInputChangeHeuristicWithTag : ( String, String ) -> MultiInputChangeHeuristic -> Json.Encode.Value
+encodeMultiInputChangeHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeMultiInputChangeHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeMultiInputChangeHeuristicPairs : MultiInputChangeHeuristic -> List EncodedField
+encodeMultiInputChangeHeuristicPairs model =
+    let
+        pairs =
+            [ encode "summary" (Json.Encode.list encodeAddressOutput) model.summary
+            , maybeEncode "confidence" Json.Encode.int model.confidence
+            ]
+    in
+    pairs
+
+
+encodeOneTimeChangeHeuristic : OneTimeChangeHeuristic -> Json.Encode.Value
+encodeOneTimeChangeHeuristic =
+    encodeObject << encodeOneTimeChangeHeuristicPairs
+
+
+encodeOneTimeChangeHeuristicWithTag : ( String, String ) -> OneTimeChangeHeuristic -> Json.Encode.Value
+encodeOneTimeChangeHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeOneTimeChangeHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeOneTimeChangeHeuristicPairs : OneTimeChangeHeuristic -> List EncodedField
+encodeOneTimeChangeHeuristicPairs model =
+    let
+        pairs =
+            [ encode "summary" (Json.Encode.list encodeAddressOutput) model.summary
+            , maybeEncode "confidence" Json.Encode.int model.confidence
+            ]
+    in
+    pairs
+
+
+encodeChangeHeuristics : ChangeHeuristics -> Json.Encode.Value
+encodeChangeHeuristics =
+    encodeObject << encodeChangeHeuristicsPairs
+
+
+encodeChangeHeuristicsWithTag : ( String, String ) -> ChangeHeuristics -> Json.Encode.Value
+encodeChangeHeuristicsWithTag (tagField, tag) model =
+    encodeObject (encodeChangeHeuristicsPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeChangeHeuristicsPairs : ChangeHeuristics -> List EncodedField
+encodeChangeHeuristicsPairs model =
+    let
+        pairs =
+            [ encode "consensus" (Json.Encode.list encodeConsensusEntry) model.consensus
+            , maybeEncode "one_time_change" encodeOneTimeChangeHeuristic model.oneTimeChange
+            , maybeEncode "direct_change" encodeDirectChangeHeuristic model.directChange
+            , maybeEncode "multi_input_change" encodeMultiInputChangeHeuristic model.multiInputChange
+            ]
+    in
+    pairs
+
+
+encodeUtxoHeuristics : UtxoHeuristics -> Json.Encode.Value
+encodeUtxoHeuristics =
+    encodeObject << encodeUtxoHeuristicsPairs
+
+
+encodeUtxoHeuristicsWithTag : ( String, String ) -> UtxoHeuristics -> Json.Encode.Value
+encodeUtxoHeuristicsWithTag (tagField, tag) model =
+    encodeObject (encodeUtxoHeuristicsPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeUtxoHeuristicsPairs : UtxoHeuristics -> List EncodedField
+encodeUtxoHeuristicsPairs model =
+    let
+        pairs =
+            [ maybeEncode "change_heuristics" encodeChangeHeuristics model.changeHeuristics
             ]
     in
     pairs
@@ -2114,6 +2329,7 @@ encodeTxUtxoPairs model =
             , encode "total_output" encodeValues model.totalOutput
             , encode "tx_hash" Json.Encode.string model.txHash
             , encode "tx_type" Json.Encode.string model.txType
+                , maybeEncode "heuristics" encodeUtxoHeuristics model.heuristics
             ]
     in
     pairs
@@ -2877,6 +3093,57 @@ txSummaryDecoder =
         |> decode "tx_hash" Json.Decode.string 
 
 
+addressOutputDecoder : Json.Decode.Decoder AddressOutput
+addressOutputDecoder =
+    Json.Decode.succeed AddressOutput
+        |> decode "address" Json.Decode.string 
+        |> decode "index" Json.Decode.int 
+
+
+consensusEntryDecoder : Json.Decode.Decoder ConsensusEntry
+consensusEntryDecoder =
+    Json.Decode.succeed ConsensusEntry
+        |> decode "output" addressOutputDecoder 
+        |> decode "confidence" Json.Decode.int 
+        |> decode "sources" (Json.Decode.list Json.Decode.string) 
+
+
+directChangeHeuristicDecoder : Json.Decode.Decoder DirectChangeHeuristic
+directChangeHeuristicDecoder =
+    Json.Decode.succeed DirectChangeHeuristic
+        |> decode "summary" (Json.Decode.list addressOutputDecoder) 
+        |> maybeDecode "confidence" Json.Decode.int Nothing
+
+
+multiInputChangeHeuristicDecoder : Json.Decode.Decoder MultiInputChangeHeuristic
+multiInputChangeHeuristicDecoder =
+    Json.Decode.succeed MultiInputChangeHeuristic
+        |> decode "summary" (Json.Decode.list addressOutputDecoder) 
+        |> maybeDecode "confidence" Json.Decode.int Nothing
+
+
+oneTimeChangeHeuristicDecoder : Json.Decode.Decoder OneTimeChangeHeuristic
+oneTimeChangeHeuristicDecoder =
+    Json.Decode.succeed OneTimeChangeHeuristic
+        |> decode "summary" (Json.Decode.list addressOutputDecoder) 
+        |> maybeDecode "confidence" Json.Decode.int Nothing
+
+
+changeHeuristicsDecoder : Json.Decode.Decoder ChangeHeuristics
+changeHeuristicsDecoder =
+    Json.Decode.succeed ChangeHeuristics
+        |> decode "consensus" (Json.Decode.list consensusEntryDecoder) 
+        |> maybeDecode "one_time_change" oneTimeChangeHeuristicDecoder Nothing
+        |> maybeDecode "direct_change" directChangeHeuristicDecoder Nothing
+        |> maybeDecode "multi_input_change" multiInputChangeHeuristicDecoder Nothing
+
+
+utxoHeuristicsDecoder : Json.Decode.Decoder UtxoHeuristics
+utxoHeuristicsDecoder =
+    Json.Decode.succeed UtxoHeuristics
+        |> maybeDecode "change_heuristics" changeHeuristicsDecoder Nothing
+
+
 txUtxoDecoder : Json.Decode.Decoder TxUtxo
 txUtxoDecoder =
     Json.Decode.succeed TxUtxo
@@ -2892,6 +3159,7 @@ txUtxoDecoder =
         |> decode "total_output" valuesDecoder 
         |> decode "tx_hash" Json.Decode.string 
         |> decode "tx_type" Json.Decode.string 
+        |> maybeDecode "heuristics" utxoHeuristicsDecoder Nothing
 
 
 txValueDecoder : Json.Decode.Decoder TxValue

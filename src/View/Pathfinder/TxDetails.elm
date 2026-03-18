@@ -239,6 +239,12 @@ utxo vc model id viewState tx =
                     )
                     {}
                 ]
+
+        consensusEntries =
+            tx.raw.heuristics
+                |> Maybe.andThen .changeHeuristics
+                |> Maybe.map .consensus
+                |> Maybe.withDefault []
     in
     SidePanelComponents.sidePanelTransactionWithAttributes
         (SidePanelComponents.sidePanelTransactionAttributes
@@ -284,7 +290,7 @@ utxo vc model id viewState tx =
                             ioTableConfig =
                                 { network = tx.raw.currency
                                 , hasTags = getHavingTags model
-                                , isChange = always False
+                                , getChangeInfo = always Nothing
                                 }
                         in
                         if viewState.inputsTableOpen then
@@ -317,15 +323,7 @@ utxo vc model id viewState tx =
                             ioTableConfig =
                                 { network = tx.raw.currency
                                 , hasTags = getHavingTags model
-                                , isChange =
-                                    .address
-                                        >> List.head
-                                        >> Maybe.andThen
-                                            (\id_ ->
-                                                Maybe.withDefault [] tx.raw.inputs
-                                                    |> List.Extra.find (.address >> List.head >> Maybe.map ((==) id_) >> Maybe.withDefault False)
-                                            )
-                                        >> (/=) Nothing
+                                , getChangeInfo = consensusChangeInfoForOutput consensusEntries
                                 }
                         in
                         if viewState.outputsTableOpen then
@@ -344,6 +342,34 @@ utxo vc model id viewState tx =
                 (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
             }
         }
+
+
+consensusChangeInfoForOutput : List Api.Data.ConsensusEntry -> Api.Data.TxValue -> Maybe { confidence : Float, heuristics : List String }
+consensusChangeInfoForOutput consensusEntries output =
+    let
+        byAddress =
+            List.Extra.find (\entry -> List.member entry.output.address output.address) consensusEntries
+
+        matchedEntry =
+            case output.index of
+                Just outputIndex ->
+                    case List.Extra.find (\entry -> entry.output.index == outputIndex) consensusEntries of
+                        Just entry ->
+                            Just entry
+
+                        Nothing ->
+                            byAddress
+
+                Nothing ->
+                    byAddress
+    in
+    matchedEntry
+        |> Maybe.map
+            (\entry ->
+                { confidence = clamp 0 1 (toFloat entry.confidence / 100)
+                , heuristics = entry.sources
+                }
+            )
 
 
 ioTableView : View.Config -> IoDirection -> Network -> Table Api.Data.TxValue -> IoColumnConfig -> Html Msg

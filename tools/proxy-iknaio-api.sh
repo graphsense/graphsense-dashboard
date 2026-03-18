@@ -25,9 +25,9 @@ server {
             return 204;
         }
 
-        proxy_pass https://api.iknaio.com;
+        proxy_pass https://api.test.iknaio.com;
         proxy_ssl_server_name on;
-        proxy_set_header Host api.iknaio.com;
+        proxy_set_header Host api.test.iknaio.com;
         proxy_set_header Authorization "'"$GS_API_KEY"'";
 
         # Strip any CORS headers the upstream already sends to avoid duplicates

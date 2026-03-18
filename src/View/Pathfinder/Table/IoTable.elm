@@ -2,12 +2,13 @@ module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Char
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
 import Css.View
 import Html.Styled exposing (span)
-import Html.Styled.Attributes exposing (css, title)
+import Html.Styled.Attributes exposing (css, style, title)
 import Model.Currency exposing (assetFromBase)
 import Model.Direction
 import Model.Pathfinder exposing (HavingTags(..))
@@ -20,6 +21,7 @@ import Table
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
@@ -30,7 +32,7 @@ import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttr
 type alias IoColumnConfig =
     { network : String
     , hasTags : Id -> HavingTags
-    , isChange : Api.Data.TxValue -> Bool
+    , getChangeInfo : Api.Data.TxValue -> Maybe { confidence : Float, heuristics : List String }
     }
 
 
@@ -108,7 +110,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
 
 
 ioColumn : View.Config -> ColumnConfig Api.Data.TxValue msg -> IoColumnConfig -> Table.Column Api.Data.TxValue msg
-ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
+ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
     let
         exchangeIcon =
             Icons.iconsExchangeSWithAttributes
@@ -148,13 +150,111 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
             ioToId network
                 >> Maybe.map hasTags
                 >> Maybe.withDefault NoTags
+
+        humanReadableHeuristic : String -> String
+        humanReadableHeuristic heuristic =
+            case heuristic of
+                "one_time_change" ->
+                    "One-Time Change"
+
+                "direct_change" ->
+                    "Direct Change"
+
+                "multi_input_change" ->
+                    "Multi-Input Change"
+
+                "all" ->
+                    "All"
+
+                _ ->
+                    heuristic
+                        |> String.split "_"
+                        |> List.map
+                            (\word ->
+                                case String.uncons word of
+                                    Just ( firstChar, rest ) ->
+                                        String.fromChar (Char.toUpper firstChar) ++ rest
+
+                                    Nothing ->
+                                        word
+                            )
+                        |> String.join " "
+
+        changeBadgeConfigFromInfo maybeChangeInfo =
+            case maybeChangeInfo of
+                Just changeInfo ->
+                    let
+                        confidence =
+                            changeInfo.confidence
+
+                        confidenceRange =
+                            getConfidenceRangeFromFloat confidence
+
+                        ( backgroundColor, borderColor, confidenceKey ) =
+                            case confidenceRange of
+                                High ->
+                                    ( Colors.green20, Colors.annotation1, "high confidence" )
+
+                                Medium ->
+                                    ( Colors.tagsMediumBg, Colors.tagsMedium, "medium confidence" )
+
+                                Low ->
+                                    ( Colors.tagsLowBg, Colors.tagsLow, "low confidence" )
+
+                        heuristics =
+                            changeInfo.heuristics
+                                |> List.map humanReadableHeuristic
+                                |> List.filter (String.isEmpty >> not)
+
+                        heuristicsSuffix =
+                            case heuristics of
+                                [] ->
+                                    ""
+
+                                firstHeuristic :: _ ->
+                                    " | Heuristic: " ++ firstHeuristic
+                    in
+                    { change =
+                        [ title
+                            (Locale.string vc.locale confidenceKey
+                                ++ " ("
+                                ++ String.fromInt (round (confidence * 100))
+                                ++ "%)"
+                                ++ heuristicsSuffix
+                            )
+                        , style "color" Colors.sidebarNeutral
+                        ]
+                    , changeTag =
+                        [ style "background-color" backgroundColor
+                        , style "border-color" borderColor
+                        , style "border-style" "solid"
+                        ]
+                    , isVisible = True
+                    }
+
+                Nothing ->
+                    { change = []
+                    , changeTag = []
+                    , isVisible = False
+                    }
     in
     Table.veryCustomColumn
         { name = label
         , viewData =
             \data ->
+                let
+                    changeBadgeConfig =
+                        getChangeInfo data
+                            |> changeBadgeConfigFromInfo
+
+                    attributes =
+                        SidePanelComponents.sidePanelIoListIdentifierCellAttributes
+                in
                 SidePanelComponents.sidePanelIoListIdentifierCellWithAttributes
-                    SidePanelComponents.sidePanelIoListIdentifierCellAttributes
+                    { attributes
+                        | change = changeBadgeConfig.change
+                        , changeTag = changeBadgeConfig.changeTag
+                    }
                     { root =
                         { position1Instance =
                             let
@@ -216,7 +316,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, isChange } =
 
                                 _ ->
                                     none
-                        , changeVisible = isChange data
+                        , changeVisible = changeBadgeConfig.isVisible
                         }
                     , changeTag = { text = Locale.string vc.locale "change" }
                     , sidePanelListIdentifierCell =

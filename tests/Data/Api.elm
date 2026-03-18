@@ -38,6 +38,7 @@ tx1 =
     , totalOutput = values
     , txHash = Id.id Id.tx1
     , txType = "utxo"
+    , heuristics = Nothing
     }
 
 
@@ -64,6 +65,7 @@ tx2 =
     , totalOutput = values
     , txHash = Id.id Id.tx2
     , txType = "utxo"
+    , heuristics = Nothing
     }
 
 
@@ -90,6 +92,7 @@ tx3 =
     , totalOutput = values
     , txHash = Id.id Id.tx3
     , txType = "utxo"
+    , heuristics = Nothing
     }
 
 
@@ -116,4 +119,5 @@ tx4 =
     , totalOutput = values
     , txHash = Id.id Id.tx4
     , txType = "utxo"
+    , heuristics = Nothing
     }

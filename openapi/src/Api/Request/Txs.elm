@@ -59,6 +59,58 @@ makeIoFromString str =
 
 
 
+type IncludeHeuristic
+    = IncludeHeuristicAll
+    | IncludeHeuristicOneTimeChange
+    | IncludeHeuristicDirectChange
+    | IncludeHeuristicMultiInputChange
+
+
+includeHeuristicVariants : List IncludeHeuristic
+includeHeuristicVariants =
+    [ IncludeHeuristicAll
+    , IncludeHeuristicOneTimeChange
+    , IncludeHeuristicDirectChange
+    , IncludeHeuristicMultiInputChange
+    ]
+
+
+stringFromIncludeHeuristic : IncludeHeuristic -> String
+stringFromIncludeHeuristic model =
+    case model of
+        IncludeHeuristicAll ->
+            "all"
+
+        IncludeHeuristicOneTimeChange ->
+            "one_time_change"
+
+        IncludeHeuristicDirectChange ->
+            "direct_change"
+
+        IncludeHeuristicMultiInputChange ->
+            "multi_input_change"
+
+
+makeIncludeHeuristicFromString : String -> Maybe IncludeHeuristic
+makeIncludeHeuristicFromString str =
+    case str of
+    "all" ->
+        Just IncludeHeuristicAll
+
+    "one_time_change" ->
+        Just IncludeHeuristicOneTimeChange
+
+    "direct_change" ->
+        Just IncludeHeuristicDirectChange
+
+    "multi_input_change" ->
+        Just IncludeHeuristicMultiInputChange
+
+    _ ->
+        Nothing
+
+
+
 
 
 
@@ -88,13 +140,27 @@ getSpentInTxs currency_path txHash_path ioIndex_query =
 
 
 
-getTx : (String) -> (String) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Int) -> Api.Request Api.Data.Tx
-getTx currency_path txHash_path includeIo_query includeNonstandardIo_query includeIoIndex_query tokenTxId_query =
+getTx : (String) -> (String) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Int) -> Maybe (List IncludeHeuristic) -> Api.Request Api.Data.Tx
+getTx currency_path txHash_path includeIo_query includeNonstandardIo_query includeIoIndex_query tokenTxId_query includeHeuristics_query =
+    let
+        includeHeuristicsParams =
+            includeHeuristics_query
+                |> Maybe.map (List.map (stringFromIncludeHeuristic >> (\value -> ( "include_heuristics", Just value ))))
+                |> Maybe.withDefault []
+
+        queryParams =
+            [ ( "include_io", Maybe.map ((\val -> if val then "true" else "false")) includeIo_query )
+            , ( "include_nonstandard_io", Maybe.map ((\val -> if val then "true" else "false")) includeNonstandardIo_query )
+            , ( "include_io_index", Maybe.map ((\val -> if val then "true" else "false")) includeIoIndex_query )
+            , ( "token_tx_id", Maybe.map (String.fromInt) tokenTxId_query )
+            ]
+                ++ includeHeuristicsParams
+    in
     Api.request
         "GET"
         "/{currency}/txs/{txHash}"
         [ ( "currency", identity currency_path ), ( "txHash", identity txHash_path ) ]
-        [ ( "include_io", Maybe.map ((\val -> if val then "true" else "false")) includeIo_query ), ( "include_nonstandard_io", Maybe.map ((\val -> if val then "true" else "false")) includeNonstandardIo_query ), ( "include_io_index", Maybe.map ((\val -> if val then "true" else "false")) includeIoIndex_query ), ( "token_tx_id", Maybe.map (String.fromInt) tokenTxId_query ) ]
+        queryParams
         []
         Nothing
         Api.Data.txDecoder

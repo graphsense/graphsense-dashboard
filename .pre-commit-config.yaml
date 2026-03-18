@@ -9,13 +9,13 @@ repos:
     language: script
     always_run: true
     stages: [pre-push]
-  - id: gen_openapi_client
-    name: Generate Openapi Client
-    entry: make openapi
-    language: system
-    pass_filenames: false
-    always_run: true
-    stages: [pre-commit]
+  # - id: gen_openapi_client
+  #   name: Generate Openapi Client
+  #   entry: make openapi
+  #   language: system
+  #   pass_filenames: false
+  #   always_run: true
+  #   stages: [pre-commit]
   - id: code_formatting
     name: Run uniform code formatting
     entry: make format
