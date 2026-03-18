@@ -4400,16 +4400,54 @@ fetchActors d existing =
         |> List.map fetchActor
 
 
-getBiggestIO : Maybe (List Api.Data.TxValue) -> Set String -> Maybe String
-getBiggestIO io exceptAddresses =
+getBiggestIOBy : (Api.Data.TxValue -> Bool) -> Maybe (List Api.Data.TxValue) -> Set String -> Maybe String
+getBiggestIOBy includeIo io exceptAddresses =
     io
         |> Maybe.withDefault []
+        |> List.filter includeIo
         |> List.filter (\x -> x.address |> Set.fromList |> Set.intersect exceptAddresses |> Set.isEmpty)
         |> List.sortBy (.value >> .value)
         |> List.reverse
         |> List.head
         |> Maybe.map .address
         |> Maybe.andThen List.head
+
+
+getBiggestIO : Maybe (List Api.Data.TxValue) -> Set String -> Maybe String
+getBiggestIO =
+    getBiggestIOBy (always True)
+
+
+isConsensusChangeOutput : List Api.Data.ConsensusEntry -> Api.Data.TxValue -> Bool
+isConsensusChangeOutput consensusEntries output =
+    let
+        byAddress =
+            List.Extra.find (\entry -> List.member entry.output.address output.address) consensusEntries
+    in
+    case output.index of
+        Just outputIndex ->
+            case List.Extra.find (\entry -> entry.output.index == outputIndex) consensusEntries of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    byAddress /= Nothing
+
+        Nothing ->
+            byAddress /= Nothing
+
+
+getBiggestNonChangeOutput : Api.Data.TxUtxo -> Set String -> Maybe String
+getBiggestNonChangeOutput raw exceptAddresses =
+    let
+        consensusEntries =
+            raw.heuristics
+                |> Maybe.andThen .changeHeuristics
+                |> Maybe.map .consensus
+                |> Maybe.withDefault []
+    in
+    getBiggestIOBy (isConsensusChangeOutput consensusEntries >> not) raw.outputs exceptAddresses
+        |> Maybe.Extra.orElseLazy (\_ -> getBiggestIO raw.outputs exceptAddresses)
 
 
 getAddressForDirection : Tx -> Direction -> Set String -> Maybe Id
@@ -4421,7 +4459,7 @@ getAddressForDirection tx direction exceptAddress =
                     getBiggestIO raw.inputs exceptAddress
 
                 Outgoing ->
-                    getBiggestIO raw.outputs exceptAddress
+                    getBiggestNonChangeOutput raw exceptAddress
             )
                 |> Maybe.map (Id.init raw.currency)
 
