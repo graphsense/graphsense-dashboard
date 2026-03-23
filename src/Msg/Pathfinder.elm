@@ -26,6 +26,7 @@ import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
 import Util.ThemedSelectBox as ThemedSelectBox
+import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 type alias AddingAddressConfig =
@@ -180,14 +181,9 @@ type TxDetailsMsg
     | BrowserGotBaseTx Api.Data.Tx
     | BrowserGotTxFlows (Maybe String) Api.Data.Txs
     | UserClickedToggleSubTxsTable
-    | UserClickedResetAllSubTxsTableFilters
-    | UserClickedResetZeroValueSubTxsTableFilters
     | UserClickedToggleSubTxsTableFilter
-    | UserClickedCloseSubTxTableFilterDialog
     | UserClickedTxInSubTxsTable Api.Data.TxAccount
-    | NoOpSubTxsTable
-    | UserClickedToggleIncludeZeroValueSubTxs
-    | SubTxsSelectedAssetSelectBoxMsg (ThemedSelectBox.Msg (Maybe String))
+    | TransactionFilterMsg TransactionFilter.Msg
 
 
 type IoDirection

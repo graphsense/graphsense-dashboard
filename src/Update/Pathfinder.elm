@@ -187,7 +187,7 @@ syncUrl model =
                                             |> Just
 
                                     Success txs ->
-                                        txs.dateRangePicker
+                                        txs.filter.dateRangePicker
                                             |> Maybe.map
                                                 (\{ fromDate, toDate } ->
                                                     { fromDate = fromDate
@@ -239,7 +239,35 @@ syncSidePanel uc model =
 
         makeRelationDetails rid =
             Dict.get rid model.network.aggEdges
-                |> Maybe.map (RelationDetails.init >> RelationDetails rid)
+                |> Maybe.andThen
+                    (\aggEdge ->
+                        let
+                            addrA =
+                                Dict.get (Tuple.first rid) model.network.addresses
+
+                            addrB =
+                                Dict.get (Tuple.second rid) model.network.addresses
+
+                            maybeAr1 =
+                                addrA
+                                    |> Maybe.andThen Address.getActivityRangeAddress
+                                    |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
+
+                            maybeAr2 =
+                                addrB
+                                    |> Maybe.andThen Address.getActivityRangeAddress
+                                    |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
+                        in
+                            Maybe.map2 
+                            (\ar1 ar2 ->
+                                ( Time.millisToPosix (min (Tuple.first ar1) (Tuple.first ar2))
+                                , Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2)) 
+                                )
+                                |> RelationDetails.init uc aggEdge 
+                                |> RelationDetails rid
+                            )
+                            maybeAr1 maybeAr2
+                    )
     in
     (case ( model.selection, model.details ) of
         ( SelectedAddress id, Just (AddressDetails aid _) ) ->
@@ -858,28 +886,6 @@ updateByMsg plugins uc msg model =
                     n model
 
         RelationDetailsMsg id submsg ->
-            let
-                addrA =
-                    Dict.get (Tuple.first id) model.network.addresses
-
-                addrB =
-                    Dict.get (Tuple.second id) model.network.addresses
-
-                ar1 =
-                    addrA
-                        |> Maybe.andThen Address.getActivityRangeAddress
-                        |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
-                        |> Maybe.withDefault ( 0, 0 )
-
-                ar2 =
-                    addrB
-                        |> Maybe.andThen Address.getActivityRangeAddress
-                        |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
-                        |> Maybe.withDefault ( 0, 0 )
-
-                ar =
-                    ( Time.millisToPosix (min (Tuple.first ar1) (Tuple.first ar2)), Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2)) )
-            in
             (case submsg of
                 RelationDetails.UserClickedTxCheckboxInTable tx ->
                     addOrRemoveTx plugins Nothing (Tx.getTxIdForRelationTx tx) model
@@ -933,7 +939,7 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
             )
-                |> and (updateRelationDetails uc id ar submsg)
+                |> and (updateRelationDetails uc id submsg)
 
         AddressDetailsMsg addressId subm ->
             let
@@ -2851,14 +2857,14 @@ setTracingMode tm model =
         |> n
 
 
-updateRelationDetails : Update.Config -> ( Id, Id ) -> ( Time.Posix, Time.Posix ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
-updateRelationDetails uc id activityRange msg model =
+updateRelationDetails : Update.Config -> ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
+updateRelationDetails uc id msg model =
     getRelationDetails model id
         |> Maybe.map
             (\rdModel ->
                 let
                     ( nVs, eff ) =
-                        RelationDetails.update uc id activityRange msg rdModel
+                        RelationDetails.update uc id msg rdModel
                 in
                 ( { model | details = Just (RelationDetails id nVs) }, eff )
             )
@@ -4995,7 +5001,7 @@ bboxWithUnit bbox =
     }
 
 
-getTagsForExport : Id -> TransactionTable.Model AddressDetails.Msg -> ( List Api.Data.TxAccount, Maybe String ) -> Model -> ( Model, List Effect )
+getTagsForExport : Id -> TransactionTable.Model -> ( List Api.Data.TxAccount, Maybe String ) -> Model -> ( Model, List Effect )
 getTagsForExport addressId table data model =
     let
         toMsg =

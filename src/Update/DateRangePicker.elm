@@ -1,4 +1,4 @@
-module Update.DateRangePicker exposing (closePicker, openPicker, setFrom, setTo, update)
+module Update.DateRangePicker exposing (closePicker, openPicker, setFocus, setFrom, setTo, update)
 
 import DurationDatePicker
 import Maybe.Extra
@@ -34,6 +34,11 @@ setFrom fd m =
 setTo : Posix -> Model msg -> Model msg
 setTo fd m =
     { m | toDate = Just fd }
+
+
+setFocus : Posix -> Model msg -> Model msg
+setFocus fd m =
+    { m | focusDate = fd }
 
 
 update : DurationDatePicker.Msg -> Model msg -> Model msg

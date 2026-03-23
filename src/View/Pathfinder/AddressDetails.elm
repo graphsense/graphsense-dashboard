@@ -31,8 +31,8 @@ import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPub
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
-import Msg.Pathfinder as Pathfinder exposing (Msg(..), OverlayWindows(..))
-import Msg.Pathfinder.AddressDetails as AddressDetails exposing (RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
+import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
+import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..), RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
@@ -67,18 +67,6 @@ import View.Pathfinder.TransactionFilter as TransactionFilter
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
 view plugins pluginStates vc model id viewState =
-    let
-        filterDialogMsgs =
-            { closeTxFilterViewMsg = AddressDetails.CloseTxFilterView
-            , txTableFilterShowAllTxsMsg = Just AddressDetails.TxTableFilterShowAllTxs
-            , txTableFilterShowIncomingTxOnlyMsg = Just AddressDetails.TxTableFilterShowIncomingTxOnly
-            , txTableFilterShowOutgoingTxOnlyMsg = Just AddressDetails.TxTableFilterShowOutgoingTxOnly
-            , resetAllTxFiltersMsg = AddressDetails.ResetAllTxFilters
-            , txTableAssetSelectBoxMsg = AddressDetails.TxTableAssetSelectBoxMsg
-            , txTableFilterToggleZeroValueMsg = Nothing
-            , openDateRangePickerMsg = Just AddressDetails.OpenDateRangePicker
-            }
-    in
     div []
         [ model.network.addresses
             |> Dict.get id
@@ -94,6 +82,13 @@ view plugins pluginStates vc model id viewState =
         , case viewState.txs of
             RemoteData.Success txs ->
                 if txs.isTxFilterViewOpen then
+                    let
+                        filterConfig =
+                            { tag = TransactionFilterMsg
+                            , toggleTxFilterViewMsg = ToggleTxFilterView
+                            , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
+                            }
+                    in
                     div
                         [ [ Css.position Css.fixed
                           , Css.right (Css.px 42)
@@ -103,7 +98,7 @@ view plugins pluginStates vc model id viewState =
                           ]
                             |> css
                         ]
-                        [ TransactionFilter.txFilterDialogView vc (Id.network id) filterDialogMsgs txs |> Html.map (Pathfinder.AddressDetailsMsg viewState.address.id) ]
+                        [ TransactionFilter.txFilterDialogView vc (Id.network id) filterConfig txs.filter |> Html.map (Pathfinder.AddressDetailsMsg viewState.address.id) ]
 
                 else
                     none
@@ -185,7 +180,7 @@ utxo plugins pluginStates vc model id viewState address =
                 ]
             |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
+            |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_categoriesList [ css [ Css.maxWidth <| Css.px categoriesMaxWidth ] ]
             |> Rs.s_tagsLayout
@@ -599,7 +594,7 @@ clusterInfoView vc open colors clstr =
                 }
 
 
-transactionTableView : View.Config -> Id -> (Id -> Bool) -> Pathfinder.Model -> TransactionTable.Model AddressDetails.Msg -> Html AddressDetails.Msg
+transactionTableView : View.Config -> Id -> (Id -> Bool) -> Pathfinder.Model -> TransactionTable.Model -> Html AddressDetails.Msg
 transactionTableView vc addressId txOnGraphFn model txs =
     let
         styles =
@@ -618,14 +613,11 @@ transactionTableView vc addressId txOnGraphFn model txs =
                 txs.table
     in
     [ TransactionFilter.filterHeader vc
-        txs
-        { resetDateFilterMsg = AddressDetails.ResetDateRangePicker
-        , resetAssetsFilterMsg = AddressDetails.ResetTxAssetFilter
-        , resetDirectionFilterMsg = Just AddressDetails.ResetTxDirectionFilter
-        , toggleFilterView = AddressDetails.ToggleTxFilterView
-        , resetZeroValueFilterMsg = Nothing
+        { tag = TransactionFilterMsg
+        , toggleTxFilterViewMsg = ToggleTxFilterView
         , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
         }
+        txs.filter
     , table
     ]
         |> div [ css [ Css.width (Css.pct 100) ] ]
@@ -919,7 +911,7 @@ account plugins pluginStates vc model id viewState address =
                     |> css
                 ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
+            |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_categoriesList [ css [ Css.maxWidth <| Css.px categoriesMaxWidth ] ]
             |> Rs.s_tagsLayout
@@ -1089,7 +1081,7 @@ getTagSummary model id =
             Nothing
 
 
-makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Msg) }
+makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Pathfinder.Msg) }
 makeSidePanelData vc model id pluginTagsVisible =
     let
         ts =
@@ -1165,7 +1157,7 @@ makeSidePanelData vc model id pluginTagsVisible =
     }
 
 
-labelOfActor : View.Config -> Pathfinder.Model -> Id -> Maybe (Html Msg)
+labelOfActor : View.Config -> Pathfinder.Model -> Id -> Maybe (Html Pathfinder.Msg)
 labelOfActor vc model id =
     let
         ts =

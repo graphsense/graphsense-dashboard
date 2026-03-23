@@ -11,6 +11,7 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Table
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
+import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 type RelatedAddressTypes
@@ -54,19 +55,9 @@ type Msg
     | NeighborsTableSubTableMsg Direction InfiniteTable.Msg
     | GotTxsForAddressDetails (Maybe String) Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction (Maybe String) Api.Data.NeighborAddresses
-    | UpdateDateRangePicker DurationDatePicker.Msg
     | ToggleTxFilterView
     | CloseTxFilterView
-    | OpenDateRangePicker
-    | CloseDateRangePicker
-    | ResetDateRangePicker
-    | ResetAllTxFilters
-    | ResetTxDirectionFilter
-    | ResetTxAssetFilter
-    | TxTableFilterShowAllTxs
-    | TxTableFilterShowIncomingTxOnly
-    | TxTableFilterShowOutgoingTxOnly
-    | TxTableAssetSelectBoxMsg (ThemedSelectBox.Msg (Maybe String))
+    | TransactionFilterMsg TransactionFilter.Msg
     | TableMsg Table.State
     | RelatedAddressesTableMsg Table.State
     | RelatedAddressesPubkeyTableMsg Table.State
@@ -85,7 +76,7 @@ type Msg
     | BrowserGotPubkeyRelations Api.Data.RelatedAddresses
     | TooltipMsg TooltipMsgs
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)
-    | ExportCSVMsg (TransactionTable.Model Msg) ExportCSV.Msg
-    | GotAddressTxsForExport (TransactionTable.Model Msg) Api.Data.AddressTxs
-    | BrowserGotBulkTxsForExport (TransactionTable.Model Msg) (List Api.Data.AddressTxUtxo) (Maybe String) Int (List ( String, Api.Data.Tx )) (List ( String, Api.Data.Tx ))
-    | BrowserGotBulkTagsForExport (TransactionTable.Model Msg) ( List Api.Data.TxAccount, Maybe String ) Bool (List ( Id, Api.Data.TagSummary ))
+    | ExportCSVMsg TransactionTable.Model ExportCSV.Msg
+    | GotAddressTxsForExport TransactionTable.Model Api.Data.AddressTxs
+    | BrowserGotBulkTxsForExport TransactionTable.Model (List Api.Data.AddressTxUtxo) (Maybe String) Int (List ( String, Api.Data.Tx )) (List ( String, Api.Data.Tx ))
+    | BrowserGotBulkTagsForExport TransactionTable.Model ( List Api.Data.TxAccount, Maybe String ) Bool (List ( Id, Api.Data.TagSummary ))

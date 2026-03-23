@@ -1,6 +1,7 @@
 module Init.Pathfinder.RelationDetails exposing (getExposedAssetsForNeighbor, getExposedAssetsForNeighborWebData, init)
 
 import Api.Data
+import Config.Update as Update
 import Dict
 import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Maybe.Extra
@@ -8,6 +9,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import RemoteData
+import Time
 
 
 getExposedAssetsForNeighbor : Api.Data.NeighborAddress -> List String
@@ -28,8 +30,8 @@ getExposedAssetsForNeighborWebData default webData =
         |> Maybe.withDefault default
 
 
-init : AggEdge -> RelationDetails.Model
-init edge =
+init : Update.Config -> AggEdge -> ( Time.Posix, Time.Posix ) -> RelationDetails.Model
+init uc edge ( rangeFrom, rangeTo ) =
     let
         -- if data should be missing, fall back to empty asset list
         -- update later assigns data when available
@@ -41,7 +43,9 @@ init edge =
     in
     { a2bTableOpen = False
     , b2aTableOpen = False
-    , a2bTable = RelationTxsTable.init Incoming a2bAssets
-    , b2aTable = RelationTxsTable.init Outgoing b2aAssets
+    , a2bTable = RelationTxsTable.init uc ( rangeFrom, rangeTo ) Incoming a2bAssets
+    , b2aTable = RelationTxsTable.init uc ( rangeFrom, rangeTo ) Outgoing b2aAssets
     , aggEdge = edge
+    , rangeFrom = rangeFrom
+    , rangeTo = rangeTo
     }

@@ -9,6 +9,7 @@ import Model.Pathfinder.TxDetails as TxDetails
 import RemoteData
 import Util.Data exposing (negateTxValue)
 import Util.ThemedSelectBox as ThemedSelectBox
+import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 initSubTxTable : InfiniteTable.Model Api.Data.TxAccount
@@ -57,11 +58,8 @@ init assets tx =
                 )
             |> Maybe.withDefault False
     , subTxsTableFilter =
-        { includeZeroValueTxs = Just False
-        , selectedAsset = Nothing
-        , dateRangePicker = Nothing
-        , direction = Nothing
-        , assetSelectBox = ThemedSelectBox.init (Nothing :: List.map Just assets)
-        , isSubTxsTableFilterDialogOpen = False
-        }
+        TransactionFilter.init
+            |> TransactionFilter.withAssetSelectBox assets
+            |> TransactionFilter.withIncludeZeroValueTxs False
+    , isSubTxsTableFilterDialogOpen = False
     }

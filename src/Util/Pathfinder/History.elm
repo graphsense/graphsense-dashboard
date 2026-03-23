@@ -144,34 +144,7 @@ shallPushHistory plugins msg _ =
                 AddressDetails.GotNeighborsForAddressDetails _ _ _ ->
                     False
 
-                AddressDetails.UpdateDateRangePicker _ ->
-                    False
-
-                AddressDetails.OpenDateRangePicker ->
-                    False
-
-                AddressDetails.CloseDateRangePicker ->
-                    False
-
-                AddressDetails.TxTableFilterShowAllTxs ->
-                    False
-
-                AddressDetails.TxTableFilterShowIncomingTxOnly ->
-                    False
-
-                AddressDetails.TxTableFilterShowOutgoingTxOnly ->
-                    False
-
-                AddressDetails.ResetDateRangePicker ->
-                    False
-
-                AddressDetails.ResetAllTxFilters ->
-                    False
-
-                AddressDetails.ResetTxAssetFilter ->
-                    False
-
-                AddressDetails.ResetTxDirectionFilter ->
+                AddressDetails.TransactionFilterMsg _ ->
                     False
 
                 AddressDetails.TableMsg _ ->
@@ -211,9 +184,6 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.TooltipMsg _ ->
-                    False
-
-                AddressDetails.TxTableAssetSelectBoxMsg _ ->
                     False
 
                 AddressDetails.ExportCSVMsg _ _ ->
@@ -263,25 +233,7 @@ shallPushHistory plugins msg _ =
                 RelationDetails.CloseTxFilterView _ ->
                     False
 
-                RelationDetails.OpenDateRangePicker _ ->
-                    False
-
-                RelationDetails.CloseDateRangePicker _ ->
-                    False
-
-                RelationDetails.ResetDateRangePicker _ ->
-                    False
-
-                RelationDetails.ResetAllTxFilters _ ->
-                    False
-
-                RelationDetails.ResetTxAssetFilter _ ->
-                    False
-
-                RelationDetails.TxTableAssetSelectBoxMsg _ _ ->
-                    False
-
-                RelationDetails.UpdateDateRangePicker _ _ ->
+                RelationDetails.TransactionFilterMsg _ _ ->
                     False
 
                 RelationDetails.ExportCSVMsg _ _ _ ->
