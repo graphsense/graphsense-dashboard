@@ -3,6 +3,7 @@ module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, Addi
 import Api.Data
 import Color exposing (Color)
 import Components.InfiniteTable as InfiniteTable
+import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Model.Dialog as Dialog
 import Model.Direction exposing (Direction)
@@ -25,8 +26,6 @@ import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
-import Util.ThemedSelectBox as ThemedSelectBox
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 type alias AddingAddressConfig =

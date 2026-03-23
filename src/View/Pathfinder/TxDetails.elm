@@ -3,6 +3,7 @@ module View.Pathfinder.TxDetails exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.Table exposing (Table)
+import Components.TransactionFilter as TransactionFilter
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -36,7 +37,6 @@ import View.Pathfinder.Details exposing (closeAttrs, dataTab, emptyCell, valuesT
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 import View.Pathfinder.Table.SubTxsTable as SubTxsTable
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 filterConfig : TransactionFilter.FilterHeaderConfig TxDetailsMsg

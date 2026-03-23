@@ -1,4 +1,4 @@
-module View.Pathfinder.TransactionFilter exposing (FilterHeaderConfig, Model, Msg(..), filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, hasChanged, init, setFocusDate, txFilterDialogView, update, updateDateRange, updateSelectedAsset, withAssetSelectBox, withDateRangePicker, withDirection, withIncludeZeroValueTxs)
+module Components.TransactionFilter exposing (FilterHeaderConfig, Model, Msg(..), filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, hasChanged, init, setFocusDate, txFilterDialogView, update, updateDateRange, updateSelectedAsset, withAssetSelectBox, withDateRangePicker, withDirection, withIncludeZeroValueTxs)
 
 import Components.ExportCSV as ExportCSV
 import Config.DateRangePicker exposing (datePickerSettings)

@@ -5,7 +5,7 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import View.Pathfinder.TransactionFilter as TransactionFilter
+import Components.TransactionFilter as TransactionFilter
 
 
 type Msg

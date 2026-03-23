@@ -5,7 +5,7 @@ import Api.Request.Addresses
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
-import View.Pathfinder.TransactionFilter as TransactionFilter
+import Components.TransactionFilter as TransactionFilter
 import Model.Direction exposing (Direction)
 
 

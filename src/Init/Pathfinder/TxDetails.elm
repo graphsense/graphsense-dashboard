@@ -3,13 +3,13 @@ module Init.Pathfinder.TxDetails exposing (init, initSubTxTable)
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
+import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Table.IoTable as IoTable
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
 import RemoteData
 import Util.Data exposing (negateTxValue)
 import Util.ThemedSelectBox as ThemedSelectBox
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 initSubTxTable : InfiniteTable.Model Api.Data.TxAccount

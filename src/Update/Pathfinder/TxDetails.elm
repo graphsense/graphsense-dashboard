@@ -4,6 +4,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
+import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.TxDetails exposing (initSubTxTable)
@@ -16,7 +17,6 @@ import RemoteData
 import Tuple exposing (mapFirst, mapSecond)
 import Util exposing (n)
 import Util.Data as Data
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 transactionTableConfig : Model -> InfiniteTable.Config Effect

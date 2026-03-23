@@ -4,14 +4,13 @@ import Api.Data
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
-import DurationDatePicker
+import Components.TransactionFilter as TransactionFilter
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Table
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 type RelatedAddressTypes

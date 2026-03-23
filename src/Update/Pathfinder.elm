@@ -113,7 +113,7 @@ import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
 import View.Locale as Locale exposing (makeTimestampFilename)
 import View.Pathfinder exposing (originShiftX)
-import View.Pathfinder.TransactionFilter as TransactionFilter
+import Components.TransactionFilter as TransactionFilter
 import Workflow
 
 

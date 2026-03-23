@@ -5,6 +5,7 @@ import Api.Request.Addresses
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
+import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Effect.Api as Api
@@ -27,7 +28,6 @@ import Util.Data as Data
 import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Locale as Locale
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 loadRelationTxs : (Bool -> Maybe String -> Api.Data.Links -> Msg) -> ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect

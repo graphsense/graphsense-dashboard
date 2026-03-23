@@ -6,6 +6,7 @@ import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
+import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Dict exposing (Dict)
@@ -43,7 +44,6 @@ import Util.Csv
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 import View.Locale as Locale
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 neighborsTableConfigWithMsg : (Direction -> Maybe String -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect

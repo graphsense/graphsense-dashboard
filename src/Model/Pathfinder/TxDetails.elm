@@ -3,9 +3,9 @@ module Model.Pathfinder.TxDetails exposing (Model)
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.Table exposing (Table)
+import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Tx exposing (Tx)
 import RemoteData exposing (WebData)
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 type alias Model =

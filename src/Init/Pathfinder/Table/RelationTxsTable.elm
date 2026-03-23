@@ -4,10 +4,10 @@ import Api.Request.Addresses
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
+import Components.TransactionFilter as TransactionFilter
 import Config.Update as Update
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Time
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 init : Update.Config -> ( Time.Posix, Time.Posix ) -> Maybe (List String) -> RelationTxsTable.Model

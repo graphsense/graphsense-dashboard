@@ -4,6 +4,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as Inf
 import Components.PagedTable as PagedTable
+import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -62,7 +63,6 @@ import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg

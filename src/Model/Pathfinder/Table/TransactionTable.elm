@@ -4,7 +4,7 @@ import Api.Data
 import Api.Request.Addresses
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
-import View.Pathfinder.TransactionFilter as TransactionFilter
+import Components.TransactionFilter as TransactionFilter
 
 
 type alias Model =
