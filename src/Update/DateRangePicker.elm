@@ -26,14 +26,14 @@ openPicker model =
     }
 
 
-setFrom : Posix -> Model msg -> Model msg
+setFrom : Maybe Posix -> Model msg -> Model msg
 setFrom fd m =
-    { m | fromDate = Just fd }
+    { m | fromDate = fd }
 
 
-setTo : Posix -> Model msg -> Model msg
+setTo : Maybe Posix -> Model msg -> Model msg
 setTo fd m =
-    { m | toDate = Just fd }
+    { m | toDate = fd }
 
 
 setFocus : Posix -> Model msg -> Model msg

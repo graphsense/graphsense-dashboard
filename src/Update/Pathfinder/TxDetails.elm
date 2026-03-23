@@ -34,9 +34,11 @@ transactionTableConfig m =
                 |> Api.ListTxFlowsEffect
                     { currency = currency
                     , txHash = baseTxHash
-                    , includeZeroValueSubTxs = m.subTxsTableFilter.includeZeroValueTxs |> Maybe.withDefault False
+                    , includeZeroValueSubTxs =
+                        TransactionFilter.getIncludeZeroValueTxs m.subTxsTableFilter
+                            |> Maybe.withDefault False
                     , pagesize = Just pagesize
-                    , token_currency = m.subTxsTableFilter.selectedAsset
+                    , token_currency = TransactionFilter.getSelectedAsset m.subTxsTableFilter
                     , nextpage = nextpage
                     }
                 |> ApiEffect

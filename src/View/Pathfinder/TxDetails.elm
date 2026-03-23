@@ -42,7 +42,7 @@ import View.Pathfinder.TransactionFilter as TransactionFilter
 filterConfig : TransactionFilter.FilterHeaderConfig TxDetailsMsg
 filterConfig =
     { tag = TransactionFilterMsg
-    , toggleTxFilterViewMsg = UserClickedToggleSubTxsTable
+    , toggleTxFilterViewMsg = UserClickedToggleSubTxsTableFilter
     , exportCsv = Nothing
     }
 

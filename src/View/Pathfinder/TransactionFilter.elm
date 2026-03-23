@@ -1,4 +1,4 @@
-module View.Pathfinder.TransactionFilter exposing (FilterHeaderConfig, FilterMetadata, Msg(..), filterHeader, hasChanged, init, setFocusDate, txFilterDialogView, update, updateDateRange, withIncludeZeroValueTxs, withAssetSelectBox, withDirection, withDateRangePicker, updateSelectedAsset, getDirection)
+module View.Pathfinder.TransactionFilter exposing (FilterHeaderConfig, Model, Msg(..), filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, hasChanged, init, setFocusDate, txFilterDialogView, update, updateDateRange, updateSelectedAsset, withAssetSelectBox, withDateRangePicker, withDirection, withIncludeZeroValueTxs)
 
 import Components.ExportCSV as ExportCSV
 import Config.DateRangePicker exposing (datePickerSettings)
@@ -29,16 +29,35 @@ import Util.View exposing (fullWidthCss, none)
 import View.Button as Button
 import View.Controls as Controls
 import View.Locale as Locale
-import Maybe.Extra
 
 
-type alias FilterMetadata =
+type Model
+    = Internal InternalModel
+
+
+type alias InternalModel =
     { dateRangePicker : Maybe (DateRangePicker.Model Msg)
     , direction : Maybe (Maybe Direction)
     , selectedAsset : Maybe String
     , assetSelectBox : Maybe (ThemedSelectBox.Model (Maybe String))
     , includeZeroValueTxs : Maybe Bool
     }
+
+
+getDateRange : Model -> Maybe ( Maybe Posix, Maybe Posix )
+getDateRange (Internal model) =
+    model.dateRangePicker
+        |> Maybe.map (\drp -> ( drp.fromDate, drp.toDate ))
+
+
+getSelectedAsset : Model -> Maybe String
+getSelectedAsset (Internal model) =
+    model.selectedAsset
+
+
+getIncludeZeroValueTxs : Model -> Maybe Bool
+getIncludeZeroValueTxs (Internal model) =
+    model.includeZeroValueTxs
 
 
 type alias FilterHeaderConfig msg =
@@ -64,92 +83,129 @@ type Msg
     | UpdateDateRangePicker DatePicker.Msg
 
 
-update : Msg -> FilterMetadata -> FilterMetadata
-update msg model =
-    case msg of
-        ResetAllTxFilters ->
-            { model
-                | selectedAsset = Nothing
-                , dateRangePicker = Nothing
-                , direction = Nothing
-            }
+update : Msg -> Model -> Model
+update msg (Internal model) =
+    Internal <|
+        case msg of
+            ResetAllTxFilters ->
+                resetSelectedAsset model
+                    |> resetDateRangePicker
+                    |> resetDirection
+                    |> resetIncludeZeroValueTxs
 
-        ResetDateRangePicker ->
-            { model | dateRangePicker = Nothing }
+            ResetDateRangePicker ->
+                resetDateRangePicker model
 
-        ResetTxDirectionFilter ->
-            { model | direction = Nothing }
+            ResetTxDirectionFilter ->
+                resetDirection model
 
-        ResetTxAssetFilter ->
-            { model | selectedAsset = Nothing }
+            ResetTxAssetFilter ->
+                resetSelectedAsset model
 
-        ResetZeroValueSubTxsTableFilters ->
-            { model | includeZeroValueTxs = Nothing }
+            ResetZeroValueSubTxsTableFilters ->
+                resetIncludeZeroValueTxs model
 
-        OpenDateRangePicker ->
-            { model | dateRangePicker = Maybe.map DateRangePicker.openPicker model.dateRangePicker }
+            OpenDateRangePicker ->
+                { model | dateRangePicker = Maybe.map DateRangePicker.openPicker model.dateRangePicker }
 
-        CloseDateRangePicker ->
-            { model | dateRangePicker = Maybe.map DateRangePicker.closePicker model.dateRangePicker }
+            CloseDateRangePicker ->
+                { model | dateRangePicker = Maybe.map DateRangePicker.closePicker model.dateRangePicker }
 
-        UpdateDateRangePicker subMsg ->
+            UpdateDateRangePicker subMsg ->
+                model.dateRangePicker
+                    |> Maybe.map
+                        (\dateRangePicker ->
+                            let
+                                newPicker =
+                                    DateRangePicker.update subMsg dateRangePicker
+                            in
+                            { model
+                                | dateRangePicker = Just newPicker
+                            }
+                        )
+                    |> Maybe.withDefault model
+
+            TxTableFilterShowAllTxs ->
+                model.direction
+                    |> Maybe.map (\_ -> { model | direction = Nothing })
+                    |> Maybe.withDefault model
+
+            TxTableFilterShowIncomingTxOnly ->
+                model.direction
+                    |> Maybe.map (\_ -> { model | direction = Just <| Just Incoming })
+                    |> Maybe.withDefault model
+
+            TxTableFilterShowOutgoingTxOnly ->
+                model.direction
+                    |> Maybe.map (\_ -> { model | direction = Just <| Just Outgoing })
+                    |> Maybe.withDefault model
+
+            TxTableFilterToggleZeroValue ->
+                { model
+                    | includeZeroValueTxs =
+                        model.includeZeroValueTxs
+                            |> Maybe.withDefault False
+                            |> not
+                            |> Just
+                }
+
+            TxTableAssetSelectBoxMsg ms ->
+                model.assetSelectBox
+                    |> Maybe.map
+                        (\sb ->
+                            let
+                                ( newSelect, outMsg ) =
+                                    ThemedSelectBox.update ms sb
+                            in
+                            { model
+                                | assetSelectBox = Just newSelect
+                                , selectedAsset =
+                                    case outMsg of
+                                        ThemedSelectBox.Selected sel ->
+                                            sel
+
+                                        _ ->
+                                            model.selectedAsset
+                            }
+                        )
+                    |> Maybe.withDefault model
+
+
+resetIncludeZeroValueTxs : InternalModel -> InternalModel
+resetIncludeZeroValueTxs model =
+    { model
+        | includeZeroValueTxs =
+            model.includeZeroValueTxs
+                |> Maybe.map (\_ -> True)
+    }
+
+
+resetSelectedAsset : InternalModel -> InternalModel
+resetSelectedAsset model =
+    { model
+        | selectedAsset = Nothing
+    }
+
+
+resetDateRangePicker : InternalModel -> InternalModel
+resetDateRangePicker model =
+    { model
+        | dateRangePicker =
             model.dateRangePicker
                 |> Maybe.map
-                    (\dateRangePicker ->
-                        let
-                            newPicker =
-                                DateRangePicker.update subMsg dateRangePicker
-                        in
-                        { model
-                            | dateRangePicker = Just newPicker
-                        }
+                    (\drp ->
+                        DateRangePicker.init UpdateDateRangePicker drp.focusDate Nothing Nothing drp.settings
                     )
-                |> Maybe.withDefault model
+    }
 
-        TxTableFilterShowAllTxs ->
+
+resetDirection : InternalModel -> InternalModel
+resetDirection model =
+    { model
+        | direction =
             model.direction
-            |> Maybe.map (\_ -> { model | direction = Nothing })
-            |> Maybe.withDefault model
-
-        TxTableFilterShowIncomingTxOnly ->
-            model.direction
-            |> Maybe.map (\_ -> { model | direction = Just <| Just Incoming })
-            |> Maybe.withDefault model
-
-        TxTableFilterShowOutgoingTxOnly ->
-            model.direction
-            |> Maybe.map (\_ -> { model | direction = Just <| Just Outgoing })
-            |> Maybe.withDefault model
-
-        TxTableFilterToggleZeroValue ->
-            { model
-                | includeZeroValueTxs =
-                    model.includeZeroValueTxs
-                        |> Maybe.withDefault False
-                        |> not
-                        |> Just
-            }
-
-        TxTableAssetSelectBoxMsg ms ->
-            model.assetSelectBox
-                |> Maybe.map
-                    (\sb ->
-                        let
-                            ( newSelect, outMsg ) =
-                                ThemedSelectBox.update ms sb
-                        in
-                        { model
-                            | assetSelectBox = Just newSelect
-                            , selectedAsset =
-                                case outMsg of
-                                    ThemedSelectBox.Selected sel ->
-                                        sel
-
-                                    _ ->
-                                        model.selectedAsset
-                        }
-                    )
-                |> Maybe.withDefault model
+                |> Maybe.map (\_ -> Nothing)
+    }
 
 
 closeButtonGrey : msg -> Html msg
@@ -245,8 +301,8 @@ zeroValuesHeader vc resetMsg includeZeroValueTxs =
         stringFilterHeader vc resetMsg "no zero value"
 
 
-filterHeader : View.Config -> FilterHeaderConfig msg -> FilterMetadata -> Html msg
-filterHeader vc config model =
+filterHeader : View.Config -> FilterHeaderConfig msg -> Model -> Html msg
+filterHeader vc config (Internal model) =
     SidePanelComponents.sidePanelListFilterRowWithAttributes
         (SidePanelComponents.sidePanelListFilterRowAttributes
             |> Rs.s_root
@@ -311,8 +367,8 @@ filterHeader vc config model =
         }
 
 
-txFilterDialogView : View.Config -> String -> FilterHeaderConfig msg -> FilterMetadata -> Html msg
-txFilterDialogView vc net config model =
+txFilterDialogView : View.Config -> String -> FilterHeaderConfig msg -> Model -> Html msg
+txFilterDialogView vc net config (Internal model) =
     let
         toRadio name selected msg =
             Controls.radioSmall (Locale.string vc.locale name) selected msg
@@ -322,16 +378,15 @@ txFilterDialogView vc net config model =
 
         directionRadios =
             model.direction
-            |> Maybe.map 
-                (\direction ->
-
-            [ TxTableFilterShowAllTxs |> toRadio "all transactions" (direction == Nothing)
-            , TxTableFilterShowIncomingTxOnly |> toRadio "incoming only" (direction == Just Incoming)
-            , TxTableFilterShowOutgoingTxOnly |> toRadio "outgoing only" (direction == Just Outgoing)
-            ]
-                |> List.map (Html.map config.tag)
-            )
-            |> Maybe.withDefault []
+                |> Maybe.map
+                    (\direction ->
+                        [ TxTableFilterShowAllTxs |> toRadio "all transactions" (direction == Nothing)
+                        , TxTableFilterShowIncomingTxOnly |> toRadio "incoming only" (direction == Just Incoming)
+                        , TxTableFilterShowOutgoingTxOnly |> toRadio "outgoing only" (direction == Just Outgoing)
+                        ]
+                            |> List.map (Html.map config.tag)
+                    )
+                |> Maybe.withDefault []
     in
     SidePanelComponents.filterTransactionsPopupWithAttributes
         (SidePanelComponents.filterTransactionsPopupAttributes
@@ -499,53 +554,59 @@ txFilterDialogView vc net config model =
         }
 
 
-init : FilterMetadata
+init : Model
 init =
-    { dateRangePicker = Nothing
-    , direction = Nothing
-    , assetSelectBox = Nothing
-    , selectedAsset = Nothing
-    , includeZeroValueTxs = Nothing
-    }
+    Internal
+        { dateRangePicker = Nothing
+        , direction = Nothing
+        , assetSelectBox = Nothing
+        , selectedAsset = Nothing
+        , includeZeroValueTxs = Nothing
+        }
 
 
-withDateRangePicker : Locale.Model -> Posix -> Posix -> FilterMetadata -> FilterMetadata
-withDateRangePicker locale mn mx builder =
-    { builder
-        | dateRangePicker =
-            datePickerSettings locale mn mx
-                |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
-                |> Just
-    }
+withDateRangePicker : Locale.Model -> Posix -> Posix -> Model -> Model
+withDateRangePicker locale mn mx (Internal builder) =
+    Internal
+        { builder
+            | dateRangePicker =
+                datePickerSettings locale mn mx
+                    |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
+                    |> Just
+        }
 
 
-withDirection : Maybe Direction -> FilterMetadata -> FilterMetadata
-withDirection direction builder =
-    { builder | direction = Just direction }
+withDirection : Maybe Direction -> Model -> Model
+withDirection direction (Internal builder) =
+    Internal
+        { builder | direction = Just direction }
 
 
-withAssetSelectBox : List String -> FilterMetadata -> FilterMetadata
-withAssetSelectBox assets builder =
-    { builder | assetSelectBox = Just (ThemedSelectBox.init (Nothing :: List.map Just assets)) }
+withAssetSelectBox : List String -> Model -> Model
+withAssetSelectBox assets (Internal builder) =
+    Internal
+        { builder | assetSelectBox = Just (ThemedSelectBox.init (Nothing :: List.map Just assets)) }
 
 
-withIncludeZeroValueTxs : Bool -> FilterMetadata -> FilterMetadata
-withIncludeZeroValueTxs includeZeroValueTxs builder =
-    { builder | includeZeroValueTxs = Just includeZeroValueTxs }
+withIncludeZeroValueTxs : Bool -> Model -> Model
+withIncludeZeroValueTxs includeZeroValueTxs (Internal builder) =
+    Internal
+        { builder | includeZeroValueTxs = Just includeZeroValueTxs }
 
 
-updateDateRange : Posix -> Posix -> FilterMetadata -> FilterMetadata
-updateDateRange mn mx model =
-    { model
-        | dateRangePicker =
-            model.dateRangePicker
-                |> Maybe.map (DateRangePicker.setFrom mn)
-                |> Maybe.map (DateRangePicker.setTo mx)
-    }
+updateDateRange : ( Maybe Posix, Maybe Posix ) -> Model -> Model
+updateDateRange ( mn, mx ) (Internal model) =
+    Internal
+        { model
+            | dateRangePicker =
+                model.dateRangePicker
+                    |> Maybe.map (DateRangePicker.setFrom mn)
+                    |> Maybe.map (DateRangePicker.setTo mx)
+        }
 
 
-hasChanged : FilterMetadata -> FilterMetadata -> Bool
-hasChanged old new =
+hasChanged : Model -> Model -> Bool
+hasChanged (Internal old) (Internal new) =
     let
         newFromDate =
             new.dateRangePicker |> Maybe.map .fromDate
@@ -555,22 +616,26 @@ hasChanged old new =
     in
     (newFromDate /= oldFromDate)
         || (old.selectedAsset /= new.selectedAsset)
+        || (old.includeZeroValueTxs /= new.includeZeroValueTxs)
+        || (old.direction /= new.direction)
 
 
-setFocusDate : Time.Posix -> FilterMetadata -> FilterMetadata
-setFocusDate focusDate model =
-    { model
-        | dateRangePicker =
-            model.dateRangePicker
-                |> Maybe.map (DateRangePicker.setFocus focusDate)
-    }
+setFocusDate : Time.Posix -> Model -> Model
+setFocusDate focusDate (Internal model) =
+    Internal
+        { model
+            | dateRangePicker =
+                model.dateRangePicker
+                    |> Maybe.map (DateRangePicker.setFocus focusDate)
+        }
 
 
-updateSelectedAsset : Maybe String -> FilterMetadata -> FilterMetadata
-updateSelectedAsset selectedAsset model =
-    { model | selectedAsset = selectedAsset }
+updateSelectedAsset : Maybe String -> Model -> Model
+updateSelectedAsset selectedAsset (Internal model) =
+    Internal
+        { model | selectedAsset = selectedAsset }
 
 
-getDirection : FilterMetadata -> Maybe Direction
-getDirection =
-    .direction >> Maybe.Extra.join
+getDirection : Model -> Maybe Direction
+getDirection (Internal model) =
+    model.direction |> Maybe.Extra.join

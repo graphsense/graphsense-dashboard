@@ -125,9 +125,9 @@ fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
                         else
                             txs.order
                     )
-        , tokenCurrency = txs.filter.selectedAsset
-        , minDate = txs.filter.dateRangePicker |> Maybe.andThen .fromDate
-        , maxDate = txs.filter.dateRangePicker |> Maybe.andThen .toDate
+        , tokenCurrency = TransactionFilter.getSelectedAsset txs.filter
+        , minDate = TransactionFilter.getDateRange txs.filter |> Maybe.andThen first
+        , maxDate = TransactionFilter.getDateRange txs.filter |> Maybe.andThen second
         }
         msg
         |> ApiEffect
@@ -774,12 +774,8 @@ openTransactionTable _ dfp model =
 
     else
         model.txs
-            |> RemoteData.map2
-                (\data txs ->
-                    let
-                        ( mmin, mmax ) =
-                            Address.getActivityRange data
-                    in
+            |> RemoteData.map
+                (\txs ->
                     { model
                         | transactionsTableOpen = True
                         , txs =
@@ -787,14 +783,20 @@ openTransactionTable _ dfp model =
                                 { txs
                                     | filter =
                                         txs.filter
-                                            |> TransactionFilter.updateDateRange
-                                                (dfp |> Maybe.andThen .fromDate |> Maybe.withDefault mmin)
-                                                (dfp |> Maybe.andThen .toDate |> Maybe.withDefault mmax)
+                                            |> (dfp
+                                                    |> Maybe.map
+                                                        (\dfp_ ->
+                                                            ( dfp_.fromDate
+                                                            , dfp_.toDate
+                                                            )
+                                                        )
+                                                    |> Maybe.map TransactionFilter.updateDateRange
+                                                    |> Maybe.withDefault identity
+                                               )
                                 }
                     }
                         |> loadFirstTxsPage False
                 )
-                model.address.data
             |> RemoteData.withDefault (n model)
 
 

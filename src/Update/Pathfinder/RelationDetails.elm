@@ -24,7 +24,6 @@ import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
 import Util exposing (n)
 import Util.Data as Data
-import Util.ThemedSelectBox as ThemedSelectBox
 import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Locale as Locale
@@ -48,10 +47,10 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
                 ( Id.id b, Id.id a )
 
         fromD =
-            txTable.filter.dateRangePicker |> Maybe.andThen .fromDate
+            TransactionFilter.getDateRange txTable.filter |> Maybe.andThen first
 
         toD =
-            txTable.filter.dateRangePicker |> Maybe.andThen .toDate
+            TransactionFilter.getDateRange txTable.filter |> Maybe.andThen second
     in
     msg isA2b nextpage
         >> RelationDetailsMsg id
@@ -63,7 +62,7 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
             , maxHeight = Nothing
             , minDate = fromD
             , maxDate = toD
-            , tokenCurrency = txTable.filter.selectedAsset
+            , tokenCurrency = TransactionFilter.getSelectedAsset txTable.filter
             , order =
                 sorting
                     |> Maybe.andThen
@@ -123,21 +122,27 @@ updateAggEdge uc edge model =
     let
         a2bSelect =
             edge.a2b
-                |> Init.getExposedAssetsForNeighborWebData (Locale.getTokenTickersAndBase uc.locale (edge.a |> Id.network))
+                |> Init.getExposedAssetsForNeighborWebData
 
         b2aSelect =
             edge.b2a
-                |> Init.getExposedAssetsForNeighborWebData (Locale.getTokenTickersAndBase uc.locale (edge.b |> Id.network))
+                |> Init.getExposedAssetsForNeighborWebData
     in
     { model
         | aggEdge = edge
         , a2bTable =
             model.a2bTable.filter
-                |> TransactionFilter.withAssetSelectBox a2bSelect
+                |> (a2bSelect
+                        |> Maybe.map TransactionFilter.withAssetSelectBox
+                        |> Maybe.withDefault identity
+                   )
                 |> flip Rs.s_filter model.a2bTable
         , b2aTable =
             model.b2aTable.filter
-                |> TransactionFilter.withAssetSelectBox b2aSelect
+                |> (b2aSelect
+                        |> Maybe.map TransactionFilter.withAssetSelectBox
+                        |> Maybe.withDefault identity
+                   )
                 |> flip Rs.s_filter model.b2aTable
     }
 
@@ -319,7 +324,9 @@ update _ id msg model =
                     |> mapFirst (flip gs.setTable model)
 
             else
-                n model
+                model
+                    |> gs.setTable newTbl
+                    |> n
 
         ExportCSVMsg _ _ _ ->
             -- handled upstream

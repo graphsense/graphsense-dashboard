@@ -5,14 +5,13 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Config.Update as Update
-import Model.Direction exposing (Direction)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Time
 import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
-init : Update.Config -> ( Time.Posix, Time.Posix ) -> Direction -> List String -> RelationTxsTable.Model
-init uc ( mn, mx ) dir assets =
+init : Update.Config -> ( Time.Posix, Time.Posix ) -> Maybe (List String) -> RelationTxsTable.Model
+init uc ( mn, mx ) assets =
     let
         table isDesc =
             Table.initSorted isDesc RelationTxsTable.titleTimestamp
@@ -25,6 +24,8 @@ init uc ( mn, mx ) dir assets =
     , filter =
         TransactionFilter.init
             |> TransactionFilter.withDateRangePicker uc.locale mn mx
-            |> TransactionFilter.withAssetSelectBox assets
-            |> TransactionFilter.withDirection (Just dir)
+            |> (assets
+                    |> Maybe.map TransactionFilter.withAssetSelectBox
+                    |> Maybe.withDefault identity
+               )
     }

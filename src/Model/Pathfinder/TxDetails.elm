@@ -18,5 +18,5 @@ type alias Model =
     , baseTx : WebData Api.Data.TxAccount
     , subTxsTable : InfiniteTable.Model Api.Data.TxAccount
     , isSubTxsTableFilterDialogOpen : Bool
-    , subTxsTableFilter : TransactionFilter.FilterMetadata
+    , subTxsTableFilter : TransactionFilter.Model
     }

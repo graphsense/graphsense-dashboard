@@ -113,6 +113,7 @@ import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
 import View.Locale as Locale exposing (makeTimestampFilename)
 import View.Pathfinder exposing (originShiftX)
+import View.Pathfinder.TransactionFilter as TransactionFilter
 import Workflow
 
 
@@ -187,18 +188,14 @@ syncUrl model =
                                             |> Just
 
                                     Success txs ->
-                                        txs.filter.dateRangePicker
+                                        txs.filter
+                                            |> TransactionFilter.getDateRange
                                             |> Maybe.map
-                                                (\{ fromDate, toDate } ->
+                                                (\( fromDate, toDate ) ->
                                                     { fromDate = fromDate
                                                     , toDate = toDate
                                                     }
                                                 )
-                                            |> Maybe.withDefault
-                                                { fromDate = Nothing
-                                                , toDate = Nothing
-                                                }
-                                            |> Just
                     in
                     Route.addressRouteWithFilter
                         { network = Id.network id
@@ -258,15 +255,16 @@ syncSidePanel uc model =
                                     |> Maybe.andThen Address.getActivityRangeAddress
                                     |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
                         in
-                            Maybe.map2 
+                        Maybe.map2
                             (\ar1 ar2 ->
                                 ( Time.millisToPosix (min (Tuple.first ar1) (Tuple.first ar2))
-                                , Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2)) 
+                                , Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2))
                                 )
-                                |> RelationDetails.init uc aggEdge 
-                                |> RelationDetails rid
+                                    |> RelationDetails.init uc aggEdge
+                                    |> RelationDetails rid
                             )
-                            maybeAr1 maybeAr2
+                            maybeAr1
+                            maybeAr2
                     )
     in
     (case ( model.selection, model.details ) of

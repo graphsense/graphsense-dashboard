@@ -10,24 +10,29 @@ import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import RemoteData
 import Time
+import Util.Data as Data
 
 
-getExposedAssetsForNeighbor : Api.Data.NeighborAddress -> List String
+getExposedAssetsForNeighbor : Api.Data.NeighborAddress -> Maybe (List String)
 getExposedAssetsForNeighbor data =
-    String.toUpper data.address.currency
-        :: (data.tokenValues
-                |> Maybe.map (Dict.keys >> List.map String.toUpper)
-                |> Maybe.withDefault []
-           )
+    if Data.isAccountLike data.address.currency then
+        String.toUpper data.address.currency
+            :: (data.tokenValues
+                    |> Maybe.map (Dict.keys >> List.map String.toUpper)
+                    |> Maybe.withDefault []
+               )
+            |> Just
+
+    else
+        Nothing
 
 
-getExposedAssetsForNeighborWebData : List String -> RemoteData.WebData (Maybe Api.Data.NeighborAddress) -> List String
-getExposedAssetsForNeighborWebData default webData =
+getExposedAssetsForNeighborWebData : RemoteData.WebData (Maybe Api.Data.NeighborAddress) -> Maybe (List String)
+getExposedAssetsForNeighborWebData webData =
     webData
         |> RemoteData.toMaybe
         |> Maybe.Extra.join
-        |> Maybe.map getExposedAssetsForNeighbor
-        |> Maybe.withDefault default
+        |> Maybe.andThen getExposedAssetsForNeighbor
 
 
 init : Update.Config -> AggEdge -> ( Time.Posix, Time.Posix ) -> RelationDetails.Model
@@ -36,15 +41,15 @@ init uc edge ( rangeFrom, rangeTo ) =
         -- if data should be missing, fall back to empty asset list
         -- update later assigns data when available
         a2bAssets =
-            edge.a2b |> getExposedAssetsForNeighborWebData []
+            edge.a2b |> getExposedAssetsForNeighborWebData
 
         b2aAssets =
-            edge.b2a |> getExposedAssetsForNeighborWebData []
+            edge.b2a |> getExposedAssetsForNeighborWebData
     in
     { a2bTableOpen = False
     , b2aTableOpen = False
-    , a2bTable = RelationTxsTable.init uc ( rangeFrom, rangeTo ) Incoming a2bAssets
-    , b2aTable = RelationTxsTable.init uc ( rangeFrom, rangeTo ) Outgoing b2aAssets
+    , a2bTable = RelationTxsTable.init uc ( rangeFrom, rangeTo ) a2bAssets
+    , b2aTable = RelationTxsTable.init uc ( rangeFrom, rangeTo ) b2aAssets
     , aggEdge = edge
     , rangeFrom = rangeFrom
     , rangeTo = rangeTo

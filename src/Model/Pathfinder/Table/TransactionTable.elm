@@ -4,16 +4,13 @@ import Api.Data
 import Api.Request.Addresses
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
-import Model.DateRangePicker as DateRangePicker
-import Model.Direction exposing (Direction)
-import Util.ThemedSelectBox as ThemedSelectBox
 import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 type alias Model =
     { table : InfiniteTable.Model Api.Data.AddressTx
     , order : Maybe Api.Request.Addresses.Order_
-    , filter : TransactionFilter.FilterMetadata
+    , filter : TransactionFilter.Model
     , isTxFilterViewOpen : Bool
     }
 
@@ -45,5 +42,3 @@ filter =
                     String.contains term tx.txHash
     , filter = always True
     }
-
-

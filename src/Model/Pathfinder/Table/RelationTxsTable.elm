@@ -6,13 +6,14 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import View.Pathfinder.TransactionFilter as TransactionFilter
+import Model.Direction exposing (Direction)
 
 
 type alias Model =
     { table : InfiniteTable.Model Api.Data.Link
     , order : Maybe Api.Request.Addresses.Order_
     , isTxFilterViewOpen : Bool
-    , filter : TransactionFilter.FilterMetadata
+    , filter : TransactionFilter.Model
     , exportCSV : ExportCSV.Model
     }
 
