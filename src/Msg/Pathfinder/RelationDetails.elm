@@ -3,9 +3,9 @@ module Msg.Pathfinder.RelationDetails exposing (Msg(..))
 import Api.Data
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
+import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import Components.TransactionFilter as TransactionFilter
 
 
 type Msg

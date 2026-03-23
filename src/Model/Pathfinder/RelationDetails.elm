@@ -2,7 +2,6 @@ module Model.Pathfinder.RelationDetails exposing (Model)
 
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import Msg.Pathfinder.RelationDetails exposing (Msg)
 import Time
 
 

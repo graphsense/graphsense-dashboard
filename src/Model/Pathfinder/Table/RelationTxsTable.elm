@@ -6,7 +6,6 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
-import Model.Direction exposing (Direction)
 
 
 type alias Model =

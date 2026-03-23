@@ -11,7 +11,6 @@ import Config.Update as Update
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.RelationDetails as Init
-import Model.Locale as Locale
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.RelationDetails exposing (Model)
@@ -118,7 +117,7 @@ gettersAndSetters isA2b =
 
 
 updateAggEdge : Update.Config -> AggEdge -> Model -> Model
-updateAggEdge uc edge model =
+updateAggEdge _ edge model =
     let
         a2bSelect =
             edge.a2b

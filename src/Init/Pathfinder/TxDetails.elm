@@ -9,7 +9,6 @@ import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
 import RemoteData
 import Util.Data exposing (negateTxValue)
-import Util.ThemedSelectBox as ThemedSelectBox
 
 
 initSubTxTable : InfiniteTable.Model Api.Data.TxAccount

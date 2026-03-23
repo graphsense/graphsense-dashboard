@@ -20,7 +20,7 @@ import List.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
-import Model.Pathfinder.Address as Address exposing (Address)
+import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
@@ -321,7 +321,7 @@ update uc msg model =
                                     loadFirstTxsPage True
 
                                 else
-                                    identity >> n
+                                    n
                                )
                     )
                 |> RemoteData.withDefault (n model)

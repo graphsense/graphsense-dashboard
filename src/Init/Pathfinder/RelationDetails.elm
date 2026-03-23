@@ -5,7 +5,6 @@ import Config.Update as Update
 import Dict
 import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Maybe.Extra
-import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import RemoteData
