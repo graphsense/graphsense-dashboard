@@ -548,3 +548,5 @@ export-dialog-button: "exportar"
 export-dialog-title: "exportar"
 export-dialog-description: "exportar el gráfico actual a varios formatos"
 export-dialog-transparent-background: "fondo transparente"
+datefilter-starting: a partir del
+datefilter-until: hasta el

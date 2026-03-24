@@ -526,3 +526,5 @@ export-dialog-button: "export"
 export-dialog-title: "export"
 export-dialog-description: "export the current graph to a various formats"
 export-dialog-transparent-background: "transparent background"
+datefilter-starting: starting
+datefilter-until: until

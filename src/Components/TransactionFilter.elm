@@ -241,8 +241,11 @@ dateTimeFilterHeader vc resetMsg dmodel =
             dmodel.toDate
                 |> Maybe.map (renderDate (Locale.isLastSecondOfTheDay vc.locale))
     in
-    Maybe.map2
-        (\startP endP ->
+    case ( startDate, endDate ) of
+        ( Nothing, Nothing ) ->
+            none
+
+        ( Just startP, Just endP ) ->
             SidePanelComponents.filterLabel
                 { root =
                     { iconInstance =
@@ -253,10 +256,30 @@ dateTimeFilterHeader vc resetMsg dmodel =
                     , dateRangeVisible = True
                     }
                 }
-        )
-        startDate
-        endDate
-        |> Maybe.withDefault none
+
+        ( Just startP, Nothing ) ->
+            SidePanelComponents.filterLabel
+                { root =
+                    { iconInstance =
+                        closeButtonGrey resetMsg
+                    , text1 = startP
+                    , text2 = Locale.string vc.locale "datefilter-starting"
+                    , text3 = ""
+                    , dateRangeVisible = True
+                    }
+                }
+
+        ( Nothing, Just endP ) ->
+            SidePanelComponents.filterLabel
+                { root =
+                    { iconInstance =
+                        closeButtonGrey resetMsg
+                    , text1 = endP
+                    , text2 = Locale.string vc.locale "datefilter-until"
+                    , text3 = ""
+                    , dateRangeVisible = True
+                    }
+                }
 
 
 directionFilterHeader : View.Config -> msg -> Direction -> Html msg

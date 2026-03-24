@@ -2,6 +2,7 @@ module Init.Pathfinder.Table.TransactionTable exposing (init)
 
 import Api.Data
 import Api.Request.Addresses
+import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
@@ -12,6 +13,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
+import Tuple exposing (pair)
 import Util.Data exposing (timestampToPosix)
 
 
@@ -25,7 +27,7 @@ init uc network txsFilter addressId data assets =
         ( mmin, mmax ) =
             Address.getActivityRange data
 
-        { desc, order, min, selectedAsset } =
+        prefilter =
             Network.getRecentTxForAddress network Incoming addressId
                 |> Maybe.map
                     (\tx ->
@@ -40,27 +42,37 @@ init uc network txsFilter addressId data assets =
                                 |> Maybe.map (.raw >> .currency)
                         }
                     )
-                |> Maybe.withDefault
-                    { desc = True
-                    , order = Just Api.Request.Addresses.Order_Desc
-                    , min = mmin
-                    , selectedAsset = Nothing
-                    }
     in
-    { table = table desc
-    , order = order
+    { table =
+        prefilter
+            |> Maybe.map .desc
+            |> Maybe.withDefault True
+            |> table
+    , order =
+        prefilter
+            |> Maybe.map .order
+            |> Maybe.withDefault (Just Api.Request.Addresses.Order_Desc)
     , filter =
         txsFilter
             |> Maybe.map
-                (TransactionFilter.withDateRangePicker uc.locale min mmax
+                (TransactionFilter.withDateRangePicker uc.locale mmin mmax
                     >> TransactionFilter.withAssetSelectBox assets
                 )
             |> Maybe.withDefault
                 (TransactionFilter.init
-                    |> TransactionFilter.withDateRangePicker uc.locale min mmax
+                    |> TransactionFilter.withDateRangePicker uc.locale mmin mmax
                     |> TransactionFilter.withAssetSelectBox assets
                     |> TransactionFilter.withDirection Nothing
-                    |> TransactionFilter.updateSelectedAsset selectedAsset
+                    |> (prefilter
+                            |> Maybe.map .selectedAsset
+                            |> Maybe.map TransactionFilter.updateSelectedAsset
+                            |> Maybe.withDefault identity
+                       )
+                    |> (prefilter
+                            |> Maybe.map .min
+                            |> Maybe.map (\mn -> TransactionFilter.updateDateRange ( Just mn, Nothing ))
+                            |> Maybe.withDefault identity
+                       )
                 )
     , isTxFilterViewOpen = False
     }

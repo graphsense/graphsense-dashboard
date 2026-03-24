@@ -543,3 +543,5 @@ export-dialog-button: "Exportieren"
 export-dialog-title: "Exportieren"
 export-dialog-description: "Exportieren Sie den aktuellen Graphen in verschiedene Formate"
 export-dialog-transparent-background: "transparenter Hintergrund"
+datefilter-starting: ab
+datefilter-until: bis
