@@ -148,6 +148,7 @@ type Msg
     | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
     | InternalExportGraphTxsCompleted
+    | InternalChangedTxFilter Id TransactionFilter.Model
 
 
 type alias TextTooltipConfig =

@@ -227,7 +227,7 @@ syncSidePanel uc model =
     let
         makeAddressDetails aid =
             Dict.get aid model.network.addresses
-                |> Maybe.map AddressDetails.init
+                |> Maybe.map (AddressDetails.init (Dict.get aid model.txsFilters))
                 |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
@@ -2634,6 +2634,9 @@ updateByMsg plugins uc msg model =
         InternalExportGraphTxsCompleted ->
             -- handled upstream
             n model
+
+        InternalChangedTxFilter id filter ->
+            n { model | txsFilters = Dict.insert id filter model.txsFilters }
 
 
 exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )

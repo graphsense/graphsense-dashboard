@@ -3,6 +3,7 @@ module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), 
 import Api.Data exposing (Actor, Entity)
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
+import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
 import Model.Graph exposing (Dragging)
@@ -66,6 +67,7 @@ type alias Model =
     , exportCSV : ExportCSV.Model
     , exportCSVGraph : ExportCSV.Model
     , exportImage : Maybe ExportImage
+    , txsFilters : Dict Id TransactionFilter.Model
     }
 
 

@@ -442,3 +442,6 @@ shallPushHistory plugins msg _ =
 
         InternalExportGraphTxsCompleted ->
             False
+
+        InternalChangedTxFilter _ _ ->
+            False

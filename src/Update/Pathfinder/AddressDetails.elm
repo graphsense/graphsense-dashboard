@@ -319,6 +319,7 @@ update uc msg model =
                             |> flip s_txs model
                             |> (if changed then
                                     loadFirstTxsPage True
+                                        >> and (storeFilter model.address.id newFilter)
 
                                 else
                                     n
@@ -511,6 +512,15 @@ update uc msg model =
         BrowserGotBulkTagsForExport _ _ _ _ ->
             -- handled upstream
             n model
+
+
+storeFilter : Id -> TransactionFilter.Model -> Model -> ( Model, List Effect )
+storeFilter id filter m =
+    ( m
+    , [ Pathfinder.InternalChangedTxFilter id filter
+            |> InternalEffect
+      ]
+    )
 
 
 closeTransactionTable : Model -> ( Model, List Effect )
@@ -782,7 +792,8 @@ openTransactionTable _ dfp model =
                             RemoteData.Success
                                 { txs
                                     | filter =
-                                        txs.filter
+                                        model.txsFilter
+                                            |> Maybe.withDefault txs.filter
                                             |> (dfp
                                                     |> Maybe.map
                                                         (\dfp_ ->

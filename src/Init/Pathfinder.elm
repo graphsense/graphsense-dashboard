@@ -55,6 +55,7 @@ init us =
       , exportCSV = ExportCSV.init
       , exportCSVGraph = ExportCSV.init
       , exportImage = Nothing
+      , txsFilters = Dict.empty
       }
     , Cmd.none
     )
