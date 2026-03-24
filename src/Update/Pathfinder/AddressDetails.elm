@@ -35,7 +35,7 @@ import RemoteData exposing (WebData)
 import Set
 import Table
 import Time
-import Tuple exposing (first, mapFirst, mapSecond, second)
+import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple3
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
@@ -318,8 +318,11 @@ update uc msg model =
                             |> RemoteData.Success
                             |> flip s_txs model
                             |> (if changed then
-                                    loadFirstTxsPage True
-                                        >> and (storeFilter model.address.id newFilter)
+                                    flip pair
+                                        [ Pathfinder.InternalChangedTxFilter model.address.id newFilter
+                                            |> InternalEffect
+                                        ]
+                                        >> and (loadFirstTxsPage True)
 
                                 else
                                     n
@@ -512,15 +515,6 @@ update uc msg model =
         BrowserGotBulkTagsForExport _ _ _ _ ->
             -- handled upstream
             n model
-
-
-storeFilter : Id -> TransactionFilter.Model -> Model -> ( Model, List Effect )
-storeFilter id filter m =
-    ( m
-    , [ Pathfinder.InternalChangedTxFilter id filter
-            |> InternalEffect
-      ]
-    )
 
 
 closeTransactionTable : Model -> ( Model, List Effect )

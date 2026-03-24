@@ -51,10 +51,16 @@ init uc network txsFilter addressId data assets =
     , order = order
     , filter =
         txsFilter
-            |> Maybe.withDefault TransactionFilter.init
-            |> TransactionFilter.withDateRangePicker uc.locale min mmax
-            |> TransactionFilter.withDirection Nothing
-            |> TransactionFilter.withAssetSelectBox assets
-            |> TransactionFilter.updateSelectedAsset selectedAsset
+            |> Maybe.map
+                (TransactionFilter.withDateRangePicker uc.locale min mmax
+                    >> TransactionFilter.withAssetSelectBox assets
+                )
+            |> Maybe.withDefault
+                (TransactionFilter.init
+                    |> TransactionFilter.withDateRangePicker uc.locale min mmax
+                    |> TransactionFilter.withAssetSelectBox assets
+                    |> TransactionFilter.withDirection Nothing
+                    |> TransactionFilter.updateSelectedAsset selectedAsset
+                )
     , isTxFilterViewOpen = False
     }

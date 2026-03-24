@@ -11,11 +11,11 @@ import Init.Pathfinder.TxDetails exposing (initSubTxTable)
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails exposing (Model)
-import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder as Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter exposing (s_baseTx, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable)
 import RemoteData
-import Tuple exposing (mapFirst, mapSecond)
-import Util exposing (n)
+import Tuple exposing (mapFirst, mapSecond, pair)
+import Util exposing (and, n)
 import Util.Data as Data
 
 
@@ -116,7 +116,11 @@ update msg model =
             in
             { model | subTxsTableFilter = newFilter }
                 |> (if changed then
-                        reloadSubTxTable
+                        flip pair
+                            [ Pathfinder.InternalChangedTxFilter model.tx.id newFilter
+                                |> InternalEffect
+                            ]
+                            >> and reloadSubTxTable
 
                     else
                         n

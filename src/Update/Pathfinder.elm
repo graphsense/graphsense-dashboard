@@ -231,8 +231,16 @@ syncSidePanel uc model =
                 |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
+            let
+                assets =
+                    uc.locale
+                        |> flip Locale.getTokenTickers (Id.network tid)
+
+                txsFilter =
+                    Dict.get tid model.txsFilters
+            in
             Dict.get tid model.network.txs
-                |> Maybe.map (TxDetails.init (uc.locale |> flip Locale.getTokenTickers (Id.network tid)) >> TxDetails tid)
+                |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
 
         makeRelationDetails rid =
             Dict.get rid model.network.aggEdges
