@@ -5,35 +5,31 @@ import Api.Request.Addresses
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
-import Config.DateRangePicker exposing (datePickerSettings)
+import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
-import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.RelationDetails as Init
-import Model.Locale as Locale
 import Model.Pathfinder.AggEdge exposing (AggEdge)
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.RelationDetails exposing (Model)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder as Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
-import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_assetSelectBox, s_b2aTable, s_b2aTableOpen, s_dateRangePicker, s_isTxFilterViewOpen, s_selectedAsset, s_table)
+import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_b2aTable, s_b2aTableOpen, s_isTxFilterViewOpen, s_table)
 import Table
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
-import Update.DateRangePicker as DateRangePicker
 import Util exposing (n)
 import Util.Data as Data
-import Util.ThemedSelectBox as ThemedSelectBox
 import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Locale as Locale
 
 
-loadRelationTxs : (Bool -> Maybe String -> Api.Data.Links -> Msg) -> ( Id, Id ) -> Bool -> RelationTxsTable.Model Msg -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+loadRelationTxs : (Bool -> Maybe String -> Api.Data.Links -> Msg) -> ( Id, Id ) -> Bool -> RelationTxsTable.Model -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
 loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
     let
         a =
@@ -50,10 +46,10 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
                 ( Id.id b, Id.id a )
 
         fromD =
-            txTable.dateRangePicker |> Maybe.andThen .fromDate
+            TransactionFilter.getDateRange txTable.filter |> Maybe.andThen first
 
         toD =
-            txTable.dateRangePicker |> Maybe.andThen .toDate
+            TransactionFilter.getDateRange txTable.filter |> Maybe.andThen second
     in
     msg isA2b nextpage
         >> RelationDetailsMsg id
@@ -65,7 +61,7 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
             , maxHeight = Nothing
             , minDate = fromD
             , maxDate = toD
-            , tokenCurrency = txTable.selectedAsset
+            , tokenCurrency = TransactionFilter.getSelectedAsset txTable.filter
             , order =
                 sorting
                     |> Maybe.andThen
@@ -86,7 +82,7 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
         |> ApiEffect
 
 
-tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model Msg -> InfiniteTable.Config Effect
+tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config Effect
 tableConfig id isA2b txTable =
     { fetch = loadRelationTxs BrowserGotLinks id isA2b txTable
     , force = False
@@ -99,8 +95,8 @@ tableConfig id isA2b txTable =
 gettersAndSetters :
     Bool
     ->
-        { getTable : Model -> RelationTxsTable.Model Msg
-        , setTable : RelationTxsTable.Model Msg -> Model -> Model
+        { getTable : Model -> RelationTxsTable.Model
+        , setTable : RelationTxsTable.Model -> Model -> Model
         , getOpen : Model -> Bool
         , setOpen : Bool -> Model -> Model
         }
@@ -121,35 +117,37 @@ gettersAndSetters isA2b =
 
 
 updateAggEdge : Update.Config -> AggEdge -> Model -> Model
-updateAggEdge uc edge model =
+updateAggEdge _ edge model =
     let
         a2bSelect =
             edge.a2b
-                |> Init.getExposedAssetsForNeighborWebData (Locale.getTokenTickersAndBase uc.locale (edge.a |> Id.network))
-                |> List.map Just
-                |> (::) Nothing
+                |> Init.getExposedAssetsForNeighborWebData
 
         b2aSelect =
             edge.b2a
-                |> Init.getExposedAssetsForNeighborWebData (Locale.getTokenTickersAndBase uc.locale (edge.b |> Id.network))
-                |> List.map Just
-                |> (::) Nothing
+                |> Init.getExposedAssetsForNeighborWebData
     in
     { model
         | aggEdge = edge
         , a2bTable =
-            model.a2bTable.assetSelectBox
-                |> ThemedSelectBox.updateOptions a2bSelect
-                |> flip Rs.s_assetSelectBox model.a2bTable
+            model.a2bTable.filter
+                |> (a2bSelect
+                        |> Maybe.map TransactionFilter.withAssetSelectBox
+                        |> Maybe.withDefault identity
+                   )
+                |> flip Rs.s_filter model.a2bTable
         , b2aTable =
-            model.b2aTable.assetSelectBox
-                |> ThemedSelectBox.updateOptions b2aSelect
-                |> flip Rs.s_assetSelectBox model.b2aTable
+            model.b2aTable.filter
+                |> (b2aSelect
+                        |> Maybe.map TransactionFilter.withAssetSelectBox
+                        |> Maybe.withDefault identity
+                   )
+                |> flip Rs.s_filter model.b2aTable
     }
 
 
-update : Update.Config -> ( Id, Id ) -> ( Time.Posix, Time.Posix ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
-update uc id ( rangeFrom, rangeTo ) msg model =
+update : Update.Config -> ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
+update _ id msg model =
     case msg of
         UserClickedToggleTable isA2b ->
             let
@@ -262,8 +260,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 tbl =
                     gs.getTable model
             in
-            tbl.dateRangePicker
-                |> flip s_dateRangePicker tbl
+            tbl
                 |> s_isTxFilterViewOpen (not tbl.isTxFilterViewOpen)
                 |> flip gs.setTable model
                 |> n
@@ -281,7 +278,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 |> flip gs.setTable model
                 |> n
 
-        OpenDateRangePicker isA2b ->
+        TransactionFilterMsg isA2b subMsg ->
             let
                 gs =
                     gettersAndSetters isA2b
@@ -289,196 +286,47 @@ update uc id ( rangeFrom, rangeTo ) msg model =
                 tbl =
                     gs.getTable model
 
-                focusDate =
-                    InfiniteTable.getTable tbl.table
-                        |> .data
-                        -- this is only try if data is sorted desc
-                        |> List.head
-                        |> Maybe.map getRawTimestampForRelationTx
-                        |> Maybe.map ((*) 1000 >> Time.millisToPosix)
-                        |> Maybe.withDefault rangeTo
+                newFilter =
+                    TransactionFilter.update subMsg tbl.filter
+                        |> (\nf ->
+                                case subMsg of
+                                    TransactionFilter.OpenDateRangePicker ->
+                                        let
+                                            focusDate =
+                                                InfiniteTable.getTable tbl.table
+                                                    |> .data
+                                                    -- this is only try if data is sorted desc
+                                                    |> List.head
+                                                    |> Maybe.map getRawTimestampForRelationTx
+                                                    |> Maybe.map ((*) 1000 >> Time.millisToPosix)
+                                                    |> Maybe.withDefault model.rangeTo
+                                        in
+                                        TransactionFilter.setFocusDate focusDate nf
+
+                                    _ ->
+                                        nf
+                           )
+
+                changed =
+                    TransactionFilter.hasChanged tbl.filter newFilter
+
+                newTbl =
+                    { tbl
+                        | filter = newFilter
+                    }
             in
-            tbl.dateRangePicker
-                |> Maybe.withDefault
-                    (datePickerSettings uc.locale rangeFrom focusDate
-                        |> DateRangePicker.init (UpdateDateRangePicker isA2b) focusDate Nothing Nothing
-                    )
-                |> DateRangePicker.openPicker
-                |> Just
-                |> flip s_dateRangePicker tbl
-                |> flip gs.setTable model
-                |> n
-
-        UpdateDateRangePicker isA2b subMsg ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                tbl =
-                    gs.getTable model
-            in
-            tbl.dateRangePicker
-                |> Maybe.map
-                    (\dateRangePicker ->
-                        let
-                            newPicker =
-                                DateRangePicker.update subMsg dateRangePicker
-
-                            dateRangeChanged =
-                                (newPicker.toDate /= Nothing && newPicker.toDate /= dateRangePicker.toDate) || (newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate)
-
-                            --&& ((newPicker.toDate |> Maybe.Extra.isJust) && (newPicker.fromDate |> Maybe.Extra.isJust))
-                            picker =
-                                if dateRangeChanged then
-                                    newPicker |> DateRangePicker.closePicker
-
-                                else
-                                    newPicker
-
-                            udateTbl =
-                                tbl |> s_dateRangePicker (Just picker)
-
-                            ( ntbl, eff ) =
-                                if dateRangeChanged then
-                                    udateTbl
-                                        |> .table
-                                        |> InfiniteTable.loadFirstPage
-                                            (tableConfig id isA2b udateTbl)
-
-                                else
-                                    ( udateTbl.table, [] )
-                        in
-                        ( model |> gs.setTable (udateTbl |> s_table ntbl)
-                        , if dateRangeChanged then
-                            eff
-
-                          else
-                            []
-                        )
-                    )
-                |> Maybe.withDefault (n model)
-
-        CloseDateRangePicker isA2b ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                tbl =
-                    gs.getTable model
-            in
-            tbl.dateRangePicker
-                |> Maybe.map DateRangePicker.closePicker
-                |> flip s_dateRangePicker tbl
-                |> flip gs.setTable model
-                |> n
-
-        ResetDateRangePicker isA2b ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                oldTable =
-                    gs.getTable model
-
-                tbl =
-                    oldTable
-                        |> s_dateRangePicker Nothing
-
-                ( table, eff ) =
-                    tbl
-                        |> .table
-                        |> InfiniteTable.loadFirstPage
-                            (tableConfig id isA2b tbl)
-            in
-            ( model |> gs.setTable (tbl |> s_table table)
-            , eff
-            )
-
-        ResetAllTxFilters isA2b ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                oldTable =
-                    gs.getTable model
-
-                tbl =
-                    oldTable
-                        |> s_selectedAsset Nothing
-                        |> s_dateRangePicker Nothing
-
-                ( table, eff ) =
-                    tbl
-                        |> .table
-                        |> InfiniteTable.loadFirstPage
-                            (tableConfig id isA2b tbl)
-            in
-            ( model |> gs.setTable (tbl |> s_table table)
-            , eff
-            )
-
-        ResetTxAssetFilter isA2b ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                oldTable =
-                    gs.getTable model
-
-                tbl =
-                    oldTable
-                        |> s_selectedAsset Nothing
-
-                ( table, eff ) =
-                    tbl
-                        |> .table
-                        |> InfiniteTable.loadFirstPage
-                            (tableConfig id isA2b tbl)
-            in
-            ( model |> gs.setTable (tbl |> s_table table)
-            , eff
-            )
-
-        TxTableAssetSelectBoxMsg isA2b ms ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                tbl =
-                    gs.getTable model
-
-                ( newSelect, outMsg ) =
-                    ThemedSelectBox.update ms tbl.assetSelectBox
-
-                newTxs =
-                    tbl
-                        |> s_assetSelectBox newSelect
-                        |> s_selectedAsset
-                            (case outMsg of
-                                ThemedSelectBox.Selected sel ->
-                                    sel
-
-                                _ ->
-                                    tbl.selectedAsset
-                            )
-            in
-            if tbl.selectedAsset == newTxs.selectedAsset then
-                -- no change
-                n (model |> gs.setTable newTxs)
+            if changed then
+                newTbl.table
+                    |> InfiniteTable.loadFirstPage
+                        (tableConfig id isA2b newTbl)
+                    |> mapFirst (flip s_table newTbl)
+                    |> mapFirst (flip gs.setTable model)
+                    |> mapSecond ((::) (Pathfinder.InternalChangedTxFilter (TxsFilterAggEdge isA2b id) newFilter |> InternalEffect))
 
             else
-                let
-                    ( ntbl, eff ) =
-                        newTxs
-                            |> .table
-                            |> InfiniteTable.loadFirstPage
-                                (tableConfig id isA2b newTxs)
-                in
-                ( newTxs
-                    |> s_table ntbl
-                    |> flip gs.setTable model
-                , eff
-                )
+                model
+                    |> gs.setTable newTbl
+                    |> n
 
         ExportCSVMsg _ _ _ ->
             -- handled upstream
@@ -489,7 +337,7 @@ update uc id ( rangeFrom, rangeTo ) msg model =
             n model
 
 
-makeExportCSVConfig : Update.Config -> Bool -> ( Id, Id ) -> RelationTxsTable.Model Msg -> ExportCSV.Config Api.Data.Link Effect
+makeExportCSVConfig : Update.Config -> Bool -> ( Id, Id ) -> RelationTxsTable.Model -> ExportCSV.Config Api.Data.Link Effect
 makeExportCSVConfig uc isA2b id tbl =
     let
         nw =

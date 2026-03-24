@@ -3,6 +3,7 @@ module View.Pathfinder.TxDetails exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.Table exposing (Table)
+import Components.TransactionFilter as TransactionFilter
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -36,7 +37,14 @@ import View.Pathfinder.Details exposing (closeAttrs, dataTab, emptyCell, valuesT
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 import View.Pathfinder.Table.SubTxsTable as SubTxsTable
-import View.Pathfinder.TransactionFilter as TransactionFilter
+
+
+filterConfig : TransactionFilter.FilterHeaderConfig TxDetailsMsg
+filterConfig =
+    { tag = TransactionFilterMsg
+    , toggleTxFilterViewMsg = UserClickedToggleSubTxsTableFilter
+    , exportCsv = Nothing
+    }
 
 
 view : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
@@ -78,14 +86,8 @@ accountAssetList vc viewState txExistsFn =
                 }
     in
     [ TransactionFilter.filterHeader vc
+        filterConfig
         viewState.subTxsTableFilter
-        { resetDateFilterMsg = NoOpSubTxsTable
-        , resetAssetsFilterMsg = UserClickedResetAllSubTxsTableFilters
-        , resetDirectionFilterMsg = Nothing
-        , toggleFilterView = UserClickedToggleSubTxsTableFilter
-        , resetZeroValueFilterMsg = Just UserClickedResetZeroValueSubTxsTableFilters
-        , exportCsv = Nothing
-        }
         |> Html.Styled.map TxDetailsMsg
     , InfiniteTable.view vc
         [ css fullWidth, css [ Css.height (Css.px 200) ] ]
@@ -113,17 +115,6 @@ account vc viewState id txExistsFn =
                     )
                     {}
                 ]
-
-        filterDialogMsgs =
-            { closeTxFilterViewMsg = UserClickedCloseSubTxTableFilterDialog
-            , txTableFilterShowAllTxsMsg = Nothing
-            , txTableFilterShowIncomingTxOnlyMsg = Nothing
-            , txTableFilterShowOutgoingTxOnlyMsg = Nothing
-            , txTableFilterToggleZeroValueMsg = Just UserClickedToggleIncludeZeroValueSubTxs
-            , resetAllTxFiltersMsg = UserClickedResetAllSubTxsTableFilters
-            , txTableAssetSelectBoxMsg = SubTxsSelectedAssetSelectBoxMsg
-            , openDateRangePickerMsg = Nothing
-            }
 
         baseTx =
             viewState.baseTx |> RemoteData.toMaybe
@@ -204,7 +195,7 @@ account vc viewState id txExistsFn =
                 , secondRowVisible = False
                 }
             }
-        , if viewState.subTxsTableFilter.isSubTxsTableFilterDialogOpen then
+        , if viewState.isSubTxsTableFilterDialogOpen then
             div
                 [ [ Css.position Css.fixed
                   , Css.right (Css.px 42)
@@ -214,7 +205,7 @@ account vc viewState id txExistsFn =
                   ]
                     |> css
                 ]
-                [ TransactionFilter.txFilterDialogView vc (Id.network id) filterDialogMsgs viewState.subTxsTableFilter
+                [ TransactionFilter.txFilterDialogView vc (Id.network id) filterConfig viewState.subTxsTableFilter
                     |> Html.Styled.map TxDetailsMsg
                 ]
 

@@ -1,24 +1,11 @@
-module Model.Pathfinder.TxDetails exposing (Model, SubTxTableFilter)
+module Model.Pathfinder.TxDetails exposing (Model)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.Table exposing (Table)
-import Model.DateRangePicker as DateRangePicker
-import Model.Direction exposing (Direction)
+import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Tx exposing (Tx)
-import Msg.Pathfinder exposing (TxDetailsMsg)
 import RemoteData exposing (WebData)
-import Util.ThemedSelectBox as ThemedSelectBox
-
-
-type alias SubTxTableFilter =
-    { includeZeroValueTxs : Maybe Bool
-    , isSubTxsTableFilterDialogOpen : Bool
-    , selectedAsset : Maybe String
-    , dateRangePicker : Maybe (DateRangePicker.Model TxDetailsMsg)
-    , direction : Maybe Direction
-    , assetSelectBox : ThemedSelectBox.Model (Maybe String)
-    }
 
 
 type alias Model =
@@ -30,5 +17,6 @@ type alias Model =
     , subTxsTableOpen : Bool
     , baseTx : WebData Api.Data.TxAccount
     , subTxsTable : InfiniteTable.Model Api.Data.TxAccount
-    , subTxsTableFilter : SubTxTableFilter
+    , isSubTxsTableFilterDialogOpen : Bool
+    , subTxsTableFilter : TransactionFilter.Model
     }

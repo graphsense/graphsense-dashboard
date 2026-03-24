@@ -6,13 +6,12 @@ import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
-import Config.DateRangePicker exposing (datePickerSettings)
+import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Dict exposing (Dict)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
-import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
@@ -21,9 +20,9 @@ import List.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
-import Model.Pathfinder.Address as Address exposing (Address)
+import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails exposing (..)
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
@@ -36,9 +35,8 @@ import RemoteData exposing (WebData)
 import Set
 import Table
 import Time
-import Tuple exposing (first, mapFirst, mapSecond, second)
+import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple3
-import Update.DateRangePicker as DateRangePicker
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Util exposing (and, n)
@@ -77,12 +75,12 @@ neighborsTableConfig =
     neighborsTableConfigWithMsg GotNeighborsForAddressDetails
 
 
-transactionTableConfig : TransactionTable.Model Msg -> Id -> InfiniteTable.Config Effect
+transactionTableConfig : TransactionTable.Model -> Id -> InfiniteTable.Config Effect
 transactionTableConfig =
     transactionTableConfigWithMsg GotTxsForAddressDetails
 
 
-transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model Msg -> Id -> InfiniteTable.Config Effect
+transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
 transactionTableConfigWithMsg msg txs addressId =
     { fetch = fetchTransactions msg txs addressId
     , force = False
@@ -92,7 +90,7 @@ transactionTableConfigWithMsg msg txs addressId =
     }
 
 
-fetchTransactions : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model Msg -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+fetchTransactions : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
 fetchTransactions msg txs addressId sorting pagesize nextpage =
     fetchTransactionsWithPathfinderMsg
         (msg nextpage
@@ -105,12 +103,12 @@ fetchTransactions msg txs addressId sorting pagesize nextpage =
         nextpage
 
 
-fetchTransactionsWithPathfinderMsg : (Api.Data.AddressTxs -> Pathfinder.Msg) -> TransactionTable.Model Msg -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+fetchTransactionsWithPathfinderMsg : (Api.Data.AddressTxs -> Pathfinder.Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
 fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
     Api.GetAddressTxsByDateEffect
         { currency = Id.network addressId
         , address = Id.id addressId
-        , direction = txs.direction
+        , direction = TransactionFilter.getDirection txs.filter
         , pagesize = pagesize
         , nextpage = nextpage
         , order =
@@ -127,9 +125,9 @@ fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
                         else
                             txs.order
                     )
-        , tokenCurrency = txs.selectedAsset
-        , minDate = txs.dateRangePicker |> Maybe.andThen .fromDate
-        , maxDate = txs.dateRangePicker |> Maybe.andThen .toDate
+        , tokenCurrency = TransactionFilter.getSelectedAsset txs.filter
+        , minDate = TransactionFilter.getDateRange txs.filter |> Maybe.andThen first
+        , maxDate = TransactionFilter.getDateRange txs.filter |> Maybe.andThen second
         }
         msg
         |> ApiEffect
@@ -282,90 +280,20 @@ update uc msg model =
                     )
                 |> RemoteData.withDefault (n model)
 
-        UpdateDateRangePicker subMsg ->
-            model.txs
-                |> RemoteData.map
-                    (\txsTable ->
-                        txsTable.dateRangePicker
-                            |> Maybe.map
-                                (\dateRangePicker ->
-                                    let
-                                        newPicker =
-                                            DateRangePicker.update subMsg dateRangePicker
-
-                                        changed =
-                                            newPicker.fromDate /= Nothing && newPicker.fromDate /= dateRangePicker.fromDate
-
-                                        np =
-                                            if changed then
-                                                newPicker |> DateRangePicker.closePicker
-
-                                            else
-                                                newPicker
-                                    in
-                                    { model
-                                        | txs = s_dateRangePicker (Just np) txsTable |> RemoteData.Success
-                                    }
-                                        |> (if changed then
-                                                loadFirstTxsPage True
-
-                                            else
-                                                n
-                                           )
-                                )
-                            |> Maybe.withDefault (n model)
-                    )
-                |> RemoteData.withDefault (n model)
-
         ToggleTxFilterView ->
             model.txs
                 |> RemoteData.map
                     (\txsTable ->
-                        txsTable.dateRangePicker
-                            |> flip s_dateRangePicker txsTable
-                            |> s_isTxFilterViewOpen (not txsTable.isTxFilterViewOpen)
-                            |> RemoteData.Success
-                            |> flip s_txs model
-                            |> n
+                        { model
+                            | txs =
+                                { txsTable
+                                    | isTxFilterViewOpen = not txsTable.isTxFilterViewOpen
+                                }
+                                    |> RemoteData.Success
+                        }
                     )
-                |> RemoteData.withDefault (n model)
-
-        OpenDateRangePicker ->
-            model.txs
-                |> RemoteData.map2
-                    (\data txsTable ->
-                        let
-                            ( mn, mx ) =
-                                Address.getActivityRange data
-                        in
-                        txsTable.dateRangePicker
-                            |> Maybe.withDefault
-                                (datePickerSettings uc.locale mn mx
-                                    |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
-                                )
-                            |> DateRangePicker.openPicker
-                            |> Just
-                            |> flip s_dateRangePicker txsTable
-                            |> RemoteData.Success
-                            |> flip s_txs model
-                            |> n
-                    )
-                    model.address.data
-                |> RemoteData.withDefault (n model)
-
-        CloseDateRangePicker ->
-            model.txs
-                |> RemoteData.map
-                    (\txsTable ->
-                        txsTable.dateRangePicker
-                            |> Maybe.map DateRangePicker.closePicker
-                            |> flip s_dateRangePicker txsTable
-                            -- |> s_isTxFilterViewOpen False
-                            |> RemoteData.Success
-                            |> flip s_txs model
-                            |> n
-                    )
-                |> RemoteData.withDefault (n model)
+                |> RemoteData.withDefault model
+                |> n
 
         CloseTxFilterView ->
             model.txs
@@ -373,52 +301,32 @@ update uc msg model =
                 |> RemoteData.withDefault model
                 |> n
 
-        TxTableFilterShowAllTxs ->
-            updateDirectionFilter model Nothing
-
-        TxTableFilterShowIncomingTxOnly ->
-            updateDirectionFilter model (Just Incoming)
-
-        TxTableFilterShowOutgoingTxOnly ->
-            updateDirectionFilter model (Just Outgoing)
-
-        ResetAllTxFilters ->
+        TransactionFilterMsg subMsg ->
             model.txs
                 |> RemoteData.map
-                    (TransactionTable.resetFilters
-                        >> RemoteData.Success
-                        >> flip s_txs model
-                        >> loadFirstTxsPage True
-                    )
-                |> RemoteData.withDefault (n model)
+                    (\txs ->
+                        let
+                            newFilter =
+                                TransactionFilter.update subMsg txs.filter
 
-        ResetDateRangePicker ->
-            model.txs
-                |> RemoteData.map
-                    (s_dateRangePicker Nothing
-                        >> RemoteData.Success
-                        >> flip s_txs model
-                        >> loadFirstTxsPage True
-                    )
-                |> RemoteData.withDefault (n model)
+                            changed =
+                                TransactionFilter.hasChanged txs.filter newFilter
+                        in
+                        { txs
+                            | filter = newFilter
+                        }
+                            |> RemoteData.Success
+                            |> flip s_txs model
+                            |> (if changed then
+                                    flip pair
+                                        [ Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id) newFilter
+                                            |> InternalEffect
+                                        ]
+                                        >> and (loadFirstTxsPage True)
 
-        ResetTxDirectionFilter ->
-            model.txs
-                |> RemoteData.map
-                    (s_direction Nothing
-                        >> RemoteData.Success
-                        >> flip s_txs model
-                        >> loadFirstTxsPage True
-                    )
-                |> RemoteData.withDefault (n model)
-
-        ResetTxAssetFilter ->
-            model.txs
-                |> RemoteData.map
-                    (s_selectedAsset Nothing
-                        >> RemoteData.Success
-                        >> flip s_txs model
-                        >> loadFirstTxsPage True
+                                else
+                                    n
+                               )
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -592,39 +500,6 @@ update uc msg model =
                 |> flip s_displayAllTagsInDetails model
                 |> n
 
-        TxTableAssetSelectBoxMsg ms ->
-            model.txs
-                |> RemoteData.map
-                    (\txs ->
-                        let
-                            oldTxs =
-                                txs
-
-                            ( newSelect, outMsg ) =
-                                ThemedSelectBox.update ms oldTxs.assetSelectBox
-
-                            newTxs =
-                                oldTxs
-                                    |> s_assetSelectBox newSelect
-                                    |> s_selectedAsset
-                                        (case outMsg of
-                                            ThemedSelectBox.Selected sel ->
-                                                sel
-
-                                            _ ->
-                                                oldTxs.selectedAsset
-                                        )
-                        in
-                        { model | txs = RemoteData.Success newTxs }
-                            |> (if oldTxs.selectedAsset /= newTxs.selectedAsset then
-                                    loadFirstTxsPage True
-
-                                else
-                                    n
-                               )
-                    )
-                |> RemoteData.withDefault (n model)
-
         ExportCSVMsg _ _ ->
             -- handled upstream
             n model
@@ -663,7 +538,7 @@ closeTransactionTable model =
     )
 
 
-makeExportCSVConfig : Update.Config -> Id -> TransactionTable.Model Msg -> ExportCSV.Config ( Api.Data.TxAccount, Maybe Api.Data.TagSummary, Maybe Api.Data.TagSummary ) Effect
+makeExportCSVConfig : Update.Config -> Id -> TransactionTable.Model -> ExportCSV.Config ( Api.Data.TxAccount, Maybe Api.Data.TagSummary, Maybe Api.Data.TagSummary ) Effect
 makeExportCSVConfig uc addressId txs =
     ExportCSV.config
         { filename =
@@ -752,13 +627,6 @@ loadFirstTxsPage reset model =
         |> RemoteData.withDefault (n model)
 
 
-updateDirectionFilter : Model -> Maybe Direction -> ( Model, List Effect )
-updateDirectionFilter model dir =
-    model.txs
-        |> RemoteData.map (s_direction dir >> RemoteData.Success >> flip s_txs model >> loadFirstTxsPage True)
-        |> RemoteData.withDefault (n model)
-
-
 getNeighborsTableAndSetter :
     Model
     -> Direction
@@ -811,10 +679,10 @@ syncByAddress uc network clusters dateFilterPreset model address =
                             |> RemoteData.withDefault
                                 (TransactionTable.init uc
                                     network
+                                    model.txsFilter
                                     address.id
                                     data
                                     assets
-                                    UpdateDateRangePicker
                                     |> RemoteData.Success
                                 )
 
@@ -905,45 +773,36 @@ syncByAddress uc network clusters dateFilterPreset model address =
 
 
 openTransactionTable : Update.Config -> Maybe DateFilterRaw -> Model -> ( Model, List Effect )
-openTransactionTable uc dfp model =
+openTransactionTable _ dfp model =
     if model.transactionsTableOpen then
         n model
 
     else
         model.txs
-            |> RemoteData.map2
-                (\data txs ->
-                    let
-                        ( drp, table, order ) =
-                            dfp
-                                |> Maybe.map
-                                    (\dfp_ ->
-                                        ( datePickerSettings uc.locale (dfp_.fromDate |> Maybe.withDefault mmin) (dfp_.toDate |> Maybe.withDefault mmax)
-                                            |> DateRangePicker.init UpdateDateRangePicker mmax dfp_.fromDate dfp_.toDate
-                                            |> Just
-                                        , InfiniteTable.sortBy TransactionTable.titleTimestamp True txs.table
-                                        , Just Api.Request.Addresses.Order_Desc
-                                        )
-                                    )
-                                |> Maybe.withDefault
-                                    ( txs.dateRangePicker, txs.table, txs.order )
-
-                        ( mmin, mmax ) =
-                            Address.getActivityRange data
-                    in
+            |> RemoteData.map
+                (\txs ->
                     { model
                         | transactionsTableOpen = True
                         , txs =
                             RemoteData.Success
                                 { txs
-                                    | dateRangePicker = drp
-                                    , table = table
-                                    , order = order
+                                    | filter =
+                                        model.txsFilter
+                                            |> Maybe.withDefault txs.filter
+                                            |> (dfp
+                                                    |> Maybe.map
+                                                        (\dfp_ ->
+                                                            ( dfp_.fromDate
+                                                            , dfp_.toDate
+                                                            )
+                                                        )
+                                                    |> Maybe.map TransactionFilter.updateDateRange
+                                                    |> Maybe.withDefault identity
+                                               )
                                 }
                     }
                         |> loadFirstTxsPage False
                 )
-                model.address.data
             |> RemoteData.withDefault (n model)
 
 

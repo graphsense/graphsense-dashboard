@@ -4,19 +4,19 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
+import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.TxDetails exposing (initSubTxTable)
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails exposing (Model)
-import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
-import RecordSetter exposing (s_baseTx, s_includeZeroValueTxs, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable, s_subTxsTableFilter)
+import Msg.Pathfinder as Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
+import RecordSetter exposing (s_baseTx, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable)
 import RemoteData
-import Tuple exposing (mapFirst, mapSecond)
+import Tuple exposing (mapFirst, mapSecond, pair)
 import Util exposing (and, n)
 import Util.Data as Data
-import Util.ThemedSelectBox as ThemedSelectBox
 
 
 transactionTableConfig : Model -> InfiniteTable.Config Effect
@@ -34,9 +34,11 @@ transactionTableConfig m =
                 |> Api.ListTxFlowsEffect
                     { currency = currency
                     , txHash = baseTxHash
-                    , includeZeroValueSubTxs = m.subTxsTableFilter.includeZeroValueTxs |> Maybe.withDefault False
+                    , includeZeroValueSubTxs =
+                        TransactionFilter.getIncludeZeroValueTxs m.subTxsTableFilter
+                            |> Maybe.withDefault False
                     , pagesize = Just pagesize
-                    , token_currency = m.subTxsTableFilter.selectedAsset
+                    , token_currency = TransactionFilter.getSelectedAsset m.subTxsTableFilter
                     , nextpage = nextpage
                     }
                 |> ApiEffect
@@ -104,99 +106,30 @@ reloadSubTxTable m =
 update : TxDetailsMsg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
-        UserClickedResetZeroValueSubTxsTableFilters ->
-            model
-                |> s_subTxsTableFilter
-                    (model.subTxsTableFilter
-                        |> s_includeZeroValueTxs (Just (not (model.subTxsTableFilter.includeZeroValueTxs |> Maybe.withDefault False)))
-                    )
-                |> n
-                |> and reloadSubTxTable
-
-        SubTxsSelectedAssetSelectBoxMsg tsbmsg ->
+        TransactionFilterMsg subMsg ->
             let
-                subTxsTableFilter =
-                    model.subTxsTableFilter
+                newFilter =
+                    TransactionFilter.update subMsg model.subTxsTableFilter
 
-                ( newSelect, outMsg ) =
-                    ThemedSelectBox.update tsbmsg subTxsTableFilter.assetSelectBox
-
-                subTxsTableFilterNew =
-                    { subTxsTableFilter
-                        | assetSelectBox = newSelect
-                        , selectedAsset =
-                            case outMsg of
-                                ThemedSelectBox.Selected table ->
-                                    table
-
-                                _ ->
-                                    subTxsTableFilter.selectedAsset
-                    }
-
-                oldvalue =
-                    subTxsTableFilter.selectedAsset
-
-                newValue =
-                    subTxsTableFilterNew.selectedAsset
+                changed =
+                    TransactionFilter.hasChanged model.subTxsTableFilter newFilter
             in
-            model
-                |> s_subTxsTableFilter subTxsTableFilterNew
-                |> n
-                |> and
-                    (if oldvalue /= newValue then
-                        reloadSubTxTable
+            { model | subTxsTableFilter = newFilter }
+                |> (if changed then
+                        flip pair
+                            [ Pathfinder.InternalChangedTxFilter (TxsFilterTx model.tx.id) newFilter
+                                |> InternalEffect
+                            ]
+                            >> and reloadSubTxTable
 
-                     else
+                    else
                         n
-                    )
-
-        UserClickedCloseSubTxTableFilterDialog ->
-            model
-                |> s_subTxsTableFilter (model.subTxsTableFilter |> s_isSubTxsTableFilterDialogOpen False)
-                |> n
-
-        UserClickedResetAllSubTxsTableFilters ->
-            let
-                subTxsTableFilter =
-                    model.subTxsTableFilter
-            in
-            n
-                { model
-                    | subTxsTableFilter =
-                        { subTxsTableFilter
-                            | isSubTxsTableFilterDialogOpen = False
-                            , includeZeroValueTxs = Just False
-                            , selectedAsset = Nothing
-                        }
-                }
-                |> and reloadSubTxTable
+                   )
 
         UserClickedToggleSubTxsTableFilter ->
-            model.subTxsTableFilter
-                |> s_isSubTxsTableFilterDialogOpen (not model.subTxsTableFilter.isSubTxsTableFilterDialogOpen)
-                |> flip s_subTxsTableFilter model
-                |> n
-
-        UserClickedToggleIncludeZeroValueSubTxs ->
-            -- setting base Tx to NotAsked and reinit the table should cause a
-            -- refetch of all data in the Update Pathfinder.elm syncDetails
             model
-                |> s_subTxsTableFilter
-                    (model.subTxsTableFilter
-                        |> s_includeZeroValueTxs
-                            (case model.subTxsTableFilter.includeZeroValueTxs of
-                                Just current ->
-                                    Just (not current)
-
-                                Nothing ->
-                                    Just False
-                            )
-                    )
+                |> s_isSubTxsTableFilterDialogOpen (not model.isSubTxsTableFilterDialogOpen)
                 |> n
-                |> and reloadSubTxTable
-
-        NoOpSubTxsTable ->
-            n model
 
         BrowserGotBaseTx tx ->
             n

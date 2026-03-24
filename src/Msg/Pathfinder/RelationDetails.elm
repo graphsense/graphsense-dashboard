@@ -3,10 +3,9 @@ module Msg.Pathfinder.RelationDetails exposing (Msg(..))
 import Api.Data
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
-import DurationDatePicker
+import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type Msg
@@ -19,12 +18,6 @@ type Msg
     | NoOp
     | ToggleTxFilterView Bool
     | CloseTxFilterView Bool
-    | OpenDateRangePicker Bool
-    | CloseDateRangePicker Bool
-    | ResetDateRangePicker Bool
-    | UpdateDateRangePicker Bool DurationDatePicker.Msg
-    | ResetAllTxFilters Bool
-    | ResetTxAssetFilter Bool
-    | TxTableAssetSelectBoxMsg Bool (ThemedSelectBox.Msg (Maybe String))
-    | ExportCSVMsg Bool (RelationTxsTable.Model Msg) ExportCSV.Msg
-    | BrowserGotLinksForExport Bool (RelationTxsTable.Model Msg) Api.Data.Links
+    | TransactionFilterMsg Bool TransactionFilter.Msg
+    | ExportCSVMsg Bool RelationTxsTable.Model ExportCSV.Msg
+    | BrowserGotLinksForExport Bool RelationTxsTable.Model Api.Data.Links

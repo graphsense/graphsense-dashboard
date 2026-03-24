@@ -3,6 +3,7 @@ module View.Pathfinder.RelationDetails exposing (ValuesFormatted, ValuesRow, mak
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable
+import Components.TransactionFilter as TransactionFilter
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -32,7 +33,6 @@ import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab)
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 isLeftToRight : RelationDetails.Model -> Bool
@@ -150,14 +150,9 @@ view vc model id viewState =
                             if ts.isTxFilterViewOpen then
                                 let
                                     filterDialogMsgs =
-                                        { closeTxFilterViewMsg = RelationDetails.CloseTxFilterView isA2b_
-                                        , txTableFilterShowAllTxsMsg = Nothing
-                                        , txTableFilterShowIncomingTxOnlyMsg = Nothing
-                                        , txTableFilterShowOutgoingTxOnlyMsg = Nothing
-                                        , resetAllTxFiltersMsg = RelationDetails.ResetAllTxFilters isA2b_
-                                        , txTableAssetSelectBoxMsg = RelationDetails.TxTableAssetSelectBoxMsg isA2b_
-                                        , openDateRangePickerMsg = Just (RelationDetails.OpenDateRangePicker isA2b_)
-                                        , txTableFilterToggleZeroValueMsg = Nothing
+                                        { tag = RelationDetails.TransactionFilterMsg isA2b_
+                                        , toggleTxFilterViewMsg = RelationDetails.ToggleTxFilterView isA2b_
+                                        , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b ts, model.exportCSV )
                                         }
                                 in
                                 div
@@ -169,7 +164,9 @@ view vc model id viewState =
                                       ]
                                         |> css
                                     ]
-                                    [ TransactionFilter.txFilterDialogView vc network filterDialogMsgs ts |> Html.Styled.map (Pathfinder.RelationDetailsMsg id) ]
+                                    [ TransactionFilter.txFilterDialogView vc network filterDialogMsgs ts.filter
+                                        |> Html.Styled.map (Pathfinder.RelationDetailsMsg id)
+                                    ]
 
                             else
                                 none
@@ -292,14 +289,11 @@ tableTab vc model edgeId viewState isA2b =
                             ++ fullWidth
                     ]
                     [ TransactionFilter.filterHeader vc
-                        table
-                        { resetDateFilterMsg = RelationDetails.ResetDateRangePicker isA2b
-                        , resetAssetsFilterMsg = RelationDetails.ResetTxAssetFilter isA2b
-                        , resetDirectionFilterMsg = Nothing
-                        , toggleFilterView = RelationDetails.ToggleTxFilterView isA2b
-                        , resetZeroValueFilterMsg = Nothing
+                        { tag = RelationDetails.TransactionFilterMsg isA2b
+                        , toggleTxFilterViewMsg = RelationDetails.ToggleTxFilterView isA2b
                         , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b table, model.exportCSV )
                         }
+                        table.filter
                     , tableView
                     ]
                     |> Just
