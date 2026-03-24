@@ -2,6 +2,7 @@ module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserializ
 
 import Animation as A
 import Api.Data
+import AssocList
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Components.ExportCSV as ExportCSV
@@ -52,7 +53,7 @@ import Model.Pathfinder.ConversionEdge as ConversionEdge
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
@@ -227,7 +228,7 @@ syncSidePanel uc model =
     let
         makeAddressDetails aid =
             Dict.get aid model.network.addresses
-                |> Maybe.map (AddressDetails.init (Dict.get aid model.txsFilters))
+                |> Maybe.map (AddressDetails.init (AssocList.get (TxsFilterAddress aid) model.txsFilters))
                 |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
@@ -237,7 +238,7 @@ syncSidePanel uc model =
                         |> flip Locale.getTokenTickers (Id.network tid)
 
                 txsFilter =
-                    Dict.get tid model.txsFilters
+                    AssocList.get (TxsFilterTx tid) model.txsFilters
             in
             Dict.get tid model.network.txs
                 |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
@@ -247,11 +248,17 @@ syncSidePanel uc model =
                 |> Maybe.andThen
                     (\aggEdge ->
                         let
+                            a =
+                                Tuple.first rid
+
+                            b =
+                                Tuple.second rid
+
                             addrA =
-                                Dict.get (Tuple.first rid) model.network.addresses
+                                Dict.get a model.network.addresses
 
                             addrB =
-                                Dict.get (Tuple.second rid) model.network.addresses
+                                Dict.get b model.network.addresses
 
                             maybeAr1 =
                                 addrA
@@ -262,13 +269,19 @@ syncSidePanel uc model =
                                 addrB
                                     |> Maybe.andThen Address.getActivityRangeAddress
                                     |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
+
+                            txsFilterA2b =
+                                AssocList.get (TxsFilterAggEdge True rid) model.txsFilters
+
+                            txsFilterB2a =
+                                AssocList.get (TxsFilterAggEdge False rid) model.txsFilters
                         in
                         Maybe.map2
                             (\ar1 ar2 ->
                                 ( Time.millisToPosix (min (Tuple.first ar1) (Tuple.first ar2))
                                 , Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2))
                                 )
-                                    |> RelationDetails.init uc aggEdge
+                                    |> RelationDetails.init uc txsFilterA2b txsFilterB2a aggEdge
                                     |> RelationDetails rid
                             )
                             maybeAr1
@@ -2644,7 +2657,7 @@ updateByMsg plugins uc msg model =
             n model
 
         InternalChangedTxFilter id filter ->
-            n { model | txsFilters = Dict.insert id filter model.txsFilters }
+            n { model | txsFilters = AssocList.insert id filter model.txsFilters }
 
 
 exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )

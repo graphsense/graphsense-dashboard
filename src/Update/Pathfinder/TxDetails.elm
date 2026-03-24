@@ -8,7 +8,7 @@ import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.TxDetails exposing (initSubTxTable)
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails exposing (Model)
 import Msg.Pathfinder as Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
@@ -117,7 +117,7 @@ update msg model =
             { model | subTxsTableFilter = newFilter }
                 |> (if changed then
                         flip pair
-                            [ Pathfinder.InternalChangedTxFilter model.tx.id newFilter
+                            [ Pathfinder.InternalChangedTxFilter (TxsFilterTx model.tx.id) newFilter
                                 |> InternalEffect
                             ]
                             >> and reloadSubTxTable

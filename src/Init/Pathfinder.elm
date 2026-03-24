@@ -1,5 +1,6 @@
 module Init.Pathfinder exposing (init)
 
+import AssocList
 import Components.ExportCSV as ExportCSV
 import Config.Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Dict
@@ -55,7 +56,7 @@ init us =
       , exportCSV = ExportCSV.init
       , exportCSVGraph = ExportCSV.init
       , exportImage = Nothing
-      , txsFilters = Dict.empty
+      , txsFilters = AssocList.empty
       }
     , Cmd.none
     )

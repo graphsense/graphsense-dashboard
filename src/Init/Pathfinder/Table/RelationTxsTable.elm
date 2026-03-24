@@ -10,8 +10,8 @@ import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Time
 
 
-init : Update.Config -> ( Time.Posix, Time.Posix ) -> Maybe (List String) -> RelationTxsTable.Model
-init uc ( mn, mx ) assets =
+init : Update.Config -> Maybe TransactionFilter.Model -> ( Time.Posix, Time.Posix ) -> Maybe (List String) -> RelationTxsTable.Model
+init uc txsFilter ( mn, mx ) assets =
     let
         table isDesc =
             Table.initSorted isDesc RelationTxsTable.titleTimestamp
@@ -22,10 +22,15 @@ init uc ( mn, mx ) assets =
     , isTxFilterViewOpen = False
     , exportCSV = ExportCSV.init
     , filter =
-        TransactionFilter.init
-            |> TransactionFilter.withDateRangePicker uc.locale mn mx
-            |> (assets
-                    |> Maybe.map TransactionFilter.withAssetSelectBox
-                    |> Maybe.withDefault identity
-               )
+        let
+            withCommon =
+                TransactionFilter.withDateRangePicker uc.locale mn mx
+                    >> (assets
+                            |> Maybe.map TransactionFilter.withAssetSelectBox
+                            |> Maybe.withDefault identity
+                       )
+        in
+        txsFilter
+            |> Maybe.map withCommon
+            |> Maybe.withDefault (TransactionFilter.init |> withCommon)
     }

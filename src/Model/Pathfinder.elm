@@ -1,6 +1,7 @@
 module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getVisibleTxs, graphId, unit)
 
 import Api.Data exposing (Actor, Entity)
+import AssocList
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
 import Components.TransactionFilter as TransactionFilter
@@ -17,7 +18,7 @@ import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
 import Model.Pathfinder.History.Entry as Entry
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id exposing (Id, TxsFilterId)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
@@ -67,7 +68,7 @@ type alias Model =
     , exportCSV : ExportCSV.Model
     , exportCSVGraph : ExportCSV.Model
     , exportImage : Maybe ExportImage
-    , txsFilters : Dict Id TransactionFilter.Model
+    , txsFilters : AssocList.Dict TxsFilterId TransactionFilter.Model
     }
 
 

@@ -12,11 +12,11 @@ import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.RelationDetails as Init
 import Model.Pathfinder.AggEdge exposing (AggEdge)
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.RelationDetails exposing (Model)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder as Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
 import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_b2aTable, s_b2aTableOpen, s_isTxFilterViewOpen, s_table)
 import Table
@@ -321,6 +321,7 @@ update _ id msg model =
                         (tableConfig id isA2b newTbl)
                     |> mapFirst (flip s_table newTbl)
                     |> mapFirst (flip gs.setTable model)
+                    |> mapSecond ((::) (Pathfinder.InternalChangedTxFilter (TxsFilterAggEdge isA2b id) newFilter |> InternalEffect))
 
             else
                 model

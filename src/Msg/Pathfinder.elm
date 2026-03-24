@@ -12,7 +12,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id exposing (Id, TxsFilterId)
 import Model.Pathfinder.Network exposing (FindPosition)
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
@@ -148,7 +148,7 @@ type Msg
     | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
     | InternalExportGraphTxsCompleted
-    | InternalChangedTxFilter Id TransactionFilter.Model
+    | InternalChangedTxFilter TxsFilterId TransactionFilter.Model
 
 
 type alias TextTooltipConfig =

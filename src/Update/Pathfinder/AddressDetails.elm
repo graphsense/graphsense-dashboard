@@ -22,7 +22,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails exposing (..)
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
@@ -319,7 +319,7 @@ update uc msg model =
                             |> flip s_txs model
                             |> (if changed then
                                     flip pair
-                                        [ Pathfinder.InternalChangedTxFilter model.address.id newFilter
+                                        [ Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id) newFilter
                                             |> InternalEffect
                                         ]
                                         >> and (loadFirstTxsPage True)

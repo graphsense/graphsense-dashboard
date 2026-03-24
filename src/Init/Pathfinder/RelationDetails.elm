@@ -1,6 +1,7 @@
 module Init.Pathfinder.RelationDetails exposing (getExposedAssetsForNeighbor, getExposedAssetsForNeighborWebData, init)
 
 import Api.Data
+import Components.TransactionFilter as TransactionFilter
 import Config.Update as Update
 import Dict
 import Init.Pathfinder.Table.RelationTxsTable as RelationTxsTable
@@ -34,8 +35,8 @@ getExposedAssetsForNeighborWebData webData =
         |> Maybe.andThen getExposedAssetsForNeighbor
 
 
-init : Update.Config -> AggEdge -> ( Time.Posix, Time.Posix ) -> RelationDetails.Model
-init uc edge ( rangeFrom, rangeTo ) =
+init : Update.Config -> Maybe TransactionFilter.Model -> Maybe TransactionFilter.Model -> AggEdge -> ( Time.Posix, Time.Posix ) -> RelationDetails.Model
+init uc txsFilterA2b txsFilterB2a edge ( rangeFrom, rangeTo ) =
     let
         -- if data should be missing, fall back to empty asset list
         -- update later assigns data when available
@@ -47,8 +48,8 @@ init uc edge ( rangeFrom, rangeTo ) =
     in
     { a2bTableOpen = False
     , b2aTableOpen = False
-    , a2bTable = RelationTxsTable.init uc ( rangeFrom, rangeTo ) a2bAssets
-    , b2aTable = RelationTxsTable.init uc ( rangeFrom, rangeTo ) b2aAssets
+    , a2bTable = RelationTxsTable.init uc txsFilterA2b ( rangeFrom, rangeTo ) a2bAssets
+    , b2aTable = RelationTxsTable.init uc txsFilterB2a ( rangeFrom, rangeTo ) b2aAssets
     , aggEdge = edge
     , rangeFrom = rangeFrom
     , rangeTo = rangeTo
