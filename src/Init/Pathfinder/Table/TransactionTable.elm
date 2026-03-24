@@ -53,6 +53,7 @@ init uc network txsFilter addressId data assets =
         txsFilter
             |> Maybe.withDefault TransactionFilter.init
             |> TransactionFilter.withDateRangePicker uc.locale min mmax
+            |> TransactionFilter.withDirection Nothing
             |> TransactionFilter.withAssetSelectBox assets
             |> TransactionFilter.updateSelectedAsset selectedAsset
     , isTxFilterViewOpen = False
