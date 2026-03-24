@@ -685,6 +685,7 @@ syncByAddress uc network clusters dateFilterPreset model address =
                             |> RemoteData.withDefault
                                 (TransactionTable.init uc
                                     network
+                                    model.txsFilter
                                     address.id
                                     data
                                     assets

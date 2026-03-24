@@ -15,8 +15,8 @@ import Model.Pathfinder.Tx as Tx
 import Util.Data exposing (timestampToPosix)
 
 
-init : Update.Config -> Network -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
-init uc network addressId data assets =
+init : Update.Config -> Network -> Maybe TransactionFilter.Model -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
+init uc network txsFilter addressId data assets =
     let
         table isDesc =
             Table.initSorted isDesc TransactionTable.titleTimestamp
@@ -50,7 +50,8 @@ init uc network addressId data assets =
     { table = table desc
     , order = order
     , filter =
-        TransactionFilter.init
+        txsFilter
+            |> Maybe.withDefault TransactionFilter.init
             |> TransactionFilter.withDateRangePicker uc.locale min mmax
             |> TransactionFilter.withAssetSelectBox assets
             |> TransactionFilter.updateSelectedAsset selectedAsset

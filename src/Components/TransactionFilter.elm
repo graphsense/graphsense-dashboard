@@ -14,7 +14,7 @@ import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
-import RecordSetter as Rs
+import RecordSetter as Rs exposing (s_settings)
 import Svg.Styled.Attributes exposing (css)
 import Theme.Colors
 import Theme.Html.Icons as HIcons
@@ -566,32 +566,50 @@ init =
 
 
 withDateRangePicker : Locale.Model -> Posix -> Posix -> Model -> Model
-withDateRangePicker locale mn mx (Internal builder) =
+withDateRangePicker locale mn mx (Internal model) =
     Internal
-        { builder
+        { model
             | dateRangePicker =
-                datePickerSettings locale mn mx
-                    |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
+                let
+                    settings =
+                        datePickerSettings locale mn mx
+                in
+                model.dateRangePicker
+                    |> Maybe.map (s_settings settings)
+                    |> Maybe.withDefault
+                        (settings
+                            |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
+                        )
                     |> Just
         }
 
 
 withDirection : Maybe Direction -> Model -> Model
-withDirection direction (Internal builder) =
+withDirection direction (Internal model) =
     Internal
-        { builder | direction = Just direction }
+        { model | direction = Just direction }
 
 
 withAssetSelectBox : List String -> Model -> Model
-withAssetSelectBox assets (Internal builder) =
+withAssetSelectBox assets (Internal model) =
     Internal
-        { builder | assetSelectBox = Just (ThemedSelectBox.init (Nothing :: List.map Just assets)) }
+        { model
+            | assetSelectBox =
+                let
+                    options =
+                        Nothing :: List.map Just assets
+                in
+                model.assetSelectBox
+                    |> Maybe.map (ThemedSelectBox.updateOptions options)
+                    |> Maybe.withDefault (ThemedSelectBox.init options)
+                    |> Just
+        }
 
 
 withIncludeZeroValueTxs : Bool -> Model -> Model
-withIncludeZeroValueTxs includeZeroValueTxs (Internal builder) =
+withIncludeZeroValueTxs includeZeroValueTxs (Internal model) =
     Internal
-        { builder | includeZeroValueTxs = Just includeZeroValueTxs }
+        { model | includeZeroValueTxs = Just includeZeroValueTxs }
 
 
 updateDateRange : ( Maybe Posix, Maybe Posix ) -> Model -> Model
