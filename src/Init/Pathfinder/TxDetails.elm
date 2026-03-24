@@ -42,6 +42,7 @@ init txsFilter assets tx =
         Table.initSorted False IoTable.titleValue
             |> Table.setData IoTable.filter outputs
     , tx = tx
+    , hasSubTxsTable = False
     , baseTx = RemoteData.NotAsked
     , subTxsTable = initSubTxTable
     , subTxsTableOpen =

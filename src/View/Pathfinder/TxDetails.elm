@@ -63,40 +63,44 @@ view vc model id viewState =
 
 accountAssetList : View.Config -> TxDetails.Model -> (Id -> Bool) -> Html Msg
 accountAssetList vc viewState txExistsFn =
-    let
-        subTxsTab c =
-            dataTab
-                { title =
-                    SidePanelComponents.sidePanelListHeaderTitleWithAttributes
-                        (SidePanelComponents.sidePanelListHeaderTitleAttributes
-                            |> Rs.s_root [ spread ]
-                        )
-                        { root =
-                            { label = Locale.string vc.locale "Sub transfers"
+    if viewState.hasSubTxsTable then
+        let
+            subTxsTab c =
+                dataTab
+                    { title =
+                        SidePanelComponents.sidePanelListHeaderTitleWithAttributes
+                            (SidePanelComponents.sidePanelListHeaderTitleAttributes
+                                |> Rs.s_root [ spread ]
+                            )
+                            { root =
+                                { label = Locale.string vc.locale "Sub transfers"
+                                }
                             }
-                        }
-                , disabled = False
-                , content =
-                    if viewState.subTxsTableOpen then
-                        Just c
+                    , disabled = False
+                    , content =
+                        if viewState.subTxsTableOpen then
+                            Just c
 
-                    else
-                        Nothing
-                , onClick = UserClickedToggleSubTxsTable |> TxDetailsMsg
-                }
-    in
-    [ TransactionFilter.filterHeader vc
-        filterConfig
-        viewState.subTxsTableFilter
-        |> Html.Styled.map TxDetailsMsg
-    , InfiniteTable.view vc
-        [ css fullWidth, css [ Css.height (Css.px 200) ] ]
-        (SubTxsTable.config Css.Table.styles vc { selectedSubTx = viewState.tx |> Tx.getTxIdForTx, isCheckedFn = txExistsFn })
-        viewState.subTxsTable
-        |> Html.Styled.map TxDetailsMsg
-    ]
-        |> div [ css [ Css.overflowY Css.auto ] ]
-        |> subTxsTab
+                        else
+                            Nothing
+                    , onClick = UserClickedToggleSubTxsTable |> TxDetailsMsg
+                    }
+        in
+        [ TransactionFilter.filterHeader vc
+            filterConfig
+            viewState.subTxsTableFilter
+            |> Html.Styled.map TxDetailsMsg
+        , InfiniteTable.view vc
+            [ css fullWidth, css [ Css.height (Css.px 200) ] ]
+            (SubTxsTable.config Css.Table.styles vc { selectedSubTx = viewState.tx |> Tx.getTxIdForTx, isCheckedFn = txExistsFn })
+            viewState.subTxsTable
+            |> Html.Styled.map TxDetailsMsg
+        ]
+            |> div [ css [ Css.overflowY Css.auto ] ]
+            |> subTxsTab
+
+    else
+        none
 
 
 account : View.Config -> TxDetails.Model -> Id -> (Id -> Bool) -> Html Msg
