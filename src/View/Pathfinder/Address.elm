@@ -9,6 +9,7 @@ import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Json.Decode
 import Json.Encode
+import List.Extra
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
@@ -108,7 +109,7 @@ view plugins vc pc address annotation =
                     ]
 
         fd =
-            GraphComponents.addressNodeNodeFrame_details
+            GraphComponents.addressNodeDevNodeFrame_details
 
         adjX =
             fd.x + fd.width / 2
@@ -132,33 +133,13 @@ view plugins vc pc address annotation =
                             Nothing
                     )
 
-        replacementTagIcons =
-            Plugin.View.replaceAddressNodeTagIcon plugins address.plugins vc { hasTags = address.hasTags } address
-
-        replacementIconCombined =
-            if List.length replacementTagIcons > 0 then
-                Just
-                    (replacementTagIcons
-                        |> List.indexedMap
-                            (\i x ->
-                                x
-                                    |> List.singleton
-                                    |> g
-                                        [ translate
-                                            ((i |> toFloat) * 4.0)
-                                            ((i |> toFloat) * 4.0)
-                                            |> transform
-                                        ]
-                            )
-                    )
-
-            else
-                Nothing
+        pluginTagIcons =
+            Plugin.View.addressNodeTagIcon plugins address.plugins vc address
 
         offset =
             2
                 + (if nodeLabel == Nothing then
-                    -GraphComponents.addressNodeExchangeLabel_details.height
+                    -GraphComponents.addressNodeDevExchangeLabel_details.height
 
                    else
                     0
@@ -169,11 +150,37 @@ view plugins vc pc address annotation =
                 |> Maybe.map
                     (annotationToAttrAndLabel vc
                         address
-                        GraphComponents.addressNode_details
+                        GraphComponents.addressNodeDev_details
                         offset
                         UserOpensAddressAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
+
+        isCrossChain =
+            False
+
+        ifTrue bool items =
+            if bool then
+                items
+
+            else
+                []
+
+        icons =
+            [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
+            , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
+            , ifTrue isCrossChain [ Icons.iconsCrosschainSwithoutPadding {} ]
+            ]
+                |> List.concat
+
+        iconInstance items index =
+            List.Extra.getAt index items
+                |> Maybe.withDefault none
+
+        iconVisible items index =
+            List.Extra.getAt index items
+                |> Maybe.map (\_ -> True)
+                |> Maybe.withDefault False
     in
     g
         [ translate
@@ -185,8 +192,8 @@ view plugins vc pc address annotation =
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
         ]
-        (GraphComponents.addressNodeWithInstances
-            (GraphComponents.addressNodeAttributes
+        (GraphComponents.addressNodeDevWithInstances
+            (GraphComponents.addressNodeDevAttributes
                 |> Rs.s_root
                     [ A.animate address.clock address.opacity
                         |> String.fromFloat
@@ -211,7 +218,7 @@ view plugins vc pc address annotation =
                 |> Rs.s_clusterColor clusterStroke
              -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
             )
-            GraphComponents.addressNodeInstances
+            GraphComponents.addressNodeDevInstances
             { root =
                 { addressId =
                     address.id
@@ -221,14 +228,16 @@ view plugins vc pc address annotation =
                 , clusterVisible = (address.clusterColor /= Nothing) && pc.highlightClusterFriends
                 , expandLeftVisible = expandVisible Incoming
                 , expandRightVisible = expandVisible Outgoing
-                , iconInstance = toNodeIcon address
+                , mainIconInstance = toNodeIcon address
                 , exchangeLabel = nodeLabel |> Maybe.withDefault ""
                 , exchangeLabelVisible = nodeLabel /= Nothing
                 , isStartingPoint = address.isStartingPoint || (pc.hideForExport /= Exporting True && address.selected)
-                , tagIconVisible = address.hasTags || List.length replacementTagIcons > 0
-                , tagIconInstance =
-                    (replacementIconCombined |> Maybe.map (g []))
-                        |> Maybe.withDefault (Icons.iconsTagLTypeDirect {})
+                , icon1Visible = iconVisible icons 0
+                , icon1Instance = iconInstance icons 0
+                , icon2Visible = iconVisible icons 1
+                , icon2Instance = iconInstance icons 1
+                , icon3Visible = iconVisible icons 2
+                , icon3Instance = iconInstance icons 2
                 }
             , iconsNodeOpenLeft =
                 { variant =
