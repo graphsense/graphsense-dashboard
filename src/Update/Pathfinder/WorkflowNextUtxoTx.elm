@@ -59,6 +59,11 @@ update config msg =
 
         BrowserGotTxForReferencedTx hops (Api.Data.TxTxUtxo tx) ->
             let
+                anchorStillInInputs =
+                    tx.inputs
+                        |> Maybe.withDefault []
+                        |> List.any (.address >> List.member (Id.id config.addressId))
+
                 io =
                     (case config.direction of
                         Incoming ->
@@ -74,9 +79,6 @@ update config msg =
 
                 isOnlyCurrentAddress =
                     Set.singleton config.addressId == io
-
-                legacyOutgoingIndex =
-                    findHighestNonSenderOutputIndex tx
 
                 shouldContinue =
                     case config.direction of
@@ -122,22 +124,24 @@ update config msg =
                                         && hasExternalOutputs
                                         && List.all (isConsensusChangeOutput consensusEntries) outputsWithoutOwnAddress
                             in
-                            if hasExternalNonChange then
+                            if not anchorStillInInputs then
+                                False
+
+                            else if hasExternalNonChange then
                                 False
 
                             else if allExternalAreChange then
                                 True
 
                             else
-                                -- Fall back to legacy behavior when heuristics are missing/partial.
-                                case legacyOutgoingIndex of
-                                    Just _ ->
-                                        True
-
-                                    Nothing ->
-                                        isOnlyCurrentAddress
+                                -- No positive change signal: stop at current tx.
+                                -- This avoids skipping a valid immediate follow-up.
+                                not hasExternalOutputs && isOnlyCurrentAddress
             in
-            if shouldContinue then
+            if config.direction == Outgoing && not anchorStillInInputs then
+                Workflow.Err NoTxFound
+
+            else if shouldContinue then
                 if hops > maxHops then
                     Workflow.Err (MaxChangeHopsLimit maxHops tx)
 

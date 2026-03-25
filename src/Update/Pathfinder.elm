@@ -3003,7 +3003,27 @@ handleTx plugins uc config neighborId tx model =
                 placeNeighborIfError plugins uc config nid model
 
         Nothing ->
-            addTx plugins uc config.addressId config.direction Nothing tx model
+            let
+                hasIncomingAnchorAdjacency =
+                    GTx.hasAddress Incoming (Id.id config.addressId) tx
+
+                hasOutgoingAnchorAdjacency =
+                    GTx.hasAddress Outgoing (Id.id config.addressId) tx
+            in
+            if
+                hasIncomingAnchorAdjacency
+                    || hasOutgoingAnchorAdjacency
+            then
+                addTx plugins uc config.addressId config.direction Nothing tx model
+
+            else
+                ( model
+                    |> s_network (Network.updateAddress config.addressId (Txs Set.empty |> txsSetter config.direction) model.network)
+                , NoAdjaccentTxForAddressFound config.addressId
+                    |> InfoError
+                    |> ErrorEffect
+                    |> List.singleton
+                )
 
 
 placeNeighborIfError : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
