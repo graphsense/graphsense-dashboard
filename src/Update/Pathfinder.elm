@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -404,11 +404,34 @@ syncSidePanel uc model =
 
                                     _ ->
                                         Nothing
+
+                            aidOld =
+                                case model.details of
+                                    Just (AddressDetails a _) ->
+                                        Just a
+
+                                    _ ->
+                                        Nothing
+
+                            refreshAddressData =
+                                if aidOld /= Just aid then
+                                    BrowserGotAddressDataToRefresh
+                                        |> Api.GetAddressEffect
+                                            { currency = Id.network aid
+                                            , address = Id.id aid
+                                            , includeActors = True
+                                            }
+                                        |> ApiEffect
+                                        |> List.singleton
+
+                                else
+                                    []
                         in
                         Dict.get aid model.network.addresses
                             |> Maybe.map
                                 (AddressDetails.syncByAddress uc model.network model.clusters dateFilterPreset ad
                                     >> mapFirst (AddressDetails aid >> Just)
+                                    >> mapSecond ((++) refreshAddressData)
                                 )
                             |> Maybe.withDefault (n Nothing)
                 )
@@ -603,6 +626,22 @@ updateByMsg plugins uc msg model =
 
         UserPressedNormalKey _ ->
             n model
+
+        BrowserGotAddressDataToRefresh data ->
+            let
+                id =
+                    Id.init data.currency data.address
+            in
+            model.network
+                |> Network.updateAddress id (s_data (Success data))
+                |> flip s_network model
+                |> updateAddressDetails id
+                    (\ad ->
+                        n
+                            { ad
+                                | address = s_data (Success data) ad.address
+                            }
+                    )
 
         BrowserGotAddressData { id, pos, autoLinkTxInTraceMode } data ->
             let
@@ -837,7 +876,9 @@ updateByMsg plugins uc msg model =
                         modelWithTxsAdded =
                             txsToAdd |> List.foldl addAccTxs ( model, [] )
                     in
-                    addressesToAdd |> List.foldl addAccAddr modelWithTxsAdded
+                    addressesToAdd
+                        |> List.foldl addAccAddr modelWithTxsAdded
+                        |> and (setDirty True)
 
                 Search.UserClicksResultLine ->
                     let
@@ -867,35 +908,8 @@ updateByMsg plugins uc msg model =
                                     |> Tuple.pair m2
 
                             Nothing ->
-                                let
-                                    multiInputList =
-                                        Data.parseMultiIdentifierInput query
-                                in
-                                if List.length multiInputList > 1 then
-                                    ( m2
-                                    , multiInputList
-                                        |> List.map
-                                            (\inp ->
-                                                Pathfinder.SearchEffect
-                                                    (Effect.Search.SearchEffect
-                                                        { query = inp
-                                                        , currency = Nothing
-                                                        , limit = Just 1
-                                                        , config =
-                                                            Api.defaultSearchConfig
-                                                                |> s_includeAddresses (Just True)
-                                                                |> s_includeTxs (Just True)
-                                                                |> s_includeActors (Just False)
-                                                                |> s_includeLabels (Just False)
-                                                        , toMsg = Search.BrowserGotMultiSearchResult query
-                                                        }
-                                                    )
-                                            )
-                                        |> (++) (List.map Pathfinder.SearchEffect eff)
-                                    )
-
-                                else
-                                    n m2
+                                ( m2, List.map Pathfinder.SearchEffect eff )
+                                    |> and (multiSearch query)
 
                 _ ->
                     Search.update m model.search
@@ -2695,6 +2709,38 @@ updateByMsg plugins uc msg model =
 
         InternalChangedTxFilter id filter ->
             n { model | txsFilters = AssocList.insert id filter model.txsFilters }
+
+
+multiSearch : String -> Model -> ( Model, List Effect )
+multiSearch query model =
+    let
+        multiInputList =
+            Data.parseMultiIdentifierInput query
+    in
+    if List.length multiInputList > 1 then
+        ( model
+        , multiInputList
+            |> List.map
+                (\inp ->
+                    Pathfinder.SearchEffect
+                        (Effect.Search.SearchEffect
+                            { query = inp
+                            , currency = Nothing
+                            , limit = Just 1
+                            , config =
+                                Api.defaultSearchConfig
+                                    |> s_includeAddresses (Just True)
+                                    |> s_includeTxs (Just True)
+                                    |> s_includeActors (Just False)
+                                    |> s_includeLabels (Just False)
+                            , toMsg = Search.BrowserGotMultiSearchResult query
+                            }
+                        )
+                )
+        )
+
+    else
+        n model
 
 
 exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
