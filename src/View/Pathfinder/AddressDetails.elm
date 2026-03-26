@@ -37,6 +37,7 @@ import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData exposing (WebData)
+import Set
 import Sha256
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
@@ -121,11 +122,34 @@ categoriesMaxWidth =
 utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
 utxo plugins pluginStates vc model id viewState address =
     let
+        crosschainTargets =
+            crosschainLedgerTargets id address
+
+        crosschainVisible =
+            not (List.isEmpty crosschainTargets)
+
+        crosschainLedgersList =
+            crosschainTargets
+                |> List.map
+                    (\( network, targetId ) ->
+                        div
+                            [ onClick (Pathfinder.UserClickedAddress targetId)
+                            , css [ Css.cursor Css.pointer ]
+                            ]
+                            [ TagsComponents.categoryTag
+                                { root =
+                                    { tagLabel = network
+                                    , closeVisible = False
+                                    }
+                                }
+                            ]
+                    )
+
         pluginTagsVisible =
             List.length pluginTagsList > 0
 
         { sidePanelData, categoriesList } =
-            makeSidePanelData vc model id pluginTagsVisible
+            makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
@@ -202,6 +226,13 @@ utxo plugins pluginStates vc model id viewState address =
                  else
                     [ css [ Css.flexDirection Css.row, Css.justifyContent Css.spaceBetween ] ]
                 )
+            |> Rs.s_crosschainLedgers
+                (if crosschainVisible then
+                    []
+
+                 else
+                    [ css [ Css.display Css.none ] ]
+                )
         )
         (SidePanelComponents.sidePanelAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
@@ -217,10 +248,18 @@ utxo plugins pluginStates vc model id viewState address =
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
+        , ledgersList = crosschainLedgersList
         , categoriesList = categoriesList
         }
         { root = sidePanelData
-        , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
+        , iconsTagL =
+            { variant =
+                if List.isEmpty categoriesList then
+                    none
+
+                else
+                    HIcons.iconsTagLTypeDirect {}
+            }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
         , identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
@@ -827,6 +866,29 @@ accountValueRundown vc conf =
 account : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
 account plugins pluginStates vc model id viewState address =
     let
+        crosschainTargets =
+            crosschainLedgerTargets id address
+
+        crosschainVisible =
+            not (List.isEmpty crosschainTargets)
+
+        crosschainLedgersList =
+            crosschainTargets
+                |> List.map
+                    (\( network, targetId ) ->
+                        div
+                            [ onClick (Pathfinder.UserClickedAddress targetId)
+                            , css [ Css.cursor Css.pointer ]
+                            ]
+                            [ TagsComponents.categoryTag
+                                { root =
+                                    { tagLabel = network
+                                    , closeVisible = False
+                                    }
+                                }
+                            ]
+                    )
+
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
 
@@ -837,7 +899,7 @@ account plugins pluginStates vc model id viewState address =
             List.length pluginTagsList > 0
 
         { sidePanelData, categoriesList } =
-            makeSidePanelData vc model id pluginTagsVisible
+            makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         sidePanelAddressHeader =
             { iconInstance =
@@ -943,6 +1005,13 @@ account plugins pluginStates vc model id viewState address =
                  else
                     []
                 )
+            |> Rs.s_crosschainLedgers
+                (if crosschainVisible then
+                    []
+
+                 else
+                    [ css [ Css.display Css.none ] ]
+                )
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
@@ -960,10 +1029,18 @@ account plugins pluginStates vc model id viewState address =
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
         , tokensList = []
+        , ledgersList = crosschainLedgersList
         , categoriesList = categoriesList
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
-        , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
+        , iconsTagL =
+            { variant =
+                if List.isEmpty categoriesList then
+                    none
+
+                else
+                    HIcons.iconsTagLTypeDirect {}
+            }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
         , sidePanelAddressHeader = sidePanelAddressHeader
@@ -1089,8 +1166,28 @@ getTagSummary model id =
             Nothing
 
 
-makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Msg) }
-makeSidePanelData vc model id pluginTagsVisible =
+crosschainLedgerTargets : Id -> Address -> List ( String, Id )
+crosschainLedgerTargets id address =
+    address.networks
+        |> Dict.toList
+        |> List.filter (\( network, addresses ) -> network /= Id.network id && not (Set.isEmpty addresses))
+        |> List.filterMap
+            (\( network, addresses ) ->
+                addresses
+                    |> Set.toList
+                    |> List.minimum
+                    |> Maybe.map
+                        (\targetAddress ->
+                            ( String.toUpper network
+                            , Id.init network targetAddress
+                            )
+                        )
+            )
+        |> List.sortBy Tuple.first
+
+
+makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Msg) }
+makeSidePanelData vc model id pluginTagsVisible crosschainVisible =
     let
         ts =
             getTagSummary model id
@@ -1156,10 +1253,10 @@ makeSidePanelData vc model id pluginTagsVisible =
                     )
                 |> Maybe.withDefault (HIcons.iconsAssign {})
         , tabsVisible = False
-        , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible
+        , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible || crosschainVisible
         , pluginSTagVisible = pluginTagsVisible
         , actorVisible = showExchangeTag
-        , tagsVisible = showOtherTag
+        , tagsVisible = showOtherTag || crosschainVisible
         }
     , categoriesList = categoriesList
     }
