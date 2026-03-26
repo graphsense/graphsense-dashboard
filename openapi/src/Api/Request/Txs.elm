@@ -64,6 +64,14 @@ type IncludeHeuristic
     | IncludeHeuristicOneTimeChange
     | IncludeHeuristicDirectChange
     | IncludeHeuristicMultiInputChange
+    | IncludeHeuristicAllChange
+    | IncludeHeuristicAllCoinjoin
+    | IncludeHeuristicWhirlpoolCoinjoin
+    | IncludeHeuristicWasabiCoinjoin
+    | IncludeHeuristicWasabi10Coinjoin
+    | IncludeHeuristicWasabi11Coinjoin
+    | IncludeHeuristicWasabi20Coinjoin
+    | IncludeHeuristicJoinmarketCoinjoin
 
 
 includeHeuristicVariants : List IncludeHeuristic
@@ -72,6 +80,14 @@ includeHeuristicVariants =
     , IncludeHeuristicOneTimeChange
     , IncludeHeuristicDirectChange
     , IncludeHeuristicMultiInputChange
+    , IncludeHeuristicAllChange
+    , IncludeHeuristicAllCoinjoin
+    , IncludeHeuristicWhirlpoolCoinjoin
+    , IncludeHeuristicWasabiCoinjoin
+    , IncludeHeuristicWasabi10Coinjoin
+    , IncludeHeuristicWasabi11Coinjoin
+    , IncludeHeuristicWasabi20Coinjoin
+    , IncludeHeuristicJoinmarketCoinjoin
     ]
 
 
@@ -90,6 +106,30 @@ stringFromIncludeHeuristic model =
         IncludeHeuristicMultiInputChange ->
             "multi_input_change"
 
+        IncludeHeuristicAllChange ->
+            "all_change"
+
+        IncludeHeuristicAllCoinjoin ->
+            "all_coinjoin"
+
+        IncludeHeuristicWhirlpoolCoinjoin ->
+            "whirlpool_coinjoin"
+
+        IncludeHeuristicWasabiCoinjoin ->
+            "wasabi_coinjoin"
+
+        IncludeHeuristicWasabi10Coinjoin ->
+            "wasabi_1_0_coinjoin"
+
+        IncludeHeuristicWasabi11Coinjoin ->
+            "wasabi_1_1_coinjoin"
+
+        IncludeHeuristicWasabi20Coinjoin ->
+            "wasabi_2_0_coinjoin"
+
+        IncludeHeuristicJoinmarketCoinjoin ->
+            "joinmarket_coinjoin"
+
 
 makeIncludeHeuristicFromString : String -> Maybe IncludeHeuristic
 makeIncludeHeuristicFromString str =
@@ -105,6 +145,30 @@ makeIncludeHeuristicFromString str =
 
     "multi_input_change" ->
         Just IncludeHeuristicMultiInputChange
+
+    "all_change" ->
+        Just IncludeHeuristicAllChange
+
+    "all_coinjoin" ->
+        Just IncludeHeuristicAllCoinjoin
+
+    "whirlpool_coinjoin" ->
+        Just IncludeHeuristicWhirlpoolCoinjoin
+
+    "wasabi_coinjoin" ->
+        Just IncludeHeuristicWasabiCoinjoin
+
+    "wasabi_1_0_coinjoin" ->
+        Just IncludeHeuristicWasabi10Coinjoin
+
+    "wasabi_1_1_coinjoin" ->
+        Just IncludeHeuristicWasabi11Coinjoin
+
+    "wasabi_2_0_coinjoin" ->
+        Just IncludeHeuristicWasabi20Coinjoin
+
+    "joinmarket_coinjoin" ->
+        Just IncludeHeuristicJoinmarketCoinjoin
 
     _ ->
         Nothing

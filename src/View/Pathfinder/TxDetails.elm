@@ -2,6 +2,7 @@ module View.Pathfinder.TxDetails exposing (view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Char
 import Components.Table exposing (Table)
 import Components.TransactionFilter as TransactionFilter
 import Config.View as View
@@ -14,6 +15,7 @@ import Html.Styled exposing (Html, div)
 import Html.Styled.Events exposing (preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import List.Extra
+import Maybe.Extra
 import Model.Currency exposing (asset, assetFromBase)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder as Pathfinder exposing (getHavingTags)
@@ -28,8 +30,10 @@ import RemoteData
 import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
+import Theme.Html.TagsComponents as TagsComponents
 import Util.Css exposing (spread)
 import Util.Graph exposing (decodeCoords)
+import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Locale as Locale
@@ -240,8 +244,44 @@ utxo vc model id viewState tx =
                 |> Maybe.andThen .changeHeuristics
                 |> Maybe.map .consensus
                 |> Maybe.withDefault []
+
+        mixingDetails =
+            tx.raw.heuristics
+                |> Maybe.andThen .coinjoinHeuristics
+                |> Maybe.andThen coinjoinMixingDetails
+
+        txValueCell =
+            valuesToCell vc (assetFromBase tx.raw.currency) tx.raw.totalOutput
+
+        mixingCell =
+            mixingDetails
+                |> Maybe.map
+                    (\details ->
+                        { firstRowText = details.firstRowText
+                        , secondRowText = details.secondRowText
+                        , secondRowVisible = details.secondRowVisible
+                        }
+                    )
+                |> Maybe.withDefault
+                    { firstRowText = ""
+                    , secondRowText = ""
+                    , secondRowVisible = False
+                    }
+
+        mixingConfidenceBadge =
+            mixingDetails
+                |> Maybe.andThen .confidence
+                |> Maybe.map (confidenceBadge vc)
+
+        sidePanelTxInstancesBase =
+            SidePanelComponents.sidePanelTransactionInstances
+
+        sidePanelTxInstances =
+            { sidePanelTxInstancesBase
+                | n115645PmOfMix = mixingConfidenceBadge
+            }
     in
-    SidePanelComponents.sidePanelTransactionWithAttributes
+    SidePanelComponents.sidePanelTransactionWithInstances
         (SidePanelComponents.sidePanelTransactionAttributes
             |> Rs.s_root
                 [ sidePanelCss
@@ -251,6 +291,7 @@ utxo vc model id viewState tx =
             |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
         )
+        sidePanelTxInstances
         { identifierWithCopyIcon =
             { identifier = Id.id id |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = Id.id id |> copyIconPathfinder vc
@@ -262,7 +303,10 @@ utxo vc model id viewState tx =
         , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
         , valueOfTimestamp = timeToCell vc tx.raw.timestamp
         , titleOfTxValue = { infoLabel = Locale.string vc.locale "Value" }
-        , valueOfTxValue = valuesToCell vc (assetFromBase tx.raw.currency) tx.raw.totalOutput
+        , valueOfTxValue = txValueCell
+        , sidePanelTxDetails = { showMixingRow = mixingDetails |> Maybe.map (always True) |> Maybe.withDefault False }
+        , titleOfMix = { infoLabel = Locale.string vc.locale "mixing type" }
+        , valueOfMix = mixingCell
         , root =
             { tabsVisible = False
             , inputListInstance =
@@ -337,6 +381,220 @@ utxo vc model id viewState tx =
                 (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
             }
         }
+
+
+type alias MixingDetails =
+    { firstRowText : String
+    , secondRowText : String
+    , secondRowVisible : Bool
+    , confidence : Maybe Int
+    }
+
+
+type alias HeuristicMatch =
+    { kind : String
+    , confidence : Int
+    }
+
+
+type alias DetectedConfidence a =
+    { a | detected : Bool, confidence : Int }
+
+
+type alias WasabiDetectedConfidence a =
+    { a | detected : Bool, confidence : Int, version : String }
+
+
+type alias CoinjoinConsensus a =
+    { a | detected : Bool, confidence : Int, sources : List String }
+
+
+coinjoinMixingDetails :
+    { a
+        | consensus : Maybe (CoinjoinConsensus b)
+        , joinmarket : Maybe (DetectedConfidence c)
+        , wasabi : Maybe (WasabiDetectedConfidence d)
+        , whirlpoolCoinjoin : Maybe (DetectedConfidence e)
+        , whirlpoolTx0 : Maybe (DetectedConfidence f)
+    }
+    -> Maybe MixingDetails
+coinjoinMixingDetails heuristics =
+    let
+        highestDetectedHeuristic =
+            heuristics
+                |> detectedHeuristicMatches
+                |> List.sortBy (.confidence >> negate)
+                |> List.head
+
+        consensusFallback =
+            heuristics.consensus
+                |> Maybe.andThen
+                    (\consensus ->
+                        if consensus.detected then
+                            Just
+                                { kind =
+                                    consensus.sources
+                                        |> List.head
+                                        |> Maybe.map coinjoinSourceLabel
+                                        |> Maybe.withDefault "CoinJoin"
+                                , confidence = consensus.confidence
+                                }
+
+                        else
+                            Nothing
+                    )
+
+        selected =
+            highestDetectedHeuristic
+                |> Maybe.Extra.or consensusFallback
+    in
+    selected
+        |> Maybe.map
+            (\entry ->
+                { firstRowText = entry.kind
+                , secondRowText = ""
+                , secondRowVisible = True
+                , confidence = Just entry.confidence
+                }
+            )
+
+
+detectedHeuristicMatches :
+    { a
+        | joinmarket : Maybe (DetectedConfidence b)
+        , wasabi : Maybe (WasabiDetectedConfidence c)
+        , whirlpoolCoinjoin : Maybe (DetectedConfidence d)
+        , whirlpoolTx0 : Maybe (DetectedConfidence e)
+    }
+    -> List HeuristicMatch
+detectedHeuristicMatches heuristics =
+    [ heuristics.joinmarket
+        |> Maybe.andThen
+            (\h ->
+                if h.detected then
+                    Just { kind = "JoinMarket", confidence = h.confidence }
+
+                else
+                    Nothing
+            )
+    , heuristics.wasabi
+        |> Maybe.andThen
+            (\h ->
+                if h.detected then
+                    Just
+                        { kind =
+                            if String.isEmpty h.version then
+                                "Wasabi"
+
+                            else
+                                "Wasabi " ++ h.version
+                        , confidence = h.confidence
+                        }
+
+                else
+                    Nothing
+            )
+    , heuristics.whirlpoolCoinjoin
+        |> Maybe.andThen
+            (\h ->
+                if h.detected then
+                    Just { kind = "Whirlpool CoinJoin", confidence = h.confidence }
+
+                else
+                    Nothing
+            )
+    , heuristics.whirlpoolTx0
+        |> Maybe.andThen
+            (\h ->
+                if h.detected then
+                    Just { kind = "Whirlpool Tx0", confidence = h.confidence }
+
+                else
+                    Nothing
+            )
+    ]
+        |> List.filterMap identity
+
+
+confidenceBadge : View.Config -> Int -> Html msg
+confidenceBadge vc confidence =
+    let
+        range =
+            confidence
+                |> toFloat
+                |> (/) 100
+                |> getConfidenceRangeFromFloat
+
+        levelText =
+            case range of
+                High ->
+                    Locale.string vc.locale "high confidence"
+
+                Medium ->
+                    Locale.string vc.locale "medium confidence"
+
+                Low ->
+                    Locale.string vc.locale "low confidence"
+
+        levelVariant =
+            case range of
+                High ->
+                    TagsComponents.ConfidenceLevelConfidenceLevelHigh
+
+                Medium ->
+                    TagsComponents.ConfidenceLevelConfidenceLevelMedium
+
+                Low ->
+                    TagsComponents.ConfidenceLevelConfidenceLevelLow
+    in
+    TagsComponents.confidenceLevel
+        { root =
+            { size = TagsComponents.ConfidenceLevelSizeSmall
+            , confidenceLevel = levelVariant
+            , text = levelText
+            }
+        }
+
+
+coinjoinSourceLabel : String -> String
+coinjoinSourceLabel source =
+    case source of
+        "joinmarket" ->
+            "JoinMarket"
+
+        "joinmarket_coinjoin" ->
+            "JoinMarket"
+
+        "wasabi" ->
+            "Wasabi"
+
+        "wasabi_coinjoin" ->
+            "Wasabi"
+
+        "whirlpool" ->
+            "Whirlpool"
+
+        "whirlpool_coinjoin" ->
+            "Whirlpool CoinJoin"
+
+        "all_coinjoin" ->
+            "CoinJoin"
+
+        _ ->
+            source
+                |> String.split "_"
+                |> List.map capitalizeWord
+                |> String.join " "
+
+
+capitalizeWord : String -> String
+capitalizeWord word =
+    case String.uncons word of
+        Just ( first, rest ) ->
+            String.fromChar (Char.toUpper first) ++ rest
+
+        Nothing ->
+            ""
 
 
 consensusChangeInfoForOutput : List Api.Data.ConsensusEntry -> Api.Data.TxValue -> Maybe { confidence : Float, heuristics : List String }

@@ -104,6 +104,23 @@ view _ vc pc tx utxo annotation =
                         UserOpensTxAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
+
+        isCoinjoinTx =
+            utxo.raw.heuristics
+                |> Maybe.andThen .coinjoinHeuristics
+                |> Maybe.andThen .consensus
+                |> Maybe.map .detected
+                |> Maybe.withDefault False
+
+        txNodeInstance =
+            if isCoinjoinTx then
+                Just (GraphComponents.txNodeCoinjoin {})
+
+            else
+                Nothing
+
+        txNodeUtxoInstances =
+            GraphComponents.txNodeUtxoInstances
     in
     g
         [ translate
@@ -118,7 +135,7 @@ view _ vc pc tx utxo annotation =
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
         ]
-        (GraphComponents.txNodeUtxoWithAttributes
+        (GraphComponents.txNodeUtxoWithInstances
             { txNodeUtxoAttributes
                 | root =
                     [ UserClickedTx id |> onClickWithStop
@@ -141,6 +158,9 @@ view _ vc pc tx utxo annotation =
                     [ translate 0 offsetTxHash |> transform ]
                 , time =
                     [ translate 0 offsetTxHash |> transform ]
+            }
+            { txNodeUtxoInstances
+                | txNode = txNodeInstance
             }
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs

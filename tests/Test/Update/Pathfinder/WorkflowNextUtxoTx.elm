@@ -98,6 +98,7 @@ txWithExternalConsensusChange =
                     , directChange = Nothing
                     , multiInputChange = Nothing
                     }
+            , coinjoinHeuristics = Nothing
             }
     }
 

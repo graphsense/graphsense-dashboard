@@ -806,9 +806,7 @@ perform apiKey wrapMsg cancelMsg effect =
                 includeHeuristics =
                     if includeIo then
                         Just
-                            [ Api.Request.Txs.IncludeHeuristicOneTimeChange
-                            , Api.Request.Txs.IncludeHeuristicDirectChange
-                            , Api.Request.Txs.IncludeHeuristicMultiInputChange
+                            [ Api.Request.Txs.IncludeHeuristicAll
                             ]
 
                     else
