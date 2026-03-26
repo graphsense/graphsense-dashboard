@@ -351,11 +351,34 @@ syncSidePanel uc model =
 
                                     _ ->
                                         Nothing
+
+                            aidOld =
+                                case model.details of
+                                    Just (AddressDetails a _) ->
+                                        Just a
+
+                                    _ ->
+                                        Nothing
+
+                            refreshAddressData =
+                                if aidOld /= Just aid then
+                                    BrowserGotAddressDataToRefresh
+                                        |> Api.GetAddressEffect
+                                            { currency = Id.network aid
+                                            , address = Id.id aid
+                                            , includeActors = True
+                                            }
+                                        |> ApiEffect
+                                        |> List.singleton
+
+                                else
+                                    []
                         in
                         Dict.get aid model.network.addresses
                             |> Maybe.map
                                 (AddressDetails.syncByAddress uc model.network model.clusters dateFilterPreset ad
                                     >> mapFirst (AddressDetails aid >> Just)
+                                    >> mapSecond ((++) refreshAddressData)
                                 )
                             |> Maybe.withDefault (n Nothing)
                 )
@@ -550,6 +573,22 @@ updateByMsg plugins uc msg model =
 
         UserPressedNormalKey _ ->
             n model
+
+        BrowserGotAddressDataToRefresh data ->
+            let
+                id =
+                    Id.init data.currency data.address
+            in
+            model.network
+                |> Network.updateAddress id (s_data (Success data))
+                |> flip s_network model
+                |> updateAddressDetails id
+                    (\ad ->
+                        n
+                            { ad
+                                | address = s_data (Success data) ad.address
+                            }
+                    )
 
         BrowserGotAddressData { id, pos, autoLinkTxInTraceMode } data ->
             let

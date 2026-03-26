@@ -293,6 +293,9 @@ shallPushHistory plugins msg _ =
         AnimationFrameDeltaForMove _ ->
             False
 
+        BrowserGotAddressDataToRefresh _ ->
+            False
+
         BrowserGotAddressData _ _ ->
             False
 
