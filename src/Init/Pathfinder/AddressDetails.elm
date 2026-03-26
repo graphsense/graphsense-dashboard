@@ -1,5 +1,6 @@
 module Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress, init)
 
+import Components.TransactionFilter as TransactionFilter
 import Config.Update as Update
 import Model.Address as Address
 import Model.Locale as Locale
@@ -22,8 +23,8 @@ getExposedAssetsForAddress uc address =
         |> RemoteData.withDefault allAssets
 
 
-init : Address -> AddressDetails.Model
-init address =
+init : Maybe TransactionFilter.Model -> Address -> AddressDetails.Model
+init txsFilter address =
     { neighborsTableOpen = False
     , transactionsTableOpen = False
     , tokenBalancesOpen = False
@@ -44,4 +45,5 @@ init address =
     , copyIconChevronOpen = False
     , isClusterDetailsOpen = False
     , displayAllTagsInDetails = False
+    , txsFilter = txsFilter
     }

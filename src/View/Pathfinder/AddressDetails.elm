@@ -4,6 +4,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as Inf
 import Components.PagedTable as PagedTable
+import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -31,12 +32,13 @@ import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPub
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
-import Msg.Pathfinder as Pathfinder exposing (Msg(..), OverlayWindows(..))
-import Msg.Pathfinder.AddressDetails as AddressDetails exposing (RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
+import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
+import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..), RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData exposing (WebData)
+import Set
 import Sha256
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
@@ -62,23 +64,10 @@ import View.Pathfinder.Table.NeighborAddressesTable as NeighborAddressesTable
 import View.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
-import View.Pathfinder.TransactionFilter as TransactionFilter
 
 
 view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
 view plugins pluginStates vc model id viewState =
-    let
-        filterDialogMsgs =
-            { closeTxFilterViewMsg = AddressDetails.CloseTxFilterView
-            , txTableFilterShowAllTxsMsg = Just AddressDetails.TxTableFilterShowAllTxs
-            , txTableFilterShowIncomingTxOnlyMsg = Just AddressDetails.TxTableFilterShowIncomingTxOnly
-            , txTableFilterShowOutgoingTxOnlyMsg = Just AddressDetails.TxTableFilterShowOutgoingTxOnly
-            , resetAllTxFiltersMsg = AddressDetails.ResetAllTxFilters
-            , txTableAssetSelectBoxMsg = AddressDetails.TxTableAssetSelectBoxMsg
-            , txTableFilterToggleZeroValueMsg = Nothing
-            , openDateRangePickerMsg = Just AddressDetails.OpenDateRangePicker
-            }
-    in
     div []
         [ model.network.addresses
             |> Dict.get id
@@ -94,6 +83,13 @@ view plugins pluginStates vc model id viewState =
         , case viewState.txs of
             RemoteData.Success txs ->
                 if txs.isTxFilterViewOpen then
+                    let
+                        filterConfig =
+                            { tag = TransactionFilterMsg
+                            , toggleTxFilterViewMsg = ToggleTxFilterView
+                            , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
+                            }
+                    in
                     div
                         [ [ Css.position Css.fixed
                           , Css.right (Css.px 42)
@@ -103,7 +99,7 @@ view plugins pluginStates vc model id viewState =
                           ]
                             |> css
                         ]
-                        [ TransactionFilter.txFilterDialogView vc (Id.network id) filterDialogMsgs txs |> Html.map (Pathfinder.AddressDetailsMsg viewState.address.id) ]
+                        [ TransactionFilter.txFilterDialogView vc (Id.network id) filterConfig txs.filter |> Html.map (Pathfinder.AddressDetailsMsg viewState.address.id) ]
 
                 else
                     none
@@ -121,11 +117,34 @@ categoriesMaxWidth =
 utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
 utxo plugins pluginStates vc model id viewState address =
     let
+        crosschainTargets =
+            crosschainLedgerTargets id address
+
+        crosschainVisible =
+            not (List.isEmpty crosschainTargets)
+
+        crosschainLedgersList =
+            crosschainTargets
+                |> List.map
+                    (\( network, targetId ) ->
+                        div
+                            [ onClick (Pathfinder.UserClickedAddress targetId)
+                            , css [ Css.cursor Css.pointer ]
+                            ]
+                            [ TagsComponents.categoryTag
+                                { root =
+                                    { tagLabel = network
+                                    , closeVisible = False
+                                    }
+                                }
+                            ]
+                    )
+
         pluginTagsVisible =
             List.length pluginTagsList > 0
 
         { sidePanelData, categoriesList } =
-            makeSidePanelData vc model id pluginTagsVisible
+            makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
@@ -185,7 +204,7 @@ utxo plugins pluginStates vc model id viewState address =
                 ]
             |> Rs.s_sidePanelAddressDetails [ css fullWidth ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
+            |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_categoriesList [ css [ Css.maxWidth <| Css.px categoriesMaxWidth ] ]
             |> Rs.s_tagsLayout
@@ -202,6 +221,13 @@ utxo plugins pluginStates vc model id viewState address =
                  else
                     [ css [ Css.flexDirection Css.row, Css.justifyContent Css.spaceBetween ] ]
                 )
+            |> Rs.s_crosschainLedgers
+                (if crosschainVisible then
+                    []
+
+                 else
+                    [ css [ Css.display Css.none ] ]
+                )
         )
         (SidePanelComponents.sidePanelAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
@@ -217,10 +243,18 @@ utxo plugins pluginStates vc model id viewState address =
         { pluginList = pluginList
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
+        , ledgersList = crosschainLedgersList
         , categoriesList = categoriesList
         }
         { root = sidePanelData
-        , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
+        , iconsTagL =
+            { variant =
+                if List.isEmpty categoriesList then
+                    none
+
+                else
+                    HIcons.iconsTagLTypeDirect {}
+            }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
         , identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
@@ -599,7 +633,7 @@ clusterInfoView vc open colors clstr =
                 }
 
 
-transactionTableView : View.Config -> Id -> (Id -> Bool) -> Pathfinder.Model -> TransactionTable.Model AddressDetails.Msg -> Html AddressDetails.Msg
+transactionTableView : View.Config -> Id -> (Id -> Bool) -> Pathfinder.Model -> TransactionTable.Model -> Html AddressDetails.Msg
 transactionTableView vc addressId txOnGraphFn model txs =
     let
         styles =
@@ -618,14 +652,11 @@ transactionTableView vc addressId txOnGraphFn model txs =
                 txs.table
     in
     [ TransactionFilter.filterHeader vc
-        txs
-        { resetDateFilterMsg = AddressDetails.ResetDateRangePicker
-        , resetAssetsFilterMsg = AddressDetails.ResetTxAssetFilter
-        , resetDirectionFilterMsg = Just AddressDetails.ResetTxDirectionFilter
-        , toggleFilterView = AddressDetails.ToggleTxFilterView
-        , resetZeroValueFilterMsg = Nothing
+        { tag = TransactionFilterMsg
+        , toggleTxFilterViewMsg = ToggleTxFilterView
         , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
         }
+        txs.filter
     , table
     ]
         |> div [ css [ Css.width (Css.pct 100) ] ]
@@ -827,6 +858,29 @@ accountValueRundown vc conf =
 account : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
 account plugins pluginStates vc model id viewState address =
     let
+        crosschainTargets =
+            crosschainLedgerTargets id address
+
+        crosschainVisible =
+            not (List.isEmpty crosschainTargets)
+
+        crosschainLedgersList =
+            crosschainTargets
+                |> List.map
+                    (\( network, targetId ) ->
+                        div
+                            [ onClick (Pathfinder.UserClickedAddress targetId)
+                            , css [ Css.cursor Css.pointer ]
+                            ]
+                            [ TagsComponents.categoryTag
+                                { root =
+                                    { tagLabel = network
+                                    , closeVisible = False
+                                    }
+                                }
+                            ]
+                    )
+
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
 
@@ -837,7 +891,7 @@ account plugins pluginStates vc model id viewState address =
             List.length pluginTagsList > 0
 
         { sidePanelData, categoriesList } =
-            makeSidePanelData vc model id pluginTagsVisible
+            makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         sidePanelAddressHeader =
             { iconInstance =
@@ -919,7 +973,7 @@ account plugins pluginStates vc model id viewState address =
                     |> css
                 ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
+            |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
             |> Rs.s_categoriesList [ css [ Css.maxWidth <| Css.px categoriesMaxWidth ] ]
             |> Rs.s_tagsLayout
@@ -943,6 +997,13 @@ account plugins pluginStates vc model id viewState address =
                  else
                     []
                 )
+            |> Rs.s_crosschainLedgers
+                (if crosschainVisible then
+                    []
+
+                 else
+                    [ css [ Css.display Css.none ] ]
+                )
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
@@ -960,10 +1021,18 @@ account plugins pluginStates vc model id viewState address =
         , pluginTagsList = pluginTagsList
         , relatedDataTabsList = relatedDataTabsList
         , tokensList = []
+        , ledgersList = crosschainLedgersList
         , categoriesList = categoriesList
         }
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
-        , iconsTagL = { variant = HIcons.iconsTagLTypeDirect {} }
+        , iconsTagL =
+            { variant =
+                if List.isEmpty categoriesList then
+                    none
+
+                else
+                    HIcons.iconsTagLTypeDirect {}
+            }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
         , sidePanelAddressHeader = sidePanelAddressHeader
@@ -1089,8 +1158,28 @@ getTagSummary model id =
             Nothing
 
 
-makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Msg) }
-makeSidePanelData vc model id pluginTagsVisible =
+crosschainLedgerTargets : Id -> Address -> List ( String, Id )
+crosschainLedgerTargets id address =
+    address.networks
+        |> Dict.toList
+        |> List.filter (\( network, addresses ) -> network /= Id.network id && not (Set.isEmpty addresses))
+        |> List.filterMap
+            (\( network, addresses ) ->
+                addresses
+                    |> Set.toList
+                    |> List.minimum
+                    |> Maybe.map
+                        (\targetAddress ->
+                            ( String.toUpper network
+                            , Id.init network targetAddress
+                            )
+                        )
+            )
+        |> List.sortBy Tuple.first
+
+
+makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Pathfinder.Msg) }
+makeSidePanelData vc model id pluginTagsVisible crosschainVisible =
     let
         ts =
             getTagSummary model id
@@ -1156,16 +1245,16 @@ makeSidePanelData vc model id pluginTagsVisible =
                     )
                 |> Maybe.withDefault (HIcons.iconsAssign {})
         , tabsVisible = False
-        , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible
+        , tagSectionVisible = showExchangeTag || showOtherTag || pluginTagsVisible || crosschainVisible
         , pluginSTagVisible = pluginTagsVisible
         , actorVisible = showExchangeTag
-        , tagsVisible = showOtherTag
+        , tagsVisible = showOtherTag || crosschainVisible
         }
     , categoriesList = categoriesList
     }
 
 
-labelOfActor : View.Config -> Pathfinder.Model -> Id -> Maybe (Html Msg)
+labelOfActor : View.Config -> Pathfinder.Model -> Id -> Maybe (Html Pathfinder.Msg)
 labelOfActor vc model id =
     let
         ts =

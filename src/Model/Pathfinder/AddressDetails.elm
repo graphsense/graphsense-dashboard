@@ -2,11 +2,12 @@ module Model.Pathfinder.AddressDetails exposing (Model)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
+import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Msg.Pathfinder.AddressDetails exposing (Msg, RelatedAddressTypes)
+import Msg.Pathfinder.AddressDetails exposing (RelatedAddressTypes)
 import RemoteData exposing (WebData)
 import Util.ThemedSelectBox as ThemedSelectBox
 
@@ -15,7 +16,7 @@ type alias Model =
     { neighborsTableOpen : Bool
     , transactionsTableOpen : Bool
     , tokenBalancesOpen : Bool
-    , txs : WebData (TransactionTable.Model Msg)
+    , txs : WebData TransactionTable.Model
     , neighborsIncoming : WebData (InfiniteTable.Model Api.Data.NeighborAddress)
     , neighborsOutgoing : WebData (InfiniteTable.Model Api.Data.NeighborAddress)
     , address : Address
@@ -32,4 +33,5 @@ type alias Model =
     , copyIconChevronOpen : Bool
     , isClusterDetailsOpen : Bool
     , displayAllTagsInDetails : Bool
+    , txsFilter : Maybe TransactionFilter.Model
     }

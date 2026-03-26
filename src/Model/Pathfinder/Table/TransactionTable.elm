@@ -1,23 +1,17 @@
-module Model.Pathfinder.Table.TransactionTable exposing (Model, filter, resetFilters, titleHash, titleTimestamp, titleValue)
+module Model.Pathfinder.Table.TransactionTable exposing (Model, filter, titleHash, titleTimestamp, titleValue)
 
 import Api.Data
 import Api.Request.Addresses
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
-import Model.DateRangePicker as DateRangePicker
-import Model.Direction exposing (Direction)
-import Util.ThemedSelectBox as ThemedSelectBox
+import Components.TransactionFilter as TransactionFilter
 
 
-type alias Model msg =
+type alias Model =
     { table : InfiniteTable.Model Api.Data.AddressTx
     , order : Maybe Api.Request.Addresses.Order_
-    , dateRangePicker : Maybe (DateRangePicker.Model msg)
-    , direction : Maybe Direction
+    , filter : TransactionFilter.Model
     , isTxFilterViewOpen : Bool
-    , assetSelectBox : ThemedSelectBox.Model (Maybe String)
-    , selectedAsset : Maybe String
-    , includeZeroValueTxs : Maybe Bool -- Backend does not support this filter at the moment
     }
 
 
@@ -47,15 +41,4 @@ filter =
                 Api.Data.AddressTxAddressTxUtxo tx ->
                     String.contains term tx.txHash
     , filter = always True
-    }
-
-
-resetFilters : Model msg -> Model msg
-resetFilters model =
-    { model
-        | order = Nothing
-        , isTxFilterViewOpen = False
-        , selectedAsset = Nothing
-        , dateRangePicker = Nothing
-        , direction = Nothing
     }

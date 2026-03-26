@@ -3,6 +3,7 @@ module View.Pathfinder.TxDetails exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.Table exposing (Table)
+import Components.TransactionFilter as TransactionFilter
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
@@ -36,7 +37,14 @@ import View.Pathfinder.Details exposing (closeAttrs, dataTab, emptyCell, valuesT
 import View.Pathfinder.InfiniteTable as InfiniteTable
 import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 import View.Pathfinder.Table.SubTxsTable as SubTxsTable
-import View.Pathfinder.TransactionFilter as TransactionFilter
+
+
+filterConfig : TransactionFilter.FilterHeaderConfig TxDetailsMsg
+filterConfig =
+    { tag = TransactionFilterMsg
+    , toggleTxFilterViewMsg = UserClickedToggleSubTxsTableFilter
+    , exportCsv = Nothing
+    }
 
 
 view : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
@@ -55,46 +63,44 @@ view vc model id viewState =
 
 accountAssetList : View.Config -> TxDetails.Model -> (Id -> Bool) -> Html Msg
 accountAssetList vc viewState txExistsFn =
-    let
-        subTxsTab c =
-            dataTab
-                { title =
-                    SidePanelComponents.sidePanelListHeaderTitleWithAttributes
-                        (SidePanelComponents.sidePanelListHeaderTitleAttributes
-                            |> Rs.s_root [ spread ]
-                        )
-                        { root =
-                            { label = Locale.string vc.locale "Sub transfers"
+    if viewState.hasSubTxsTable then
+        let
+            subTxsTab c =
+                dataTab
+                    { title =
+                        SidePanelComponents.sidePanelListHeaderTitleWithAttributes
+                            (SidePanelComponents.sidePanelListHeaderTitleAttributes
+                                |> Rs.s_root [ spread ]
+                            )
+                            { root =
+                                { label = Locale.string vc.locale "Sub transfers"
+                                }
                             }
-                        }
-                , disabled = False
-                , content =
-                    if viewState.subTxsTableOpen then
-                        Just c
+                    , disabled = False
+                    , content =
+                        if viewState.subTxsTableOpen then
+                            Just c
 
-                    else
-                        Nothing
-                , onClick = UserClickedToggleSubTxsTable |> TxDetailsMsg
-                }
-    in
-    [ TransactionFilter.filterHeader vc
-        viewState.subTxsTableFilter
-        { resetDateFilterMsg = NoOpSubTxsTable
-        , resetAssetsFilterMsg = UserClickedResetAllSubTxsTableFilters
-        , resetDirectionFilterMsg = Nothing
-        , toggleFilterView = UserClickedToggleSubTxsTableFilter
-        , resetZeroValueFilterMsg = Just UserClickedResetZeroValueSubTxsTableFilters
-        , exportCsv = Nothing
-        }
-        |> Html.Styled.map TxDetailsMsg
-    , InfiniteTable.view vc
-        [ css fullWidth, css [ Css.height (Css.px 200) ] ]
-        (SubTxsTable.config Css.Table.styles vc { selectedSubTx = viewState.tx |> Tx.getTxIdForTx, isCheckedFn = txExistsFn })
-        viewState.subTxsTable
-        |> Html.Styled.map TxDetailsMsg
-    ]
-        |> div [ css [ Css.overflowY Css.auto ] ]
-        |> subTxsTab
+                        else
+                            Nothing
+                    , onClick = UserClickedToggleSubTxsTable |> TxDetailsMsg
+                    }
+        in
+        [ TransactionFilter.filterHeader vc
+            filterConfig
+            viewState.subTxsTableFilter
+            |> Html.Styled.map TxDetailsMsg
+        , InfiniteTable.view vc
+            [ css fullWidth, css [ Css.height (Css.px 200) ] ]
+            (SubTxsTable.config Css.Table.styles vc { selectedSubTx = viewState.tx |> Tx.getTxIdForTx, isCheckedFn = txExistsFn })
+            viewState.subTxsTable
+            |> Html.Styled.map TxDetailsMsg
+        ]
+            |> div [ css [ Css.overflowY Css.auto ] ]
+            |> subTxsTab
+
+    else
+        none
 
 
 account : View.Config -> TxDetails.Model -> Id -> (Id -> Bool) -> Html Msg
@@ -113,17 +119,6 @@ account vc viewState id txExistsFn =
                     )
                     {}
                 ]
-
-        filterDialogMsgs =
-            { closeTxFilterViewMsg = UserClickedCloseSubTxTableFilterDialog
-            , txTableFilterShowAllTxsMsg = Nothing
-            , txTableFilterShowIncomingTxOnlyMsg = Nothing
-            , txTableFilterShowOutgoingTxOnlyMsg = Nothing
-            , txTableFilterToggleZeroValueMsg = Just UserClickedToggleIncludeZeroValueSubTxs
-            , resetAllTxFiltersMsg = UserClickedResetAllSubTxsTableFilters
-            , txTableAssetSelectBoxMsg = SubTxsSelectedAssetSelectBoxMsg
-            , openDateRangePickerMsg = Nothing
-            }
 
         baseTx =
             viewState.baseTx |> RemoteData.toMaybe
@@ -204,7 +199,7 @@ account vc viewState id txExistsFn =
                 , secondRowVisible = False
                 }
             }
-        , if viewState.subTxsTableFilter.isSubTxsTableFilterDialogOpen then
+        , if viewState.isSubTxsTableFilterDialogOpen then
             div
                 [ [ Css.position Css.fixed
                   , Css.right (Css.px 42)
@@ -214,7 +209,7 @@ account vc viewState id txExistsFn =
                   ]
                     |> css
                 ]
-                [ TransactionFilter.txFilterDialogView vc (Id.network id) filterDialogMsgs viewState.subTxsTableFilter
+                [ TransactionFilter.txFilterDialogView vc (Id.network id) filterConfig viewState.subTxsTableFilter
                     |> Html.Styled.map TxDetailsMsg
                 ]
 

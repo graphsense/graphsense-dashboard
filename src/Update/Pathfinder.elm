@@ -2,10 +2,13 @@ module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserializ
 
 import Animation as A
 import Api.Data
+import Api.Request.Addresses
+import AssocList
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
+import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
@@ -51,7 +54,7 @@ import Model.Pathfinder.ConversionEdge as ConversionEdge
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
 import Model.Pathfinder.History.Entry as Entry
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
@@ -121,6 +124,11 @@ zoomFactor =
     0.5
 
 
+relatedAddressesPageSize : Int
+relatedAddressesPageSize =
+    100
+
+
 getTagsummary : HavingTags -> Maybe Api.Data.TagSummary
 getTagsummary ht =
     case ht of
@@ -187,18 +195,14 @@ syncUrl model =
                                             |> Just
 
                                     Success txs ->
-                                        txs.dateRangePicker
+                                        txs.filter
+                                            |> TransactionFilter.getDateRange
                                             |> Maybe.map
-                                                (\{ fromDate, toDate } ->
+                                                (\( fromDate, toDate ) ->
                                                     { fromDate = fromDate
                                                     , toDate = toDate
                                                     }
                                                 )
-                                            |> Maybe.withDefault
-                                                { fromDate = Nothing
-                                                , toDate = Nothing
-                                                }
-                                            |> Just
                     in
                     Route.addressRouteWithFilter
                         { network = Id.network id
@@ -230,16 +234,65 @@ syncSidePanel uc model =
     let
         makeAddressDetails aid =
             Dict.get aid model.network.addresses
-                |> Maybe.map AddressDetails.init
+                |> Maybe.map (AddressDetails.init (AssocList.get (TxsFilterAddress aid) model.txsFilters))
                 |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
+            let
+                assets =
+                    uc.locale
+                        |> flip Locale.getTokenTickers (Id.network tid)
+
+                txsFilter =
+                    AssocList.get (TxsFilterTx tid) model.txsFilters
+            in
             Dict.get tid model.network.txs
-                |> Maybe.map (TxDetails.init (uc.locale |> flip Locale.getTokenTickers (Id.network tid)) >> TxDetails tid)
+                |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
 
         makeRelationDetails rid =
             Dict.get rid model.network.aggEdges
-                |> Maybe.map (RelationDetails.init >> RelationDetails rid)
+                |> Maybe.andThen
+                    (\aggEdge ->
+                        let
+                            a =
+                                Tuple.first rid
+
+                            b =
+                                Tuple.second rid
+
+                            addrA =
+                                Dict.get a model.network.addresses
+
+                            addrB =
+                                Dict.get b model.network.addresses
+
+                            maybeAr1 =
+                                addrA
+                                    |> Maybe.andThen Address.getActivityRangeAddress
+                                    |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
+
+                            maybeAr2 =
+                                addrB
+                                    |> Maybe.andThen Address.getActivityRangeAddress
+                                    |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
+
+                            txsFilterA2b =
+                                AssocList.get (TxsFilterAggEdge True rid) model.txsFilters
+
+                            txsFilterB2a =
+                                AssocList.get (TxsFilterAggEdge False rid) model.txsFilters
+                        in
+                        Maybe.map2
+                            (\ar1 ar2 ->
+                                ( Time.millisToPosix (min (Tuple.first ar1) (Tuple.first ar2))
+                                , Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2))
+                                )
+                                    |> RelationDetails.init uc txsFilterA2b txsFilterB2a aggEdge
+                                    |> RelationDetails rid
+                            )
+                            maybeAr1
+                            maybeAr2
+                    )
     in
     (case ( model.selection, model.details ) of
         ( SelectedAddress id, Just (AddressDetails aid _) ) ->
@@ -572,6 +625,18 @@ updateByMsg plugins uc msg model =
                 browserGotAddressData uc plugins id pos data model
                     |> and condFetchEgonet
 
+        BrowserGotAddressPubkeyRelations id x ->
+            let
+                modelWithRelations =
+                    updateAddressRelatedData id x model
+
+                nextFetch =
+                    x.nextPage
+                        |> Maybe.map (\nextPage -> fetchAddressPubkeyRelations id (Just nextPage))
+                        |> Maybe.Extra.toList
+            in
+            ( modelWithRelations, nextFetch )
+
         BrowserGotRelationsToVisibleNeighbors { id, dir, requestIds, autoLinkInTraceMode } { neighbors } ->
             let
                 neighborIds =
@@ -858,28 +923,6 @@ updateByMsg plugins uc msg model =
                     n model
 
         RelationDetailsMsg id submsg ->
-            let
-                addrA =
-                    Dict.get (Tuple.first id) model.network.addresses
-
-                addrB =
-                    Dict.get (Tuple.second id) model.network.addresses
-
-                ar1 =
-                    addrA
-                        |> Maybe.andThen Address.getActivityRangeAddress
-                        |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
-                        |> Maybe.withDefault ( 0, 0 )
-
-                ar2 =
-                    addrB
-                        |> Maybe.andThen Address.getActivityRangeAddress
-                        |> Maybe.map (Tuple.mapBoth Time.posixToMillis Time.posixToMillis)
-                        |> Maybe.withDefault ( 0, 0 )
-
-                ar =
-                    ( Time.millisToPosix (min (Tuple.first ar1) (Tuple.first ar2)), Time.millisToPosix (max (Tuple.second ar1) (Tuple.second ar2)) )
-            in
             (case submsg of
                 RelationDetails.UserClickedTxCheckboxInTable tx ->
                     addOrRemoveTx plugins Nothing (Tx.getTxIdForRelationTx tx) model
@@ -933,7 +976,7 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
             )
-                |> and (updateRelationDetails uc id ar submsg)
+                |> and (updateRelationDetails uc id submsg)
 
         AddressDetailsMsg addressId subm ->
             let
@@ -970,6 +1013,11 @@ updateByMsg plugins uc msg model =
                             (AddressDetails.update uc subm
                                 |> updateAddressDetails addressId
                             )
+
+                AddressDetails.BrowserGotPubkeyRelations x ->
+                    updateAddressRelatedData addressId x model
+                        |> updateAddressDetails addressId
+                            (AddressDetails.update uc subm)
 
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
                     userClickedAddressCheckboxInTable plugins id model
@@ -2645,6 +2693,9 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
+        InternalChangedTxFilter id filter ->
+            n { model | txsFilters = AssocList.insert id filter model.txsFilters }
+
 
 exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
 exportGraph conf bbox model =
@@ -2865,14 +2916,14 @@ setTracingMode tm model =
         |> n
 
 
-updateRelationDetails : Update.Config -> ( Id, Id ) -> ( Time.Posix, Time.Posix ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
-updateRelationDetails uc id activityRange msg model =
+updateRelationDetails : Update.Config -> ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
+updateRelationDetails uc id msg model =
     getRelationDetails model id
         |> Maybe.map
             (\rdModel ->
                 let
                     ( nVs, eff ) =
-                        RelationDetails.update uc id activityRange msg rdModel
+                        RelationDetails.update uc id msg rdModel
                 in
                 ( { model | details = Just (RelationDetails id nVs) }, eff )
             )
@@ -3201,9 +3252,60 @@ browserGotAddressData uc plugins providedId position data model =
                 :: fetchActorsForAddress data model.actors
                 --++ eff
                 ++ effCluster
-                ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
+                ++ [ fetchAddressPubkeyRelations id Nothing
+                   , InternalEffect (InternalPathfinderAddedAddress newAddress.id)
+                   ]
             )
         |> and (checkSelection uc)
+
+
+fetchAddressPubkeyRelations : Id -> Maybe String -> Effect
+fetchAddressPubkeyRelations id nextpage =
+    BrowserGotAddressPubkeyRelations id
+        |> Api.ListRelatedAddressesEffect
+            { currency = Id.network id
+            , address = Id.id id
+            , reltype = Api.Request.Addresses.AddressRelationTypePubkey
+            , pagesize = relatedAddressesPageSize
+            , nextpage = nextpage
+            }
+        |> ApiEffect
+
+
+updateAddressRelatedData : Id -> Api.Data.RelatedAddresses -> Model -> Model
+updateAddressRelatedData id x model =
+    { model
+        | network =
+            Network.updateAddress id
+                (\address ->
+                    let
+                        withRelatedAddresses =
+                            x.relatedAddresses
+                                |> List.foldl
+                                    (\related acc ->
+                                        Dict.update related.currency
+                                            (Maybe.map (Set.insert related.address)
+                                                >> Maybe.withDefault (Set.singleton related.address)
+                                                >> Just
+                                            )
+                                            acc
+                                    )
+                                    address.networks
+
+                        withCurrentAddress =
+                            Dict.update (Id.network id)
+                                (Maybe.map (Set.insert (Id.id id))
+                                    >> Maybe.withDefault (Set.singleton (Id.id id))
+                                    >> Just
+                                )
+                                withRelatedAddresses
+                    in
+                    { address
+                        | networks = withCurrentAddress
+                    }
+                )
+                model.network
+    }
 
 
 handleTooltipMsg : AddressDetails.TooltipMsgs -> Model -> ( Model, List Effect )
@@ -5067,7 +5169,7 @@ bboxWithUnit bbox =
     }
 
 
-getTagsForExport : Id -> TransactionTable.Model AddressDetails.Msg -> ( List Api.Data.TxAccount, Maybe String ) -> Model -> ( Model, List Effect )
+getTagsForExport : Id -> TransactionTable.Model -> ( List Api.Data.TxAccount, Maybe String ) -> Model -> ( Model, List Effect )
 getTagsForExport addressId table data model =
     let
         toMsg =

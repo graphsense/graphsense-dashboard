@@ -3,6 +3,7 @@ module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, Addi
 import Api.Data
 import Color exposing (Color)
 import Components.InfiniteTable as InfiniteTable
+import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Model.Dialog as Dialog
 import Model.Direction exposing (Direction)
@@ -11,7 +12,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType)
 import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (Deserializing)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id exposing (Id, TxsFilterId)
 import Model.Pathfinder.Network exposing (FindPosition)
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
@@ -25,7 +26,6 @@ import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
-import Util.ThemedSelectBox as ThemedSelectBox
 
 
 type alias AddingAddressConfig =
@@ -81,6 +81,7 @@ type Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
     | BrowserGotAddressData AddingAddressConfig Api.Data.Address
+    | BrowserGotAddressPubkeyRelations Id Api.Data.RelatedAddresses
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
@@ -149,6 +150,7 @@ type Msg
     | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
     | InternalExportGraphTxsCompleted
+    | InternalChangedTxFilter TxsFilterId TransactionFilter.Model
 
 
 type alias TextTooltipConfig =
@@ -181,14 +183,9 @@ type TxDetailsMsg
     | BrowserGotBaseTx Api.Data.Tx
     | BrowserGotTxFlows (Maybe String) Api.Data.Txs
     | UserClickedToggleSubTxsTable
-    | UserClickedResetAllSubTxsTableFilters
-    | UserClickedResetZeroValueSubTxsTableFilters
     | UserClickedToggleSubTxsTableFilter
-    | UserClickedCloseSubTxTableFilterDialog
     | UserClickedTxInSubTxsTable Api.Data.TxAccount
-    | NoOpSubTxsTable
-    | UserClickedToggleIncludeZeroValueSubTxs
-    | SubTxsSelectedAssetSelectBoxMsg (ThemedSelectBox.Msg (Maybe String))
+    | TransactionFilterMsg TransactionFilter.Msg
 
 
 type IoDirection

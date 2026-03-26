@@ -1,4 +1,4 @@
-module Model.Pathfinder.Id exposing (Id, id, network, toString)
+module Model.Pathfinder.Id exposing (Id, TxsFilterId(..), id, network, toString)
 
 import Tuple exposing (first, second)
 
@@ -20,3 +20,9 @@ id =
 toString : Id -> String
 toString ( c, i ) =
     c ++ i
+
+
+type TxsFilterId
+    = TxsFilterAddress Id
+    | TxsFilterTx Id
+    | TxsFilterAggEdge Bool ( Id, Id )

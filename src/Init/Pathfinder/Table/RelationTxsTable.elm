@@ -1,28 +1,17 @@
-module Init.Pathfinder.Table.RelationTxsTable exposing (emptyDateFilter, init)
+module Init.Pathfinder.Table.RelationTxsTable exposing (init)
 
 import Api.Request.Addresses
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
-import Model.DateRangePicker as DateRangePicker
-import Model.Direction exposing (Direction)
+import Components.TransactionFilter as TransactionFilter
+import Config.Update as Update
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
-import Msg.Pathfinder.RelationDetails exposing (Msg)
-import Util.ThemedSelectBox as ThemedSelectBox
+import Time
 
 
-emptyDateFilter : { txMinBlock : Maybe Int, txMaxBlock : Maybe Int, dateRangePicker : Maybe (DateRangePicker.Model Msg) }
-emptyDateFilter =
-    { txMinBlock = Nothing, txMaxBlock = Nothing, dateRangePicker = Nothing }
-
-
-getCompleteAssetList : List String -> List (Maybe String)
-getCompleteAssetList l =
-    Nothing :: (l |> List.map Just)
-
-
-init : Direction -> List String -> RelationTxsTable.Model Msg
-init dir assets =
+init : Update.Config -> Maybe TransactionFilter.Model -> ( Time.Posix, Time.Posix ) -> Maybe (List String) -> RelationTxsTable.Model
+init uc txsFilter ( mn, mx ) assets =
     let
         table isDesc =
             Table.initSorted isDesc RelationTxsTable.titleTimestamp
@@ -30,11 +19,18 @@ init dir assets =
     in
     { table = table False
     , order = Just Api.Request.Addresses.Order_Desc
-    , dateRangePicker = Nothing
-    , direction = Just dir
     , isTxFilterViewOpen = False
-    , assetSelectBox = ThemedSelectBox.init (getCompleteAssetList assets)
-    , selectedAsset = Nothing
-    , includeZeroValueTxs = Nothing -- Backend does not support this filter at the moment
     , exportCSV = ExportCSV.init
+    , filter =
+        let
+            withCommon =
+                TransactionFilter.withDateRangePicker uc.locale mn mx
+                    >> (assets
+                            |> Maybe.map TransactionFilter.withAssetSelectBox
+                            |> Maybe.withDefault identity
+                       )
+        in
+        txsFilter
+            |> Maybe.map withCommon
+            |> Maybe.withDefault (TransactionFilter.init |> withCommon)
     }
