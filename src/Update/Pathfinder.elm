@@ -2,6 +2,7 @@ module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserializ
 
 import Animation as A
 import Api.Data
+import Api.Request.Addresses
 import AssocList
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
@@ -121,6 +122,11 @@ import Workflow
 zoomFactor : Float
 zoomFactor =
     0.5
+
+
+relatedAddressesPageSize : Int
+relatedAddressesPageSize =
+    100
 
 
 getTagsummary : HavingTags -> Maybe Api.Data.TagSummary
@@ -619,6 +625,18 @@ updateByMsg plugins uc msg model =
                 browserGotAddressData uc plugins id pos data model
                     |> and condFetchEgonet
 
+        BrowserGotAddressPubkeyRelations id x ->
+            let
+                modelWithRelations =
+                    updateAddressRelatedData id x model
+
+                nextFetch =
+                    x.nextPage
+                        |> Maybe.map (\nextPage -> fetchAddressPubkeyRelations id (Just nextPage))
+                        |> Maybe.Extra.toList
+            in
+            ( modelWithRelations, nextFetch )
+
         BrowserGotRelationsToVisibleNeighbors { id, dir, requestIds, autoLinkInTraceMode } { neighbors } ->
             let
                 neighborIds =
@@ -995,6 +1013,11 @@ updateByMsg plugins uc msg model =
                             (AddressDetails.update uc subm
                                 |> updateAddressDetails addressId
                             )
+
+                AddressDetails.BrowserGotPubkeyRelations x ->
+                    updateAddressRelatedData addressId x model
+                        |> updateAddressDetails addressId
+                            (AddressDetails.update uc subm)
 
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
                     userClickedAddressCheckboxInTable plugins id model
@@ -3209,9 +3232,60 @@ browserGotAddressData uc plugins providedId position data model =
                 :: fetchActorsForAddress data model.actors
                 --++ eff
                 ++ effCluster
-                ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
+                ++ [ fetchAddressPubkeyRelations id Nothing
+                   , InternalEffect (InternalPathfinderAddedAddress newAddress.id)
+                   ]
             )
         |> and (checkSelection uc)
+
+
+fetchAddressPubkeyRelations : Id -> Maybe String -> Effect
+fetchAddressPubkeyRelations id nextpage =
+    BrowserGotAddressPubkeyRelations id
+        |> Api.ListRelatedAddressesEffect
+            { currency = Id.network id
+            , address = Id.id id
+            , reltype = Api.Request.Addresses.AddressRelationTypePubkey
+            , pagesize = relatedAddressesPageSize
+            , nextpage = nextpage
+            }
+        |> ApiEffect
+
+
+updateAddressRelatedData : Id -> Api.Data.RelatedAddresses -> Model -> Model
+updateAddressRelatedData id x model =
+    { model
+        | network =
+            Network.updateAddress id
+                (\address ->
+                    let
+                        withRelatedAddresses =
+                            x.relatedAddresses
+                                |> List.foldl
+                                    (\related acc ->
+                                        Dict.update related.currency
+                                            (Maybe.map (Set.insert related.address)
+                                                >> Maybe.withDefault (Set.singleton related.address)
+                                                >> Just
+                                            )
+                                            acc
+                                    )
+                                    address.networks
+
+                        withCurrentAddress =
+                            Dict.update (Id.network id)
+                                (Maybe.map (Set.insert (Id.id id))
+                                    >> Maybe.withDefault (Set.singleton (Id.id id))
+                                    >> Just
+                                )
+                                withRelatedAddresses
+                    in
+                    { address
+                        | networks = withCurrentAddress
+                    }
+                )
+                model.network
+    }
 
 
 handleTooltipMsg : AddressDetails.TooltipMsgs -> Model -> ( Model, List Effect )
