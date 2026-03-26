@@ -110,11 +110,11 @@ config styles vc ratc _ =
                     HasTags _ ->
                         []
 
-                    HasTagSummaryWithCluster _ ->
-                        []
+                    HasTagSummaryWithCluster ts ->
+                        withTagSummary ts
 
-                    HasTagSummaryOnlyWithCluster _ ->
-                        []
+                    HasTagSummaryOnlyWithCluster ts ->
+                        withTagSummary ts
 
                     HasTagSummaryWithoutCluster ts ->
                         withTagSummary ts
