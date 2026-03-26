@@ -5,6 +5,7 @@ import Color
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Config.View as View
 import Css
+import Dict
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Json.Decode
@@ -156,9 +157,6 @@ view plugins vc pc address annotation =
                     )
                 |> Maybe.withDefault ( [], [] )
 
-        isCrossChain =
-            False
-
         ifTrue bool items =
             if bool then
                 items
@@ -169,7 +167,7 @@ view plugins vc pc address annotation =
         icons =
             [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
             , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
-            , ifTrue isCrossChain [ Icons.iconsCrosschainSwithoutPadding {} ]
+            , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
             ]
                 |> List.concat
 

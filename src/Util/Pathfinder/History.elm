@@ -296,6 +296,9 @@ shallPushHistory plugins msg _ =
         BrowserGotAddressData _ _ ->
             False
 
+        BrowserGotAddressPubkeyRelations _ _ ->
+            False
+
         BrowserGotClusterData _ _ ->
             False
 

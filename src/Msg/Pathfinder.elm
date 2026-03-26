@@ -80,6 +80,7 @@ type Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
     | BrowserGotAddressData AddingAddressConfig Api.Data.Address
+    | BrowserGotAddressPubkeyRelations Id Api.Data.RelatedAddresses
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary

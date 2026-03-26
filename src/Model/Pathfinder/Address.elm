@@ -24,6 +24,7 @@ module Model.Pathfinder.Address exposing
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
 import Color exposing (Color)
+import Dict exposing (Dict)
 import Init.Pathfinder.Id as Id
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
@@ -53,6 +54,7 @@ type alias Address =
     , clusterSiblingHovered : Bool
     , exchange : Maybe String
     , hasTags : Bool
+    , networks : Dict String (Set String)
     , actor : Maybe String
     , isStartingPoint : Bool
     , plugins : Plugin.AddressState
