@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -772,7 +772,9 @@ updateByMsg plugins uc msg model =
                         modelWithTxsAdded =
                             txsToAdd |> List.foldl addAccTxs ( model, [] )
                     in
-                    addressesToAdd |> List.foldl addAccAddr modelWithTxsAdded
+                    addressesToAdd
+                        |> List.foldl addAccAddr modelWithTxsAdded
+                        |> and (setDirty True)
 
                 Search.UserClicksResultLine ->
                     let
@@ -802,35 +804,8 @@ updateByMsg plugins uc msg model =
                                     |> Tuple.pair m2
 
                             Nothing ->
-                                let
-                                    multiInputList =
-                                        Data.parseMultiIdentifierInput query
-                                in
-                                if List.length multiInputList > 1 then
-                                    ( m2
-                                    , multiInputList
-                                        |> List.map
-                                            (\inp ->
-                                                Pathfinder.SearchEffect
-                                                    (Effect.Search.SearchEffect
-                                                        { query = inp
-                                                        , currency = Nothing
-                                                        , limit = Just 1
-                                                        , config =
-                                                            Api.defaultSearchConfig
-                                                                |> s_includeAddresses (Just True)
-                                                                |> s_includeTxs (Just True)
-                                                                |> s_includeActors (Just False)
-                                                                |> s_includeLabels (Just False)
-                                                        , toMsg = Search.BrowserGotMultiSearchResult query
-                                                        }
-                                                    )
-                                            )
-                                        |> (++) (List.map Pathfinder.SearchEffect eff)
-                                    )
-
-                                else
-                                    n m2
+                                ( m2, List.map Pathfinder.SearchEffect eff )
+                                    |> and (multiSearch query)
 
                 _ ->
                     Search.update m model.search
@@ -2630,6 +2605,38 @@ updateByMsg plugins uc msg model =
         InternalExportGraphTxsCompleted ->
             -- handled upstream
             n model
+
+
+multiSearch : String -> Model -> ( Model, List Effect )
+multiSearch query model =
+    let
+        multiInputList =
+            Data.parseMultiIdentifierInput query
+    in
+    if List.length multiInputList > 1 then
+        ( model
+        , multiInputList
+            |> List.map
+                (\inp ->
+                    Pathfinder.SearchEffect
+                        (Effect.Search.SearchEffect
+                            { query = inp
+                            , currency = Nothing
+                            , limit = Just 1
+                            , config =
+                                Api.defaultSearchConfig
+                                    |> s_includeAddresses (Just True)
+                                    |> s_includeTxs (Just True)
+                                    |> s_includeActors (Just False)
+                                    |> s_includeLabels (Just False)
+                            , toMsg = Search.BrowserGotMultiSearchResult query
+                            }
+                        )
+                )
+        )
+
+    else
+        n model
 
 
 exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
