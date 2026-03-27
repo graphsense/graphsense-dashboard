@@ -66,6 +66,7 @@ blockExplorerTransactionLinks =
           , [ ( "https://www.oklink.com/btc/tx/", "Oklink" )
             , ( "https://www.blockchain.com/btc/tx/", "Blockchain.com" )
             , ( "https://blockchair.com/bitcoin/transaction/", "Blockchair" )
+            , ( "https://am-i.exposed/#tx=", "Tx Privacy Analyzer" )
             ]
           )
         , ( "zec"
