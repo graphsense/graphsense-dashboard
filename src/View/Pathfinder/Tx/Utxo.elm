@@ -20,6 +20,7 @@ import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
+import RecordSetter exposing (s_subtract, s_txNode)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
@@ -66,7 +67,7 @@ view _ vc pc tx utxo annotation =
                 >> List.any (second >> .address >> (==) Nothing)
 
         fd =
-            GraphComponents.txNodeUtxoDevTxNodeNeutralTxNode_details
+            GraphComponents.txNodeUtxoDevTransparentEllipse_details
 
         adjX =
             fd.x + fd.width / 2
@@ -112,27 +113,20 @@ view _ vc pc tx utxo annotation =
                 |> Maybe.map .detected
                 |> Maybe.withDefault False
 
-        txNodeMixingAttrs =
-            GraphComponents.txNodeMixingAttributes
-
         txNodeNeutralInstance =
             if isCoinjoinTx then
-                Just
-                    (GraphComponents.txNodeMixingWithAttributes
-                        { txNodeMixingAttrs
-                            | root =
-                                [ transform "translate(20.08984375, 24.399993896484375)" ]
-                            , bg = []
-                            , subtract = annAttr
-                        }
-                        {}
+                GraphComponents.txNodeTypeMixingWithAttributes
+                    (GraphComponents.txNodeTypeMixingAttributes
+                        |> s_subtract annAttr
                     )
+                    {}
 
             else
-                Nothing
-
-        txNodeUtxoDevInstances =
-            GraphComponents.txNodeUtxoDevInstances
+                GraphComponents.txNodeTypeNeutralWithAttributes
+                    (GraphComponents.txNodeTypeNeutralAttributes
+                        |> s_txNode annAttr
+                    )
+                    {}
 
         txNodeUtxoDevAttrs =
             GraphComponents.txNodeUtxoDevAttributes
@@ -150,7 +144,7 @@ view _ vc pc tx utxo annotation =
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
         ]
-        (GraphComponents.txNodeUtxoDevWithInstances
+        (GraphComponents.txNodeUtxoDevWithAttributes
             { txNodeUtxoDevAttrs
                 | root =
                     [ UserClickedTx id |> onClickWithStop
@@ -167,15 +161,11 @@ view _ vc pc tx utxo annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
-                , txNode = annAttr
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , date =
                     [ translate 0 offsetTxHash |> transform ]
                 , time =
                     [ translate 0 offsetTxHash |> transform ]
-            }
-            { txNodeUtxoDevInstances
-                | txNodeNeutral = txNodeNeutralInstance
             }
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
@@ -197,6 +187,9 @@ view _ vc pc tx utxo annotation =
 
                         ( False, True ) ->
                             Icons.iconsNodeMarkerPurposeStartingPoint {}
+                }
+            , txNode =
+                { variant = txNodeNeutralInstance
                 }
             }
             :: label
@@ -261,7 +254,7 @@ edge _ vc pc level utxo tx annotation =
             fd.width / 2
 
         txRad =
-            GraphComponents.txNodeUtxoDevTxNodeNeutralTxNode_details.width / 2
+            GraphComponents.txNodeTypeNeutralTxNode_details.width / 2
 
         txPos =
             tx |> toPosition
