@@ -422,6 +422,12 @@ shallPushHistory plugins msg _ =
         CloseTextTooltip _ ->
             False
 
+        ShowChangeTooltip _ ->
+            False
+
+        CloseChangeTooltip _ ->
+            False
+
         BrowserGotTagSummaries _ _ ->
             False
 

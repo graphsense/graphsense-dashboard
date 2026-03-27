@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -138,6 +138,8 @@ type Msg
     | UserGotDataForTagsListDialog Id Api.Data.AddressTags
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
+    | ShowChangeTooltip ChangeTooltipConfig
+    | CloseChangeTooltip ChangeTooltipConfig
     | UserClickedToggleTracingMode
     | BrowserGotRelationsToVisibleNeighbors AddingRelationsConfig Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id
@@ -156,6 +158,13 @@ type Msg
 
 type alias TextTooltipConfig =
     { domId : String, text : String }
+
+
+type alias ChangeTooltipConfig =
+    { domId : String
+    , confidence : Float
+    , heuristics : List String
+    }
 
 
 type OverlayWindows

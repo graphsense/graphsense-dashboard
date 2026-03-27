@@ -56,6 +56,9 @@ view plugins model vc tt =
                 ActorDetails ac msgs ->
                     ( showActor vc ac, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
+                ChangeHeuristics cfg ->
+                    ( changeHeuristics vc cfg, [] )
+
                 Text t ->
                     ( [ div [ [ Css.width (Css.px GraphComponents.tooltipDown_details.width) ] |> css ] [ text t ] ], [] )
 
@@ -250,6 +253,51 @@ tagConcept vc openDetailsMsg concept tag =
                 |> val vc
         }
     , openDetailsMsg |> Maybe.map (linkRow vc "learn more") |> Maybe.withDefault none
+    ]
+
+
+changeHeuristics : View.Config -> { confidence : Float, heuristics : List String } -> List (Html msg)
+changeHeuristics vc cfg =
+    let
+        maxItems =
+            7
+
+        labels =
+            cfg.heuristics
+                |> List.filter (String.isEmpty >> not)
+
+        more =
+            List.length labels - maxItems
+
+        labelsPreview =
+            labels
+                |> List.take maxItems
+                |> List.intersperse ", "
+                |> flip (++)
+                    (if more > 0 then
+                        [ "..." ]
+
+                     else
+                        []
+                    )
+                |> String.concat
+    in
+    [ tooltipRow
+        { tooltipRowLabel =
+            { title = Locale.string vc.locale "Type"
+            }
+        , tooltipRowValue =
+            labelsPreview
+                |> val vc
+        }
+    , tooltipRowCustomValue (Locale.string vc.locale "confidence") (getConfidenceIndicator vc cfg.confidence)
+    , tooltipRow
+        { tooltipRowLabel = { title = Locale.string vc.locale "sources" }
+        , tooltipRowValue =
+            List.length labels
+                |> String.fromInt
+                |> val vc
+        }
     ]
 
 

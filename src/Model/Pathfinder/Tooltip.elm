@@ -30,6 +30,7 @@ type TooltipType msg
     | TagLabel String TagSummary (TooltipMessages msg)
     | TagConcept Id String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
+    | ChangeHeuristics { confidence : Float, heuristics : List String }
     | Text String
     | Plugin { context : String, domId : String } (TooltipMessages msg)
 
@@ -63,6 +64,9 @@ mapMsgTooltipType toMap f =
         AggEdge a msgs ->
             AggEdge a (mapMsgTooltipMsg msgs f)
 
+        ChangeHeuristics cfg ->
+            ChangeHeuristics cfg
+
         Text a ->
             Text a
 
@@ -90,6 +94,12 @@ isSameTooltip t1 t2 =
 
         ( ActorDetails a1 _, ActorDetails a2 _ ) ->
             a1.id == a2.id
+
+        ( ChangeHeuristics c1, ChangeHeuristics c2 ) ->
+            c1.confidence
+                == c2.confidence
+                && c1.heuristics
+                == c2.heuristics
 
         ( Text tt1, Text tt2 ) ->
             tt1 == tt2
@@ -119,6 +129,9 @@ isSameTooltip t1 t2 =
             False
 
         ( ActorDetails _ _, _ ) ->
+            False
+
+        ( ChangeHeuristics _, _ ) ->
             False
 
         ( Text _, _ ) ->

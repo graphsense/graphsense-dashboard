@@ -8,7 +8,8 @@ import Css
 import Css.Table exposing (Styles)
 import Css.View
 import Html.Styled exposing (span)
-import Html.Styled.Attributes exposing (css, style, title)
+import Html.Styled.Attributes exposing (css, id, style, title)
+import Html.Styled.Events exposing (onMouseOut, onMouseOver)
 import Model.Currency exposing (assetFromBase)
 import Model.Direction
 import Model.Pathfinder exposing (HavingTags(..))
@@ -109,7 +110,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
         }
 
 
-ioColumn : View.Config -> ColumnConfig Api.Data.TxValue msg -> IoColumnConfig -> Table.Column Api.Data.TxValue msg
+ioColumn : View.Config -> ColumnConfig Api.Data.TxValue Msg -> IoColumnConfig -> Table.Column Api.Data.TxValue Msg
 ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
     let
         exchangeIcon =
@@ -190,52 +191,50 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                         confidenceRange =
                             getConfidenceRangeFromFloat confidence
 
-                        ( backgroundColor, borderColor, confidenceKey ) =
+                        ( backgroundColor, borderColor ) =
                             case confidenceRange of
                                 High ->
-                                    ( Colors.green20, Colors.annotation1, "high confidence" )
+                                    ( Colors.green20, Colors.annotation1 )
 
                                 Medium ->
-                                    ( Colors.tagsMediumBg, Colors.tagsMedium, "medium confidence" )
+                                    ( Colors.tagsMediumBg, Colors.tagsMedium )
 
                                 Low ->
-                                    ( Colors.tagsLowBg, Colors.tagsLow, "low confidence" )
+                                    ( Colors.tagsLowBg, Colors.tagsLow )
+
+                        confidencePercent =
+                            round (confidence * 100)
 
                         heuristics =
                             changeInfo.heuristics
                                 |> List.map humanReadableHeuristic
                                 |> List.filter (String.isEmpty >> not)
-
-                        heuristicsSuffix =
-                            case heuristics of
-                                [] ->
-                                    ""
-
-                                firstHeuristic :: _ ->
-                                    " | Heuristic: " ++ firstHeuristic
                     in
                     { change =
-                        [ title
-                            (Locale.string vc.locale confidenceKey
-                                ++ " ("
-                                ++ String.fromInt (round (confidence * 100))
-                                ++ "%)"
-                                ++ heuristicsSuffix
-                            )
-                        , style "color" Colors.sidebarNeutral
-                        ]
+                        []
                     , changeTag =
                         [ style "background-color" backgroundColor
                         , style "border-color" borderColor
                         , style "border-style" "solid"
                         ]
                     , isVisible = True
+                    , tooltip =
+                        Just
+                            { domId =
+                                "txdetails_change_"
+                                    ++ String.fromInt confidencePercent
+                                    ++ "_"
+                                    ++ (String.join "_" heuristics |> String.replace " " "_")
+                            , confidence = confidence
+                            , heuristics = heuristics
+                            }
                     }
 
                 Nothing ->
                     { change = []
                     , changeTag = []
                     , isVisible = False
+                    , tooltip = Nothing
                     }
     in
     Table.veryCustomColumn
@@ -249,11 +248,22 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
 
                     attributes =
                         SidePanelComponents.sidePanelIoListIdentifierCellAttributes
+
+                    changeTooltipAttrs =
+                        case changeBadgeConfig.tooltip of
+                            Just tt ->
+                                [ id tt.domId
+                                , onMouseOver (ShowChangeTooltip tt)
+                                , onMouseOut (CloseChangeTooltip tt)
+                                ]
+
+                            Nothing ->
+                                []
                 in
                 SidePanelComponents.sidePanelIoListIdentifierCellWithAttributes
                     { attributes
                         | change = changeBadgeConfig.change
-                        , changeTag = changeBadgeConfig.changeTag
+                        , changeTag = changeTooltipAttrs ++ changeBadgeConfig.changeTag
                     }
                     { root =
                         { position1Instance =
