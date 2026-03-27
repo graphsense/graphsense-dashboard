@@ -25,7 +25,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Theme.Colors as Colors
-import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeUtxoAttributes)
+import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Tuple exposing (pair, second)
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
@@ -66,7 +66,7 @@ view _ vc pc tx utxo annotation =
                 >> List.any (second >> .address >> (==) Nothing)
 
         fd =
-            GraphComponents.txNodeUtxoTxNode_details
+            GraphComponents.txNodeUtxoDevTxNodeNeutralTxNode_details
 
         adjX =
             fd.x + fd.width / 2
@@ -75,12 +75,12 @@ view _ vc pc tx utxo annotation =
             fd.y + fd.height / 2
 
         offset =
-            2
+            8
                 + (if vc.showTimestampOnTxEdge then
                     0
 
                    else
-                    -GraphComponents.txNodeUtxoTxText_details.height
+                    -GraphComponents.txNodeUtxoDevTxText_details.height
                   )
                 + offsetTxHash
 
@@ -89,7 +89,7 @@ view _ vc pc tx utxo annotation =
                 0
 
             else
-                -GraphComponents.txNodeUtxoTxHash_details.renderedHeight
+                -GraphComponents.txNodeUtxoDevTxHash_details.renderedHeight
 
         t =
             Data.timestampToPosix utxo.raw.timestamp
@@ -99,7 +99,7 @@ view _ vc pc tx utxo annotation =
                 |> Maybe.map
                     (annotationToAttrAndLabel vc
                         tx
-                        GraphComponents.txNodeUtxo_details
+                        GraphComponents.txNodeUtxoDev_details
                         offset
                         UserOpensTxAnnotationDialog
                     )
@@ -112,15 +112,30 @@ view _ vc pc tx utxo annotation =
                 |> Maybe.map .detected
                 |> Maybe.withDefault False
 
-        txNodeInstance =
+        txNodeMixingAttrs =
+            GraphComponents.txNodeMixingAttributes
+
+        txNodeNeutralInstance =
             if isCoinjoinTx then
-                Just (GraphComponents.txNodeCoinjoin {})
+                Just
+                    (GraphComponents.txNodeMixingWithAttributes
+                        { txNodeMixingAttrs
+                            | root =
+                                [ transform "translate(20.08984375, 24.399993896484375)" ]
+                            , bg = []
+                            , subtract = annAttr
+                        }
+                        {}
+                    )
 
             else
                 Nothing
 
-        txNodeUtxoInstances =
-            GraphComponents.txNodeUtxoInstances
+        txNodeUtxoDevInstances =
+            GraphComponents.txNodeUtxoDevInstances
+
+        txNodeUtxoDevAttrs =
+            GraphComponents.txNodeUtxoDevAttributes
     in
     g
         [ translate
@@ -135,8 +150,8 @@ view _ vc pc tx utxo annotation =
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
         ]
-        (GraphComponents.txNodeUtxoWithInstances
-            { txNodeUtxoAttributes
+        (GraphComponents.txNodeUtxoDevWithInstances
+            { txNodeUtxoDevAttrs
                 | root =
                     [ UserClickedTx id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx id
@@ -159,8 +174,8 @@ view _ vc pc tx utxo annotation =
                 , time =
                     [ translate 0 offsetTxHash |> transform ]
             }
-            { txNodeUtxoInstances
-                | txNode = txNodeInstance
+            { txNodeUtxoDevInstances
+                | txNodeNeutral = txNodeNeutralInstance
             }
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
@@ -246,7 +261,7 @@ edge _ vc pc level utxo tx annotation =
             fd.width / 2
 
         txRad =
-            GraphComponents.txNodeUtxoTxNode_details.width / 2
+            GraphComponents.txNodeUtxoDevTxNodeNeutralTxNode_details.width / 2
 
         txPos =
             tx |> toPosition
