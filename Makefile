@@ -4,6 +4,7 @@
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
 FIGMA_WHITELIST_FRAMES?=[]
+FIGMA_WHITELIST_COMPONENTS?=[]
 CONFIG=./config/Config.elm
 CODEGEN_CONFIG=$(CODEGEN)/$(CONFIG)
 FIGMA_JSON=./theme/figma.json
@@ -171,7 +172,7 @@ $(FIGMA_JSON):
 	./tools/codegen.sh --refresh
 
 $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC) $(CODEGEN_RECORDSETTER)
-	/usr/bin/time -v ./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
+	/usr/bin/time -v ./tools/codegen.sh -w="$(FIGMA_WHITELIST_FRAMES)" -c="$(FIGMA_WHITELIST_COMPONENTS)"
 
 check-plugin-exists:
 	@if [ ! -z "$(PLUGIN_NAME)" -a ! -e $(PLUGINS_DIR)/$(PLUGIN_NAME) ]; then \
@@ -180,7 +181,7 @@ check-plugin-exists:
 	fi
 
 plugin-theme-refresh: 
-	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh -w=$(FIGMA_WHITELIST_FRAMES)
+	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh -w=$(FIGMA_WHITELIST_NAMES) -l=$(FIGMA_WHITELIST_LEVEL)
 
 $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 	@# only update an existing figma.json

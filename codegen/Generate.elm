@@ -14,12 +14,12 @@ import Generate.Common as Common
 import Generate.Common.FrameTraits as FrameTraits
 import Generate.Html
 import Generate.Svg
+import Generate.Util exposing (Whitelist, matchWhitelist)
 import Generate.Util.RGBA as RGBA
 import Http
 import Json.Decode
 import Json.Encode as Encode
 import RecordSetter as Rs
-import Regex
 import Result.Extra
 import String.Case exposing (toCamelCaseUpper)
 import String.Extra
@@ -39,12 +39,6 @@ type alias Flags =
 
 type alias FigmaContent =
     ( Maybe String, List FrameNodeWithChildrenSeparated )
-
-
-type alias Whitelist =
-    { frames : List String
-    , components : List String
-    }
 
 
 type Msg
@@ -354,11 +348,10 @@ decodeWithWhitelist =
 
 decodeWhitelist : Json.Decode.Decoder Whitelist
 decodeWhitelist =
-    (Json.Decode.map2 Whitelist
-            (Json.Decode.field "frames" (Json.Decode.list Json.Decode.string))
-            (Json.Decode.field "components" (Json.Decode.list Json.Decode.string))
-            |> Json.Decode.field "whitelist"
-        )
+    Json.Decode.map2 Whitelist
+        (Json.Decode.field "frames" (Json.Decode.list Json.Decode.string))
+        (Json.Decode.field "components" (Json.Decode.list Json.Decode.string))
+        |> Json.Decode.field "whitelist"
 
 
 canvasNodeToRequests : Flags -> CanvasNode -> Cmd Msg
@@ -436,24 +429,13 @@ colorsFrameDark =
     colorsFrame ++ " Dark"
 
 
-matchWhitelist : Whitelist -> String -> Bool
-matchWhitelist { frames } name =
-    let
-        matchRegex str r = 
-            Regex.fromStringWith { caseInsensitive = True, multiline = False } r
-            |> Maybe.map (flip Regex.contains str)
-            |> Maybe.withDefault False
-    in
-    List.isEmpty frames
-        || List.any (matchRegex name) (frames)
-
 isInterestingFrame : Flags -> SubcanvasNode -> Maybe FrameNode
-isInterestingFrame {whitelist} arg1 =
+isInterestingFrame { whitelist } arg1 =
     let
         matchOnlyFrames =
             whitelist
-            |> Maybe.map matchWhitelist
-            |> Maybe.withDefault (always True)
+                |> Maybe.map (.frames >> matchWhitelist)
+                |> Maybe.withDefault (always True)
     in
     case arg1 of
         SubcanvasNodeFrameNode n ->
@@ -489,7 +471,6 @@ frameToFiles model ( ( n, children ), htmlDeclarations, svgDeclarations ) =
         nameLowered =
             String.toLower n.frameTraits.isLayerTrait.name
 
-
         restFrames =
             List.drop 1 model.frames
 
@@ -500,7 +481,7 @@ frameToFiles model ( ( n, children ), htmlDeclarations, svgDeclarations ) =
         _ =
             log "decoding frame" nameLowered
     in
-    if matchWhitelist model.whitelist nameLowered && not (String.startsWith (String.toLower colorsFrame) nameLowered) then
+    if matchWhitelist model.whitelist.frames nameLowered && not (String.startsWith (String.toLower colorsFrame) nameLowered) then
         case children of
             child :: rest ->
                 let
@@ -528,9 +509,9 @@ frameToFiles model ( ( n, children ), htmlDeclarations, svgDeclarations ) =
                                       , rest
                                       )
                                     , htmlDeclarations
-                                        ++ fun (getFormatSpecifics False) colorMap ok
+                                        ++ fun model.whitelist (getFormatSpecifics False) colorMap ok
                                     , svgDeclarations
-                                        ++ fun (getFormatSpecifics True) colorMap ok
+                                        ++ fun model.whitelist (getFormatSpecifics True) colorMap ok
                                     )
 
                                 _ =

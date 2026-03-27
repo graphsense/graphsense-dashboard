@@ -561,12 +561,14 @@ instanceNodeToExpressions config parentName node =
             |> Maybe.andThen (Dict.get "mainComponent")
             |> Maybe.andThen
                 (\ref ->
-                    Dict.get parentName config.propertyExpressions
+                    config.propertyExpressions
+                        |> Dict.get parentName
                         |> Maybe.andThen (Dict.get ref)
                 )
             |> Maybe.Extra.orElseLazy
                 (\_ ->
-                    Dict.get (Generate.Common.FrameTraits.getName node.frameTraits |> sanitize) config.propertyExpressions
+                    config.propertyExpressions
+                        |> Dict.get (Generate.Common.FrameTraits.getName node.frameTraits |> sanitize)
                         |> Maybe.andThen (Dict.get "variant")
                 )
             |> Maybe.map
