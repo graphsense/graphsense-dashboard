@@ -19,7 +19,7 @@ RUN mkdir $WORKDIR && \
 
 WORKDIR $WORKDIR
 
-COPY ./elm.json.base ./elm-tooling.json ./index.html ./package*.json ./vite.config.mjs ./Makefile $WORKDIR/
+COPY ./elm.json.base ./index.html ./package*.json ./vite.config.mjs ./Makefile $WORKDIR/
 
 COPY ./config $WORKDIR/config
 RUN cp -n $WORKDIR/config/Config.elm.tmp $WORKDIR/config/Config.elm
