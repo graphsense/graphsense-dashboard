@@ -6,7 +6,7 @@ import Init.Pathfinder.Id as Id
 import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Id as Id exposing (Id)
-import Set exposing (Set)
+import Set
 import Tuple
 import Workflow
 
@@ -215,97 +215,13 @@ findOwnAddressIoIndex addressId values =
 
 findOutgoingContinuationIndex : Id -> Api.Data.TxUtxo -> Maybe Int
 findOutgoingContinuationIndex addressId tx =
-    let
-        ownAddressIndex =
-            findOwnAddressIoIndex addressId tx.outputs
-
-        legacyOutgoingIndex =
-            findHighestNonSenderOutputIndex tx
-
-        consensusEntries =
-            tx.heuristics
-                |> Maybe.andThen .changeHeuristics
-                |> Maybe.map .consensus
-                |> Maybe.withDefault []
-
-        senderAddresses =
-            tx.inputs
-                |> Maybe.withDefault []
-                |> List.concatMap .address
-                |> Set.fromList
-
-        outputsWithoutSenderAddress =
-            tx.outputs
-                |> Maybe.withDefault []
-                |> List.filter (isNotSenderOutput senderAddresses)
-
-        externalConsensusEntries =
-            outputsWithoutSenderAddress
-                |> List.filterMap (findConsensusEntryForOutput consensusEntries)
-
-        selectedChangeIndex =
-            externalConsensusEntries
-                |> List.Extra.maximumBy .confidence
-                |> Maybe.map (.output >> .index)
-    in
-    case selectedChangeIndex of
-        Just index ->
-            Just index
-
-        Nothing ->
-            case legacyOutgoingIndex of
-                Just index ->
-                    Just index
-
-                Nothing ->
-                    ownAddressIndex
-
-
-findConsensusEntryForOutput : List Api.Data.ConsensusEntry -> Api.Data.TxValue -> Maybe Api.Data.ConsensusEntry
-findConsensusEntryForOutput consensusEntries output =
-    let
-        byAddress =
-            List.Extra.find (\txOutput -> List.member txOutput.output.address output.address) consensusEntries
-    in
-    case output.index of
-        Just outputIndex ->
-            case List.Extra.find (\txOutput -> txOutput.output.index == outputIndex) consensusEntries of
-                Just txOutput ->
-                    Just txOutput
-
-                Nothing ->
-                    byAddress
-
-        Nothing ->
-            byAddress
-
-
-findHighestNonSenderOutputIndex : Api.Data.TxUtxo -> Maybe Int
-findHighestNonSenderOutputIndex tx =
-    let
-        senderAddresses =
-            tx.inputs
-                |> Maybe.withDefault []
-                |> List.concatMap .address
-                |> Set.fromList
-
-        nonSenderOutputs =
-            tx.outputs
-                |> Maybe.withDefault []
-                |> List.indexedMap Tuple.pair
-                |> List.filter (Tuple.second >> isNotSenderOutput senderAddresses)
-    in
-    nonSenderOutputs
+    tx.outputs
+        |> Maybe.withDefault []
+        |> List.indexedMap Tuple.pair
+        |> List.filter (Tuple.second >> (.address >> List.member (Id.id addressId)))
         |> List.Extra.maximumBy (Tuple.second >> (.value >> .value))
         |> Maybe.map
             (\( outputPosition, txOutput ) ->
                 txOutput.index
                     |> Maybe.withDefault outputPosition
             )
-
-
-isNotSenderOutput : Set String -> Api.Data.TxValue -> Bool
-isNotSenderOutput senderAddresses txOutput =
-    txOutput.address
-        |> List.all (\address -> Set.member address senderAddresses)
-        |> not
