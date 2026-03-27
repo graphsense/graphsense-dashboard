@@ -15,7 +15,7 @@ import Workflow
 suite : Test
 suite =
     Test.describe "Update.Pathfinder.WorkflowNextUtxoTx"
-        [ Test.test "outgoing continuation prefers consensus change output index" <|
+        [ Test.test "outgoing continuation uses highest-value output for expanded address" <|
             \_ ->
                 let
                     workflow =
@@ -27,10 +27,10 @@ suite =
                 in
                 case workflow of
                     Workflow.Next [ ApiEffect.ListSpentInTxRefsEffect req _ ] ->
-                        Expect.equal (Just 1) req.index
+                        Expect.equal (Just 0) req.index
 
                     _ ->
-                        Expect.fail "Expected ListSpentInTxRefsEffect with a selected change output index"
+                        Expect.fail "Expected ListSpentInTxRefsEffect with the expanded-address output index"
         , Test.test "outgoing continuation falls back to own-address output index" <|
             \_ ->
                 let
@@ -47,7 +47,7 @@ suite =
 
                     _ ->
                         Expect.fail "Expected ListSpentInTxRefsEffect with own-address output index"
-        , Test.test "outgoing continuation without consensus uses highest non-sender output index" <|
+        , Test.test "outgoing continuation ignores external outputs when own-address output exists" <|
             \_ ->
                 let
                     workflow =
@@ -59,10 +59,10 @@ suite =
                 in
                 case workflow of
                     Workflow.Next [ ApiEffect.ListSpentInTxRefsEffect req _ ] ->
-                        Expect.equal (Just 1) req.index
+                        Expect.equal (Just 0) req.index
 
                     _ ->
-                        Expect.fail "Expected ListSpentInTxRefsEffect with highest non-sender output index"
+                        Expect.fail "Expected ListSpentInTxRefsEffect to keep following expanded address output"
         ]
 
 
