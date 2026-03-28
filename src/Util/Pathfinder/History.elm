@@ -25,6 +25,9 @@ shallPushHistory plugins msg _ =
         UserPushesLeftMouseButtonOnGraph _ ->
             False
 
+        UserPushesRightMouseButtonOnGraph _ ->
+            False
+
         UserMovesMouseOnGraph _ ->
             False
 
@@ -245,7 +248,13 @@ shallPushHistory plugins msg _ =
         AnimationFrameDeltaForMove _ ->
             False
 
+        BrowserGotAddressDataToRefresh _ ->
+            False
+
         BrowserGotAddressData _ _ ->
+            False
+
+        BrowserGotAddressPubkeyRelations _ _ ->
             False
 
         BrowserGotClusterData _ _ ->
@@ -411,6 +420,12 @@ shallPushHistory plugins msg _ =
             False
 
         CloseTextTooltip _ ->
+            False
+
+        ShowChangeTooltip _ ->
+            False
+
+        CloseChangeTooltip _ ->
             False
 
         BrowserGotTagSummaries _ _ ->

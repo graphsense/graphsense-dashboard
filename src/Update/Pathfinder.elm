@@ -1,7 +1,8 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
+import Api.Request.Addresses
 import AssocList
 import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
@@ -121,6 +122,11 @@ import Workflow
 zoomFactor : Float
 zoomFactor =
     0.5
+
+
+relatedAddressesPageSize : Int
+relatedAddressesPageSize =
+    100
 
 
 getTagsummary : HavingTags -> Maybe Api.Data.TagSummary
@@ -398,11 +404,34 @@ syncSidePanel uc model =
 
                                     _ ->
                                         Nothing
+
+                            aidOld =
+                                case model.details of
+                                    Just (AddressDetails a _) ->
+                                        Just a
+
+                                    _ ->
+                                        Nothing
+
+                            refreshAddressData =
+                                if aidOld /= Just aid then
+                                    BrowserGotAddressDataToRefresh
+                                        |> Api.GetAddressEffect
+                                            { currency = Id.network aid
+                                            , address = Id.id aid
+                                            , includeActors = True
+                                            }
+                                        |> ApiEffect
+                                        |> List.singleton
+
+                                else
+                                    []
                         in
                         Dict.get aid model.network.addresses
                             |> Maybe.map
                                 (AddressDetails.syncByAddress uc model.network model.clusters dateFilterPreset ad
                                     >> mapFirst (AddressDetails aid >> Just)
+                                    >> mapSecond ((++) refreshAddressData)
                                 )
                             |> Maybe.withDefault (n Nothing)
                 )
@@ -598,6 +627,22 @@ updateByMsg plugins uc msg model =
         UserPressedNormalKey _ ->
             n model
 
+        BrowserGotAddressDataToRefresh data ->
+            let
+                id =
+                    Id.init data.currency data.address
+            in
+            model.network
+                |> Network.updateAddress id (s_data (Success data))
+                |> flip s_network model
+                |> updateAddressDetails id
+                    (\ad ->
+                        n
+                            { ad
+                                | address = s_data (Success data) ad.address
+                            }
+                    )
+
         BrowserGotAddressData { id, pos, autoLinkTxInTraceMode } data ->
             let
                 condFetchEgonet =
@@ -618,6 +663,18 @@ updateByMsg plugins uc msg model =
             else
                 browserGotAddressData uc plugins id pos data model
                     |> and condFetchEgonet
+
+        BrowserGotAddressPubkeyRelations id x ->
+            let
+                modelWithRelations =
+                    updateAddressRelatedData id x model
+
+                nextFetch =
+                    x.nextPage
+                        |> Maybe.map (\nextPage -> fetchAddressPubkeyRelations id (Just nextPage))
+                        |> Maybe.Extra.toList
+            in
+            ( modelWithRelations, nextFetch )
 
         BrowserGotRelationsToVisibleNeighbors { id, dir, requestIds, autoLinkInTraceMode } { neighbors } ->
             let
@@ -819,7 +876,9 @@ updateByMsg plugins uc msg model =
                         modelWithTxsAdded =
                             txsToAdd |> List.foldl addAccTxs ( model, [] )
                     in
-                    addressesToAdd |> List.foldl addAccAddr modelWithTxsAdded
+                    addressesToAdd
+                        |> List.foldl addAccAddr modelWithTxsAdded
+                        |> and (setDirty True)
 
                 Search.UserClicksResultLine ->
                     let
@@ -849,35 +908,8 @@ updateByMsg plugins uc msg model =
                                     |> Tuple.pair m2
 
                             Nothing ->
-                                let
-                                    multiInputList =
-                                        Data.parseMultiIdentifierInput query
-                                in
-                                if List.length multiInputList > 1 then
-                                    ( m2
-                                    , multiInputList
-                                        |> List.map
-                                            (\inp ->
-                                                Pathfinder.SearchEffect
-                                                    (Effect.Search.SearchEffect
-                                                        { query = inp
-                                                        , currency = Nothing
-                                                        , limit = Just 1
-                                                        , config =
-                                                            Api.defaultSearchConfig
-                                                                |> s_includeAddresses (Just True)
-                                                                |> s_includeTxs (Just True)
-                                                                |> s_includeActors (Just False)
-                                                                |> s_includeLabels (Just False)
-                                                        , toMsg = Search.BrowserGotMultiSearchResult query
-                                                        }
-                                                    )
-                                            )
-                                        |> (++) (List.map Pathfinder.SearchEffect eff)
-                                    )
-
-                                else
-                                    n m2
+                                ( m2, List.map Pathfinder.SearchEffect eff )
+                                    |> and (multiSearch query)
 
                 _ ->
                     Search.update m model.search
@@ -995,6 +1027,11 @@ updateByMsg plugins uc msg model =
                             (AddressDetails.update uc subm
                                 |> updateAddressDetails addressId
                             )
+
+                AddressDetails.BrowserGotPubkeyRelations x ->
+                    updateAddressRelatedData addressId x model
+                        |> updateAddressDetails addressId
+                            (AddressDetails.update uc subm)
 
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
                     userClickedAddressCheckboxInTable plugins id model
@@ -1401,6 +1438,20 @@ updateByMsg plugins uc msg model =
             , CloseTooltipEffect Nothing False |> List.singleton
             )
 
+        UserPushesRightMouseButtonOnGraph coords ->
+            ( { model
+                | pointerTool = Select
+                , dragging =
+                    case ( model.dragging, model.transform.state ) of
+                        ( NoDragging, Transform.Settled _ ) ->
+                            Dragging model.transform (relativeToGraphZero uc.size coords) (relativeToGraphZero uc.size coords)
+
+                        _ ->
+                            NoDragging
+              }
+            , CloseTooltipEffect Nothing False |> List.singleton
+            )
+
         UserPushesLeftMouseButtonOnAddress id coords ->
             ( { model
                 | dragging =
@@ -1547,6 +1598,22 @@ updateByMsg plugins uc msg model =
             ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
 
         CloseTextTooltip config ->
+            ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
+
+        ShowChangeTooltip config ->
+            ( model
+            , OpenTooltipEffect
+                { context = config.domId, domId = config.domId }
+                False
+                (Tooltip.ChangeHeuristics
+                    { confidence = config.confidence
+                    , heuristics = config.heuristics
+                    }
+                )
+                |> List.singleton
+            )
+
+        CloseChangeTooltip config ->
             ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
 
         UserMovesMouseOverTagLabel ctx ->
@@ -2660,6 +2727,38 @@ updateByMsg plugins uc msg model =
             n { model | txsFilters = AssocList.insert id filter model.txsFilters }
 
 
+multiSearch : String -> Model -> ( Model, List Effect )
+multiSearch query model =
+    let
+        multiInputList =
+            Data.parseMultiIdentifierInput query
+    in
+    if List.length multiInputList > 1 then
+        ( model
+        , multiInputList
+            |> List.map
+                (\inp ->
+                    Pathfinder.SearchEffect
+                        (Effect.Search.SearchEffect
+                            { query = inp
+                            , currency = Nothing
+                            , limit = Just 1
+                            , config =
+                                Api.defaultSearchConfig
+                                    |> s_includeAddresses (Just True)
+                                    |> s_includeTxs (Just True)
+                                    |> s_includeActors (Just False)
+                                    |> s_includeLabels (Just False)
+                            , toMsg = Search.BrowserGotMultiSearchResult query
+                            }
+                        )
+                )
+        )
+
+    else
+        n model
+
+
 exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
 exportGraph conf bbox model =
     ( model.config
@@ -3017,7 +3116,27 @@ handleTx plugins uc config neighborId tx model =
                 placeNeighborIfError plugins uc config nid model
 
         Nothing ->
-            addTx plugins uc config.addressId config.direction Nothing tx model
+            let
+                hasIncomingAnchorAdjacency =
+                    GTx.hasAddress Incoming (Id.id config.addressId) tx
+
+                hasOutgoingAnchorAdjacency =
+                    GTx.hasAddress Outgoing (Id.id config.addressId) tx
+            in
+            if
+                hasIncomingAnchorAdjacency
+                    || hasOutgoingAnchorAdjacency
+            then
+                addTx plugins uc config.addressId config.direction Nothing tx model
+
+            else
+                ( model
+                    |> s_network (Network.updateAddress config.addressId (Txs Set.empty |> txsSetter config.direction) model.network)
+                , NoAdjaccentTxForAddressFound config.addressId
+                    |> InfoError
+                    |> ErrorEffect
+                    |> List.singleton
+                )
 
 
 placeNeighborIfError : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
@@ -3195,9 +3314,60 @@ browserGotAddressData uc plugins providedId position data model =
                 :: fetchActorsForAddress data model.actors
                 --++ eff
                 ++ effCluster
-                ++ [ InternalEffect (InternalPathfinderAddedAddress newAddress.id) ]
+                ++ [ fetchAddressPubkeyRelations id Nothing
+                   , InternalEffect (InternalPathfinderAddedAddress newAddress.id)
+                   ]
             )
         |> and (checkSelection uc)
+
+
+fetchAddressPubkeyRelations : Id -> Maybe String -> Effect
+fetchAddressPubkeyRelations id nextpage =
+    BrowserGotAddressPubkeyRelations id
+        |> Api.ListRelatedAddressesEffect
+            { currency = Id.network id
+            , address = Id.id id
+            , reltype = Api.Request.Addresses.AddressRelationTypePubkey
+            , pagesize = relatedAddressesPageSize
+            , nextpage = nextpage
+            }
+        |> ApiEffect
+
+
+updateAddressRelatedData : Id -> Api.Data.RelatedAddresses -> Model -> Model
+updateAddressRelatedData id x model =
+    { model
+        | network =
+            Network.updateAddress id
+                (\address ->
+                    let
+                        withRelatedAddresses =
+                            x.relatedAddresses
+                                |> List.foldl
+                                    (\related acc ->
+                                        Dict.update related.currency
+                                            (Maybe.map (Set.insert related.address)
+                                                >> Maybe.withDefault (Set.singleton related.address)
+                                                >> Just
+                                            )
+                                            acc
+                                    )
+                                    address.networks
+
+                        withCurrentAddress =
+                            Dict.update (Id.network id)
+                                (Maybe.map (Set.insert (Id.id id))
+                                    >> Maybe.withDefault (Set.singleton (Id.id id))
+                                    >> Just
+                                )
+                                withRelatedAddresses
+                    in
+                    { address
+                        | networks = withCurrentAddress
+                    }
+                )
+                model.network
+    }
 
 
 handleTooltipMsg : AddressDetails.TooltipMsgs -> Model -> ( Model, List Effect )
@@ -4414,16 +4584,54 @@ fetchActors d existing =
         |> List.map fetchActor
 
 
-getBiggestIO : Maybe (List Api.Data.TxValue) -> Set String -> Maybe String
-getBiggestIO io exceptAddresses =
+getBiggestIOBy : (Api.Data.TxValue -> Bool) -> Maybe (List Api.Data.TxValue) -> Set String -> Maybe String
+getBiggestIOBy includeIo io exceptAddresses =
     io
         |> Maybe.withDefault []
+        |> List.filter includeIo
         |> List.filter (\x -> x.address |> Set.fromList |> Set.intersect exceptAddresses |> Set.isEmpty)
         |> List.sortBy (.value >> .value)
         |> List.reverse
         |> List.head
         |> Maybe.map .address
         |> Maybe.andThen List.head
+
+
+getBiggestIO : Maybe (List Api.Data.TxValue) -> Set String -> Maybe String
+getBiggestIO =
+    getBiggestIOBy (always True)
+
+
+isConsensusChangeOutput : List Api.Data.ConsensusEntry -> Api.Data.TxValue -> Bool
+isConsensusChangeOutput consensusEntries output =
+    let
+        byAddress =
+            List.Extra.find (\entry -> List.member entry.output.address output.address) consensusEntries
+    in
+    case output.index of
+        Just outputIndex ->
+            case List.Extra.find (\entry -> entry.output.index == outputIndex) consensusEntries of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    byAddress /= Nothing
+
+        Nothing ->
+            byAddress /= Nothing
+
+
+getBiggestNonChangeOutput : Api.Data.TxUtxo -> Set String -> Maybe String
+getBiggestNonChangeOutput raw exceptAddresses =
+    let
+        consensusEntries =
+            raw.heuristics
+                |> Maybe.andThen .changeHeuristics
+                |> Maybe.map .consensus
+                |> Maybe.withDefault []
+    in
+    getBiggestIOBy (isConsensusChangeOutput consensusEntries >> not) raw.outputs exceptAddresses
+        |> Maybe.Extra.orElseLazy (\_ -> getBiggestIO raw.outputs exceptAddresses)
 
 
 getAddressForDirection : Tx -> Direction -> Set String -> Maybe Id
@@ -4435,7 +4643,7 @@ getAddressForDirection tx direction exceptAddress =
                     getBiggestIO raw.inputs exceptAddress
 
                 Outgoing ->
-                    getBiggestIO raw.outputs exceptAddress
+                    getBiggestNonChangeOutput raw exceptAddress
             )
                 |> Maybe.map (Id.init raw.currency)
 

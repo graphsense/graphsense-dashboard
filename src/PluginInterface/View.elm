@@ -81,8 +81,8 @@ type alias View modelState addressState entityState msg =
     -- Upper left panel in pathfinder (right besides the logo)
     , pathfinderUpperLeftPanel : Maybe (View.Config -> modelState -> Html msg)
 
-    -- allows to replace the tag icon on the address node with something more specific
-    , replaceAddressNodeTagIcon : Maybe (View.Config -> { hasTags : Bool } -> Pathfinder.Address -> addressState -> Maybe (Svg msg))
+    -- allows to add a tag icon on the address node
+    , addressNodeTagIcon : Maybe (View.Config -> Pathfinder.Address -> addressState -> Maybe (Svg msg))
 
     -- allows to add legend items from the plugins
     , getLegendIconItems : Maybe (View.Config -> List { description : String, icon : Html msg, label : String })
@@ -114,6 +114,6 @@ init =
     , dialog = Nothing
     , tooltip = Nothing
     , pathfinderUpperLeftPanel = Nothing
-    , replaceAddressNodeTagIcon = Nothing
+    , addressNodeTagIcon = Nothing
     , getLegendIconItems = Nothing
     }

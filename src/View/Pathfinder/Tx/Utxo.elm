@@ -20,12 +20,13 @@ import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
+import RecordSetter exposing (s_subtract, s_txNode)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Theme.Colors as Colors
-import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeUtxoAttributes)
+import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Tuple exposing (pair, second)
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
@@ -66,7 +67,7 @@ view _ vc pc tx utxo annotation =
                 >> List.any (second >> .address >> (==) Nothing)
 
         fd =
-            GraphComponents.txNodeUtxoTxNode_details
+            GraphComponents.txNodeUtxoDevTransparentEllipse_details
 
         adjX =
             fd.x + fd.width / 2
@@ -75,12 +76,12 @@ view _ vc pc tx utxo annotation =
             fd.y + fd.height / 2
 
         offset =
-            2
+            8
                 + (if vc.showTimestampOnTxEdge then
                     0
 
                    else
-                    -GraphComponents.txNodeUtxoTxText_details.height
+                    -GraphComponents.txNodeUtxoDevTxText_details.height
                   )
                 + offsetTxHash
 
@@ -89,7 +90,7 @@ view _ vc pc tx utxo annotation =
                 0
 
             else
-                -GraphComponents.txNodeUtxoTxHash_details.renderedHeight
+                -GraphComponents.txNodeUtxoDevTxHash_details.renderedHeight
 
         t =
             Data.timestampToPosix utxo.raw.timestamp
@@ -99,11 +100,36 @@ view _ vc pc tx utxo annotation =
                 |> Maybe.map
                     (annotationToAttrAndLabel vc
                         tx
-                        GraphComponents.txNodeUtxo_details
+                        GraphComponents.txNodeUtxoDev_details
                         offset
                         UserOpensTxAnnotationDialog
                     )
                 |> Maybe.withDefault ( [], [] )
+
+        isCoinjoinTx =
+            utxo.raw.heuristics
+                |> Maybe.andThen .coinjoinHeuristics
+                |> Maybe.andThen .consensus
+                |> Maybe.map .detected
+                |> Maybe.withDefault False
+
+        txNodeNeutralInstance =
+            if isCoinjoinTx then
+                GraphComponents.txNodeTypeMixingWithAttributes
+                    (GraphComponents.txNodeTypeMixingAttributes
+                        |> s_subtract annAttr
+                    )
+                    {}
+
+            else
+                GraphComponents.txNodeTypeNeutralWithAttributes
+                    (GraphComponents.txNodeTypeNeutralAttributes
+                        |> s_txNode annAttr
+                    )
+                    {}
+
+        txNodeUtxoDevAttrs =
+            GraphComponents.txNodeUtxoDevAttributes
     in
     g
         [ translate
@@ -118,8 +144,8 @@ view _ vc pc tx utxo annotation =
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
         ]
-        (GraphComponents.txNodeUtxoWithAttributes
-            { txNodeUtxoAttributes
+        (GraphComponents.txNodeUtxoDevWithAttributes
+            { txNodeUtxoDevAttrs
                 | root =
                     [ UserClickedTx id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx id
@@ -135,7 +161,6 @@ view _ vc pc tx utxo annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
-                , txNode = annAttr
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , date =
                     [ translate 0 offsetTxHash |> transform ]
@@ -162,6 +187,9 @@ view _ vc pc tx utxo annotation =
 
                         ( False, True ) ->
                             Icons.iconsNodeMarkerPurposeStartingPoint {}
+                }
+            , txNode =
+                { variant = txNodeNeutralInstance
                 }
             }
             :: label
@@ -226,7 +254,7 @@ edge _ vc pc level utxo tx annotation =
             fd.width / 2
 
         txRad =
-            GraphComponents.txNodeUtxoTxNode_details.width / 2
+            GraphComponents.txNodeTypeNeutralTxNode_details.width / 2
 
         txPos =
             tx |> toPosition

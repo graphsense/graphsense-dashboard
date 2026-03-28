@@ -11,6 +11,7 @@ import Gen.Html.Styled.Attributes as Attributes
 import Gen.Svg.Styled
 import Maybe.Extra
 import RecordSetter exposing (s_annotation)
+import Regex
 import String.Case exposing (toCamelCaseLower)
 import String.Format as Format
 import Types exposing (ComponentPropertyExpressions, Config, Details, Styles)
@@ -299,3 +300,21 @@ addIdAttribute { showId } id =
 rootName : String
 rootName =
     "root"
+
+
+type alias Whitelist =
+    { frames : List String
+    , components : List String
+    }
+
+
+matchWhitelist : List String -> String -> Bool
+matchWhitelist whitelist name =
+    let
+        matchRegex str r =
+            Regex.fromStringWith { caseInsensitive = True, multiline = False } r
+                |> Maybe.map (flip Regex.contains str)
+                |> Maybe.withDefault False
+    in
+    List.isEmpty whitelist
+        || List.any (matchRegex name) whitelist

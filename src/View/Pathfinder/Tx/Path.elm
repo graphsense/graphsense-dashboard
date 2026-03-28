@@ -577,7 +577,6 @@ coloredPath c =
                 [ translate lx ly
                     |> transform
                 , textAnchor "middle"
-                , dominantBaseline "hanging"
                 , ([ Css.px 12 |> Css.fontSize
                    , Css.property "fill" Colors.black0
                    ]
@@ -603,6 +602,7 @@ coloredPath c =
                                 >> tspan
                                     [ Svg.Styled.Attributes.x "0"
                                     , Svg.Styled.Attributes.dy (String.fromInt i ++ "em")
+                                    , dominantBaseline "hanging"
                                     ]
                         )
                 )

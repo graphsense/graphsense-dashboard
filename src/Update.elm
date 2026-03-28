@@ -986,33 +986,47 @@ update plugins uc msg model =
                                     |> pair m2
 
                             Nothing ->
-                                model.stats
-                                    |> RD.map
-                                        (\stats ->
-                                            { m2
-                                                | dialog =
-                                                    { message = Locale.string model.config.locale "Please-choose-ledger"
-                                                    , options =
-                                                        stats.currencies
-                                                            |> List.map .name
-                                                            |> List.map
-                                                                (\name ->
-                                                                    ( String.toUpper name
-                                                                    , Search.UserPicksCurrency name |> SearchMsg
+                                if model.page == Graph then
+                                    model.stats
+                                        |> RD.map
+                                            (\stats ->
+                                                { m2
+                                                    | dialog =
+                                                        { message = Locale.string model.config.locale "Please-choose-ledger"
+                                                        , options =
+                                                            stats.currencies
+                                                                |> List.map .name
+                                                                |> List.map
+                                                                    (\name ->
+                                                                        ( String.toUpper name
+                                                                        , Search.UserPicksCurrency name |> SearchMsg
+                                                                        )
                                                                     )
-                                                                )
-                                                    , onClose = SearchMsg Search.UserClickedCloseCurrencyPicker
-                                                    }
-                                                        |> Dialog.options
-                                                        |> Just
-                                                , search =
-                                                    Search.setIsPickingCurrency search
-                                                        -- add back the query for UserPicksCurrency
-                                                        |> Search.setQuery query
-                                            }
-                                        )
-                                    |> RD.withDefault model
-                                    |> n
+                                                        , onClose = SearchMsg Search.UserClickedCloseCurrencyPicker
+                                                        }
+                                                            |> Dialog.options
+                                                            |> Just
+                                                    , search =
+                                                        Search.setIsPickingCurrency search
+                                                            -- add back the query for UserPicksCurrency
+                                                            |> Search.setQuery query
+                                                }
+                                            )
+                                        |> RD.withDefault model
+                                        |> n
+
+                                else
+                                    Pathfinder.multiSearch query model.pathfinder
+                                        |> mapFirst (flip s_pathfinder model)
+                                        |> mapSecond
+                                            (List.map PathfinderEffect
+                                                >> (::)
+                                                    (Route.Pathfinder.Root
+                                                        |> Route.pathfinderRoute
+                                                        |> Route.toUrl
+                                                        |> NavPushUrlEffect
+                                                    )
+                                            )
 
                 Search.UserClickedCloseCurrencyPicker ->
                     clearSearch plugins { model | dialog = Nothing }
@@ -1129,7 +1143,7 @@ update plugins uc msg model =
                     }
 
             else
-                n model
+                update plugins uc (PathfinderMsg Pathfinder.UserClickedRestartYes) model
 
         PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let

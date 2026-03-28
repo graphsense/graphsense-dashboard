@@ -9,13 +9,19 @@ fi
 
 docker run --rm -d --name nginx-proxy-iknaio-prod-api -p 8080:80 nginx /bin/bash -c '
 cat << "EOF" > /etc/nginx/conf.d/default.conf
+
+map $http_origin $cors_origin {
+    default "";
+    "~^https?://([^/]+\.)?(.+)$" $http_origin;
+}
+
 server {
     listen 80;
 
     location / {
         # Handle CORS preflight requests directly
         if ($request_method = OPTIONS) {
-            add_header Access-Control-Allow-Origin "http://localhost:3000" always;
+            add_header Access-Control-Allow-Origin $cors_origin always;
             add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
             add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, Origin, X-Requested-With" always;
             add_header Access-Control-Allow-Credentials "true" always;
@@ -25,9 +31,9 @@ server {
             return 204;
         }
 
-        proxy_pass https://api.iknaio.com;
+        proxy_pass https://api.test.iknaio.com;
         proxy_ssl_server_name on;
-        proxy_set_header Host api.iknaio.com;
+        proxy_set_header Host api.test.iknaio.com;
         proxy_set_header Authorization "'"$GS_API_KEY"'";
 
         # Strip any CORS headers the upstream already sends to avoid duplicates
@@ -37,7 +43,7 @@ server {
         proxy_hide_header Access-Control-Allow-Headers;
 
         # Set our own CORS headers
-        add_header Access-Control-Allow-Origin "http://localhost:3000" always;
+        add_header Access-Control-Allow-Origin $cors_origin always;
         add_header Access-Control-Allow-Credentials "true" always;
     }
 }

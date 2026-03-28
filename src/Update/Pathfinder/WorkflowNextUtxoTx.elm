@@ -7,6 +7,7 @@ import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Set
+import Tuple
 import Workflow
 
 
@@ -58,6 +59,11 @@ update config msg =
 
         BrowserGotTxForReferencedTx hops (Api.Data.TxTxUtxo tx) ->
             let
+                anchorStillInInputs =
+                    tx.inputs
+                        |> Maybe.withDefault []
+                        |> List.any (.address >> List.member (Id.id config.addressId))
+
                 io =
                     (case config.direction of
                         Incoming ->
@@ -70,8 +76,72 @@ update config msg =
                         |> List.concatMap .address
                         |> List.map (Id.init tx.currency)
                         |> Set.fromList
+
+                isOnlyCurrentAddress =
+                    Set.singleton config.addressId == io
+
+                shouldContinue =
+                    case config.direction of
+                        Incoming ->
+                            isOnlyCurrentAddress
+
+                        Outgoing ->
+                            let
+                                ownAddress =
+                                    Id.id config.addressId
+
+                                outputs =
+                                    tx.outputs
+                                        |> Maybe.withDefault []
+
+                                outputsWithoutOwnAddress =
+                                    outputs
+                                        |> List.filter
+                                            (\output ->
+                                                output.address
+                                                    |> List.all ((==) ownAddress)
+                                                    |> not
+                                            )
+
+                                consensusEntries =
+                                    tx.heuristics
+                                        |> Maybe.andThen .changeHeuristics
+                                        |> Maybe.map .consensus
+                                        |> Maybe.withDefault []
+
+                                hasConsensus =
+                                    not (List.isEmpty consensusEntries)
+
+                                hasExternalOutputs =
+                                    not (List.isEmpty outputsWithoutOwnAddress)
+
+                                hasExternalNonChange =
+                                    hasConsensus
+                                        && List.any (isConsensusChangeOutput consensusEntries >> not) outputsWithoutOwnAddress
+
+                                allExternalAreChange =
+                                    hasConsensus
+                                        && hasExternalOutputs
+                                        && List.all (isConsensusChangeOutput consensusEntries) outputsWithoutOwnAddress
+                            in
+                            if not anchorStillInInputs then
+                                False
+
+                            else if hasExternalNonChange then
+                                False
+
+                            else if allExternalAreChange then
+                                True
+
+                            else
+                                -- No positive change signal: stop at current tx.
+                                -- This avoids skipping a valid immediate follow-up.
+                                not hasExternalOutputs && isOnlyCurrentAddress
             in
-            if Set.singleton config.addressId == io then
+            if config.direction == Outgoing && not anchorStillInInputs then
+                Workflow.Err NoTxFound
+
+            else if shouldContinue then
                 if hops > maxHops then
                     Workflow.Err (MaxChangeHopsLimit maxHops tx)
 
@@ -85,6 +155,25 @@ update config msg =
             Workflow.Err NoTxFound
 
 
+isConsensusChangeOutput : List Api.Data.ConsensusEntry -> Api.Data.TxValue -> Bool
+isConsensusChangeOutput consensusEntries output =
+    let
+        byAddress =
+            List.Extra.find (\entry -> List.member entry.output.address output.address) consensusEntries
+    in
+    case output.index of
+        Just outputIndex ->
+            case List.Extra.find (\entry -> entry.output.index == outputIndex) consensusEntries of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    byAddress /= Nothing
+
+        Nothing ->
+            byAddress /= Nothing
+
+
 start : Config -> Api.Data.TxUtxo -> Workflow
 start =
     continueWorkflow 0
@@ -93,19 +182,16 @@ start =
 continueWorkflow : Int -> Config -> Api.Data.TxUtxo -> Workflow
 continueWorkflow hops config tx =
     let
-        ( listLinkedTxRefs, getIo ) =
+        ( listLinkedTxRefs, index ) =
             case config.direction of
                 Incoming ->
-                    ( Api.ListSpendingTxRefsEffect, .inputs )
+                    ( Api.ListSpendingTxRefsEffect
+                    , findOwnAddressIoIndex config.addressId tx.inputs
+                    )
 
                 Outgoing ->
-                    ( Api.ListSpentInTxRefsEffect, .outputs )
-
-        index =
-            getIo tx
-                |> Maybe.andThen
-                    (List.Extra.findIndex
-                        (.address >> List.member (Id.id config.addressId))
+                    ( Api.ListSpentInTxRefsEffect
+                    , findOutgoingContinuationIndex config.addressId tx
                     )
     in
     BrowserGotReferencedTxs (hops + 1)
@@ -116,3 +202,26 @@ continueWorkflow hops config tx =
             }
         |> List.singleton
         |> Workflow.Next
+
+
+findOwnAddressIoIndex : Id -> Maybe (List Api.Data.TxValue) -> Maybe Int
+findOwnAddressIoIndex addressId values =
+    values
+        |> Maybe.andThen
+            (List.Extra.findIndex
+                (.address >> List.member (Id.id addressId))
+            )
+
+
+findOutgoingContinuationIndex : Id -> Api.Data.TxUtxo -> Maybe Int
+findOutgoingContinuationIndex addressId tx =
+    tx.outputs
+        |> Maybe.withDefault []
+        |> List.indexedMap Tuple.pair
+        |> List.filter (Tuple.second >> (.address >> List.member (Id.id addressId)))
+        |> List.Extra.maximumBy (Tuple.second >> (.value >> .value))
+        |> Maybe.map
+            (\( outputPosition, txOutput ) ->
+                txOutput.index
+                    |> Maybe.withDefault outputPosition
+            )

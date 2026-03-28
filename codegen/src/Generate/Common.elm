@@ -19,7 +19,7 @@ import Generate.Common.FrameTraits as FrameTraits
 import Generate.Common.RectangleNode as RectangleNode
 import Generate.Common.VectorNode as VectorNode
 import Generate.Html.HasLayoutTrait as HasLayoutTrait
-import Generate.Util exposing (detailsAndStylesToDeclaration, getElementAttributes, getMainComponentProperty, mm2, rootName, sanitize)
+import Generate.Util exposing (Whitelist, detailsAndStylesToDeclaration, getElementAttributes, getMainComponentProperty, matchWhitelist, mm2, rootName, sanitize)
 import List.Extra
 import RecordSetter exposing (s_children, s_defaultShapeTraits, s_frameTraits, s_instanceName, s_name)
 import Set
@@ -29,8 +29,8 @@ import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Types exposing (ColorMap, ComponentNodeOrSet, ComponentPropertyExpressions, Config, Details, FormatSpecifics, OriginAdjust)
 
 
-subcanvasNodeComponentsToDeclarations : FormatSpecifics -> ColorMap -> SubcanvasNode -> List Elm.Declaration
-subcanvasNodeComponentsToDeclarations specifics colorMap node =
+subcanvasNodeComponentsToDeclarations : Whitelist -> FormatSpecifics -> ColorMap -> SubcanvasNode -> List Elm.Declaration
+subcanvasNodeComponentsToDeclarations whitelist specifics colorMap node =
     let
         filter n =
             filterUnneededParts n
@@ -41,6 +41,9 @@ subcanvasNodeComponentsToDeclarations specifics colorMap node =
             if FrameTraits.isHidden n then
                 []
 
+            else if FrameTraits.getName n.frameTraits |> matchWhitelist whitelist.components |> not then
+                []
+
             else
                 filter n
                     |> adjustNames
@@ -49,6 +52,9 @@ subcanvasNodeComponentsToDeclarations specifics colorMap node =
 
         SubcanvasNodeComponentSetNode n ->
             if FrameTraits.isHidden n then
+                []
+
+            else if FrameTraits.getName n.frameTraits |> matchWhitelist whitelist.components |> not then
                 []
 
             else

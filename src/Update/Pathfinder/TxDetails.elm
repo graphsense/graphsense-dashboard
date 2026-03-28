@@ -99,8 +99,24 @@ reloadSubTxTable m =
     n
         { m
             | baseTx = RemoteData.NotAsked
+            , hasSubTxsTable = False
+            , subTxsTableOpen = False
+            , isSubTxsTableFilterDialogOpen = False
             , subTxsTable = initSubTxTable
         }
+
+
+hasActualSubTxs : List Api.Data.TxAccount -> Bool
+hasActualSubTxs txs =
+    case txs of
+        [] ->
+            False
+
+        [ tx ] ->
+            tx.isExternal /= Just True
+
+        _ ->
+            True
 
 
 update : TxDetailsMsg -> Model -> ( Model, List Effect )
@@ -149,6 +165,13 @@ update msg model =
                 accountTxs =
                     txs.txs |> List.filterMap Tx.getAccountTxRaw
 
+                hasSubTxsTable =
+                    if fetchedPage == Nothing then
+                        hasActualSubTxs accountTxs
+
+                    else
+                        model.hasSubTxsTable
+
                 setter =
                     if fetchedPage == Nothing then
                         InfiniteTable.setData
@@ -160,7 +183,24 @@ update msg model =
                     model.subTxsTable
                         |> setter config transactionTableFilter txs.nextPage accountTxs
             in
-            ( { model | subTxsTable = nt }, CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: meff )
+            ( { model
+                | subTxsTable = nt
+                , hasSubTxsTable = hasSubTxsTable
+                , subTxsTableOpen =
+                    if hasSubTxsTable then
+                        model.subTxsTableOpen
+
+                    else
+                        False
+                , isSubTxsTableFilterDialogOpen =
+                    if hasSubTxsTable then
+                        model.isSubTxsTableFilterDialogOpen
+
+                    else
+                        False
+              }
+            , CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: meff
+            )
 
         UserClickedToggleIoTable Inputs ->
             n { model | inputsTableOpen = not model.inputsTableOpen }
@@ -186,16 +226,20 @@ update msg model =
             n model
 
         UserClickedToggleSubTxsTable ->
-            let
-                ( table, eff ) =
-                    if model.subTxsTableOpen then
-                        InfiniteTable.abort
-                            (transactionTableConfig model)
-                            model.subTxsTable
+            if model.hasSubTxsTable then
+                let
+                    ( table, eff ) =
+                        if model.subTxsTableOpen then
+                            InfiniteTable.abort
+                                (transactionTableConfig model)
+                                model.subTxsTable
 
-                    else
-                        ( model.subTxsTable, [] )
-            in
-            ( { model | subTxsTableOpen = not model.subTxsTableOpen, subTxsTable = table }
-            , eff
-            )
+                        else
+                            ( model.subTxsTable, [] )
+                in
+                ( { model | subTxsTableOpen = not model.subTxsTableOpen, subTxsTable = table }
+                , eff
+                )
+
+            else
+                n model

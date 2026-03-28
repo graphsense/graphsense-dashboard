@@ -22,10 +22,14 @@ module Api.Data exposing
     , AddressTx(..)
     , AddressTxUtxo
     , AddressTxs
+    , AddressOutput
     , Block
     , BlockAtDate
+    , ChangeHeuristics
     , Concept
+    , ConsensusEntry
     , CurrencyStats
+    , DirectChangeHeuristic
     , Entity
     , EntityAddresses
     , ExternalConversion, ExternalConversionConversionType(..), externalConversionConversionTypeVariants
@@ -34,10 +38,12 @@ module Api.Data exposing
     , Link(..)
     , LinkUtxo
     , Links
+    , MultiInputChangeHeuristic
     , NeighborAddress
     , NeighborAddresses
     , NeighborEntities
     , NeighborEntity
+    , OneTimeChangeHeuristic
     , Rate
     , Rates
     , RelatedAddress, RelatedAddressRelationType(..), relatedAddressRelationTypeVariants
@@ -65,6 +71,7 @@ module Api.Data exposing
     , TxUtxo
     , TxValue
     , Txs
+    , UtxoHeuristics
     , UserReportedTag
     , UserTagReportResponse
     , Values
@@ -76,10 +83,14 @@ module Api.Data exposing
     , encodeAddressTx
     , encodeAddressTxUtxo
     , encodeAddressTxs
+    , encodeAddressOutput
     , encodeBlock
     , encodeBlockAtDate
+    , encodeChangeHeuristics
     , encodeConcept
+    , encodeConsensusEntry
     , encodeCurrencyStats
+    , encodeDirectChangeHeuristic
     , encodeEntity
     , encodeEntityAddresses
     , encodeExternalConversion
@@ -88,10 +99,12 @@ module Api.Data exposing
     , encodeLink
     , encodeLinkUtxo
     , encodeLinks
+    , encodeMultiInputChangeHeuristic
     , encodeNeighborAddress
     , encodeNeighborAddresses
     , encodeNeighborEntities
     , encodeNeighborEntity
+    , encodeOneTimeChangeHeuristic
     , encodeRate
     , encodeRates
     , encodeRelatedAddress
@@ -119,6 +132,7 @@ module Api.Data exposing
     , encodeTxUtxo
     , encodeTxValue
     , encodeTxs
+    , encodeUtxoHeuristics
     , encodeUserReportedTag
     , encodeUserTagReportResponse
     , encodeValues
@@ -130,10 +144,14 @@ module Api.Data exposing
     , addressTxDecoder
     , addressTxUtxoDecoder
     , addressTxsDecoder
+    , addressOutputDecoder
     , blockDecoder
     , blockAtDateDecoder
+    , changeHeuristicsDecoder
     , conceptDecoder
+    , consensusEntryDecoder
     , currencyStatsDecoder
+    , directChangeHeuristicDecoder
     , entityDecoder
     , entityAddressesDecoder
     , externalConversionDecoder
@@ -142,10 +160,12 @@ module Api.Data exposing
     , linkDecoder
     , linkUtxoDecoder
     , linksDecoder
+    , multiInputChangeHeuristicDecoder
     , neighborAddressDecoder
     , neighborAddressesDecoder
     , neighborEntitiesDecoder
     , neighborEntityDecoder
+    , oneTimeChangeHeuristicDecoder
     , rateDecoder
     , ratesDecoder
     , relatedAddressDecoder
@@ -173,6 +193,7 @@ module Api.Data exposing
     , txUtxoDecoder
     , txValueDecoder
     , txsDecoder
+    , utxoHeuristicsDecoder
     , userReportedTagDecoder
     , userTagReportResponseDecoder
     , valuesDecoder
@@ -312,6 +333,12 @@ type alias AddressTxs =
     }
 
 
+type alias AddressOutput =
+    { address : String
+    , index : Int
+    }
+
+
 type alias Block =
     { blockHash : String
     , currency : String
@@ -326,6 +353,95 @@ type alias BlockAtDate =
     , afterTimestamp : Maybe Int
     , beforeBlock : Maybe Int
     , beforeTimestamp : Maybe Int
+    }
+
+
+type alias ConsensusEntry =
+    { output : AddressOutput
+    , confidence : Int
+    , sources : List String
+    }
+
+
+type alias DirectChangeHeuristic =
+    { summary : List AddressOutput
+    , confidence : Maybe Int
+    }
+
+
+type alias MultiInputChangeHeuristic =
+    { summary : List AddressOutput
+    , confidence : Maybe Int
+    }
+
+
+type alias OneTimeChangeHeuristic =
+    { summary : List AddressOutput
+    , confidence : Maybe Int
+    }
+
+
+type alias ChangeHeuristics =
+    { consensus : List ConsensusEntry
+    , oneTimeChange : Maybe OneTimeChangeHeuristic
+    , directChange : Maybe DirectChangeHeuristic
+    , multiInputChange : Maybe MultiInputChangeHeuristic
+    }
+
+
+type alias CoinJoinConsensus =
+    { detected : Bool
+    , confidence : Int
+    , sources : List String
+    }
+
+
+type alias JoinMarketHeuristic =
+    { detected : Bool
+    , confidence : Int
+    , denominationSat : Int
+    , nParticipants : Int
+    }
+
+
+type alias WasabiHeuristic =
+    { detected : Bool
+    , confidence : Int
+    , denominations : List Int
+    , nParticipants : Int
+    , version : String
+    }
+
+
+type alias WhirlpoolTx0Heuristic =
+    { detected : Bool
+    , confidence : Int
+    , nPremixOutputs : Int
+    , poolDenominationSat : Int
+    }
+
+
+type alias WhirlpoolCoinJoinHeuristic =
+    { detected : Bool
+    , confidence : Int
+    , nNewEntrants : Int
+    , nRemixers : Int
+    , poolDenominationSat : Int
+    }
+
+
+type alias CoinJoinHeuristics =
+    { consensus : Maybe CoinJoinConsensus
+    , joinmarket : Maybe JoinMarketHeuristic
+    , wasabi : Maybe WasabiHeuristic
+    , whirlpoolTx0 : Maybe WhirlpoolTx0Heuristic
+    , whirlpoolCoinjoin : Maybe WhirlpoolCoinJoinHeuristic
+    }
+
+
+type alias UtxoHeuristics =
+    { changeHeuristics : Maybe ChangeHeuristics
+    , coinjoinHeuristics : Maybe CoinJoinHeuristics
     }
 
 
@@ -721,6 +837,7 @@ type alias TxUtxo =
     , totalOutput : Values
     , txHash : String
     , txType : String
+    , heuristics : Maybe UtxoHeuristics
     }
 
 
@@ -1038,6 +1155,27 @@ encodeAddressTxsPairs model =
     pairs
 
 
+encodeAddressOutput : AddressOutput -> Json.Encode.Value
+encodeAddressOutput =
+    encodeObject << encodeAddressOutputPairs
+
+
+encodeAddressOutputWithTag : ( String, String ) -> AddressOutput -> Json.Encode.Value
+encodeAddressOutputWithTag (tagField, tag) model =
+    encodeObject (encodeAddressOutputPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeAddressOutputPairs : AddressOutput -> List EncodedField
+encodeAddressOutputPairs model =
+    let
+        pairs =
+            [ encode "address" Json.Encode.string model.address
+            , encode "index" Json.Encode.int model.index
+            ]
+    in
+    pairs
+
+
 encodeBlock : Block -> Json.Encode.Value
 encodeBlock =
     encodeObject << encodeBlockPairs
@@ -1080,6 +1218,275 @@ encodeBlockAtDatePairs model =
             , maybeEncode "after_timestamp" Json.Encode.int model.afterTimestamp
             , maybeEncode "before_block" Json.Encode.int model.beforeBlock
             , maybeEncode "before_timestamp" Json.Encode.int model.beforeTimestamp
+            ]
+    in
+    pairs
+
+
+encodeConsensusEntry : ConsensusEntry -> Json.Encode.Value
+encodeConsensusEntry =
+    encodeObject << encodeConsensusEntryPairs
+
+
+encodeConsensusEntryWithTag : ( String, String ) -> ConsensusEntry -> Json.Encode.Value
+encodeConsensusEntryWithTag (tagField, tag) model =
+    encodeObject (encodeConsensusEntryPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeConsensusEntryPairs : ConsensusEntry -> List EncodedField
+encodeConsensusEntryPairs model =
+    let
+        pairs =
+            [ encode "output" encodeAddressOutput model.output
+            , encode "confidence" Json.Encode.int model.confidence
+            , encode "sources" (Json.Encode.list Json.Encode.string) model.sources
+            ]
+    in
+    pairs
+
+
+encodeDirectChangeHeuristic : DirectChangeHeuristic -> Json.Encode.Value
+encodeDirectChangeHeuristic =
+    encodeObject << encodeDirectChangeHeuristicPairs
+
+
+encodeDirectChangeHeuristicWithTag : ( String, String ) -> DirectChangeHeuristic -> Json.Encode.Value
+encodeDirectChangeHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeDirectChangeHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeDirectChangeHeuristicPairs : DirectChangeHeuristic -> List EncodedField
+encodeDirectChangeHeuristicPairs model =
+    let
+        pairs =
+            [ encode "summary" (Json.Encode.list encodeAddressOutput) model.summary
+            , maybeEncode "confidence" Json.Encode.int model.confidence
+            ]
+    in
+    pairs
+
+
+encodeMultiInputChangeHeuristic : MultiInputChangeHeuristic -> Json.Encode.Value
+encodeMultiInputChangeHeuristic =
+    encodeObject << encodeMultiInputChangeHeuristicPairs
+
+
+encodeMultiInputChangeHeuristicWithTag : ( String, String ) -> MultiInputChangeHeuristic -> Json.Encode.Value
+encodeMultiInputChangeHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeMultiInputChangeHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeMultiInputChangeHeuristicPairs : MultiInputChangeHeuristic -> List EncodedField
+encodeMultiInputChangeHeuristicPairs model =
+    let
+        pairs =
+            [ encode "summary" (Json.Encode.list encodeAddressOutput) model.summary
+            , maybeEncode "confidence" Json.Encode.int model.confidence
+            ]
+    in
+    pairs
+
+
+encodeOneTimeChangeHeuristic : OneTimeChangeHeuristic -> Json.Encode.Value
+encodeOneTimeChangeHeuristic =
+    encodeObject << encodeOneTimeChangeHeuristicPairs
+
+
+encodeOneTimeChangeHeuristicWithTag : ( String, String ) -> OneTimeChangeHeuristic -> Json.Encode.Value
+encodeOneTimeChangeHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeOneTimeChangeHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeOneTimeChangeHeuristicPairs : OneTimeChangeHeuristic -> List EncodedField
+encodeOneTimeChangeHeuristicPairs model =
+    let
+        pairs =
+            [ encode "summary" (Json.Encode.list encodeAddressOutput) model.summary
+            , maybeEncode "confidence" Json.Encode.int model.confidence
+            ]
+    in
+    pairs
+
+
+encodeChangeHeuristics : ChangeHeuristics -> Json.Encode.Value
+encodeChangeHeuristics =
+    encodeObject << encodeChangeHeuristicsPairs
+
+
+encodeChangeHeuristicsWithTag : ( String, String ) -> ChangeHeuristics -> Json.Encode.Value
+encodeChangeHeuristicsWithTag (tagField, tag) model =
+    encodeObject (encodeChangeHeuristicsPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeChangeHeuristicsPairs : ChangeHeuristics -> List EncodedField
+encodeChangeHeuristicsPairs model =
+    let
+        pairs =
+            [ encode "consensus" (Json.Encode.list encodeConsensusEntry) model.consensus
+            , maybeEncode "one_time_change" encodeOneTimeChangeHeuristic model.oneTimeChange
+            , maybeEncode "direct_change" encodeDirectChangeHeuristic model.directChange
+            , maybeEncode "multi_input_change" encodeMultiInputChangeHeuristic model.multiInputChange
+            ]
+    in
+    pairs
+
+
+encodeCoinJoinConsensus : CoinJoinConsensus -> Json.Encode.Value
+encodeCoinJoinConsensus =
+    encodeObject << encodeCoinJoinConsensusPairs
+
+
+encodeCoinJoinConsensusWithTag : ( String, String ) -> CoinJoinConsensus -> Json.Encode.Value
+encodeCoinJoinConsensusWithTag (tagField, tag) model =
+    encodeObject (encodeCoinJoinConsensusPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeCoinJoinConsensusPairs : CoinJoinConsensus -> List EncodedField
+encodeCoinJoinConsensusPairs model =
+    let
+        pairs =
+            [ encode "detected" Json.Encode.bool model.detected
+            , encode "confidence" Json.Encode.int model.confidence
+            , encode "sources" (Json.Encode.list Json.Encode.string) model.sources
+            ]
+    in
+    pairs
+
+
+encodeJoinMarketHeuristic : JoinMarketHeuristic -> Json.Encode.Value
+encodeJoinMarketHeuristic =
+    encodeObject << encodeJoinMarketHeuristicPairs
+
+
+encodeJoinMarketHeuristicWithTag : ( String, String ) -> JoinMarketHeuristic -> Json.Encode.Value
+encodeJoinMarketHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeJoinMarketHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeJoinMarketHeuristicPairs : JoinMarketHeuristic -> List EncodedField
+encodeJoinMarketHeuristicPairs model =
+    let
+        pairs =
+            [ encode "detected" Json.Encode.bool model.detected
+            , encode "confidence" Json.Encode.int model.confidence
+            , encode "denomination_sat" Json.Encode.int model.denominationSat
+            , encode "n_participants" Json.Encode.int model.nParticipants
+            ]
+    in
+    pairs
+
+
+encodeWasabiHeuristic : WasabiHeuristic -> Json.Encode.Value
+encodeWasabiHeuristic =
+    encodeObject << encodeWasabiHeuristicPairs
+
+
+encodeWasabiHeuristicWithTag : ( String, String ) -> WasabiHeuristic -> Json.Encode.Value
+encodeWasabiHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeWasabiHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeWasabiHeuristicPairs : WasabiHeuristic -> List EncodedField
+encodeWasabiHeuristicPairs model =
+    let
+        pairs =
+            [ encode "detected" Json.Encode.bool model.detected
+            , encode "confidence" Json.Encode.int model.confidence
+            , encode "denominations" (Json.Encode.list Json.Encode.int) model.denominations
+            , encode "n_participants" Json.Encode.int model.nParticipants
+            , encode "version" Json.Encode.string model.version
+            ]
+    in
+    pairs
+
+
+encodeWhirlpoolTx0Heuristic : WhirlpoolTx0Heuristic -> Json.Encode.Value
+encodeWhirlpoolTx0Heuristic =
+    encodeObject << encodeWhirlpoolTx0HeuristicPairs
+
+
+encodeWhirlpoolTx0HeuristicWithTag : ( String, String ) -> WhirlpoolTx0Heuristic -> Json.Encode.Value
+encodeWhirlpoolTx0HeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeWhirlpoolTx0HeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeWhirlpoolTx0HeuristicPairs : WhirlpoolTx0Heuristic -> List EncodedField
+encodeWhirlpoolTx0HeuristicPairs model =
+    let
+        pairs =
+            [ encode "detected" Json.Encode.bool model.detected
+            , encode "confidence" Json.Encode.int model.confidence
+            , encode "n_premix_outputs" Json.Encode.int model.nPremixOutputs
+            , encode "pool_denomination_sat" Json.Encode.int model.poolDenominationSat
+            ]
+    in
+    pairs
+
+
+encodeWhirlpoolCoinJoinHeuristic : WhirlpoolCoinJoinHeuristic -> Json.Encode.Value
+encodeWhirlpoolCoinJoinHeuristic =
+    encodeObject << encodeWhirlpoolCoinJoinHeuristicPairs
+
+
+encodeWhirlpoolCoinJoinHeuristicWithTag : ( String, String ) -> WhirlpoolCoinJoinHeuristic -> Json.Encode.Value
+encodeWhirlpoolCoinJoinHeuristicWithTag (tagField, tag) model =
+    encodeObject (encodeWhirlpoolCoinJoinHeuristicPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeWhirlpoolCoinJoinHeuristicPairs : WhirlpoolCoinJoinHeuristic -> List EncodedField
+encodeWhirlpoolCoinJoinHeuristicPairs model =
+    let
+        pairs =
+            [ encode "detected" Json.Encode.bool model.detected
+            , encode "confidence" Json.Encode.int model.confidence
+            , encode "n_new_entrants" Json.Encode.int model.nNewEntrants
+            , encode "n_remixers" Json.Encode.int model.nRemixers
+            , encode "pool_denomination_sat" Json.Encode.int model.poolDenominationSat
+            ]
+    in
+    pairs
+
+
+encodeCoinJoinHeuristics : CoinJoinHeuristics -> Json.Encode.Value
+encodeCoinJoinHeuristics =
+    encodeObject << encodeCoinJoinHeuristicsPairs
+
+
+encodeCoinJoinHeuristicsWithTag : ( String, String ) -> CoinJoinHeuristics -> Json.Encode.Value
+encodeCoinJoinHeuristicsWithTag (tagField, tag) model =
+    encodeObject (encodeCoinJoinHeuristicsPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeCoinJoinHeuristicsPairs : CoinJoinHeuristics -> List EncodedField
+encodeCoinJoinHeuristicsPairs model =
+    let
+        pairs =
+            [ maybeEncode "consensus" encodeCoinJoinConsensus model.consensus
+            , maybeEncode "joinmarket" encodeJoinMarketHeuristic model.joinmarket
+            , maybeEncode "wasabi" encodeWasabiHeuristic model.wasabi
+            , maybeEncode "whirlpool_tx0" encodeWhirlpoolTx0Heuristic model.whirlpoolTx0
+            , maybeEncode "whirlpool_coinjoin" encodeWhirlpoolCoinJoinHeuristic model.whirlpoolCoinjoin
+            ]
+    in
+    pairs
+
+
+encodeUtxoHeuristics : UtxoHeuristics -> Json.Encode.Value
+encodeUtxoHeuristics =
+    encodeObject << encodeUtxoHeuristicsPairs
+
+
+encodeUtxoHeuristicsWithTag : ( String, String ) -> UtxoHeuristics -> Json.Encode.Value
+encodeUtxoHeuristicsWithTag (tagField, tag) model =
+    encodeObject (encodeUtxoHeuristicsPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeUtxoHeuristicsPairs : UtxoHeuristics -> List EncodedField
+encodeUtxoHeuristicsPairs model =
+    let
+        pairs =
+            [ maybeEncode "change_heuristics" encodeChangeHeuristics model.changeHeuristics
+            , maybeEncode "coinjoin_heuristics" encodeCoinJoinHeuristics model.coinjoinHeuristics
             ]
     in
     pairs
@@ -2114,6 +2521,7 @@ encodeTxUtxoPairs model =
             , encode "total_output" encodeValues model.totalOutput
             , encode "tx_hash" Json.Encode.string model.txHash
             , encode "tx_type" Json.Encode.string model.txType
+                , maybeEncode "heuristics" encodeUtxoHeuristics model.heuristics
             ]
     in
     pairs
@@ -2877,6 +3285,114 @@ txSummaryDecoder =
         |> decode "tx_hash" Json.Decode.string 
 
 
+addressOutputDecoder : Json.Decode.Decoder AddressOutput
+addressOutputDecoder =
+    Json.Decode.succeed AddressOutput
+        |> decode "address" Json.Decode.string 
+        |> decode "index" Json.Decode.int 
+
+
+consensusEntryDecoder : Json.Decode.Decoder ConsensusEntry
+consensusEntryDecoder =
+    Json.Decode.succeed ConsensusEntry
+        |> decode "output" addressOutputDecoder 
+        |> decode "confidence" Json.Decode.int 
+        |> decode "sources" (Json.Decode.list Json.Decode.string) 
+
+
+directChangeHeuristicDecoder : Json.Decode.Decoder DirectChangeHeuristic
+directChangeHeuristicDecoder =
+    Json.Decode.succeed DirectChangeHeuristic
+        |> decode "summary" (Json.Decode.list addressOutputDecoder) 
+        |> maybeDecode "confidence" Json.Decode.int Nothing
+
+
+multiInputChangeHeuristicDecoder : Json.Decode.Decoder MultiInputChangeHeuristic
+multiInputChangeHeuristicDecoder =
+    Json.Decode.succeed MultiInputChangeHeuristic
+        |> decode "summary" (Json.Decode.list addressOutputDecoder) 
+        |> maybeDecode "confidence" Json.Decode.int Nothing
+
+
+oneTimeChangeHeuristicDecoder : Json.Decode.Decoder OneTimeChangeHeuristic
+oneTimeChangeHeuristicDecoder =
+    Json.Decode.succeed OneTimeChangeHeuristic
+        |> decode "summary" (Json.Decode.list addressOutputDecoder) 
+        |> maybeDecode "confidence" Json.Decode.int Nothing
+
+
+changeHeuristicsDecoder : Json.Decode.Decoder ChangeHeuristics
+changeHeuristicsDecoder =
+    Json.Decode.succeed ChangeHeuristics
+        |> decode "consensus" (Json.Decode.list consensusEntryDecoder) 
+        |> maybeDecode "one_time_change" oneTimeChangeHeuristicDecoder Nothing
+        |> maybeDecode "direct_change" directChangeHeuristicDecoder Nothing
+        |> maybeDecode "multi_input_change" multiInputChangeHeuristicDecoder Nothing
+
+
+coinJoinConsensusDecoder : Json.Decode.Decoder CoinJoinConsensus
+coinJoinConsensusDecoder =
+    Json.Decode.succeed CoinJoinConsensus
+        |> decode "detected" Json.Decode.bool
+        |> decode "confidence" Json.Decode.int
+        |> decode "sources" (Json.Decode.list Json.Decode.string)
+
+
+joinMarketHeuristicDecoder : Json.Decode.Decoder JoinMarketHeuristic
+joinMarketHeuristicDecoder =
+    Json.Decode.succeed JoinMarketHeuristic
+        |> decode "detected" Json.Decode.bool
+        |> decode "confidence" Json.Decode.int
+        |> decode "denomination_sat" Json.Decode.int
+        |> decode "n_participants" Json.Decode.int
+
+
+wasabiHeuristicDecoder : Json.Decode.Decoder WasabiHeuristic
+wasabiHeuristicDecoder =
+    Json.Decode.succeed WasabiHeuristic
+        |> decode "detected" Json.Decode.bool
+        |> decode "confidence" Json.Decode.int
+        |> decode "denominations" (Json.Decode.list Json.Decode.int)
+        |> decode "n_participants" Json.Decode.int
+        |> decode "version" Json.Decode.string
+
+
+whirlpoolTx0HeuristicDecoder : Json.Decode.Decoder WhirlpoolTx0Heuristic
+whirlpoolTx0HeuristicDecoder =
+    Json.Decode.succeed WhirlpoolTx0Heuristic
+        |> decode "detected" Json.Decode.bool
+        |> decode "confidence" Json.Decode.int
+        |> decode "n_premix_outputs" Json.Decode.int
+        |> decode "pool_denomination_sat" Json.Decode.int
+
+
+whirlpoolCoinJoinHeuristicDecoder : Json.Decode.Decoder WhirlpoolCoinJoinHeuristic
+whirlpoolCoinJoinHeuristicDecoder =
+    Json.Decode.succeed WhirlpoolCoinJoinHeuristic
+        |> decode "detected" Json.Decode.bool
+        |> decode "confidence" Json.Decode.int
+        |> decode "n_new_entrants" Json.Decode.int
+        |> decode "n_remixers" Json.Decode.int
+        |> decode "pool_denomination_sat" Json.Decode.int
+
+
+coinJoinHeuristicsDecoder : Json.Decode.Decoder CoinJoinHeuristics
+coinJoinHeuristicsDecoder =
+    Json.Decode.succeed CoinJoinHeuristics
+        |> maybeDecode "consensus" coinJoinConsensusDecoder Nothing
+        |> maybeDecode "joinmarket" joinMarketHeuristicDecoder Nothing
+        |> maybeDecode "wasabi" wasabiHeuristicDecoder Nothing
+        |> maybeDecode "whirlpool_tx0" whirlpoolTx0HeuristicDecoder Nothing
+        |> maybeDecode "whirlpool_coinjoin" whirlpoolCoinJoinHeuristicDecoder Nothing
+
+
+utxoHeuristicsDecoder : Json.Decode.Decoder UtxoHeuristics
+utxoHeuristicsDecoder =
+    Json.Decode.succeed UtxoHeuristics
+        |> maybeDecode "change_heuristics" changeHeuristicsDecoder Nothing
+        |> maybeDecode "coinjoin_heuristics" coinJoinHeuristicsDecoder Nothing
+
+
 txUtxoDecoder : Json.Decode.Decoder TxUtxo
 txUtxoDecoder =
     Json.Decode.succeed TxUtxo
@@ -2892,6 +3408,7 @@ txUtxoDecoder =
         |> decode "total_output" valuesDecoder 
         |> decode "tx_hash" Json.Decode.string 
         |> decode "tx_type" Json.Decode.string 
+        |> maybeDecode "heuristics" utxoHeuristicsDecoder Nothing
 
 
 txValueDecoder : Json.Decode.Decoder TxValue

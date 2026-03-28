@@ -416,6 +416,7 @@ learn more: Mehr Info
 low confidence: Wenig Vertrauen
 medium confidence: Mittelm. Vertrauen
 high confidence: Hohes Vertrauen
+mixing type: Mixing-Typ
 more: mehr
 x-per-y: '{0} pro {1}'
 request limit exceeded: Abfrage-Limit erreicht
@@ -485,7 +486,7 @@ exclude zero value transfers: Transfers mit Nullwert ausschließen
 no zero value: Ohne Nullwert
 bridge transaction: Bridge Transaktion
 swap transaction: Swap Transaktion
-swap transactions: Swap Transaktione
+swap transactions: Swap Transaktionen
 Bridge transactions: Bridge Transaktionen
 hint-minimum-input: Bitte mindestens {0} Zeichen eingeben
 no-results-found: Keine Ergebnisse gefunden.

@@ -802,7 +802,24 @@ perform apiKey wrapMsg cancelMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxEffect { currency, txHash, tokenTxId, includeIo } toMsg ->
-            Api.Request.Txs.getTx currency txHash (Just includeIo) Nothing Nothing tokenTxId
+            let
+                includeHeuristics =
+                    if includeIo then
+                        Just
+                            [ Api.Request.Txs.IncludeHeuristicAll
+                            ]
+
+                    else
+                        Nothing
+
+                includeIoIndex =
+                    if includeIo then
+                        Just True
+
+                    else
+                        Nothing
+            in
+            Api.Request.Txs.getTx currency txHash (Just includeIo) Nothing includeIoIndex tokenTxId includeHeuristics
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->

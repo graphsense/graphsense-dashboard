@@ -59,6 +59,122 @@ makeIoFromString str =
 
 
 
+type IncludeHeuristic
+    = IncludeHeuristicAll
+    | IncludeHeuristicOneTimeChange
+    | IncludeHeuristicDirectChange
+    | IncludeHeuristicMultiInputChange
+    | IncludeHeuristicAllChange
+    | IncludeHeuristicAllCoinjoin
+    | IncludeHeuristicWhirlpoolCoinjoin
+    | IncludeHeuristicWasabiCoinjoin
+    | IncludeHeuristicWasabi10Coinjoin
+    | IncludeHeuristicWasabi11Coinjoin
+    | IncludeHeuristicWasabi20Coinjoin
+    | IncludeHeuristicJoinmarketCoinjoin
+
+
+includeHeuristicVariants : List IncludeHeuristic
+includeHeuristicVariants =
+    [ IncludeHeuristicAll
+    , IncludeHeuristicOneTimeChange
+    , IncludeHeuristicDirectChange
+    , IncludeHeuristicMultiInputChange
+    , IncludeHeuristicAllChange
+    , IncludeHeuristicAllCoinjoin
+    , IncludeHeuristicWhirlpoolCoinjoin
+    , IncludeHeuristicWasabiCoinjoin
+    , IncludeHeuristicWasabi10Coinjoin
+    , IncludeHeuristicWasabi11Coinjoin
+    , IncludeHeuristicWasabi20Coinjoin
+    , IncludeHeuristicJoinmarketCoinjoin
+    ]
+
+
+stringFromIncludeHeuristic : IncludeHeuristic -> String
+stringFromIncludeHeuristic model =
+    case model of
+        IncludeHeuristicAll ->
+            "all"
+
+        IncludeHeuristicOneTimeChange ->
+            "one_time_change"
+
+        IncludeHeuristicDirectChange ->
+            "direct_change"
+
+        IncludeHeuristicMultiInputChange ->
+            "multi_input_change"
+
+        IncludeHeuristicAllChange ->
+            "all_change"
+
+        IncludeHeuristicAllCoinjoin ->
+            "all_coinjoin"
+
+        IncludeHeuristicWhirlpoolCoinjoin ->
+            "whirlpool_coinjoin"
+
+        IncludeHeuristicWasabiCoinjoin ->
+            "wasabi_coinjoin"
+
+        IncludeHeuristicWasabi10Coinjoin ->
+            "wasabi_1_0_coinjoin"
+
+        IncludeHeuristicWasabi11Coinjoin ->
+            "wasabi_1_1_coinjoin"
+
+        IncludeHeuristicWasabi20Coinjoin ->
+            "wasabi_2_0_coinjoin"
+
+        IncludeHeuristicJoinmarketCoinjoin ->
+            "joinmarket_coinjoin"
+
+
+makeIncludeHeuristicFromString : String -> Maybe IncludeHeuristic
+makeIncludeHeuristicFromString str =
+    case str of
+    "all" ->
+        Just IncludeHeuristicAll
+
+    "one_time_change" ->
+        Just IncludeHeuristicOneTimeChange
+
+    "direct_change" ->
+        Just IncludeHeuristicDirectChange
+
+    "multi_input_change" ->
+        Just IncludeHeuristicMultiInputChange
+
+    "all_change" ->
+        Just IncludeHeuristicAllChange
+
+    "all_coinjoin" ->
+        Just IncludeHeuristicAllCoinjoin
+
+    "whirlpool_coinjoin" ->
+        Just IncludeHeuristicWhirlpoolCoinjoin
+
+    "wasabi_coinjoin" ->
+        Just IncludeHeuristicWasabiCoinjoin
+
+    "wasabi_1_0_coinjoin" ->
+        Just IncludeHeuristicWasabi10Coinjoin
+
+    "wasabi_1_1_coinjoin" ->
+        Just IncludeHeuristicWasabi11Coinjoin
+
+    "wasabi_2_0_coinjoin" ->
+        Just IncludeHeuristicWasabi20Coinjoin
+
+    "joinmarket_coinjoin" ->
+        Just IncludeHeuristicJoinmarketCoinjoin
+
+    _ ->
+        Nothing
+
+
+
 
 
 
@@ -88,13 +204,27 @@ getSpentInTxs currency_path txHash_path ioIndex_query =
 
 
 
-getTx : (String) -> (String) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Int) -> Api.Request Api.Data.Tx
-getTx currency_path txHash_path includeIo_query includeNonstandardIo_query includeIoIndex_query tokenTxId_query =
+getTx : (String) -> (String) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Int) -> Maybe (List IncludeHeuristic) -> Api.Request Api.Data.Tx
+getTx currency_path txHash_path includeIo_query includeNonstandardIo_query includeIoIndex_query tokenTxId_query includeHeuristics_query =
+    let
+        includeHeuristicsParams =
+            includeHeuristics_query
+                |> Maybe.map (List.map (stringFromIncludeHeuristic >> (\value -> ( "include_heuristics", Just value ))))
+                |> Maybe.withDefault []
+
+        queryParams =
+            [ ( "include_io", Maybe.map ((\val -> if val then "true" else "false")) includeIo_query )
+            , ( "include_nonstandard_io", Maybe.map ((\val -> if val then "true" else "false")) includeNonstandardIo_query )
+            , ( "include_io_index", Maybe.map ((\val -> if val then "true" else "false")) includeIoIndex_query )
+            , ( "token_tx_id", Maybe.map (String.fromInt) tokenTxId_query )
+            ]
+                ++ includeHeuristicsParams
+    in
     Api.request
         "GET"
         "/{currency}/txs/{txHash}"
         [ ( "currency", identity currency_path ), ( "txHash", identity txHash_path ) ]
-        [ ( "include_io", Maybe.map ((\val -> if val then "true" else "false")) includeIo_query ), ( "include_nonstandard_io", Maybe.map ((\val -> if val then "true" else "false")) includeNonstandardIo_query ), ( "include_io_index", Maybe.map ((\val -> if val then "true" else "false")) includeIoIndex_query ), ( "token_tx_id", Maybe.map (String.fromInt) tokenTxId_query ) ]
+        queryParams
         []
         Nothing
         Api.Data.txDecoder

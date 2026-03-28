@@ -14,6 +14,7 @@ type alias Model =
     , inputsTable : Table Api.Data.TxValue
     , outputsTable : Table Api.Data.TxValue
     , tx : Tx
+    , hasSubTxsTable : Bool
     , subTxsTableOpen : Bool
     , baseTx : WebData Api.Data.TxAccount
     , subTxsTable : InfiniteTable.Model Api.Data.TxAccount
