@@ -314,15 +314,15 @@ getRelatedAddressTypeLabel vc relatedAddressType =
 
 relatedAddressesSelectBoxConfig : View.Config -> Id -> ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
 relatedAddressesSelectBoxConfig vc id =
-    { optionToLabel = getRelatedAddressTypeLabel vc
-    , width = Nothing
-    , filter =
-        if isAccountLike (Id.network id) then
-            (==) AddressDetails.Pubkey
+    ThemedSelectBox.defaultConfig
+        (getRelatedAddressTypeLabel vc)
+        |> ThemedSelectBox.withFilter
+            (if isAccountLike (Id.network id) then
+                (==) AddressDetails.Pubkey
 
-        else
-            always True
-    }
+             else
+                always True
+            )
 
 
 relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Entity -> Html AddressDetails.Msg
@@ -809,7 +809,7 @@ accountValueRundown vc conf =
                 |> Rs.s_iconGroup fixedleftAttr
             )
             { root =
-                { iconInstance = HIcons.iconsChevronRightThin { root = { state = HIcons.IconsChevronRightThinStateDefault } }
+                { iconInstance = HIcons.chevron { root = { state = HIcons.ChevronStateDefault } }
                 , title = Locale.string vc.locale conf.title
                 , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
                 }

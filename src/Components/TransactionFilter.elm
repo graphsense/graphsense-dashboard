@@ -1,4 +1,4 @@
-module Components.TransactionFilter exposing (FilterHeaderConfig, Model, Msg(..), filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, hasChanged, init, setFocusDate, txFilterDialogView, update, updateDateRange, updateSelectedAsset, withAssetSelectBox, withDateRangePicker, withDirection, withIncludeZeroValueTxs)
+module Components.TransactionFilter exposing (FilterHeaderConfig, Model, Msg(..), filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, hasChanged, init, initQuickFilter, quickfilterWithAsset, setFocusDate, txFilterDialogView, update, updateDateRange, updateSelectedAsset, withAssetSelectBox, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
 import Components.ExportCSV as ExportCSV
 import Config.DateRangePicker exposing (datePickerSettings)
@@ -17,7 +17,7 @@ import Model.Locale as Locale
 import RecordSetter as Rs exposing (s_settings)
 import Svg.Styled.Attributes exposing (css)
 import Theme.Colors
-import Theme.Html.Icons as HIcons
+import Theme.Html.Icons as Icons
 import Theme.Html.SelectionControls as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Time exposing (Posix)
@@ -41,6 +41,19 @@ type alias InternalModel =
     , selectedAsset : Maybe String
     , assetSelectBox : Maybe (ThemedSelectBox.Model (Maybe String))
     , includeZeroValueTxs : Maybe Bool
+    , quickFilterSelect : Maybe (ThemedSelectBox.Model (Maybe QuickFilterModel))
+    , selectedQuickFilter : Maybe QuickFilterModel
+    }
+
+
+type QuickFilter
+    = QuickFilterInternal QuickFilterModel
+
+
+type alias QuickFilterModel =
+    { asset : Maybe String
+    , date : Posix
+    , direction : Direction
     }
 
 
@@ -81,6 +94,7 @@ type Msg
     | OpenDateRangePicker
     | CloseDateRangePicker
     | UpdateDateRangePicker DatePicker.Msg
+    | TxTableQuickFilterSelectBoxMsg (ThemedSelectBox.Msg (Maybe QuickFilterModel))
 
 
 update : Msg -> Model -> Model
@@ -170,6 +184,9 @@ update msg (Internal model) =
                         )
                     |> Maybe.withDefault model
 
+            TxTableQuickFilterSelectBoxMsg _ ->
+                Debug.todo "branch 'TxTableQuickFilterSelectBoxMsg _' not implemented"
+
 
 resetIncludeZeroValueTxs : InternalModel -> InternalModel
 resetIncludeZeroValueTxs model =
@@ -210,8 +227,8 @@ resetDirection model =
 
 closeButtonGrey : msg -> Html msg
 closeButtonGrey msg =
-    HIcons.iconsCloseBlackWithAttributes
-        (HIcons.iconsCloseBlackAttributes
+    Icons.iconsCloseBlackWithAttributes
+        (Icons.iconsCloseBlackAttributes
             |> Rs.s_root
                 [ [ Util.Css.overrideBlack Theme.Colors.greyBlue500 ] |> css
                 , Util.View.pointer
@@ -224,22 +241,13 @@ closeButtonGrey msg =
 dateTimeFilterHeader : View.Config -> Msg -> DateRangePicker.Model Msg -> Html Msg
 dateTimeFilterHeader vc resetMsg dmodel =
     let
-        renderDate showTimeFn date =
-            date
-                |> (if showTimeFn date then
-                        Locale.timestampDateUniform vc.locale
-
-                    else
-                        Locale.timestampDateTimeUniform vc.locale False
-                   )
-
         startDate =
             dmodel.fromDate
-                |> Maybe.map (renderDate (Locale.isFirstSecondOfTheDay vc.locale))
+                |> Maybe.map (renderDate vc (Locale.isFirstSecondOfTheDay vc.locale))
 
         endDate =
             dmodel.toDate
-                |> Maybe.map (renderDate (Locale.isLastSecondOfTheDay vc.locale))
+                |> Maybe.map (renderDate vc (Locale.isLastSecondOfTheDay vc.locale))
     in
     case ( startDate, endDate ) of
         ( Nothing, Nothing ) ->
@@ -282,17 +290,61 @@ dateTimeFilterHeader vc resetMsg dmodel =
                 }
 
 
+renderDate : View.Config -> (Posix -> Bool) -> Posix -> String
+renderDate vc showTimeFn date =
+    date
+        |> (if showTimeFn date then
+                Locale.timestampDateUniform vc.locale
+
+            else
+                Locale.timestampDateTimeUniform vc.locale False
+           )
+
+
+dateTimeFilterSmall : View.Config -> Direction -> Posix -> Html msg
+dateTimeFilterSmall vc dir date =
+    let
+        dateRendered =
+            date
+                |> renderDate vc (Locale.isFirstSecondOfTheDay vc.locale)
+    in
+    case dir of
+        Outgoing ->
+            SidePanelComponents.filterLabelSmall
+                { root =
+                    { text1 = dateRendered
+                    , text2 = Locale.string vc.locale "datefilter-starting"
+                    , text3 = ""
+                    , dateRangeVisible = True
+                    }
+                }
+
+        Incoming ->
+            SidePanelComponents.filterLabelSmall
+                { root =
+                    { text1 = dateRendered
+                    , text2 = Locale.string vc.locale "datefilter-until"
+                    , text3 = ""
+                    , dateRangeVisible = True
+                    }
+                }
+
+
 directionFilterHeader : View.Config -> msg -> Direction -> Html msg
 directionFilterHeader vc resetMsg dir =
-    stringFilterHeader vc
-        resetMsg
-        (case dir of
-            Incoming ->
-                "incoming only"
+    directionFilterString dir
+        |> stringFilterHeader vc
+            resetMsg
 
-            Outgoing ->
-                "outgoing only"
-        )
+
+directionFilterString : Direction -> String
+directionFilterString dir =
+    case dir of
+        Incoming ->
+            "incoming only"
+
+        Outgoing ->
+            "outgoing only"
 
 
 stringFilterHeader : View.Config -> msg -> String -> Html msg
@@ -302,6 +354,19 @@ stringFilterHeader vc msg str =
             { iconInstance =
                 closeButtonGrey msg
             , text3 = ""
+            , text2 = ""
+            , text1 =
+                Locale.string vc.locale str
+            , dateRangeVisible = False
+            }
+        }
+
+
+stringFilterSmall : View.Config -> String -> Html msg
+stringFilterSmall vc str =
+    SidePanelComponents.filterLabelSmall
+        { root =
+            { text3 = ""
             , text2 = ""
             , text1 =
                 Locale.string vc.locale str
@@ -376,7 +441,7 @@ filterHeader vc config (Internal model) =
                 |> List.map (Html.map config.tag)
         }
         { framedFilter =
-            { iconInstance = HIcons.iconsFilter {}
+            { iconInstance = Icons.iconsFilter {}
             }
         , framedExport =
             { iconInstance =
@@ -411,15 +476,8 @@ txFilterDialogView vc net config (Internal model) =
                     )
                 |> Maybe.withDefault []
     in
-    SidePanelComponents.filterTransactionsPopupWithAttributes
-        (SidePanelComponents.filterTransactionsPopupAttributes
-            |> Rs.s_assetType
-                (if isAssetFilterVisible then
-                    [ Css.padding (Css.px 0) |> Css.important ] |> css |> List.singleton
-
-                 else
-                    [ Css.display Css.none ] |> css |> List.singleton
-                )
+    SidePanelComponents.filterTransactionsPopupDevWithAttributes
+        (SidePanelComponents.filterTransactionsPopupDevAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick config.toggleTxFilterViewMsg ]
             |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
@@ -445,8 +503,7 @@ txFilterDialogView vc net config (Internal model) =
         )
         { radioItemsList = directionRadios
         }
-        { assetType = { label = "" }
-        , cancelButton =
+        { cancelButton =
             { variant =
                 Button.defaultConfig
                     |> Rs.s_text "reset"
@@ -460,23 +517,6 @@ txFilterDialogView vc net config (Internal model) =
                     |> Rs.s_text "done"
                     |> Rs.s_onClick (Just config.toggleTxFilterViewMsg)
                     |> Button.primaryButton vc
-            }
-        , dropDown =
-            { variant =
-                model.assetSelectBox
-                    |> Maybe.map
-                        (\sa ->
-                            ThemedSelectBox.viewWithLabel
-                                (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets"))
-                                    |> Rs.s_width (Just (Css.px 200))
-                                )
-                                sa
-                                model.selectedAsset
-                                (Locale.string vc.locale "Asset type")
-                                |> Html.map TxTableAssetSelectBoxMsg
-                                |> Html.map config.tag
-                        )
-                    |> Maybe.withDefault none
             }
         , root =
             let
@@ -554,12 +594,61 @@ txFilterDialogView vc net config (Internal model) =
 
                         _ ->
                             drp
-            , dateLabel = Locale.string vc.locale "Date range"
+            , dateRangeLabel = Locale.string vc.locale "Date range"
             , headerTitle = Locale.string vc.locale "Transaction filter"
-            , txDirection = Locale.string vc.locale "Transaction direction"
-            , zeroValues = Locale.string vc.locale "Exclude zero value transfers"
+            , txDirectionLabel = Locale.string vc.locale "Transaction direction"
+            , showAssetType = isAssetFilterVisible
+            , assetDropdown =
+                model.assetSelectBox
+                    |> Maybe.map
+                        (\sa ->
+                            ThemedSelectBox.viewWithLabel
+                                (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets"))
+                                    |> ThemedSelectBox.withWidth (Css.px 200)
+                                )
+                                sa
+                                model.selectedAsset
+                                (Locale.string vc.locale "Asset type")
+                                |> Html.map TxTableAssetSelectBoxMsg
+                                |> Html.map config.tag
+                        )
+                    |> Maybe.withDefault none
+            , showQuickFilter = model.quickFilterSelect /= Nothing
+            , showCustomFilter = True -- TODO
+            , customFilterLabel = Locale.string vc.locale "filter-custom-filter"
+            , quickFilterLabel = Locale.string vc.locale "filter-quick-filter"
+            , showUtxoConstraint = not isAssetFilterVisible
+            , quickfilterDropdown =
+                model.quickFilterSelect
+                    |> Maybe.map
+                        (\qf ->
+                            ThemedSelectBox.viewWithLabel
+                                (ThemedSelectBox.defaultConfigHtml (quickFilterToLabel vc)
+                                 --|> Rs.s_width (Just (Css.px 200))
+                                )
+                                qf
+                                model.selectedQuickFilter
+                                (Locale.string vc.locale "Asset type")
+                                |> Html.map TxTableQuickFilterSelectBoxMsg
+                                |> Html.map config.tag
+                        )
+                    |> Maybe.withDefault none
+            , zeroValuesLabel = Locale.string vc.locale "Exclude zero value transfers"
+            , followUtxoLabel = Locale.string vc.locale "filter-follow-utxo"
+            , assetTypeLabel = Locale.string vc.locale "Asset type"
             }
-        , switch =
+        , checkboxUtxoLevel =
+            { variant =
+                Debug.todo """
+                Checkbox.checkbox
+                    {}
+                    """
+            }
+        , customFilterChevron =
+            { variant =
+                Icons.chevron { root = { state = Icons.ChevronStateDefault } }
+            }
+        , zeroValueSwitch =
             { variant =
                 model.includeZeroValueTxs
                     |> Maybe.map
@@ -577,6 +666,25 @@ txFilterDialogView vc net config (Internal model) =
         }
 
 
+quickFilterToLabel : View.Config -> Maybe QuickFilterModel -> Html (ThemedSelectBox.Msg (Maybe QuickFilterModel))
+quickFilterToLabel vc =
+    Maybe.map
+        (\qf ->
+            Sc.filterGroupSmall
+                { filterList =
+                    (qf.asset
+                        |> Maybe.map (stringFilterSmall vc >> List.singleton)
+                        |> Maybe.withDefault []
+                    )
+                        ++ [ qf.direction |> directionFilterString |> stringFilterSmall vc
+                           , qf.date |> dateTimeFilterSmall vc qf.direction
+                           ]
+                }
+                {}
+        )
+        >> Maybe.withDefault none
+
+
 init : Model
 init =
     Internal
@@ -585,7 +693,23 @@ init =
         , assetSelectBox = Nothing
         , selectedAsset = Nothing
         , includeZeroValueTxs = Nothing
+        , quickFilterSelect = Nothing
+        , selectedQuickFilter = Nothing
         }
+
+
+initQuickFilter : Direction -> Posix -> QuickFilter
+initQuickFilter dir date =
+    QuickFilterInternal
+        { direction = dir
+        , date = date
+        , asset = Nothing
+        }
+
+
+quickfilterWithAsset : String -> QuickFilter -> QuickFilter
+quickfilterWithAsset asset (QuickFilterInternal qf) =
+    QuickFilterInternal { qf | asset = Just asset }
 
 
 withDateRangePicker : Locale.Model -> Posix -> Posix -> Model -> Model
@@ -603,6 +727,25 @@ withDateRangePicker locale mn mx (Internal model) =
                         (settings
                             |> DateRangePicker.init UpdateDateRangePicker mx Nothing Nothing
                         )
+                    |> Just
+        }
+
+
+withQuickFilter : QuickFilter -> Model -> Model
+withQuickFilter (QuickFilterInternal qf) (Internal model) =
+    Internal
+        { model
+            | quickFilterSelect =
+                model.quickFilterSelect
+                    |> Maybe.withDefault
+                        (ThemedSelectBox.init [ Nothing ])
+                    |> (\select ->
+                            let
+                                options =
+                                    ThemedSelectBox.getOptions select ++ [ Just qf ]
+                            in
+                            ThemedSelectBox.updateOptions options select
+                       )
                     |> Just
         }
 

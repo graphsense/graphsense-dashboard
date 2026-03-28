@@ -147,14 +147,14 @@ view vc attributes config tblPaged msgTag =
                 }
 
         chevronRight =
-            Icons.iconsChevronRightThin
+            Icons.chevron
                 { root =
                     { state =
                         if rightDisabled then
-                            Icons.IconsChevronRightThinStateDisabled
+                            Icons.ChevronStateDisabled
 
                         else
-                            Icons.IconsChevronRightThinStateDefault
+                            Icons.ChevronStateDefault
                     }
                 }
 
