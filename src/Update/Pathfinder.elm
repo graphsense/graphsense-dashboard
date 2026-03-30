@@ -196,6 +196,7 @@ syncUrl model =
 
                                     Success txs ->
                                         txs.filter
+                                            |> TransactionFilter.getSettings
                                             |> TransactionFilter.getDateRange
                                             |> Maybe.map
                                                 (\( fromDate, toDate ) ->

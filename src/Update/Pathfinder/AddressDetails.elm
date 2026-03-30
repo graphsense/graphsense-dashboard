@@ -105,10 +105,14 @@ fetchTransactions msg txs addressId sorting pagesize nextpage =
 
 fetchTransactionsWithPathfinderMsg : (Api.Data.AddressTxs -> Pathfinder.Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
 fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
+    let
+        filter =
+            TransactionFilter.getSettings txs.filter
+    in
     Api.GetAddressTxsByDateEffect
         { currency = Id.network addressId
         , address = Id.id addressId
-        , direction = TransactionFilter.getDirection txs.filter
+        , direction = TransactionFilter.getDirection filter
         , pagesize = pagesize
         , nextpage = nextpage
         , order =
@@ -125,9 +129,9 @@ fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
                         else
                             txs.order
                     )
-        , tokenCurrency = TransactionFilter.getSelectedAsset txs.filter
-        , minDate = TransactionFilter.getDateRange txs.filter |> Maybe.andThen first
-        , maxDate = TransactionFilter.getDateRange txs.filter |> Maybe.andThen second
+        , tokenCurrency = TransactionFilter.getSelectedAsset filter
+        , minDate = TransactionFilter.getDateRange filter |> Maybe.andThen first
+        , maxDate = TransactionFilter.getDateRange filter |> Maybe.andThen second
         }
         msg
         |> ApiEffect
@@ -319,7 +323,8 @@ update uc msg model =
                             |> flip s_txs model
                             |> (if changed then
                                     flip pair
-                                        [ Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id) newFilter
+                                        [ TransactionFilter.getSettings newFilter
+                                            |> Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id)
                                             |> InternalEffect
                                         ]
                                         >> and (loadFirstTxsPage True)
@@ -788,6 +793,7 @@ openTransactionTable _ dfp model =
                                 { txs
                                     | filter =
                                         model.txsFilter
+                                            |> Maybe.map TransactionFilter.init
                                             |> Maybe.withDefault txs.filter
                                             |> (dfp
                                                     |> Maybe.map

@@ -1,5 +1,6 @@
-module Components.TransactionFilter exposing (FilterHeaderConfig, Model, Msg(..), applyQuickFilter, filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, hasChanged, init, initQuickFilter, quickfilterWithAsset, setFocusDate, setSelectedQuickFilter, txFilterDialogView, update, updateDateRange, updateDirection, updateSelectedAsset, withAssetSelectBox, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
+module Components.TransactionFilter exposing (FilterHeaderConfig, Model, Msg(..), Settings, applyQuickFilter, filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, getSettings, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, quickfilterWithAsset, setFocusDate, setSelectedQuickFilter, txFilterDialogView, update, updateDateRange, updateDirection, updateSelectedAsset, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
+import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.View as View
@@ -14,7 +15,7 @@ import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
-import RecordSetter as Rs exposing (s_settings)
+import RecordSetter as Rs exposing (s_direction, s_settings)
 import Svg.Styled.Attributes exposing (css)
 import Theme.Colors
 import Theme.Html.Icons as Icons
@@ -38,14 +39,29 @@ type Model
 
 type alias InternalModel =
     { dateRangePicker : Maybe (DateRangePicker.Model Msg)
-    , direction : Maybe (Maybe Direction)
-    , selectedAsset : Maybe String
     , assetSelectBox : Maybe (ThemedSelectBox.Model (Maybe String))
-    , includeZeroValueTxs : Maybe Bool
     , quickFilterSelect : Maybe (ThemedSelectBox.Model (Maybe QuickFilterModel))
-    , selectedQuickFilter : Maybe QuickFilterModel
     , showCustomFilter : Bool
+    , settings : SettingsModel
     }
+
+
+type Settings
+    = Settings SettingsModel
+
+
+type alias SettingsModel =
+    { range : Maybe (Maybe Range)
+    , asset : Maybe String
+    , direction : Maybe (Maybe Direction)
+    , includeZeroValueTxs : Maybe Bool
+    }
+
+
+type Range
+    = Starting Posix
+    | Until Posix
+    | Range Posix Posix
 
 
 type QuickFilter
@@ -59,19 +75,33 @@ type alias QuickFilterModel =
     }
 
 
-getDateRange : Model -> Maybe ( Maybe Posix, Maybe Posix )
-getDateRange (Internal model) =
-    model.dateRangePicker
-        |> Maybe.map (\drp -> ( drp.fromDate, drp.toDate ))
+getDateRange : Settings -> Maybe ( Maybe Posix, Maybe Posix )
+getDateRange (Settings model) =
+    model.range
+        |> Maybe.map
+            (\r ->
+                case r of
+                    Just (Starting start) ->
+                        ( Just start, Nothing )
+
+                    Just (Until end) ->
+                        ( Nothing, Just end )
+
+                    Just (Range start end) ->
+                        ( Just start, Just end )
+
+                    Nothing ->
+                        ( Nothing, Nothing )
+            )
 
 
-getSelectedAsset : Model -> Maybe String
-getSelectedAsset (Internal model) =
-    model.selectedAsset
+getSelectedAsset : Settings -> Maybe String
+getSelectedAsset (Settings model) =
+    model.asset
 
 
-getIncludeZeroValueTxs : Model -> Maybe Bool
-getIncludeZeroValueTxs (Internal model) =
+getIncludeZeroValueTxs : Settings -> Maybe Bool
+getIncludeZeroValueTxs (Settings model) =
     model.includeZeroValueTxs
 
 
@@ -152,13 +182,10 @@ update msg (Internal model) =
                 updateDirectionInternal (Just Incoming) model
 
             TxTableFilterToggleZeroValue ->
-                { model
-                    | includeZeroValueTxs =
-                        model.includeZeroValueTxs
-                            |> Maybe.withDefault False
-                            |> not
-                            |> Just
-                }
+                model.settings.includeZeroValueTxs
+                    |> Maybe.map not
+                    |> flip Rs.s_includeZeroValueTxs model.settings
+                    |> flip s_settings model
 
             TxTableAssetSelectBoxMsg ms ->
                 model.assetSelectBox
@@ -170,13 +197,16 @@ update msg (Internal model) =
                             in
                             { model
                                 | assetSelectBox = Just newSelect
-                                , selectedAsset =
-                                    case outMsg of
-                                        ThemedSelectBox.Selected sel ->
-                                            sel
+                                , settings =
+                                    model.settings
+                                        |> Rs.s_asset
+                                            (case outMsg of
+                                                ThemedSelectBox.Selected sel ->
+                                                    sel
 
-                                        _ ->
-                                            model.selectedAsset
+                                                _ ->
+                                                    model.settings.asset
+                                            )
                             }
                         )
                     |> Maybe.withDefault model
@@ -188,22 +218,18 @@ update msg (Internal model) =
                             let
                                 ( newSelect, outMsg ) =
                                     ThemedSelectBox.update ms sb
-
-                                selectedQuickFilter =
-                                    case outMsg of
-                                        ThemedSelectBox.Selected sel ->
-                                            sel
-
-                                        _ ->
-                                            model.selectedQuickFilter
                             in
                             { model
                                 | quickFilterSelect = Just newSelect
-                                , selectedQuickFilter = selectedQuickFilter
                             }
-                                |> (selectedQuickFilter
-                                        |> Maybe.map applyQuickFilter
-                                        |> Maybe.withDefault identity
+                                |> (case outMsg of
+                                        ThemedSelectBox.Selected sel ->
+                                            sel
+                                                |> Maybe.map applyQuickFilter
+                                                |> Maybe.withDefault identity
+
+                                        _ ->
+                                            identity
                                    )
                         )
                     |> Maybe.withDefault model
@@ -214,9 +240,10 @@ update msg (Internal model) =
 
 updateDirectionInternal : Maybe Direction -> InternalModel -> InternalModel
 updateDirectionInternal direction model =
-    model.direction
-        |> Maybe.map (\_ -> { model | direction = Just direction })
-        |> Maybe.withDefault model
+    model.settings.direction
+        |> Maybe.map (\_ -> direction)
+        |> flip s_direction model.settings
+        |> flip s_settings model
 
 
 updateDirection : Maybe Direction -> Model -> Model
@@ -227,18 +254,16 @@ updateDirection direction (Internal model) =
 
 resetIncludeZeroValueTxs : InternalModel -> InternalModel
 resetIncludeZeroValueTxs model =
-    { model
-        | includeZeroValueTxs =
-            model.includeZeroValueTxs
-                |> Maybe.map (\_ -> True)
-    }
+    model.settings.includeZeroValueTxs
+        |> Maybe.map (\_ -> True)
+        |> flip Rs.s_includeZeroValueTxs model.settings
+        |> flip s_settings model
 
 
 resetSelectedAsset : InternalModel -> InternalModel
 resetSelectedAsset model =
-    { model
-        | selectedAsset = Nothing
-    }
+    Rs.s_asset Nothing model.settings
+        |> flip s_settings model
 
 
 resetDateRangePicker : InternalModel -> InternalModel
@@ -255,11 +280,10 @@ resetDateRangePicker model =
 
 resetDirection : InternalModel -> InternalModel
 resetDirection model =
-    { model
-        | direction =
-            model.direction
-                |> Maybe.map (\_ -> Nothing)
-    }
+    model.settings.direction
+        |> Maybe.map (\_ -> Nothing)
+        |> flip s_direction model.settings
+        |> flip s_settings model
 
 
 closeButtonGrey : msg -> Html msg
@@ -470,9 +494,9 @@ filterHeader vc config (Internal model) =
         )
         { filterList =
             [ model.dateRangePicker |> Maybe.map (dateTimeFilterHeader vc ResetDateRangePicker)
-            , model.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
-            , model.selectedAsset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
-            , model.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
+            , model.settings.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
+            , model.settings.asset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
+            , model.settings.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
             ]
                 |> List.filterMap identity
                 |> List.map (Html.map config.tag)
@@ -502,7 +526,7 @@ txFilterDialogView vc net config (Internal model) =
             Data.isAccountLike net
 
         directionRadios =
-            model.direction
+            model.settings.direction
                 |> Maybe.map
                     (\direction ->
                         [ TxTableFilterShowAllTxs |> toRadio "all transactions" (direction == Nothing)
@@ -527,7 +551,7 @@ txFilterDialogView vc net config (Internal model) =
                     []
                 )
             |> Rs.s_zeroValue
-                (if model.includeZeroValueTxs |> Maybe.Extra.isJust then
+                (if model.settings.includeZeroValueTxs |> Maybe.Extra.isJust then
                     []
 
                  else
@@ -669,7 +693,7 @@ txFilterDialogView vc net config (Internal model) =
                                 (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets")))
                                 [ css [ Css.width <| Css.px 200 ] ]
                                 sa
-                                model.selectedAsset
+                                model.settings.asset
                                 (Locale.string vc.locale "Asset type")
                                 |> Html.map TxTableAssetSelectBoxMsg
                                 |> Html.map config.tag
@@ -692,7 +716,7 @@ txFilterDialogView vc net config (Internal model) =
                                     ]
                                 ]
                                 qf
-                                model.selectedQuickFilter
+                                (settingsToQuickFilter model.settings)
                                 |> Html.map TxTableQuickFilterSelectBoxMsg
                                 |> Html.map config.tag
                         )
@@ -725,7 +749,7 @@ txFilterDialogView vc net config (Internal model) =
             }
         , zeroValueSwitch =
             { variant =
-                model.includeZeroValueTxs
+                model.settings.includeZeroValueTxs
                     |> Maybe.map
                         (\selected ->
                             Controls.toggle
@@ -739,6 +763,35 @@ txFilterDialogView vc net config (Internal model) =
                     |> Html.map config.tag
             }
         }
+
+
+settingsToQuickFilter : SettingsModel -> Maybe QuickFilterModel
+settingsToQuickFilter settings =
+    let
+        dateDir =
+            settings.range
+                |> Maybe.Extra.join
+                |> Maybe.andThen
+                    (\r ->
+                        case r of
+                            Starting d ->
+                                Just ( d, Outgoing )
+
+                            Until d ->
+                                Just ( d, Incoming )
+
+                            Range _ _ ->
+                                Nothing
+                    )
+    in
+    dateDir
+        |> Maybe.map
+            (\( d, dir ) ->
+                { asset = settings.asset
+                , date = d
+                , direction = dir
+                }
+            )
 
 
 quickFilterToLabel : View.Config -> Maybe QuickFilterModel -> Html (ThemedSelectBox.Msg (Maybe QuickFilterModel))
@@ -760,18 +813,52 @@ quickFilterToLabel vc =
         >> Maybe.withDefault (Html.text <| Locale.string vc.locale "filter-none-selected")
 
 
-init : Model
-init =
+init : Settings -> Model
+init (Settings settings) =
     Internal
         { dateRangePicker = Nothing
-        , direction = Nothing
         , assetSelectBox = Nothing
-        , selectedAsset = Nothing
-        , includeZeroValueTxs = Nothing
         , quickFilterSelect = Nothing
-        , selectedQuickFilter = Nothing
         , showCustomFilter = False
+        , settings = settings
         }
+
+
+initSettings : Settings
+initSettings =
+    Settings initSettingsModel
+
+
+initSettingsFromQuickFilter : QuickFilter -> Settings
+initSettingsFromQuickFilter (QuickFilterInternal qf) =
+    Settings <|
+        quickFilterToSettings qf
+
+
+quickFilterToSettings : QuickFilterModel -> SettingsModel
+quickFilterToSettings qf =
+    { asset = qf.asset
+    , includeZeroValueTxs = Nothing
+    , direction = Just <| Just qf.direction
+    , range =
+        Just <|
+            Just <|
+                case qf.direction of
+                    Incoming ->
+                        Until qf.date
+
+                    Outgoing ->
+                        Starting qf.date
+    }
+
+
+initSettingsModel : SettingsModel
+initSettingsModel =
+    { direction = Nothing
+    , asset = Nothing
+    , includeZeroValueTxs = Nothing
+    , range = Nothing
+    }
 
 
 initQuickFilter : Direction -> Posix -> QuickFilter
@@ -786,6 +873,12 @@ initQuickFilter dir date =
 quickfilterWithAsset : String -> QuickFilter -> QuickFilter
 quickfilterWithAsset asset (QuickFilterInternal qf) =
     QuickFilterInternal { qf | asset = Just asset }
+
+
+withDateRange : Posix -> Posix -> Settings -> Settings
+withDateRange mn mx (Settings model) =
+    Settings
+        { model | range = Just <| Just <| Range mn mx }
 
 
 withDateRangePicker : Locale.Model -> Posix -> Posix -> Model -> Model
@@ -826,9 +919,9 @@ withQuickFilter (QuickFilterInternal qf) (Internal model) =
         }
 
 
-withDirection : Maybe Direction -> Model -> Model
-withDirection direction (Internal model) =
-    Internal
+withDirection : Maybe Direction -> Settings -> Settings
+withDirection direction (Settings model) =
+    Settings
         { model | direction = Just direction }
 
 
@@ -848,9 +941,9 @@ withAssetSelectBox assets (Internal model) =
         }
 
 
-withIncludeZeroValueTxs : Bool -> Model -> Model
-withIncludeZeroValueTxs includeZeroValueTxs (Internal model) =
-    Internal
+withIncludeZeroValueTxs : Bool -> Settings -> Settings
+withIncludeZeroValueTxs includeZeroValueTxs (Settings model) =
+    Settings
         { model | includeZeroValueTxs = Just includeZeroValueTxs }
 
 
@@ -880,9 +973,9 @@ hasChanged (Internal old) (Internal new) =
             old.dateRangePicker |> Maybe.map .fromDate
     in
     (newFromDate /= oldFromDate)
-        || (old.selectedAsset /= new.selectedAsset)
-        || (old.includeZeroValueTxs /= new.includeZeroValueTxs)
-        || (old.direction /= new.direction)
+        || (old.settings.asset /= new.settings.asset)
+        || (old.settings.includeZeroValueTxs /= new.settings.includeZeroValueTxs)
+        || (old.settings.direction /= new.settings.direction)
 
 
 setFocusDate : Time.Posix -> Model -> Model
@@ -903,11 +996,12 @@ updateSelectedAsset selectedAsset (Internal model) =
 
 updateSelectedAssetInternal : Maybe String -> InternalModel -> InternalModel
 updateSelectedAssetInternal selectedAsset model =
-    { model | selectedAsset = selectedAsset }
+    Rs.s_asset selectedAsset model.settings
+        |> flip s_settings model
 
 
-getDirection : Model -> Maybe Direction
-getDirection (Internal model) =
+getDirection : Settings -> Maybe Direction
+getDirection (Settings model) =
     model.direction |> Maybe.Extra.join
 
 
@@ -927,5 +1021,10 @@ applyQuickFilter qf model =
 
 setSelectedQuickFilter : QuickFilter -> Model -> Model
 setSelectedQuickFilter (QuickFilterInternal qf) (Internal model) =
-    Internal
-        { model | selectedQuickFilter = Just qf }
+    applyQuickFilter qf model
+        |> Internal
+
+
+getSettings : Model -> Settings
+getSettings (Internal { settings }) =
+    Settings settings

@@ -35,7 +35,7 @@ getExposedAssetsForNeighborWebData webData =
         |> Maybe.andThen getExposedAssetsForNeighbor
 
 
-init : Update.Config -> Maybe TransactionFilter.Model -> Maybe TransactionFilter.Model -> AggEdge -> ( Time.Posix, Time.Posix ) -> RelationDetails.Model
+init : Update.Config -> Maybe TransactionFilter.Settings -> Maybe TransactionFilter.Settings -> AggEdge -> ( Time.Posix, Time.Posix ) -> RelationDetails.Model
 init uc txsFilterA2b txsFilterB2a edge ( rangeFrom, rangeTo ) =
     let
         -- if data should be missing, fall back to empty asset list

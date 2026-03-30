@@ -33,5 +33,5 @@ type alias Model =
     , copyIconChevronOpen : Bool
     , isClusterDetailsOpen : Bool
     , displayAllTagsInDetails : Bool
-    , txsFilter : Maybe TransactionFilter.Model
+    , txsFilter : Maybe TransactionFilter.Settings
     }

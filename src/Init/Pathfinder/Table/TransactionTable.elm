@@ -1,5 +1,6 @@
 module Init.Pathfinder.Table.TransactionTable exposing (init)
 
+
 import Api.Data
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
@@ -17,7 +18,7 @@ import Tuple exposing (first, pair, second)
 import Util.Data exposing (timestampToPosix)
 
 
-init : Update.Config -> Network -> Maybe TransactionFilter.Model -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
+init : Update.Config -> Network -> Maybe TransactionFilter.Settings -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
 init uc network txsFilter addressId data assets =
     let
         ( mmin, mmax ) =
@@ -64,22 +65,14 @@ init uc network txsFilter addressId data assets =
     , filter =
         txsFilter
             |> Maybe.map (Debug.log "stored")
-            |> Maybe.map
-                -- on a stored txFilter apply the new date range, asset select box and quickfilters
-                (TransactionFilter.withDateRangePicker uc.locale mmin mmax
-                    >> TransactionFilter.withAssetSelectBox assets
-                    >> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
-                )
             |> Maybe.withDefault
-                (TransactionFilter.init
-                    |> TransactionFilter.withDateRangePicker uc.locale mmin mmax
-                    |> TransactionFilter.withAssetSelectBox assets
-                    |> TransactionFilter.withDirection Nothing
-                    |> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
-                    |> (prefilter
-                            |> Maybe.map (first >> TransactionFilter.setSelectedQuickFilter)
-                            |> Maybe.withDefault identity
-                       )
+                (prefilter
+                    |> Maybe.map (first >> TransactionFilter.initSettingsFromQuickFilter)
+                    |> Maybe.withDefault TransactionFilter.initSettings
                 )
+            |> TransactionFilter.init
+            |> TransactionFilter.withDateRangePicker uc.locale mmin mmax
+            |> TransactionFilter.withAssetSelectBox assets
+            |> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
     , isTxFilterViewOpen = False
     }
