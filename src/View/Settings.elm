@@ -103,7 +103,7 @@ generalSettings plugins vc m =
                 )
 
         languageSb =
-            TSelectBox.view conf m.localeSelectBox vc.locale.locale
+            TSelectBox.view conf [] m.localeSelectBox vc.locale.locale
                 |> Html.Styled.map Model.LocaleSelectBoxMsg
 
         ( expr, ( rqlPrim, rqlSec ) ) =

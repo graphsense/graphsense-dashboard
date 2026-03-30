@@ -351,7 +351,7 @@ getRelatedAddressTypeLabel vc relatedAddressType =
             Locale.string vc.locale "Related by multi-input heuristic"
 
 
-relatedAddressesSelectBoxConfig : View.Config -> Id -> ThemedSelectBox.Config AddressDetails.RelatedAddressTypes b
+relatedAddressesSelectBoxConfig : View.Config -> Id -> ThemedSelectBox.Config AddressDetails.RelatedAddressTypes
 relatedAddressesSelectBoxConfig vc id =
     ThemedSelectBox.defaultConfig
         (getRelatedAddressTypeLabel vc)
@@ -453,6 +453,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 [ css [ Css.flexGrow (Css.int 1) ] ]
                                 -- This makes the select box container take all available space
                                 [ ThemedSelectBox.view (relatedAddressesSelectBoxConfig vc viewState.address.id)
+                                    []
                                     viewState.relatedAddressesVisibleTableSelectBox
                                     relatedAddressesVisibleTable
                                     |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg

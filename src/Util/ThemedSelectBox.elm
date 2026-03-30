@@ -15,7 +15,6 @@ module Util.ThemedSelectBox exposing
     , viewDisabled
     , viewWithLabel
     , withFilter
-    , withWidth
     )
 
 import Css
@@ -107,54 +106,38 @@ update msg model =
             ( close model, NoSelection )
 
 
-defaultConfig : (a -> String) -> Config a b
+defaultConfig : (a -> String) -> Config a
 defaultConfig optionToLabel =
     Config
-        { optionToLabel = optionToLabel >> Html.Styled.text, width = Nothing, filter = always True }
+        { optionToLabel = optionToLabel >> Html.Styled.text, filter = always True }
 
 
-withWidth : Css.ExplicitLength b -> Config a b -> Config a b
-withWidth width (Config config) =
-    Config { config | width = Just width }
-
-
-defaultConfigHtml : (a -> Html.Styled.Html (Msg a)) -> Config a b
+defaultConfigHtml : (a -> Html.Styled.Html (Msg a)) -> Config a
 defaultConfigHtml optionToLabel =
     Config
-        { optionToLabel = optionToLabel, width = Nothing, filter = always True }
+        { optionToLabel = optionToLabel, filter = always True }
 
 
-type Config a b
-    = Config (ConfigInternal a b)
+type Config a
+    = Config (ConfigInternal a)
 
 
-type alias ConfigInternal a b =
+type alias ConfigInternal a =
     { optionToLabel : a -> Html.Styled.Html (Msg a)
-    , width : Maybe (Css.ExplicitLength b)
     , filter : a -> Bool
     }
 
 
-viewWithLabel : Config a b -> Model a -> a -> String -> Html (Msg a)
-viewWithLabel config m selected label =
-    F.dropDownLabel { dropDown = { variant = view config m selected }, root = { label = label } }
+viewWithLabel : Config a -> List (Html.Styled.Attribute (Msg a)) -> Model a -> a -> String -> Html (Msg a)
+viewWithLabel config attrs m selected label =
+    F.dropDownLabel { dropDown = { variant = view config attrs m selected }, root = { label = label } }
 
 
-getWidthAttrs : ConfigInternal a b -> Html.Styled.Attribute (Msg a)
-getWidthAttrs config =
-    case config.width of
-        Just w ->
-            [ Css.width w |> Css.important ] |> css
-
-        _ ->
-            [ Css.width (Css.px Sc.dropDownClosed_details.width) |> Css.important ] |> css
-
-
-viewDisabled : Config a b -> Model a -> a -> Html (Msg a)
-viewDisabled (Config config) _ selected =
+viewDisabled : Config a -> List (Html.Styled.Attribute (Msg a)) -> Model a -> a -> Html (Msg a)
+viewDisabled (Config config) attrs _ selected =
     let
         baseAttrs =
-            [ getWidthAttrs config ]
+            attrs
     in
     F.dropDownStateDisabledWithInstances
         (F.dropDownStateDisabledAttributes
@@ -171,37 +154,39 @@ viewDisabled (Config config) _ selected =
         }
 
 
-view : Config a b -> Model a -> a -> Html (Msg a)
-view (Config config) (SelectBox sBox) selected =
+view : Config a -> List (Html.Styled.Attribute (Msg a)) -> Model a -> a -> Html (Msg a)
+view (Config config) attrs (SelectBox sBox) selected =
     let
         selectedItem =
             List.Extra.find ((==) selected) sBox.options
-
-        widthAttr =
-            getWidthAttrs config
 
         createRow sItem hoverEffect x =
             let
                 itemAttributes =
                     [ Css.cursor Css.pointer
+                        :: (Css.width (Css.pct 100) |> Css.important)
                         :: Css.property "user-select" "none"
                         :: (if hoverEffect then
-                                [ Css.hover Sc.dropDownLabelsStateHoverSizeNormal_details.styles ]
+                                [ Css.hover <|
+                                    (Css.pct 100 |> Css.width |> Css.important)
+                                        :: Sc.dropDownLabelsStateHoverSizeNormal_details.styles
+                                ]
 
                             else
                                 []
                            )
                         |> css
                     , Util.View.onClickWithStop (Select x)
-                    , widthAttr
                     ]
+                        ++ attrs
             in
             Sc.dropDownLabelsWithInstances
                 (Sc.dropDownLabelsAttributes
                     |> Rs.s_root itemAttributes
+                 --|> Rs.s_label [ css [ Css.height Css.auto ] ]
                 )
                 (Sc.dropDownLabelsInstances
-                    |> Rs.s_subtitle1 (Just <| config.optionToLabel x)
+                    |> Rs.s_label (Just <| config.optionToLabel x)
                 )
                 { root =
                     { state =
@@ -238,19 +223,21 @@ view (Config config) (SelectBox sBox) selected =
         Sc.dropDownOpenWithInstances
             (Sc.dropDownOpenAttributes
                 |> Rs.s_root
-                    [ Util.View.onClickWithStop Close
-                    , onMouseLeave Close
-                    , Util.View.pointer
-                    , css
+                    ([ Util.View.onClickWithStop Close
+                     , onMouseLeave Close
+                     , Util.View.pointer
+                     , css
                         [ Sc.dropDownClosed_details.height
                             |> Css.px
                             |> Css.height
                             |> Css.important
                         ]
-                    , widthAttr
-                    ]
-                |> Rs.s_dropDownList [ css dropdownOverlayCss, widthAttr ]
-                |> Rs.s_dropDownHeaderOpen [ widthAttr ]
+                     ]
+                        ++ attrs
+                    )
+                |> Rs.s_dropDownList (css dropdownOverlayCss :: attrs)
+                |> Rs.s_dropDownHeaderOpen attrs
+             --|> Rs.s_text [ css [ Css.height Css.auto ] ]
             )
             (Sc.dropDownOpenInstances
                 |> Rs.s_text (Just selectedLabel)
@@ -266,10 +253,11 @@ view (Config config) (SelectBox sBox) selected =
         Sc.dropDownClosedWithInstances
             (Sc.dropDownClosedAttributes
                 |> Rs.s_root
-                    [ Util.View.onClickWithStop Open
-                    , Util.View.pointer
-                    , widthAttr
-                    ]
+                    ([ Util.View.onClickWithStop Open
+                     , Util.View.pointer
+                     ]
+                        ++ attrs
+                    )
             )
             (Sc.dropDownClosedInstances
                 |> Rs.s_text (Just selectedLabel)
@@ -277,6 +265,6 @@ view (Config config) (SelectBox sBox) selected =
             { root = { text = "" } }
 
 
-withFilter : (a -> Bool) -> Config a b -> Config a b
+withFilter : (a -> Bool) -> Config a -> Config a
 withFilter filter (Config config) =
     Config { config | filter = filter }

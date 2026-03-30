@@ -529,3 +529,7 @@ export-dialog-description: "export the current graph to a various formats"
 export-dialog-transparent-background: "transparent background"
 datefilter-starting: starting
 datefilter-until: until
+filter-quick-filter: quick filter
+filter-custom-filter: custom filter
+filter-follow-utxo: follow UTXO
+filter-none-selected: none selected

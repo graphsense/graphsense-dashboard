@@ -13,6 +13,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
+import Time
 import Tuple exposing (pair)
 import Util.Data exposing (timestampToPosix)
 
@@ -42,6 +43,14 @@ init uc network txsFilter addressId data assets =
                                 |> Maybe.map (.raw >> .currency)
                         }
                     )
+
+        quickfilters =
+            [ Time.millisToPosix 0
+                |> TransactionFilter.initQuickFilter Outgoing
+            , Time.millisToPosix 0
+                |> TransactionFilter.initQuickFilter Incoming
+                |> TransactionFilter.quickfilterWithAsset "BLA"
+            ]
     in
     { table =
         prefilter
@@ -63,6 +72,7 @@ init uc network txsFilter addressId data assets =
                     |> TransactionFilter.withDateRangePicker uc.locale mmin mmax
                     |> TransactionFilter.withAssetSelectBox assets
                     |> TransactionFilter.withDirection Nothing
+                    |> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
                     |> (prefilter
                             |> Maybe.map .selectedAsset
                             |> Maybe.map TransactionFilter.updateSelectedAsset

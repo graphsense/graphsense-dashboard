@@ -22,6 +22,7 @@ import Theme.Html.SelectionControls as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Time exposing (Posix)
 import Update.DateRangePicker as DateRangePicker
+import Util.Checkbox as Checkbox
 import Util.Css
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
@@ -184,8 +185,26 @@ update msg (Internal model) =
                         )
                     |> Maybe.withDefault model
 
-            TxTableQuickFilterSelectBoxMsg _ ->
-                Debug.todo "branch 'TxTableQuickFilterSelectBoxMsg _' not implemented"
+            TxTableQuickFilterSelectBoxMsg ms ->
+                model.quickFilterSelect
+                    |> Maybe.map
+                        (\sb ->
+                            let
+                                ( newSelect, outMsg ) =
+                                    ThemedSelectBox.update ms sb
+                            in
+                            { model
+                                | quickFilterSelect = Just newSelect
+                                , selectedQuickFilter =
+                                    case outMsg of
+                                        ThemedSelectBox.Selected sel ->
+                                            sel
+
+                                        _ ->
+                                            model.selectedQuickFilter
+                            }
+                        )
+                    |> Maybe.withDefault model
 
 
 resetIncludeZeroValueTxs : InternalModel -> InternalModel
@@ -603,9 +622,8 @@ txFilterDialogView vc net config (Internal model) =
                     |> Maybe.map
                         (\sa ->
                             ThemedSelectBox.viewWithLabel
-                                (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets"))
-                                    |> ThemedSelectBox.withWidth (Css.px 200)
-                                )
+                                (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets")))
+                                [ css [ Css.width <| Css.px 200 ] ]
                                 sa
                                 model.selectedAsset
                                 (Locale.string vc.locale "Asset type")
@@ -613,7 +631,7 @@ txFilterDialogView vc net config (Internal model) =
                                 |> Html.map config.tag
                         )
                     |> Maybe.withDefault none
-            , showQuickFilter = model.quickFilterSelect /= Nothing
+            , showQuickFilter = Debug.log "Qf" model.quickFilterSelect /= Nothing
             , showCustomFilter = True -- TODO
             , customFilterLabel = Locale.string vc.locale "filter-custom-filter"
             , quickFilterLabel = Locale.string vc.locale "filter-quick-filter"
@@ -622,13 +640,15 @@ txFilterDialogView vc net config (Internal model) =
                 model.quickFilterSelect
                     |> Maybe.map
                         (\qf ->
-                            ThemedSelectBox.viewWithLabel
-                                (ThemedSelectBox.defaultConfigHtml (quickFilterToLabel vc)
-                                 --|> Rs.s_width (Just (Css.px 200))
-                                )
+                            ThemedSelectBox.view
+                                (ThemedSelectBox.defaultConfigHtml (quickFilterToLabel vc))
+                                [ css
+                                    [ Css.width <| Css.px 250
+                                    , Css.height Css.auto
+                                    ]
+                                ]
                                 qf
                                 model.selectedQuickFilter
-                                (Locale.string vc.locale "Asset type")
                                 |> Html.map TxTableQuickFilterSelectBoxMsg
                                 |> Html.map config.tag
                         )
@@ -639,10 +659,12 @@ txFilterDialogView vc net config (Internal model) =
             }
         , checkboxUtxoLevel =
             { variant =
-                Debug.todo """
                 Checkbox.checkbox
-                    {}
-                    """
+                    { state = Checkbox.stateFromBool False
+                    , size = Checkbox.smallSize
+                    , msg = Nothing
+                    }
+                    []
             }
         , customFilterChevron =
             { variant =
@@ -682,7 +704,7 @@ quickFilterToLabel vc =
                 }
                 {}
         )
-        >> Maybe.withDefault none
+        >> Maybe.withDefault (Html.text <| Locale.string vc.locale "filter-none-selected")
 
 
 init : Model
