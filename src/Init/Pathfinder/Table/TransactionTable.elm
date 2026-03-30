@@ -13,59 +13,62 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
-import Time
-import Tuple exposing (pair)
+import Tuple exposing (first, pair, second)
 import Util.Data exposing (timestampToPosix)
 
 
 init : Update.Config -> Network -> Maybe TransactionFilter.Model -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
 init uc network txsFilter addressId data assets =
     let
-        table isDesc =
-            Table.initSorted isDesc TransactionTable.titleTimestamp
-                |> InfiniteTable.init "transactionTable" 25
-
         ( mmin, mmax ) =
             Address.getActivityRange data
 
+        qfFromTx direction tx =
+            Tx.getRawTimestamp tx
+                |> timestampToPosix
+                |> TransactionFilter.initQuickFilter direction
+                |> (tx
+                        |> Tx.getAccountTx
+                        |> Maybe.map (.raw >> .currency)
+                        |> Maybe.map TransactionFilter.quickfilterWithAsset
+                        |> Maybe.withDefault identity
+                   )
+
         prefilter =
             Network.getRecentTxForAddress network Incoming addressId
-                |> Maybe.map
-                    (\tx ->
-                        { desc = False
-                        , order = Just Api.Request.Addresses.Order_Asc
-                        , min =
-                            Tx.getRawTimestamp tx
-                                |> timestampToPosix
-                        , selectedAsset =
-                            tx
-                                |> Tx.getAccountTx
-                                |> Maybe.map (.raw >> .currency)
-                        }
-                    )
+                |> Maybe.map (qfFromTx Outgoing >> flip pair False)
 
         quickfilters =
-            [ Time.millisToPosix 0
-                |> TransactionFilter.initQuickFilter Outgoing
-            , Time.millisToPosix 0
-                |> TransactionFilter.initQuickFilter Incoming
-                |> TransactionFilter.quickfilterWithAsset "BLA"
-            ]
+            Network.getTxsForAddress network Incoming addressId
+                |> List.map (qfFromTx Outgoing)
+                |> flip (++)
+                    (Network.getTxsForAddress network Outgoing addressId
+                        |> Debug.log "outgoing txs"
+                        |> List.map (qfFromTx Incoming)
+                    )
+
+        isDesc =
+            prefilter
+                |> Maybe.map second
+                |> Maybe.withDefault True
     in
     { table =
-        prefilter
-            |> Maybe.map .desc
-            |> Maybe.withDefault True
-            |> table
+        Table.initSorted isDesc TransactionTable.titleTimestamp
+            |> InfiniteTable.init "transactionTable" 25
     , order =
-        prefilter
-            |> Maybe.map .order
-            |> Maybe.withDefault (Just Api.Request.Addresses.Order_Desc)
+        if isDesc then
+            Just Api.Request.Addresses.Order_Desc
+
+        else
+            Just Api.Request.Addresses.Order_Asc
     , filter =
         txsFilter
+            |> Maybe.map (Debug.log "stored")
             |> Maybe.map
+                -- on a stored txFilter apply the new date range, asset select box and quickfilters
                 (TransactionFilter.withDateRangePicker uc.locale mmin mmax
                     >> TransactionFilter.withAssetSelectBox assets
+                    >> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
                 )
             |> Maybe.withDefault
                 (TransactionFilter.init
@@ -74,13 +77,7 @@ init uc network txsFilter addressId data assets =
                     |> TransactionFilter.withDirection Nothing
                     |> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
                     |> (prefilter
-                            |> Maybe.map .selectedAsset
-                            |> Maybe.map TransactionFilter.updateSelectedAsset
-                            |> Maybe.withDefault identity
-                       )
-                    |> (prefilter
-                            |> Maybe.map .min
-                            |> Maybe.map (\mn -> TransactionFilter.updateDateRange ( Just mn, Nothing ))
+                            |> Maybe.map (first >> TransactionFilter.setSelectedQuickFilter)
                             |> Maybe.withDefault identity
                        )
                 )
