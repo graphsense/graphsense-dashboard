@@ -153,7 +153,7 @@ view vc conf =
                 [ css
                     [ Css.width (Css.pct 100)
                     , Css.margin2 (Css.px 16) (Css.px 0)
-                    , Css.color (Css.hex "cc0000")
+                    , Css.property "color" Colors.red500
                     ]
                 ]
                 [ Html.Styled.text (Locale.string vc.locale "cluster tags disclaimer") ]
