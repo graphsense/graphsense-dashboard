@@ -146,7 +146,7 @@ config styles vc conf =
                     HasExchangeTagOnly ->
                         []
 
-                    HasClusterTagsOnly ->
+                    HasClusterTagsOnlyButNoDirect ->
                         []
             )
         , assetsColumnWithOptions

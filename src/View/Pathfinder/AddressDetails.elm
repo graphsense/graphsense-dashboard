@@ -1276,7 +1276,7 @@ isClusterOnlyTags model id =
         Pathfinder.HasTagSummaryOnlyWithCluster _ ->
             True
 
-        Pathfinder.HasClusterTagsOnly ->
+        Pathfinder.HasClusterTagsOnlyButNoDirect ->
             True
 
         _ ->

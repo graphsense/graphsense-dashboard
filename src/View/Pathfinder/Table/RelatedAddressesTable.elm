@@ -129,7 +129,7 @@ config styles vc ratc _ =
                     HasExchangeTagOnly ->
                         []
 
-                    HasClusterTagsOnly ->
+                    HasClusterTagsOnlyButNoDirect ->
                         []
             )
         , twoValuesColumn vc

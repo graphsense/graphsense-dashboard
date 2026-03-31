@@ -303,7 +303,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                                 HasTagSummaries { withCluster } ->
                                     withTagSummary withCluster
 
-                                HasClusterTagsOnly ->
+                                HasClusterTagsOnlyButNoDirect ->
                                     none
                         , position2Instance =
                             let

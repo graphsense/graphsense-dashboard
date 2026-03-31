@@ -1,4 +1,4 @@
-module Model.Dialog exposing (AddTagConfig, ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, defaultMsg, exportFormatToString, initExportConfig)
+module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initExportConfig)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -70,10 +70,24 @@ type alias CustomConfigWithVc msg =
     }
 
 
+type TagsTab
+    = AddressTagsTab
+    | ClusterTagsTab
+
+
+type ClusterTagsState
+    = ClusterTagsNotLoaded
+    | ClusterTagsLoading
+    | ClusterTagsLoaded (Table Api.Data.AddressTag)
+
+
 type alias TagListConfig msg =
     { id : Id
-    , tagsTable : Table Api.Data.AddressTag
-    , isClusterTagsList : Bool
+    , addressTagsTable : Table Api.Data.AddressTag
+    , clusterTagsState : ClusterTagsState
+    , activeTab : TagsTab
+    , showAddressTab : Bool
+    , showClusterTab : Bool
     , closeMsg : msg
     }
 

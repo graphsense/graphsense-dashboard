@@ -132,8 +132,11 @@ mapMsg map model =
                 |> CustomWithVc
 
         TagsList conf ->
-            { tagsTable = conf.tagsTable
-            , isClusterTagsList = conf.isClusterTagsList
+            { addressTagsTable = conf.addressTagsTable
+            , clusterTagsState = conf.clusterTagsState
+            , activeTab = conf.activeTab
+            , showAddressTab = conf.showAddressTab
+            , showClusterTab = conf.showClusterTab
             , closeMsg = map conf.closeMsg
             , id = conf.id
             }

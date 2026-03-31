@@ -119,6 +119,7 @@ type Msg
     | UserClickedStatusbar
     | UserClosesDialog
     | TagsListDialogTableUpdateMsg Table.State
+    | UserClickedTagsDialogTab Model.Dialog.TagsTab
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | AddTagDialog AddTagDialogMsgs

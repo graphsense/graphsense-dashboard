@@ -494,7 +494,7 @@ updateByMsg plugins uc msg model =
             case windowType of
                 TagsList id ->
                     let
-                        fallbackEffect =
+                        addressTagsEffect =
                             UserGotDataForTagsListDialog id
                                 |> Api.GetAddressTagsEffect
                                     { currency = Id.network id
@@ -504,36 +504,9 @@ updateByMsg plugins uc msg model =
                                     , includeBestClusterTag = True
                                     }
                                 |> ApiEffect
-
-                        clusterTagsEffect =
-                            model.network.addresses
-                                |> Dict.get id
-                                |> Maybe.andThen (.data >> RemoteData.toMaybe)
-                                |> Maybe.map .entity
-                                |> Maybe.map
-                                    (\entityId ->
-                                        UserGotDataForTagsListDialog id
-                                            |> Api.GetEntityAddressTagsEffect
-                                                { currency = Id.network id
-                                                , entity = entityId
-                                                , pagesize = 30
-                                                , nextpage = Nothing
-                                                }
-                                            |> ApiEffect
-                                    )
-
-                        isClusterOnly =
-                            isClusterOnlyTags model id
-
-                        effect =
-                            if isClusterOnly then
-                                clusterTagsEffect |> Maybe.withDefault fallbackEffect
-
-                            else
-                                fallbackEffect
                     in
                     ( model
-                    , [ effect ]
+                    , [ addressTagsEffect ]
                     )
 
                 AddTags _ ->
@@ -541,6 +514,10 @@ updateByMsg plugins uc msg model =
                     n model
 
         UserGotDataForTagsListDialog _ _ ->
+            -- handled in src/Update.elm
+            n model
+
+        UserGotClusterTagsForDialog _ _ ->
             -- handled in src/Update.elm
             n model
 
@@ -1038,7 +1015,6 @@ updateByMsg plugins uc msg model =
                     neighbors
                         |> List.map (.address >> .address)
                         |> fetchTagSummaryForIds True model.tagSummaries BrowserGotTagSummaries network
-                        |> List.singleton
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -1057,7 +1033,6 @@ updateByMsg plugins uc msg model =
                     addresses
                         |> List.map .address
                         |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
-                        |> List.singleton
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -2294,7 +2269,7 @@ updateByMsg plugins uc msg model =
             if hasClusterTags then
                 let
                     updatedTagSummaries =
-                        upsertTagSummary id HasClusterTagsOnly model.tagSummaries
+                        upsertTagSummary id HasClusterTagsOnlyButNoDirect model.tagSummaries
                 in
                 ( { model | tagSummaries = updatedTagSummaries }
                     |> updateTagDataOnAddress id
@@ -3779,7 +3754,7 @@ updateTagDataOnAddress addressId m =
                         |> Network.updateAddress addressId (s_hasTags False)
                         |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = False })
 
-                HasClusterTagsOnly ->
+                HasClusterTagsOnlyButNoDirect ->
                     m.network
                         |> Network.updateAddress addressId (s_hasTags False)
                         |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = True })
@@ -4585,19 +4560,6 @@ bulkfetchTagsForAddresses network model addr =
     )
 
 
-isClusterOnlyTags : Model -> Id -> Bool
-isClusterOnlyTags model id =
-    case getHavingTags model id of
-        HasTagSummaryOnlyWithCluster _ ->
-            True
-
-        HasClusterTagsOnly ->
-            True
-
-        _ ->
-            False
-
-
 isTagSummaryLoaded : Bool -> Dict Id HavingTags -> Id -> Bool
 isTagSummaryLoaded includeBestClusterTag existing id =
     case Dict.get id existing of
@@ -4623,7 +4585,7 @@ isTagSummaryLoaded includeBestClusterTag existing id =
             False
 
 
-fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> (Bool -> List ( Id, Api.Data.TagSummary ) -> Msg) -> String -> List String -> Effect
+fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> (Bool -> List ( Id, Api.Data.TagSummary ) -> Msg) -> String -> List String -> List Effect
 fetchTagSummaryForIds includeBestClusterTag existing toMsg network ids =
     let
         idsToLoad =
@@ -4631,9 +4593,14 @@ fetchTagSummaryForIds includeBestClusterTag existing toMsg network ids =
                 |> List.map (Id.init network)
                 |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
     in
-    toMsg includeBestClusterTag
-        |> Api.BulkGetAddressTagSummaryEffect { currency = network, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
-        |> ApiEffect
+    if List.isEmpty idsToLoad then
+        []
+
+    else
+        [ toMsg includeBestClusterTag
+            |> Api.BulkGetAddressTagSummaryEffect { currency = network, addresses = idsToLoad |> List.map Id.id, includeBestClusterTag = includeBestClusterTag }
+            |> ApiEffect
+        ]
 
 
 fetchTagSummaryForId : Bool -> Dict Id HavingTags -> Id -> Effect
@@ -5293,7 +5260,7 @@ upsertTagSummary id newTagSummary dict =
                         ( NoTagsWithoutCluster, NoTags ) ->
                             NoTags
 
-                        ( HasClusterTagsOnly, new ) ->
+                        ( HasClusterTagsOnlyButNoDirect, new ) ->
                             new
 
                         ( HasTags _, new ) ->
@@ -5398,7 +5365,6 @@ getTagsForExport addressId table data model =
         |> Set.fromList
         |> Set.toList
         |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
-        |> List.singleton
     )
 
 
@@ -5749,7 +5715,7 @@ exportGraphTxs uc conf model =
 
             fetchEffects =
                 missingByNetwork
-                    |> List.map
+                    |> List.concatMap
                         (\( network, addrs ) ->
                             fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
                         )

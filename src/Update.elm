@@ -38,6 +38,7 @@ import Model.Locale as Locale
 import Model.Notification as Notification exposing (Notification)
 import Model.Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
+import Model.Pathfinder.Id as PathfinderId
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
 import Model.Statusbar as Statusbar
@@ -548,11 +549,41 @@ update plugins uc msg model =
         TagsListDialogTableUpdateMsg tableState ->
             case model.dialog of
                 Just (Dialog.TagsList config) ->
-                    let
-                        newConfig =
-                            { config | tagsTable = config.tagsTable |> s_state tableState }
-                    in
-                    n { model | dialog = Just (Dialog.TagsList newConfig) }
+                    case config.activeTab of
+                        Dialog.AddressTagsTab ->
+                            n { model | dialog = Just (Dialog.TagsList { config | addressTagsTable = config.addressTagsTable |> s_state tableState }) }
+
+                        Dialog.ClusterTagsTab ->
+                            case config.clusterTagsState of
+                                Dialog.ClusterTagsLoaded table ->
+                                    n { model | dialog = Just (Dialog.TagsList { config | clusterTagsState = Dialog.ClusterTagsLoaded (table |> s_state tableState) }) }
+
+                                _ ->
+                                    n model
+
+                _ ->
+                    n model
+
+        UserClickedTagsDialogTab tab ->
+            case model.dialog of
+                Just (Dialog.TagsList config) ->
+                    case ( tab, config.clusterTagsState ) of
+                        ( Dialog.ClusterTagsTab, Dialog.ClusterTagsNotLoaded ) ->
+                            ( { model
+                                | dialog =
+                                    Just
+                                        (Dialog.TagsList
+                                            { config
+                                                | activeTab = tab
+                                                , clusterTagsState = Dialog.ClusterTagsLoading
+                                            }
+                                        )
+                              }
+                            , fetchClusterTagsEffect config.id model.pathfinder
+                            )
+
+                        _ ->
+                            n { model | dialog = Just (Dialog.TagsList { config | activeTab = tab }) }
 
                 _ ->
                     n model
@@ -1249,34 +1280,109 @@ update plugins uc msg model =
                 ( pathfinder, eff ) =
                     Pathfinder.update plugins uc (Pathfinder.UserGotDataForTagsListDialog id tags) model.pathfinder
 
-                isClusterTagsList =
+                isClusterOnly =
                     case Dict.get id pathfinder.tagSummaries of
                         Just (Model.Pathfinder.HasTagSummaryOnlyWithCluster _) ->
                             True
 
-                        Just Model.Pathfinder.HasClusterTagsOnly ->
+                        Just Model.Pathfinder.HasClusterTagsOnlyButNoDirect ->
                             True
 
                         _ ->
                             False
 
-                closemsg =
-                    UserClosesDialog
+                clusterNoAddresses =
+                    pathfinder.network.addresses
+                        |> Dict.get id
+                        |> Maybe.andThen (.data >> RD.toMaybe)
+                        |> Maybe.map (\addr -> Id.initClusterId addr.currency addr.entity)
+                        |> Maybe.andThen (\cid -> Dict.get cid pathfinder.clusters)
+                        |> Maybe.andThen RD.toMaybe
+                        |> Maybe.map .noAddresses
+                        |> Maybe.withDefault 0
+
+                hasAddressTags =
+                    not isClusterOnly && not (List.isEmpty tags.addressTags)
+
+                showAddressTab =
+                    hasAddressTags
+
+                showClusterTab =
+                    clusterNoAddresses > 1
+
+                needsClusterTags =
+                    (isClusterOnly || not hasAddressTags) && showClusterTab
+
+                clusterEffect =
+                    if needsClusterTags then
+                        fetchClusterTagsEffect id pathfinder
+
+                    else
+                        []
+
+                finalActiveTab =
+                    if needsClusterTags then
+                        Dialog.ClusterTagsTab
+
+                    else
+                        Dialog.AddressTagsTab
+
+                finalClusterTagsState =
+                    if needsClusterTags then
+                        Dialog.ClusterTagsLoading
+
+                    else
+                        Dialog.ClusterTagsNotLoaded
             in
             ( { model
                 | pathfinder = pathfinder
                 , dialog =
                     Just
                         (Dialog.TagsList
-                            { tagsTable = TagsTable.init tags
-                            , isClusterTagsList = isClusterTagsList
+                            { addressTagsTable = TagsTable.init tags
+                            , clusterTagsState = finalClusterTagsState
+                            , activeTab = finalActiveTab
+                            , showAddressTab = showAddressTab
+                            , showClusterTab = showClusterTab
                             , id = id
-                            , closeMsg = closemsg
+                            , closeMsg = UserClosesDialog
                             }
                         )
               }
-            , List.map PathfinderEffect eff
+            , List.map PathfinderEffect eff ++ clusterEffect
             )
+
+        PathfinderMsg (Pathfinder.UserGotClusterTagsForDialog id tags) ->
+            case model.dialog of
+                Just (Dialog.TagsList config) ->
+                    if config.id == id then
+                        let
+                            currentAddress =
+                                PathfinderId.id id
+
+                            filteredTags =
+                                { tags
+                                    | addressTags =
+                                        tags.addressTags
+                                            |> List.filter (\t -> String.toLower t.address /= String.toLower currentAddress)
+                                }
+                        in
+                        n
+                            { model
+                                | dialog =
+                                    Just
+                                        (Dialog.TagsList
+                                            { config
+                                                | clusterTagsState = Dialog.ClusterTagsLoaded (TagsTable.init filteredTags)
+                                            }
+                                        )
+                            }
+
+                    else
+                        n model
+
+                _ ->
+                    n model
 
         PathfinderMsg (Pathfinder.UserOpensDialogWindow (Pathfinder.AddTags id)) ->
             n
@@ -2754,3 +2860,23 @@ togglShowTimestampOnTxEdge m =
 saveUserSettings : Model key -> Effect
 saveUserSettings =
     SaveUserSettingsEffect << Model.userSettingsFromMainModel
+
+
+fetchClusterTagsEffect : PathfinderId.Id -> Model.Pathfinder.Model -> List Effect
+fetchClusterTagsEffect id pathfinderModel =
+    pathfinderModel.network.addresses
+        |> Dict.get id
+        |> Maybe.andThen (.data >> RD.toMaybe)
+        |> Maybe.map
+            (\addr ->
+                Effect.Api.GetEntityAddressTagsEffect
+                    { currency = PathfinderId.network id
+                    , entity = addr.entity
+                    , pagesize = 30
+                    , nextpage = Nothing
+                    }
+                    (\tags -> PathfinderMsg (Pathfinder.UserGotClusterTagsForDialog id tags))
+                    |> ApiEffect
+            )
+        |> Maybe.map List.singleton
+        |> Maybe.withDefault []
