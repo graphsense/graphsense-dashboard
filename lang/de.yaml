@@ -443,6 +443,11 @@ hint-direct-transfer-of-asset: Direkter Transfer eines Assets von einer Wallet z
 hint-simplified-address: Ein vereinfachter Pfad, der alle zugrunde liegenden Transfers
   eines Swaps kombiniert.
 hint-swap-bridge: Swap/Bridge Transaktion
+mixing transaction: Mixing-Transaktion
+hint-mixing-transaction: Eine als CoinJoin-Mixing erkannte Transaktion.
+crosschain tag: Crosschain-Tag
+hint-crosschain-tag: Dieselbe Adresse auf einem anderen Netzwerk (gleicher öffentlicher
+  Schlüssel).
 known-exchange: Bekannte Kryptoasset-Exchange.
 exchange: Exchange
 hint-possible-service: Möglicherweise ein Dienst (z. B. hohe Aktivität), aber nicht

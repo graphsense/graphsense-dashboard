@@ -429,6 +429,10 @@ hint-direct-transfer-of-asset: A direct transfer of an asset from one wallet to 
 hint-simplified-address: A simplified path that combines all of a swaps's underlying
   transfers.
 hint-swap-bridge: Swap/Bridge Transaction
+mixing transaction: Mixing Transaction
+hint-mixing-transaction: A transaction detected as a CoinJoin mixing transaction.
+crosschain tag: Crosschain Tag
+hint-crosschain-tag: The same address on another network (same public key).
 known-exchange: Known cryptoasset exchange.
 exchange: Exchange
 hint-possible-service: Might be a service (e.g. high activity), but not confirmed.

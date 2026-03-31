@@ -59,6 +59,7 @@ legendView plugins vc closeMsg =
     Theme.Html.Dialogs.dialogLegendWithAttributes
         (Theme.Html.Dialogs.dialogLegendAttributes
             |> Rs.s_iconsCloseBlack [ pointer, onClick closeMsg ]
+            |> Rs.s_root [ [ Css.maxHeight (Css.vh 90), Css.overflow Css.auto ] |> css ]
         )
         { additionalIconsItemsList =
             [ legendItem vc
@@ -76,6 +77,12 @@ legendView plugins vc closeMsg =
             ]
                 ++ pluginLegendIconItems
                 ++ [ legendItem vc
+                        IconItem
+                        { description = "Hint-crosschain-tag"
+                        , icon = Icons.iconsTagLiconsCrosschainL {}
+                        , label = "Crosschain tag"
+                        }
+                   , legendItem vc
                         IconItem
                         { description = "Hint-first-thing-added"
                         , icon = Icons.iconsNodeMarker { root = { purpose = Icons.IconsNodeMarkerPurposeStartingPoint } }
@@ -124,6 +131,12 @@ legendView plugins vc closeMsg =
                 { description = "Hint-direct-transfer-of-asset"
                 , icon = Icons.iconsUntagged {}
                 , label = "Unlabeled transaction"
+                }
+            , legendItem vc
+                IconItem
+                { description = "Hint-mixing-transaction"
+                , icon = Icons.iconsMixing { txNode = { variant = GraphComponents.txNodeTypeMixing {} } }
+                , label = "Mixing transaction"
                 }
             , legendItem vc
                 IconItem
