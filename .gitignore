@@ -32,3 +32,4 @@ elm.json
 .idea
 .vscode/
 test_addresses.txt
+.claude/*.local.json

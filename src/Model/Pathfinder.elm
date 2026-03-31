@@ -79,6 +79,7 @@ type HavingTags
     | HasTagSummaryOnlyWithCluster Api.Data.TagSummary
     | HasTagSummaries { withCluster : Api.Data.TagSummary, withoutCluster : Api.Data.TagSummary }
     | HasExchangeTagOnly
+    | HasClusterTagsOnly
     | HasTags Bool -- whether includes an exchange tag
     | NoTagsWithoutCluster
     | NoTags

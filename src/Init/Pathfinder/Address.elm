@@ -27,6 +27,7 @@ init plugins id { x, y } =
     , exchange = Nothing
     , actor = Nothing
     , hasTags = False
+    , hasClusterTagsOnly = False
     , networks = Dict.singleton (Id.network id) (Set.singleton (Id.id id))
     , isStartingPoint = False
     , plugins = Plugin.initAddress plugins

@@ -128,6 +128,9 @@ config styles vc ratc _ =
 
                     HasExchangeTagOnly ->
                         []
+
+                    HasClusterTagsOnly ->
+                        []
             )
         , twoValuesColumn vc
             (Locale.string vc.locale "Total received")

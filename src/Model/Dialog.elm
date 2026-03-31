@@ -73,6 +73,7 @@ type alias CustomConfigWithVc msg =
 type alias TagListConfig msg =
     { id : Id
     , tagsTable : Table Api.Data.AddressTag
+    , isClusterTagsList : Bool
     , closeMsg : msg
     }
 

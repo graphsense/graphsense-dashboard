@@ -54,6 +54,7 @@ type alias Address =
     , clusterSiblingHovered : Bool
     , exchange : Maybe String
     , hasTags : Bool
+    , hasClusterTagsOnly : Bool
     , networks : Dict String (Set String)
     , actor : Maybe String
     , isStartingPoint : Bool

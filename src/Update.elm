@@ -36,6 +36,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Notification as Notification exposing (Notification)
+import Model.Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
@@ -1248,6 +1249,17 @@ update plugins uc msg model =
                 ( pathfinder, eff ) =
                     Pathfinder.update plugins uc (Pathfinder.UserGotDataForTagsListDialog id tags) model.pathfinder
 
+                isClusterTagsList =
+                    case Dict.get id pathfinder.tagSummaries of
+                        Just (Model.Pathfinder.HasTagSummaryOnlyWithCluster _) ->
+                            True
+
+                        Just Model.Pathfinder.HasClusterTagsOnly ->
+                            True
+
+                        _ ->
+                            False
+
                 closemsg =
                     UserClosesDialog
             in
@@ -1257,6 +1269,7 @@ update plugins uc msg model =
                     Just
                         (Dialog.TagsList
                             { tagsTable = TagsTable.init tags
+                            , isClusterTagsList = isClusterTagsList
                             , id = id
                             , closeMsg = closemsg
                             }

@@ -59,7 +59,7 @@ view plugins pluginStates vc model =
                 customWithVc vc conf
 
             TagsList conf ->
-                TagsDetailList.view vc conf.closeMsg conf.id conf.tagsTable
+                TagsDetailList.view vc conf.closeMsg conf.id conf.tagsTable conf.isClusterTagsList
 
             AddTag conf ->
                 AddTagDialog.view plugins vc conf

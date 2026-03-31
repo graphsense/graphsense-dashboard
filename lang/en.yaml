@@ -527,3 +527,5 @@ export-dialog-button: "export"
 export-dialog-title: "export"
 export-dialog-description: "export the current graph to a various formats"
 export-dialog-transparent-background: "transparent background"
+cluster tags list: Cluster tags list
+cluster tags disclaimer: "Disclaimer: These are cluster-level tags. Showing up to 30 tags. Interpret them as indirect context."

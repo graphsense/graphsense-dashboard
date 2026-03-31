@@ -133,6 +133,7 @@ mapMsg map model =
 
         TagsList conf ->
             { tagsTable = conf.tagsTable
+            , isClusterTagsList = conf.isClusterTagsList
             , closeMsg = map conf.closeMsg
             , id = conf.id
             }

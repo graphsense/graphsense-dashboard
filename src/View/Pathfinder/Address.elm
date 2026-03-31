@@ -166,6 +166,7 @@ view plugins vc pc address annotation =
 
         icons =
             [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
+            , ifTrue (not address.hasTags && address.hasClusterTagsOnly) [ Icons.iconsTagSwithoutPaddingTypeIndirect {} ]
             , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
             , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
             ]

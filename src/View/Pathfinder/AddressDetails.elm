@@ -143,7 +143,7 @@ utxo plugins pluginStates vc model id viewState address =
         pluginTagsVisible =
             List.length pluginTagsList > 0
 
-        { sidePanelData, categoriesList } =
+        { sidePanelData, categoriesList, hasClusterOnlyTags } =
             makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         pluginList =
@@ -251,6 +251,9 @@ utxo plugins pluginStates vc model id viewState address =
             { variant =
                 if List.isEmpty categoriesList then
                     none
+
+                else if hasClusterOnlyTags then
+                    HIcons.iconsTagLTypeIndirect {}
 
                 else
                     HIcons.iconsTagLTypeDirect {}
@@ -890,7 +893,7 @@ account plugins pluginStates vc model id viewState address =
         pluginTagsVisible =
             List.length pluginTagsList > 0
 
-        { sidePanelData, categoriesList } =
+        { sidePanelData, categoriesList, hasClusterOnlyTags } =
             makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         sidePanelAddressHeader =
@@ -1030,6 +1033,9 @@ account plugins pluginStates vc model id viewState address =
                 if List.isEmpty categoriesList then
                     none
 
+                else if hasClusterOnlyTags then
+                    HIcons.iconsTagLTypeIndirect {}
+
                 else
                     HIcons.iconsTagLTypeDirect {}
             }
@@ -1067,6 +1073,9 @@ transactionsOrNeighborsDataTabs vc model id viewState =
 tagsList : View.Config -> Pathfinder.Model -> Id -> List (Html Pathfinder.Msg)
 tagsList vc model id =
     let
+        clusterOnlyTagsVisible =
+            isClusterOnlyTags model id
+
         ts =
             getTagSummary model id
 
@@ -1084,7 +1093,10 @@ tagsList vc model id =
                         []
                    )
     in
-    if vc.showLabelsInTaggingOverview then
+    if clusterOnlyTagsVisible then
+        [ learnMoreButton vc id ]
+
+    else if vc.showLabelsInTaggingOverview then
         let
             showTag ( tid, t ) =
                 let
@@ -1178,9 +1190,12 @@ crosschainLedgerTargets id address =
         |> List.sortBy Tuple.first
 
 
-makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Pathfinder.Msg) }
+makeSidePanelData : View.Config -> Pathfinder.Model -> Id -> Bool -> Bool -> { sidePanelData : { actorIconInstance : Svg msg, tabsVisible : Bool, tagSectionVisible : Bool, pluginSTagVisible : Bool, actorVisible : Bool, tagsVisible : Bool }, categoriesList : List (Html Pathfinder.Msg), hasClusterOnlyTags : Bool }
 makeSidePanelData vc model id pluginTagsVisible crosschainVisible =
     let
+        clusterOnlyTagsVisible =
+            isClusterOnlyTags model id
+
         ts =
             getTagSummary model id
 
@@ -1211,7 +1226,7 @@ makeSidePanelData vc model id pluginTagsVisible crosschainVisible =
             tagsList vc model id
 
         showOtherTag =
-            nrTagsAddress > 0
+            nrTagsAddress > 0 || clusterOnlyTagsVisible
     in
     { sidePanelData =
         { actorIconInstance =
@@ -1251,7 +1266,21 @@ makeSidePanelData vc model id pluginTagsVisible crosschainVisible =
         , tagsVisible = showOtherTag || crosschainVisible
         }
     , categoriesList = categoriesList
+    , hasClusterOnlyTags = clusterOnlyTagsVisible
     }
+
+
+isClusterOnlyTags : Pathfinder.Model -> Id -> Bool
+isClusterOnlyTags model id =
+    case getHavingTags model id of
+        Pathfinder.HasTagSummaryOnlyWithCluster _ ->
+            True
+
+        Pathfinder.HasClusterTagsOnly ->
+            True
+
+        _ ->
+            False
 
 
 labelOfActor : View.Config -> Pathfinder.Model -> Id -> Maybe (Html Pathfinder.Msg)

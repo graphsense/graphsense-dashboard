@@ -544,3 +544,5 @@ export-dialog-button: "Exportieren"
 export-dialog-title: "Exportieren"
 export-dialog-description: "Exportieren Sie den aktuellen Graphen in verschiedene Formate"
 export-dialog-transparent-background: "transparenter Hintergrund"
+cluster tags list: Cluster-Schlagwortliste
+cluster tags disclaimer: "Hinweis: Dies sind Cluster-Schlagwörter. Es werden maximal 30 Schlagwörter angezeigt. Bitte als indirekten Kontext interpretieren."

@@ -266,6 +266,9 @@ shallPushHistory plugins msg _ =
         BrowserGotTagSummary _ _ _ ->
             False
 
+        BrowserGotClusterTagsProbe _ _ ->
+            False
+
         UserClickedAddressExpandHandle _ _ ->
             True
 

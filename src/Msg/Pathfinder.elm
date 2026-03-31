@@ -86,6 +86,7 @@ type Msg
     | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
+    | BrowserGotClusterTagsProbe Id Bool
     | BrowserGotTagSummaries Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id

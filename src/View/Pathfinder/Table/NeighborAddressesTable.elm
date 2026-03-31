@@ -145,6 +145,9 @@ config styles vc conf =
 
                     HasExchangeTagOnly ->
                         []
+
+                    HasClusterTagsOnly ->
+                        []
             )
         , assetsColumnWithOptions
             { sortable = False
