@@ -549,5 +549,7 @@ export-dialog-button: "exportar"
 export-dialog-title: "exportar"
 export-dialog-description: "exportar el gráfico actual a varios formatos"
 export-dialog-transparent-background: "fondo transparente"
+unsupported-swap-notice: "Nota: Transacción de intercambio no soportada detectada, destino {0} ({1})"
+unsupported-bridge-notice: "Nota: Transacción puente no soportada detectada, destino {0} ({1})"
 cluster tags list: Lista de etiquetas del cluster
 cluster tags disclaimer: "Aviso: Estas etiquetas son a nivel de cluster. Se muestran hasta 30 etiquetas. Interprételas como contexto indirecto."

@@ -139,8 +139,8 @@ account vc viewState id txExistsFn =
             ("0x" ++ Id.id id) |> String.split "_" |> List.head |> Maybe.withDefault ""
     in
     div []
-        [ SidePanelComponents.sidePanelEthTransactionWithAttributes
-            (SidePanelComponents.sidePanelEthTransactionAttributes
+        [ SidePanelComponents.sidePanelEthTransactionDevWithAttributes
+            (SidePanelComponents.sidePanelEthTransactionDevAttributes
                 |> Rs.s_root
                     [ sidePanelCss
                         |> css
@@ -175,20 +175,15 @@ account vc viewState id txExistsFn =
                 , assetListInstance = accountAssetList vc viewState txExistsFn
                 , swapsListInstance = none
                 }
-            , sidePanelEthTxDetails =
+            , sidePanelEthTxDetailsDev =
                 { contractCreationVisible = baseTx |> Maybe.andThen .contractCreation |> Maybe.withDefault False
+                , showNotice = not (List.isEmpty viewState.tx.unsupportedConversions)
+                }
+            , sidePanelNotice =
+                { text = unsupportedConversionNotice vc viewState.tx.unsupportedConversions
                 }
             , sidePanelTxHeader =
                 { headerText = (Id.network id |> String.toUpper) ++ " " ++ Locale.string vc.locale "Transaction"
-
-                -- baseTx
-                --     |> Maybe.map
-                --         (Tx.fromApiTxAccount
-                --             >> Tx.txTypeToLabel
-                --             >> Locale.string vc.locale
-                --             >> (++) ((String.toUpper <| Id.network id) ++ " ")
-                --         )
-                --     |> Maybe.withDefault ""
                 }
             , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
             , valueOfContractCreation =
@@ -274,20 +269,20 @@ utxo vc model id viewState tx =
                 |> Maybe.map (confidenceBadge vc)
 
         sidePanelTxInstancesBase =
-            SidePanelComponents.sidePanelTransactionInstances
+            SidePanelComponents.sidePanelTransactionDevInstances
 
         sidePanelTxInstances =
             { sidePanelTxInstancesBase
                 | n115645PmOfMix = mixingConfidenceBadge
             }
     in
-    SidePanelComponents.sidePanelTransactionWithInstances
-        (SidePanelComponents.sidePanelTransactionAttributes
+    SidePanelComponents.sidePanelTransactionDevWithInstances
+        (SidePanelComponents.sidePanelTransactionDevAttributes
             |> Rs.s_root
                 [ sidePanelCss
                     |> css
                 ]
-            |> Rs.s_sidePanelTxDetails [ css fullWidth ]
+            -- |> Rs.s_sidePanelTxDetailsDev [ css fullWidth ]
             |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
         )
@@ -304,7 +299,15 @@ utxo vc model id viewState tx =
         , valueOfTimestamp = timeToCell vc tx.raw.timestamp
         , titleOfTxValue = { infoLabel = Locale.string vc.locale "Value" }
         , valueOfTxValue = txValueCell
-        , sidePanelTxDetails = { showMixingRow = mixingDetails |> Maybe.map (always True) |> Maybe.withDefault False }
+        , sidePanelTxDetailsDev =
+            { showMixingRow = mixingDetails |> Maybe.map (always True) |> Maybe.withDefault False
+            , showNotice = False
+            , showNotice2 = not (List.isEmpty viewState.tx.unsupportedConversions)
+            , noticeText = unsupportedConversionNotice vc viewState.tx.unsupportedConversions
+            }
+        , sidePanelNotice =
+            { text = unsupportedConversionNotice vc viewState.tx.unsupportedConversions
+            }
         , titleOfMix = { infoLabel = Locale.string vc.locale "mixing type" }
         , valueOfMix = mixingCell
         , root =
@@ -623,6 +626,31 @@ consensusChangeInfoForOutput consensusEntries output =
                 , heuristics = entry.sources
                 }
             )
+
+
+unsupportedConversionNotice : View.Config -> List Tx.UnsupportedConversion -> String
+unsupportedConversionNotice vc conversions =
+    case conversions of
+        [] ->
+            ""
+
+        conv :: _ ->
+            let
+                key =
+                    case conv.conversionType of
+                        Api.Data.ExternalConversionConversionTypeDexSwap ->
+                            "unsupported-swap-notice"
+
+                        Api.Data.ExternalConversionConversionTypeBridgeTx ->
+                            "unsupported-bridge-notice"
+
+                address =
+                    conv.toAddress
+
+                network =
+                    String.toUpper conv.toNetwork
+            in
+            Locale.interpolated vc.locale key [ address, network ]
 
 
 ioTableView : View.Config -> IoDirection -> Network -> Table Api.Data.TxValue -> IoColumnConfig -> Html Msg

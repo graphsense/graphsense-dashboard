@@ -20,6 +20,7 @@ tx1 =
     , selected = False
     , isStartingPoint = False
     , conversionType = Nothing
+    , unsupportedConversions = []
     , hovered = False
     , type_ =
         Tx.Utxo
@@ -46,6 +47,7 @@ tx2 =
     , clock = 0
     , isStartingPoint = False
     , conversionType = Nothing
+    , unsupportedConversions = []
     , hovered = False
     , type_ =
         Tx.Utxo
@@ -69,6 +71,7 @@ tx3 =
     , clock = 0
     , isStartingPoint = False
     , conversionType = Nothing
+    , unsupportedConversions = []
     , hovered = False
     , type_ =
         Tx.Utxo
@@ -92,6 +95,7 @@ tx4 =
     , clock = 0
     , isStartingPoint = False
     , conversionType = Nothing
+    , unsupportedConversions = []
     , hovered = False
     , type_ =
         Tx.Utxo

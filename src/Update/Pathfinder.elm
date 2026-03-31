@@ -2010,9 +2010,30 @@ updateByMsg plugins uc msg model =
                 txid =
                     Tx.getTxIdForTx tx
 
+                unsupported =
+                    conversions
+                        |> List.filter (\c -> not c.toIsSupportedAsset || not c.fromIsSupportedAsset)
+                        |> List.map
+                            (\c ->
+                                { toAddress = c.toAddress
+                                , toNetwork = c.toNetwork
+                                , conversionType = c.conversionType
+                                }
+                            )
+
                 supportedConversions =
                     conversions
                         |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset)
+
+                networkWithFlag =
+                    if List.isEmpty unsupported then
+                        model.network
+
+                    else
+                        Network.updateTx txid (\t -> { t | unsupportedConversions = unsupported }) model.network
+
+                modelWithFlag =
+                    { model | network = networkWithFlag }
             in
             supportedConversions
                 |> List.foldl
@@ -2038,7 +2059,7 @@ updateByMsg plugins uc msg model =
                         in
                         ( aggm, effects ++ effs )
                     )
-                    ( model, [] )
+                    ( modelWithFlag, [] )
 
         BrowserGotTx ({ requestedTxHash } as loadTxConfig) tx ->
             let

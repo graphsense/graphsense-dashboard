@@ -4,6 +4,7 @@ module Model.Pathfinder.Tx exposing
     , Io
     , Tx
     , TxType(..)
+    , UnsupportedConversion
     , UtxoTx
     , addressToCoords
     , avg
@@ -75,7 +76,15 @@ type alias Tx =
     , opacity : Animation
     , isStartingPoint : Bool
     , conversionType : Maybe ConversionLegType
+    , unsupportedConversions : List UnsupportedConversion
     , index : Int
+    }
+
+
+type alias UnsupportedConversion =
+    { toAddress : String
+    , toNetwork : String
+    , conversionType : Api.Data.ExternalConversionConversionType
     }
 
 

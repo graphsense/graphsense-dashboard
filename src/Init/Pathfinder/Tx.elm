@@ -27,6 +27,7 @@ fromTxAccountData index tx coords =
     , opacity = A.static 1
     , clock = 0
     , conversionType = Nothing
+    , unsupportedConversions = []
     , type_ =
         let
             from =
@@ -64,6 +65,7 @@ fromTxUtxoData index tx coords =
     , opacity = A.static 1
     , clock = 0
     , conversionType = Nothing
+    , unsupportedConversions = []
     , type_ = normalizeUtxo tx |> Utxo
     , index = index + 1
     }

@@ -571,5 +571,7 @@ export-dialog-button: "esporta"
 export-dialog-title: "esporta"
 export-dialog-description: "esporta il grafico corrente in vari formati"
 export-dialog-transparent-background: "sfondo trasparente"
+unsupported-swap-notice: "Nota: Transazione di scambio non supportata rilevata, destinazione {0} ({1})"
+unsupported-bridge-notice: "Nota: Transazione bridge non supportata rilevata, destinazione {0} ({1})"
 cluster tags list: Elenco tag del cluster
 cluster tags disclaimer: "Avviso: Questi tag sono a livello di cluster. Vengono mostrati fino a 30 tag. Interpretali come contesto indiretto."
