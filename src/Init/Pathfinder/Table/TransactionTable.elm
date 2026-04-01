@@ -1,6 +1,5 @@
 module Init.Pathfinder.Table.TransactionTable exposing (init)
 
-
 import Api.Data
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
@@ -10,7 +9,7 @@ import Components.TransactionFilter as TransactionFilter
 import Config.Update as Update
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
@@ -27,7 +26,7 @@ init uc network txsFilter addressId data assets =
         qfFromTx direction tx =
             Tx.getRawTimestamp tx
                 |> timestampToPosix
-                |> TransactionFilter.initQuickFilter direction
+                |> TransactionFilter.initQuickFilter (Id.id tx.id) direction
                 |> (tx
                         |> Tx.getAccountTx
                         |> Maybe.map (.raw >> .currency)
@@ -64,11 +63,13 @@ init uc network txsFilter addressId data assets =
             Just Api.Request.Addresses.Order_Asc
     , filter =
         txsFilter
-            |> Maybe.map (Debug.log "stored")
             |> Maybe.withDefault
                 (prefilter
                     |> Maybe.map (first >> TransactionFilter.initSettingsFromQuickFilter)
-                    |> Maybe.withDefault TransactionFilter.initSettings
+                    |> Maybe.withDefault
+                        (TransactionFilter.initSettings
+                            |> TransactionFilter.withDirection Nothing
+                        )
                 )
             |> TransactionFilter.init
             |> TransactionFilter.withDateRangePicker uc.locale mmin mmax

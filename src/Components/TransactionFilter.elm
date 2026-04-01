@@ -11,6 +11,7 @@ import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events exposing (onClick)
 import Init.DateRangePicker as DateRangePicker
+import List.Extra
 import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
@@ -72,6 +73,7 @@ type alias QuickFilterModel =
     { asset : Maybe String
     , date : Posix
     , direction : Direction
+    , txHash : String
     }
 
 
@@ -165,9 +167,27 @@ update msg (Internal model) =
                             let
                                 newPicker =
                                     DateRangePicker.update subMsg dateRangePicker
+
+                                changed =
+                                    newPicker.fromDate
+                                        /= Nothing
+                                        && newPicker.fromDate
+                                        /= dateRangePicker.fromDate
+                                        || newPicker.toDate
+                                        /= Nothing
+                                        && newPicker.toDate
+                                        /= dateRangePicker.toDate
                             in
                             { model
-                                | dateRangePicker = Just newPicker
+                                | dateRangePicker =
+                                    newPicker
+                                        |> (if changed then
+                                                DateRangePicker.closePicker
+
+                                            else
+                                                identity
+                                           )
+                                        |> Just
                             }
                         )
                     |> Maybe.withDefault model
@@ -623,17 +643,13 @@ txFilterDialogView vc net config (Internal model) =
                     case model.dateRangePicker of
                         Just dmodel ->
                             let
-                                prepDate =
-                                    Maybe.map
-                                        (Locale.timestampDateTimeUniform vc.locale False)
-
                                 startDate =
                                     dmodel.fromDate
-                                        |> prepDate
+                                        |> Maybe.map (renderDate vc (Locale.isFirstSecondOfTheDay vc.locale))
 
                                 endDate =
                                     dmodel.toDate
-                                        |> prepDate
+                                        |> Maybe.map (renderDate vc (Locale.isLastSecondOfTheDay vc.locale))
                             in
                             if DatePicker.isOpen dmodel.dateRangePicker then
                                 div []
@@ -716,7 +732,7 @@ txFilterDialogView vc net config (Internal model) =
                                     ]
                                 ]
                                 qf
-                                (settingsToQuickFilter model.settings)
+                                (settingsToQuickFilter model)
                                 |> Html.map TxTableQuickFilterSelectBoxMsg
                                 |> Html.map config.tag
                         )
@@ -765,33 +781,47 @@ txFilterDialogView vc net config (Internal model) =
         }
 
 
-settingsToQuickFilter : SettingsModel -> Maybe QuickFilterModel
-settingsToQuickFilter settings =
-    let
-        dateDir =
-            settings.range
-                |> Maybe.Extra.join
-                |> Maybe.andThen
-                    (\r ->
-                        case r of
-                            Starting d ->
-                                Just ( d, Outgoing )
+settingsToQuickFilter : InternalModel -> Maybe QuickFilterModel
+settingsToQuickFilter { settings, quickFilterSelect } =
+    settings.range
+        |> Maybe.Extra.join
+        |> Maybe.Extra.andThen2
+            (\dir r ->
+                case ( dir, r ) of
+                    ( Outgoing, Starting d ) ->
+                        Just ( d, Outgoing )
 
-                            Until d ->
-                                Just ( d, Incoming )
+                    ( Incoming, Until d ) ->
+                        Just ( d, Incoming )
 
-                            Range _ _ ->
-                                Nothing
-                    )
-    in
-    dateDir
-        |> Maybe.map
+                    _ ->
+                        Nothing
+            )
+            (Maybe.Extra.join settings.direction)
+        |> Maybe.andThen
             (\( d, dir ) ->
-                { asset = settings.asset
+                quickFilterSelect
+                    |> Maybe.map ThemedSelectBox.getOptions
+                    |> Maybe.withDefault []
+                    |> List.filterMap identity
+                    |> List.Extra.find
+                        (\{ asset, direction, date } ->
+                            asset
+                                == settings.asset
+                                && direction
+                                == dir
+                                && date
+                                == d
+                        )
+            )
+        |> Debug.log "settingsToQF"
+
+
+
+{--asset = settings.asset
                 , date = d
                 , direction = dir
-                }
-            )
+                --}
 
 
 quickFilterToLabel : View.Config -> Maybe QuickFilterModel -> Html (ThemedSelectBox.Msg (Maybe QuickFilterModel))
@@ -861,12 +891,13 @@ initSettingsModel =
     }
 
 
-initQuickFilter : Direction -> Posix -> QuickFilter
-initQuickFilter dir date =
+initQuickFilter : String -> Direction -> Posix -> QuickFilter
+initQuickFilter txHash dir date =
     QuickFilterInternal
         { direction = dir
         , date = date
         , asset = Nothing
+        , txHash = txHash
         }
 
 

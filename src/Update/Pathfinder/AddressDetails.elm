@@ -792,9 +792,7 @@ openTransactionTable _ dfp model =
                             RemoteData.Success
                                 { txs
                                     | filter =
-                                        model.txsFilter
-                                            |> Maybe.map TransactionFilter.init
-                                            |> Maybe.withDefault txs.filter
+                                        txs.filter
                                             |> (dfp
                                                     |> Maybe.map
                                                         (\dfp_ ->

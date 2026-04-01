@@ -27,6 +27,9 @@ transactionTableConfig m =
 
         currency =
             m.tx |> Tx.getNetwork
+
+        settings =
+            TransactionFilter.getSettings m.subTxsTableFilter
     in
     { fetch =
         \_ pagesize nextpage ->
@@ -35,10 +38,11 @@ transactionTableConfig m =
                     { currency = currency
                     , txHash = baseTxHash
                     , includeZeroValueSubTxs =
-                        TransactionFilter.getIncludeZeroValueTxs m.subTxsTableFilter
+                        settings
+                            |> TransactionFilter.getIncludeZeroValueTxs
                             |> Maybe.withDefault False
                     , pagesize = Just pagesize
-                    , token_currency = TransactionFilter.getSelectedAsset m.subTxsTableFilter
+                    , token_currency = TransactionFilter.getSelectedAsset settings
                     , nextpage = nextpage
                     }
                 |> ApiEffect
@@ -133,7 +137,8 @@ update msg model =
             { model | subTxsTableFilter = newFilter }
                 |> (if changed then
                         flip pair
-                            [ Pathfinder.InternalChangedTxFilter (TxsFilterTx model.tx.id) newFilter
+                            [ TransactionFilter.getSettings newFilter
+                                |> Pathfinder.InternalChangedTxFilter (TxsFilterTx model.tx.id)
                                 |> InternalEffect
                             ]
                             >> and reloadSubTxTable
