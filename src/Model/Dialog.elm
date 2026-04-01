@@ -88,6 +88,7 @@ type alias TagListConfig msg =
     , activeTab : TagsTab
     , showAddressTab : Bool
     , showClusterTab : Bool
+    , hasAddressTags : Bool
     , closeMsg : msg
     }
 

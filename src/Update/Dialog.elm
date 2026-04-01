@@ -137,6 +137,7 @@ mapMsg map model =
             , activeTab = conf.activeTab
             , showAddressTab = conf.showAddressTab
             , showClusterTab = conf.showClusterTab
+            , hasAddressTags = conf.hasAddressTags
             , closeMsg = map conf.closeMsg
             , id = conf.id
             }

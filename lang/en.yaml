@@ -533,6 +533,6 @@ export-dialog-description: "export the current graph to a various formats"
 export-dialog-transparent-background: "transparent background"
 unsupported-swap-notice: "Note: Unsupported swap transaction detected, target {0} ({1})"
 unsupported-bridge-notice: "Note: Unsupported bridge transaction detected, target {0} ({1})"
-cluster tags: Cluster tags
-cluster tags list: Cluster tags list
-cluster tags disclaimer: "Disclaimer: These are cluster-level tags and should be interpreted as indirect context only. Showing up to 30 tags."
+cluster tags: Cluster-derived tags
+cluster tags list: Cluster-derived tags list
+cluster tags disclaimer: "These tags are not directly assigned to this address but inferred from the cluster it belongs to. Clustering can contain errors, so these tags should be used with caution."

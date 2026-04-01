@@ -1305,13 +1305,13 @@ update plugins uc msg model =
                     not isClusterOnly && not (List.isEmpty tags.addressTags)
 
                 showAddressTab =
-                    hasAddressTags
+                    True
 
                 showClusterTab =
                     clusterNoAddresses > 1
 
                 needsClusterTags =
-                    (isClusterOnly || not hasAddressTags) && showClusterTab
+                    showClusterTab
 
                 clusterEffect =
                     if needsClusterTags then
@@ -1321,7 +1321,7 @@ update plugins uc msg model =
                         []
 
                 finalActiveTab =
-                    if needsClusterTags then
+                    if not hasAddressTags && showClusterTab then
                         Dialog.ClusterTagsTab
 
                     else
@@ -1344,6 +1344,7 @@ update plugins uc msg model =
                             , activeTab = finalActiveTab
                             , showAddressTab = showAddressTab
                             , showClusterTab = showClusterTab
+                            , hasAddressTags = hasAddressTags
                             , id = id
                             , closeMsg = UserClosesDialog
                             }
@@ -2872,7 +2873,7 @@ fetchClusterTagsEffect id pathfinderModel =
                 Effect.Api.GetEntityAddressTagsEffect
                     { currency = PathfinderId.network id
                     , entity = addr.entity
-                    , pagesize = 30
+                    , pagesize = 500
                     , nextpage = Nothing
                     }
                     (\tags -> PathfinderMsg (Pathfinder.UserGotClusterTagsForDialog id tags))

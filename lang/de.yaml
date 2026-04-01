@@ -551,6 +551,6 @@ export-dialog-description: "Exportieren Sie den aktuellen Graphen in verschieden
 export-dialog-transparent-background: "transparenter Hintergrund"
 unsupported-swap-notice: "Hinweis: Nicht unterstützte Swap-Transaktion erkannt, Ziel {0} ({1})"
 unsupported-bridge-notice: "Hinweis: Nicht unterstützte Bridge-Transaktion erkannt, Ziel {0} ({1})"
-cluster tags: Cluster-Schlagwörter
-cluster tags list: Cluster-Schlagwortliste
-cluster tags disclaimer: "Hinweis: Dies sind Cluster-Schlagwörter und sollten nur als indirekter Kontext interpretiert werden. Es werden maximal 30 Schlagwörter angezeigt."
+cluster tags: Cluster-abgeleitete Schlagwörter
+cluster tags list: Cluster-abgeleitete Schlagwortliste
+cluster tags disclaimer: "Diese Schlagwörter sind nicht direkt dieser Adresse zugeordnet, sondern werden vom zugehörigen Cluster abgeleitet. Clustering kann Fehler enthalten, daher sollten diese Schlagwörter mit Vorsicht verwendet werden."
