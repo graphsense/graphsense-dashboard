@@ -3,6 +3,8 @@
 
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
+FIGMA_WHITELIST_FRAMES?=[]
+FIGMA_WHITELIST_COMPONENTS?=[]
 CONFIG=./config/Config.elm
 CODEGEN_CONFIG=$(CODEGEN)/$(CONFIG)
 FIGMA_JSON=./theme/figma.json
@@ -10,7 +12,6 @@ GENERATED=./generated
 GENERATE_JS=tools/generate.js
 
 CODEGEN=./codegen
-CODEGEN_TOOL=./tools/codegen.mjs
 CODEGEN_GENERATED=$(CODEGEN)/$(GENERATED)
 CODEGEN_RECORDSETTER=$(CODEGEN_GENERATED)/RecordSetter.elm
 CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
@@ -109,10 +110,10 @@ clean-generated-utils:
 	rm -rf $(CODEGEN_GENERATED)
 
 clean-figma-json:
-	-rm $(FIGMA_JSON)
+	rm $(FIGMA_JSON)
 
 clean-plugin-figma-json:
-	-rm $(PLUGINS_DIR)/$(PLUGIN_NAME)/$(FIGMA_JSON)
+	rm $(PLUGINS_DIR)/$(PLUGIN_NAME)/$(FIGMA_JSON)
 
 clean-public:
 	rm -rf $(GENERATED_PUBLIC)
@@ -168,10 +169,10 @@ theme: $(GENERATED_THEME_COLORMAPS) setem
 theme-refresh: clean-figma-json theme
 
 $(FIGMA_JSON): 
-	$(CODEGEN_TOOL) --refresh --file-id=$(FIGMA_FILE_ID) --api-token=$(FIGMA_API_TOKEN)
+	./tools/codegen.sh --refresh
 
 $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC) $(CODEGEN_RECORDSETTER)
-	/usr/bin/time -v $(CODEGEN_TOOL) -w=$(FIGMA_WHITELIST_FRAMES) -c="$(FIGMA_WHITELIST_COMPONENTS)"
+	/usr/bin/time -v ./tools/codegen.sh -w="$(FIGMA_WHITELIST_FRAMES)" -c="$(FIGMA_WHITELIST_COMPONENTS)"
 
 check-plugin-exists:
 	@if [ ! -z "$(PLUGIN_NAME)" -a ! -e $(PLUGINS_DIR)/$(PLUGIN_NAME) ]; then \
@@ -180,18 +181,18 @@ check-plugin-exists:
 	fi
 
 plugin-theme-refresh: 
-	$(CODEGEN_TOOL) --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh -w=$(FIGMA_WHITELIST_FRAMES)
+	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh -w=$(FIGMA_WHITELIST_NAMES) -l=$(FIGMA_WHITELIST_LEVEL)
 
 $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 	@# only update an existing figma.json
 	if [ -e $(PLUGINS_DIR)/%/$(FIGMA_JSON) ]; then \
-		$(CODEGEN_TOOL) --plugin=$* --file-id=$(FIGMA_FILE_ID) --api-token=$(FIGMA_API_TOKEN) --refresh; \
+		./tools/codegen.sh --plugin=$* --file-id=$(FIGMA_FILE_ID) --refresh; \
 	fi
 
 plugin-theme: check-plugin-exists $(GENERATED_THEME_THEME)/$(PLUGIN_NAME)/$(THEME_GENERATED_MARKER) setem
 
 $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(GENERATED_THEME_COLORMAPS) $(CODEGEN_RECORDSETTER) $(PLUGINS_DIR)/%/$(FIGMA_JSON)
-	/usr/bin/time -v $(CODEGEN_TOOL) --plugin=$* 
+	/usr/bin/time -v ./tools/codegen.sh --plugin=$* 
 	mkdir -p $(GENERATED_THEME_THEME)/$*
 	touch $@
 
