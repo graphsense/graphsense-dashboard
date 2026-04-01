@@ -134,7 +134,7 @@ async function handleRefreshMode() {
         outputDir = join(__dirname, '..', 'plugins', pluginName, 'theme');
     }
 
-    await runCodegen(flags, outputDir);
+    await runCodegen(pluginName, flags, outputDir);
 }
 
 async function handleGenerateMode() {
@@ -179,15 +179,39 @@ async function handleGenerateMode() {
         
         flags = {
             colormaps: colormaps,
-            theme: pluginFigmaContent
+            theme: pluginFigmaContent,
+            whitelist: {frames:[], components:[]}
         };
         outputDir = join(__dirname, '..', 'generated', 'theme');
     }
 
-    await runCodegen(flags, outputDir);
+    await runCodegenIteratively(flags, outputDir);
 }
 
-async function runCodegen(flags, outputDir) {
+async function runCodegenIteratively(flags, outputDir) {
+  if(!flags.theme) {
+    console.error('no theme found!')
+    process.exit(1)
+  }
+
+  const nodes = {...flags.theme.figma.nodes}
+  const colorNodes = {}
+  for (const node in nodes) {
+    if(!nodes[node].document.name.startsWith('Colors ')) continue
+    colorNodes[node] = nodes[node]
+  }
+  for (const node in nodes) {
+    const name = nodes[node].document.name
+    if(flags.whitelist.frames.length && flags.whitelist.frames.indexOf(name) === -1) {
+      continue
+    }
+    flags.theme.figma.nodes = {...colorNodes}
+    flags.theme.figma.nodes[node] = nodes[node]
+    await runCodegen(name, flags, outputDir)
+  }
+}
+
+async function runCodegen(name, flags, outputDir) {
     const elmFile = join(__dirname, '..', 'codegen', 'Generate.elm');
     
     const options = {
@@ -197,16 +221,18 @@ async function runCodegen(flags, outputDir) {
         cwd: join(__dirname, '..', 'codegen')
     };
 
-    console.log(`Running elm-codegen ...`);
+    console.log(`Running elm-codegen for ${name}...`);
 
     const origLog = console.log
     const origWarn = console.log
     const origErr = console.error
     let success = ""
+    let logs = ""
     console.log = (str) => {
         if (str.indexOf(" files generated in ") !== -1) {
           success = str
         }
+        logs += str
       }
     console.warn = () => {}
     let errors = ""
@@ -230,6 +256,7 @@ async function runCodegen(flags, outputDir) {
       console.log(success)
     } else {
       console.error('Code generation completed with errors:');
+      console.error(logs)
       console.error(errors)
       const out_file = '/tmp/codegen_options_' + Date.now() + '.json'
       writeFileSync(out_file, JSON.stringify(options, null, 2))
