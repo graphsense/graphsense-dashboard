@@ -23,15 +23,13 @@ COPY ./theme $WORKDIR/theme
 COPY ./codegen $WORKDIR/codegen
 COPY ./lib $WORKDIR/lib
 COPY ./docker/site.conf /etc/nginx/http.d/
-COPY ./tools/generate.js $WORKDIR/tools/generate.js
+COPY ./tools $WORKDIR/tools
 
 RUN mkdir -p /usr/share/nginx/html /run/nginx && \
     rm -f /etc/nginx/http.d/default.conf 
 
 COPY ./docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
-
-COPY ./tools $WORKDIR/tools
 
 RUN touch .env && make build
 
