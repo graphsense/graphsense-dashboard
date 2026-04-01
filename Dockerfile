@@ -3,7 +3,7 @@ FROM node:22-alpine AS builder
 ENV WORKDIR=/app
 
 RUN mkdir ${WORKDIR} && \
-    apk --no-cache --update add bash git openssh make python3 py3-yaml g++ 
+    apk --no-cache --update add bash git openssh make g++ rsync
 
 WORKDIR $WORKDIR
 
