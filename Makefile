@@ -3,7 +3,6 @@
 
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
-FIGMA_WHITELIST_FRAMES?=[]
 CONFIG=./config/Config.elm
 CODEGEN_CONFIG=$(CODEGEN)/$(CONFIG)
 FIGMA_JSON=./theme/figma.json
@@ -109,10 +108,10 @@ clean-generated-utils:
 	rm -rf $(CODEGEN_GENERATED)
 
 clean-figma-json:
-	rm $(FIGMA_JSON)
+	-rm $(FIGMA_JSON)
 
 clean-plugin-figma-json:
-	rm $(PLUGINS_DIR)/$(PLUGIN_NAME)/$(FIGMA_JSON)
+	-rm $(PLUGINS_DIR)/$(PLUGIN_NAME)/$(FIGMA_JSON)
 
 clean-public:
 	rm -rf $(GENERATED_PUBLIC)
@@ -168,10 +167,10 @@ theme: $(GENERATED_THEME_COLORMAPS) setem
 theme-refresh: clean-figma-json theme
 
 $(FIGMA_JSON): 
-	./tools/codegen.sh --refresh
+	./tools/codegen.js --refresh --file-id=$(FIGMA_FILE_ID) --api-token=$(FIGMA_API_TOKEN)
 
 $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC) $(CODEGEN_RECORDSETTER)
-	/usr/bin/time -v ./tools/codegen.sh -w=$(FIGMA_WHITELIST_FRAMES)
+	/usr/bin/time -v ./tools/codegen.js -w=$(FIGMA_WHITELIST_FRAMES) 
 
 check-plugin-exists:
 	@if [ ! -z "$(PLUGIN_NAME)" -a ! -e $(PLUGINS_DIR)/$(PLUGIN_NAME) ]; then \
@@ -180,18 +179,18 @@ check-plugin-exists:
 	fi
 
 plugin-theme-refresh: 
-	./tools/codegen.sh --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh -w=$(FIGMA_WHITELIST_FRAMES)
+	./tools/codegen.js --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh -w=$(FIGMA_WHITELIST_FRAMES)
 
 $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 	@# only update an existing figma.json
 	if [ -e $(PLUGINS_DIR)/%/$(FIGMA_JSON) ]; then \
-		./tools/codegen.sh --plugin=$* --file-id=$(FIGMA_FILE_ID) --refresh; \
+		./tools/codegen.js --plugin=$* --file-id=$(FIGMA_FILE_ID) --api-token=$(FIGMA_API_TOKEN) --refresh; \
 	fi
 
 plugin-theme: check-plugin-exists $(GENERATED_THEME_THEME)/$(PLUGIN_NAME)/$(THEME_GENERATED_MARKER) setem
 
 $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(GENERATED_THEME_COLORMAPS) $(CODEGEN_RECORDSETTER) $(PLUGINS_DIR)/%/$(FIGMA_JSON)
-	/usr/bin/time -v ./tools/codegen.sh --plugin=$* 
+	/usr/bin/time -v ./tools/codegen.js --plugin=$* 
 	mkdir -p $(GENERATED_THEME_THEME)/$*
 	touch $@
 
