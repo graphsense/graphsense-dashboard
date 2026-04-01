@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * CommonJS version of codegen.sh
  * Generates Elm code from Figma design files using elm-codegen

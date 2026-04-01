@@ -1,21 +1,9 @@
-FROM alpine:3.19
-LABEL org.opencontainers.image.title="graphsense-dashboard"
-LABEL org.opencontainers.image.maintainer="contact@ikna.io"
-LABEL org.opencontainers.image.url="https://www.ikna.io/"
-LABEL org.opencontainers.image.description="GraphSense's Web GUI for interactive cryptocurrency analysis written"
-LABEL org.opencontainers.image.source="https://github.com/graphsense/graphsense-dashboard"
-
-ENV DOCKER_USER=dockeruser
-ENV DOCKER_UID=1000
-ENV REST_URL=http://localhost:9000
-
-#RUN addgroup -S $DOCKER_USER && adduser -S $DOCKER_USER -G $DOCKER_USER -u $DOCKER_UID
+FROM node:22-alpine AS builder
 
 ENV WORKDIR=/app
 
-RUN mkdir $WORKDIR && \
-    apk --no-cache --update add bash nginx nodejs npm rsync git && \
-    apk --no-cache --update --virtual build-dependendencies add python3 make g++ jq
+RUN mkdir ${WORKDIR} && \
+    apk --no-cache --update add bash git openssh make python3 py3-yaml g++ 
 
 WORKDIR $WORKDIR
 
