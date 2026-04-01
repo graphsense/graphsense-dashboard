@@ -10,7 +10,7 @@ GENERATED=./generated
 GENERATE_JS=tools/generate.js
 
 CODEGEN=./codegen
-CODEGEN_TOOL=./tools/codegen.mjs
+CODEGEN_TOOL=./tools/codegen.js
 CODEGEN_GENERATED=$(CODEGEN)/$(GENERATED)
 CODEGEN_RECORDSETTER=$(CODEGEN_GENERATED)/RecordSetter.elm
 CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)

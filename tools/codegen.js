@@ -1,19 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * ECMAScript version of codegen.sh
+ * CommonJS version of codegen.sh
  * Generates Elm code from Figma design files using elm-codegen
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { run } from 'elm-codegen';
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
+const { readFileSync, writeFileSync, existsSync } = require('fs');
+const { join, dirname } = require('path');
+const { run } = require('elm-codegen');
+const yargs = require('yargs');
+const { hideBin } = require('yargs/helpers');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// __filename and __dirname are available as globals in CommonJS
 
 // Parse command line arguments using yargs
 const argv = yargs(hideBin(process.argv))
