@@ -10,7 +10,9 @@
     "prebuild": "elm-tooling install",
     "build": "NODE_ENV=${NODE_ENV:=production} vite build",
     "serve": "vite preview",
-    "test": "elm-test-rs"
+    "test": "elm-test-rs",
+    "compile": "elm make src/Main.elm --output=/dev/null --report=json"
+
   },
   "devDependencies": {
     "elm-codegen": "^0.6.3",

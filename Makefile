@@ -49,6 +49,9 @@ serve: prepare gen
 build: prepare gen
 	npm run build
 
+compile: prepare gen
+	npm run compile
+
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \
 		if [ ! -e "$$i" ] && [ ! -L "$$i" ]; then \
