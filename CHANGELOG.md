@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.03.2] - 2026-03-27
+
+### Fixed
+
+- Align placement of multiple input addresses in the searchbars on the landingpage and in Pathfinder
+- Show category in related addresses and neighbors table
+- Refresh address data on opening of sidepanel
+- Fix tx edge label placement in Safari
 
 ## [26.03.1] - 2026-03-13
 
