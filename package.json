@@ -5,20 +5,19 @@
   "version": "1.1.2",
   "license": "MIT",
   "scripts": {
-    "postinstall": "elm-tooling install",
     "dev": "vite",
-    "prebuild": "elm-tooling install",
     "build": "NODE_ENV=${NODE_ENV:=production} vite build",
     "serve": "vite preview",
     "test": "elm-test-rs",
     "compile": "elm make src/Main.elm --output=/dev/null --report=json"
-
   },
   "devDependencies": {
+    "elm": "^0.19.1-6",
     "elm-codegen": "^0.6.3",
-    "elm-format": "^0.8.7",
+    "elm-format": "^0.8.8",
     "elm-review": "^2.13.5",
     "elm-test": "^0.19.1-revision17",
+    "elm-test-rs": "^3.0.2-0",
     "fs-extra": "^11.1.1",
     "level": "^8.0.0",
     "mustache": "^4.2.0",
@@ -32,7 +31,6 @@
   },
   "dependencies": {
     "canvas-size": "^2.0.0",
-    "elm-tooling": "^1.13.1",
     "file-saver": "^2.0.5",
     "file-select-dialog": "^1.5.4",
     "js-base64": "^3.7.2",
