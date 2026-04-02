@@ -43,7 +43,6 @@ init uc network txsFilter addressId data assets =
                 |> List.map (qfFromTx Outgoing)
                 |> flip (++)
                     (Network.getTxsForAddress network Outgoing addressId
-                        |> Debug.log "outgoing txs"
                         |> List.map (qfFromTx Incoming)
                     )
 

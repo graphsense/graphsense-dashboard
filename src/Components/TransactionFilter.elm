@@ -330,6 +330,39 @@ dateTimeFilterHeader vc resetMsg dmodel =
             dmodel.toDate
                 |> Maybe.map (renderDate vc (Locale.isLastSecondOfTheDay vc.locale))
     in
+    renderDateTimeFilter vc resetMsg startDate endDate
+
+
+dateTimeFilterHeaderFromRange : View.Config -> Msg -> Maybe Range -> Html Msg
+dateTimeFilterHeaderFromRange vc resetMsg maybeRange =
+    let
+        ( startDate, endDate ) =
+            case maybeRange of
+                Just (Starting start) ->
+                    ( Just start, Nothing )
+
+                Just (Until end) ->
+                    ( Nothing, Just end )
+
+                Just (Range start end) ->
+                    ( Just start, Just end )
+
+                Nothing ->
+                    ( Nothing, Nothing )
+
+        startDateStr =
+            startDate
+                |> Maybe.map (renderDate vc (Locale.isFirstSecondOfTheDay vc.locale))
+
+        endDateStr =
+            endDate
+                |> Maybe.map (renderDate vc (Locale.isLastSecondOfTheDay vc.locale))
+    in
+    renderDateTimeFilter vc resetMsg startDateStr endDateStr
+
+
+renderDateTimeFilter : View.Config -> Msg -> Maybe String -> Maybe String -> Html Msg
+renderDateTimeFilter vc resetMsg startDate endDate =
     case ( startDate, endDate ) of
         ( Nothing, Nothing ) ->
             none
@@ -512,7 +545,7 @@ filterHeader vc config (Internal model) =
                 )
         )
         { filterList =
-            [ model.dateRangePicker |> Maybe.map (dateTimeFilterHeader vc ResetDateRangePicker)
+            [ model.settings.range |> Maybe.map (dateTimeFilterHeaderFromRange vc ResetDateRangePicker)
             , model.settings.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
             , model.settings.asset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
             , model.settings.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
@@ -813,7 +846,6 @@ settingsToQuickFilter { settings, quickFilterSelect } =
                                 == d
                         )
             )
-        |> Debug.log "settingsToQF"
 
 
 
