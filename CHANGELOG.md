@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [26.04.0] - 2026-04-02
+
+### Added
+
+- Indirect tags support (tags inherited through cluster membership)
+- Cross-chain address indicator on address nodes
+- Mixing transaction detection and visualization (icon, variant styling)
+- Use new change heuristics from backend
+- Privacy analysis link for BTC transactions
+- Unsupported swap notice
+- Transaction direction filter
+- Persistent transaction filter configuration for address details
+- Infinite scrolling tags table
+
+### Changed
+
+- Default to showing biggest non-change output when loading transactions
+- Right mouse button selects nodes
+- Cluster tags shown in tags list
+- Migrated codegen from shell to JavaScript (ts-node)
+- Address node icons use more generic approach
+
+### Fixed
+
+- Fix Safari label placement (dominant-baseline on tspan)
+- Fix transaction node with mixing variant
+- Fix file import handling
+
+## [26.03.2] - 2026-03-17
+
+### Fixed
+
+- Fix category display in related addresses and neighbors table
+- Refresh address details on opening
+- Align search behaviour on landing page and pathfinder
+- Fix Safari label placement
+
 ## [26.03.1] - 2026-03-13
 
 ### Fixed
