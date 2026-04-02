@@ -533,3 +533,4 @@ filter-quick-filter: quick filter
 filter-custom-filter: custom filter
 filter-follow-utxo: follow UTXO
 filter-none-selected: none selected
+by Tx: by Tx

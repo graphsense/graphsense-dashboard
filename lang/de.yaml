@@ -546,3 +546,4 @@ export-dialog-description: "Exportieren Sie den aktuellen Graphen in verschieden
 export-dialog-transparent-background: "transparenter Hintergrund"
 datefilter-starting: ab
 datefilter-until: bis
+by Tx: von Tx

@@ -868,7 +868,7 @@ quickFilterToLabel vc =
                         ++ [ qf.date |> dateTimeFilterSmall vc qf.direction
                            , qf.txHash
                                 |> truncateLongIdentifier
-                                |> dateTimeFilterRawSmall vc "Tx"
+                                |> dateTimeFilterRawSmall vc "by Tx"
                            , qf.direction |> directionFilterString |> stringFilterSmall vc
                            ]
                 }
