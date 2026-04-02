@@ -3,6 +3,7 @@ module Model exposing (AddTagDialogMsgs(..), Auth(..), Effect(..), Flags, Model,
 import Api.Data
 import Browser exposing (UrlRequest)
 import Browser.Dom
+import Components.InfiniteTable as InfiniteTable
 import Config.UserSettings exposing (UserSettings)
 import Config.View
 import Dict exposing (Dict)
@@ -30,7 +31,6 @@ import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
-import Table
 import Time
 import Url exposing (Url)
 import Util.Http exposing (Headers)
@@ -118,7 +118,8 @@ type Msg
     | BrowserGotUserInfo Effect.Api.UserInfo
     | UserClickedStatusbar
     | UserClosesDialog
-    | TagsListDialogTableUpdateMsg Table.State
+    | TagsListDialogAddressTableMsg InfiniteTable.Msg
+    | TagsListDialogClusterTableMsg InfiniteTable.Msg
     | UserClickedTagsDialogTab Model.Dialog.TagsTab
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg

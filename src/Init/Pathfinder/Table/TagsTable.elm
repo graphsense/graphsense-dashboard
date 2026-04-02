@@ -1,23 +1,16 @@
-module Init.Pathfinder.Table.TagsTable exposing (init)
+module Init.Pathfinder.Table.TagsTable exposing (init, pagesize)
 
 import Api.Data
-import Components.Table as Table exposing (Table)
-import RecordSetter as Rs
+import Components.InfiniteTable as InfiniteTable
+import Components.Table as Table
 
 
-init : Api.Data.AddressTags -> Table Api.Data.AddressTag
-init data =
-    let
-        tags =
-            data.addressTags
+pagesize : Int
+pagesize =
+    100
 
-        sdata =
-            tags
-                |> List.sortBy (.confidenceLevel >> Maybe.withDefault 0)
-                |> List.reverse
-    in
+
+init : String -> InfiniteTable.Model Api.Data.AddressTag
+init tableId =
     Table.initSorted False "confidenceLevel"
-        |> Rs.s_data sdata
-        |> Rs.s_filtered sdata
-        |> Rs.s_loading False
-        |> Rs.s_nextpage data.nextPage
+        |> InfiniteTable.init tableId pagesize

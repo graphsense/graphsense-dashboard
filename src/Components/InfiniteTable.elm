@@ -261,12 +261,15 @@ loadMore config model =
 
     else
         let
+            computedContentHeight =
+                model.rowHeight * toFloat len
+
             needsMore =
                 shouldLoadMore config
                     model
                     { scrollTop = model.scrollTop
                     , containerHeight = model.containerHeight
-                    , contentHeight = model.rowHeight * toFloat len
+                    , contentHeight = computedContentHeight
                     }
         in
         if not config.force && not needsMore then
@@ -435,6 +438,46 @@ gotoFirstPage config (Model model) =
         model
 
 
+{-| Determines whether more data should be fetched based on scroll position.
+
+This uses a dual-check strategy to handle variable-height rows correctly:
+
+
+## Problem
+
+The virtual scroller estimates total content height as `rowHeight * itemCount`,
+using a single sampled row height. When rows have variable heights (e.g. the
+tags table where labels/categories wrap to multiple lines), the estimate can
+diverge from reality:
+
+  - If the sampled row is TALLER than average: the estimated content height
+    exceeds the actual DOM scrollHeight. The user reaches the real scroll
+    bottom, but `nearComputedBottom` thinks there's still space — no fetch
+    triggers, and the user gets stuck.
+
+  - If the sampled row is SHORTER than average: estimated height is too small,
+    causing premature fetching (harmless, just slightly eager).
+
+
+## Solution
+
+Two independent checks, either of which triggers a fetch:
+
+1.  `nearComputedBottom` — classical check against the estimated content height
+    (`rowHeight * itemCount`). Works well when the estimate is accurate or
+    underestimates.
+
+2.  `nearActualBottom` — fallback that compares `scrollTop + containerHeight`
+    against the real DOM `scrollHeight` (passed in from scroll events via
+    `model.contentHeight`). This catches the stuck-at-bottom case: even if the
+    computed estimate says there's more room, if the user has physically
+    scrolled to within `triggerOffset` of the actual DOM bottom, we fetch.
+
+The `nearActualBottom` guard (`model.contentHeight > containerHeight`) prevents
+false triggers when the content is shorter than the container (nothing to
+scroll, so `scrollTop` is 0 and the condition would trivially be true).
+
+-}
 shouldLoadMore : Config eff -> ModelInternal d -> ScrollPos -> Bool
 shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
     if model.table.loading then
@@ -444,8 +487,19 @@ shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
         let
             excessHeight =
                 contentHeight - containerHeight
+
+            nearComputedBottom =
+                scrollTop >= (excessHeight - config.triggerOffset)
+
+            nearActualBottom =
+                model.contentHeight
+                    > containerHeight
+                    && scrollTop
+                    + containerHeight
+                    >= model.contentHeight
+                    - config.triggerOffset
         in
-        scrollTop >= (excessHeight - config.triggerOffset)
+        nearComputedBottom || nearActualBottom
 
 
 scrollUpdate : Config eff -> ScrollPos -> ModelInternal d -> ( Model d, List eff )

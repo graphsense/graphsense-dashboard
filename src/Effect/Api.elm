@@ -777,6 +777,7 @@ perform apiKey wrapMsg cancelMsg effect =
 
         GetAddressTagsEffect { currency, address, pagesize, nextpage, includeBestClusterTag } toMsg ->
             Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize) (Just includeBestClusterTag)
+                |> withTracker
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorTagsEffect { actorId, pagesize, nextpage } toMsg ->
@@ -1164,6 +1165,18 @@ effectToTracker effect =
             "GetEntityAddressTagsEffect"
                 ++ ([ Json.Encode.string currency
                     , Json.Encode.int entity
+                    , Encode.maybe Json.Encode.string nextpage
+                    , Json.Encode.int pagesize
+                    ]
+                        |> Json.Encode.list identity
+                        |> Json.Encode.encode 0
+                   )
+                |> Just
+
+        GetAddressTagsEffect { currency, address, pagesize, nextpage } _ ->
+            "GetAddressTagsEffect"
+                ++ ([ Json.Encode.string currency
+                    , Json.Encode.string address
                     , Encode.maybe Json.Encode.string nextpage
                     , Json.Encode.int pagesize
                     ]

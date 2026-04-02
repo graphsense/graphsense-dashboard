@@ -5,6 +5,8 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Browser
 import Browser.Dom
+import Components.InfiniteTable as InfiniteTable
+import Components.Table as Table
 import Config
 import Config.Update exposing (Config)
 import Dict exposing (Dict)
@@ -496,6 +498,32 @@ update plugins uc msg model =
 
                         _ ->
                             n model.notifications
+
+                dialogAfterError =
+                    case result of
+                        Err ( _, _, Effect.Api.GetAddressTagsEffect _ _ ) ->
+                            case newDialog of
+                                Just (Dialog.TagsList conf) ->
+                                    Just (Dialog.TagsList { conf | addressTagsTable = InfiniteTable.updateTable (\t -> t |> s_loading False) conf.addressTagsTable })
+
+                                _ ->
+                                    newDialog
+
+                        Err ( _, _, Effect.Api.GetEntityAddressTagsEffect _ _ ) ->
+                            case newDialog of
+                                Just (Dialog.TagsList conf) ->
+                                    case conf.clusterTagsState of
+                                        Dialog.ClusterTagsLoaded tbl ->
+                                            Just (Dialog.TagsList { conf | clusterTagsState = Dialog.ClusterTagsLoaded (InfiniteTable.updateTable (\t -> t |> s_loading False) tbl) })
+
+                                        _ ->
+                                            newDialog
+
+                                _ ->
+                                    newDialog
+
+                        _ ->
+                            newDialog
             in
             { model
                 | statusbar =
@@ -527,7 +555,7 @@ update plugins uc msg model =
 
                                     _ ->
                                         model.statusbar
-                , dialog = newDialog
+                , dialog = dialogAfterError
                 , notifications = notifications
             }
                 |> handleResponse plugins
@@ -546,20 +574,35 @@ update plugins uc msg model =
                 _ ->
                     n { model | dialog = Nothing }
 
-        TagsListDialogTableUpdateMsg tableState ->
+        TagsListDialogAddressTableMsg imsg ->
             case model.dialog of
                 Just (Dialog.TagsList config) ->
-                    case config.activeTab of
-                        Dialog.AddressTagsTab ->
-                            n { model | dialog = Just (Dialog.TagsList { config | addressTagsTable = config.addressTagsTable |> s_state tableState }) }
+                    let
+                        ( tbl, cmd, eff ) =
+                            InfiniteTable.update (addressTagsInfiniteTableConfig config.id) imsg config.addressTagsTable
+                    in
+                    ( { model | dialog = Just (Dialog.TagsList { config | addressTagsTable = tbl }) }
+                    , CmdEffect (Cmd.map TagsListDialogAddressTableMsg cmd) :: List.map ApiEffect eff
+                    )
 
-                        Dialog.ClusterTagsTab ->
-                            case config.clusterTagsState of
-                                Dialog.ClusterTagsLoaded table ->
-                                    n { model | dialog = Just (Dialog.TagsList { config | clusterTagsState = Dialog.ClusterTagsLoaded (table |> s_state tableState) }) }
+                _ ->
+                    n model
 
-                                _ ->
-                                    n model
+        TagsListDialogClusterTableMsg imsg ->
+            case model.dialog of
+                Just (Dialog.TagsList config) ->
+                    case config.clusterTagsState of
+                        Dialog.ClusterTagsLoaded tbl ->
+                            let
+                                ( newTbl, cmd, eff ) =
+                                    InfiniteTable.update (clusterTagsInfiniteTableConfig config.id model.pathfinder) imsg tbl
+                            in
+                            ( { model | dialog = Just (Dialog.TagsList { config | clusterTagsState = Dialog.ClusterTagsLoaded newTbl }) }
+                            , CmdEffect (Cmd.map TagsListDialogClusterTableMsg cmd) :: List.map ApiEffect eff
+                            )
+
+                        _ ->
+                            n model
 
                 _ ->
                     n model
@@ -580,6 +623,27 @@ update plugins uc msg model =
                                         )
                               }
                             , fetchClusterTagsEffect config.id model.pathfinder
+                            )
+
+                        ( Dialog.ClusterTagsTab, Dialog.ClusterTagsLoaded tbl ) ->
+                            let
+                                conf =
+                                    clusterTagsInfiniteTableConfig config.id model.pathfinder
+
+                                ( newTbl, eff ) =
+                                    InfiniteTable.gotoFirstPage conf tbl
+                            in
+                            ( { model
+                                | dialog =
+                                    Just
+                                        (Dialog.TagsList
+                                            { config
+                                                | activeTab = tab
+                                                , clusterTagsState = Dialog.ClusterTagsLoaded newTbl
+                                            }
+                                        )
+                              }
+                            , List.map ApiEffect eff
                             )
 
                         _ ->
@@ -1333,13 +1397,27 @@ update plugins uc msg model =
 
                     else
                         Dialog.ClusterTagsNotLoaded
+
+                addressTable =
+                    TagsTable.init "addressTagsTable"
+
+                addressTagsConf =
+                    addressTagsInfiniteTableConfig id
+
+                ( addressTableWithData, addressCmd, addressEff ) =
+                    InfiniteTable.setData
+                        addressTagsConf
+                        addressTagsFilter
+                        tags.nextPage
+                        tags.addressTags
+                        addressTable
             in
             ( { model
                 | pathfinder = pathfinder
                 , dialog =
                     Just
                         (Dialog.TagsList
-                            { addressTagsTable = TagsTable.init tags
+                            { addressTagsTable = addressTableWithData
                             , clusterTagsState = finalClusterTagsState
                             , activeTab = finalActiveTab
                             , showAddressTab = showAddressTab
@@ -1350,7 +1428,9 @@ update plugins uc msg model =
                             }
                         )
               }
-            , List.map PathfinderEffect eff ++ clusterEffect
+            , List.map PathfinderEffect eff
+                ++ clusterEffect
+                ++ (CmdEffect (Cmd.map TagsListDialogAddressTableMsg addressCmd) :: List.map ApiEffect addressEff)
             )
 
         PathfinderMsg (Pathfinder.UserGotClusterTagsForDialog id tags) ->
@@ -1358,26 +1438,94 @@ update plugins uc msg model =
                 Just (Dialog.TagsList config) ->
                     if config.id == id then
                         let
-                            currentAddress =
-                                PathfinderId.id id
+                            clusterTable =
+                                TagsTable.init "clusterTagsTable"
 
-                            filteredTags =
-                                { tags
-                                    | addressTags =
-                                        tags.addressTags
-                                            |> List.filter (\t -> String.toLower t.address /= String.toLower currentAddress)
-                                }
+                            clusterConf =
+                                clusterTagsInfiniteTableConfig id model.pathfinder
+
+                            ( clusterTableWithData, clusterCmd, clusterEff ) =
+                                InfiniteTable.setData
+                                    clusterConf
+                                    (clusterTagsFilter id)
+                                    tags.nextPage
+                                    tags.addressTags
+                                    clusterTable
                         in
-                        n
-                            { model
-                                | dialog =
-                                    Just
-                                        (Dialog.TagsList
-                                            { config
-                                                | clusterTagsState = Dialog.ClusterTagsLoaded (TagsTable.init filteredTags)
-                                            }
-                                        )
-                            }
+                        ( { model
+                            | dialog =
+                                Just
+                                    (Dialog.TagsList
+                                        { config
+                                            | clusterTagsState = Dialog.ClusterTagsLoaded clusterTableWithData
+                                        }
+                                    )
+                          }
+                        , CmdEffect (Cmd.map TagsListDialogClusterTableMsg clusterCmd) :: List.map ApiEffect clusterEff
+                        )
+
+                    else
+                        n model
+
+                _ ->
+                    n model
+
+        PathfinderMsg (Pathfinder.UserGotMoreAddressTagsForDialog id tags) ->
+            case model.dialog of
+                Just (Dialog.TagsList config) ->
+                    if config.id == id then
+                        let
+                            ( tbl, cmd, eff ) =
+                                InfiniteTable.appendData
+                                    (addressTagsInfiniteTableConfig id)
+                                    addressTagsFilter
+                                    tags.nextPage
+                                    tags.addressTags
+                                    config.addressTagsTable
+                        in
+                        ( { model
+                            | dialog =
+                                Just
+                                    (Dialog.TagsList
+                                        { config | addressTagsTable = tbl }
+                                    )
+                          }
+                        , CmdEffect (Cmd.map TagsListDialogAddressTableMsg cmd) :: List.map ApiEffect eff
+                        )
+
+                    else
+                        n model
+
+                _ ->
+                    n model
+
+        PathfinderMsg (Pathfinder.UserGotMoreClusterTagsForDialog id tags) ->
+            case model.dialog of
+                Just (Dialog.TagsList config) ->
+                    if config.id == id then
+                        case config.clusterTagsState of
+                            Dialog.ClusterTagsLoaded tbl ->
+                                let
+                                    ( newTbl, cmd, eff ) =
+                                        InfiniteTable.appendData
+                                            (clusterTagsInfiniteTableConfig id model.pathfinder)
+                                            (clusterTagsFilter id)
+                                            tags.nextPage
+                                            tags.addressTags
+                                            tbl
+                                in
+                                ( { model
+                                    | dialog =
+                                        Just
+                                            (Dialog.TagsList
+                                                { config | clusterTagsState = Dialog.ClusterTagsLoaded newTbl }
+                                            )
+                                  }
+                                , CmdEffect (Cmd.map TagsListDialogClusterTableMsg cmd) :: List.map ApiEffect eff
+                                )
+
+                            _ ->
+                                n model
 
                     else
                         n model
@@ -2873,7 +3021,7 @@ fetchClusterTagsEffect id pathfinderModel =
                 Effect.Api.GetEntityAddressTagsEffect
                     { currency = PathfinderId.network id
                     , entity = addr.entity
-                    , pagesize = 500
+                    , pagesize = TagsTable.pagesize
                     , nextpage = Nothing
                     }
                     (\tags -> PathfinderMsg (Pathfinder.UserGotClusterTagsForDialog id tags))
@@ -2881,3 +3029,62 @@ fetchClusterTagsEffect id pathfinderModel =
             )
         |> Maybe.map List.singleton
         |> Maybe.withDefault []
+
+
+addressTagsFilter : Table.Filter Api.Data.AddressTag
+addressTagsFilter =
+    { search = \_ _ -> True
+    , filter = always True
+    }
+
+
+clusterTagsFilter : PathfinderId.Id -> Table.Filter Api.Data.AddressTag
+clusterTagsFilter _ =
+    { search = \_ _ -> True
+    , filter = always True
+    }
+
+
+addressTagsInfiniteTableConfig : PathfinderId.Id -> InfiniteTable.Config (Effect.Api.Effect Msg)
+addressTagsInfiniteTableConfig id =
+    { fetch =
+        \_ pagesize nextpage ->
+            Effect.Api.GetAddressTagsEffect
+                { currency = PathfinderId.network id
+                , address = PathfinderId.id id
+                , pagesize = pagesize
+                , nextpage = nextpage
+                , includeBestClusterTag = True
+                }
+                (\tags -> PathfinderMsg (Pathfinder.UserGotMoreAddressTagsForDialog id tags))
+    , force = False
+    , triggerOffset = 100
+    , effectToTracker = Effect.Api.effectToTracker
+    , abort = Effect.Api.CancelEffect
+    }
+
+
+clusterTagsInfiniteTableConfig : PathfinderId.Id -> Model.Pathfinder.Model -> InfiniteTable.Config (Effect.Api.Effect Msg)
+clusterTagsInfiniteTableConfig id pathfinderModel =
+    let
+        entity =
+            pathfinderModel.network.addresses
+                |> Dict.get id
+                |> Maybe.andThen (.data >> RD.toMaybe)
+                |> Maybe.map .entity
+                |> Maybe.withDefault 0
+    in
+    { fetch =
+        \_ pagesize nextpage ->
+            Effect.Api.GetEntityAddressTagsEffect
+                { currency = PathfinderId.network id
+                , entity = entity
+                , pagesize = pagesize
+                , nextpage = nextpage
+                }
+                (\tags -> PathfinderMsg (Pathfinder.UserGotMoreClusterTagsForDialog id tags))
+    , force = False
+    , triggerOffset = 100
+    , effectToTracker = Effect.Api.effectToTracker
+    , abort = Effect.Api.CancelEffect
+    }

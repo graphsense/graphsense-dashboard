@@ -29,6 +29,7 @@ import Init.Pathfinder.ConversionDetails as ConversionDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.RelationDetails as RelationDetails
+import Init.Pathfinder.Table.TagsTable as TagsTable
 import Init.Pathfinder.Tx exposing (normalizeUtxo)
 import Init.Pathfinder.TxDetails as TxDetails
 import Json.Decode
@@ -499,7 +500,7 @@ updateByMsg plugins uc msg model =
                                 |> Api.GetAddressTagsEffect
                                     { currency = Id.network id
                                     , address = Id.id id
-                                    , pagesize = 5000
+                                    , pagesize = TagsTable.pagesize
                                     , nextpage = Nothing
                                     , includeBestClusterTag = True
                                     }
@@ -517,7 +518,15 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
+        UserGotMoreAddressTagsForDialog _ _ ->
+            -- handled in src/Update.elm
+            n model
+
         UserGotClusterTagsForDialog _ _ ->
+            -- handled in src/Update.elm
+            n model
+
+        UserGotMoreClusterTagsForDialog _ _ ->
             -- handled in src/Update.elm
             n model
 

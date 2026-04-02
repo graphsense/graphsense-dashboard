@@ -115,6 +115,10 @@ The test suite is small but growing. When adding or changing logic — especiall
 
 Runs on commit: `make format`, `make lint`, `make test`. On push: `tools/set_version.sh` (writes version to `Version.elm`).
 
+## InfiniteTable (Virtual Scrolling)
+
+`Components.InfiniteTable` provides virtual scrolling for large datasets. **It requires fixed/constant row heights.** The scroller estimates total content height as `rowHeight * itemCount` using a single sampled row. Variable-height rows cause spacer miscalculations, scrollbar jitter, and can prevent data loading at scroll boundaries. When converting a table to use `InfiniteTable`, always ensure rows have a fixed CSS height (no `height: auto`, no text wrapping that grows rows). If variable row content is needed, truncate with `text-overflow: ellipsis` and use tooltips for the full text.
+
 ## Patched Dependencies
 
 The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.

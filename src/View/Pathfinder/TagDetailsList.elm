@@ -1,14 +1,14 @@
 module View.Pathfinder.TagDetailsList exposing (view)
 
 import Api.Data
-import Components.Table exposing (Table)
+import Components.InfiniteTable as InfiniteTable
 import Config.View as View
 import Css
+import Css.Pathfinder exposing (fullWidth)
 import Css.View
 import Html.Styled exposing (Html, div, span)
 import Html.Styled.Attributes exposing (css, id)
 import Html.Styled.Events exposing (onMouseOut, onMouseOver)
-import Html.Styled.Lazy
 import Model exposing (Msg(..))
 import Model.Dialog as Dialog
 import Model.Pathfinder.Id as Id
@@ -18,7 +18,6 @@ import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.TagsComponents as TagsComponents
 import Util.View exposing (copyIconPathfinder, fixFillRule, none, onClickWithStop)
-import View.Graph.Table
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
 
@@ -177,26 +176,15 @@ view vc conf =
             else
                 Html.Styled.text ""
 
-        -- disclaimer =
-        --     div
-        --         [ css
-        --             [ Css.width (Css.px 400)
-        --             , Css.margin2 (Css.px 0) (Css.px 0)
-        --             , Css.property "color" Colors.red500
-        --             , Css.whiteSpace Css.normal
-        --             , Css.property "overflow-wrap" "break-word"
-        --             ]
-        --         ]
-        --         [ Html.Styled.text (Locale.string vc.locale "cluster tags disclaimer") ]
         tableContent =
             case conf.activeTab of
                 Dialog.AddressTagsTab ->
-                    Html.Styled.Lazy.lazy2 tagsTable vc conf.addressTagsTable
+                    tagsInfiniteTable vc TagsListDialogAddressTableMsg conf.addressTagsTable
 
                 Dialog.ClusterTagsTab ->
                     case conf.clusterTagsState of
                         Dialog.ClusterTagsLoaded table ->
-                            Html.Styled.Lazy.lazy2 tagsTable vc table
+                            tagsInfiniteTable vc TagsListDialogClusterTableMsg table
 
                         Dialog.ClusterTagsLoading ->
                             Util.View.loadingSpinner vc Css.View.loadingSpinner
@@ -221,19 +209,16 @@ view vc conf =
         ]
 
 
-tagsTable : View.Config -> Table Api.Data.AddressTag -> Html Msg
-tagsTable vc tags =
-    View.Graph.Table.table
-        TagsTable.styles
-        vc
-        [ css
-            [ Css.verticalAlign Css.top
-            , Css.overflowY Css.scroll
-            , Css.overflowX Css.hidden
-            , Css.minWidth (Css.pct 80)
-            , Css.minHeight (Css.px 300)
-            ]
-        ]
-        View.Graph.Table.noTools
-        (TagsTable.config vc)
-        tags
+tagsInfiniteTable : View.Config -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.Model Api.Data.AddressTag -> Html Msg
+tagsInfiniteTable vc tag tbl =
+    if InfiniteTable.isEmpty tbl then
+        if InfiniteTable.isLoading tbl then
+            Util.View.loadingSpinner vc Css.View.loadingSpinner
+
+        else
+            Html.Styled.text ""
+
+    else
+        InfiniteTable.view (TagsTable.config vc tag)
+            [ css (Css.maxHeight (Css.px 500) :: fullWidth) ]
+            tbl

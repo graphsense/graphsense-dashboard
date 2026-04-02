@@ -137,7 +137,9 @@ type Msg
     | BrowserWaitedAfterReleasingMouseButton
     | UserOpensDialogWindow OverlayWindows
     | UserGotDataForTagsListDialog Id Api.Data.AddressTags
+    | UserGotMoreAddressTagsForDialog Id Api.Data.AddressTags
     | UserGotClusterTagsForDialog Id Api.Data.AddressTags
+    | UserGotMoreClusterTagsForDialog Id Api.Data.AddressTags
     | ShowTextTooltip TextTooltipConfig
     | CloseTextTooltip TextTooltipConfig
     | ShowChangeTooltip ChangeTooltipConfig

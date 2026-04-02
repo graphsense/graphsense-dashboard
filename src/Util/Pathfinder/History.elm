@@ -419,7 +419,13 @@ shallPushHistory plugins msg _ =
         UserGotDataForTagsListDialog _ _ ->
             False
 
+        UserGotMoreAddressTagsForDialog _ _ ->
+            False
+
         UserGotClusterTagsForDialog _ _ ->
+            False
+
+        UserGotMoreClusterTagsForDialog _ _ ->
             False
 
         ShowTextTooltip _ ->

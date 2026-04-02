@@ -2,8 +2,10 @@ module View.Pathfinder.Table.TagsTable exposing (config, styles)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Components.InfiniteTable as InfiniteTable
 import Config.View as View exposing (getConceptName)
 import Css
+import Css.Pathfinder exposing (fullWidth)
 import Css.Table
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
@@ -25,6 +27,7 @@ import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (fixFillRule, none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
+import View.Pathfinder.InfiniteTable as ViewInfiniteTable
 import View.Pathfinder.Table.Columns exposing (addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders)
 
 
@@ -79,36 +82,36 @@ cell : View.Config -> Cell -> Table.HtmlDetails Msg
 cell vc c =
     let
         cellBase =
-            [ Css.height Css.auto |> Css.important
-            , Css.minHeight (Css.px TagsComponents.tagRowCell_details.height)
+            [ Css.height (Css.px TagsComponents.tagRowCell_details.height)
             ]
 
         cellWMinWidth =
             cellBase ++ [ Css.minWidth (Css.px 150) ]
 
         cellWWidth =
-            [ Css.marginRight (Css.px 15), Css.maxWidth (Css.px 300) ] ++ cellWMinWidth
+            [ Css.marginRight (Css.px 15), Css.maxWidth (Css.px 300) |> Css.important ] ++ cellWMinWidth
 
-        attrs =
+        attrs showTooltip cc =
             TagsComponents.tagRowCellAttributes
                 |> Rs.s_iconText
-                    ([ Css.height Css.auto |> Css.important
-                     , Css.minHeight (Css.px TagsComponents.tagRowCellIconText_details.height)
+                    ([ Css.height (Css.px TagsComponents.tagRowCellIconText_details.height)
                      ]
                         |> css
                         |> List.singleton
                     )
                 |> Rs.s_label
-                    ([ Css.whiteSpace Css.preWrap |> Css.important, Css.overflowWrap Css.breakWord ]
-                        |> css
-                        |> List.singleton
+                    (if showTooltip then
+                        [ title cc.label ]
+
+                     else
+                        []
                     )
                 |> Rs.s_category
-                    ([ Css.whiteSpace Css.normal |> Css.important
-                     , Css.overflowWrap Css.breakWord
-                     ]
-                        |> css
-                        |> List.singleton
+                    (if showTooltip then
+                        [ cc.subLabel |> Maybe.withDefault "" |> title ]
+
+                     else
+                        []
                     )
 
         -- to allow wrapping and growing of line
@@ -117,9 +120,9 @@ cell vc c =
                 { infoIconInstance = actionIcon |> Maybe.withDefault none
                 , tagIconVisible = tagIcon /= Nothing
                 , infoIconVisible = actionIcon /= Nothing
-                , labelText = cc.label
+                , labelText = cc.label |> Util.View.truncate 60
                 , subLabelVisible = cc.subLabel /= Nothing
-                , subLabelText = cc.subLabel |> Maybe.withDefault ""
+                , subLabelText = cc.subLabel |> Maybe.withDefault "" |> Util.View.truncate 60
                 , tagIconInstance = none
                 }
             }
@@ -127,12 +130,22 @@ cell vc c =
     (case c of
         LastModCell cc ->
             TagsComponents.tagRowCellWithAttributes
-                (attrs
+                (attrs False cc
                     |> Rs.s_root (cellBase ++ [ Css.alignItems Css.end |> Css.important ] |> css |> List.singleton)
                 )
                 (defaultData cc Nothing Nothing)
 
         IconCell ti ->
+            let
+                iconPlaceholder =
+                    Html.Styled.div
+                        [ css
+                            [ Css.width (Css.px TagsComponents.tagRowIconCell_details.width)
+                            , Css.height (Css.px TagsComponents.tagRowIconCell_details.height)
+                            ]
+                        ]
+                        []
+            in
             case ti of
                 Exchange ->
                     TagsComponents.tagRowIconCellWithAttributes
@@ -149,29 +162,17 @@ cell vc c =
                         }
 
                 DirectTag ->
-                    none
+                    iconPlaceholder
 
                 IndirectTag ->
-                    none
+                    iconPlaceholder
 
-                -- TagsComponents.tagRowIconCellWithAttributes
-                --     (TagsComponents.tagRowIconCellAttributes
-                --     |> Rs.s_root
-                --         [ css
-                --             [ Css.verticalAlign Css.top
-                --             ]
-                --         ]
-                -- )
-                -- { root =
-                --     { iconInstance = Icons.iconsTagS {}
-                --     }
-                -- }
                 None ->
-                    none
+                    iconPlaceholder
 
         LabelCell cc _ ->
             TagsComponents.tagRowCellWithAttributes
-                (attrs |> Rs.s_root (cellWWidth |> css |> List.singleton))
+                (attrs True cc |> Rs.s_root (cellWWidth |> css |> List.singleton))
                 (defaultData cc Nothing Nothing)
 
         SourceCell cc ->
@@ -203,7 +204,7 @@ cell vc c =
                         [ text subText ]
             in
             TagsComponents.tagRowCellWithInstances
-                (attrs |> Rs.s_root (cellWWidth |> css |> List.singleton))
+                (attrs False cc |> Rs.s_root (cellWWidth |> css |> List.singleton))
                 (TagsComponents.tagRowCellInstances
                     |> Rs.s_label linkBody
                     |> Rs.s_category (Just sub)
@@ -258,13 +259,16 @@ cell vc c =
                             )
                             {}
                         ]
+
+                cellConfig =
+                    { label = cc.label, subLabel = Just "" }
             in
             TagsComponents.tagRowCellWithInstances
-                (attrs |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
+                (attrs False cellConfig |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
                 (TagsComponents.tagRowCellInstances
                     |> Rs.s_category (Just sub)
                 )
-                (defaultData { label = cc.label, subLabel = Just "" } Nothing (Just icon))
+                (defaultData cellConfig Nothing (Just icon))
     )
         |> List.singleton
         |> Table.HtmlDetails
@@ -515,7 +519,7 @@ styles =
                 [ Css.borderBottom2 (Css.px 1) Css.solid
                 , Css.property "border-color" Colors.grey50
                 , Css.property "content-visibility" "auto"
-                , Css.property "contain-intrinsic-size" "auto 48px"
+                , Css.property "contain-intrinsic-size" "auto 50px"
                 ]
             )
         |> Rs.s_headCell
@@ -527,22 +531,25 @@ styles =
                        , Css.backgroundColor Css.transparent
                        ]
             )
+        |> Rs.s_table
+            (\vc -> Css.Table.styles.table vc ++ fullWidth)
 
 
-config : View.Config -> Table.Config Api.Data.AddressTag Msg
-config vc =
-    Table.customConfig
-        { toId = tagId
-        , toMsg = TagsListDialogTableUpdateMsg
-        , columns =
-            [ iconColumn vc
-            , labelColumn vc
-            , typeColumn vc
-            , sourceColumn vc
-            , lastModColumn vc
-            ]
-        , customizations =
-            initCustomHeaders
-                |> addHeaderAttributes titleLastModified [ css [ Css.textAlign Css.right ] ]
-                |> flip (applyHeaderCustomizations styles vc) (customizations styles vc)
-        }
+config : View.Config -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.TableConfig Api.Data.AddressTag Msg
+config vc tag =
+    { toId = tagId
+    , columns =
+        [ iconColumn vc
+        , labelColumn vc
+        , typeColumn vc
+        , sourceColumn vc
+        , lastModColumn vc
+        ]
+    , customizations =
+        initCustomHeaders
+            |> addHeaderAttributes titleLastModified [ css [ Css.textAlign Css.right ] ]
+            |> flip (applyHeaderCustomizations styles vc) (customizations styles vc)
+    , tag = tag
+    , loadingPlaceholderAbove = ViewInfiniteTable.loadingPlaceholderAbove vc
+    , loadingPlaceholderBelow = ViewInfiniteTable.loadingPlaceholderBelow vc
+    }

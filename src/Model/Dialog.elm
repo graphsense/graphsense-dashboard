@@ -2,7 +2,7 @@ module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig,
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Components.Table exposing (Table)
+import Components.InfiniteTable as InfiniteTable
 import Config.Update as Update
 import Config.View exposing (Config)
 import Html.Styled exposing (Html)
@@ -78,12 +78,12 @@ type TagsTab
 type ClusterTagsState
     = ClusterTagsNotLoaded
     | ClusterTagsLoading
-    | ClusterTagsLoaded (Table Api.Data.AddressTag)
+    | ClusterTagsLoaded (InfiniteTable.Model Api.Data.AddressTag)
 
 
 type alias TagListConfig msg =
     { id : Id
-    , addressTagsTable : Table Api.Data.AddressTag
+    , addressTagsTable : InfiniteTable.Model Api.Data.AddressTag
     , clusterTagsState : ClusterTagsState
     , activeTab : TagsTab
     , showAddressTab : Bool
