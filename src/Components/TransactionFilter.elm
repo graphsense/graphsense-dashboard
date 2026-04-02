@@ -759,7 +759,7 @@ txFilterDialogView vc net config (Internal model) =
                             ThemedSelectBox.view
                                 (ThemedSelectBox.defaultConfigHtml (quickFilterToLabel vc))
                                 [ css
-                                    [ Css.width <| Css.px 250
+                                    [ Css.width <| Css.px 280
                                     , Css.height Css.auto
                                     ]
                                 ]
@@ -784,14 +784,14 @@ txFilterDialogView vc net config (Internal model) =
             }
         , customFilterChevron =
             { variant =
-                Icons.chevron
+                Icons.iconsChevronDev
                     { root =
                         { state =
                             if model.showCustomFilter then
-                                Icons.ChevronStateDown
+                                Icons.IconsChevronDevStateDown
 
                             else
-                                Icons.ChevronStateDefault
+                                Icons.IconsChevronDevStateDefault
                         }
                     }
             }

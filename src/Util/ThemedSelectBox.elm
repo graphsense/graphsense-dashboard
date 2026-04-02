@@ -208,9 +208,7 @@ view (Config config) attrs (SelectBox sBox) selected =
     if sBox.open then
         let
             dropdownOverlayCss =
-                [ Css.position Css.absolute
-                , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1))
-                , Css.top (Css.px Sc.dropDownClosed_details.height)
+                [ Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1))
                 , Css.property "user-select" "none"
                 , Css.height Css.auto
                 ]
@@ -226,12 +224,6 @@ view (Config config) attrs (SelectBox sBox) selected =
                     ([ Util.View.onClickWithStop Close
                      , onMouseLeave Close
                      , Util.View.pointer
-                     , css
-                        [ Sc.dropDownClosed_details.height
-                            |> Css.px
-                            |> Css.height
-                            |> Css.important
-                        ]
                      ]
                         ++ attrs
                     )

@@ -849,7 +849,7 @@ accountValueRundown vc conf =
                 |> Rs.s_iconGroup fixedleftAttr
             )
             { root =
-                { iconInstance = HIcons.chevron { root = { state = HIcons.ChevronStateDefault } }
+                { iconInstance = HIcons.iconsChevronDev { root = { state = HIcons.IconsChevronDevStateDefault } }
                 , title = Locale.string vc.locale conf.title
                 , value = Locale.fiat vc.locale fiatCurr fiatSumTotal
                 }
