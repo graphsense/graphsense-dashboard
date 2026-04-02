@@ -28,7 +28,7 @@ import Util.Checkbox as Checkbox
 import Util.Css
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (fullWidthCss, none, pointer)
+import Util.View exposing (fullWidthCss, none, pointer, truncateLongIdentifier)
 import View.Button as Button
 import View.Controls as Controls
 import View.Locale as Locale
@@ -385,30 +385,29 @@ renderDate vc showTimeFn date =
 dateTimeFilterSmall : View.Config -> Direction -> Posix -> Html msg
 dateTimeFilterSmall vc dir date =
     let
-        dateRendered =
-            date
-                |> renderDate vc (Locale.isFirstSecondOfTheDay vc.locale)
-    in
-    case dir of
-        Outgoing ->
-            SidePanelComponents.filterLabelSmall
-                { root =
-                    { text1 = dateRendered
-                    , text2 = Locale.string vc.locale "datefilter-starting"
-                    , text3 = ""
-                    , dateRangeVisible = True
-                    }
-                }
+        dirLabel =
+            case dir of
+                Outgoing ->
+                    "datefilter-starting"
 
-        Incoming ->
-            SidePanelComponents.filterLabelSmall
-                { root =
-                    { text1 = dateRendered
-                    , text2 = Locale.string vc.locale "datefilter-until"
-                    , text3 = ""
-                    , dateRangeVisible = True
-                    }
-                }
+                Incoming ->
+                    "datefilter-until"
+    in
+    date
+        |> renderDate vc (Locale.isFirstSecondOfTheDay vc.locale)
+        |> dateTimeFilterRawSmall vc dirLabel
+
+
+dateTimeFilterRawSmall : View.Config -> String -> String -> Html msg
+dateTimeFilterRawSmall vc label text =
+    SidePanelComponents.filterLabelSmall
+        { root =
+            { text1 = text
+            , text2 = Locale.string vc.locale label
+            , text3 = ""
+            , dateRangeVisible = True
+            }
+        }
 
 
 directionFilterHeader : View.Config -> msg -> Direction -> Html msg
@@ -834,8 +833,11 @@ quickFilterToLabel vc =
                         |> Maybe.map (stringFilterSmall vc >> List.singleton)
                         |> Maybe.withDefault []
                     )
-                        ++ [ qf.direction |> directionFilterString |> stringFilterSmall vc
-                           , qf.date |> dateTimeFilterSmall vc qf.direction
+                        ++ [ qf.date |> dateTimeFilterSmall vc qf.direction
+                           , qf.txHash
+                                |> truncateLongIdentifier
+                                |> dateTimeFilterRawSmall vc "Tx"
+                           , qf.direction |> directionFilterString |> stringFilterSmall vc
                            ]
                 }
                 {}
@@ -861,8 +863,10 @@ initSettings =
 
 initSettingsFromQuickFilter : QuickFilter -> Settings
 initSettingsFromQuickFilter (QuickFilterInternal qf) =
-    Settings <|
-        quickFilterToSettings qf
+    qf
+        |> quickFilterToSettings
+        |> Debug.log "qf"
+        |> Settings
 
 
 quickFilterToSettings : QuickFilterModel -> SettingsModel
