@@ -514,6 +514,8 @@ styles =
             (\_ ->
                 [ Css.borderBottom2 (Css.px 1) Css.solid
                 , Css.property "border-color" Colors.grey50
+                , Css.property "content-visibility" "auto"
+                , Css.property "contain-intrinsic-size" "auto 48px"
                 ]
             )
         |> Rs.s_headCell
