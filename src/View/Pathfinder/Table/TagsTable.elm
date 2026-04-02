@@ -424,7 +424,7 @@ typeColumn vc =
                         , cellid = tagId data ++ "_tag_row"
                         }
                     )
-        , sorter = Table.increasingOrDecreasingBy (\data -> data.confidenceLevel |> Maybe.withDefault 0)
+        , sorter = Table.unsortable
         }
 
 
@@ -486,7 +486,7 @@ lastModColumn vc =
                             |> Maybe.withDefault ( "-", "-" )
                 in
                 cell vc (LastModCell { label = date, subLabel = Nothing })
-        , sorter = Table.increasingOrDecreasingBy (\data -> data.lastmod |> Maybe.withDefault 0)
+        , sorter = Table.unsortable
         }
 
 

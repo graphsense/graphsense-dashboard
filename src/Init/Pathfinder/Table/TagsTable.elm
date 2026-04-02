@@ -12,5 +12,5 @@ pagesize =
 
 init : String -> InfiniteTable.Model Api.Data.AddressTag
 init tableId =
-    Table.initSorted False "confidenceLevel"
+    Table.initUnsorted
         |> InfiniteTable.init tableId pagesize
