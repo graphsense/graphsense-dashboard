@@ -21,6 +21,7 @@ module Model.Pathfinder.Tx exposing
     , getOutputValueForAddressFromRawTx
     , getOutputs
     , getRawBaseTxHashForTx
+    , getRawBaseTxHashForTxType
     , getRawTimestamp
     , getRawTimestampForRelationTx
     , getRawTx
@@ -372,7 +373,12 @@ getTxIdForTx tx =
 
 getRawBaseTxHashForTx : Tx -> String
 getRawBaseTxHashForTx tx =
-    case tx.type_ of
+    getRawBaseTxHashForTxType tx.type_
+
+
+getRawBaseTxHashForTxType : TxType -> String
+getRawBaseTxHashForTxType tx =
+    case tx of
         Account t ->
             t.raw.txHash
 

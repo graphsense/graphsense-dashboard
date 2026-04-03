@@ -1,4 +1,4 @@
-module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, getSettings, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, quickfilterWithAsset, setFocusDate, setSelectedQuickFilter, txFilterDialogView, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
+module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoOnly, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, quickfilterWithAsset, setFocusDate, setSelectedQuickFilter, txFilterDialogView, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter, getDirectionFromQuickFilter)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -16,6 +16,7 @@ import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
+import Model.Pathfinder.Tx as Tx
 import RecordSetter as Rs exposing (s_direction, s_settings)
 import Svg.Styled.Attributes exposing (css)
 import Theme.Colors
@@ -56,6 +57,7 @@ type alias SettingsModel =
     , asset : Maybe String
     , direction : Maybe (Maybe Direction)
     , includeZeroValueTxs : Maybe Bool
+    , utxoOnly : Bool
     }
 
 
@@ -73,7 +75,7 @@ type alias QuickFilterModel =
     { asset : Maybe String
     , date : Posix
     , direction : Direction
-    , txHash : String
+    , tx : Tx.TxType
     }
 
 
@@ -860,7 +862,8 @@ quickFilterToLabel vc =
                         |> Maybe.withDefault []
                     )
                         ++ [ qf.date |> dateTimeFilterSmall vc qf.direction
-                           , qf.txHash
+                           , qf.tx
+                                |> Tx.getRawBaseTxHashForTxType
                                 |> truncateLongIdentifier
                                 |> dateTimeFilterRawSmall vc "by Tx"
                            , qf.direction |> directionFilterString |> stringFilterSmall vc
@@ -908,6 +911,7 @@ quickFilterToSettings qf =
 
                     Outgoing ->
                         Starting qf.date
+    , utxoOnly = False
     }
 
 
@@ -917,16 +921,17 @@ initSettingsModel =
     , asset = Nothing
     , includeZeroValueTxs = Nothing
     , range = Nothing
+    , utxoOnly = False
     }
 
 
-initQuickFilter : String -> Direction -> Posix -> QuickFilter
-initQuickFilter txHash dir date =
+initQuickFilter : Tx.TxType -> Direction -> Posix -> QuickFilter
+initQuickFilter tx dir date =
     QuickFilterInternal
         { direction = dir
         , date = date
         , asset = Nothing
-        , txHash = txHash
+        , tx = tx
         }
 
 
@@ -1122,6 +1127,12 @@ getDirection (Settings model) =
     model.direction |> Maybe.Extra.join
 
 
+getSelectedQuickFilter : Model -> Maybe QuickFilter
+getSelectedQuickFilter (Internal model) =
+    settingsToQuickFilter model
+        |> Maybe.map QuickFilterInternal
+
+
 applyQuickFilter : QuickFilterModel -> InternalModel -> InternalModel
 applyQuickFilter qf model =
     updateSelectedAssetInternal qf.asset model
@@ -1145,3 +1156,18 @@ setSelectedQuickFilter (QuickFilterInternal qf) (Internal model) =
 getSettings : Model -> Settings
 getSettings (Internal { settings }) =
     Settings settings
+
+
+getUtxoOnly : Settings -> Bool
+getUtxoOnly (Settings { utxoOnly }) =
+    utxoOnly
+
+
+getTx : QuickFilter -> Tx.TxType
+getTx (QuickFilterInternal { tx }) =
+    tx
+
+
+getDirectionFromQuickFilter : QuickFilter -> Direction
+getDirectionFromQuickFilter (QuickFilterInternal {direction}) =
+    direction

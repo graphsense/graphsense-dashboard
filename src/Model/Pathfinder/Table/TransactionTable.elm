@@ -7,7 +7,7 @@ import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
 import Model.Direction exposing (Direction(..))
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Util.Data exposing (timestampToPosix)
@@ -54,7 +54,7 @@ quickFilterFromTx : Direction -> Tx -> TransactionFilter.QuickFilter
 quickFilterFromTx direction tx =
     Tx.getRawTimestamp tx
         |> timestampToPosix
-        |> TransactionFilter.initQuickFilter (Id.id tx.id) direction
+        |> TransactionFilter.initQuickFilter tx.type_ direction
         |> (tx
                 |> Tx.getAccountTx
                 |> Maybe.map (.raw >> .currency)

@@ -83,6 +83,11 @@ perform plugins model statusbarToken apiKey effect =
                     cmd
                         |> Cmd.map PathfinderMsg
 
+                Pathfinder.BatchEffect effs ->
+                    effs
+                        |> List.map (PathfinderEffect >> perform plugins model statusbarToken apiKey)
+                        |> Cmd.batch
+
                 Pathfinder.SearchEffect e ->
                     handleSearchEffect apiKey
                         Nothing

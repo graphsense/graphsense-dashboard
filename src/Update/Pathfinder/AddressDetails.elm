@@ -28,6 +28,7 @@ import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
+import Model.Pathfinder.Tx exposing (TxType(..))
 import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..))
 import RecordSetter exposing (..)
@@ -40,11 +41,13 @@ import Tuple3
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Update.Pathfinder.Table.TransactionTable as TransactionTable
+import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util exposing (and, n)
 import Util.Csv
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 import View.Locale as Locale
+import Workflow
 
 
 neighborsTableConfigWithMsg : (Direction -> Maybe String -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
@@ -109,33 +112,59 @@ fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
     let
         filter =
             TransactionFilter.getSettings txs.filter
+
+        qf =
+            TransactionFilter.getSelectedQuickFilter txs.filter
+
+        tx =
+            case ( Maybe.map TransactionFilter.getTx qf, Maybe.map TransactionFilter.getDirectionFromQuickFilter qf ) of
+                ( Just (Utxo utxo), Just dir ) ->
+                    Just ( utxo, dir )
+
+                _ ->
+                    Nothing
     in
-    Api.GetAddressTxsByDateEffect
-        { currency = Id.network addressId
-        , address = Id.id addressId
-        , direction = TransactionFilter.getDirection filter
-        , pagesize = pagesize
-        , nextpage = nextpage
-        , order =
-            sorting
-                |> Maybe.andThen
-                    (\( column, isReversed ) ->
-                        if column == TransactionTable.titleTimestamp then
-                            if isReversed then
-                                Just Api.Request.Addresses.Order_Desc
+    case ( tx, TransactionFilter.getUtxoOnly filter ) of
+        ( Just ( { raw }, dir ), True ) ->
+            let
+                config =
+                    { addressId = addressId
+                    , direction = dir
+                    }
+            in
+            WorkflowNextUtxoTx.start config raw
+                |> Workflow.mapEffect (WorkflowNextUtxoTx config)
+                |> Workflow.next
+                |> List.map ApiEffect
+                |> BatchEffect
 
-                            else
-                                Just Api.Request.Addresses.Order_Asc
+        _ ->
+            Api.GetAddressTxsByDateEffect
+                { currency = Id.network addressId
+                , address = Id.id addressId
+                , direction = TransactionFilter.getDirection filter
+                , pagesize = pagesize
+                , nextpage = nextpage
+                , order =
+                    sorting
+                        |> Maybe.andThen
+                            (\( column, isReversed ) ->
+                                if column == TransactionTable.titleTimestamp then
+                                    if isReversed then
+                                        Just Api.Request.Addresses.Order_Desc
 
-                        else
-                            txs.order
-                    )
-        , tokenCurrency = TransactionFilter.getSelectedAsset filter
-        , minDate = TransactionFilter.getDateRange filter |> Maybe.andThen first
-        , maxDate = TransactionFilter.getDateRange filter |> Maybe.andThen second
-        }
-        msg
-        |> ApiEffect
+                                    else
+                                        Just Api.Request.Addresses.Order_Asc
+
+                                else
+                                    txs.order
+                            )
+                , tokenCurrency = TransactionFilter.getSelectedAsset filter
+                , minDate = TransactionFilter.getDateRange filter |> Maybe.andThen first
+                , maxDate = TransactionFilter.getDateRange filter |> Maybe.andThen second
+                }
+                msg
+                |> ApiEffect
 
 
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -531,6 +560,54 @@ update uc msg model =
         BrowserGotBulkTagsForExport _ _ _ _ ->
             -- handled upstream
             n model
+
+        WorkflowNextUtxoTx config subMsg ->
+            WorkflowNextUtxoTx.update config subMsg
+                |> flip handleWorkflowNextUtxo model
+
+
+handleWorkflowNextUtxo : WorkflowNextUtxoTx.Config -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
+handleWorkflowNextUtxo config wf model =
+    model.txs
+        |> RemoteData.map
+            (\txsTable ->
+                case wf of
+                    Workflow.Ok tx ->
+                        let
+                            setter =
+                                InfiniteTable.appendData
+
+                            ( table, cmd, eff ) =
+                                txsTable.table
+                                    |> setter
+                                        (transactionTableConfig txsTable model.address.id)
+                                        TransactionTable.filter
+                                        Nothing
+                                        [ tx |> utxoToAddressTx config.addressId |> Api.Data.AddressTxAddressTxUtxo ]
+                        in
+                        ( table, eff )
+                            |> mapFirst (flip s_table txsTable)
+                            |> mapFirst (RemoteData.Success >> flip s_txs model)
+                            |> mapSecond
+                                ((::)
+                                    (cmd
+                                        |> Cmd.map
+                                            (TransactionsTableSubTableMsg
+                                                >> Pathfinder.AddressDetailsMsg model.address.id
+                                            )
+                                        |> CmdEffect
+                                    )
+                                )
+
+                    _ ->
+                        n model
+            )
+        |> RemoteData.withDefault (n model)
+
+
+utxoToAddressTx : Id -> Api.Data.TxUtxo -> Api.Data.AddressTxUtxo
+utxoToAddressTx id utxo =
+    Debug.todo "TODO"
 
 
 closeTransactionTable : Model -> ( Model, List Effect )
