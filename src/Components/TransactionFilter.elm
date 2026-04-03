@@ -192,6 +192,7 @@ update msg (Internal model) =
                                            )
                                         |> Just
                             }
+                                |> updateDateRangeInternal ( newPicker.fromDate, newPicker.toDate )
                         )
                     |> Maybe.withDefault model
 
@@ -1068,7 +1069,8 @@ withIncludeZeroValueTxs includeZeroValueTxs (Settings model) =
 
 updateDateRange : ( Maybe Posix, Maybe Posix ) -> Model -> Model
 updateDateRange range (Internal model) =
-    updateDateRangeInternal range model
+    updateDateRangeInternal (Debug.log "updateDateRange" range) model
+        |> Debug.log "after update"
         |> Internal
 
 
