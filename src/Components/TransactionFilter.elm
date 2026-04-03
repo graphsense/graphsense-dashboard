@@ -765,12 +765,11 @@ txFilterDialogView vc net config (Internal model) =
                 model.assetSelectBox
                     |> Maybe.map
                         (\sa ->
-                            ThemedSelectBox.viewWithLabel
+                            ThemedSelectBox.view
                                 (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets")))
                                 [ css [ Css.width <| Css.px 200 ] ]
                                 sa
                                 model.settings.asset
-                                (Locale.string vc.locale "Asset type")
                                 |> Html.map TxTableAssetSelectBoxMsg
                                 |> Html.map config.tag
                         )
