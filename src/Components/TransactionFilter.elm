@@ -1069,8 +1069,7 @@ withIncludeZeroValueTxs includeZeroValueTxs (Settings model) =
 
 updateDateRange : ( Maybe Posix, Maybe Posix ) -> Model -> Model
 updateDateRange range (Internal model) =
-    updateDateRangeInternal (Debug.log "updateDateRange" range) model
-        |> Debug.log "after update"
+    updateDateRangeInternal range model
         |> Internal
 
 
