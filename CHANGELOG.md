@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Cluster tags shown in tags list
 - Migrated codegen from shell to JavaScript (ts-node)
 - Address node icons use more generic approach
+- Improve code generation from figma
+- Preserve filter settings
 
 ### Fixed
 
