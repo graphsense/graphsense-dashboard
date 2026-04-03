@@ -22,7 +22,8 @@ init uc network txsFilter addressId data assets =
             Address.getActivityRange data
 
         quickfilters =
-            getQuickFilters network addressId
+            --getQuickFilters network addressId
+            []
 
         prefilter =
             Network.getRecentTxForAddress network Incoming addressId
