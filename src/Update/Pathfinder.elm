@@ -3101,7 +3101,7 @@ getRelations id dir autoLinkInTraceMode onlyIds =
             |> List.singleton
 
 
-handleTx : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
+handleTx : Plugins -> Update.Config -> { a | direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
 handleTx plugins uc config neighborId tx model =
     case neighborId of
         Just nid ->
@@ -3140,7 +3140,7 @@ handleTx plugins uc config neighborId tx model =
                 )
 
 
-placeNeighborIfError : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
+placeNeighborIfError : Plugins -> Update.Config -> { a | direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
 placeNeighborIfError plugins uc config nid model =
     let
         newModel =
@@ -3581,6 +3581,7 @@ expandAddress address direction model =
                 config =
                     { addressId = id
                     , direction = direction
+                    , allowMultiple = False
                     }
               in
               WorkflowNextUtxoTx.start config tx
@@ -3707,24 +3708,31 @@ updateTagDataOnAddress addressId m =
 
 getNextTxEffects : Network -> Id -> Direction -> { addBetweenLinks : Bool, addAnyLinks : Bool } -> Maybe Id -> List Effect
 getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } neighborId =
-    let
-        config =
-            { addressId = addressId
-            , direction = direction
-            }
-    in
     Network.getRecentTxForAddress network (Direction.flip direction) addressId
         |> Maybe.map
             (\tx ->
                 if addAnyLinks then
                     case tx.type_ of
                         Tx.Account t ->
+                            let
+                                config =
+                                    { addressId = addressId
+                                    , direction = direction
+                                    }
+                            in
                             WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
                                 |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
                                 |> Workflow.next
                                 |> List.map ApiEffect
 
                         Tx.Utxo t ->
+                            let
+                                config =
+                                    { addressId = addressId
+                                    , direction = direction
+                                    , allowMultiple = False
+                                    }
+                            in
                             WorkflowNextUtxoTx.start config t.raw
                                 |> Workflow.mapEffect (WorkflowNextUtxoTx config neighborId)
                                 |> Workflow.next
@@ -3735,6 +3743,12 @@ getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } ne
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ ->
+                let
+                    config =
+                        { addressId = addressId
+                        , direction = direction
+                        }
+                in
                 if addBetweenLinks then
                     neighborId
                         |> Maybe.map (WorkflowNextTxByTime.startBetween config)

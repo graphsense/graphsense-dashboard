@@ -121,6 +121,7 @@ fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
                     config =
                         { addressId = addressId
                         , direction = dir
+                        , allowMultiple = True
                         }
                 in
                 WorkflowNextUtxoTx.start config raw
@@ -574,7 +575,7 @@ handleWorkflowNextUtxo config wf model =
                     _ ->
                         let
                             setter =
-                                InfiniteTable.setData
+                                InfiniteTable.appendData
 
                             result =
                                 case wf of

@@ -22,6 +22,7 @@ suite =
                         WorkflowNextUtxoTx.start
                             { addressId = Id.address1
                             , direction = Outgoing
+                            , allowMultiple = False
                             }
                             txWithExternalConsensusChange
                 in
@@ -38,6 +39,7 @@ suite =
                         WorkflowNextUtxoTx.start
                             { addressId = Id.address1
                             , direction = Outgoing
+                            , allowMultiple = False
                             }
                             txWithOwnOutputOnly
                 in
@@ -54,6 +56,7 @@ suite =
                         WorkflowNextUtxoTx.start
                             { addressId = Id.address1
                             , direction = Outgoing
+                            , allowMultiple = False
                             }
                             txWithoutConsensusUsesHighestNonSender
                 in
