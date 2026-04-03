@@ -95,6 +95,7 @@ async function handleRefreshMode() {
     console.log(`Refreshing figma file from ${figmaFileId}...`);
 
     let flags, outputDir;
+    let name = "figma.json"
     if (!pluginName) {
         // Core refresh mode
         flags = {
@@ -128,9 +129,10 @@ async function handleRefreshMode() {
             whitelist: whitelist
         };
         outputDir = join(__dirname, '..', 'plugins', pluginName, 'theme');
+        name += " of " + pluginName
     }
 
-    await runCodegen(pluginName, flags, outputDir);
+    await runCodegen(name, flags, outputDir);
 }
 
 async function handleGenerateMode() {
@@ -225,7 +227,8 @@ async function runCodegen(name, flags, outputDir) {
     let success = ""
     let logs = ""
     console.log = (str) => {
-        if (str.indexOf(" files generated in ") !== -1) {
+        if (str.indexOf(" files generated in ") !== -1 ||
+            str.indexOf(" was generated!") !== -1) {
           success = str
         }
         logs += str
