@@ -1,4 +1,4 @@
-module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, filterHeader, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, quickfilterWithAsset, setFocusDate, setSelectedQuickFilter, txFilterDialogView, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
+module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, filterHeader, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, setFocusDate, setSelectedQuickFilter, txFilterDialogView, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -72,8 +72,7 @@ type QuickFilter
 
 
 type alias QuickFilterModel =
-    { asset : Maybe String
-    , date : Posix
+    { date : Posix
     , direction : Direction
     , tx : Tx.TxType
     }
@@ -779,7 +778,7 @@ txFilterDialogView vc net config (Internal model) =
             , showCustomFilter = model.showCustomFilter || not showQuickFilter
             , customFilterLabel = Locale.string vc.locale "filter-custom-filter" |> Locale.titleCase vc.locale
             , quickFilterLabel = Locale.string vc.locale "filter-quick-filter" |> Locale.titleCase vc.locale
-            , showUtxoConstraint = True
+            , showUtxoConstraint = not isAssetFilterVisible
             , quickfilterDropdown =
                 model.quickFilterSelect
                     |> Maybe.map
@@ -874,19 +873,12 @@ settingsToQuickFilter { settings, quickFilterSelect } =
                     |> Maybe.withDefault []
                     |> List.filterMap identity
                     |> List.Extra.find
-                        (\{ asset, direction, date } ->
-                            (asset == settings.asset)
+                        (\{ tx, direction, date } ->
+                            (txToAsset tx == settings.asset)
                                 && (direction == dir)
                                 && (date == d)
                         )
             )
-
-
-
-{--asset = settings.asset
-                , date = d
-                , direction = dir
-                --}
 
 
 quickFilterToLabel : View.Config -> Maybe QuickFilterModel -> Html (ThemedSelectBox.Msg (Maybe QuickFilterModel))
@@ -895,7 +887,8 @@ quickFilterToLabel vc =
         (\qf ->
             Sc.filterGroupSmall
                 { filterList =
-                    (qf.asset
+                    (qf.tx
+                        |> txToAsset
                         |> Maybe.map (stringFilterSmall vc >> List.singleton)
                         |> Maybe.withDefault []
                     )
@@ -935,9 +928,21 @@ initSettingsFromQuickFilter (QuickFilterInternal qf) =
         |> Settings
 
 
+txToAsset : Tx.TxType -> Maybe String
+txToAsset tx =
+    case tx of
+        Tx.Account t ->
+            t.raw.currency
+                |> String.toUpper
+                |> Just
+
+        Tx.Utxo _ ->
+            Nothing
+
+
 quickFilterToSettings : QuickFilterModel -> SettingsModel
 quickFilterToSettings qf =
-    { asset = qf.asset
+    { asset = txToAsset qf.tx
     , includeZeroValueTxs = Nothing
     , direction = Just <| Just qf.direction
     , range =
@@ -968,14 +973,8 @@ initQuickFilter tx dir date =
     QuickFilterInternal
         { direction = dir
         , date = date
-        , asset = Nothing
         , tx = tx
         }
-
-
-quickfilterWithAsset : String -> QuickFilter -> QuickFilter
-quickfilterWithAsset asset (QuickFilterInternal qf) =
-    QuickFilterInternal { qf | asset = Just asset }
 
 
 withDateRange : Posix -> Posix -> Settings -> Settings
@@ -1134,7 +1133,7 @@ setFocusDate focusDate (Internal model) =
 
 updateSelectedAsset : Maybe String -> Model -> Model
 updateSelectedAsset selectedAsset (Internal model) =
-    updateSelectedAssetInternal selectedAsset model
+    updateSelectedAssetInternal (Maybe.map String.toUpper selectedAsset) model
         |> Internal
 
 
@@ -1174,7 +1173,11 @@ getSelectedQuickFilter (Internal model) =
 
 applyQuickFilter : QuickFilterModel -> InternalModel -> InternalModel
 applyQuickFilter qf model =
-    updateSelectedAssetInternal qf.asset model
+    let
+        asset =
+            txToAsset qf.tx
+    in
+    updateSelectedAssetInternal asset model
         |> updateDateRangeInternal
             (case qf.direction of
                 Outgoing ->

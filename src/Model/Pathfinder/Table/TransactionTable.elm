@@ -55,12 +55,6 @@ quickFilterFromTx direction tx =
     Tx.getRawTimestamp tx
         |> timestampToPosix
         |> TransactionFilter.initQuickFilter tx.type_ direction
-        |> (tx
-                |> Tx.getAccountTx
-                |> Maybe.map (.raw >> .currency)
-                |> Maybe.map TransactionFilter.quickfilterWithAsset
-                |> Maybe.withDefault identity
-           )
 
 
 getQuickFilters : Network -> Id -> List TransactionFilter.QuickFilter
