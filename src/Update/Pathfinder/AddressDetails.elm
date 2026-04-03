@@ -16,6 +16,7 @@ import Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import Init.Pathfinder.Tx as Tx
 import List.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
@@ -28,7 +29,7 @@ import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Model.Pathfinder.Tx exposing (TxType(..))
+import Model.Pathfinder.Tx as Tx exposing (TxType(..))
 import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..))
 import RecordSetter exposing (..)
@@ -605,8 +606,25 @@ handleWorkflowNextUtxo config wf model =
         |> RemoteData.withDefault (n model)
 
 
-utxoToAddressTx : Id -> Api.Data.TxUtxo -> Api.Data.AddressTxUtxo
-utxoToAddressTx id utxo =
+utxoToAddressTx : Direction -> Id -> Api.Data.TxUtxo -> List Api.Data.AddressTxUtxo
+utxoToAddressTx direction addressId utxo =
+    Tx.normalizeUtxo utxo
+        |> Tx.utxoTxToAccountTxs Nothing
+        |> List.filter
+            ((case direction of
+                Incoming ->
+                    .toAddress
+
+                Outgoing ->
+                    .fromAddress
+             )
+                >> (==) (Id.id addressId)
+            )
+        |> List.map accountTxToAddressTxUtxo
+
+
+accountTxToAddressTxUtxo : Api.Data.TxAccount -> Api.Data.AddressTxUtxo
+accountTxToAddressTxUtxo arg1 =
     Debug.todo "TODO"
 
 

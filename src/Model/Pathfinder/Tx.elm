@@ -40,6 +40,7 @@ module Model.Pathfinder.Tx exposing
     , listAddressesForTx
     , listSeparatedAddressesForTx
     , toFinalCoords
+    , utxoTxToAccountTxs, normalizeUtxo
     )
 
 import Animation exposing (Animation, Clock)
@@ -50,12 +51,14 @@ import List.Extra
 import List.Nonempty as NList
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Locale as Locale
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Set
 import Tuple exposing (pair)
-import Util.Data
+import Util.Data as Data
+import View.Locale as Locale
 
 
 type ConversionLegType
@@ -487,3 +490,93 @@ isZeroValueTx tx =
 
         Api.Data.TxTxUtxo _ ->
             False
+
+
+utxoTxToAccountTxs : Maybe Locale.Model -> UtxoTx -> List Api.Data.TxAccount
+utxoTxToAccountTxs locale utxoTx =
+    let
+        raw =
+            utxoTx.raw
+
+        inputs =
+            utxoTx.inputs
+
+        outputs =
+            utxoTx.outputs
+
+        sumInputs =
+            Dict.values inputs
+                |> List.map .values
+                |> Data.sumValues
+
+        sumOutputs =
+            Dict.values outputs
+                |> List.map .values
+                |> Data.sumValues
+
+        fee =
+            Data.subValues sumInputs sumOutputs
+    in
+    Dict.toList inputs
+        |> List.concatMap
+            (\( inputId, inputIo ) ->
+                let
+                    inputPortion =
+                        if sumInputs.value > 0 then
+                            toFloat inputIo.values.value / toFloat sumInputs.value
+
+                        else
+                            0
+
+                    outputRows =
+                        Dict.toList outputs
+                            |> List.map
+                                (\( outputId, outputIo ) ->
+                                    { contractCreation = Nothing
+                                    , currency = raw.currency
+                                    , fromAddress = Id.id inputId
+                                    , height = raw.height
+                                    , identifier = ""
+                                    , isExternal = Nothing
+                                    , network = raw.currency
+                                    , timestamp = raw.timestamp
+                                    , toAddress = Id.id outputId
+                                    , tokenTxId = Nothing
+                                    , txHash = raw.txHash
+                                    , txType = "utxo"
+                                    , value = Data.mulValues inputPortion outputIo.values
+                                    , fee = Nothing
+                                    }
+                                )
+
+                    feeRows =
+                        locale
+                            |> Maybe.map
+                                (\loc ->
+                                    if fee.value /= 0 then
+                                        [ { contractCreation = Nothing
+                                          , currency = raw.currency
+                                          , fromAddress = Id.id inputId
+                                          , height = raw.height
+                                          , identifier = ""
+                                          , isExternal = Nothing
+                                          , network = raw.currency
+                                          , timestamp = raw.timestamp
+                                          , toAddress = Locale.string loc "fee"
+                                          , tokenTxId = Nothing
+                                          , txHash = raw.txHash
+                                          , txType = "utxo"
+                                          , value = Data.mulValues inputPortion (Data.negateValues fee)
+                                          , fee = Nothing
+                                          }
+                                        ]
+
+                                    else
+                                        []
+                                )
+                            |> Maybe.withDefault []
+                in
+                outputRows ++ feeRows
+            )
+
+
