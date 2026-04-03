@@ -4242,20 +4242,24 @@ selectConversionEdge ( a, b ) model =
 
 selectAddress : Id -> Model -> ( Model, List Effect )
 selectAddress id model =
-    case Dict.get id model.network.addresses of
-        Just _ ->
-            let
-                ( m1, eff2 ) =
-                    unselect model
-            in
-            Network.updateAddress id (s_selected True) m1.network
-                |> flip s_network m1
-                |> s_selection (SelectedAddress id)
-                |> pairTo eff2
+    if model.selection == SelectedAddress id then
+        n model
 
-        Nothing ->
-            s_selection (WillSelectAddress id) model
-                |> n
+    else
+        case Dict.get id model.network.addresses of
+            Just _ ->
+                let
+                    ( m1, eff2 ) =
+                        unselect model
+                in
+                Network.updateAddress id (s_selected True) m1.network
+                    |> flip s_network m1
+                    |> s_selection (SelectedAddress id)
+                    |> pairTo eff2
+
+            Nothing ->
+                s_selection (WillSelectAddress id) model
+                    |> n
 
 
 unselectAddress : Id -> Network -> Network

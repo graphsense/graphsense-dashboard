@@ -1,10 +1,16 @@
-module Model.Pathfinder.Table.TransactionTable exposing (Model, filter, titleHash, titleTimestamp, titleValue)
+module Model.Pathfinder.Table.TransactionTable exposing (Model, filter, getQuickFilters, quickFilterFromTx, titleHash, titleTimestamp, titleValue)
 
 import Api.Data
 import Api.Request.Addresses
+import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
+import Model.Direction exposing (Direction(..))
+import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Network as Network exposing (Network)
+import Model.Pathfinder.Tx as Tx exposing (Tx)
+import Util.Data exposing (timestampToPosix)
 
 
 type alias Model =
@@ -42,3 +48,26 @@ filter =
                     String.contains term tx.txHash
     , filter = always True
     }
+
+
+quickFilterFromTx : Direction -> Tx -> TransactionFilter.QuickFilter
+quickFilterFromTx direction tx =
+    Tx.getRawTimestamp tx
+        |> timestampToPosix
+        |> TransactionFilter.initQuickFilter (Id.id tx.id) direction
+        |> (tx
+                |> Tx.getAccountTx
+                |> Maybe.map (.raw >> .currency)
+                |> Maybe.map TransactionFilter.quickfilterWithAsset
+                |> Maybe.withDefault identity
+           )
+
+
+getQuickFilters : Network -> Id -> List TransactionFilter.QuickFilter
+getQuickFilters network addressId =
+    Network.getTxsForAddress network Incoming addressId
+        |> List.map (quickFilterFromTx Outgoing)
+        |> flip (++)
+            (Network.getTxsForAddress network Outgoing addressId
+                |> List.map (quickFilterFromTx Incoming)
+            )

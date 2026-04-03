@@ -9,12 +9,10 @@ import Components.TransactionFilter as TransactionFilter
 import Config.Update as Update
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
-import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Model.Pathfinder.Tx as Tx
+import Model.Pathfinder.Table.TransactionTable as TransactionTable exposing (getQuickFilters, quickFilterFromTx)
 import Tuple exposing (first, pair, second)
-import Util.Data exposing (timestampToPosix)
 
 
 init : Update.Config -> Network -> Maybe TransactionFilter.Settings -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
@@ -23,28 +21,12 @@ init uc network txsFilter addressId data assets =
         ( mmin, mmax ) =
             Address.getActivityRange data
 
-        qfFromTx direction tx =
-            Tx.getRawTimestamp tx
-                |> timestampToPosix
-                |> TransactionFilter.initQuickFilter (Id.id tx.id) direction
-                |> (tx
-                        |> Tx.getAccountTx
-                        |> Maybe.map (.raw >> .currency)
-                        |> Maybe.map TransactionFilter.quickfilterWithAsset
-                        |> Maybe.withDefault identity
-                   )
+        quickfilters =
+            getQuickFilters network addressId
 
         prefilter =
             Network.getRecentTxForAddress network Incoming addressId
-                |> Maybe.map (qfFromTx Outgoing >> flip pair False)
-
-        quickfilters =
-            Network.getTxsForAddress network Incoming addressId
-                |> List.map (qfFromTx Outgoing)
-                |> flip (++)
-                    (Network.getTxsForAddress network Outgoing addressId
-                        |> List.map (qfFromTx Incoming)
-                    )
+                |> Maybe.map (quickFilterFromTx Outgoing >> flip pair False)
 
         isDesc =
             prefilter

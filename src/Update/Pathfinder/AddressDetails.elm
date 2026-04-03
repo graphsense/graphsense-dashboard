@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (loadFirstTxsPage, makeExportCSVConfig, prepareCSV, syncByAddress, update)
+module Update.Pathfinder.AddressDetails exposing (loadFirstTxsPage, makeExportCSVConfig, prepareCSV, syncByAddress, update, updateTransactionTable)
 
 import Api.Data
 import Api.Request.Addresses
@@ -39,6 +39,7 @@ import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple3
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
+import Update.Pathfinder.Table.TransactionTable as TransactionTable
 import Util exposing (and, n)
 import Util.Csv
 import Util.Data as Data
@@ -315,15 +316,25 @@ update uc msg model =
 
                             changed =
                                 TransactionFilter.hasChanged txs.filter newFilter
+
+                            settings =
+                                TransactionFilter.getSettings newFilter
                         in
                         { txs
                             | filter = newFilter
+                            , table =
+                                TransactionTable.sort
+                                    (settings
+                                        |> TransactionFilter.getDirection
+                                        |> (==) (Just Incoming)
+                                    )
+                                    txs.table
                         }
                             |> RemoteData.Success
                             |> flip s_txs model
                             |> (if changed then
                                     flip pair
-                                        [ TransactionFilter.getSettings newFilter
+                                        [ settings
                                             |> Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id)
                                             |> InternalEffect
                                         ]
@@ -680,7 +691,12 @@ syncByAddress uc network clusters dateFilterPreset model address =
 
                     txs =
                         model.txs
-                            |> RemoteData.map (\_ -> model.txs)
+                            |> RemoteData.map
+                                (\txs_ ->
+                                    TransactionTable.getQuickFilters network address.id
+                                        |> flip TransactionTable.updateQuickFilters txs_
+                                        |> RemoteData.Success
+                                )
                             |> RemoteData.withDefault
                                 (TransactionTable.init uc
                                     network
@@ -870,3 +886,10 @@ prepareCSV locModel network data =
                 |> Util.Csv.string
              )
            ]
+
+
+updateTransactionTable : (TransactionTable.Model -> TransactionTable.Model) -> Model -> Model
+updateTransactionTable f model =
+    model.txs
+        |> RemoteData.map (\txs -> { model | txs = f txs |> RemoteData.Success })
+        |> RemoteData.withDefault model
