@@ -547,3 +547,4 @@ export-dialog-transparent-background: "transparenter Hintergrund"
 datefilter-starting: ab
 datefilter-until: bis
 by Tx: von Tx
+filter-utxo-only: nur UTXO

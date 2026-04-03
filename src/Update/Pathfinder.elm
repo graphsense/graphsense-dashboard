@@ -5392,7 +5392,7 @@ explodeTxToAccounts locale tx =
             raw :: (feeRow |> Maybe.map List.singleton |> Maybe.withDefault [])
 
         Tx.Utxo utxoTx ->
-            Tx.utxoTxToAccountTxs locale utxoTx
+            Tx.utxoTxToAccountTxs (Just locale) utxoTx
 
 
 getToAndFromAddresses : Update.Config -> List Tx -> List ( String, String )

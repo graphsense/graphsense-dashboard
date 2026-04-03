@@ -1,4 +1,4 @@
-module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, filterHeader, getDateRange, getDirection, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoOnly, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, quickfilterWithAsset, setFocusDate, setSelectedQuickFilter, txFilterDialogView, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter, getDirectionFromQuickFilter)
+module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, filterHeader, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, quickfilterWithAsset, setFocusDate, setSelectedQuickFilter, txFilterDialogView, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -132,6 +132,8 @@ type Msg
     | UpdateDateRangePicker DatePicker.Msg
     | TxTableQuickFilterSelectBoxMsg (ThemedSelectBox.Msg (Maybe QuickFilterModel))
     | UserClickedCustomFilterLabel
+    | UserClickedUtxoOnly
+    | ResetTxUtxoOnlyFilter
 
 
 update : Msg -> Model -> Model
@@ -146,6 +148,9 @@ update msg (Internal model) =
 
             ResetTxDirectionFilter ->
                 resetDirection model
+
+            ResetTxUtxoOnlyFilter ->
+                resetUtxoOnly model
 
             ResetTxAssetFilter ->
                 resetSelectedAsset model
@@ -256,12 +261,23 @@ update msg (Internal model) =
             UserClickedCustomFilterLabel ->
                 { model | showCustomFilter = not model.showCustomFilter }
 
+            UserClickedUtxoOnly ->
+                settingsToQuickFilter model
+                    |> Maybe.map
+                        (\_ ->
+                            not model.settings.utxoOnly
+                                |> flip Rs.s_utxoOnly model.settings
+                                |> flip s_settings model
+                        )
+                    |> Maybe.withDefault model
+
 
 resetAll : InternalModel -> InternalModel
 resetAll =
     resetSelectedAsset
         >> resetDateRangePicker
         >> resetDirection
+        >> resetUtxoOnly
         >> resetIncludeZeroValueTxs
 
 
@@ -316,6 +332,13 @@ resetDirection model =
     model.settings.direction
         |> Maybe.map (\_ -> Nothing)
         |> flip s_direction model.settings
+        |> flip s_settings model
+
+
+resetUtxoOnly : InternalModel -> InternalModel
+resetUtxoOnly model =
+    model.settings
+        |> Rs.s_utxoOnly False
         |> flip s_settings model
 
 
@@ -501,6 +524,11 @@ zeroValuesHeader vc resetMsg includeZeroValueTxs =
         stringFilterHeader vc resetMsg "no zero value"
 
 
+utxoOnlyHeader : View.Config -> msg -> Html msg
+utxoOnlyHeader vc resetMsg =
+    stringFilterHeader vc resetMsg "filter-utxo-only"
+
+
 filterHeader : View.Config -> FilterHeaderConfig msg -> Model -> Html msg
 filterHeader vc config (Internal model) =
     SidePanelComponents.sidePanelListFilterRowWithAttributes
@@ -546,6 +574,7 @@ filterHeader vc config (Internal model) =
         { filterList =
             [ model.settings.range |> Maybe.map (dateTimeFilterHeaderFromRange vc ResetDateRangePicker)
             , model.settings.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
+            , model |> Internal |> getUtxoFilter |> Maybe.map (\_ -> utxoOnlyHeader vc ResetTxUtxoOnlyFilter)
             , model.settings.asset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
             , model.settings.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
             ]
@@ -750,7 +779,7 @@ txFilterDialogView vc net config (Internal model) =
             , showCustomFilter = model.showCustomFilter || not showQuickFilter
             , customFilterLabel = Locale.string vc.locale "filter-custom-filter" |> Locale.titleCase vc.locale
             , quickFilterLabel = Locale.string vc.locale "filter-quick-filter" |> Locale.titleCase vc.locale
-            , showUtxoConstraint = not isAssetFilterVisible
+            , showUtxoConstraint = True
             , quickfilterDropdown =
                 model.quickFilterSelect
                     |> Maybe.map
@@ -769,15 +798,24 @@ txFilterDialogView vc net config (Internal model) =
                         )
                     |> Maybe.withDefault none
             , zeroValuesLabel = Locale.string vc.locale "Exclude zero value transfers"
-            , followUtxoLabel = Locale.string vc.locale "filter-follow-utxo"
+            , followUtxoLabel = Locale.string vc.locale "filter-utxo-only"
             , assetTypeLabel = Locale.string vc.locale "Asset type"
             }
         , checkboxUtxoLevel =
             { variant =
                 Checkbox.checkbox
-                    { state = Checkbox.stateFromBool False
+                    { state =
+                        if isAssetFilterVisible || settingsToQuickFilter model == Nothing then
+                            Checkbox.disabledState
+
+                        else
+                            Internal model
+                                |> getUtxoFilter
+                                |> Maybe.map (\_ -> True)
+                                |> Maybe.withDefault False
+                                |> Checkbox.stateFromBool
                     , size = Checkbox.smallSize
-                    , msg = Nothing
+                    , msg = Just (UserClickedUtxoOnly |> config.tag)
                     }
                     []
             }
@@ -1081,6 +1119,7 @@ hasChanged (Internal old) (Internal new) =
         || (old.settings.asset /= new.settings.asset)
         || (old.settings.includeZeroValueTxs /= new.settings.includeZeroValueTxs)
         || (old.settings.direction /= new.settings.direction)
+        || (old.settings.utxoOnly /= new.settings.utxoOnly)
 
 
 setFocusDate : Time.Posix -> Model -> Model
@@ -1158,9 +1197,18 @@ getSettings (Internal { settings }) =
     Settings settings
 
 
-getUtxoOnly : Settings -> Bool
-getUtxoOnly (Settings { utxoOnly }) =
-    utxoOnly
+getUtxoFilter : Model -> Maybe ( Tx.UtxoTx, Direction )
+getUtxoFilter (Internal model) =
+    settingsToQuickFilter model
+        |> Maybe.andThen
+            (\qf ->
+                case ( qf.tx, model.settings.utxoOnly ) of
+                    ( Tx.Utxo utxo, True ) ->
+                        Just ( utxo, qf.direction )
+
+                    _ ->
+                        Nothing
+            )
 
 
 getTx : QuickFilter -> Tx.TxType
@@ -1169,5 +1217,5 @@ getTx (QuickFilterInternal { tx }) =
 
 
 getDirectionFromQuickFilter : QuickFilter -> Direction
-getDirectionFromQuickFilter (QuickFilterInternal {direction}) =
+getDirectionFromQuickFilter (QuickFilterInternal { direction }) =
     direction

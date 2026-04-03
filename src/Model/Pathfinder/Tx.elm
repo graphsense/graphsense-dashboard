@@ -40,7 +40,7 @@ module Model.Pathfinder.Tx exposing
     , listAddressesForTx
     , listSeparatedAddressesForTx
     , toFinalCoords
-    , utxoTxToAccountTxs, normalizeUtxo
+    , utxoTxToAccountTxs
     )
 
 import Animation exposing (Animation, Clock)
@@ -454,14 +454,14 @@ getInputValueForAddressFromRawTx address tx =
                 value
 
             else
-                Util.Data.valuesZero
+                Data.valuesZero
 
         Api.Data.TxTxUtxo { inputs } ->
             inputs
                 |> Maybe.withDefault []
                 |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
                 |> List.map .value
-                |> Util.Data.sumValues
+                |> Data.sumValues
 
 
 getOutputValueForAddressFromRawTx : String -> Api.Data.Tx -> Api.Data.Values
@@ -472,14 +472,14 @@ getOutputValueForAddressFromRawTx address tx =
                 value
 
             else
-                Util.Data.valuesZero
+                Data.valuesZero
 
         Api.Data.TxTxUtxo { outputs } ->
             outputs
                 |> Maybe.withDefault []
                 |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
                 |> List.map .value
-                |> Util.Data.sumValues
+                |> Data.sumValues
 
 
 isZeroValueTx : Api.Data.Tx -> Bool
@@ -578,5 +578,3 @@ utxoTxToAccountTxs locale utxoTx =
                 in
                 outputRows ++ feeRows
             )
-
-

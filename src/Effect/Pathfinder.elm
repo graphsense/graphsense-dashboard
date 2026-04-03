@@ -47,6 +47,7 @@ perform eff =
 
         BatchEffect _ ->
             Cmd.none
+
         -- managed in Effect.elm
         ApiEffect _ ->
             Cmd.none

@@ -201,6 +201,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.BrowserGotBulkTagsForExport _ _ _ _ ->
                     False
 
+                AddressDetails.WorkflowNextUtxoTx _ _ ->
+                    False
+
         TxDetailsMsg _ ->
             False
 

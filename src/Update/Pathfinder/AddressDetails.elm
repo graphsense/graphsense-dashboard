@@ -18,6 +18,7 @@ import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Init.Pathfinder.Tx as Tx
 import List.Extra
+import Maybe.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
@@ -29,7 +30,6 @@ import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Model.Pathfinder.Tx as Tx exposing (TxType(..))
 import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..))
 import RecordSetter exposing (..)
@@ -113,59 +113,51 @@ fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
     let
         filter =
             TransactionFilter.getSettings txs.filter
-
-        qf =
-            TransactionFilter.getSelectedQuickFilter txs.filter
-
-        tx =
-            case ( Maybe.map TransactionFilter.getTx qf, Maybe.map TransactionFilter.getDirectionFromQuickFilter qf ) of
-                ( Just (Utxo utxo), Just dir ) ->
-                    Just ( utxo, dir )
-
-                _ ->
-                    Nothing
     in
-    case ( tx, TransactionFilter.getUtxoOnly filter ) of
-        ( Just ( { raw }, dir ), True ) ->
-            let
-                config =
-                    { addressId = addressId
-                    , direction = dir
-                    }
-            in
-            WorkflowNextUtxoTx.start config raw
-                |> Workflow.mapEffect (WorkflowNextUtxoTx config)
-                |> Workflow.next
-                |> List.map ApiEffect
-                |> BatchEffect
+    TransactionFilter.getUtxoFilter txs.filter
+        |> Maybe.map
+            (\( { raw }, dir ) ->
+                let
+                    config =
+                        { addressId = addressId
+                        , direction = dir
+                        }
+                in
+                WorkflowNextUtxoTx.start config raw
+                    |> Workflow.mapEffect (WorkflowNextUtxoTx config >> Pathfinder.AddressDetailsMsg addressId)
+                    |> Workflow.next
+                    |> List.map ApiEffect
+                    |> BatchEffect
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                Api.GetAddressTxsByDateEffect
+                    { currency = Id.network addressId
+                    , address = Id.id addressId
+                    , direction = TransactionFilter.getDirection filter
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    , order =
+                        sorting
+                            |> Maybe.andThen
+                                (\( column, isReversed ) ->
+                                    if column == TransactionTable.titleTimestamp then
+                                        if isReversed then
+                                            Just Api.Request.Addresses.Order_Desc
 
-        _ ->
-            Api.GetAddressTxsByDateEffect
-                { currency = Id.network addressId
-                , address = Id.id addressId
-                , direction = TransactionFilter.getDirection filter
-                , pagesize = pagesize
-                , nextpage = nextpage
-                , order =
-                    sorting
-                        |> Maybe.andThen
-                            (\( column, isReversed ) ->
-                                if column == TransactionTable.titleTimestamp then
-                                    if isReversed then
-                                        Just Api.Request.Addresses.Order_Desc
+                                        else
+                                            Just Api.Request.Addresses.Order_Asc
 
                                     else
-                                        Just Api.Request.Addresses.Order_Asc
-
-                                else
-                                    txs.order
-                            )
-                , tokenCurrency = TransactionFilter.getSelectedAsset filter
-                , minDate = TransactionFilter.getDateRange filter |> Maybe.andThen first
-                , maxDate = TransactionFilter.getDateRange filter |> Maybe.andThen second
-                }
-                msg
-                |> ApiEffect
+                                        txs.order
+                                )
+                    , tokenCurrency = TransactionFilter.getSelectedAsset filter
+                    , minDate = TransactionFilter.getDateRange filter |> Maybe.andThen first
+                    , maxDate = TransactionFilter.getDateRange filter |> Maybe.andThen second
+                    }
+                    msg
+                    |> ApiEffect
+            )
 
 
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -564,7 +556,7 @@ update uc msg model =
 
         WorkflowNextUtxoTx config subMsg ->
             WorkflowNextUtxoTx.update config subMsg
-                |> flip handleWorkflowNextUtxo model
+                |> flip (handleWorkflowNextUtxo config) model
 
 
 handleWorkflowNextUtxo : WorkflowNextUtxoTx.Config -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
@@ -573,10 +565,26 @@ handleWorkflowNextUtxo config wf model =
         |> RemoteData.map
             (\txsTable ->
                 case wf of
-                    Workflow.Ok tx ->
+                    Workflow.Next eff ->
+                        eff
+                            |> List.map (Api.map (WorkflowNextUtxoTx config >> Pathfinder.AddressDetailsMsg config.addressId))
+                            |> List.map ApiEffect
+                            |> pair model
+
+                    _ ->
                         let
                             setter =
-                                InfiniteTable.appendData
+                                InfiniteTable.setData
+
+                            result =
+                                case wf of
+                                    Workflow.Ok tx ->
+                                        tx
+                                            |> utxoToAddressTx config.direction config.addressId
+                                            |> List.map Api.Data.AddressTxAddressTxUtxo
+
+                                    _ ->
+                                        []
 
                             ( table, cmd, eff ) =
                                 txsTable.table
@@ -584,7 +592,7 @@ handleWorkflowNextUtxo config wf model =
                                         (transactionTableConfig txsTable model.address.id)
                                         TransactionTable.filter
                                         Nothing
-                                        [ tx |> utxoToAddressTx config.addressId |> Api.Data.AddressTxAddressTxUtxo ]
+                                        result
                         in
                         ( table, eff )
                             |> mapFirst (flip s_table txsTable)
@@ -599,9 +607,6 @@ handleWorkflowNextUtxo config wf model =
                                         |> CmdEffect
                                     )
                                 )
-
-                    _ ->
-                        n model
             )
         |> RemoteData.withDefault (n model)
 
@@ -609,23 +614,27 @@ handleWorkflowNextUtxo config wf model =
 utxoToAddressTx : Direction -> Id -> Api.Data.TxUtxo -> List Api.Data.AddressTxUtxo
 utxoToAddressTx direction addressId utxo =
     Tx.normalizeUtxo utxo
-        |> Tx.utxoTxToAccountTxs Nothing
-        |> List.filter
-            ((case direction of
+        |> (case direction of
                 Incoming ->
-                    .toAddress
+                    .outputs
 
                 Outgoing ->
-                    .fromAddress
-             )
-                >> (==) (Id.id addressId)
+                    .inputs
+           )
+        |> Dict.get addressId
+        |> Maybe.map
+            (\io ->
+                { coinbase = False
+                , currency = utxo.currency
+                , height = utxo.height
+                , timestamp = utxo.timestamp
+                , txHash = utxo.txHash
+                , txType = "utxo"
+                , value = io.values
+                }
+                    |> List.singleton
             )
-        |> List.map accountTxToAddressTxUtxo
-
-
-accountTxToAddressTxUtxo : Api.Data.TxAccount -> Api.Data.AddressTxUtxo
-accountTxToAddressTxUtxo arg1 =
-    Debug.todo "TODO"
+        |> Maybe.withDefault []
 
 
 closeTransactionTable : Model -> ( Model, List Effect )
