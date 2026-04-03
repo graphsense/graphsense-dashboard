@@ -7,7 +7,7 @@ import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Set
-import Tuple
+import Tuple exposing (first, pair, second)
 import Workflow
 
 
@@ -19,6 +19,7 @@ maxHops =
 type alias Config =
     { addressId : Id
     , direction : Direction
+    , allowMultiple : Bool
     }
 
 
@@ -182,45 +183,67 @@ start =
 continueWorkflow : Int -> Config -> Api.Data.TxUtxo -> Workflow
 continueWorkflow hops config tx =
     let
-        ( listLinkedTxRefs, index ) =
+        ( listLinkedTxRefs, indices ) =
             case config.direction of
                 Incoming ->
                     ( Api.ListSpendingTxRefsEffect
-                    , findOwnAddressIoIndex config.addressId tx.inputs
+                    , findOwnAddressIoIndex config tx.inputs
                     )
 
                 Outgoing ->
                     ( Api.ListSpentInTxRefsEffect
-                    , findOutgoingContinuationIndex config.addressId tx
+                    , findOutgoingContinuationIndex config tx
                     )
     in
-    BrowserGotReferencedTxs (hops + 1)
-        |> listLinkedTxRefs
-            { currency = tx.currency
-            , txHash = tx.txHash
-            , index = index
-            }
-        |> List.singleton
+    indices
+        |> List.map
+            (\index ->
+                BrowserGotReferencedTxs (hops + 1)
+                    |> listLinkedTxRefs
+                        { currency = tx.currency
+                        , txHash = tx.txHash
+                        , index = Just index
+                        }
+            )
         |> Workflow.Next
 
 
-findOwnAddressIoIndex : Id -> Maybe (List Api.Data.TxValue) -> Maybe Int
-findOwnAddressIoIndex addressId values =
+findOwnAddressIoIndex : Config -> Maybe (List Api.Data.TxValue) -> List Int
+findOwnAddressIoIndex { addressId, allowMultiple } values =
+    let
+        predicate =
+            .address >> List.member (Id.id addressId)
+    in
     values
         |> Maybe.andThen
-            (List.Extra.findIndex
-                (.address >> List.member (Id.id addressId))
+            (if allowMultiple then
+                List.indexedMap pair
+                    >> List.filter (second >> predicate)
+                    >> List.map first
+                    >> Just
+
+             else
+                List.Extra.findIndex predicate
+                    >> Maybe.map List.singleton
             )
+        |> Maybe.withDefault []
 
 
-findOutgoingContinuationIndex : Id -> Api.Data.TxUtxo -> Maybe Int
-findOutgoingContinuationIndex addressId tx =
+findOutgoingContinuationIndex : Config -> Api.Data.TxUtxo -> List Int
+findOutgoingContinuationIndex { addressId, allowMultiple } tx =
     tx.outputs
         |> Maybe.withDefault []
         |> List.indexedMap Tuple.pair
         |> List.filter (Tuple.second >> (.address >> List.member (Id.id addressId)))
-        |> List.Extra.maximumBy (Tuple.second >> (.value >> .value))
-        |> Maybe.map
+        |> (if allowMultiple then
+                identity
+
+            else
+                List.Extra.maximumBy (Tuple.second >> (.value >> .value))
+                    >> Maybe.map List.singleton
+                    >> Maybe.withDefault []
+           )
+        |> List.map
             (\( outputPosition, txOutput ) ->
                 txOutput.index
                     |> Maybe.withDefault outputPosition

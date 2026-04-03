@@ -17,7 +17,7 @@ initSubTxTable =
         |> InfiniteTable.init "subTxTable" 6
 
 
-init : Maybe TransactionFilter.Model -> List String -> Tx -> TxDetails.Model
+init : Maybe TransactionFilter.Settings -> List String -> Tx -> TxDetails.Model
 init txsFilter assets tx =
     let
         ( inputs, outputs ) =
@@ -59,11 +59,11 @@ init txsFilter assets tx =
             |> Maybe.withDefault False
     , subTxsTableFilter =
         txsFilter
-            |> Maybe.map (TransactionFilter.withAssetSelectBox assets)
             |> Maybe.withDefault
-                (TransactionFilter.init
-                    |> TransactionFilter.withAssetSelectBox assets
+                (TransactionFilter.initSettings
                     |> TransactionFilter.withIncludeZeroValueTxs False
                 )
+            |> TransactionFilter.init
+            |> TransactionFilter.withAssetSelectBox assets
     , isSubTxsTableFilterDialogOpen = False
     }

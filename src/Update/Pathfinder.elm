@@ -197,6 +197,7 @@ syncUrl model =
 
                                     Success txs ->
                                         txs.filter
+                                            |> TransactionFilter.getSettings
                                             |> TransactionFilter.getDateRange
                                             |> Maybe.map
                                                 (\( fromDate, toDate ) ->
@@ -3160,7 +3161,7 @@ getRelations id dir autoLinkInTraceMode onlyIds =
             |> List.singleton
 
 
-handleTx : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
+handleTx : Plugins -> Update.Config -> { a | direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
 handleTx plugins uc config neighborId tx model =
     case neighborId of
         Just nid ->
@@ -3199,7 +3200,7 @@ handleTx plugins uc config neighborId tx model =
                 )
 
 
-placeNeighborIfError : Plugins -> Update.Config -> { direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
+placeNeighborIfError : Plugins -> Update.Config -> { a | direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
 placeNeighborIfError plugins uc config nid model =
     let
         newModel =
@@ -3640,6 +3641,7 @@ expandAddress address direction model =
                 config =
                     { addressId = id
                     , direction = direction
+                    , allowMultiple = False
                     }
               in
               WorkflowNextUtxoTx.start config tx
@@ -3783,24 +3785,31 @@ updateTagDataOnAddress addressId m =
 
 getNextTxEffects : Network -> Id -> Direction -> { addBetweenLinks : Bool, addAnyLinks : Bool } -> Maybe Id -> List Effect
 getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } neighborId =
-    let
-        config =
-            { addressId = addressId
-            , direction = direction
-            }
-    in
     Network.getRecentTxForAddress network (Direction.flip direction) addressId
         |> Maybe.map
             (\tx ->
                 if addAnyLinks then
                     case tx.type_ of
                         Tx.Account t ->
+                            let
+                                config =
+                                    { addressId = addressId
+                                    , direction = direction
+                                    }
+                            in
                             WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
                                 |> Workflow.mapEffect (WorkflowNextTxByTime config neighborId)
                                 |> Workflow.next
                                 |> List.map ApiEffect
 
                         Tx.Utxo t ->
+                            let
+                                config =
+                                    { addressId = addressId
+                                    , direction = direction
+                                    , allowMultiple = False
+                                    }
+                            in
                             WorkflowNextUtxoTx.start config t.raw
                                 |> Workflow.mapEffect (WorkflowNextUtxoTx config neighborId)
                                 |> Workflow.next
@@ -3811,6 +3820,12 @@ getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } ne
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ ->
+                let
+                    config =
+                        { addressId = addressId
+                        , direction = direction
+                        }
+                in
                 if addBetweenLinks then
                     neighborId
                         |> Maybe.map (WorkflowNextTxByTime.startBetween config)
@@ -4318,20 +4333,24 @@ selectConversionEdge ( a, b ) model =
 
 selectAddress : Id -> Model -> ( Model, List Effect )
 selectAddress id model =
-    case Dict.get id model.network.addresses of
-        Just _ ->
-            let
-                ( m1, eff2 ) =
-                    unselect model
-            in
-            Network.updateAddress id (s_selected True) m1.network
-                |> flip s_network m1
-                |> s_selection (SelectedAddress id)
-                |> pairTo eff2
+    if model.selection == SelectedAddress id then
+        n model
 
-        Nothing ->
-            s_selection (WillSelectAddress id) model
-                |> n
+    else
+        case Dict.get id model.network.addresses of
+            Just _ ->
+                let
+                    ( m1, eff2 ) =
+                        unselect model
+                in
+                Network.updateAddress id (s_selected True) m1.network
+                    |> flip s_network m1
+                    |> s_selection (SelectedAddress id)
+                    |> pairTo eff2
+
+            Nothing ->
+                s_selection (WillSelectAddress id) model
+                    |> n
 
 
 unselectAddress : Id -> Network -> Network
@@ -5514,85 +5533,7 @@ explodeTxToAccounts locale tx =
             raw :: (feeRow |> Maybe.map List.singleton |> Maybe.withDefault [])
 
         Tx.Utxo utxoTx ->
-            let
-                raw =
-                    utxoTx.raw
-
-                inputs =
-                    utxoTx.inputs
-
-                outputs =
-                    utxoTx.outputs
-
-                sumInputs =
-                    Dict.values inputs
-                        |> List.map .values
-                        |> Data.sumValues
-
-                sumOutputs =
-                    Dict.values outputs
-                        |> List.map .values
-                        |> Data.sumValues
-
-                fee =
-                    Data.subValues sumInputs sumOutputs
-            in
-            Dict.toList inputs
-                |> List.concatMap
-                    (\( inputId, inputIo ) ->
-                        let
-                            inputPortion =
-                                if sumInputs.value > 0 then
-                                    toFloat inputIo.values.value / toFloat sumInputs.value
-
-                                else
-                                    0
-
-                            outputRows =
-                                Dict.toList outputs
-                                    |> List.map
-                                        (\( outputId, outputIo ) ->
-                                            { contractCreation = Nothing
-                                            , currency = raw.currency
-                                            , fromAddress = Id.id inputId
-                                            , height = raw.height
-                                            , identifier = ""
-                                            , isExternal = Nothing
-                                            , network = raw.currency
-                                            , timestamp = raw.timestamp
-                                            , toAddress = Id.id outputId
-                                            , tokenTxId = Nothing
-                                            , txHash = raw.txHash
-                                            , txType = "utxo"
-                                            , value = Data.mulValues inputPortion outputIo.values
-                                            , fee = Nothing
-                                            }
-                                        )
-
-                            feeRows =
-                                if fee.value /= 0 then
-                                    [ { contractCreation = Nothing
-                                      , currency = raw.currency
-                                      , fromAddress = Id.id inputId
-                                      , height = raw.height
-                                      , identifier = ""
-                                      , isExternal = Nothing
-                                      , network = raw.currency
-                                      , timestamp = raw.timestamp
-                                      , toAddress = Locale.string locale "fee"
-                                      , tokenTxId = Nothing
-                                      , txHash = raw.txHash
-                                      , txType = "utxo"
-                                      , value = Data.mulValues inputPortion (Data.negateValues fee)
-                                      , fee = Nothing
-                                      }
-                                    ]
-
-                                else
-                                    []
-                        in
-                        outputRows ++ feeRows
-                    )
+            Tx.utxoTxToAccountTxs (Just locale) utxoTx
 
 
 getToAndFromAddresses : Update.Config -> List Tx -> List ( String, String )

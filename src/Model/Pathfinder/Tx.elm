@@ -22,6 +22,7 @@ module Model.Pathfinder.Tx exposing
     , getOutputValueForAddressFromRawTx
     , getOutputs
     , getRawBaseTxHashForTx
+    , getRawBaseTxHashForTxType
     , getRawTimestamp
     , getRawTimestampForRelationTx
     , getRawTx
@@ -40,6 +41,7 @@ module Model.Pathfinder.Tx exposing
     , listAddressesForTx
     , listSeparatedAddressesForTx
     , toFinalCoords
+    , utxoTxToAccountTxs
     )
 
 import Animation exposing (Animation, Clock)
@@ -50,12 +52,14 @@ import List.Extra
 import List.Nonempty as NList
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Locale as Locale
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Set
 import Tuple exposing (pair)
-import Util.Data
+import Util.Data as Data
+import View.Locale as Locale
 
 
 type ConversionLegType
@@ -381,7 +385,12 @@ getTxIdForTx tx =
 
 getRawBaseTxHashForTx : Tx -> String
 getRawBaseTxHashForTx tx =
-    case tx.type_ of
+    getRawBaseTxHashForTxType tx.type_
+
+
+getRawBaseTxHashForTxType : TxType -> String
+getRawBaseTxHashForTxType tx =
+    case tx of
         Account t ->
             t.raw.txHash
 
@@ -454,14 +463,14 @@ getInputValueForAddressFromRawTx address tx =
                 value
 
             else
-                Util.Data.valuesZero
+                Data.valuesZero
 
         Api.Data.TxTxUtxo { inputs } ->
             inputs
                 |> Maybe.withDefault []
                 |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
                 |> List.map .value
-                |> Util.Data.sumValues
+                |> Data.sumValues
 
 
 getOutputValueForAddressFromRawTx : String -> Api.Data.Tx -> Api.Data.Values
@@ -472,14 +481,14 @@ getOutputValueForAddressFromRawTx address tx =
                 value
 
             else
-                Util.Data.valuesZero
+                Data.valuesZero
 
         Api.Data.TxTxUtxo { outputs } ->
             outputs
                 |> Maybe.withDefault []
                 |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
                 |> List.map .value
-                |> Util.Data.sumValues
+                |> Data.sumValues
 
 
 isZeroValueTx : Api.Data.Tx -> Bool
@@ -490,3 +499,91 @@ isZeroValueTx tx =
 
         Api.Data.TxTxUtxo _ ->
             False
+
+
+utxoTxToAccountTxs : Maybe Locale.Model -> UtxoTx -> List Api.Data.TxAccount
+utxoTxToAccountTxs locale utxoTx =
+    let
+        raw =
+            utxoTx.raw
+
+        inputs =
+            utxoTx.inputs
+
+        outputs =
+            utxoTx.outputs
+
+        sumInputs =
+            Dict.values inputs
+                |> List.map .values
+                |> Data.sumValues
+
+        sumOutputs =
+            Dict.values outputs
+                |> List.map .values
+                |> Data.sumValues
+
+        fee =
+            Data.subValues sumInputs sumOutputs
+    in
+    Dict.toList inputs
+        |> List.concatMap
+            (\( inputId, inputIo ) ->
+                let
+                    inputPortion =
+                        if sumInputs.value > 0 then
+                            toFloat inputIo.values.value / toFloat sumInputs.value
+
+                        else
+                            0
+
+                    outputRows =
+                        Dict.toList outputs
+                            |> List.map
+                                (\( outputId, outputIo ) ->
+                                    { contractCreation = Nothing
+                                    , currency = raw.currency
+                                    , fromAddress = Id.id inputId
+                                    , height = raw.height
+                                    , identifier = ""
+                                    , isExternal = Nothing
+                                    , network = raw.currency
+                                    , timestamp = raw.timestamp
+                                    , toAddress = Id.id outputId
+                                    , tokenTxId = Nothing
+                                    , txHash = raw.txHash
+                                    , txType = "utxo"
+                                    , value = Data.mulValues inputPortion outputIo.values
+                                    , fee = Nothing
+                                    }
+                                )
+
+                    feeRows =
+                        locale
+                            |> Maybe.map
+                                (\loc ->
+                                    if fee.value /= 0 then
+                                        [ { contractCreation = Nothing
+                                          , currency = raw.currency
+                                          , fromAddress = Id.id inputId
+                                          , height = raw.height
+                                          , identifier = ""
+                                          , isExternal = Nothing
+                                          , network = raw.currency
+                                          , timestamp = raw.timestamp
+                                          , toAddress = Locale.string loc "fee"
+                                          , tokenTxId = Nothing
+                                          , txHash = raw.txHash
+                                          , txType = "utxo"
+                                          , value = Data.mulValues inputPortion (Data.negateValues fee)
+                                          , fee = Nothing
+                                          }
+                                        ]
+
+                                    else
+                                        []
+                                )
+                            |> Maybe.withDefault []
+                in
+                outputRows ++ feeRows
+            )

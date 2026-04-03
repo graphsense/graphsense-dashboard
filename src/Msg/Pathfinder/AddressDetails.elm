@@ -9,6 +9,7 @@ import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Table
+import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 
@@ -79,3 +80,4 @@ type Msg
     | GotAddressTxsForExport TransactionTable.Model Api.Data.AddressTxs
     | BrowserGotBulkTxsForExport TransactionTable.Model (List Api.Data.AddressTxUtxo) (Maybe String) Int (List ( String, Api.Data.Tx )) (List ( String, Api.Data.Tx ))
     | BrowserGotBulkTagsForExport TransactionTable.Model ( List Api.Data.TxAccount, Maybe String ) Bool (List ( Id, Api.Data.TagSummary ))
+    | WorkflowNextUtxoTx WorkflowNextUtxoTx.Config WorkflowNextUtxoTx.Msg

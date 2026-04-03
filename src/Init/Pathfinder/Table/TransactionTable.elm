@@ -2,6 +2,7 @@ module Init.Pathfinder.Table.TransactionTable exposing (init)
 
 import Api.Data
 import Api.Request.Addresses
+import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
@@ -10,57 +11,50 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
-import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Model.Pathfinder.Tx as Tx
-import Util.Data exposing (timestampToPosix)
+import Model.Pathfinder.Table.TransactionTable as TransactionTable exposing (getQuickFilters, quickFilterFromTx)
+import Tuple exposing (first, pair, second)
 
 
-init : Update.Config -> Network -> Maybe TransactionFilter.Model -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
+init : Update.Config -> Network -> Maybe TransactionFilter.Settings -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
 init uc network txsFilter addressId data assets =
     let
-        table isDesc =
-            Table.initSorted isDesc TransactionTable.titleTimestamp
-                |> InfiniteTable.init "transactionTable" 25
-
         ( mmin, mmax ) =
             Address.getActivityRange data
 
-        { desc, order, min, selectedAsset } =
+        quickfilters =
+            getQuickFilters network addressId
+
+        prefilter =
             Network.getRecentTxForAddress network Incoming addressId
-                |> Maybe.map
-                    (\tx ->
-                        { desc = False
-                        , order = Just Api.Request.Addresses.Order_Asc
-                        , min =
-                            Tx.getRawTimestamp tx
-                                |> timestampToPosix
-                        , selectedAsset =
-                            tx
-                                |> Tx.getAccountTx
-                                |> Maybe.map (.raw >> .currency)
-                        }
-                    )
-                |> Maybe.withDefault
-                    { desc = True
-                    , order = Just Api.Request.Addresses.Order_Desc
-                    , min = mmin
-                    , selectedAsset = Nothing
-                    }
+                |> Maybe.map (quickFilterFromTx Outgoing >> flip pair False)
+
+        isDesc =
+            prefilter
+                |> Maybe.map second
+                |> Maybe.withDefault True
     in
-    { table = table desc
-    , order = order
+    { table =
+        Table.initSorted isDesc TransactionTable.titleTimestamp
+            |> InfiniteTable.init "transactionTable" 25
+    , order =
+        if isDesc then
+            Just Api.Request.Addresses.Order_Desc
+
+        else
+            Just Api.Request.Addresses.Order_Asc
     , filter =
         txsFilter
-            |> Maybe.map
-                (TransactionFilter.withDateRangePicker uc.locale min mmax
-                    >> TransactionFilter.withAssetSelectBox assets
-                )
             |> Maybe.withDefault
-                (TransactionFilter.init
-                    |> TransactionFilter.withDateRangePicker uc.locale min mmax
-                    |> TransactionFilter.withAssetSelectBox assets
-                    |> TransactionFilter.withDirection Nothing
-                    |> TransactionFilter.updateSelectedAsset selectedAsset
+                (prefilter
+                    |> Maybe.map (first >> TransactionFilter.initSettingsFromQuickFilter)
+                    |> Maybe.withDefault
+                        (TransactionFilter.initSettings
+                            |> TransactionFilter.withDirection Nothing
+                        )
                 )
+            |> TransactionFilter.init
+            |> TransactionFilter.withDateRangePicker uc.locale mmin mmax
+            |> TransactionFilter.withAssetSelectBox assets
+            |> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
     , isTxFilterViewOpen = False
     }

@@ -49,6 +49,9 @@ serve: prepare gen
 build: prepare gen
 	npm run build
 
+compile: prepare gen
+	npm run compile
+
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \
 		if [ ! -e "$$i" ] && [ ! -L "$$i" ]; then \
@@ -171,7 +174,7 @@ $(FIGMA_JSON):
 	$(CODEGEN_TOOL) --refresh --file-id=$(FIGMA_FILE_ID) --api-token=$(FIGMA_API_TOKEN)
 
 $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC) $(CODEGEN_RECORDSETTER)
-	/usr/bin/time -v $(CODEGEN_TOOL) -w=$(FIGMA_WHITELIST_FRAMES) 
+	/usr/bin/time -v $(CODEGEN_TOOL) -w="$(FIGMA_WHITELIST_FRAMES)" -c="$(FIGMA_WHITELIST_COMPONENTS)"
 
 check-plugin-exists:
 	@if [ ! -z "$(PLUGIN_NAME)" -a ! -e $(PLUGINS_DIR)/$(PLUGIN_NAME) ]; then \
@@ -180,7 +183,7 @@ check-plugin-exists:
 	fi
 
 plugin-theme-refresh: 
-	$(CODEGEN_TOOL) --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh -w=$(FIGMA_WHITELIST_FRAMES)
+	$(CODEGEN_TOOL) --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh 
 
 $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 	@# only update an existing figma.json

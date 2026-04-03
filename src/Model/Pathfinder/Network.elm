@@ -1,4 +1,4 @@
-module Model.Pathfinder.Network exposing (FindPosition(..), Network, NetworkConditions(..), getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, hasAddress, hasAggEdge, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isConditionMet, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
+module Model.Pathfinder.Network exposing (FindPosition(..), Network, NetworkConditions(..), getAddressCoords, getAddressIdsInCluster, getBoundingBox, getRecentTxForAddress, getTxsForAddress, hasAddress, hasAggEdge, hasAnimations, hasLoadedAddress, hasTx, isClusterFriendAlreadyOnGraph, isConditionMet, isEmpty, listTxsForAddress, listTxsForAddressByRaw)
 
 import Animation
 import Dict exposing (Dict)
@@ -193,8 +193,8 @@ hasAnimations network =
         |> not
 
 
-getRecentTxForAddress : Network -> Direction -> Id -> Maybe Tx
-getRecentTxForAddress network direction addressId =
+getTxsForAddress : Network -> Direction -> Id -> List Tx
+getTxsForAddress network direction addressId =
     let
         getTxSet =
             case direction of
@@ -208,12 +208,18 @@ getRecentTxForAddress network direction addressId =
     in
     Dict.get addressId network.addresses
         |> Maybe.andThen getTxSet
-        |> Maybe.andThen
+        |> Maybe.map
             (Set.toList
                 >> List.filterMap (\txId -> Dict.get txId network.txs)
-                >> List.sortBy .index
-                >> List.Extra.last
             )
+        |> Maybe.withDefault []
+
+
+getRecentTxForAddress : Network -> Direction -> Id -> Maybe Tx
+getRecentTxForAddress network direction addressId =
+    getTxsForAddress network direction addressId
+        |> List.sortBy .index
+        |> List.Extra.last
 
 
 isEmpty : Network -> Bool

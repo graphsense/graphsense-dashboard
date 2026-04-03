@@ -68,7 +68,7 @@ type alias Model =
     , exportCSV : ExportCSV.Model
     , exportCSVGraph : ExportCSV.Model
     , exportImage : Maybe ExportImage
-    , txsFilters : AssocList.Dict TxsFilterId TransactionFilter.Model
+    , txsFilters : AssocList.Dict TxsFilterId TransactionFilter.Settings
     }
 
 

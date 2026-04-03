@@ -16,6 +16,7 @@ type Effect
     = NavPushRouteEffect Route
     | PluginEffect (Cmd Plugin.Msg)
     | ApiEffect (Api.Effect Msg)
+    | BatchEffect (List Effect)
     | CmdEffect (Cmd Msg)
     | SearchEffect Search.Effect
     | ErrorEffect Error
@@ -43,6 +44,9 @@ perform eff =
 
         CmdEffect cmd ->
             cmd
+
+        BatchEffect _ ->
+            Cmd.none
 
         -- managed in Effect.elm
         ApiEffect _ ->

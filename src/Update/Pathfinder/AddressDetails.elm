@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (loadFirstTxsPage, makeExportCSVConfig, prepareCSV, syncByAddress, update)
+module Update.Pathfinder.AddressDetails exposing (loadFirstTxsPage, makeExportCSVConfig, prepareCSV, syncByAddress, update, updateTransactionTable)
 
 import Api.Data
 import Api.Request.Addresses
@@ -16,7 +16,9 @@ import Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import Init.Pathfinder.Tx as Tx
 import List.Extra
+import Maybe.Extra
 import Model.DateFilter exposing (DateFilterRaw)
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
@@ -39,11 +41,14 @@ import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple3
 import Update.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
 import Update.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
+import Update.Pathfinder.Table.TransactionTable as TransactionTable
+import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util exposing (and, n)
 import Util.Csv
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 import View.Locale as Locale
+import Workflow
 
 
 neighborsTableConfigWithMsg : (Direction -> Maybe String -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
@@ -105,32 +110,55 @@ fetchTransactions msg txs addressId sorting pagesize nextpage =
 
 fetchTransactionsWithPathfinderMsg : (Api.Data.AddressTxs -> Pathfinder.Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
 fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
-    Api.GetAddressTxsByDateEffect
-        { currency = Id.network addressId
-        , address = Id.id addressId
-        , direction = TransactionFilter.getDirection txs.filter
-        , pagesize = pagesize
-        , nextpage = nextpage
-        , order =
-            sorting
-                |> Maybe.andThen
-                    (\( column, isReversed ) ->
-                        if column == TransactionTable.titleTimestamp then
-                            if isReversed then
-                                Just Api.Request.Addresses.Order_Desc
+    let
+        filter =
+            TransactionFilter.getSettings txs.filter
+    in
+    TransactionFilter.getUtxoFilter txs.filter
+        |> Maybe.map
+            (\( { raw }, dir ) ->
+                let
+                    config =
+                        { addressId = addressId
+                        , direction = dir
+                        , allowMultiple = True
+                        }
+                in
+                WorkflowNextUtxoTx.start config raw
+                    |> Workflow.mapEffect (WorkflowNextUtxoTx config >> Pathfinder.AddressDetailsMsg addressId)
+                    |> Workflow.next
+                    |> List.map ApiEffect
+                    |> BatchEffect
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                Api.GetAddressTxsByDateEffect
+                    { currency = Id.network addressId
+                    , address = Id.id addressId
+                    , direction = TransactionFilter.getDirection filter
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    , order =
+                        sorting
+                            |> Maybe.andThen
+                                (\( column, isReversed ) ->
+                                    if column == TransactionTable.titleTimestamp then
+                                        if isReversed then
+                                            Just Api.Request.Addresses.Order_Desc
 
-                            else
-                                Just Api.Request.Addresses.Order_Asc
+                                        else
+                                            Just Api.Request.Addresses.Order_Asc
 
-                        else
-                            txs.order
-                    )
-        , tokenCurrency = TransactionFilter.getSelectedAsset txs.filter
-        , minDate = TransactionFilter.getDateRange txs.filter |> Maybe.andThen first
-        , maxDate = TransactionFilter.getDateRange txs.filter |> Maybe.andThen second
-        }
-        msg
-        |> ApiEffect
+                                    else
+                                        txs.order
+                                )
+                    , tokenCurrency = TransactionFilter.getSelectedAsset filter
+                    , minDate = TransactionFilter.getDateRange filter |> Maybe.andThen first
+                    , maxDate = TransactionFilter.getDateRange filter |> Maybe.andThen second
+                    }
+                    msg
+                    |> ApiEffect
+            )
 
 
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -311,15 +339,26 @@ update uc msg model =
 
                             changed =
                                 TransactionFilter.hasChanged txs.filter newFilter
+
+                            settings =
+                                TransactionFilter.getSettings newFilter
                         in
                         { txs
                             | filter = newFilter
+                            , table =
+                                TransactionTable.sort
+                                    (settings
+                                        |> TransactionFilter.getDirection
+                                        |> (==) (Just Incoming)
+                                    )
+                                    txs.table
                         }
                             |> RemoteData.Success
                             |> flip s_txs model
                             |> (if changed then
                                     flip pair
-                                        [ Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id) newFilter
+                                        [ settings
+                                            |> Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id)
                                             |> InternalEffect
                                         ]
                                         >> and (loadFirstTxsPage True)
@@ -516,6 +555,88 @@ update uc msg model =
             -- handled upstream
             n model
 
+        WorkflowNextUtxoTx config subMsg ->
+            WorkflowNextUtxoTx.update config subMsg
+                |> flip (handleWorkflowNextUtxo config) model
+
+
+handleWorkflowNextUtxo : WorkflowNextUtxoTx.Config -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
+handleWorkflowNextUtxo config wf model =
+    model.txs
+        |> RemoteData.map
+            (\txsTable ->
+                case wf of
+                    Workflow.Next eff ->
+                        eff
+                            |> List.map (Api.map (WorkflowNextUtxoTx config >> Pathfinder.AddressDetailsMsg config.addressId))
+                            |> List.map ApiEffect
+                            |> pair model
+
+                    _ ->
+                        let
+                            setter =
+                                InfiniteTable.appendData
+
+                            result =
+                                case wf of
+                                    Workflow.Ok tx ->
+                                        tx
+                                            |> utxoToAddressTx config.direction config.addressId
+                                            |> List.map Api.Data.AddressTxAddressTxUtxo
+
+                                    _ ->
+                                        []
+
+                            ( table, cmd, eff ) =
+                                txsTable.table
+                                    |> setter
+                                        (transactionTableConfig txsTable model.address.id)
+                                        TransactionTable.filter
+                                        Nothing
+                                        result
+                        in
+                        ( table, eff )
+                            |> mapFirst (flip s_table txsTable)
+                            |> mapFirst (RemoteData.Success >> flip s_txs model)
+                            |> mapSecond
+                                ((::)
+                                    (cmd
+                                        |> Cmd.map
+                                            (TransactionsTableSubTableMsg
+                                                >> Pathfinder.AddressDetailsMsg model.address.id
+                                            )
+                                        |> CmdEffect
+                                    )
+                                )
+            )
+        |> RemoteData.withDefault (n model)
+
+
+utxoToAddressTx : Direction -> Id -> Api.Data.TxUtxo -> List Api.Data.AddressTxUtxo
+utxoToAddressTx direction addressId utxo =
+    Tx.normalizeUtxo utxo
+        |> (case direction of
+                Incoming ->
+                    .outputs
+
+                Outgoing ->
+                    .inputs
+           )
+        |> Dict.get addressId
+        |> Maybe.map
+            (\io ->
+                { coinbase = False
+                , currency = utxo.currency
+                , height = utxo.height
+                , timestamp = utxo.timestamp
+                , txHash = utxo.txHash
+                , txType = "utxo"
+                , value = io.values
+                }
+                    |> List.singleton
+            )
+        |> Maybe.withDefault []
+
 
 closeTransactionTable : Model -> ( Model, List Effect )
 closeTransactionTable model =
@@ -675,7 +796,12 @@ syncByAddress uc network clusters dateFilterPreset model address =
 
                     txs =
                         model.txs
-                            |> RemoteData.map (\_ -> model.txs)
+                            |> RemoteData.map
+                                (\txs_ ->
+                                    TransactionTable.getQuickFilters network address.id
+                                        |> flip TransactionTable.updateQuickFilters txs_
+                                        |> RemoteData.Success
+                                )
                             |> RemoteData.withDefault
                                 (TransactionTable.init uc
                                     network
@@ -787,8 +913,7 @@ openTransactionTable _ dfp model =
                             RemoteData.Success
                                 { txs
                                     | filter =
-                                        model.txsFilter
-                                            |> Maybe.withDefault txs.filter
+                                        txs.filter
                                             |> (dfp
                                                     |> Maybe.map
                                                         (\dfp_ ->
@@ -866,3 +991,10 @@ prepareCSV locModel network data =
                 |> Util.Csv.string
              )
            ]
+
+
+updateTransactionTable : (TransactionTable.Model -> TransactionTable.Model) -> Model -> Model
+updateTransactionTable f model =
+    model.txs
+        |> RemoteData.map (\txs -> { model | txs = f txs |> RemoteData.Success })
+        |> RemoteData.withDefault model

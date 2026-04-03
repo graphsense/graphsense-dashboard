@@ -126,6 +126,9 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.CmdEffect _) ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.BatchEffect _) ->
+            Nothing
+
         Model.PathfinderEffect (Pathfinder.PluginEffect _) ->
             Nothing
 

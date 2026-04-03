@@ -45,11 +45,14 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
             else
                 ( Id.id b, Id.id a )
 
+        settings =
+            txTable.filter |> TransactionFilter.getSettings
+
         fromD =
-            TransactionFilter.getDateRange txTable.filter |> Maybe.andThen first
+            settings |> TransactionFilter.getDateRange |> Maybe.andThen first
 
         toD =
-            TransactionFilter.getDateRange txTable.filter |> Maybe.andThen second
+            settings |> TransactionFilter.getDateRange |> Maybe.andThen second
     in
     msg isA2b nextpage
         >> RelationDetailsMsg id
@@ -61,7 +64,7 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
             , maxHeight = Nothing
             , minDate = fromD
             , maxDate = toD
-            , tokenCurrency = TransactionFilter.getSelectedAsset txTable.filter
+            , tokenCurrency = TransactionFilter.getSelectedAsset settings
             , order =
                 sorting
                     |> Maybe.andThen
@@ -321,7 +324,13 @@ update _ id msg model =
                         (tableConfig id isA2b newTbl)
                     |> mapFirst (flip s_table newTbl)
                     |> mapFirst (flip gs.setTable model)
-                    |> mapSecond ((::) (Pathfinder.InternalChangedTxFilter (TxsFilterAggEdge isA2b id) newFilter |> InternalEffect))
+                    |> mapSecond
+                        ((::)
+                            (TransactionFilter.getSettings newFilter
+                                |> Pathfinder.InternalChangedTxFilter (TxsFilterAggEdge isA2b id)
+                                |> InternalEffect
+                            )
+                        )
 
             else
                 model

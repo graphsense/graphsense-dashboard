@@ -580,3 +580,7 @@ unsupported-bridge-notice: "Nota: Transazione bridge non supportata rilevata, de
 cluster tags: Tag derivati dal cluster
 cluster tags list: Elenco tag derivati dal cluster
 cluster tags disclaimer: "Questi tag non sono assegnati direttamente a questo indirizzo, ma sono derivati dal cluster di appartenenza. Il clustering può contenere errori, pertanto questi tag vanno utilizzati con cautela."
+datefilter-starting: dal
+datefilter-until: fino al
+by Tx: da Tx
+filter-utxo-only: solo UTXO
