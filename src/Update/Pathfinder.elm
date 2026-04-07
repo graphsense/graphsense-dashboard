@@ -384,17 +384,13 @@ syncSidePanel uc model =
                             |> n
 
                     TxDetails tid td ->
-                        case Dict.get tid model.network.txs of
-                            Just tx ->
-                                let
-                                    newM =
-                                        tx |> flip s_tx td
-                                in
-                                TxDetails.loadTxDetailsDataAccount tx newM
-                                    |> mapFirst (TxDetails tid >> Just)
-
-                            _ ->
-                                n Nothing
+                        Dict.get tid model.network.txs
+                            |> Maybe.map
+                                (flip s_tx td
+                                    >> TxDetails.loadTxDetailsDataAccount
+                                    >> mapFirst (TxDetails tid >> Just)
+                                )
+                            |> Maybe.withDefault (n Nothing)
 
                     AddressDetails aid ad ->
                         let
