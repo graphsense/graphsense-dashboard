@@ -899,10 +899,19 @@ quickFilterToLabel vc =
                         |> Maybe.withDefault []
                     )
                         ++ [ qf.date |> dateTimeFilterSmall vc qf.direction
-                           , qf.tx
+                           , let
+                                txLabel =
+                                    case qf.direction of
+                                        Outgoing ->
+                                            "datefilter-starting-tx"
+
+                                        Incoming ->
+                                            "datefilter-until-tx"
+                             in
+                             qf.tx
                                 |> Tx.getRawBaseTxHashForTxType
                                 |> truncateLongIdentifier
-                                |> dateTimeFilterRawSmall vc "by Tx"
+                                |> dateTimeFilterRawSmall vc txLabel
                            , qf.direction |> directionFilterString |> stringFilterSmall vc
                            ]
                 }

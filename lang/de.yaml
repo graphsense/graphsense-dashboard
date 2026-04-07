@@ -546,5 +546,9 @@ export-dialog-description: "Exportieren Sie den aktuellen Graphen in verschieden
 export-dialog-transparent-background: "transparenter Hintergrund"
 datefilter-starting: ab
 datefilter-until: bis
-by Tx: von Tx
+datefilter-starting-tx: ab Tx
+datefilter-until-tx: bis Tx
 filter-utxo-only: nur UTXO
+filter-quick-filter: Schnellfilter
+filter-custom-filter: Benutzerdefinierter Filter
+filter-none-selected: keine

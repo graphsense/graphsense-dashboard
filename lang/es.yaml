@@ -551,5 +551,9 @@ export-dialog-description: "exportar el gráfico actual a varios formatos"
 export-dialog-transparent-background: "fondo transparente"
 datefilter-starting: a partir del
 datefilter-until: hasta el
-by Tx: por Tx
+datefilter-starting-tx: a partir de Tx
+datefilter-until-tx: hasta Tx
 filter-utxo-only: solo UTXO
+filter-quick-filter: filtro rápido
+filter-custom-filter: filtro personalizado
+filter-none-selected: ninguno
