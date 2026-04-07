@@ -39,11 +39,11 @@ toExpressions config componentName node =
                     (getTextProperty componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
                         |> Maybe.map Gen.Html.Styled.call_.text
                         |> Maybe.withDefault (Gen.Html.Styled.text node.characters)
-                        |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
                         |> List.singleton
                         |> Elm.list
                     )
                 )
+            |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> List.singleton
 
 

@@ -390,38 +390,41 @@ renderDateTimeFilter vc resetMsg startDate endDate =
             none
 
         ( Just startP, Just endP ) ->
-            SidePanelComponents.filterLabel
+            SidePanelComponents.filterLabelDev
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
-                    , text1 = endP
-                    , text2 = "-"
-                    , text3 = startP
-                    , dateRangeVisible = True
+                    , text = endP
+                    , separator = "-"
+                    , start = startP
+                    , showSeparator = True
+                    , showStart = True
                     }
                 }
 
         ( Just startP, Nothing ) ->
-            SidePanelComponents.filterLabel
+            SidePanelComponents.filterLabelDev
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
-                    , text1 = startP
-                    , text2 = Locale.string vc.locale "datefilter-starting"
-                    , text3 = ""
-                    , dateRangeVisible = True
+                    , text = startP
+                    , separator = Locale.string vc.locale "datefilter-starting"
+                    , start = ""
+                    , showSeparator = True
+                    , showStart = False
                     }
                 }
 
         ( Nothing, Just endP ) ->
-            SidePanelComponents.filterLabel
+            SidePanelComponents.filterLabelDev
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
-                    , text1 = endP
-                    , text2 = Locale.string vc.locale "datefilter-until"
-                    , text3 = ""
-                    , dateRangeVisible = True
+                    , text = endP
+                    , separator = Locale.string vc.locale "datefilter-until"
+                    , start = ""
+                    , showSeparator = True
+                    , showStart = False
                     }
                 }
 
@@ -457,10 +460,11 @@ dateTimeFilterRawSmall : View.Config -> String -> String -> Html msg
 dateTimeFilterRawSmall vc label text =
     SidePanelComponents.filterLabelSmall
         { root =
-            { text1 = text
-            , text2 = Locale.string vc.locale label
-            , text3 = ""
-            , dateRangeVisible = True
+            { text = text
+            , separator = Locale.string vc.locale label
+            , start = ""
+            , showSeparator = True
+            , showStart = False
             }
         }
 
@@ -484,15 +488,16 @@ directionFilterString dir =
 
 stringFilterHeader : View.Config -> msg -> String -> Html msg
 stringFilterHeader vc msg str =
-    SidePanelComponents.filterLabel
+    SidePanelComponents.filterLabelDev
         { root =
             { iconInstance =
                 closeButtonGrey msg
-            , text3 = ""
-            , text2 = ""
-            , text1 =
+            , start = ""
+            , separator = ""
+            , text =
                 Locale.string vc.locale str
-            , dateRangeVisible = False
+            , showSeparator = False
+            , showStart = False
             }
         }
 
@@ -501,11 +506,12 @@ stringFilterSmall : View.Config -> String -> Html msg
 stringFilterSmall vc str =
     SidePanelComponents.filterLabelSmall
         { root =
-            { text3 = ""
-            , text2 = ""
-            , text1 =
+            { start = ""
+            , separator = ""
+            , text =
                 Locale.string vc.locale str
-            , dateRangeVisible = False
+            , showSeparator = False
+            , showStart = False
             }
         }
 
