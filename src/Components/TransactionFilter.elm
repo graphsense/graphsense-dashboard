@@ -661,15 +661,8 @@ view vc net config (Internal model) =
                   , Css.right (Css.px model.dialogPosition.right)
                   , Css.top (Css.px model.dialogPosition.top)
                   , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
-                  , Css.cursor Css.move
                   ]
                     |> css
-                , on "mousedown"
-                    (Json.Decode.map2 (\x y -> config.tag <| StartDrag x y)
-                        (Json.Decode.at [ "clientX" ] Json.Decode.int)
-                        (Json.Decode.at [ "clientY" ] Json.Decode.int)
-                    )
-                , on "mouseup" (Json.Decode.succeed <| config.tag EndDrag)
                 ]
                 [ txFilterDialogView vc net config (Internal model) ]
 
@@ -737,6 +730,22 @@ txFilterDialogView vc net config (Internal model) =
 
                     else
                         []
+                ]
+            |> Rs.s_iconsDragHandle
+                [ on "mousedown"
+                    (Json.Decode.map2 (\x y -> config.tag <| StartDrag x y)
+                        (Json.Decode.at [ "clientX" ] Json.Decode.int)
+                        (Json.Decode.at [ "clientY" ] Json.Decode.int)
+                    )
+                , on "mouseup" (Json.Decode.succeed <| config.tag EndDrag)
+                , css
+                    [ Css.cursor <|
+                        if model.isDragging then
+                            Css.grabbing
+
+                        else
+                            Css.grab
+                    ]
                 ]
         )
         { radioItemsList = directionRadios
