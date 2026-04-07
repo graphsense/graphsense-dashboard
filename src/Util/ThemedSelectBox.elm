@@ -14,6 +14,7 @@ module Util.ThemedSelectBox exposing
     , view
     , viewDisabled
     , viewWithLabel
+    , withAttributes
     , withFilter
     )
 
@@ -116,13 +117,17 @@ defaultConfig optionToLabel =
                 >> Html.Styled.div
                     [ css Sc.dropDownHeaderOpenText_details.styles ]
         , filter = always True
+        , attributes = []
         }
 
 
 defaultConfigHtml : (a -> Html.Styled.Html (Msg a)) -> Config a
 defaultConfigHtml optionToLabel =
     Config
-        { optionToLabel = optionToLabel, filter = always True }
+        { optionToLabel = optionToLabel
+        , filter = always True
+        , attributes = []
+        }
 
 
 type Config a
@@ -132,12 +137,18 @@ type Config a
 type alias ConfigInternal a =
     { optionToLabel : a -> Html.Styled.Html (Msg a)
     , filter : a -> Bool
+    , attributes : List (Html.Styled.Attribute (Msg a))
     }
 
 
-viewWithLabel : Config a -> List (Html.Styled.Attribute (Msg a)) -> Model a -> a -> String -> Html (Msg a)
-viewWithLabel config attrs m selected label =
-    F.dropDownLabel { dropDown = { variant = view config attrs m selected }, root = { label = label } }
+withAttributes : List (Html.Styled.Attribute (Msg a)) -> Config a -> Config a
+withAttributes attributes (Config config) =
+    Config { config | attributes = attributes }
+
+
+viewWithLabel : Config a -> Model a -> a -> String -> Html (Msg a)
+viewWithLabel config m selected label =
+    F.dropDownLabel { dropDown = { variant = view config m selected }, root = { label = label } }
 
 
 viewDisabled : Config a -> List (Html.Styled.Attribute (Msg a)) -> Model a -> a -> Html (Msg a)
@@ -161,8 +172,8 @@ viewDisabled (Config config) attrs _ selected =
         }
 
 
-view : Config a -> List (Html.Styled.Attribute (Msg a)) -> Model a -> a -> Html (Msg a)
-view (Config config) attrs (SelectBox sBox) selected =
+view : Config a -> Model a -> a -> Html (Msg a)
+view (Config config) (SelectBox sBox) selected =
     let
         selectedItem =
             List.Extra.find ((==) selected) sBox.options
@@ -185,7 +196,7 @@ view (Config config) attrs (SelectBox sBox) selected =
                         |> css
                     , Util.View.onClickWithStop (Select x)
                     ]
-                        ++ attrs
+                        ++ config.attributes
             in
             Sc.dropDownLabelsWithInstances
                 (Sc.dropDownLabelsAttributes
@@ -232,10 +243,10 @@ view (Config config) attrs (SelectBox sBox) selected =
                      , onMouseLeave Close
                      , Util.View.pointer
                      ]
-                        ++ attrs
+                        ++ config.attributes
                     )
-                |> Rs.s_dropDownList (css dropdownOverlayCss :: attrs)
-                |> Rs.s_dropDownHeaderOpen attrs
+                |> Rs.s_dropDownList (css dropdownOverlayCss :: config.attributes)
+                |> Rs.s_dropDownHeaderOpen config.attributes
              --|> Rs.s_text [ css [ Css.height Css.auto ] ]
             )
             (Sc.dropDownOpenInstances
@@ -255,7 +266,7 @@ view (Config config) attrs (SelectBox sBox) selected =
                     ([ Util.View.onClickWithStop Open
                      , Util.View.pointer
                      ]
-                        ++ attrs
+                        ++ config.attributes
                     )
             )
             (Sc.dropDownClosedInstances

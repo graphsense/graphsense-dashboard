@@ -798,8 +798,9 @@ txFilterDialogView vc net config (Internal model) =
                     |> Maybe.map
                         (\sa ->
                             ThemedSelectBox.view
-                                (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets")))
-                                [ css [ Css.width <| Css.px 200 ] ]
+                                (ThemedSelectBox.defaultConfig (Maybe.withDefault (Locale.string vc.locale "All assets"))
+                                    |> ThemedSelectBox.withAttributes [ css [ Css.width <| Css.px 200 ] ]
+                                )
                                 sa
                                 model.settings.asset
                                 |> Html.map TxTableAssetSelectBoxMsg
@@ -816,12 +817,14 @@ txFilterDialogView vc net config (Internal model) =
                     |> Maybe.map
                         (\qf ->
                             ThemedSelectBox.view
-                                (ThemedSelectBox.defaultConfigHtml (quickFilterToLabel vc))
-                                [ css
-                                    [ Css.width <| Css.px 280
-                                    , Css.height Css.auto
-                                    ]
-                                ]
+                                (ThemedSelectBox.defaultConfigHtml (quickFilterToLabel vc)
+                                    |> ThemedSelectBox.withAttributes
+                                        [ css
+                                            [ Css.width <| Css.px 280
+                                            , Css.height Css.auto
+                                            ]
+                                        ]
+                                )
                                 qf
                                 (settingsToQuickFilter model)
                                 |> Html.map TxTableQuickFilterSelectBoxMsg
