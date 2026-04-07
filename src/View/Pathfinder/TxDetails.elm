@@ -46,8 +46,9 @@ import View.Pathfinder.Table.SubTxsTable as SubTxsTable
 filterConfig : TransactionFilter.FilterHeaderConfig TxDetailsMsg
 filterConfig =
     { tag = TransactionFilterMsg
-    , toggleTxFilterViewMsg = UserClickedToggleSubTxsTableFilter
     , exportCsv = Nothing
+    , right = 42
+    , top = 250
     }
 
 
@@ -90,7 +91,8 @@ accountAssetList vc viewState txExistsFn =
                     , onClick = UserClickedToggleSubTxsTable |> TxDetailsMsg
                     }
         in
-        [ TransactionFilter.filterHeader vc
+        [ TransactionFilter.view vc
+            (Id.network viewState.tx.id)
             filterConfig
             viewState.subTxsTableFilter
             |> Html.Styled.map TxDetailsMsg
@@ -203,22 +205,6 @@ account vc viewState id txExistsFn =
                 , secondRowVisible = False
                 }
             }
-        , if viewState.isSubTxsTableFilterDialogOpen then
-            div
-                [ [ Css.position Css.fixed
-                  , Css.right (Css.px 42)
-                  , Css.top (Css.px 350)
-                  , Css.property "transform" "translate(0%, -50%)"
-                  , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
-                  ]
-                    |> css
-                ]
-                [ TransactionFilter.txFilterDialogView vc (Id.network id) filterConfig viewState.subTxsTableFilter
-                    |> Html.Styled.map TxDetailsMsg
-                ]
-
-          else
-            none
         ]
 
 

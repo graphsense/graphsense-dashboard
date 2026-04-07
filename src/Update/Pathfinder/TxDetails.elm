@@ -11,7 +11,7 @@ import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails exposing (Model)
 import Msg.Pathfinder as Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
-import RecordSetter exposing (s_baseTx, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable)
+import RecordSetter exposing (s_baseTx, s_state, s_subTxsTable)
 import RemoteData
 import Tuple exposing (mapFirst, mapSecond, pair)
 import Util exposing (and, n)
@@ -140,11 +140,6 @@ update msg model =
                         n
                    )
 
-        UserClickedToggleSubTxsTableFilter ->
-            model
-                |> s_isSubTxsTableFilterDialogOpen (not model.isSubTxsTableFilterDialogOpen)
-                |> n
-
         BrowserGotBaseTx tx ->
             n
                 { model
@@ -181,7 +176,6 @@ update msg model =
                 | subTxsTable = nt
                 , hasSubTxsTable = hasSubTxsTable
                 , subTxsTableOpen = hasSubTxsTable && model.subTxsTableOpen
-                , isSubTxsTableFilterDialogOpen = hasSubTxsTable && model.isSubTxsTableFilterDialogOpen
               }
             , CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: meff
             )

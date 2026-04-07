@@ -80,32 +80,6 @@ view plugins pluginStates vc model id viewState =
                         utxo plugins pluginStates vc model id viewState address
                 )
             |> Maybe.withDefault none
-        , case viewState.txs of
-            RemoteData.Success txs ->
-                if txs.isTxFilterViewOpen then
-                    let
-                        filterConfig =
-                            { tag = TransactionFilterMsg
-                            , toggleTxFilterViewMsg = ToggleTxFilterView
-                            , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
-                            }
-                    in
-                    div
-                        [ [ Css.position Css.fixed
-                          , Css.right (Css.px 42)
-                          , Css.top (Css.px 350)
-                          , Css.property "transform" "translate(0%, -50%)"
-                          , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
-                          ]
-                            |> css
-                        ]
-                        [ TransactionFilter.txFilterDialogView vc (Id.network id) filterConfig txs.filter |> Html.map (Pathfinder.AddressDetailsMsg viewState.address.id) ]
-
-                else
-                    none
-
-            _ ->
-                none
         ]
 
 
@@ -651,10 +625,12 @@ transactionTableView vc addressId txOnGraphFn model txs =
                 (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
                 txs.table
     in
-    [ TransactionFilter.filterHeader vc
+    [ TransactionFilter.view vc
+        (Id.network addressId)
         { tag = TransactionFilterMsg
-        , toggleTxFilterViewMsg = ToggleTxFilterView
         , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
+        , right = 42
+        , top = 250
         }
         txs.filter
     , table

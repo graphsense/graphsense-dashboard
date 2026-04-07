@@ -193,7 +193,6 @@ type TxDetailsMsg
     | BrowserGotBaseTx Api.Data.Tx
     | BrowserGotTxFlows (Maybe String) Api.Data.Txs
     | UserClickedToggleSubTxsTable
-    | UserClickedToggleSubTxsTableFilter
     | UserClickedTxInSubTxsTable Api.Data.TxAccount
     | TransactionFilterMsg TransactionFilter.Msg
 

@@ -18,7 +18,7 @@ import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
 import Msg.Pathfinder as Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
-import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_b2aTable, s_b2aTableOpen, s_isTxFilterViewOpen, s_table)
+import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_b2aTable, s_b2aTableOpen, s_table)
 import Table
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, second)
@@ -254,32 +254,6 @@ update _ id msg model =
         RelationDetails.UserClickedTx _ ->
             -- handled upstream
             n model
-
-        ToggleTxFilterView isA2b ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                tbl =
-                    gs.getTable model
-            in
-            tbl
-                |> s_isTxFilterViewOpen (not tbl.isTxFilterViewOpen)
-                |> flip gs.setTable model
-                |> n
-
-        CloseTxFilterView isA2b ->
-            let
-                gs =
-                    gettersAndSetters isA2b
-
-                tbl =
-                    gs.getTable model
-            in
-            tbl
-                |> s_isTxFilterViewOpen False
-                |> flip gs.setTable model
-                |> n
 
         TransactionFilterMsg isA2b subMsg ->
             let
