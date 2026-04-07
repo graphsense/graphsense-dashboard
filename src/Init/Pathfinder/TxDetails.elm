@@ -65,5 +65,4 @@ init txsFilter assets tx =
                 )
             |> TransactionFilter.init
             |> TransactionFilter.withAssetSelectBox assets
-    , isSubTxsTableFilterDialogOpen = False
     }

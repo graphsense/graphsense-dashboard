@@ -16,8 +16,6 @@ type Msg
     | UserClickedTxCheckboxInTable Api.Data.Link
     | UserClickedTx Id
     | NoOp
-    | ToggleTxFilterView Bool
-    | CloseTxFilterView Bool
     | TransactionFilterMsg Bool TransactionFilter.Msg
     | ExportCSVMsg Bool RelationTxsTable.Model ExportCSV.Msg
     | BrowserGotLinksForExport Bool RelationTxsTable.Model Api.Data.Links

@@ -18,7 +18,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Tx as Tx
-import Msg.Pathfinder as Pathfinder exposing (Msg(..))
+import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import RecordSetter as Rs
 import RemoteData exposing (RemoteData(..))
@@ -106,73 +106,43 @@ view vc model id viewState =
                     }
                 }
     in
-    div []
-        (SidePanelComponents.sidePanelRelationshipWithAttributes
-            (SidePanelComponents.sidePanelRelationshipAttributes
-                |> Rs.s_root
-                    [ sidePanelCss
-                        |> css
-                    ]
-                |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
-                |> Rs.s_valuesList
-                    [ css [ Css.overflowY Css.auto ] ]
-            )
-            { tabsList =
-                [ tableTab vc model id viewState isA2b
-                , tableTab vc model id viewState isB2a
+    SidePanelComponents.sidePanelRelationshipWithAttributes
+        (SidePanelComponents.sidePanelRelationshipAttributes
+            |> Rs.s_root
+                [ sidePanelCss
+                    |> css
                 ]
-                    |> List.map (Html.Styled.map (RelationDetailsMsg id))
-            , valuesList =
-                valuesList
-                    |> List.map valuesToValuesRow
-            }
-            { leftTab = { variant = none }
-            , rightTab = { variant = none }
-            , root =
-                { tabsVisible = False
-                , address1 =
-                    leftId
-                        |> Id.id
-                        |> truncateLongIdentifier
-                , address2 =
-                    rightId
-                        |> Id.id
-                        |> truncateLongIdentifier
-                , title =
-                    Locale.string vc.locale "Asset transfers between"
-                        |> Locale.titleCase vc.locale
-                , totalReceivedLabel = Locale.string vc.locale "Total transferred"
-                }
-            }
-            :: ([ ( True, viewState.a2bTable ), ( False, viewState.b2aTable ) ]
-                    |> List.map
-                        (\( isA2b_, ts ) ->
-                            if ts.isTxFilterViewOpen then
-                                let
-                                    filterDialogMsgs =
-                                        { tag = RelationDetails.TransactionFilterMsg isA2b_
-                                        , toggleTxFilterViewMsg = RelationDetails.ToggleTxFilterView isA2b_
-                                        , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b ts, model.exportCSV )
-                                        }
-                                in
-                                div
-                                    [ [ Css.position Css.fixed
-                                      , Css.right (Css.px 42)
-                                      , Css.top (Css.px 350)
-                                      , Css.property "transform" "translate(0%, -50%)"
-                                      , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
-                                      ]
-                                        |> css
-                                    ]
-                                    [ TransactionFilter.txFilterDialogView vc network filterDialogMsgs ts.filter
-                                        |> Html.Styled.map (Pathfinder.RelationDetailsMsg id)
-                                    ]
-
-                            else
-                                none
-                        )
-               )
+            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
+            |> Rs.s_valuesList
+                [ css [ Css.overflowY Css.auto ] ]
         )
+        { tabsList =
+            [ tableTab vc model id viewState isA2b
+            , tableTab vc model id viewState isB2a
+            ]
+                |> List.map (Html.Styled.map (RelationDetailsMsg id))
+        , valuesList =
+            valuesList
+                |> List.map valuesToValuesRow
+        }
+        { leftTab = { variant = none }
+        , rightTab = { variant = none }
+        , root =
+            { tabsVisible = False
+            , address1 =
+                leftId
+                    |> Id.id
+                    |> truncateLongIdentifier
+            , address2 =
+                rightId
+                    |> Id.id
+                    |> truncateLongIdentifier
+            , title =
+                Locale.string vc.locale "Asset transfers between"
+                    |> Locale.titleCase vc.locale
+            , totalReceivedLabel = Locale.string vc.locale "Total transferred"
+            }
+        }
 
 
 tableTab : View.Config -> Pathfinder.Model -> ( Id, Id ) -> RelationDetails.Model -> Bool -> Html RelationDetails.Msg
@@ -288,9 +258,9 @@ tableTab vc model edgeId viewState isA2b =
                         SidePanelComponents.sidePanelRelatedAddressesContent_details.styles
                             ++ fullWidth
                     ]
-                    [ TransactionFilter.filterHeader vc
+                    [ TransactionFilter.view vc
+                        (Id.network id)
                         { tag = RelationDetails.TransactionFilterMsg isA2b
-                        , toggleTxFilterViewMsg = RelationDetails.ToggleTxFilterView isA2b
                         , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b table, model.exportCSV )
                         }
                         table.filter

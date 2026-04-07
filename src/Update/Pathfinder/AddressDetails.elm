@@ -308,27 +308,6 @@ update uc msg model =
                     )
                 |> RemoteData.withDefault (n model)
 
-        ToggleTxFilterView ->
-            model.txs
-                |> RemoteData.map
-                    (\txsTable ->
-                        { model
-                            | txs =
-                                { txsTable
-                                    | isTxFilterViewOpen = not txsTable.isTxFilterViewOpen
-                                }
-                                    |> RemoteData.Success
-                        }
-                    )
-                |> RemoteData.withDefault model
-                |> n
-
-        CloseTxFilterView ->
-            model.txs
-                |> RemoteData.map (s_isTxFilterViewOpen False >> RemoteData.Success >> flip s_txs model)
-                |> RemoteData.withDefault model
-                |> n
-
         TransactionFilterMsg subMsg ->
             model.txs
                 |> RemoteData.map

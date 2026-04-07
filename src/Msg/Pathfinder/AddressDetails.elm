@@ -55,8 +55,6 @@ type Msg
     | NeighborsTableSubTableMsg Direction InfiniteTable.Msg
     | GotTxsForAddressDetails (Maybe String) Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Direction (Maybe String) Api.Data.NeighborAddresses
-    | ToggleTxFilterView
-    | CloseTxFilterView
     | TransactionFilterMsg TransactionFilter.Msg
     | TableMsg Table.State
     | RelatedAddressesTableMsg Table.State

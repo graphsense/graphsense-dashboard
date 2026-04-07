@@ -138,12 +138,6 @@ shallPushHistory plugins msg _ =
                 AddressDetails.GotTxsForAddressDetails _ _ ->
                     False
 
-                AddressDetails.ToggleTxFilterView ->
-                    False
-
-                AddressDetails.CloseTxFilterView ->
-                    False
-
                 AddressDetails.GotNeighborsForAddressDetails _ _ _ ->
                     False
 
@@ -231,12 +225,6 @@ shallPushHistory plugins msg _ =
                     False
 
                 RelationDetails.NoOp ->
-                    False
-
-                RelationDetails.ToggleTxFilterView _ ->
-                    False
-
-                RelationDetails.CloseTxFilterView _ ->
                     False
 
                 RelationDetails.TransactionFilterMsg _ _ ->

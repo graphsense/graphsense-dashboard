@@ -1,12 +1,16 @@
 module Sub.Pathfinder exposing (subscriptions)
 
 import Browser.Events
+import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Json.Decode as Decode
 import Model.Graph exposing (Dragging(..))
-import Model.Pathfinder exposing (Model)
+import Model.Pathfinder exposing (Details(..), Model)
 import Msg.ExportDialog exposing (Msg(..))
 import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder.AddressDetails
+import Msg.Pathfinder.RelationDetails
+import RemoteData
 import Set
 import Sub.Graph.Transform as Transform
 
@@ -113,5 +117,41 @@ subscriptions model =
     , model.toolbarHovercard
         |> Maybe.map (Tuple.second >> Hovercard.subscriptions >> Sub.map ToolbarHovercardMsg)
         |> Maybe.withDefault Sub.none
+    , case model.details of
+        Just (TxDetails _ txDetailsModel) ->
+            TransactionFilter.subscriptions txDetailsModel.subTxsTableFilter
+                |> Sub.map (\msg -> TxDetailsMsg (Msg.Pathfinder.TransactionFilterMsg msg))
+
+        Just (AddressDetails aid addressDetailsModel) ->
+            case addressDetailsModel.txs of
+                RemoteData.Success txsModel ->
+                    TransactionFilter.subscriptions txsModel.filter
+                        |> Sub.map (\msg -> AddressDetailsMsg aid (Msg.Pathfinder.AddressDetails.TransactionFilterMsg msg))
+
+                _ ->
+                    Sub.none
+
+        Just (RelationDetails rid relationDetailsModel) ->
+            let
+                a2bFilterSub =
+                    if relationDetailsModel.a2bTableOpen then
+                        TransactionFilter.subscriptions relationDetailsModel.a2bTable.filter
+                            |> Sub.map (\msg -> RelationDetailsMsg rid (Msg.Pathfinder.RelationDetails.TransactionFilterMsg True msg))
+
+                    else
+                        Sub.none
+
+                b2aFilterSub =
+                    if relationDetailsModel.b2aTableOpen then
+                        TransactionFilter.subscriptions relationDetailsModel.b2aTable.filter
+                            |> Sub.map (\msg -> RelationDetailsMsg rid (Msg.Pathfinder.RelationDetails.TransactionFilterMsg False msg))
+
+                    else
+                        Sub.none
+            in
+            Sub.batch [ a2bFilterSub, b2aFilterSub ]
+
+        _ ->
+            Sub.none
     ]
         |> Sub.batch
