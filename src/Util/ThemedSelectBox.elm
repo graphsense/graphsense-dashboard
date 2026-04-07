@@ -109,7 +109,14 @@ update msg model =
 defaultConfig : (a -> String) -> Config a
 defaultConfig optionToLabel =
     Config
-        { optionToLabel = optionToLabel >> Html.Styled.text, filter = always True }
+        { optionToLabel =
+            optionToLabel
+                >> Html.Styled.text
+                >> List.singleton
+                >> Html.Styled.div
+                    [ css Sc.dropDownHeaderOpenText_details.styles ]
+        , filter = always True
+        }
 
 
 defaultConfigHtml : (a -> Html.Styled.Html (Msg a)) -> Config a

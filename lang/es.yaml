@@ -560,5 +560,9 @@ cluster tags list: Lista de etiquetas derivadas del cluster
 cluster tags disclaimer: "Estas etiquetas no están asignadas directamente a esta dirección, sino que se infieren del cluster al que pertenece. El clustering puede contener errores, por lo que estas etiquetas deben usarse con precaución."
 datefilter-starting: a partir del
 datefilter-until: hasta el
-by Tx: por Tx
+datefilter-starting-tx: a partir de Tx
+datefilter-until-tx: hasta Tx
 filter-utxo-only: solo UTXO
+filter-quick-filter: filtro rápido
+filter-custom-filter: filtro personalizado
+filter-none-selected: ninguno seleccionado

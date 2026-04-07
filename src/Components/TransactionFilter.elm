@@ -9,8 +9,9 @@ import Css.DateTimePicker as DateTimePicker
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes as Attributes
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Events exposing (onClick, stopPropagationOn)
 import Init.DateRangePicker as DateRangePicker
+import Json.Decode
 import List.Extra
 import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
@@ -390,38 +391,41 @@ renderDateTimeFilter vc resetMsg startDate endDate =
             none
 
         ( Just startP, Just endP ) ->
-            SidePanelComponents.filterLabel
+            SidePanelComponents.filterLabelDev
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
-                    , text1 = endP
-                    , text2 = "-"
-                    , text3 = startP
-                    , dateRangeVisible = True
+                    , text = endP
+                    , separator = "-"
+                    , start = startP
+                    , showSeparator = True
+                    , showStart = True
                     }
                 }
 
         ( Just startP, Nothing ) ->
-            SidePanelComponents.filterLabel
+            SidePanelComponents.filterLabelDev
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
-                    , text1 = startP
-                    , text2 = Locale.string vc.locale "datefilter-starting"
-                    , text3 = ""
-                    , dateRangeVisible = True
+                    , text = startP
+                    , separator = Locale.string vc.locale "datefilter-starting"
+                    , start = ""
+                    , showSeparator = True
+                    , showStart = False
                     }
                 }
 
         ( Nothing, Just endP ) ->
-            SidePanelComponents.filterLabel
+            SidePanelComponents.filterLabelDev
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
-                    , text1 = endP
-                    , text2 = Locale.string vc.locale "datefilter-until"
-                    , text3 = ""
-                    , dateRangeVisible = True
+                    , text = endP
+                    , separator = Locale.string vc.locale "datefilter-until"
+                    , start = ""
+                    , showSeparator = True
+                    , showStart = False
                     }
                 }
 
@@ -457,10 +461,11 @@ dateTimeFilterRawSmall : View.Config -> String -> String -> Html msg
 dateTimeFilterRawSmall vc label text =
     SidePanelComponents.filterLabelSmall
         { root =
-            { text1 = text
-            , text2 = Locale.string vc.locale label
-            , text3 = ""
-            , dateRangeVisible = True
+            { text = text
+            , separator = Locale.string vc.locale label
+            , start = ""
+            , showSeparator = True
+            , showStart = False
             }
         }
 
@@ -484,15 +489,16 @@ directionFilterString dir =
 
 stringFilterHeader : View.Config -> msg -> String -> Html msg
 stringFilterHeader vc msg str =
-    SidePanelComponents.filterLabel
+    SidePanelComponents.filterLabelDev
         { root =
             { iconInstance =
                 closeButtonGrey msg
-            , text3 = ""
-            , text2 = ""
-            , text1 =
+            , start = ""
+            , separator = ""
+            , text =
                 Locale.string vc.locale str
-            , dateRangeVisible = False
+            , showSeparator = False
+            , showStart = False
             }
         }
 
@@ -501,11 +507,12 @@ stringFilterSmall : View.Config -> String -> Html msg
 stringFilterSmall vc str =
     SidePanelComponents.filterLabelSmall
         { root =
-            { text3 = ""
-            , text2 = ""
-            , text1 =
+            { start = ""
+            , separator = ""
+            , text =
                 Locale.string vc.locale str
-            , dateRangeVisible = False
+            , showSeparator = False
+            , showStart = False
             }
         }
 
@@ -723,11 +730,11 @@ txFilterDialogView vc net config (Internal model) =
                             else
                                 let
                                     drpFilledHeader =
-                                        SidePanelComponents.datePickerFilledWithAttributes
-                                            (SidePanelComponents.datePickerFilledAttributes
+                                        SidePanelComponents.datePickerFilledDevWithAttributes
+                                            (SidePanelComponents.datePickerFilledDevAttributes
                                                 |> Rs.s_root
                                                     ([ Util.View.pointer
-                                                     , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
+                                                     , [ Css.hover SidePanelComponents.datePickerFilledDevStateHover_details.styles ] |> css
                                                      ]
                                                         ++ (case model.dateRangePicker of
                                                                 Just _ ->
@@ -737,20 +744,45 @@ txFilterDialogView vc net config (Internal model) =
                                                                     []
                                                            )
                                                     )
+                                                |> Rs.s_iconsCloseBlack
+                                                    [ Json.Decode.succeed ( ResetDateRangePicker, True )
+                                                        |> stopPropagationOn "click"
+                                                    ]
                                             )
                                 in
                                 case ( startDate, endDate ) of
                                     ( Just startP, Just endP ) ->
                                         drpFilledHeader
-                                            { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to", state = SidePanelComponents.DatePickerFilledStateDefault } }
+                                            { root =
+                                                { from = startP
+                                                , to = endP
+                                                , pronoun = Locale.string vc.locale "to"
+                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , showIconClose = True
+                                                }
+                                            }
 
                                     ( Just startP, Nothing ) ->
                                         drpFilledHeader
-                                            { root = { from = "", to = startP, pronoun = Locale.string vc.locale "datefilter-starting", state = SidePanelComponents.DatePickerFilledStateDefault } }
+                                            { root =
+                                                { from = ""
+                                                , to = startP
+                                                , pronoun = Locale.string vc.locale "datefilter-starting"
+                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , showIconClose = True
+                                                }
+                                            }
 
                                     ( Nothing, Just endP ) ->
                                         drpFilledHeader
-                                            { root = { from = "", to = endP, pronoun = Locale.string vc.locale "datefilter-until", state = SidePanelComponents.DatePickerFilledStateDefault } }
+                                            { root =
+                                                { from = ""
+                                                , to = endP
+                                                , pronoun = Locale.string vc.locale "datefilter-until"
+                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , showIconClose = True
+                                                }
+                                            }
 
                                     ( Nothing, Nothing ) ->
                                         drp
@@ -893,10 +925,19 @@ quickFilterToLabel vc =
                         |> Maybe.withDefault []
                     )
                         ++ [ qf.date |> dateTimeFilterSmall vc qf.direction
-                           , qf.tx
+                           , let
+                                txLabel =
+                                    case qf.direction of
+                                        Outgoing ->
+                                            "datefilter-starting-tx"
+
+                                        Incoming ->
+                                            "datefilter-until-tx"
+                             in
+                             qf.tx
                                 |> Tx.getRawBaseTxHashForTxType
                                 |> truncateLongIdentifier
-                                |> dateTimeFilterRawSmall vc "by Tx"
+                                |> dateTimeFilterRawSmall vc txLabel
                            , qf.direction |> directionFilterString |> stringFilterSmall vc
                            ]
                 }

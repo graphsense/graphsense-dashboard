@@ -7,9 +7,8 @@ import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
-import Init.Pathfinder.TxDetails exposing (initSubTxTable)
 import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
-import Model.Pathfinder.Tx as Tx exposing (Tx)
+import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails exposing (Model)
 import Msg.Pathfinder as Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter exposing (s_baseTx, s_isSubTxsTableFilterDialogOpen, s_state, s_subTxsTable)
@@ -61,23 +60,30 @@ transactionTableFilter =
     }
 
 
-loadTxDetailsDataAccount : Tx -> Model -> ( Model, List Effect )
-loadTxDetailsDataAccount tx model =
+loadFirstPage : Model -> ( Model, List Effect )
+loadFirstPage model =
     let
         config =
             transactionTableConfig model
+    in
+    InfiniteTable.loadFirstPage config model.subTxsTable
+        |> mapFirst (flip s_subTxsTable model)
 
+
+loadTxDetailsDataAccount : Model -> ( Model, List Effect )
+loadTxDetailsDataAccount model =
+    let
         hasToFetchMoreData =
-            Data.isAccountLike (tx.id |> Id.network) && model.baseTx == RemoteData.NotAsked
+            Data.isAccountLike (model.tx.id |> Id.network) && model.baseTx == RemoteData.NotAsked
 
         baseTxHash =
-            tx |> Tx.getRawBaseTxHashForTx
+            model.tx |> Tx.getRawBaseTxHashForTx
 
         effects =
             if hasToFetchMoreData then
                 [ (BrowserGotBaseTx >> TxDetailsMsg)
                     |> Api.GetTxEffect
-                        { currency = tx |> Tx.getNetwork
+                        { currency = model.tx |> Tx.getNetwork
                         , txHash = baseTxHash
                         , tokenTxId = Nothing
                         , includeIo = False
@@ -89,25 +95,12 @@ loadTxDetailsDataAccount tx model =
                 []
     in
     if hasToFetchMoreData then
-        InfiniteTable.loadFirstPage config model.subTxsTable
-            |> mapFirst (flip s_subTxsTable model)
+        loadFirstPage model
             |> mapFirst (s_baseTx RemoteData.Loading)
             |> mapSecond ((++) effects)
 
     else
         n model
-
-
-reloadSubTxTable : Model -> ( Model, List Effect )
-reloadSubTxTable m =
-    n
-        { m
-            | baseTx = RemoteData.NotAsked
-            , hasSubTxsTable = False
-            , subTxsTableOpen = False
-            , isSubTxsTableFilterDialogOpen = False
-            , subTxsTable = initSubTxTable
-        }
 
 
 hasActualSubTxs : List Api.Data.TxAccount -> Bool
@@ -141,7 +134,7 @@ update msg model =
                                 |> Pathfinder.InternalChangedTxFilter (TxsFilterTx model.tx.id)
                                 |> InternalEffect
                             ]
-                            >> and reloadSubTxTable
+                            >> and loadFirstPage
 
                     else
                         n
@@ -171,11 +164,7 @@ update msg model =
                     txs.txs |> List.filterMap Tx.getAccountTxRaw
 
                 hasSubTxsTable =
-                    if fetchedPage == Nothing then
-                        hasActualSubTxs accountTxs
-
-                    else
-                        model.hasSubTxsTable
+                    model.hasSubTxsTable || hasActualSubTxs accountTxs
 
                 setter =
                     if fetchedPage == Nothing then
@@ -191,18 +180,8 @@ update msg model =
             ( { model
                 | subTxsTable = nt
                 , hasSubTxsTable = hasSubTxsTable
-                , subTxsTableOpen =
-                    if hasSubTxsTable then
-                        model.subTxsTableOpen
-
-                    else
-                        False
-                , isSubTxsTableFilterDialogOpen =
-                    if hasSubTxsTable then
-                        model.isSubTxsTableFilterDialogOpen
-
-                    else
-                        False
+                , subTxsTableOpen = hasSubTxsTable && model.subTxsTableOpen
+                , isSubTxsTableFilterDialogOpen = hasSubTxsTable && model.isSubTxsTableFilterDialogOpen
               }
             , CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: meff
             )

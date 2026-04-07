@@ -464,8 +464,8 @@ date range: Zeitraum
 select date range: Zeitraum auswählen
 transaction direction: Transaktionsrichtung
 all transactions: Alle Transaktionen
-incoming only: Nur eingehende
-outgoing only: Nur ausgehende
+incoming only: nur eingehende
+outgoing only: nur ausgehende
 done: Anwenden
 asset type: Asset Typ
 tag-dialog-start-typing-search-labels: Beginnen Sie mit der Eingabe, um nach vorhandenen
@@ -556,5 +556,9 @@ cluster tags list: Cluster-abgeleitete Schlagwortliste
 cluster tags disclaimer: "Diese Schlagwörter sind nicht direkt dieser Adresse zugeordnet, sondern werden vom zugehörigen Cluster abgeleitet. Clustering kann Fehler enthalten, daher sollten diese Schlagwörter mit Vorsicht verwendet werden."
 datefilter-starting: ab
 datefilter-until: bis
-by Tx: von Tx
+datefilter-starting-tx: ab Tx
+datefilter-until-tx: bis Tx
 filter-utxo-only: nur UTXO
+filter-quick-filter: Schnellfilter
+filter-custom-filter: Benutzerdefinierter Filter
+filter-none-selected: keinen ausgewählt

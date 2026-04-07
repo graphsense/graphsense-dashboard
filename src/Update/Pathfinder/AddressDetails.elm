@@ -614,14 +614,17 @@ handleWorkflowNextUtxo config wf model =
 
 utxoToAddressTx : Direction -> Id -> Api.Data.TxUtxo -> List Api.Data.AddressTxUtxo
 utxoToAddressTx direction addressId utxo =
-    Tx.normalizeUtxo utxo
-        |> (case direction of
+    let
+        ( ios, sign ) =
+            case direction of
                 Incoming ->
-                    .outputs
+                    ( .outputs, 1 )
 
                 Outgoing ->
-                    .inputs
-           )
+                    ( .inputs, -1 )
+    in
+    Tx.normalizeUtxo utxo
+        |> ios
         |> Dict.get addressId
         |> Maybe.map
             (\io ->
@@ -631,7 +634,9 @@ utxoToAddressTx direction addressId utxo =
                 , timestamp = utxo.timestamp
                 , txHash = utxo.txHash
                 , txType = "utxo"
-                , value = io.values
+                , value =
+                    io.values
+                        |> Data.mulValues sign
                 }
                     |> List.singleton
             )
