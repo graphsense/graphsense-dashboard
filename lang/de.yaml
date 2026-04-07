@@ -459,8 +459,8 @@ date range: Zeitraum
 select date range: Zeitraum auswählen
 transaction direction: Transaktionsrichtung
 all transactions: Alle Transaktionen
-incoming only: Nur eingehende
-outgoing only: Nur ausgehende
+incoming only: nur eingehende
+outgoing only: nur ausgehende
 done: Anwenden
 asset type: Asset Typ
 tag-dialog-start-typing-search-labels: Beginnen Sie mit der Eingabe, um nach vorhandenen
