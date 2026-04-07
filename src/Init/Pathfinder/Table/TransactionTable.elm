@@ -56,5 +56,4 @@ init uc network txsFilter addressId data assets =
             |> TransactionFilter.withDateRangePicker uc.locale mmin mmax
             |> TransactionFilter.withAssetSelectBox assets
             |> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
-    , isTxFilterViewOpen = False
     }

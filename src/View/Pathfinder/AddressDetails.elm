@@ -629,8 +629,6 @@ transactionTableView vc addressId txOnGraphFn model txs =
         (Id.network addressId)
         { tag = TransactionFilterMsg
         , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
-        , right = 42
-        , top = 250
         }
         txs.filter
     , table

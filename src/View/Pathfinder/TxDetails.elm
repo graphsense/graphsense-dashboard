@@ -47,8 +47,6 @@ filterConfig : TransactionFilter.FilterHeaderConfig TxDetailsMsg
 filterConfig =
     { tag = TransactionFilterMsg
     , exportCsv = Nothing
-    , right = 42
-    , top = 250
     }
 
 

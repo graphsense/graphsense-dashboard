@@ -262,8 +262,6 @@ tableTab vc model edgeId viewState isA2b =
                         (Id.network id)
                         { tag = RelationDetails.TransactionFilterMsg isA2b
                         , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b table, model.exportCSV )
-                        , right = 42
-                        , top = 250
                         }
                         table.filter
                     , tableView

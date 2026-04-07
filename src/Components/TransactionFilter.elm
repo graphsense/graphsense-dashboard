@@ -1,6 +1,7 @@
-module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, setFocusDate, setSelectedQuickFilter, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
+module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
 import Basics.Extra exposing (flip)
+import Browser.Events
 import Components.ExportCSV as ExportCSV
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.View as View
@@ -9,7 +10,7 @@ import Css.DateTimePicker as DateTimePicker
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes as Attributes
-import Html.Styled.Events exposing (onClick, stopPropagationOn)
+import Html.Styled.Events exposing (on, onClick, stopPropagationOn)
 import Init.DateRangePicker as DateRangePicker
 import Json.Decode
 import List.Extra
@@ -47,6 +48,9 @@ type alias InternalModel =
     , showCustomFilter : Bool
     , settings : SettingsModel
     , showDialog : Bool
+    , dialogPosition : { top : Float, right : Float }
+    , isDragging : Bool
+    , dragStart : Maybe { x : Int, y : Int, top : Float, right : Float }
     }
 
 
@@ -113,8 +117,6 @@ getIncludeZeroValueTxs (Settings model) =
 type alias FilterHeaderConfig msg =
     { tag : Msg -> msg
     , exportCsv : Maybe ( ExportCSV.Msg -> msg, ExportCSV.Model )
-    , right : Float
-    , top : Float
     }
 
 
@@ -137,6 +139,9 @@ type Msg
     | UserClickedUtxoOnly
     | ResetTxUtxoOnlyFilter
     | ToggleDialog
+    | StartDrag Int Int
+    | Drag Int Int
+    | EndDrag
 
 
 update : Msg -> Model -> Model
@@ -277,6 +282,42 @@ update msg (Internal model) =
 
             ToggleDialog ->
                 { model | showDialog = not model.showDialog }
+
+            StartDrag x y ->
+                { model
+                    | isDragging = True
+                    , dragStart = Just { x = x, y = y, top = model.dialogPosition.top, right = model.dialogPosition.right }
+                }
+
+            Drag x y ->
+                case model.dragStart of
+                    Just start ->
+                        let
+                            dx =
+                                toFloat (x - start.x)
+
+                            dy =
+                                toFloat (y - start.y)
+
+                            newTop =
+                                start.top + dy
+
+                            newRight =
+                                start.right - dx
+                        in
+                        { model
+                            | dialogPosition = { top = newTop, right = newRight }
+                            , isDragging = True
+                        }
+
+                    Nothing ->
+                        model
+
+            EndDrag ->
+                { model
+                    | isDragging = False
+                    , dragStart = Nothing
+                }
 
 
 resetAll : InternalModel -> InternalModel
@@ -612,18 +653,25 @@ filterHeader vc config (Internal model) =
 view : View.Config -> String -> FilterHeaderConfig msg -> Model -> Html msg
 view vc net config (Internal model) =
     div
-        [ css [ Css.position Css.relative ] ]
+        [ css [ Css.position Css.relative, Css.width <| Css.pct 100 ] ]
         [ filterHeader vc config (Internal model)
         , if model.showDialog then
             div
                 [ [ Css.position Css.fixed
-                  , Css.right (Css.px config.right)
-                  , Css.top (Css.px config.top)
+                  , Css.right (Css.px model.dialogPosition.right)
+                  , Css.top (Css.px model.dialogPosition.top)
                   , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1000))
+                  , Css.cursor Css.move
                   ]
                     |> css
+                , on "mousedown"
+                    (Json.Decode.map2 (\x y -> config.tag <| StartDrag x y)
+                        (Json.Decode.at [ "clientX" ] Json.Decode.int)
+                        (Json.Decode.at [ "clientY" ] Json.Decode.int)
+                    )
+                , on "mouseup" (Json.Decode.succeed <| config.tag EndDrag)
                 ]
-                [ Internal model |> txFilterDialogView vc net config ]
+                [ txFilterDialogView vc net config (Internal model) ]
 
           else
             none
@@ -985,6 +1033,9 @@ init (Settings settings) =
         , showCustomFilter = False
         , settings = settings
         , showDialog = False
+        , dialogPosition = { top = 100, right = 20 }
+        , isDragging = False
+        , dragStart = Nothing
         }
 
 
@@ -1294,3 +1345,16 @@ getTx (QuickFilterInternal { tx }) =
 getDirectionFromQuickFilter : QuickFilter -> Direction
 getDirectionFromQuickFilter (QuickFilterInternal { direction }) =
     direction
+
+
+subscriptions : Model -> Sub Msg
+subscriptions (Internal model) =
+    if model.isDragging then
+        Browser.Events.onMouseMove
+            (Json.Decode.map2 Drag
+                (Json.Decode.at [ "clientX" ] Json.Decode.int)
+                (Json.Decode.at [ "clientY" ] Json.Decode.int)
+            )
+
+    else
+        Sub.none

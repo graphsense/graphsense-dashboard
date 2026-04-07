@@ -17,7 +17,6 @@ type alias Model =
     { table : InfiniteTable.Model Api.Data.AddressTx
     , order : Maybe Api.Request.Addresses.Order_
     , filter : TransactionFilter.Model
-    , isTxFilterViewOpen : Bool
     }
 
 
