@@ -578,4 +578,4 @@ datefilter-until-tx: fino al Tx
 filter-utxo-only: solo UTXO
 filter-quick-filter: filtro veloce
 filter-custom-filter: filtro personalizzato
-filter-none-selected: nessuno
+filter-none-selected: nessuno selezionato

@@ -551,4 +551,4 @@ datefilter-until-tx: bis Tx
 filter-utxo-only: nur UTXO
 filter-quick-filter: Schnellfilter
 filter-custom-filter: Benutzerdefinierter Filter
-filter-none-selected: keine
+filter-none-selected: keinen ausgewählt
