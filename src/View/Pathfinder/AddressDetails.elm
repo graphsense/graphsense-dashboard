@@ -456,7 +456,6 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                 [ css [ Css.flexGrow (Css.int 1) ] ]
                                 -- This makes the select box container take all available space
                                 [ ThemedSelectBox.view (relatedAddressesSelectBoxConfig vc viewState.address.id)
-                                    []
                                     viewState.relatedAddressesVisibleTableSelectBox
                                     relatedAddressesVisibleTable
                                     |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
