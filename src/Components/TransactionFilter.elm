@@ -9,8 +9,9 @@ import Css.DateTimePicker as DateTimePicker
 import DurationDatePicker as DatePicker
 import Html.Styled as Html exposing (Html, div)
 import Html.Styled.Attributes as Attributes
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Events exposing (onClick, stopPropagationOn)
 import Init.DateRangePicker as DateRangePicker
+import Json.Decode
 import List.Extra
 import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
@@ -729,11 +730,11 @@ txFilterDialogView vc net config (Internal model) =
                             else
                                 let
                                     drpFilledHeader =
-                                        SidePanelComponents.datePickerFilledWithAttributes
-                                            (SidePanelComponents.datePickerFilledAttributes
+                                        SidePanelComponents.datePickerFilledDevWithAttributes
+                                            (SidePanelComponents.datePickerFilledDevAttributes
                                                 |> Rs.s_root
                                                     ([ Util.View.pointer
-                                                     , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
+                                                     , [ Css.hover SidePanelComponents.datePickerFilledDevStateHover_details.styles ] |> css
                                                      ]
                                                         ++ (case model.dateRangePicker of
                                                                 Just _ ->
@@ -743,20 +744,45 @@ txFilterDialogView vc net config (Internal model) =
                                                                     []
                                                            )
                                                     )
+                                                |> Rs.s_iconsCloseBlack
+                                                    [ Json.Decode.succeed ( ResetDateRangePicker, True )
+                                                        |> stopPropagationOn "click"
+                                                    ]
                                             )
                                 in
                                 case ( startDate, endDate ) of
                                     ( Just startP, Just endP ) ->
                                         drpFilledHeader
-                                            { root = { from = startP, to = endP, pronoun = Locale.string vc.locale "to", state = SidePanelComponents.DatePickerFilledStateDefault } }
+                                            { root =
+                                                { from = startP
+                                                , to = endP
+                                                , pronoun = Locale.string vc.locale "to"
+                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , showIconClose = True
+                                                }
+                                            }
 
                                     ( Just startP, Nothing ) ->
                                         drpFilledHeader
-                                            { root = { from = "", to = startP, pronoun = Locale.string vc.locale "datefilter-starting", state = SidePanelComponents.DatePickerFilledStateDefault } }
+                                            { root =
+                                                { from = ""
+                                                , to = startP
+                                                , pronoun = Locale.string vc.locale "datefilter-starting"
+                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , showIconClose = True
+                                                }
+                                            }
 
                                     ( Nothing, Just endP ) ->
                                         drpFilledHeader
-                                            { root = { from = "", to = endP, pronoun = Locale.string vc.locale "datefilter-until", state = SidePanelComponents.DatePickerFilledStateDefault } }
+                                            { root =
+                                                { from = ""
+                                                , to = endP
+                                                , pronoun = Locale.string vc.locale "datefilter-until"
+                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , showIconClose = True
+                                                }
+                                            }
 
                                     ( Nothing, Nothing ) ->
                                         drp
