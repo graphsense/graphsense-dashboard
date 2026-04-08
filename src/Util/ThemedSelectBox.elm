@@ -229,6 +229,8 @@ view (Config config) (SelectBox sBox) selected =
                 [ Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1))
                 , Css.property "user-select" "none"
                 , Css.height Css.auto
+                , Css.maxHeight <| Css.px 350
+                , Css.overflowY Css.scroll
                 ]
 
             dropDownList =
