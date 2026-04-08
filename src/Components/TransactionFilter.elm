@@ -1164,10 +1164,36 @@ withQuickFilterInternal qf model =
                             options =
                                 ThemedSelectBox.getOptions select ++ [ Just qf ]
                         in
-                        ThemedSelectBox.updateOptions options select
+                        updateOptions options select
                    )
                 |> Just
     }
+
+
+updateOptions : List (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel)
+updateOptions options select =
+    options
+        |> List.sortBy
+            (\opt ->
+                case opt of
+                    Nothing ->
+                        ( 0, 0, 0 )
+
+                    -- Nothing comes first, using 0 as epoch
+                    Just qf ->
+                        ( 1
+                        , -- Non-Nothing options come after
+                          case qf.direction of
+                            Incoming ->
+                                1
+
+                            Outgoing ->
+                                0
+                        , qf.date |> Time.posixToMillis
+                          -- Then sort by date (converted to millis)
+                        )
+            )
+        |> flip ThemedSelectBox.updateOptions select
 
 
 withDirection : Maybe Direction -> Settings -> Settings
@@ -1287,7 +1313,7 @@ updateQuickFilters quickFilters (Internal model) =
         |> List.foldl withQuickFilterInternal
             { model
                 | quickFilterSelect =
-                    Maybe.map (ThemedSelectBox.updateOptions [ Nothing ]) model.quickFilterSelect
+                    Maybe.map (updateOptions [ Nothing ]) model.quickFilterSelect
             }
         |> Internal
 
