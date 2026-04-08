@@ -488,27 +488,25 @@ renderDate vc showTimeFn date =
            )
 
 
-dateTimeFilterSmall : View.Config -> Direction -> Posix -> Html msg
-dateTimeFilterSmall vc dir date =
-    let
-        dirLabel =
-            case dir of
-                Outgoing ->
-                    "datefilter-starting"
-
-                Incoming ->
-                    "datefilter-until"
-    in
-    date
-        |> renderDate vc (Locale.isFirstSecondOfTheDay vc.locale)
-        |> dateTimeFilterRawSmall vc dirLabel
-
-
 dateTimeFilterRawSmall : View.Config -> String -> String -> Html msg
 dateTimeFilterRawSmall vc label text =
     SidePanelComponents.filterLabelSmall
         { root =
             { text = text
+            , separator = Locale.string vc.locale label
+            , start = ""
+            , showSeparator = True
+            , showStart = False
+            }
+        }
+
+
+dateTimeFilterRaw : View.Config -> msg -> String -> String -> Html msg
+dateTimeFilterRaw vc msg label text =
+    SidePanelComponents.filterLabelDev
+        { root =
+            { iconInstance = closeButtonGrey msg
+            , text = text
             , separator = Locale.string vc.locale label
             , start = ""
             , showSeparator = True
@@ -585,6 +583,32 @@ utxoOnlyHeader vc resetMsg =
 
 filterHeader : View.Config -> FilterHeaderConfig msg -> Model -> Html msg
 filterHeader vc config (Internal model) =
+    let
+        qf =
+            settingsToQuickFilter model
+
+        utxoFilter =
+            model
+                |> Internal
+                |> getUtxoFilter
+                |> Maybe.map (\_ -> utxoOnlyHeader vc ResetTxUtxoOnlyFilter)
+
+        filterList =
+            qf
+                |> Maybe.map
+                    (quickfilterHeader vc
+                        >> Just
+                        >> List.singleton
+                        >> (::) utxoFilter
+                    )
+                |> Maybe.withDefault
+                    [ model.settings.range |> Maybe.map (dateTimeFilterHeaderFromRange vc ResetDateRangePicker)
+                    , model.settings.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
+                    , utxoFilter
+                    , model.settings.asset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
+                    , model.settings.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
+                    ]
+    in
     SidePanelComponents.sidePanelListFilterRowWithAttributes
         (SidePanelComponents.sidePanelListFilterRowAttributes
             |> Rs.s_root
@@ -626,12 +650,7 @@ filterHeader vc config (Internal model) =
                 )
         )
         { filterList =
-            [ model.settings.range |> Maybe.map (dateTimeFilterHeaderFromRange vc ResetDateRangePicker)
-            , model.settings.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
-            , model |> Internal |> getUtxoFilter |> Maybe.map (\_ -> utxoOnlyHeader vc ResetTxUtxoOnlyFilter)
-            , model.settings.asset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
-            , model.settings.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
-            ]
+            filterList
                 |> List.filterMap identity
                 |> List.map (Html.map config.tag)
         }
@@ -1012,19 +1031,7 @@ quickFilterToLabel vc =
                         |> Maybe.withDefault []
                     )
                         ++ [ --qf.date |> dateTimeFilterSmall vc qf.direction
-                             let
-                                txLabel =
-                                    case qf.direction of
-                                        Outgoing ->
-                                            "Datefilter-starting-tx"
-
-                                        Incoming ->
-                                            "Datefilter-until-tx"
-                             in
-                             qf.tx
-                                |> Tx.getRawBaseTxHashForTxType
-                                |> truncateLongIdentifier
-                                |> dateTimeFilterRawSmall vc txLabel
+                             quickfilterHeaderSmall vc qf
 
                            --, qf.direction |> directionFilterString |> stringFilterSmall vc
                            ]
@@ -1032,6 +1039,43 @@ quickFilterToLabel vc =
                 {}
         )
         >> Maybe.withDefault (Html.text <| Locale.string vc.locale "filter-none-selected")
+
+
+quickfilterHeaderSmall : View.Config -> { a | direction : Direction, tx : Tx.TxType } -> Html msg
+quickfilterHeaderSmall vc qf =
+    let
+        txLabel =
+            case qf.direction of
+                Outgoing ->
+                    "Datefilter-starting-tx"
+
+                Incoming ->
+                    "Datefilter-until-tx"
+    in
+    qf.tx
+        |> Tx.getRawBaseTxHashForTxType
+        |> truncateLongIdentifier
+        |> dateTimeFilterRawSmall vc txLabel
+
+
+quickfilterHeader : View.Config -> { a | direction : Direction, tx : Tx.TxType } -> Html Msg
+quickfilterHeader vc qf =
+    let
+        txLabel =
+            case qf.direction of
+                Outgoing ->
+                    "Datefilter-starting-tx"
+
+                Incoming ->
+                    "Datefilter-until-tx"
+
+        txHash =
+            qf.tx
+                |> Tx.getRawBaseTxHashForTxType
+    in
+    txHash
+        |> truncateLongIdentifier
+        |> dateTimeFilterRaw vc ResetAllTxFilters txLabel
 
 
 init : Settings -> Model
