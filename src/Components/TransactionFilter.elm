@@ -894,7 +894,7 @@ txFilterDialogView vc net config (Internal model) =
             , showQuickFilter = showQuickFilter
             , showCustomFilter = model.showCustomFilter || not showQuickFilter
             , customFilterLabel = Locale.string vc.locale "filter-custom-filter" |> Locale.titleCase vc.locale
-            , quickFilterLabel = Locale.string vc.locale "filter-quick-filter" |> Locale.titleCase vc.locale
+            , quickFilterLabel = Locale.string vc.locale "Filter-quick-filter" |> Locale.titleCase vc.locale
             , showUtxoConstraint = not isAssetFilterVisible
             , quickfilterDropdown =
                 model.quickFilterSelect
@@ -1011,21 +1011,22 @@ quickFilterToLabel vc =
                         |> Maybe.map (stringFilterSmall vc >> List.singleton)
                         |> Maybe.withDefault []
                     )
-                        ++ [ qf.date |> dateTimeFilterSmall vc qf.direction
-                           , let
+                        ++ [ --qf.date |> dateTimeFilterSmall vc qf.direction
+                             let
                                 txLabel =
                                     case qf.direction of
                                         Outgoing ->
-                                            "datefilter-starting-tx"
+                                            "Datefilter-starting-tx"
 
                                         Incoming ->
-                                            "datefilter-until-tx"
+                                            "Datefilter-until-tx"
                              in
                              qf.tx
                                 |> Tx.getRawBaseTxHashForTxType
                                 |> truncateLongIdentifier
                                 |> dateTimeFilterRawSmall vc txLabel
-                           , qf.direction |> directionFilterString |> stringFilterSmall vc
+
+                           --, qf.direction |> directionFilterString |> stringFilterSmall vc
                            ]
                 }
                 {}
