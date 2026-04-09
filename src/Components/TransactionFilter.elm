@@ -1025,16 +1025,16 @@ quickFilterToLabel vc =
         (\qf ->
             Sc.filterGroupSmall
                 { filterList =
-                    (qf.tx
-                        |> txToAsset
-                        |> Maybe.map (stringFilterSmall vc >> List.singleton)
-                        |> Maybe.withDefault []
-                    )
-                        ++ [ --qf.date |> dateTimeFilterSmall vc qf.direction
-                             quickfilterHeaderSmall vc qf
+                    [ --qf.date |> dateTimeFilterSmall vc qf.direction
+                      quickfilterHeaderSmall vc qf
 
-                           --, qf.direction |> directionFilterString |> stringFilterSmall vc
-                           ]
+                    --, qf.direction |> directionFilterString |> stringFilterSmall vc
+                    ]
+                        ++ (qf.tx
+                                |> txToAsset
+                                |> Maybe.map (stringFilterSmall vc >> List.singleton)
+                                |> Maybe.withDefault []
+                           )
                 }
                 {}
         )
@@ -1218,6 +1218,7 @@ withQuickFilterInternal qf model =
 updateOptions : List (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel)
 updateOptions options select =
     options
+        --|> List.Extra.uniqueBy (Debug.todo "unify by direction, date, tx hash and tx currency")
         |> List.sortBy
             (\opt ->
                 case opt of
