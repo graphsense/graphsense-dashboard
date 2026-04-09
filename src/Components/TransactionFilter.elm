@@ -1,6 +1,7 @@
 module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
 import Basics.Extra exposing (flip)
+import String
 import Browser.Events
 import Components.ExportCSV as ExportCSV
 import Config.DateRangePicker exposing (datePickerSettings)
@@ -1217,8 +1218,35 @@ withQuickFilterInternal qf model =
 
 updateOptions : List (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel)
 updateOptions options select =
+    let
+        -- Create a unique key for each quick filter based on direction, date, tx hash, and currency
+        quickFilterKey : Maybe QuickFilterModel -> String
+        quickFilterKey opt =
+            case opt of
+                Nothing ->
+                    "Nothing"
+                
+                Just qf ->
+                    let
+                        txHash =
+                            qf.tx |> Tx.getRawBaseTxHashForTxType
+                        
+                        currency =
+                            txToAsset qf.tx
+                                |> Maybe.withDefault ""
+                        
+                        directionStr =
+                            case qf.direction of
+                                Incoming -> "Incoming"
+                                Outgoing -> "Outgoing"
+                        
+                        dateMillis =
+                            qf.date |> Time.posixToMillis |> String.fromInt
+                    in
+                    String.join "|" [directionStr, dateMillis, txHash, currency]
+    in
     options
-        --|> List.Extra.uniqueBy (Debug.todo "unify by direction, date, tx hash and tx currency")
+        |> List.Extra.uniqueBy quickFilterKey
         |> List.sortBy
             (\opt ->
                 case opt of
