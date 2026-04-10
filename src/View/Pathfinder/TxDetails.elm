@@ -139,8 +139,8 @@ account vc viewState id txExistsFn =
             ("0x" ++ Id.id id) |> String.split "_" |> List.head |> Maybe.withDefault ""
     in
     div []
-        [ SidePanelComponents.sidePanelEthTransactionDevWithAttributes
-            (SidePanelComponents.sidePanelEthTransactionDevAttributes
+        [ SidePanelComponents.sidePanelEthTransactionWithAttributes
+            (SidePanelComponents.sidePanelEthTransactionAttributes
                 |> Rs.s_root
                     [ sidePanelCss
                         |> css
@@ -175,7 +175,7 @@ account vc viewState id txExistsFn =
                 , assetListInstance = accountAssetList vc viewState txExistsFn
                 , swapsListInstance = none
                 }
-            , sidePanelEthTxDetailsDev =
+            , sidePanelEthTxDetails =
                 { contractCreationVisible = baseTx |> Maybe.andThen .contractCreation |> Maybe.withDefault False
                 , showNotice = not (List.isEmpty viewState.tx.unsupportedConversions)
                 }
@@ -253,20 +253,20 @@ utxo vc model id viewState tx =
                 |> Maybe.map (confidenceBadge vc)
 
         sidePanelTxInstancesBase =
-            SidePanelComponents.sidePanelTransactionDevInstances
+            SidePanelComponents.sidePanelTransactionInstances
 
         sidePanelTxInstances =
             { sidePanelTxInstancesBase
                 | n115645PmOfMix = mixingConfidenceBadge
             }
     in
-    SidePanelComponents.sidePanelTransactionDevWithInstances
-        (SidePanelComponents.sidePanelTransactionDevAttributes
+    SidePanelComponents.sidePanelTransactionWithInstances
+        (SidePanelComponents.sidePanelTransactionAttributes
             |> Rs.s_root
                 [ sidePanelCss
                     |> css
                 ]
-            -- |> Rs.s_sidePanelTxDetailsDev [ css fullWidth ]
+            -- |> Rs.s_sidePanelTxDetails [ css fullWidth ]
             |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
         )
@@ -283,7 +283,7 @@ utxo vc model id viewState tx =
         , valueOfTimestamp = timeToCell vc tx.raw.timestamp
         , titleOfTxValue = { infoLabel = Locale.string vc.locale "Value" }
         , valueOfTxValue = txValueCell
-        , sidePanelTxDetailsDev =
+        , sidePanelTxDetails =
             { showMixingRow = mixingDetails |> Maybe.map (always True) |> Maybe.withDefault False
             , showNotice = False
             , showNotice2 = not (List.isEmpty viewState.tx.unsupportedConversions)

@@ -19,6 +19,7 @@ import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
+import RecordSetter exposing (s_txNode)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
@@ -39,7 +40,7 @@ view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> AccountTx -> Maybe A
 view _ vc pc tx accTx annotation =
     let
         fd =
-            GraphComponents.txNodeEthNodeEllipse_details
+            GraphComponents.txNodeEthTransparentEllipse_details
 
         adjX =
             fd.x + fd.width / 2
@@ -149,7 +150,6 @@ view _ vc pc tx accTx annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
-                , nodeEllipse = annAttr
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , timestamp =
                     [ translate 0 offsetSecondValue |> transform ]
@@ -180,6 +180,14 @@ view _ vc pc tx accTx annotation =
                         ( False, True ) ->
                             Icons.iconsNodeMarkerPurposeStartingPoint {}
                 }
+            , txNode =
+                { variant =
+                    GraphComponents.txNodeTypeNeutralWithAttributes
+                        (GraphComponents.txNodeTypeNeutralAttributes
+                            |> s_txNode annAttr
+                        )
+                        {}
+                }
             }
             :: label
         )
@@ -189,7 +197,7 @@ edge : Plugins -> View.Config -> Pathfinder.Config -> AccountTx -> Tx -> Maybe A
 edge _ _ pc account tx annotation =
     let
         radTx =
-            GraphComponents.txNodeEthNodeEllipse_details.width / 2
+            GraphComponents.txNodeEthTransparentEllipse_details.width / 2
 
         radA =
             GraphComponents.addressNodeNodeFrame_details.width / 2

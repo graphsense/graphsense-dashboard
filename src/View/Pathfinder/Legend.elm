@@ -106,7 +106,7 @@ legendView plugins vc closeMsg =
                 Node
                 { description = "Known-exchange"
                 , icon = Icons.iconsExchangeSnoPadding {}
-                , label = "exchange"
+                , label = "Exchange"
                 }
             , legendItem vc
                 Node
@@ -118,7 +118,7 @@ legendView plugins vc closeMsg =
                 Node
                 { description = "Hint-known-entity"
                 , icon = Icons.iconsInstitutionSnoPadding {}
-                , label = "institution"
+                , label = "Institution"
                 }
             , legendItem vc
                 Node
@@ -135,7 +135,7 @@ legendView plugins vc closeMsg =
             , legendItem vc
                 IconItem
                 { description = "Hint-mixing-transaction"
-                , icon = Icons.iconsMixing { txNode = { variant = GraphComponents.txNodeTypeMixing {} } }
+                , icon = Icons.iconsMixing {}
                 , label = "Mixing transaction"
                 }
             , legendItem vc
