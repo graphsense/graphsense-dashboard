@@ -11,7 +11,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
-import Model.Pathfinder.Table.TransactionTable as TransactionTable exposing (getQuickFilters, quickFilterFromTx)
+import Model.Pathfinder.Table.TransactionTable as TransactionTable exposing (quickFilterFromTx)
 import Tuple exposing (first, pair, second)
 
 
