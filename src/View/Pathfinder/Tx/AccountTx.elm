@@ -197,7 +197,7 @@ edge : Plugins -> View.Config -> Pathfinder.Config -> AccountTx -> Tx -> Maybe A
 edge _ _ pc account tx annotation =
     let
         radTx =
-            GraphComponents.txNodeEthTransparentEllipse_details.width / 2
+            GraphComponents.txNodeTypeNeutralTxNode_details.width / 2
 
         radA =
             GraphComponents.addressNodeNodeFrame_details.width / 2
