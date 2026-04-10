@@ -439,7 +439,7 @@ renderDateTimeFilter vc resetMsg startDate endDate =
             none
 
         ( Just startP, Just endP ) ->
-            SidePanelComponents.filterLabelDev
+            SidePanelComponents.filterLabel
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
@@ -452,7 +452,7 @@ renderDateTimeFilter vc resetMsg startDate endDate =
                 }
 
         ( Just startP, Nothing ) ->
-            SidePanelComponents.filterLabelDev
+            SidePanelComponents.filterLabel
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
@@ -465,7 +465,7 @@ renderDateTimeFilter vc resetMsg startDate endDate =
                 }
 
         ( Nothing, Just endP ) ->
-            SidePanelComponents.filterLabelDev
+            SidePanelComponents.filterLabel
                 { root =
                     { iconInstance =
                         closeButtonGrey resetMsg
@@ -504,7 +504,7 @@ dateTimeFilterRawSmall vc label text =
 
 dateTimeFilterRaw : View.Config -> msg -> String -> String -> Html msg
 dateTimeFilterRaw vc msg label text =
-    SidePanelComponents.filterLabelDev
+    SidePanelComponents.filterLabel
         { root =
             { iconInstance = closeButtonGrey msg
             , text = text
@@ -535,7 +535,7 @@ directionFilterString dir =
 
 stringFilterHeader : View.Config -> msg -> String -> Html msg
 stringFilterHeader vc msg str =
-    SidePanelComponents.filterLabelDev
+    SidePanelComponents.filterLabel
         { root =
             { iconInstance =
                 closeButtonGrey msg
@@ -719,8 +719,8 @@ txFilterDialogView vc net config (Internal model) =
         showQuickFilter =
             model.quickFilterSelect /= Nothing
     in
-    SidePanelComponents.filterTransactionsPopupDevWithAttributes
-        (SidePanelComponents.filterTransactionsPopupDevAttributes
+    SidePanelComponents.filterTransactionsPopupWithAttributes
+        (SidePanelComponents.filterTransactionsPopupAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick (config.tag ToggleDialog) ]
             |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
@@ -838,11 +838,11 @@ txFilterDialogView vc net config (Internal model) =
                             else
                                 let
                                     drpFilledHeader =
-                                        SidePanelComponents.datePickerFilledDevWithAttributes
-                                            (SidePanelComponents.datePickerFilledDevAttributes
+                                        SidePanelComponents.datePickerFilledWithAttributes
+                                            (SidePanelComponents.datePickerFilledAttributes
                                                 |> Rs.s_root
                                                     ([ Util.View.pointer
-                                                     , [ Css.hover SidePanelComponents.datePickerFilledDevStateHover_details.styles ] |> css
+                                                     , [ Css.hover SidePanelComponents.datePickerFilledStateHover_details.styles ] |> css
                                                      ]
                                                         ++ (case model.dateRangePicker of
                                                                 Just _ ->
@@ -865,7 +865,7 @@ txFilterDialogView vc net config (Internal model) =
                                                 { from = startP
                                                 , to = endP
                                                 , pronoun = Locale.string vc.locale "to"
-                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , state = SidePanelComponents.DatePickerFilledStateDefault
                                                 , showIconClose = True
                                                 }
                                             }
@@ -876,7 +876,7 @@ txFilterDialogView vc net config (Internal model) =
                                                 { from = ""
                                                 , to = startP
                                                 , pronoun = Locale.string vc.locale "datefilter-starting"
-                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , state = SidePanelComponents.DatePickerFilledStateDefault
                                                 , showIconClose = True
                                                 }
                                             }
@@ -887,7 +887,7 @@ txFilterDialogView vc net config (Internal model) =
                                                 { from = ""
                                                 , to = endP
                                                 , pronoun = Locale.string vc.locale "datefilter-until"
-                                                , state = SidePanelComponents.DatePickerFilledDevStateDefault
+                                                , state = SidePanelComponents.DatePickerFilledStateDefault
                                                 , showIconClose = True
                                                 }
                                             }
@@ -963,14 +963,14 @@ txFilterDialogView vc net config (Internal model) =
             }
         , customFilterChevron =
             { variant =
-                Icons.iconsChevronDev
+                Icons.iconsChevronRightThin
                     { root =
                         { state =
                             if model.showCustomFilter then
-                                Icons.IconsChevronDevStateDown
+                                Icons.IconsChevronRightThinStateDown
 
                             else
-                                Icons.IconsChevronDevStateDefault
+                                Icons.IconsChevronRightThinStateDefault
                         }
                     }
             }
