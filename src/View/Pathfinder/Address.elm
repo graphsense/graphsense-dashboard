@@ -110,7 +110,7 @@ view plugins vc pc address annotation =
                     ]
 
         fd =
-            GraphComponents.addressNodeDevNodeFrame_details
+            GraphComponents.addressNodeNodeFrame_details
 
         adjX =
             fd.x + fd.width / 2
@@ -140,7 +140,7 @@ view plugins vc pc address annotation =
         offset =
             2
                 + (if nodeLabel == Nothing then
-                    -GraphComponents.addressNodeDevExchangeLabel_details.height
+                    -GraphComponents.addressNodeExchangeLabel_details.height
 
                    else
                     0
@@ -151,7 +151,7 @@ view plugins vc pc address annotation =
                 |> Maybe.map
                     (annotationToAttrAndLabel vc
                         address
-                        GraphComponents.addressNodeDev_details
+                        GraphComponents.addressNode_details
                         offset
                         UserOpensAddressAnnotationDialog
                     )
@@ -191,8 +191,8 @@ view plugins vc pc address annotation =
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
         ]
-        (GraphComponents.addressNodeDevWithInstances
-            (GraphComponents.addressNodeDevAttributes
+        (GraphComponents.addressNodeWithInstances
+            (GraphComponents.addressNodeAttributes
                 |> Rs.s_root
                     [ A.animate address.clock address.opacity
                         |> String.fromFloat
@@ -217,7 +217,7 @@ view plugins vc pc address annotation =
                 |> Rs.s_clusterColor clusterStroke
              -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
             )
-            GraphComponents.addressNodeDevInstances
+            GraphComponents.addressNodeInstances
             { root =
                 { addressId =
                     address.id
