@@ -167,7 +167,7 @@ view vc conf =
             if List.length tabItems > 1 then
                 div
                     [ css
-                        (TagsComponents.dialogTagsListComponentDevTabs_details.styles
+                        (TagsComponents.dialogTagsListComponentTabs_details.styles
                             ++ [ Css.width (Css.pct 100) ]
                         )
                     ]
@@ -200,7 +200,7 @@ view vc conf =
         ]
         [ div
             [ css
-                (TagsComponents.dialogTagsListComponentDev_details.styles ++ [ Css.width (Css.pct 100) ])
+                (TagsComponents.dialogTagsListComponent_details.styles ++ [ Css.width (Css.pct 100) ])
             ]
             [ header
             , tabs
