@@ -23,7 +23,7 @@ import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tx as Tx exposing (ioToId)
-import Model.Pathfinder.TxDetails as TxDetails
+import Model.Pathfinder.TxDetails as TxDetails exposing (hasSubTxsTable)
 import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter as Rs
 import RemoteData
@@ -66,7 +66,7 @@ view vc model id viewState =
 
 accountAssetList : View.Config -> TxDetails.Model -> (Id -> Bool) -> Html Msg
 accountAssetList vc viewState txExistsFn =
-    if viewState.hasSubTxsTable then
+    if hasSubTxsTable viewState.tx then
         let
             subTxsTab c =
                 dataTab
@@ -257,7 +257,7 @@ utxo vc model id viewState tx =
 
         sidePanelTxInstances =
             { sidePanelTxInstancesBase
-                | n115645PmOfMix = mixingConfidenceBadge
+                | secondRowTextOfMix = mixingConfidenceBadge
             }
     in
     SidePanelComponents.sidePanelTransactionWithInstances

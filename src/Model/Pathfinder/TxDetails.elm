@@ -1,10 +1,10 @@
-module Model.Pathfinder.TxDetails exposing (Model)
+module Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.Table exposing (Table)
 import Components.TransactionFilter as TransactionFilter
-import Model.Pathfinder.Tx exposing (Tx)
+import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData exposing (WebData)
 
 
@@ -14,9 +14,16 @@ type alias Model =
     , inputsTable : Table Api.Data.TxValue
     , outputsTable : Table Api.Data.TxValue
     , tx : Tx
-    , hasSubTxsTable : Bool
     , subTxsTableOpen : Bool
     , baseTx : WebData Api.Data.TxAccount
     , subTxsTable : InfiniteTable.Model Api.Data.TxAccount
     , subTxsTableFilter : TransactionFilter.Model
     }
+
+
+hasSubTxsTable : Tx -> Bool
+hasSubTxsTable tx =
+    tx
+        |> Tx.getAccountTx
+        |> Maybe.map (\_ -> True)
+        |> Maybe.withDefault False

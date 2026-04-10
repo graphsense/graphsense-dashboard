@@ -9,7 +9,7 @@ import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx
-import Model.Pathfinder.TxDetails exposing (Model)
+import Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
 import Msg.Pathfinder as Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
 import RecordSetter exposing (s_baseTx, s_state, s_subTxsTable)
 import RemoteData
@@ -103,19 +103,6 @@ loadTxDetailsDataAccount model =
         n model
 
 
-hasActualSubTxs : List Api.Data.TxAccount -> Bool
-hasActualSubTxs txs =
-    case txs of
-        [] ->
-            False
-
-        [ tx ] ->
-            tx.isExternal /= Just True
-
-        _ ->
-            True
-
-
 update : TxDetailsMsg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
@@ -158,9 +145,6 @@ update msg model =
                 accountTxs =
                     txs.txs |> List.filterMap Tx.getAccountTxRaw
 
-                hasSubTxsTable =
-                    model.hasSubTxsTable || hasActualSubTxs accountTxs
-
                 setter =
                     if fetchedPage == Nothing then
                         InfiniteTable.setData
@@ -174,8 +158,6 @@ update msg model =
             in
             ( { model
                 | subTxsTable = nt
-                , hasSubTxsTable = hasSubTxsTable
-                , subTxsTableOpen = hasSubTxsTable && model.subTxsTableOpen
               }
             , CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: meff
             )
@@ -204,7 +186,7 @@ update msg model =
             n model
 
         UserClickedToggleSubTxsTable ->
-            if model.hasSubTxsTable then
+            if hasSubTxsTable model.tx then
                 let
                     ( table, eff ) =
                         if model.subTxsTableOpen then
