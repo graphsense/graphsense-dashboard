@@ -1030,12 +1030,8 @@ quickFilterToLabel vc =
         (\qf ->
             Sc.filterGroupSmall
                 { filterList =
-                    [ --qf.date |> dateTimeFilterSmall vc qf.direction
-                      quickfilterHeaderSmall vc qf
-
-                    --, qf.direction |> directionFilterString |> stringFilterSmall vc
-                    ]
-                        ++ (qf.tx
+                    quickfilterHeaderSmall vc qf
+                        :: (qf.tx
                                 |> txToAsset
                                 |> Maybe.map (stringFilterSmall vc >> List.singleton)
                                 |> Maybe.withDefault []
