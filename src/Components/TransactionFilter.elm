@@ -1,7 +1,6 @@
 module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
 import Basics.Extra exposing (flip)
-import String
 import Browser.Events
 import Components.ExportCSV as ExportCSV
 import Config.DateRangePicker exposing (datePickerSettings)
@@ -21,6 +20,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
 import Model.Pathfinder.Tx as Tx
 import RecordSetter as Rs exposing (s_direction, s_settings)
+import String
 import Svg.Styled.Attributes exposing (css)
 import Theme.Colors
 import Theme.Html.Icons as Icons
@@ -594,6 +594,9 @@ filterHeader vc config (Internal model) =
                 |> getUtxoFilter
                 |> Maybe.map (\_ -> utxoOnlyHeader vc ResetTxUtxoOnlyFilter)
 
+        asset =
+            model.settings.asset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
+
         filterList =
             qf
                 |> Maybe.map
@@ -601,12 +604,13 @@ filterHeader vc config (Internal model) =
                         >> Just
                         >> List.singleton
                         >> (::) utxoFilter
+                        >> flip (++) [ asset ]
                     )
                 |> Maybe.withDefault
                     [ model.settings.range |> Maybe.map (dateTimeFilterHeaderFromRange vc ResetDateRangePicker)
                     , model.settings.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
                     , utxoFilter
-                    , model.settings.asset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
+                    , asset
                     , model.settings.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
                     ]
     in
@@ -1224,49 +1228,33 @@ updateOptions options select =
         quickFilterKey opt =
             case opt of
                 Nothing ->
-                    "Nothing"
-                
+                    "0"
+
                 Just qf ->
                     let
                         txHash =
                             qf.tx |> Tx.getRawBaseTxHashForTxType
-                        
+
                         currency =
                             txToAsset qf.tx
                                 |> Maybe.withDefault ""
-                        
+
                         directionStr =
                             case qf.direction of
-                                Incoming -> "Incoming"
-                                Outgoing -> "Outgoing"
-                        
+                                Incoming ->
+                                    "1"
+
+                                Outgoing ->
+                                    "0"
+
                         dateMillis =
                             qf.date |> Time.posixToMillis |> String.fromInt
                     in
-                    String.join "|" [directionStr, dateMillis, txHash, currency]
+                    String.join "|" [ directionStr, dateMillis, txHash, currency ]
     in
     options
         |> List.Extra.uniqueBy quickFilterKey
-        |> List.sortBy
-            (\opt ->
-                case opt of
-                    Nothing ->
-                        ( 0, 0, 0 )
-
-                    -- Nothing comes first, using 0 as epoch
-                    Just qf ->
-                        ( 1
-                        , -- Non-Nothing options come after
-                          case qf.direction of
-                            Incoming ->
-                                1
-
-                            Outgoing ->
-                                0
-                        , qf.date |> Time.posixToMillis
-                          -- Then sort by date (converted to millis)
-                        )
-            )
+        |> List.sortBy quickFilterKey
         |> flip ThemedSelectBox.updateOptions select
 
 
