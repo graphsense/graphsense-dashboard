@@ -1204,20 +1204,21 @@ withQuickFilter (QuickFilterInternal qf) (Internal model) =
 
 withQuickFilterInternal : QuickFilterModel -> InternalModel -> InternalModel
 withQuickFilterInternal qf model =
-    { model
-        | quickFilterSelect =
-            model.quickFilterSelect
-                |> Maybe.withDefault
-                    (ThemedSelectBox.init [ Nothing ])
-                |> (\select ->
-                        let
-                            options =
-                                ThemedSelectBox.getOptions select ++ [ Just qf ]
-                        in
-                        updateOptions options select
-                   )
-                |> Just
-    }
+    {- model
+       | quickFilterSelect =
+           model.quickFilterSelect
+               |> Maybe.withDefault
+                   (ThemedSelectBox.init [ Nothing ])
+               |> (\select ->
+                       let
+                           options =
+                               ThemedSelectBox.getOptions select ++ [ Just qf ]
+                       in
+                       updateOptions options select
+                  )
+               |> Just
+    -}
+    model
 
 
 updateOptions : List (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel)
