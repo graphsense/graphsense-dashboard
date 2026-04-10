@@ -489,8 +489,8 @@ statusbar-loading-swap-bridge-events: 'Cargando eventos de intercambio y puente 
 related by multi-input heuristic: Relacionado por heurística multi-input
 related by public key: Relacionado por clave pública
 sub transfers: Subtransferencias
-exclude zero value transfers: Excluir transferencias de valor cero
-no zero value: Sin valor cero
+filter-label-exclude-zero-values: Excluir transferencias de valor cero
+filter-no-zero-value: sin valor cero
 bridge transaction: Transacción puente
 swap transaction: Transacción de intercambio
 swap transactions: Transacciones de intercambio
