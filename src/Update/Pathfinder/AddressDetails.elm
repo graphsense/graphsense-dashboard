@@ -324,13 +324,6 @@ update uc msg model =
                         in
                         { txs
                             | filter = newFilter
-                            , table =
-                                TransactionTable.sort
-                                    (settings
-                                        |> TransactionFilter.getDirection
-                                        |> (==) (Just Incoming)
-                                    )
-                                    txs.table
                         }
                             |> RemoteData.Success
                             |> flip s_txs model

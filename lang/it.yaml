@@ -582,9 +582,9 @@ cluster tags list: Elenco tag derivati dal cluster
 cluster tags disclaimer: "Questi tag non sono assegnati direttamente a questo indirizzo, ma sono derivati dal cluster di appartenenza. Il clustering può contenere errori, pertanto questi tag vanno utilizzati con cautela."
 datefilter-starting: dal
 datefilter-until: fino al
-datefilter-starting-tx: dal Tx
-datefilter-until-tx: fino al Tx
+datefilter-starting-tx: successivo a
+datefilter-until-tx: precedente a
 filter-utxo-only: solo UTXO
-filter-quick-filter: filtro veloce
+filter-quick-filter: filtro veloce per transazione
 filter-custom-filter: filtro personalizzato
 filter-none-selected: nessuno selezionato

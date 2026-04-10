@@ -538,9 +538,9 @@ cluster tags list: Cluster-derived tags list
 cluster tags disclaimer: "These tags are not directly assigned to this address but inferred from the cluster it belongs to. Clustering can contain errors, so these tags should be used with caution."
 datefilter-starting: starting
 datefilter-until: until
-datefilter-starting-tx: from Tx
-datefilter-until-tx: until Tx
-filter-quick-filter: quick filter
+datefilter-starting-tx: subsequent to
+datefilter-until-tx: preceding to
+filter-quick-filter: quick filter per transaction
 filter-custom-filter: custom filter
 filter-follow-utxo: follow UTXO
 filter-none-selected: none selected 

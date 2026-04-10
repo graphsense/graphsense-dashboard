@@ -556,9 +556,9 @@ cluster tags list: Cluster-abgeleitete Schlagwortliste
 cluster tags disclaimer: "Diese Schlagwörter sind nicht direkt dieser Adresse zugeordnet, sondern werden vom zugehörigen Cluster abgeleitet. Clustering kann Fehler enthalten, daher sollten diese Schlagwörter mit Vorsicht verwendet werden."
 datefilter-starting: ab
 datefilter-until: bis
-datefilter-starting-tx: ab Tx
-datefilter-until-tx: bis Tx
+datefilter-starting-tx: nachfolgende zu
+datefilter-until-tx: vorangehende zu
 filter-utxo-only: nur UTXO
-filter-quick-filter: Schnellfilter
+filter-quick-filter: Schnellfilter per Transaktion
 filter-custom-filter: Benutzerdefinierter Filter
 filter-none-selected: keinen ausgewählt
