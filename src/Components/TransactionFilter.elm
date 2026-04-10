@@ -1199,7 +1199,7 @@ withQuickFilter (QuickFilterInternal qf) (Internal model) =
 
 
 withQuickFilterInternal : QuickFilterModel -> InternalModel -> InternalModel
-withQuickFilterInternal qf model =
+withQuickFilterInternal _ model =
     {- model
        | quickFilterSelect =
            model.quickFilterSelect
