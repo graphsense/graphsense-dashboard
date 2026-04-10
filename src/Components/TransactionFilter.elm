@@ -574,7 +574,7 @@ zeroValuesHeader vc resetMsg includeZeroValueTxs =
         none
 
     else
-        stringFilterHeader vc resetMsg "no zero value"
+        stringFilterHeader vc resetMsg "filter-no-zero-value"
 
 
 utxoOnlyHeader : View.Config -> msg -> Html msg
@@ -939,7 +939,7 @@ txFilterDialogView vc net config (Internal model) =
                                 |> Html.map config.tag
                         )
                     |> Maybe.withDefault none
-            , zeroValuesLabel = Locale.string vc.locale "Exclude zero value transfers"
+            , zeroValuesLabel = Locale.string vc.locale "filter-label-exclude-zero-values"
             , followUtxoLabel = Locale.string vc.locale "filter-utxo-only"
             , assetTypeLabel = Locale.string vc.locale "Asset type"
             }

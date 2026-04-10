@@ -442,8 +442,8 @@ transaction-based: Basato sulle transazioni
 related by multi-input heuristic: Correlato tramite euristica multi-input
 related by public key: Correlato tramite chiave pubblica
 sub transfers: Sotto trasferimenti
-exclude zero value transfers: Escludi trasferimenti a valore zero
-no zero value: Nessuna valore zero
+filter-label-exclude-zero-values: Escludi trasferimenti a valore zero
+filter-no-zero-value: senza valore zero
 bridge transaction: Transazione di Bridge
 swap transaction: Transazione di Swap
 swap transactions: Swap Transazione

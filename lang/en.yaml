@@ -465,8 +465,8 @@ statusbar-loading-swap-bridge-events: 'loading Swaps and Briding events for Tx {
 related by multi-input heuristic: Related by Multi-Input Heuristic
 related by public key: Related by Public Key
 sub transfers: Sub Transfers
-exclude zero value transfers: Exclude Zero Value Transfers
-no zero value: No zero value
+filter-label-exclude-zero-values: Exclude zero value transfers
+filter-no-zero-value: no zero value
 bridge transaction: Bridge Transaction
 swap transaction: Swap Transaction
 swap transactions: Swap Transactions
