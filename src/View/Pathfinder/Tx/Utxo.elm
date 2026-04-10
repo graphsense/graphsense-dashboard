@@ -67,7 +67,7 @@ view _ vc pc tx utxo annotation =
                 >> List.any (second >> .address >> (==) Nothing)
 
         fd =
-            GraphComponents.txNodeUtxoDevTransparentEllipse_details
+            GraphComponents.txNodeUtxoTransparentEllipse_details
 
         adjX =
             fd.x + fd.width / 2
@@ -81,7 +81,7 @@ view _ vc pc tx utxo annotation =
                     0
 
                    else
-                    -GraphComponents.txNodeUtxoDevTxText_details.height
+                    -GraphComponents.txNodeUtxoTxText_details.height
                   )
                 + offsetTxHash
 
@@ -90,7 +90,7 @@ view _ vc pc tx utxo annotation =
                 0
 
             else
-                -GraphComponents.txNodeUtxoDevTxHash_details.renderedHeight
+                -GraphComponents.txNodeUtxoTxHash_details.renderedHeight
 
         t =
             Data.timestampToPosix utxo.raw.timestamp
@@ -100,7 +100,7 @@ view _ vc pc tx utxo annotation =
                 |> Maybe.map
                     (annotationToAttrAndLabel vc
                         tx
-                        GraphComponents.txNodeUtxoDev_details
+                        GraphComponents.txNodeUtxo_details
                         offset
                         UserOpensTxAnnotationDialog
                     )
@@ -128,8 +128,8 @@ view _ vc pc tx utxo annotation =
                     )
                     {}
 
-        txNodeUtxoDevAttrs =
-            GraphComponents.txNodeUtxoDevAttributes
+        txNodeUtxoAttrs =
+            GraphComponents.txNodeUtxoAttributes
     in
     g
         [ translate
@@ -144,8 +144,8 @@ view _ vc pc tx utxo annotation =
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
         ]
-        (GraphComponents.txNodeUtxoDevWithAttributes
-            { txNodeUtxoDevAttrs
+        (GraphComponents.txNodeUtxoWithAttributes
+            { txNodeUtxoAttrs
                 | root =
                     [ UserClickedTx id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx id
