@@ -536,7 +536,7 @@ unsupported-bridge-notice: "Note: Unsupported bridge transaction detected, targe
 cluster tags: Cluster-derived tags
 cluster tags list: Cluster-derived tags list
 cluster tags disclaimer: "These tags are not directly assigned to this address but inferred from the cluster it belongs to. Clustering can contain errors, so these tags should be used with caution."
-datefilter-starting: starting
+datefilter-starting: from
 datefilter-until: until
 datefilter-starting-tx: subsequent to
 datefilter-until-tx: preceding to
