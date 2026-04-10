@@ -14,8 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use new change heuristics from backend
 - Privacy analysis link for BTC transactions
 - Unsupported swap notice
-- Transaction direction filter
-- Persistent transaction filter configuration for address details
+- Persistent transaction filter configuration 
 - Infinite scrolling tags table
 
 ### Changed
@@ -26,7 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Migrated codegen from shell to JavaScript (ts-node)
 - Address node icons use more generic approach
 - Improve code generation from figma
-- Preserve filter settings
 
 ### Fixed
 
