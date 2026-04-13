@@ -1,4 +1,4 @@
-module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
+module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getHoveredQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getTxIdFromQuickFilter, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
 import Basics.Extra exposing (flip)
 import Browser.Events
@@ -18,6 +18,7 @@ import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
 import RecordSetter as Rs exposing (s_direction, s_settings)
 import String
@@ -52,6 +53,7 @@ type alias InternalModel =
     , dialogPosition : { top : Float, right : Float }
     , isDragging : Bool
     , dragStart : Maybe { x : Int, y : Int, top : Float, right : Float }
+    , hoveredQuickFilter : Maybe QuickFilterModel
     }
 
 
@@ -136,6 +138,7 @@ type Msg
     | CloseDateRangePicker
     | UpdateDateRangePicker DatePicker.Msg
     | TxTableQuickFilterSelectBoxMsg (ThemedSelectBox.Msg (Maybe QuickFilterModel))
+    | TxTableQuickFilterHoverMsg (ThemedSelectBox.Msg (Maybe QuickFilterModel))
     | UserClickedCustomFilterLabel
     | UserClickedUtxoOnly
     | ResetTxUtxoOnlyFilter
@@ -265,6 +268,30 @@ update msg (Internal model) =
                                         _ ->
                                             identity
                                    )
+                        )
+                    |> Maybe.withDefault model
+
+            TxTableQuickFilterHoverMsg ms ->
+                model.quickFilterSelect
+                    |> Maybe.map
+                        (\sb ->
+                            let
+                                ( newSelect, outMsg ) =
+                                    ThemedSelectBox.update ms sb
+                            in
+                            { model
+                                | quickFilterSelect = Just newSelect
+                                , hoveredQuickFilter =
+                                    case outMsg of
+                                        ThemedSelectBox.Hovered qf ->
+                                            qf
+
+                                        ThemedSelectBox.Unhovered ->
+                                            Nothing
+
+                                        _ ->
+                                            model.hoveredQuickFilter
+                            }
                         )
                     |> Maybe.withDefault model
 
@@ -935,7 +962,24 @@ txFilterDialogView vc net config (Internal model) =
                                 )
                                 qf
                                 (settingsToQuickFilter model)
-                                |> Html.map TxTableQuickFilterSelectBoxMsg
+                                |> Html.map
+                                    (\msg ->
+                                        case msg of
+                                            ThemedSelectBox.Select x ->
+                                                TxTableQuickFilterSelectBoxMsg (ThemedSelectBox.Select x)
+
+                                            ThemedSelectBox.Open ->
+                                                TxTableQuickFilterSelectBoxMsg ThemedSelectBox.Open
+
+                                            ThemedSelectBox.Close ->
+                                                TxTableQuickFilterSelectBoxMsg ThemedSelectBox.Close
+
+                                            ThemedSelectBox.Hover x ->
+                                                TxTableQuickFilterHoverMsg (ThemedSelectBox.Hover x)
+
+                                            ThemedSelectBox.Unhover ->
+                                                TxTableQuickFilterHoverMsg ThemedSelectBox.Unhover
+                                    )
                                 |> Html.map config.tag
                         )
                     |> Maybe.withDefault none
@@ -1091,6 +1135,7 @@ init (Settings settings) =
         , dialogPosition = { top = 100, right = 20 }
         , isDragging = False
         , dragStart = Nothing
+        , hoveredQuickFilter = Nothing
         }
 
 
@@ -1199,22 +1244,21 @@ withQuickFilter (QuickFilterInternal qf) (Internal model) =
 
 
 withQuickFilterInternal : QuickFilterModel -> InternalModel -> InternalModel
-withQuickFilterInternal _ model =
-    {- model
-       | quickFilterSelect =
-           model.quickFilterSelect
-               |> Maybe.withDefault
-                   (ThemedSelectBox.init [ Nothing ])
-               |> (\select ->
-                       let
-                           options =
-                               ThemedSelectBox.getOptions select ++ [ Just qf ]
-                       in
-                       updateOptions options select
-                  )
-               |> Just
-    -}
-    model
+withQuickFilterInternal qf model =
+    { model
+        | quickFilterSelect =
+            model.quickFilterSelect
+                |> Maybe.withDefault
+                    (ThemedSelectBox.init [ Nothing ])
+                |> (\select ->
+                        let
+                            options =
+                                ThemedSelectBox.getOptions select ++ [ Just qf ]
+                        in
+                        updateOptions options select
+                   )
+                |> Just
+    }
 
 
 updateOptions : List (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel)
@@ -1338,6 +1382,12 @@ hasChanged (Internal old) (Internal new) =
         || (old.settings.utxoOnly /= new.settings.utxoOnly)
 
 
+getHoveredQuickFilter : Model -> Maybe QuickFilter
+getHoveredQuickFilter (Internal model) =
+    model.hoveredQuickFilter
+        |> Maybe.map QuickFilterInternal
+
+
 setFocusDate : Time.Posix -> Model -> Model
 setFocusDate focusDate (Internal model) =
     Internal
@@ -1452,3 +1502,9 @@ subscriptions (Internal model) =
 
     else
         Sub.none
+
+
+getTxIdFromQuickFilter : QuickFilter -> Id
+getTxIdFromQuickFilter (QuickFilterInternal qf) =
+    qf.tx
+        |> Tx.getRawBaseTxIdForTxType

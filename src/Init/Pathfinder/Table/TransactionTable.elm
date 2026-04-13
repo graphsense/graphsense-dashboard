@@ -11,7 +11,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
-import Model.Pathfinder.Table.TransactionTable as TransactionTable exposing (quickFilterFromTx)
+import Model.Pathfinder.Table.TransactionTable as TransactionTable exposing (getQuickFilters, quickFilterFromTx)
 import Tuple exposing (first, pair, second)
 
 
@@ -22,8 +22,7 @@ init uc network txsFilter addressId data assets =
             Address.getActivityRange data
 
         quickfilters =
-            --getQuickFilters network addressId
-            []
+            getQuickFilters network addressId
 
         prefilter =
             Network.getRecentTxForAddress network Incoming addressId

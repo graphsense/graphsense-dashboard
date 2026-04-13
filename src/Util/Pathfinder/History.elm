@@ -463,3 +463,6 @@ shallPushHistory plugins msg _ =
 
         InternalChangedTxFilter _ _ ->
             False
+
+        InternalHoveredQuickFilter _ ->
+            False

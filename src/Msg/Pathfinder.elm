@@ -158,6 +158,7 @@ type Msg
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
     | InternalExportGraphTxsCompleted
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
+    | InternalHoveredQuickFilter (Maybe TransactionFilter.QuickFilter)
 
 
 type alias TextTooltipConfig =

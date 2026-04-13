@@ -321,23 +321,55 @@ update uc msg model =
 
                             settings =
                                 TransactionFilter.getSettings newFilter
-                        in
-                        { txs
-                            | filter = newFilter
-                        }
-                            |> RemoteData.Success
-                            |> flip s_txs model
-                            |> (if changed then
-                                    flip pair
-                                        [ settings
-                                            |> Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id)
-                                            |> InternalEffect
-                                        ]
-                                        >> and (loadFirstTxsPage True)
+
+                            hoveredTx =
+                                TransactionFilter.getHoveredQuickFilter newFilter
+
+                            baseResult =
+                                { txs
+                                    | filter = newFilter
+                                }
+                                    |> RemoteData.Success
+                                    |> flip s_txs model
+
+                            changedEffects =
+                                if changed then
+                                    [ settings
+                                        |> Pathfinder.InternalChangedTxFilter (TxsFilterAddress model.address.id)
+                                        |> InternalEffect
+                                    ]
 
                                 else
-                                    n
-                               )
+                                    []
+
+                            hoverEffects =
+                                [ hoveredTx
+                                    |> Pathfinder.InternalHoveredQuickFilter
+                                    |> InternalEffect
+                                ]
+
+                            allEffects =
+                                changedEffects ++ hoverEffects
+
+                            resultWithEffects =
+                                if List.isEmpty allEffects then
+                                    ( baseResult, [] )
+
+                                else
+                                    ( baseResult, allEffects )
+
+                            ( baseModel, baseEffects ) =
+                                resultWithEffects
+                        in
+                        if changed then
+                            let
+                                ( loadedModel, loadEffects ) =
+                                    loadFirstTxsPage True baseModel
+                            in
+                            ( loadedModel, baseEffects ++ loadEffects )
+
+                        else
+                            resultWithEffects
                     )
                 |> RemoteData.withDefault (n model)
 

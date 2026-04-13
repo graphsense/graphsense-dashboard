@@ -2076,6 +2076,12 @@ update plugins uc msg model =
                 TSelectBox.NoSelection ->
                     n newModel
 
+                TSelectBox.Hovered _ ->
+                    n newModel
+
+                TSelectBox.Unhovered ->
+                    n newModel
+
         NotificationMsg ms ->
             n { model | notifications = Notification.update ms model.notifications }
 

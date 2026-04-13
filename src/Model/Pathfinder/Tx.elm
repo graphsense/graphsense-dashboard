@@ -21,8 +21,10 @@ module Model.Pathfinder.Tx exposing
     , getOutputAddressIds
     , getOutputValueForAddressFromRawTx
     , getOutputs
+    , getRawBaseNetworkForTxType
     , getRawBaseTxHashForTx
     , getRawBaseTxHashForTxType
+    , getRawBaseTxIdForTxType
     , getRawTimestamp
     , getRawTimestampForRelationTx
     , getRawTx
@@ -153,12 +155,7 @@ getAssetFromRawTx tx =
 
 getNetwork : Tx -> String
 getNetwork tx =
-    case tx.type_ of
-        Account { raw } ->
-            raw.network
-
-        Utxo { raw } ->
-            raw.currency
+    getRawBaseNetworkForTxType tx.type_
 
 
 hasAddress : Id -> Tx -> Bool
@@ -396,6 +393,23 @@ getRawBaseTxHashForTxType tx =
 
         Utxo t ->
             t.raw.txHash
+
+
+getRawBaseNetworkForTxType : TxType -> String
+getRawBaseNetworkForTxType tx =
+    case tx of
+        Account t ->
+            t.raw.network
+
+        Utxo t ->
+            t.raw.currency
+
+
+getRawBaseTxIdForTxType : TxType -> Id
+getRawBaseTxIdForTxType type_ =
+    getRawBaseTxHashForTxType type_
+        |> Id.init
+            (getRawBaseNetworkForTxType type_)
 
 
 getTxIdForAddressTx : Api.Data.AddressTx -> Id
