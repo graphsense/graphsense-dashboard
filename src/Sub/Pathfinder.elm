@@ -4,6 +4,7 @@ import Browser.Events
 import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Json.Decode as Decode
+import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Details(..), Model)
 import Msg.ExportDialog exposing (Msg(..))
@@ -54,6 +55,12 @@ toKeyDown keyValue =
 
         "y" ->
             UserPressedNormalKey keyValue |> onlyFireOutsideOfTextInput
+
+        "ArrowLeft" ->
+            UserPressedArrowKey Incoming |> onlyFireOutsideOfTextInput
+
+        "ArrowRight" ->
+            UserPressedArrowKey Outgoing |> onlyFireOutsideOfTextInput
 
         _ ->
             Decode.fail "not handled"

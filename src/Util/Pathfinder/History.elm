@@ -82,6 +82,9 @@ shallPushHistory plugins msg _ =
         UserReleasedNormalKey _ ->
             False
 
+        UserPressedArrowKey _ ->
+            False
+
         UserClickedShowLegend ->
             False
 

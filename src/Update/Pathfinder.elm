@@ -1739,6 +1739,24 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
+        UserPressedArrowKey direction ->
+            case model.selection of
+                SelectedAddress id ->
+                    Dict.get id model.network.addresses
+                        |> Maybe.map
+                            (\address ->
+                                case getTxs address direction of
+                                    Txs _ ->
+                                        focusNeighborAddress uc id direction model
+
+                                    _ ->
+                                        update plugins uc (UserClickedAddressExpandHandle id direction) model
+                            )
+                        |> Maybe.withDefault (n model)
+
+                _ ->
+                    n model
+
         UserClickedAddress id ->
             if model.modPressed || model.pointerTool == Select then
                 multiSelect model [ MSelectedAddress id ] True
@@ -4261,6 +4279,57 @@ selectConversionEdge ( a, b ) model =
         |> s_selection (SelectedConversionEdge ( a, b ))
         |> n
         |> Tuple.mapSecond ((++) eff)
+
+
+focusNeighborAddress : Update.Config -> Id -> Direction -> Model -> ( Model, List Effect )
+focusNeighborAddress uc anchorId direction model =
+    let
+        anchorKey =
+            Id.id anchorId
+
+        neighborId =
+            Network.getTxsForAddress model.network direction anchorId
+                |> List.filterMap
+                    (\tx ->
+                        getAddressForDirection tx direction (Set.singleton anchorKey)
+                            |> Maybe.andThen
+                                (\nid ->
+                                    if Dict.member nid model.network.addresses then
+                                        Just nid
+
+                                    else
+                                        Nothing
+                                )
+                    )
+                |> List.head
+    in
+    case neighborId |> Maybe.andThen (\nid -> Dict.get nid model.network.addresses) of
+        Just neighbor ->
+            let
+                ( m1, eff ) =
+                    selectAddress neighbor.id model
+
+                transform =
+                    (uc.size
+                        |> Maybe.map
+                            (\{ width, height } ->
+                                { width = width
+                                , height = height
+                                }
+                            )
+                        |> Maybe.map Transform.politeMove
+                        |> Maybe.withDefault Transform.move
+                    )
+                        { x = neighbor.x * unit
+                        , y = A.getTo neighbor.y * unit
+                        , z = Transform.initZ
+                        }
+                        m1.transform
+            in
+            ( { m1 | transform = transform }, eff )
+
+        Nothing ->
+            n model
 
 
 selectAddress : Id -> Model -> ( Model, List Effect )

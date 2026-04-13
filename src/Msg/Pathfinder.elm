@@ -74,6 +74,7 @@ type Msg
     | UserReleasedEscape
     | UserPressedNormalKey String
     | UserReleasedNormalKey String
+    | UserPressedArrowKey Direction
     | AddressDetailsMsg Id AddressDetails.Msg
     | ConversionDetailsMsg ( Id, Id ) ConversionDetails.ConversionDetailsMsgs
     | TxDetailsMsg TxDetailsMsg
