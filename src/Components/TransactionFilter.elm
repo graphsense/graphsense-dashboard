@@ -1074,32 +1074,53 @@ quickFilterToLabel vc =
         (\qf ->
             Sc.filterGroupSmall
                 { filterList =
-                    quickfilterHeaderSmall vc qf
-                        :: (qf.tx
-                                |> txToAsset
-                                |> Maybe.map (stringFilterSmall vc >> List.singleton)
-                                |> Maybe.withDefault []
-                           )
+                    (qf.tx
+                        |> txToAsset
+                        |> Maybe.map (stringFilterSmall vc >> List.singleton)
+                        |> Maybe.withDefault []
+                    )
+                        ++ [ qf.date |> dateTimeFilterSmall vc qf.direction
+                           , qf.direction |> directionFilterString |> stringFilterSmall vc
+                           ]
                 }
                 {}
         )
         >> Maybe.withDefault (Html.text <| Locale.string vc.locale "filter-none-selected")
 
 
-quickfilterHeaderSmall : View.Config -> { a | direction : Direction, tx : Tx.TxType } -> Html msg
-quickfilterHeaderSmall vc qf =
+
+{-
+   txHashHeaderSmall : View.Config -> { a | direction : Direction, tx : Tx.TxType } -> Html msg
+   txHashHeaderSmall vc qf =
+       let
+           txLabel =
+               case qf.direction of
+                   Outgoing ->
+                       "Datefilter-starting-tx"
+
+                   Incoming ->
+                       "Datefilter-until-tx"
+       in
+       qf.tx
+           |> Tx.getRawBaseTxHashForTxType
+           |> truncateLongIdentifier
+           |> dateTimeFilterRawSmall vc txLabel
+-}
+
+
+dateTimeFilterSmall : View.Config -> Direction -> Time.Posix -> Html msg
+dateTimeFilterSmall vc direction date =
     let
         txLabel =
-            case qf.direction of
+            case direction of
                 Outgoing ->
-                    "Datefilter-starting-tx"
+                    "Datefilter-starting"
 
                 Incoming ->
-                    "Datefilter-until-tx"
+                    "Datefilter-until"
     in
-    qf.tx
-        |> Tx.getRawBaseTxHashForTxType
-        |> truncateLongIdentifier
+    date
+        |> Locale.timestampDateTimeUniform vc.locale False
         |> dateTimeFilterRawSmall vc txLabel
 
 
