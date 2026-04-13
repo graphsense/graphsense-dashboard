@@ -1186,19 +1186,19 @@ txToAsset tx =
 
 quickFilterToSettings : QuickFilterModel -> SettingsModel
 quickFilterToSettings qf =
-    { asset = txToAsset qf.tx
-    , includeZeroValueTxs = Nothing
-    , direction = Just <| Just qf.direction
-    , range =
-        Just <|
+    { initSettingsModel
+        | asset = txToAsset qf.tx
+        , includeZeroValueTxs = Nothing
+        , direction = Just <| Just qf.direction
+        , range =
             Just <|
-                case qf.direction of
-                    Incoming ->
-                        Until qf.date
+                Just <|
+                    case qf.direction of
+                        Incoming ->
+                            Until qf.date
 
-                    Outgoing ->
-                        Starting qf.date
-    , utxoOnly = False
+                        Outgoing ->
+                            Starting qf.date
     }
 
 
@@ -1208,7 +1208,7 @@ initSettingsModel =
     , asset = Nothing
     , includeZeroValueTxs = Nothing
     , range = Nothing
-    , utxoOnly = False
+    , utxoOnly = True
     }
 
 
