@@ -256,7 +256,7 @@ tagConcept vc openDetailsMsg concept tag =
     ]
 
 
-changeHeuristics : View.Config -> { confidence : Float, heuristics : List String } -> List (Html msg)
+changeHeuristics : View.Config -> { a | confidence : Float, heuristics : List String } -> List (Html msg)
 changeHeuristics vc cfg =
     let
         maxItems =

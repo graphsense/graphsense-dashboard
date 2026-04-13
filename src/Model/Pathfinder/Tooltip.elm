@@ -30,7 +30,7 @@ type TooltipType msg
     | TagLabel String TagSummary (TooltipMessages msg)
     | TagConcept Id String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
-    | ChangeHeuristics { confidence : Float, heuristics : List String }
+    | ChangeHeuristics { domId : String, confidence : Float, heuristics : List String }
     | Text String
     | Plugin { context : String, domId : String } (TooltipMessages msg)
 
@@ -96,7 +96,9 @@ isSameTooltip t1 t2 =
             a1.id == a2.id
 
         ( ChangeHeuristics c1, ChangeHeuristics c2 ) ->
-            c1.confidence
+            c1.domId
+                == c2.domId
+                && c1.confidence
                 == c2.confidence
                 && c1.heuristics
                 == c2.heuristics

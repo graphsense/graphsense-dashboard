@@ -1564,7 +1564,8 @@ updateByMsg plugins uc msg model =
                 { context = config.domId, domId = config.domId }
                 False
                 (Tooltip.ChangeHeuristics
-                    { confidence = config.confidence
+                    { domId = config.domId
+                    , confidence = config.confidence
                     , heuristics = config.heuristics
                     }
                 )
