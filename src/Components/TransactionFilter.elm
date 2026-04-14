@@ -720,8 +720,8 @@ txFilterDialogView vc net config (Internal model) =
         showQuickFilter =
             model.quickFilterSelect /= Nothing
     in
-    SidePanelComponents.filterTransactionsPopupWithAttributes
-        (SidePanelComponents.filterTransactionsPopupAttributes
+    SidePanelComponents.filterTransactionsPopupDevWithAttributes
+        (SidePanelComponents.filterTransactionsPopupDevAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick (config.tag ToggleDialog) ]
             |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
