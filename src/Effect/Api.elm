@@ -21,7 +21,8 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Pathfinder.Id exposing (Id)
-import Task
+import Process
+import Task exposing (Task)
 import Time
 import Tuple exposing (pair)
 import Util.Http exposing (Headers)
@@ -1198,10 +1199,76 @@ withAuthorization apiKey request =
         Api.withHeader "Authorization" apiKey request
 
 
-send : String -> (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg
-send apiKey wrapMsg effect toMsg =
-    withAuthorization apiKey
-        >> Api.sendAndAlsoReceiveHeaders wrapMsg effect toMsg
+retryDelaysMs : List Float
+retryDelaysMs =
+    [ 500, 1500, 4500 ]
+
+
+isTransient : Http.Error -> Bool
+isTransient err =
+    case err of
+        Http.NetworkError ->
+            True
+
+        Http.Timeout ->
+            True
+
+        Http.BadStatus s ->
+            s == 502 || s == 503 || s == 504
+
+        _ ->
+            False
+
+
+withRetry :
+    List Float
+    -> (() -> Task ( Http.Error, Headers ) ( Headers, a ))
+    -> Task ( Http.Error, Headers ) ( Headers, a )
+withRetry delays mkTask =
+    mkTask ()
+        |> Task.onError
+            (\( err, hs ) ->
+                case ( isTransient err, delays ) of
+                    ( True, d :: rest ) ->
+                        Process.sleep d
+                            |> Task.andThen (\_ -> withRetry rest mkTask)
+
+                    _ ->
+                        Task.fail ( err, hs )
+            )
+
+
+hasTracker : Effect msg -> Bool
+hasTracker effect =
+    case effect of
+        SearchEffect _ _ ->
+            True
+
+        _ ->
+            effectToTracker effect /= Nothing
+
+
+send : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> Effect msg -> (a -> msg) -> Api.Request a -> Cmd msg
+send apiKey wrapMsg effect toMsg req =
+    let
+        authed =
+            withAuthorization apiKey req
+    in
+    if hasTracker effect then
+        Api.sendAndAlsoReceiveHeaders wrapMsg effect toMsg authed
+
+    else
+        let
+            adapt result =
+                case result of
+                    Ok ( hs, a ) ->
+                        wrapMsg (Ok ( hs, toMsg a ))
+
+                    Err ( err, hs ) ->
+                        wrapMsg (Err ( err, hs, effect ))
+        in
+        withRetry retryDelaysMs (\() -> Api.taskWithHeaders authed)
+            |> Task.attempt adapt
 
 
 isOutgoingToDirection : Bool -> Api.Request.Entities.Direction
