@@ -3,6 +3,7 @@ module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel,
 import Basics.Extra exposing (flip)
 import Browser.Events
 import Components.ExportCSV as ExportCSV
+import Components.Tooltip as Tooltip
 import Config.DateRangePicker exposing (datePickerSettings)
 import Config.View as View
 import Css
@@ -28,6 +29,7 @@ import Theme.Html.SelectionControls as Sc
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Time exposing (Posix)
 import Update.DateRangePicker as DateRangePicker
+import Util exposing (n)
 import Util.Checkbox as Checkbox
 import Util.Css
 import Util.Data as Data
@@ -42,12 +44,17 @@ type Model
     = Internal InternalModel
 
 
+type Effect
+    = TooltipEffect Tooltip.Effect
+
+
 type alias InternalModel =
     { dateRangePicker : Maybe (DateRangePicker.Model Msg)
     , assetSelectBox : Maybe (ThemedSelectBox.Model (Maybe String))
     , quickFilterSelect : Maybe (ThemedSelectBox.Model (Maybe QuickFilterModel))
     , showCustomFilter : Bool
     , settings : SettingsModel
+    , tooltip : Maybe Tooltip.Model
     , showDialog : Bool
     , dialogPosition : { top : Float, right : Float }
     , isDragging : Bool
@@ -143,182 +150,243 @@ type Msg
     | StartDrag Int Int
     | Drag Int Int
     | EndDrag
+    | TooltipMsg Tooltip.Msg
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, List Effect )
 update msg (Internal model) =
-    Internal <|
-        case msg of
-            ResetAllTxFilters ->
-                resetAll model
+    case msg of
+        ResetAllTxFilters ->
+            resetAll model
+                |> Internal
+                |> n
 
-            ResetDateRangePicker ->
-                resetDateRangePicker model
+        ResetDateRangePicker ->
+            resetDateRangePicker model
+                |> Internal
+                |> n
 
-            ResetTxDirectionFilter ->
-                resetDirection model
+        ResetTxDirectionFilter ->
+            resetDirection model
+                |> Internal
+                |> n
 
-            ResetTxUtxoOnlyFilter ->
-                resetUtxoOnly model
+        ResetTxUtxoOnlyFilter ->
+            resetUtxoOnly model
+                |> Internal
+                |> n
 
-            ResetTxAssetFilter ->
-                resetSelectedAsset model
+        ResetTxAssetFilter ->
+            resetSelectedAsset model
+                |> Internal
+                |> n
 
-            ResetZeroValueSubTxsTableFilters ->
-                resetIncludeZeroValueTxs model
+        ResetZeroValueSubTxsTableFilters ->
+            resetIncludeZeroValueTxs model
+                |> Internal
+                |> n
 
-            OpenDateRangePicker ->
-                { model | dateRangePicker = Maybe.map DateRangePicker.openPicker model.dateRangePicker }
+        OpenDateRangePicker ->
+            { model | dateRangePicker = Maybe.map DateRangePicker.openPicker model.dateRangePicker }
+                |> Internal
+                |> n
 
-            CloseDateRangePicker ->
-                { model | dateRangePicker = Maybe.map DateRangePicker.closePicker model.dateRangePicker }
+        CloseDateRangePicker ->
+            { model | dateRangePicker = Maybe.map DateRangePicker.closePicker model.dateRangePicker }
+                |> Internal
+                |> n
 
-            UpdateDateRangePicker subMsg ->
-                model.dateRangePicker
-                    |> Maybe.map
-                        (\dateRangePicker ->
-                            let
-                                newPicker =
-                                    DateRangePicker.update subMsg dateRangePicker
-
-                                changed =
-                                    newPicker.fromDate
-                                        /= Nothing
-                                        && newPicker.fromDate
-                                        /= dateRangePicker.fromDate
-                                        || newPicker.toDate
-                                        /= Nothing
-                                        && newPicker.toDate
-                                        /= dateRangePicker.toDate
-                            in
-                            { model
-                                | dateRangePicker =
-                                    newPicker
-                                        |> (if changed then
-                                                DateRangePicker.closePicker
-
-                                            else
-                                                identity
-                                           )
-                                        |> Just
-                            }
-                                |> updateDateRangeInternal ( newPicker.fromDate, newPicker.toDate )
-                        )
-                    |> Maybe.withDefault model
-
-            TxTableFilterShowAllTxs ->
-                updateDirectionInternal Nothing model
-
-            TxTableFilterShowIncomingTxOnly ->
-                updateDirectionInternal (Just Incoming) model
-
-            TxTableFilterShowOutgoingTxOnly ->
-                updateDirectionInternal (Just Outgoing) model
-
-            TxTableFilterToggleZeroValue ->
-                model.settings.includeZeroValueTxs
-                    |> Maybe.map not
-                    |> flip Rs.s_includeZeroValueTxs model.settings
-                    |> flip s_settings model
-
-            TxTableAssetSelectBoxMsg ms ->
-                model.assetSelectBox
-                    |> Maybe.map
-                        (\sb ->
-                            let
-                                ( newSelect, outMsg ) =
-                                    ThemedSelectBox.update ms sb
-                            in
-                            { model
-                                | assetSelectBox = Just newSelect
-                                , settings =
-                                    model.settings
-                                        |> Rs.s_asset
-                                            (case outMsg of
-                                                ThemedSelectBox.Selected sel ->
-                                                    sel
-
-                                                _ ->
-                                                    model.settings.asset
-                                            )
-                            }
-                        )
-                    |> Maybe.withDefault model
-
-            TxTableQuickFilterSelectBoxMsg ms ->
-                model.quickFilterSelect
-                    |> Maybe.map
-                        (\sb ->
-                            let
-                                ( newSelect, outMsg ) =
-                                    ThemedSelectBox.update ms sb
-                            in
-                            { model
-                                | quickFilterSelect = Just newSelect
-                            }
-                                |> (case outMsg of
-                                        ThemedSelectBox.Selected sel ->
-                                            sel
-                                                |> Maybe.map applyQuickFilter
-                                                |> Maybe.withDefault resetAll
-
-                                        _ ->
-                                            identity
-                                   )
-                        )
-                    |> Maybe.withDefault model
-
-            UserClickedCustomFilterLabel ->
-                { model | showCustomFilter = not model.showCustomFilter }
-
-            UserClickedUtxoOnly ->
-                settingsToQuickFilter model
-                    |> Maybe.map
-                        (\_ ->
-                            not model.settings.utxoOnly
-                                |> flip Rs.s_utxoOnly model.settings
-                                |> flip s_settings model
-                        )
-                    |> Maybe.withDefault model
-
-            ToggleDialog ->
-                { model | showDialog = not model.showDialog }
-
-            StartDrag x y ->
-                { model
-                    | isDragging = True
-                    , dragStart = Just { x = x, y = y, top = model.dialogPosition.top, right = model.dialogPosition.right }
-                }
-
-            Drag x y ->
-                case model.dragStart of
-                    Just start ->
+        UpdateDateRangePicker subMsg ->
+            model.dateRangePicker
+                |> Maybe.map
+                    (\dateRangePicker ->
                         let
-                            dx =
-                                toFloat (x - start.x)
+                            newPicker =
+                                DateRangePicker.update subMsg dateRangePicker
 
-                            dy =
-                                toFloat (y - start.y)
-
-                            newTop =
-                                start.top + dy
-
-                            newRight =
-                                start.right - dx
+                            changed =
+                                newPicker.fromDate
+                                    /= Nothing
+                                    && newPicker.fromDate
+                                    /= dateRangePicker.fromDate
+                                    || newPicker.toDate
+                                    /= Nothing
+                                    && newPicker.toDate
+                                    /= dateRangePicker.toDate
                         in
                         { model
-                            | dialogPosition = { top = newTop, right = newRight }
-                            , isDragging = True
+                            | dateRangePicker =
+                                newPicker
+                                    |> (if changed then
+                                            DateRangePicker.closePicker
+
+                                        else
+                                            identity
+                                       )
+                                    |> Just
                         }
+                            |> updateDateRangeInternal ( newPicker.fromDate, newPicker.toDate )
+                    )
+                |> Maybe.withDefault model
+                |> Internal
+                |> n
 
-                    Nothing ->
-                        model
+        TxTableFilterShowAllTxs ->
+            updateDirectionInternal Nothing model
+                |> Internal
+                |> n
 
-            EndDrag ->
-                { model
-                    | isDragging = False
-                    , dragStart = Nothing
-                }
+        TxTableFilterShowIncomingTxOnly ->
+            updateDirectionInternal (Just Incoming) model
+                |> Internal
+                |> n
+
+        TxTableFilterShowOutgoingTxOnly ->
+            updateDirectionInternal (Just Outgoing) model
+                |> Internal
+                |> n
+
+        TxTableFilterToggleZeroValue ->
+            model.settings.includeZeroValueTxs
+                |> Maybe.map not
+                |> flip Rs.s_includeZeroValueTxs model.settings
+                |> flip s_settings model
+                |> Internal
+                |> n
+
+        TxTableAssetSelectBoxMsg ms ->
+            model.assetSelectBox
+                |> Maybe.map
+                    (\sb ->
+                        let
+                            ( newSelect, outMsg ) =
+                                ThemedSelectBox.update ms sb
+                        in
+                        { model
+                            | assetSelectBox = Just newSelect
+                            , settings =
+                                model.settings
+                                    |> Rs.s_asset
+                                        (case outMsg of
+                                            ThemedSelectBox.Selected sel ->
+                                                sel
+
+                                            _ ->
+                                                model.settings.asset
+                                        )
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> Internal
+                |> n
+
+        TxTableQuickFilterSelectBoxMsg ms ->
+            model.quickFilterSelect
+                |> Maybe.map
+                    (\sb ->
+                        let
+                            ( newSelect, outMsg ) =
+                                ThemedSelectBox.update ms sb
+                        in
+                        { model
+                            | quickFilterSelect = Just newSelect
+                        }
+                            |> (case outMsg of
+                                    ThemedSelectBox.Selected sel ->
+                                        sel
+                                            |> Maybe.map applyQuickFilter
+                                            |> Maybe.withDefault resetAll
+
+                                    _ ->
+                                        identity
+                               )
+                    )
+                |> Maybe.withDefault model
+                |> Internal
+                |> n
+
+        UserClickedCustomFilterLabel ->
+            { model | showCustomFilter = not model.showCustomFilter }
+                |> Internal
+                |> n
+
+        UserClickedUtxoOnly ->
+            settingsToQuickFilter model
+                |> Maybe.map
+                    (\_ ->
+                        not model.settings.utxoOnly
+                            |> flip Rs.s_utxoOnly model.settings
+                            |> flip s_settings model
+                    )
+                |> Maybe.withDefault model
+                |> Internal
+                |> n
+
+        ToggleDialog ->
+            { model | showDialog = not model.showDialog }
+                |> Internal
+                |> n
+
+        StartDrag x y ->
+            { model
+                | isDragging = True
+                , dragStart = Just { x = x, y = y, top = model.dialogPosition.top, right = model.dialogPosition.right }
+            }
+                |> Internal
+                |> n
+
+        Drag x y ->
+            case model.dragStart of
+                Just start ->
+                    let
+                        dx =
+                            toFloat (x - start.x)
+
+                        dy =
+                            toFloat (y - start.y)
+
+                        newTop =
+                            start.top + dy
+
+                        newRight =
+                            start.right - dx
+                    in
+                    { model
+                        | dialogPosition = { top = newTop, right = newRight }
+                        , isDragging = True
+                    }
+                        |> Internal
+                        |> n
+
+                Nothing ->
+                    model
+                        |> Internal
+                        |> n
+
+        EndDrag ->
+            { model
+                | isDragging = False
+                , dragStart = Nothing
+            }
+                |> Internal
+                |> n
+
+        TooltipMsg tm ->
+            model.tooltip
+                |> Maybe.map
+                    (\tt ->
+                        let
+                            ( tooltip, eff ) =
+                                Tooltip.update tm tt
+                        in
+                        ( Internal
+                            { model
+                                | tooltip = Just tooltip
+                            }
+                        , List.map TooltipEffect eff
+                        )
+                    )
+                |> Maybe.withDefault (model |> Internal |> n)
 
 
 resetAll : InternalModel -> InternalModel
@@ -1087,6 +1155,7 @@ init (Settings settings) =
         , quickFilterSelect = Nothing
         , showCustomFilter = False
         , settings = settings
+        , tooltip = Nothing
         , showDialog = False
         , dialogPosition = { top = 100, right = 20 }
         , isDragging = False
