@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, init, tooltipRow, tooltipRowCustomValue, update, val, view)
+module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, defaultConfig, init, mapConfig, perform, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withZIndex)
 
 import Color exposing (Color)
 import Config.View as View exposing (Config)
@@ -37,6 +37,72 @@ type alias ConfigInternal msg =
     , backgroundColor : Color
     , borderWidth : Float
     }
+
+
+
+-- | Create a default Config with sensible defaults
+
+
+defaultConfig : (Msg -> msg) -> Config msg
+defaultConfig tag =
+    Config
+        { tag = tag
+        , zIndex = 0
+        , borderColor = Color.black
+        , backgroundColor = Color.white
+        , borderWidth = 1.0
+        }
+
+
+
+-- | Set the z-index of the Config
+
+
+withZIndex : Int -> Config msg -> Config msg
+withZIndex zIndex (Config cfg) =
+    Config { cfg | zIndex = zIndex }
+
+
+
+-- | Set the border color of the Config
+
+
+withBorderColor : Color -> Config msg -> Config msg
+withBorderColor borderColor (Config cfg) =
+    Config { cfg | borderColor = borderColor }
+
+
+
+-- | Set the background color of the Config
+
+
+withBackgroundColor : Color -> Config msg -> Config msg
+withBackgroundColor backgroundColor (Config cfg) =
+    Config { cfg | backgroundColor = backgroundColor }
+
+
+
+-- | Set the border width of the Config
+
+
+withBorderWidth : Float -> Config msg -> Config msg
+withBorderWidth borderWidth (Config cfg) =
+    Config { cfg | borderWidth = borderWidth }
+
+
+
+-- | Apply a function to modify the Config
+
+
+mapConfig : (a -> b) -> Config a -> Config b
+mapConfig fn (Config cfg) =
+    Config
+        { tag = cfg.tag >> fn
+        , zIndex = cfg.zIndex
+        , borderWidth = cfg.borderWidth
+        , backgroundColor = cfg.backgroundColor
+        , borderColor = cfg.borderColor
+        }
 
 
 type Msg
@@ -157,3 +223,10 @@ tooltipRowCustomValue title rowValue =
         , tooltipRowValue =
             { firstRowText = "", secondRowText = "", secondRowVisible = False }
         }
+
+
+perform : Effect -> Cmd Msg
+perform eff =
+    case eff of
+        HovercardCmd cmd ->
+            Cmd.map HovercardMsg cmd

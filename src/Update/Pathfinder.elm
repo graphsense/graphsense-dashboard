@@ -72,11 +72,11 @@ import Msg.Pathfinder
         , DisplaySettingsMsg(..)
         , Msg(..)
         , OverlayWindows(..)
-        , TxDetailsMsg(..)
         )
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
+import Msg.Pathfinder.TxDetails as TxDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
 import Plugin.Msg as Plugin
@@ -939,7 +939,7 @@ updateByMsg plugins uc msg model =
             { model | details = Nothing, selection = NoSelection }
                 |> n
 
-        TxDetailsMsg (UserClickedTxInSubTxsTable tx) ->
+        TxDetailsMsg (TxDetails.UserClickedTxInSubTxsTable tx) ->
             addOrRemoveTx plugins (Just (Id.init tx.network tx.fromAddress)) (Id.init tx.network tx.identifier) model
                 |> and (setTracingMode TransactionTracingMode)
 
@@ -2782,6 +2782,38 @@ updateByMsg plugins uc msg model =
 
         InternalChangedTxFilter id filter ->
             n { model | txsFilters = AssocList.insert id filter model.txsFilters }
+
+        TransactionFilterMsg tm ->
+            case model.details of
+                Just (TxDetails tid txDetailsModel) ->
+                    TransactionFilter.update tm txDetailsModel.subTxsTableFilter
+                        |> mapFirst (flip s_subTxsTableFilter txDetailsModel >> TxDetails tid >> Just >> flip s_details model)
+                        |> mapSecond (List.map TransactionFilterEffect)
+
+                Just (AddressDetails aid addressDetailsModel) ->
+                    case addressDetailsModel.txs of
+                        RemoteData.Success txsModel ->
+                            TransactionFilter.update tm txsModel.filter
+                                |> mapFirst
+                                    (flip s_filter txsModel
+                                        >> RemoteData.Success
+                                        >> flip s_txs addressDetailsModel
+                                        >> AddressDetails aid
+                                        >> Just
+                                        >> flip s_details model
+                                    )
+                                |> mapSecond (List.map TransactionFilterEffect)
+
+                        _ ->
+                            n model
+
+                Just (RelationDetails _ _) ->
+                    -- ignore for now
+                    -- we need a way of handling txfilter effects separately for a2b and b2a table
+                    n model
+
+                _ ->
+                    n model
 
 
 multiSearch : String -> Model -> ( Model, List Effect )

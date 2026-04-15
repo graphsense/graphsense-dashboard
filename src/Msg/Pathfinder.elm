@@ -1,8 +1,7 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TextTooltipConfig)
 
 import Api.Data
 import Color exposing (Color)
-import Components.InfiniteTable as InfiniteTable
 import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Model.Dialog as Dialog
@@ -18,10 +17,10 @@ import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
+import Msg.Pathfinder.TxDetails as TxDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
-import Table
 import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
@@ -76,7 +75,7 @@ type Msg
     | UserReleasedNormalKey String
     | AddressDetailsMsg Id AddressDetails.Msg
     | ConversionDetailsMsg ( Id, Id ) ConversionDetails.ConversionDetailsMsgs
-    | TxDetailsMsg TxDetailsMsg
+    | TxDetailsMsg TxDetails.Msg
     | RelationDetailsMsg ( Id, Id ) RelationDetails.Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
@@ -158,6 +157,7 @@ type Msg
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
     | InternalExportGraphTxsCompleted
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
+    | TransactionFilterMsg TransactionFilter.Msg
 
 
 type alias TextTooltipConfig =
@@ -188,19 +188,3 @@ type DisplaySettingsMsg
     | UserClickedToggleValueDetail
     | UserClickedToggleShowHash
     | UserClickedToggleAvoidOverlapingNodes
-
-
-type TxDetailsMsg
-    = UserClickedToggleIoTable IoDirection
-    | TableMsg IoDirection Table.State
-    | TableMsgSubTxTable InfiniteTable.Msg
-    | BrowserGotBaseTx Api.Data.Tx
-    | BrowserGotTxFlows (Maybe String) Api.Data.Txs
-    | UserClickedToggleSubTxsTable
-    | UserClickedTxInSubTxsTable Api.Data.TxAccount
-    | TransactionFilterMsg TransactionFilter.Msg
-
-
-type IoDirection
-    = Inputs
-    | Outputs

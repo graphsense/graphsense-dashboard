@@ -1,5 +1,6 @@
 module Effect.Pathfinder exposing (Effect(..), effectToTracker, perform)
 
+import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Search as Search
 import Model.Notification exposing (Notification)
@@ -26,6 +27,7 @@ type Effect
     | PostponeUpdateByRouteEffect Route
     | ShowNotificationEffect Notification
     | InternalEffect Msg
+    | TransactionFilterEffect TransactionFilter.Effect
 
 
 perform : Effect -> Cmd Msg
@@ -77,6 +79,10 @@ perform eff =
         -- managed in Effect.elm
         InternalEffect _ ->
             Cmd.none
+
+        TransactionFilterEffect e ->
+            TransactionFilter.perform e
+                |> Cmd.map TransactionFilterMsg
 
 
 effectToTracker : Effect -> Maybe String

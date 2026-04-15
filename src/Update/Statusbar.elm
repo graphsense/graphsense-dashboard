@@ -165,6 +165,9 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.InternalEffect _) ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.TransactionFilterEffect _) ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =

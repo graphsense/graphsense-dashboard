@@ -1,4 +1,4 @@
-module Components.TransactionFilter exposing (FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
+module Components.TransactionFilter exposing (Effect, FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, perform, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
 
 import Basics.Extra exposing (flip)
 import Browser.Events
@@ -33,6 +33,7 @@ import Util exposing (n)
 import Util.Checkbox as Checkbox
 import Util.Css
 import Util.Data as Data
+import Util.Pathfinder as Pathfinder
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.View exposing (fullWidthCss, none, pointer, truncateLongIdentifier)
 import View.Button as Button
@@ -756,10 +757,17 @@ view vc net config (Internal model) =
                   ]
                     |> css
                 ]
-                [ txFilterDialogView vc net config (Internal model) ]
+                [ txFilterDialogView vc net config (Internal model)
+                ]
 
           else
             none
+        , model.tooltip
+            |> Maybe.map
+                (Html.text "tooltip"
+                    |> flip (Tooltip.view (Pathfinder.tooltipConfig vc (TooltipMsg >> config.tag)))
+                )
+            |> Maybe.withDefault none
         ]
 
 
@@ -787,9 +795,11 @@ txFilterDialogView vc net config (Internal model) =
         showQuickFilter =
             model.quickFilterSelect /= Nothing
     in
-    SidePanelComponents.filterTransactionsPopupWithAttributes
-        (SidePanelComponents.filterTransactionsPopupAttributes
+    SidePanelComponents.filterTransactionsPopupDevWithAttributes
+        (SidePanelComponents.filterTransactionsPopupDevAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick (config.tag ToggleDialog) ]
+            |> Rs.s_iconsInfoSnoPaddingDev
+                (Tooltip.attributes (Pathfinder.tooltipConfig vc (TooltipMsg >> config.tag)))
             |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
                     [ Css.display Css.none ] |> css |> List.singleton
@@ -1521,3 +1531,11 @@ subscriptions (Internal model) =
 
     else
         Sub.none
+
+
+perform : Effect -> Cmd Msg
+perform eff =
+    case eff of
+        TooltipEffect e ->
+            Tooltip.perform e
+                |> Cmd.map TooltipMsg

@@ -10,6 +10,7 @@ import Msg.ExportDialog exposing (Msg(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails
 import Msg.Pathfinder.RelationDetails
+import Msg.Pathfinder.TxDetails
 import RemoteData
 import Set
 import Sub.Graph.Transform as Transform
@@ -120,7 +121,7 @@ subscriptions model =
     , case model.details of
         Just (TxDetails _ txDetailsModel) ->
             TransactionFilter.subscriptions txDetailsModel.subTxsTableFilter
-                |> Sub.map (\msg -> TxDetailsMsg (Msg.Pathfinder.TransactionFilterMsg msg))
+                |> Sub.map (\msg -> TxDetailsMsg (Msg.Pathfinder.TxDetails.TransactionFilterMsg msg))
 
         Just (AddressDetails aid addressDetailsModel) ->
             case addressDetailsModel.txs of
