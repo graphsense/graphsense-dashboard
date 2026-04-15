@@ -545,3 +545,4 @@ filter-custom-filter: custom filter
 filter-follow-utxo: follow UTXO
 filter-none-selected: none selected 
 filter-utxo-only: UTXO only
+retrying {0}/{1}: retrying {0}/{1}

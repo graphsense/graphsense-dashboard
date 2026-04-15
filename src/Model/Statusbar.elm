@@ -36,6 +36,7 @@ loadingAddressEntityKey =
 
 type alias Model =
     { messages : Dict String ( String, List String )
+    , retries : Dict String Int
     , log : List ( String, List String, Maybe Http.Error )
     , visible : Bool
     , lastBlocks : List ( String, Int )

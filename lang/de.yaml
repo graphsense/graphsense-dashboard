@@ -562,3 +562,4 @@ filter-utxo-only: nur UTXO
 filter-quick-filter: Schnellfilter per Transaktion
 filter-custom-filter: Benutzerdefinierter Filter
 filter-none-selected: keinen ausgewählt
+retrying {0}/{1}: erneuter Versuch {0}/{1}

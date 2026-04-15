@@ -116,6 +116,32 @@ delay time msg =
            Task.perform identity
 
 
+maxApiRetries : Int
+maxApiRetries =
+    3
+
+
+apiRetryDelaysMs : List Float
+apiRetryDelaysMs =
+    [ 500, 1500, 4500 ]
+
+
+isTransientHttpError : Http.Error -> Bool
+isTransientHttpError err =
+    case err of
+        NetworkError ->
+            True
+
+        Timeout ->
+            True
+
+        BadStatus s ->
+            s == 502 || s == 503 || s == 504
+
+        _ ->
+            False
+
+
 tooltipBeginClosing : Msg -> Bool -> ( Model key, List Effect ) -> ( Model key, List Effect )
 tooltipBeginClosing closingMsg withDelay ( model, eff ) =
     ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }
@@ -406,8 +432,48 @@ update plugins uc msg model =
                     | statusbar = Statusbar.update statusbarToken Nothing model.statusbar
                 }
 
+        BrowserRetryApiEffect key effect attempt ->
+            case Dict.get key model.statusbar.retries of
+                Just stored ->
+                    if stored == attempt then
+                        ( model, [ ApiEffect effect ] )
+
+                    else
+                        n model
+
+                Nothing ->
+                    n model
+
         BrowserGotResponseWithHeaders statusbarToken result ->
             let
+                retryPlan =
+                    case ( statusbarToken, result ) of
+                        ( Just key, Err ( err, _, eff ) ) ->
+                            if isTransientHttpError err then
+                                let
+                                    current =
+                                        Dict.get key model.statusbar.retries
+                                            |> Maybe.withDefault 0
+
+                                    next =
+                                        current + 1
+                                in
+                                if next <= maxApiRetries then
+                                    List.Extra.getAt current apiRetryDelaysMs
+                                        |> Maybe.map
+                                            (\d ->
+                                                { key = key, effect = eff, attempt = next, delayMs = d }
+                                            )
+
+                                else
+                                    Nothing
+
+                            else
+                                Nothing
+
+                        _ ->
+                            Nothing
+
                 notFound token =
                     Statusbar.getMessage token model.statusbar
                         |> Maybe.andThen
@@ -525,43 +591,52 @@ update plugins uc msg model =
                         _ ->
                             newDialog
             in
-            { model
-                | statusbar =
-                    case statusbarToken of
-                        Just t ->
-                            Statusbar.update
-                                t
-                                (case result of
-                                    Err ( Http.BadStatus 401, _, _ ) ->
-                                        Nothing
+            case retryPlan of
+                Just plan ->
+                    ( { model | statusbar = Statusbar.setRetry plan.key plan.attempt model.statusbar }
+                    , [ delay plan.delayMs (BrowserRetryApiEffect plan.key plan.effect plan.attempt)
+                            |> CmdEffect
+                      ]
+                    )
 
-                                    Err ( err, _, _ ) ->
-                                        Just err
+                Nothing ->
+                    { model
+                        | statusbar =
+                            case statusbarToken of
+                                Just t ->
+                                    Statusbar.update
+                                        t
+                                        (case result of
+                                            Err ( Http.BadStatus 401, _, _ ) ->
+                                                Nothing
 
-                                    Ok _ ->
-                                        Nothing
-                                )
-                                model.statusbar
+                                            Err ( err, _, _ ) ->
+                                                Just err
 
-                        Nothing ->
-                            if isNonCriticalApiError then
-                                model.statusbar
-
-                            else
-                                case result of
-                                    Err ( Http.BadStatus 429, _, _ ) ->
-                                        Just (Http.BadStatus 429)
-                                            |> Statusbar.add model.statusbar "search" []
-
-                                    _ ->
+                                            Ok _ ->
+                                                Nothing
+                                        )
                                         model.statusbar
-                , dialog = dialogAfterError
-                , notifications = notifications
-            }
-                |> handleResponse plugins
-                    uc
-                    result
-                |> mapSecond ((++) (List.map NotificationEffect notificationEffects))
+
+                                Nothing ->
+                                    if isNonCriticalApiError then
+                                        model.statusbar
+
+                                    else
+                                        case result of
+                                            Err ( Http.BadStatus 429, _, _ ) ->
+                                                Just (Http.BadStatus 429)
+                                                    |> Statusbar.add model.statusbar "search" []
+
+                                            _ ->
+                                                model.statusbar
+                        , dialog = dialogAfterError
+                        , notifications = notifications
+                    }
+                        |> handleResponse plugins
+                            uc
+                            result
+                        |> mapSecond ((++) (List.map NotificationEffect notificationEffects))
 
         UserClosesDialog ->
             case model.dialog of

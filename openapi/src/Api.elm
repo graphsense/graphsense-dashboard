@@ -8,7 +8,6 @@ module Api exposing
     , sendAndAlsoReceiveHeaders
     , sendWithCustomError
     , task
-    , taskWithHeaders
     , withBasePath
     , withBearerToken
     , withHeader
@@ -136,48 +135,6 @@ task (Request req) =
         , resolver = jsonResolver req.decoder
         , timeout = req.timeout
         }
-
-
-taskWithHeaders : Request a -> Task.Task ( Http.Error, Headers ) ( Headers, a )
-taskWithHeaders (Request req) =
-    Http.riskyTask
-        { method = req.method
-        , headers = headers req.headers
-        , url = Url.Builder.crossOrigin req.basePath req.pathParams req.queryParams
-        , body = Maybe.withDefault Http.emptyBody (Maybe.map Http.jsonBody req.body)
-        , resolver = jsonResolverWithHeaders req.decoder
-        , timeout = req.timeout
-        }
-
-
-jsonResolverWithHeaders : Json.Decode.Decoder a -> Http.Resolver ( Http.Error, Headers ) ( Headers, a )
-jsonResolverWithHeaders decoder =
-    Http.stringResolver <|
-        \response ->
-            case response of
-                Http.BadUrl_ url ->
-                    Err ( Http.BadUrl url, Dict.empty )
-
-                Http.Timeout_ ->
-                    Err ( Http.Timeout, Dict.empty )
-
-                Http.NetworkError_ ->
-                    Err ( Http.NetworkError, Dict.empty )
-
-                Http.BadStatus_ metadata body ->
-                    if metadata.statusCode == 404 && String.contains "no external transactions" body then
-                        Err ( Http.BadBody "no external transactions", metadata.headers )
-
-                    else
-                        Err ( Http.BadStatus metadata.statusCode, metadata.headers )
-
-                Http.GoodStatus_ metadata body ->
-                    case Json.Decode.decodeString decoder body of
-                        Ok value ->
-                            Ok ( metadata.headers, value )
-
-                        Err err ->
-                            Err ( Http.BadBody (Json.Decode.errorToString err), metadata.headers )
 
 
 map : (a -> b) -> Request a -> Request b

@@ -1,4 +1,4 @@
-module Update.Statusbar exposing (add, messagesFromEffects, toggle, update, updateLastBlocks)
+module Update.Statusbar exposing (add, clearRetry, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
 
 import Api.Data
 import Api.Request.Entities
@@ -191,10 +191,21 @@ update key error model =
             (\msg ->
                 { model
                     | messages = Dict.remove key model.messages
+                    , retries = Dict.remove key model.retries
                     , log = addLog ( first msg, second msg, error ) model.log
                 }
             )
         |> Maybe.withDefault model
+
+
+setRetry : String -> Int -> Model -> Model
+setRetry key attempt sb =
+    { sb | retries = Dict.insert key attempt sb.retries }
+
+
+clearRetry : String -> Model -> Model
+clearRetry key sb =
+    { sb | retries = Dict.remove key sb.retries }
 
 
 updateLastBlocks : Api.Data.Stats -> Model -> Model
