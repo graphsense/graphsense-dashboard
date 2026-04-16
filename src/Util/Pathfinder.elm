@@ -23,3 +23,4 @@ tooltipConfig vc tag =
         |> Tooltip.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
         |> Tooltip.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
         |> Tooltip.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+        |> Tooltip.withCloseDelay 100

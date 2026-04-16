@@ -1168,7 +1168,6 @@ init (Settings settings) =
         , showCustomFilter = False
         , settings = settings
         , tooltip = Tooltip.init "tx-filter-tooltip"
-            |> Tooltip.withDelay 500
         , showDialog = False
         , dialogPosition = { top = 100, right = 20 }
         , isDragging = False

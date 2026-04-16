@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, defaultConfig, init, mapConfig, perform, reposition, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withDelay, withFixed, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, defaultConfig, init, perform, reposition, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
@@ -28,7 +28,6 @@ type alias ModelInternal =
     { hovercard : Maybe Hovercard.Model
     , id : String
     , state : State
-    , delay : Float
     }
 
 
@@ -36,6 +35,7 @@ type State
     = Open
     | Closing
     | Closed
+    | Opening
 
 
 type Config msg
@@ -54,6 +54,8 @@ type alias ConfigInternal msg =
     , borderWidth : Float
     , viewport : Maybe Viewport
     , fixed : Bool
+    , openDelay : Float
+    , closeDelay : Float
     }
 
 
@@ -71,6 +73,8 @@ defaultConfig tag =
         , borderWidth = 1.0
         , viewport = Nothing
         , fixed = False
+        , openDelay = 0
+        , closeDelay = 0
         }
 
 
@@ -120,33 +124,32 @@ withFixed (Config c) =
     Config { c | fixed = True }
 
 
+{-| Set the delay (in milliseconds) before the tooltip opens
+-}
+withOpenDelay : Float -> Config msg -> Config msg
+withOpenDelay delay (Config c) =
+    Config { c | openDelay = delay }
 
--- | Apply a function to modify the Config
 
-
-mapConfig : (a -> b) -> Config a -> Config b
-mapConfig fn (Config cfg) =
-    Config
-        { tag = cfg.tag >> fn
-        , zIndex = cfg.zIndex
-        , borderWidth = cfg.borderWidth
-        , backgroundColor = cfg.backgroundColor
-        , borderColor = cfg.borderColor
-        , viewport = cfg.viewport
-        , fixed = cfg.fixed
-        }
+{-| Set the delay (in milliseconds) before the tooltip closes
+-}
+withCloseDelay : Float -> Config msg -> Config msg
+withCloseDelay delay (Config c) =
+    Config { c | closeDelay = delay }
 
 
 type Msg
-    = OpenTooltip
-    | CloseTooltip
+    = OpenTooltip Float
+    | CloseTooltip Float
     | HovercardMsg Hovercard.Msg
     | DelayPassed
+    | OpenDelayPassed
 
 
 type Effect
     = HovercardCmd (Cmd Hovercard.Msg)
     | CloseEffect Float
+    | OpenEffect Float
 
 
 init : String -> Model
@@ -155,19 +158,13 @@ init id =
         { hovercard = Nothing
         , id = id
         , state = Closed
-        , delay = 0
         }
 
 
-withDelay : Float -> Model -> Model
-withDelay delay (Model model) =
-    Model { model | delay = delay }
-
-
 attributes : Config msg -> Model -> List (Attribute msg)
-attributes (Config { tag }) (Model model) =
-    [ OpenTooltip |> tag |> onMouseOver
-    , CloseTooltip |> tag |> onMouseLeave
+attributes (Config { tag, openDelay, closeDelay }) (Model model) =
+    [ OpenTooltip openDelay |> tag |> onMouseOver
+    , CloseTooltip closeDelay |> tag |> onMouseLeave
     , id model.id
     ]
 
@@ -175,28 +172,38 @@ attributes (Config { tag }) (Model model) =
 update : Msg -> Model -> ( Model, List Effect )
 update msg (Model model) =
     case msg of
-        OpenTooltip ->
-            if model.state /= Open then
-                let
-                    ( hovercard, cmd ) =
-                        Hovercard.init model.id
-                in
+        OpenTooltip openDelay ->
+            if model.state /= Open && model.state /= Opening then
                 { model
-                    | state = Open
-                    , hovercard = Just hovercard
+                    | state = Opening
                 }
                     |> Model
-                    |> flip pair [ HovercardCmd cmd ]
+                    |> flip pair [ OpenEffect openDelay ]
 
             else
                 n (Model model)
 
-        CloseTooltip ->
-            { model
-                | state = Closing
-            }
+        CloseTooltip closeDelay ->
+            { model | state = Closing }
                 |> Model
-                |> flip pair [ CloseEffect model.delay ]
+                |> flip pair [ CloseEffect closeDelay ]
+
+        OpenDelayPassed ->
+            case model.state of
+                Opening ->
+                    let
+                        ( hovercard, cmd ) =
+                            Hovercard.init model.id
+                    in
+                    { model
+                        | state = Open
+                        , hovercard = Just hovercard
+                    }
+                        |> Model
+                        |> flip pair [ HovercardCmd cmd ]
+
+                _ ->
+                    n (Model model)
 
         HovercardMsg hm ->
             model.hovercard
@@ -303,6 +310,11 @@ perform eff =
         CloseEffect delay ->
             Process.sleep delay
                 |> Task.map (\_ -> DelayPassed)
+                |> Task.perform identity
+
+        OpenEffect delay ->
+            Process.sleep delay
+                |> Task.map (\_ -> OpenDelayPassed)
                 |> Task.perform identity
 
 
