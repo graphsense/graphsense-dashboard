@@ -100,7 +100,13 @@ body plugins vc model =
                     |> Maybe.map List.singleton
                     |> Maybe.withDefault []
                )
+         --++ viewTooltips model
         )
+
+
+viewTooltips : Model key -> List (Html Msg)
+viewTooltips model =
+    []
 
 
 navbarSubMenuView : Config -> Model key -> NavbarSubMenu -> Html Msg

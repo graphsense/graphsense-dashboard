@@ -1,17 +1,22 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, defaultConfig, init, mapConfig, perform, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, defaultConfig, init, mapConfig, perform, reposition, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withDelay, withFixed, withViewport, withZIndex)
 
+import Basics.Extra exposing (flip)
 import Color exposing (Color)
 import Config.View as View exposing (Config)
 import Css
 import Hovercard
-import Html.Styled exposing (Attribute, Html, div, text, toUnstyled)
-import Html.Styled.Attributes exposing (css, title)
-import Html.Styled.Events exposing (onMouseOut, onMouseOver)
+import Html.Styled exposing (Attribute, Html, div, toUnstyled)
+import Html.Styled.Attributes exposing (css, id, title)
+import Html.Styled.Events exposing (onMouseLeave, onMouseOut, onMouseOver)
+import Process
 import RecordSetter as Rs
+import Task
 import Theme.Html.GraphComponents as GraphComponents
+import Tuple exposing (pair)
 import Util exposing (n)
 import Util.Css as Css
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..))
+import Util.View exposing (none)
 import View.Locale as Locale
 
 
@@ -20,14 +25,25 @@ type Model
 
 
 type alias ModelInternal =
-    { hovercard : Hovercard.Model
-    , closing : Bool
-    , open : Bool
+    { hovercard : Maybe Hovercard.Model
+    , id : String
+    , state : State
+    , delay : Float
     }
+
+
+type State
+    = Open
+    | Closing
+    | Closed
 
 
 type Config msg
     = Config (ConfigInternal msg)
+
+
+type alias Viewport =
+    { x : Float, y : Float, width : Float, height : Float }
 
 
 type alias ConfigInternal msg =
@@ -36,6 +52,8 @@ type alias ConfigInternal msg =
     , borderColor : Color
     , backgroundColor : Color
     , borderWidth : Float
+    , viewport : Maybe Viewport
+    , fixed : Bool
     }
 
 
@@ -51,6 +69,8 @@ defaultConfig tag =
         , borderColor = Color.black
         , backgroundColor = Color.white
         , borderWidth = 1.0
+        , viewport = Nothing
+        , fixed = False
         }
 
 
@@ -90,6 +110,16 @@ withBorderWidth borderWidth (Config cfg) =
     Config { cfg | borderWidth = borderWidth }
 
 
+withViewport : Viewport -> Config msg -> Config msg
+withViewport vp (Config c) =
+    Config { c | viewport = Just vp }
+
+
+withFixed : Config msg -> Config msg
+withFixed (Config c) =
+    Config { c | fixed = True }
+
+
 
 -- | Apply a function to modify the Config
 
@@ -102,6 +132,8 @@ mapConfig fn (Config cfg) =
         , borderWidth = cfg.borderWidth
         , backgroundColor = cfg.backgroundColor
         , borderColor = cfg.borderColor
+        , viewport = cfg.viewport
+        , fixed = cfg.fixed
         }
 
 
@@ -109,31 +141,34 @@ type Msg
     = OpenTooltip
     | CloseTooltip
     | HovercardMsg Hovercard.Msg
+    | DelayPassed
 
 
 type Effect
     = HovercardCmd (Cmd Hovercard.Msg)
+    | CloseEffect Float
 
 
-init : String -> ( Model, List Effect )
+init : String -> Model
 init id =
-    let
-        ( hovercard, cmd ) =
-            Hovercard.init id
-    in
-    ( Model
-        { hovercard = hovercard
-        , closing = False
-        , open = False
+    Model
+        { hovercard = Nothing
+        , id = id
+        , state = Closed
+        , delay = 0
         }
-    , [ HovercardCmd cmd ]
-    )
 
 
-attributes : Config msg -> List (Attribute msg)
-attributes (Config { tag }) =
+withDelay : Float -> Model -> Model
+withDelay delay (Model model) =
+    Model { model | delay = delay }
+
+
+attributes : Config msg -> Model -> List (Attribute msg)
+attributes (Config { tag }) (Model model) =
     [ OpenTooltip |> tag |> onMouseOver
-    , CloseTooltip |> tag |> onMouseOut
+    , CloseTooltip |> tag |> onMouseLeave
+    , id model.id
     ]
 
 
@@ -141,52 +176,86 @@ update : Msg -> Model -> ( Model, List Effect )
 update msg (Model model) =
     case msg of
         OpenTooltip ->
-            { model | open = True }
-                |> Model
-                |> n
+            if model.state /= Open then
+                let
+                    ( hovercard, cmd ) =
+                        Hovercard.init model.id
+                in
+                { model
+                    | state = Open
+                    , hovercard = Just hovercard
+                }
+                    |> Model
+                    |> flip pair [ HovercardCmd cmd ]
+
+            else
+                n (Model model)
 
         CloseTooltip ->
-            { model | closing = True }
+            { model
+                | state = Closing
+            }
                 |> Model
-                |> n
+                |> flip pair [ CloseEffect model.delay ]
 
         HovercardMsg hm ->
-            let
-                ( hc, cmd ) =
-                    Hovercard.update hm model.hovercard
-            in
-            ( Model { model | hovercard = hc }
-            , [ HovercardCmd cmd ]
+            model.hovercard
+                |> Maybe.map
+                    (\hovercard ->
+                        let
+                            ( hc, cmd ) =
+                                Hovercard.update hm hovercard
+                        in
+                        ( Model { model | hovercard = Just hc }
+                        , [ HovercardCmd cmd ]
+                        )
+                    )
+                |> Maybe.withDefault (n (Model model))
+
+        DelayPassed ->
+            (if model.state == Closing then
+                { model
+                    | hovercard = Nothing
+                    , state = Closed
+                }
+
+             else
+                model
             )
+                |> Model
+                |> n
 
 
 view : Config msg -> Model -> Html msg -> Html msg
 view (Config config) (Model model) content =
-    if model.open then
-        content
-            |> List.singleton
-            |> div
-                [ css
-                    (GraphComponents.tooltipDown_details.styles
-                        ++ [ Css.minWidth (Css.px 230) ]
+    case model.hovercard of
+        Just hovercard ->
+            content
+                |> List.singleton
+                |> div
+                    [ css
+                        (GraphComponents.tooltipDown_details.styles
+                            ++ [ Css.minWidth (Css.px 230) ]
+                        )
+                    ]
+                |> toUnstyled
+                |> List.singleton
+                |> Hovercard.view
+                    (Hovercard.defaultConfig
+                        |> Hovercard.withTickLength 16
+                        |> Hovercard.withZIndex config.zIndex
+                        |> Hovercard.withBorderColor config.borderColor
+                        |> Hovercard.withBackgroundColor config.backgroundColor
+                        |> Hovercard.withBorderWidth config.borderWidth
+                        |> Hovercard.withViewport config.viewport
+                        |> Hovercard.withFixed config.fixed
                     )
-                ]
-            |> toUnstyled
-            |> List.singleton
-            |> Hovercard.view
-                { tickLength = 16
-                , zIndex = config.zIndex
-                , borderColor = config.borderColor
-                , backgroundColor = config.backgroundColor
-                , borderWidth = config.borderWidth
-                , viewport = Nothing
-                }
-                model.hovercard
-                []
-            |> Html.Styled.fromUnstyled
+                    hovercard
+                    []
+                |> Html.Styled.fromUnstyled
 
-    else
-        text ""
+        _ ->
+            none
 
 
 val : View.Config -> String -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
@@ -230,3 +299,14 @@ perform eff =
     case eff of
         HovercardCmd cmd ->
             Cmd.map HovercardMsg cmd
+
+        CloseEffect delay ->
+            Process.sleep delay
+                |> Task.map (\_ -> DelayPassed)
+                |> Task.perform identity
+
+
+reposition : Model -> List Effect
+reposition (Model { hovercard }) =
+    Maybe.map (Hovercard.getElement >> HovercardCmd >> List.singleton) hovercard
+        |> Maybe.withDefault []

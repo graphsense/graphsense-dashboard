@@ -55,12 +55,16 @@ type alias InternalModel =
     , quickFilterSelect : Maybe (ThemedSelectBox.Model (Maybe QuickFilterModel))
     , showCustomFilter : Bool
     , settings : SettingsModel
-    , tooltip : Maybe Tooltip.Model
+    , tooltip : Tooltip.Model
     , showDialog : Bool
-    , dialogPosition : { top : Float, right : Float }
+    , dialogPosition : DialogPosition
     , isDragging : Bool
     , dragStart : Maybe { x : Int, y : Int, top : Float, right : Float }
     }
+
+
+type alias DialogPosition =
+    { top : Float, right : Float }
 
 
 type Settings
@@ -352,12 +356,13 @@ update msg (Internal model) =
                         newRight =
                             start.right - dx
                     in
-                    { model
+                    ( { model
                         | dialogPosition = { top = newTop, right = newRight }
                         , isDragging = True
-                    }
+                      }
                         |> Internal
-                        |> n
+                    , Tooltip.reposition model.tooltip |> List.map TooltipEffect
+                    )
 
                 Nothing ->
                     model
@@ -373,21 +378,16 @@ update msg (Internal model) =
                 |> n
 
         TooltipMsg tm ->
-            model.tooltip
-                |> Maybe.map
-                    (\tt ->
-                        let
-                            ( tooltip, eff ) =
-                                Tooltip.update tm tt
-                        in
-                        ( Internal
-                            { model
-                                | tooltip = Just tooltip
-                            }
-                        , List.map TooltipEffect eff
-                        )
-                    )
-                |> Maybe.withDefault (model |> Internal |> n)
+            let
+                ( tt, eff ) =
+                    Tooltip.update tm model.tooltip
+            in
+            ( Internal
+                { model
+                    | tooltip = tt
+                }
+            , List.map TooltipEffect eff
+            )
 
 
 resetAll : InternalModel -> InternalModel
@@ -743,6 +743,12 @@ filterHeader vc config (Internal model) =
         }
 
 
+tooltipConfig : View.Config -> FilterHeaderConfig msg -> Tooltip.Config msg
+tooltipConfig vc config =
+    Pathfinder.tooltipConfig vc (TooltipMsg >> config.tag)
+        |> Tooltip.withFixed
+
+
 view : View.Config -> String -> FilterHeaderConfig msg -> Model -> Html msg
 view vc net config (Internal model) =
     div
@@ -758,16 +764,12 @@ view vc net config (Internal model) =
                     |> css
                 ]
                 [ txFilterDialogView vc net config (Internal model)
+                , Html.text "tooltip"
+                    |> Tooltip.view (tooltipConfig vc config) model.tooltip
                 ]
 
           else
             none
-        , model.tooltip
-            |> Maybe.map
-                (Html.text "tooltip"
-                    |> flip (Tooltip.view (Pathfinder.tooltipConfig vc (TooltipMsg >> config.tag)))
-                )
-            |> Maybe.withDefault none
         ]
 
 
@@ -799,7 +801,7 @@ txFilterDialogView vc net config (Internal model) =
         (SidePanelComponents.filterTransactionsPopupDevAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick (config.tag ToggleDialog) ]
             |> Rs.s_iconsInfoSnoPaddingDev
-                (Tooltip.attributes (Pathfinder.tooltipConfig vc (TooltipMsg >> config.tag)))
+                (Tooltip.attributes (tooltipConfig vc config) model.tooltip)
             |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
                     [ Css.display Css.none ] |> css |> List.singleton
@@ -1165,7 +1167,8 @@ init (Settings settings) =
         , quickFilterSelect = Nothing
         , showCustomFilter = False
         , settings = settings
-        , tooltip = Nothing
+        , tooltip = Tooltip.init "tx-filter-tooltip"
+            |> Tooltip.withDelay 500
         , showDialog = False
         , dialogPosition = { top = 100, right = 20 }
         , isDragging = False
@@ -1278,22 +1281,21 @@ withQuickFilter (QuickFilterInternal qf) (Internal model) =
 
 
 withQuickFilterInternal : QuickFilterModel -> InternalModel -> InternalModel
-withQuickFilterInternal _ model =
-    {- model
-       | quickFilterSelect =
-           model.quickFilterSelect
-               |> Maybe.withDefault
-                   (ThemedSelectBox.init [ Nothing ])
-               |> (\select ->
-                       let
-                           options =
-                               ThemedSelectBox.getOptions select ++ [ Just qf ]
-                       in
-                       updateOptions options select
-                  )
-               |> Just
-    -}
-    model
+withQuickFilterInternal qf model =
+    { model
+        | quickFilterSelect =
+            model.quickFilterSelect
+                |> Maybe.withDefault
+                    (ThemedSelectBox.init [ Nothing ])
+                |> (\select ->
+                        let
+                            options =
+                                ThemedSelectBox.getOptions select ++ [ Just qf ]
+                        in
+                        updateOptions options select
+                   )
+                |> Just
+    }
 
 
 updateOptions : List (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel) -> ThemedSelectBox.Model (Maybe QuickFilterModel)

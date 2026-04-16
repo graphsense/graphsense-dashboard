@@ -1,4 +1,4 @@
-module View.Pathfinder exposing (originShiftX, view)
+module View.Pathfinder exposing (originShiftX, view, viewTooltips)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -52,6 +52,7 @@ import View.Locale as Locale
 import View.Pathfinder.AddressDetails as AddressDetails
 import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.ConversionDetails as ConversionDetails
+import View.Pathfinder.Details as Details
 import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.Toolbar as Toolbar
@@ -1023,3 +1024,8 @@ drawDragSelector _ m =
 
         _ ->
             none
+
+
+viewTooltips : Pathfinder.Model -> List (Html Msg)
+viewTooltips model =
+    Maybe.map Details.viewTooltips model.details |> Maybe.withDefault []

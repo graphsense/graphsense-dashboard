@@ -123,30 +123,31 @@ setAlpha alpha =
 hovercardFullViewPort : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
 hovercardFullViewPort vc element zIndex =
     Hovercard.view
-        { tickLength = 16
-        , zIndex = zIndex
-        , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
-        , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
-        , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-        , viewport = Nothing
-        }
-        element
-        (Css.hovercard vc
-            |> List.map (\( k, v ) -> Html.Attributes.style k v)
+        (Hovercard.defaultConfig
+        |> Hovercard.withTickLength 16
+        |> Hovercard.withZIndex zIndex
+        |> Hovercard.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
+        |> Hovercard.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
+        |> Hovercard.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
         )
+            element
+            (Css.hovercard vc
+                |> List.map (\( k, v ) -> Html.Attributes.style k v)
+            )
         >> Html.Styled.fromUnstyled
 
 
 hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
 hovercard vc element zIndex =
     Hovercard.view
-        { tickLength = 16
-        , zIndex = zIndex
-        , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
-        , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
-        , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-        , viewport = vc.size
-        }
+        (Hovercard.defaultConfig
+        |> Hovercard.withTickLength 16
+        |> Hovercard.withZIndex zIndex
+        |> Hovercard.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
+        |> Hovercard.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
+        |> Hovercard.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+        |> Hovercard.withViewport vc.size
+        )
         element
         (Css.hovercard vc
             |> List.map (\( k, v ) -> Html.Attributes.style k v)

@@ -315,6 +315,7 @@ update uc msg model =
                         let
                             ( newFilter, eff ) =
                                 TransactionFilter.update subMsg txs.filter
+                                    |> mapSecond (List.map TransactionFilterEffect)
 
                             changed =
                                 TransactionFilter.hasChanged txs.filter newFilter
@@ -334,10 +335,10 @@ update uc msg model =
                                             |> InternalEffect
                                         ]
                                         >> and (loadFirstTxsPage True)
-                                        >> mapSecond ((++) (List.map TransactionFilterEffect eff))
+                                        >> mapSecond ((++) eff)
 
                                 else
-                                    n
+                                    flip pair eff
                                )
                     )
                 |> RemoteData.withDefault (n model)
