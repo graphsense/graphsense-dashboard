@@ -2,6 +2,7 @@ module View.Pathfinder exposing (originShiftX, view, viewTooltips)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
+import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -9,7 +10,7 @@ import Css.Graph
 import Css.Pathfinder as Css
 import Dict
 import Hovercard
-import Html.Styled as Html exposing (Html, div, input)
+import Html.Styled as Html exposing (Html, div, input, span)
 import Html.Styled.Attributes as HA
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Json.Decode
@@ -45,6 +46,7 @@ import Util.Annotations as Annotations
 import Util.Css as Css
 import Util.ExternalLinks
 import Util.Graph
+import Util.Pathfinder as PathfinderUtil
 import Util.View exposing (fixFillRule, hovercard, none)
 import View.Controls as Controls
 import View.Graph.Transform as Transform
@@ -388,8 +390,9 @@ bottomCenterPanel vc model =
                 AggregateTracingMode ->
                     Locale.string vc.locale "tx-relationship-mode-help-text"
 
-        ctx =
-            { text = text, domId = Sha256.sha256 text }
+        tooltipConfig =
+            PathfinderUtil.tooltipConfig vc TooltipMsg
+                |> Tooltip.withFixed
     in
     div
         [ css Css.bottomCenterPanelStyle
@@ -414,24 +417,21 @@ bottomCenterPanel vc model =
             , rightCell = { variant = none }
             , root = { toggleLabel = "" }
             }
-        , HIcons.framedIconCircleWithAttributes
-            (HIcons.framedIconCircleAttributes
-                |> Rs.s_root
-                    [ onMouseEnter (ShowTextTooltip ctx)
-                    , onMouseLeave (CloseTextTooltip ctx)
-                    , HA.id ctx.domId
-                    , css [ Css.pointerEventsAll ]
-                    ]
-            )
-            { root =
-                { iconInstance =
-                    HIcons.iconsInfoLWithAttributes
-                        (HIcons.iconsInfoLAttributes
-                            |> Rs.s_root [ fixFillRule ]
-                        )
-                        {}
-                }
-            }
+        , div []
+            [ span
+                ([ css [ Css.pointerEventsAll ]
+                , HA.id (Sha256.sha256 text)
+                ]
+                    ++ Tooltip.attributes tooltipConfig model.tracingModeTooltip
+                )
+                [ HIcons.iconsInfoLWithAttributes
+                    (HIcons.iconsInfoLAttributes
+                        |> Rs.s_root [ fixFillRule ]
+                    )
+                    {}
+                ]
+            , Tooltip.view tooltipConfig model.tracingModeTooltip (Html.text text)
+            ]
         ]
 
 

@@ -2816,6 +2816,15 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
+        TooltipMsg tm ->
+            let
+                ( tooltipModel, eff ) =
+                    Components.Tooltip.update tm model.tracingModeTooltip
+            in
+            ( { model | tracingModeTooltip = tooltipModel }
+            , List.map TooltipEffect eff
+            )
+
 
 multiSearch : String -> Model -> ( Model, List Effect )
 multiSearch query model =

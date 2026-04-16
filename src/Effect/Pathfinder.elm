@@ -1,5 +1,6 @@
 module Effect.Pathfinder exposing (Effect(..), effectToTracker, perform)
 
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Search as Search
@@ -28,6 +29,7 @@ type Effect
     | ShowNotificationEffect Notification
     | InternalEffect Msg
     | TransactionFilterEffect TransactionFilter.Effect
+    | TooltipEffect Tooltip.Effect
 
 
 perform : Effect -> Cmd Msg
@@ -83,6 +85,10 @@ perform eff =
         TransactionFilterEffect e ->
             TransactionFilter.perform e
                 |> Cmd.map TransactionFilterMsg
+
+        TooltipEffect e ->
+            Tooltip.perform e
+                |> Cmd.map TooltipMsg
 
 
 effectToTracker : Effect -> Maybe String

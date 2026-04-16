@@ -2,6 +2,7 @@ module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, Addi
 
 import Api.Data
 import Color exposing (Color)
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Model.Dialog as Dialog
@@ -158,6 +159,7 @@ type Msg
     | InternalExportGraphTxsCompleted
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
     | TransactionFilterMsg TransactionFilter.Msg
+    | TooltipMsg Tooltip.Msg
 
 
 type alias TextTooltipConfig =

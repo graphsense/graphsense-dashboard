@@ -466,3 +466,6 @@ shallPushHistory plugins msg _ =
 
         TransactionFilterMsg _ ->
             False
+
+        TooltipMsg _ ->
+            False

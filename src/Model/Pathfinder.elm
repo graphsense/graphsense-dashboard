@@ -4,6 +4,7 @@ import Api.Data exposing (Actor, Entity)
 import AssocList
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
@@ -69,6 +70,7 @@ type alias Model =
     , exportCSVGraph : ExportCSV.Model
     , exportImage : Maybe ExportImage
     , txsFilters : AssocList.Dict TxsFilterId TransactionFilter.Settings
+    , tracingModeTooltip : Tooltip.Model
     }
 
 
