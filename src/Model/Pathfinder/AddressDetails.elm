@@ -2,6 +2,7 @@ module Model.Pathfinder.AddressDetails exposing (Model)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Table.RelatedAddressesPubkeyTable as RelatedAddressesPubkeyTable
@@ -34,4 +35,5 @@ type alias Model =
     , isClusterDetailsOpen : Bool
     , displayAllTagsInDetails : Bool
     , txsFilter : Maybe TransactionFilter.Settings
+    , tooltip : Tooltip.Model
     }

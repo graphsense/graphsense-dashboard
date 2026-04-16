@@ -4,6 +4,7 @@ import Api.Data
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
@@ -33,13 +34,12 @@ type alias TooltipContext =
 type RelatedAddressesTooltipMsgs
     = ShowRelatedAddressesTooltip TooltipContext
     | HideRelatedAddressesTooltip TooltipContext
-    | ShowTextTooltip TooltipContext
-    | HideTextTooltip TooltipContext
 
 
 type TooltipMsgs
     = RelatedAddressesTooltipMsg RelatedAddressesTooltipMsgs
     | TagTooltipMsg Tag.Msg
+    | ComponentTooltipMsg Tooltip.Msg
 
 
 type Msg

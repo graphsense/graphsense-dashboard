@@ -1,5 +1,6 @@
 module Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress, init)
 
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.Update as Update
 import Model.Address as Address
@@ -46,4 +47,5 @@ init txsFilter address =
     , isClusterDetailsOpen = False
     , displayAllTagsInDetails = False
     , txsFilter = txsFilter
+    , tooltip = Tooltip.init "address-details-text-tooltip"
     }
