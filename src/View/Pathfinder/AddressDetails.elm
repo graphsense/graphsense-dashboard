@@ -526,9 +526,9 @@ clusterInfoView vc open colors viewState clstr =
 
         helpIcon =
             Just <|
-                HIcons.iconsInfoSnoPaddingWithAttributes
-                    (HIcons.iconsInfoSnoPaddingAttributes
-                        |> Rs.s_shape (Tooltip.attributes tooltipConfig)
+                HIcons.iconsInfoSnoPaddingDevWithAttributes
+                    (HIcons.iconsInfoSnoPaddingDevAttributes
+                        |> Rs.s_root (Tooltip.attributes tooltipConfig)
                     )
                     {}
 

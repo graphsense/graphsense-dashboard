@@ -250,7 +250,7 @@ cell vc maybeTooltipModel c =
                 cellConfig =
                     { label = cc.label, subLabel = Just "" }
             in
-            case maybeTooltipModel |> Debug.log "maybTooltipmd" of
+            case maybeTooltipModel of
                 Just tooltipModel ->
                     let
                         tooltipConfig =
@@ -258,9 +258,9 @@ cell vc maybeTooltipModel c =
                                 |> Tooltip.withFixed
 
                         icon =
-                            Icons.iconsInfoSnoPaddingWithAttributes
-                                (Icons.iconsInfoSnoPaddingAttributes
-                                    |> Rs.s_shape (Tooltip.attributes tooltipConfig ++ [ fixFillRule ])
+                            Icons.iconsInfoSnoPaddingDevWithAttributes
+                                (Icons.iconsInfoSnoPaddingDevAttributes
+                                    |> Rs.s_root (Tooltip.attributes tooltipConfig ++ [ fixFillRule ])
                                 )
                                 {}
 
