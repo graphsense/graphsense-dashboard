@@ -745,7 +745,7 @@ filterHeader vc config (Internal model) =
 
 tooltipConfig : View.Config -> FilterHeaderConfig msg -> Tooltip.Config msg
 tooltipConfig vc config =
-    Pathfinder.tooltipConfig vc (TooltipMsg >> config.tag)
+    Pathfinder.tooltipConfig vc "tx-filter-tooltip" (TooltipMsg >> config.tag)
         |> Tooltip.withFixed
 
 
@@ -801,7 +801,7 @@ txFilterDialogView vc net config (Internal model) =
         (SidePanelComponents.filterTransactionsPopupDevAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick (config.tag ToggleDialog) ]
             |> Rs.s_iconsInfoSnoPaddingDev
-                (Tooltip.attributes (tooltipConfig vc config) model.tooltip)
+                (Tooltip.attributes (tooltipConfig vc config))
             |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
                     [ Css.display Css.none ] |> css |> List.singleton
@@ -1167,7 +1167,7 @@ init (Settings settings) =
         , quickFilterSelect = Nothing
         , showCustomFilter = False
         , settings = settings
-        , tooltip = Tooltip.init "tx-filter-tooltip"
+        , tooltip = Tooltip.init 
         , showDialog = False
         , dialogPosition = { top = 100, right = 20 }
         , isDragging = False

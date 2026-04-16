@@ -23,7 +23,7 @@ import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Selection as Pathfinder
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TooltipType(..))
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -391,7 +391,7 @@ bottomCenterPanel vc model =
                     Locale.string vc.locale "tx-relationship-mode-help-text"
 
         tooltipConfig =
-            PathfinderUtil.tooltipConfig vc TooltipMsg
+            PathfinderUtil.tooltipConfig vc "tracing-mode-tooltip" (TooltipMsg Tooltip)
                 |> Tooltip.withFixed
     in
     div
@@ -420,9 +420,9 @@ bottomCenterPanel vc model =
         , div []
             [ span
                 ([ css [ Css.pointerEventsAll ]
-                , HA.id (Sha256.sha256 text)
-                ]
-                    ++ Tooltip.attributes tooltipConfig model.tracingModeTooltip
+                 , HA.id (Sha256.sha256 text)
+                 ]
+                    ++ Tooltip.attributes tooltipConfig 
                 )
                 [ HIcons.iconsInfoLWithAttributes
                     (HIcons.iconsInfoLAttributes

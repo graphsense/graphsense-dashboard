@@ -16,9 +16,9 @@ getAddress addresses id =
         |> Maybe.withDefault (PfError.AddressNotFoundInDict id |> PfError.InternalError |> Err)
 
 
-tooltipConfig : View.Config -> (Tooltip.Msg -> msg) -> Tooltip.Config msg
-tooltipConfig vc tag =
-    Tooltip.defaultConfig tag
+tooltipConfig : View.Config -> String -> (Tooltip.Msg -> msg) -> Tooltip.Config msg
+tooltipConfig vc id tag =
+    Tooltip.defaultConfig id tag
         |> Tooltip.withZIndex (Css.zIndexMainValue + 10000)
         |> Tooltip.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
         |> Tooltip.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor

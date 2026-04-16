@@ -168,7 +168,7 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.TransactionFilterEffect _) ->
             Nothing
 
-        Model.PathfinderEffect (Pathfinder.TooltipEffect _) ->
+        Model.PathfinderEffect (Pathfinder.TooltipEffect _ _) ->
             Nothing
 
 

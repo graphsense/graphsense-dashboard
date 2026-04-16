@@ -521,14 +521,14 @@ clusterInfoView vc open colors viewState clstr =
             Locale.string vc.locale "cluster-details-info-help-text"
 
         tooltipConfig =
-            Pathfinder.tooltipConfig vc (AddressDetails.ComponentTooltipMsg >> AddressDetails.TooltipMsg)
+            Pathfinder.tooltipConfig vc "address-details-text-tooltip" (AddressDetails.ComponentTooltipMsg >> AddressDetails.TooltipMsg)
                 |> Tooltip.withFixed
 
         helpIcon =
             Just <|
                 HIcons.iconsInfoSnoPaddingWithAttributes
                     (HIcons.iconsInfoSnoPaddingAttributes
-                        |> Rs.s_shape (Tooltip.attributes tooltipConfig viewState.tooltip)
+                        |> Rs.s_shape (Tooltip.attributes tooltipConfig)
                     )
                     {}
 
@@ -610,8 +610,8 @@ clusterInfoView vc open colors viewState clstr =
                     )
                     { root = { label = label }
                     }
-                , tooltipHtml
-                ]
+            , tooltipHtml
+            ]
 
 
 transactionTableView : View.Config -> Id -> (Id -> Bool) -> Pathfinder.Model -> TransactionTable.Model -> Html AddressDetails.Msg

@@ -6,8 +6,8 @@ import Config.View as View exposing (Config)
 import Css
 import Hovercard
 import Html.Styled exposing (Attribute, Html, div, toUnstyled)
-import Html.Styled.Attributes exposing (css, id, title)
-import Html.Styled.Events exposing (onMouseLeave, onMouseOut, onMouseOver)
+import Html.Styled.Attributes exposing (css, title)
+import Html.Styled.Events exposing (onMouseLeave, onMouseOver)
 import Process
 import RecordSetter as Rs
 import Task
@@ -26,13 +26,12 @@ type Model
 
 type alias ModelInternal =
     { hovercard : Maybe Hovercard.Model
-    , id : String
     , state : State
     }
 
 
 type State
-    = Open
+    = Open String
     | Closing
     | Closed
     | Opening
@@ -56,6 +55,7 @@ type alias ConfigInternal msg =
     , fixed : Bool
     , openDelay : Float
     , closeDelay : Float
+    , id : String
     }
 
 
@@ -63,10 +63,11 @@ type alias ConfigInternal msg =
 -- | Create a default Config with sensible defaults
 
 
-defaultConfig : (Msg -> msg) -> Config msg
-defaultConfig tag =
+defaultConfig : String -> (Msg -> msg) -> Config msg
+defaultConfig id tag =
     Config
-        { tag = tag
+        { id = id
+        , tag = tag
         , zIndex = 0
         , borderColor = Color.black
         , backgroundColor = Color.white
@@ -139,64 +140,67 @@ withCloseDelay delay (Config c) =
 
 
 type Msg
-    = OpenTooltip Float
+    = OpenTooltip String Float
     | CloseTooltip Float
     | HovercardMsg Hovercard.Msg
     | DelayPassed
-    | OpenDelayPassed
+    | OpenDelayPassed String
 
 
 type Effect
     = HovercardCmd (Cmd Hovercard.Msg)
     | CloseEffect Float
-    | OpenEffect Float
+    | OpenEffect String Float
 
 
-init : String -> Model
-init id =
+init : Model
+init =
     Model
         { hovercard = Nothing
-        , id = id
         , state = Closed
         }
 
 
-attributes : Config msg -> Model -> List (Attribute msg)
-attributes (Config { tag, openDelay, closeDelay }) (Model model) =
-    [ OpenTooltip openDelay |> tag |> onMouseOver
+attributes : Config msg -> List (Attribute msg)
+attributes (Config { id, tag, openDelay, closeDelay }) =
+    [ OpenTooltip id openDelay |> tag |> onMouseOver
     , CloseTooltip closeDelay |> tag |> onMouseLeave
-    , id model.id
+    , Html.Styled.Attributes.id id
     ]
 
 
 update : Msg -> Model -> ( Model, List Effect )
 update msg (Model model) =
     case msg of
-        OpenTooltip openDelay ->
-            if model.state /= Open && model.state /= Opening then
-                { model
-                    | state = Opening
-                }
-                    |> Model
-                    |> flip pair [ OpenEffect openDelay ]
+        OpenTooltip id openDelay ->
+            case model.state of
+                Open _ ->
+                    model |> Model |> n
 
-            else
-                n (Model model)
+                Opening ->
+                    model |> Model |> n
+
+                _ ->
+                    { model
+                        | state = Opening
+                    }
+                        |> Model
+                        |> flip pair [ OpenEffect id openDelay ]
 
         CloseTooltip closeDelay ->
             { model | state = Closing }
                 |> Model
                 |> flip pair [ CloseEffect closeDelay ]
 
-        OpenDelayPassed ->
+        OpenDelayPassed id ->
             case model.state of
                 Opening ->
                     let
                         ( hovercard, cmd ) =
-                            Hovercard.init model.id
+                            Hovercard.init id
                     in
                     { model
-                        | state = Open
+                        | state = Open id
                         , hovercard = Just hovercard
                     }
                         |> Model
@@ -237,29 +241,33 @@ view : Config msg -> Model -> Html msg -> Html msg
 view (Config config) (Model model) content =
     case model.hovercard of
         Just hovercard ->
-            content
-                |> List.singleton
-                |> div
-                    [ css
-                        (GraphComponents.tooltipDown_details.styles
-                            ++ [ Css.minWidth (Css.px 230) ]
+            if Open config.id /= model.state then
+                none
+
+            else
+                content
+                    |> List.singleton
+                    |> div
+                        [ css
+                            (GraphComponents.tooltipDown_details.styles
+                                ++ [ Css.minWidth (Css.px 230) ]
+                            )
+                        ]
+                    |> toUnstyled
+                    |> List.singleton
+                    |> Hovercard.view
+                        (Hovercard.defaultConfig
+                            |> Hovercard.withTickLength 16
+                            |> Hovercard.withZIndex config.zIndex
+                            |> Hovercard.withBorderColor config.borderColor
+                            |> Hovercard.withBackgroundColor config.backgroundColor
+                            |> Hovercard.withBorderWidth config.borderWidth
+                            |> Hovercard.withViewport config.viewport
+                            |> Hovercard.withFixed config.fixed
                         )
-                    ]
-                |> toUnstyled
-                |> List.singleton
-                |> Hovercard.view
-                    (Hovercard.defaultConfig
-                        |> Hovercard.withTickLength 16
-                        |> Hovercard.withZIndex config.zIndex
-                        |> Hovercard.withBorderColor config.borderColor
-                        |> Hovercard.withBackgroundColor config.backgroundColor
-                        |> Hovercard.withBorderWidth config.borderWidth
-                        |> Hovercard.withViewport config.viewport
-                        |> Hovercard.withFixed config.fixed
-                    )
-                    hovercard
-                    []
-                |> Html.Styled.fromUnstyled
+                        hovercard
+                        []
+                    |> Html.Styled.fromUnstyled
 
         _ ->
             none
@@ -312,9 +320,9 @@ perform eff =
                 |> Task.map (\_ -> DelayPassed)
                 |> Task.perform identity
 
-        OpenEffect delay ->
+        OpenEffect id delay ->
             Process.sleep delay
-                |> Task.map (\_ -> OpenDelayPassed)
+                |> Task.map (\_ -> OpenDelayPassed id)
                 |> Task.perform identity
 
 

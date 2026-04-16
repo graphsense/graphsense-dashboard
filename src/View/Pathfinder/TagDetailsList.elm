@@ -2,13 +2,13 @@ module View.Pathfinder.TagDetailsList exposing (view)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
+import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.View
 import Html.Styled exposing (Html, div, span)
 import Html.Styled.Attributes exposing (css, id)
-import Html.Styled.Events exposing (onMouseOut, onMouseOver)
 import Model exposing (Msg(..))
 import Model.Dialog as Dialog
 import Model.Pathfinder.Id as Id
@@ -17,6 +17,7 @@ import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.TagsComponents as TagsComponents
+import Util.Pathfinder as PathfinderUtil
 import Util.View exposing (copyIconPathfinder, fixFillRule, none, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
@@ -123,10 +124,12 @@ view vc conf =
                     [ css disabledTabStyle ]
                     [ Html.Styled.text (Locale.string vc.locale "address tags") ]
 
-        clusterTabTtConfig =
-            { domId = "cluster-tags-disclaimer-tooltip"
-            , text = Locale.string vc.locale "cluster tags disclaimer"
-            }
+        clusterTabTooltipConfig =
+            PathfinderUtil.tooltipConfig vc "cluster-tab-tooltip" (\tipMsg -> PathfinderMsg (Msg.Pathfinder.TooltipMsg Msg.Pathfinder.ClusterTabTooltip tipMsg))
+                |> Tooltip.withFixed
+
+        clusterTabTooltipHtml =
+            Tooltip.view clusterTabTooltipConfig conf.clusterTabTooltip (Html.Styled.text (Locale.string vc.locale "cluster tags disclaimer"))
 
         clusterTab =
             div
@@ -134,25 +137,18 @@ view vc conf =
                 , onClickWithStop (UserClickedTagsDialogTab Dialog.ClusterTagsTab)
                 ]
                 [ Html.Styled.text (Locale.string vc.locale "cluster tags")
-                , span
-                    [ onMouseOver (Msg.Pathfinder.ShowTextTooltip clusterTabTtConfig |> PathfinderMsg)
-                    , onMouseOut (Msg.Pathfinder.CloseTextTooltip clusterTabTtConfig |> PathfinderMsg)
-                    , id clusterTabTtConfig.domId
-                    , css [ Css.displayFlex, Css.alignItems Css.center, Css.cursor Css.pointer ]
-                    ]
-                    [ Icons.iconsInfoSnoPaddingWithAttributes
-                        (Icons.iconsInfoSnoPaddingAttributes
-                            |> Rs.s_root [ css [ Css.width (Css.px 16), Css.height (Css.px 16) ] ]
-                            |> Rs.s_shape [ fixFillRule ]
-                        )
-                        {}
-                    ]
+                , Icons.iconsInfoSnoPaddingWithAttributes
+                    (Icons.iconsInfoSnoPaddingAttributes
+                        |> Rs.s_root [ css [ Css.width (Css.px 16), Css.height (Css.px 16) ] ]
+                        |> Rs.s_shape (Tooltip.attributes clusterTabTooltipConfig ++ [ fixFillRule ])
+                    )
+                    {}
                 ]
 
         tabItems =
             case ( conf.showAddressTab, conf.showClusterTab ) of
                 ( True, True ) ->
-                    [ addressTab, clusterTab ]
+                    [ addressTab, clusterTab, clusterTabTooltipHtml ]
 
                 ( True, False ) ->
                     [ addressTab ]
@@ -179,12 +175,12 @@ view vc conf =
         tableContent =
             case conf.activeTab of
                 Dialog.AddressTagsTab ->
-                    tagsInfiniteTable vc TagsListDialogAddressTableMsg conf.addressTagsTable
+                    tagsInfiniteTable vc conf TagsListDialogAddressTableMsg conf.addressTagsTable
 
                 Dialog.ClusterTagsTab ->
                     case conf.clusterTagsState of
                         Dialog.ClusterTagsLoaded table ->
-                            tagsInfiniteTable vc TagsListDialogClusterTableMsg table
+                            tagsInfiniteTable vc conf TagsListDialogClusterTableMsg table
 
                         Dialog.ClusterTagsLoading ->
                             Util.View.loadingSpinner vc Css.View.loadingSpinner
@@ -209,8 +205,8 @@ view vc conf =
         ]
 
 
-tagsInfiniteTable : View.Config -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.Model Api.Data.AddressTag -> Html Msg
-tagsInfiniteTable vc tag tbl =
+tagsInfiniteTable : View.Config -> Dialog.TagListConfig Msg -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.Model Api.Data.AddressTag -> Html Msg
+tagsInfiniteTable vc conf tag tbl =
     if InfiniteTable.isEmpty tbl then
         if InfiniteTable.isLoading tbl then
             Util.View.loadingSpinner vc Css.View.loadingSpinner
@@ -219,6 +215,6 @@ tagsInfiniteTable vc tag tbl =
             Html.Styled.text ""
 
     else
-        InfiniteTable.view (TagsTable.config vc tag)
+        InfiniteTable.view (TagsTable.config vc conf tag)
             [ css (Css.maxHeight (Css.px 500) :: fullWidth) ]
             tbl

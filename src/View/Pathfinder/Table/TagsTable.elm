@@ -3,14 +3,16 @@ module View.Pathfinder.Table.TagsTable exposing (config, styles)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
+import Components.Tooltip as Tooltip
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.Table
-import Html.Styled exposing (a, span, text)
+import Html.Styled exposing (a, div, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Html.Styled.Events exposing (onMouseOut, onMouseOver)
 import Model exposing (Msg(..))
+import Model.Dialog as Dialog
 import Msg.Pathfinder
 import RecordSetter as Rs
 import Set
@@ -22,6 +24,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Html.TagsComponents as TagsComponents
 import Url
 import Util.Data as Data
+import Util.Pathfinder as PathfinderUtil
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (exchangeCategory)
 import Util.View exposing (fixFillRule, none)
@@ -78,8 +81,8 @@ linkCellStyle =
     TagsComponents.tagRowCellLabel_details.styles ++ [ Css.property "color" Colors.blue400, Css.textDecoration Css.none ]
 
 
-cell : View.Config -> Cell -> Table.HtmlDetails Msg
-cell vc c =
+cell : View.Config -> Maybe Tooltip.Model -> Cell -> Table.HtmlDetails Msg
+cell vc maybeTooltipModel c =
     let
         cellBase =
             [ Css.height (Css.px TagsComponents.tagRowCell_details.height)
@@ -213,9 +216,6 @@ cell vc c =
 
         TypeCell cc ->
             let
-                ttConfig =
-                    { domId = cc.cellid, text = cc.titletext }
-
                 lbl =
                     case cc.confidence of
                         High ->
@@ -247,28 +247,51 @@ cell vc c =
                             }
                         }
 
-                icon =
-                    span
-                        [ onMouseOver (Msg.Pathfinder.ShowTextTooltip ttConfig |> PathfinderMsg)
-                        , onMouseOut (Msg.Pathfinder.CloseTextTooltip ttConfig |> PathfinderMsg)
-                        , Html.Styled.Attributes.id ttConfig.domId
-                        ]
-                        [ Icons.iconsInfoSnoPaddingWithAttributes
-                            (Icons.iconsInfoSnoPaddingAttributes
-                                |> Rs.s_shape [ fixFillRule ]
-                            )
-                            {}
-                        ]
-
                 cellConfig =
                     { label = cc.label, subLabel = Just "" }
             in
-            TagsComponents.tagRowCellWithInstances
-                (attrs False cellConfig |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
-                (TagsComponents.tagRowCellInstances
-                    |> Rs.s_category (Just sub)
-                )
-                (defaultData cellConfig Nothing (Just icon))
+            case maybeTooltipModel |> Debug.log "maybTooltipmd" of
+                Just tooltipModel ->
+                    let
+                        tooltipConfig =
+                            PathfinderUtil.tooltipConfig vc cc.cellid (\tipMsg -> PathfinderMsg (Msg.Pathfinder.TooltipMsg Msg.Pathfinder.TagsTooltip tipMsg))
+                                |> Tooltip.withFixed
+
+                        icon =
+                            Icons.iconsInfoSnoPaddingWithAttributes
+                                (Icons.iconsInfoSnoPaddingAttributes
+                                    |> Rs.s_shape (Tooltip.attributes tooltipConfig ++ [ fixFillRule ])
+                                )
+                                {}
+
+                        tooltipHtml =
+                            Tooltip.view tooltipConfig tooltipModel (text cc.titletext)
+
+                        cellHtml =
+                            TagsComponents.tagRowCellWithInstances
+                                (attrs False cellConfig |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
+                                (TagsComponents.tagRowCellInstances
+                                    |> Rs.s_category (Just sub)
+                                )
+                                (defaultData cellConfig Nothing (Just icon))
+                    in
+                    Html.Styled.div [] [ cellHtml, tooltipHtml ]
+
+                Nothing ->
+                    let
+                        icon =
+                            Icons.iconsInfoSnoPaddingWithAttributes
+                                (Icons.iconsInfoSnoPaddingAttributes
+                                    |> Rs.s_shape [ fixFillRule ]
+                                )
+                                {}
+                    in
+                    TagsComponents.tagRowCellWithInstances
+                        (attrs False cellConfig |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
+                        (TagsComponents.tagRowCellInstances
+                            |> Rs.s_category (Just sub)
+                        )
+                        (defaultData cellConfig Nothing (Just icon))
     )
         |> List.singleton
         |> Table.HtmlDetails
@@ -304,7 +327,7 @@ iconColumn vc =
                         else
                             None
                 in
-                cell vc (IconCell icon)
+                cell vc Nothing (IconCell icon)
         , sorter = Table.unsortable
         }
 
@@ -346,6 +369,7 @@ labelColumn vc =
                             None
                 in
                 cell vc
+                    Nothing
                     (LabelCell
                         { label =
                             if isProprietaryTag data then
@@ -370,8 +394,8 @@ labelColumn vc =
         }
 
 
-typeColumn : View.Config -> Table.Column Api.Data.AddressTag Msg
-typeColumn vc =
+typeColumn : View.Config -> Tooltip.Model -> Table.Column Api.Data.AddressTag Msg
+typeColumn vc tooltipModel =
     Table.veryCustomColumn
         { name = Locale.string vc.locale "Type"
         , viewData =
@@ -413,6 +437,7 @@ typeColumn vc =
                             titleText
                 in
                 cell vc
+                    (Just tooltipModel)
                     (TypeCell
                         { label =
                             data.tagType
@@ -462,7 +487,7 @@ sourceColumn vc =
                             _ ->
                                 Nothing
                 in
-                cell vc (SourceCell { label = truncatedSource, link = link, subLabel = Just (Util.View.truncate 30 data.tagpackCreator) })
+                cell vc Nothing (SourceCell { label = truncatedSource, link = link, subLabel = Just (Util.View.truncate 30 data.tagpackCreator) })
         , sorter = Table.unsortable
         }
 
@@ -485,7 +510,7 @@ lastModColumn vc =
                                 )
                             |> Maybe.withDefault ( "-", "-" )
                 in
-                cell vc (LastModCell { label = date, subLabel = Nothing })
+                cell vc Nothing (LastModCell { label = date, subLabel = Nothing })
         , sorter = Table.unsortable
         }
 
@@ -535,13 +560,13 @@ styles =
             (\vc -> Css.Table.styles.table vc ++ fullWidth)
 
 
-config : View.Config -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.TableConfig Api.Data.AddressTag Msg
-config vc tag =
+config : View.Config -> Dialog.TagListConfig Msg -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.TableConfig Api.Data.AddressTag Msg
+config vc conf tag =
     { toId = tagId
     , columns =
         [ iconColumn vc
         , labelColumn vc
-        , typeColumn vc
+        , typeColumn vc conf.tagsTooltip
         , sourceColumn vc
         , lastModColumn vc
         ]

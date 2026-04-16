@@ -119,6 +119,7 @@ import Util.Tag as Tag
 import View.Locale as Locale exposing (makeTimestampFilename)
 import View.Pathfinder exposing (originShiftX)
 import Workflow
+import Msg.Pathfinder exposing (TooltipType(..))
 
 
 zoomFactor : Float
@@ -2816,14 +2817,20 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        TooltipMsg tm ->
+        TooltipMsg Tooltip tm ->
             let
                 ( tooltipModel, eff ) =
                     Components.Tooltip.update tm model.tracingModeTooltip
             in
             ( { model | tracingModeTooltip = tooltipModel }
-            , List.map TooltipEffect eff
+            , List.map (TooltipEffect Tooltip) eff
             )
+
+        TooltipMsg TagsTooltip _ ->
+            n model
+
+        TooltipMsg ClusterTabTooltip _ ->
+            n model
 
 
 multiSearch : String -> Model -> ( Model, List Effect )

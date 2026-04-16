@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TextTooltipConfig)
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TooltipType(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -159,7 +159,14 @@ type Msg
     | InternalExportGraphTxsCompleted
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
     | TransactionFilterMsg TransactionFilter.Msg
-    | TooltipMsg Tooltip.Msg
+    | TooltipMsg TooltipType Tooltip.Msg
+
+type TooltipType
+    = Tooltip
+    | ClusterTabTooltip
+    | TagsTooltip
+
+
 
 
 type alias TextTooltipConfig =

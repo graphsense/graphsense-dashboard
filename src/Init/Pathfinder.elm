@@ -58,7 +58,7 @@ init us =
       , exportCSVGraph = ExportCSV.init
       , exportImage = Nothing
       , txsFilters = AssocList.empty
-      , tracingModeTooltip = Tooltip.init "tracing-mode-tooltip"
+      , tracingModeTooltip = Tooltip.init
       }
     , Cmd.none
     )
