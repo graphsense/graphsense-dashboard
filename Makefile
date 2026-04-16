@@ -243,6 +243,19 @@ virtual-dom-fix:
 	$(call clone-repo,lydell/virtual-dom,safe,e1fae6aabd65539db2c94a98220a45cfc624b633,$(ELM_PACKAGES_DIR)/elm/virtual-dom/1.0.5)
 	$(call clone-repo,lydell/browser,safe,f5de544c8033d934285501f78f09e2eaf0171d55,$(ELM_PACKAGES_DIR)/elm/browser/1.0.2)
 
+# Target to create a version tag and commit
+# Usage: make tag-version VERSION=v1.0.0
+tag-version:
+	@echo "Setting version to $(VERSION)"
+	@echo "module Version exposing (version)" > src/Version.elm
+	@echo "" >> src/Version.elm
+	@echo "" >> src/Version.elm
+	@echo "version : String" >> src/Version.elm
+	@echo "version =" >> src/Version.elm
+	@echo "    \"$(VERSION)\"" >> src/Version.elm
+	git add src/Version.elm
+	git commit -m "$(VERSION)" -n
+	git tag $(VERSION)
+	@echo "Created version $(VERSION)"
 
-.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix
-
+.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version

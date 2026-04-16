@@ -10,6 +10,7 @@ GraphSense Dashboard — a web GUI for interactive cryptocurrency analysis, writ
 
 ```bash
 # Development
+make compile            # Compile the project
 make serve              # Start dev server (localhost:3000) — runs prepare + codegen + vite
 make build              # Production build to ./dist
 make test               # Run Elm tests (elm-test-rs)
