@@ -179,6 +179,11 @@ update msg (Model model) =
                                 { mo
                                     | state = Opening
                                     , content = content
+                                    , hovercard = 
+                                        if mo.id /= id then
+                                            Nothing
+                                        else
+                                            mo.hovercard
                                 }
                                     |> Just
                                     |> Model
