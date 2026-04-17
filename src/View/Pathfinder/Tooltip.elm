@@ -35,7 +35,7 @@ view plugins model vc tt =
         ( content, containerAttributes ) =
             case tt.type_ of
                 Plugin s msgs ->
-                    ( Plugin.tooltip plugins s model.plugins vc |> Maybe.withDefault [], [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
+                    ( [], [] )
     in
     content
         |> div

@@ -14,6 +14,7 @@ import Html.Styled as Html exposing (Html, div, input, span)
 import Html.Styled.Attributes as HA
 import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Json.Decode
+import Maybe.Extra
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Transform exposing (Transition(..))

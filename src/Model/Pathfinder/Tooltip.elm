@@ -40,4 +40,3 @@ isSameTooltip t1 t2 =
     case ( t1.type_, t2.type_ ) of
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
-

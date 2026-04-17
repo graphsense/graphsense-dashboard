@@ -293,7 +293,7 @@ update msg (Model model) =
                 |> n
 
 
-view : Config a msg -> Model a -> (a -> Html msg) -> Html msg
+view : Config a msg -> Model a -> (a -> List (Html msg)) -> Html msg
 view (Config config) (Model model) view_ =
     model
         |> Maybe.andThen
@@ -302,7 +302,6 @@ view (Config config) (Model model) view_ =
                     |> Maybe.map
                         (\hovercard ->
                             view_ mo.content
-                                |> List.singleton
                                 |> div
                                     [ css
                                         (GraphComponents.tooltipDown_details.styles

@@ -1,4 +1,4 @@
-module Util.Tooltip exposing (linkRow, tooltipConfig, tooltipRow, tooltipRowCustomValue, view)
+module Util.Tooltip exposing (linkRow, tooltipConfig, tooltipProperties, tooltipRow, tooltipRowCustomValue, view)
 
 import Api.Data exposing (Actor, TagSummary)
 import Basics.Extra exposing (flip)
@@ -13,7 +13,7 @@ import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder as Pathfinder exposing (getTagSummary)
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder exposing (Msg(..), OverlayWindows(..))
 import RecordSetter as Rs
 import Set
 import Theme.Html.GraphComponents as GraphComponents
@@ -27,64 +27,68 @@ import Util.TooltipType exposing (TooltipType(..))
 import Util.View exposing (makeValuesList, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
-import Msg.Pathfinder exposing (OverlayWindows(..))
 
 
 tooltipConfig : View.Config -> (Tooltip.Msg TooltipType -> msg) -> Tooltip.Config TooltipType msg
 tooltipConfig vc tag =
     Tooltip.defaultConfig tag
-        |> Tooltip.withZIndex (Css.zIndexMainValue + 10000)
-        |> Tooltip.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
-        |> Tooltip.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
-        |> Tooltip.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
-        |> Tooltip.withCloseDelay 100
-        |> Tooltip.withFixed
+        |> tooltipProperties vc
 
 
-view : View.Config -> Pathfinder.Model -> TooltipType -> Html Msg
+tooltipProperties : View.Config -> Tooltip.Config a msg -> Tooltip.Config a msg
+tooltipProperties vc =
+    Tooltip.withZIndex (Css.zIndexMainValue + 10000)
+        >> Tooltip.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
+        >> Tooltip.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
+        >> Tooltip.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+        >> Tooltip.withCloseDelay 100
+        >> Tooltip.withFixed
+
+
+view : View.Config -> Pathfinder.Model -> TooltipType -> List (Html Msg)
 view vc model tt =
-    div [] <|
-        case tt of
-            UtxoTx t ->
-                genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }
+    case tt of
+        UtxoTx t ->
+            genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }
 
-            AccountTx t ->
-                genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }
+        AccountTx t ->
+            genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }
 
-            AggEdge a ->
-                aggEdge vc a
+        AggEdge a ->
+            aggEdge vc a
 
-            Address id ->
-                model.network.addresses
+        Address id ->
+            model.network.addresses
                 |> Dict.get id
-                |> Maybe.map (address vc (getTagSummary model id ))
+                |> Maybe.map (address vc (getTagSummary model id))
                 |> Maybe.withDefault []
 
-            TagLabel addrId lblid ->
-                case getTagSummary model addrId of
-                    Just ts ->
-                        tagLabel vc lblid ts
-                    Nothing ->
-                        []
+        TagLabel addrId lblid ->
+            case getTagSummary model addrId of
+                Just ts ->
+                    tagLabel vc lblid ts
 
-            TagConcept id conceptId ->
-                getTagSummary model id
-                    |> Maybe.map (tagConcept vc id conceptId)
-                    |> Maybe.withDefault [ Html.text "no tagsummary found" ]
+                Nothing ->
+                    []
 
-            ActorDetails actorId ->
-                model.actors
-                    |> Dict.get actorId
-                    |> Maybe.map (showActor vc)
-                    |> Maybe.withDefault []
+        TagConcept id conceptId ->
+            getTagSummary model id
+                |> Maybe.map (tagConcept vc id conceptId)
+                |> Maybe.withDefault [ Html.text "no tagsummary found" ]
 
-            ChangeHeuristics cfg ->
-                changeHeuristics vc cfg
+        ActorDetails actorId ->
+            model.actors
+                |> Dict.get actorId
+                |> Maybe.map (showActor vc)
+                |> Maybe.withDefault []
 
-            Text txt ->
-                Locale.string vc.locale txt
-                    |> Html.text
-                    |> List.singleton
+        ChangeHeuristics cfg ->
+            changeHeuristics vc cfg
+
+        Text txt ->
+            Locale.string vc.locale txt
+                |> Html.text
+                |> List.singleton
 
 
 getConfidenceIndicator : View.Config -> Float -> Html msg
