@@ -40,9 +40,6 @@ view plugins model vc tt =
                 ActorDetails ac msgs ->
                     ( showActor vc ac, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
-                ChangeHeuristics cfg ->
-                    ( changeHeuristics vc cfg, [] )
-
                 Plugin s msgs ->
                     ( Plugin.tooltip plugins s model.plugins vc |> Maybe.withDefault [], [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
     in

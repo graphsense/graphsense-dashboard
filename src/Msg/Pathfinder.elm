@@ -144,8 +144,6 @@ type Msg
     | UserGotMoreAddressTagsForDialog Id Api.Data.AddressTags
     | UserGotClusterTagsForDialog Id Api.Data.AddressTags
     | UserGotMoreClusterTagsForDialog Id Api.Data.AddressTags
-    | ShowChangeTooltip ChangeTooltipConfig
-    | CloseChangeTooltip ChangeTooltipConfig
     | UserClickedToggleTracingMode
     | BrowserGotRelationsToVisibleNeighbors AddingRelationsConfig Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id

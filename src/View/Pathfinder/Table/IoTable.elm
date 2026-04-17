@@ -3,6 +3,7 @@ module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, config)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Char
+import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
@@ -25,6 +26,8 @@ import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
+import Util.Tooltip
+import Util.TooltipType as TooltipType
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
@@ -253,10 +256,10 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                     changeTooltipAttrs =
                         case changeBadgeConfig.tooltip of
                             Just tt ->
-                                [ id tt.domId
-                                , onMouseOver (Pathfinder.ShowChangeTooltip tt)
-                                , onMouseOut (Pathfinder.CloseChangeTooltip tt)
-                                ]
+                                [ id tt.domId ]
+                                    ++ (TooltipType.ChangeHeuristics { confidence = tt.confidence, heuristics = tt.heuristics }
+                                        |> Tooltip.attributes tt.domId (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
+                                    )
 
                             Nothing ->
                                 []

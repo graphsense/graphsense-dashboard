@@ -23,7 +23,6 @@ type alias TooltipMessages msg =
 type TooltipType msg
     = TagLabel String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
-    | ChangeHeuristics { confidence : Float, heuristics : List String }
     | Plugin { context : String, domId : String } (TooltipMessages msg)
 
 
@@ -41,9 +40,6 @@ mapMsgTooltipType toMap f =
         ActorDetails a msgs ->
             ActorDetails a (mapMsgTooltipMsg msgs f)
 
-        ChangeHeuristics cfg ->
-            ChangeHeuristics cfg
-
         Plugin pid msgs ->
             Plugin pid (mapMsgTooltipMsg msgs f)
 
@@ -57,12 +53,6 @@ isSameTooltip t1 t2 =
         ( ActorDetails a1 _, ActorDetails a2 _ ) ->
             a1.id == a2.id
 
-        ( ChangeHeuristics c1, ChangeHeuristics c2 ) ->
-            c1.confidence
-                == c2.confidence
-                && c1.heuristics
-                == c2.heuristics
-
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
 
@@ -70,9 +60,6 @@ isSameTooltip t1 t2 =
             False
 
         ( ActorDetails _ _, _ ) ->
-            False
-
-        ( ChangeHeuristics _, _ ) ->
             False
 
         ( Plugin _ _, _ ) ->

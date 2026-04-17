@@ -1558,22 +1558,6 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
-        ShowChangeTooltip config ->
-            ( model
-            , OpenTooltipEffect
-                { context = config.domId, domId = config.domId }
-                False
-                (Tooltip.ChangeHeuristics
-                    { confidence = config.confidence
-                    , heuristics = config.heuristics
-                    }
-                )
-                |> List.singleton
-            )
-
-        CloseChangeTooltip config ->
-            ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
-
         UserMovesMouseOverTagLabel ctx ->
             let
                 tsToTooltip ts =

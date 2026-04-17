@@ -422,12 +422,6 @@ shallPushHistory plugins msg _ =
         UserGotMoreClusterTagsForDialog _ _ ->
             False
 
-        ShowChangeTooltip _ ->
-            False
-
-        CloseChangeTooltip _ ->
-            False
-
         BrowserGotTagSummaries _ _ ->
             False
 
