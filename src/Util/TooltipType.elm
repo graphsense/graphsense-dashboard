@@ -14,6 +14,6 @@ type TooltipType
     | Address Id
     | TagLabel Id String
     | TagConcept Id String
-    | ActorDetails Actor
+    | ActorDetails String
     | Text String
     | ChangeHeuristics { confidence : Float, heuristics : List String }

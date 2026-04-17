@@ -114,8 +114,6 @@ type Msg
     | UserMovesMouseOutTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
-    | UserMovesMouseOverActorLabel TooltipContext
-    | UserMovesMouseOutActorLabel TooltipContext
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg

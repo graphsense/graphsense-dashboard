@@ -1,6 +1,6 @@
 module View.Pathfinder.Tooltip exposing (linkRow, tooltipRow, tooltipRowCustomValue, view)
 
-import Api.Data exposing (Actor, TagSummary)
+import Api.Data exposing (TagSummary)
 import Basics.Extra exposing (flip)
 import Config.View as View exposing (getConceptName)
 import Css
@@ -34,9 +34,6 @@ view plugins model vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
-                ActorDetails ac msgs ->
-                    ( showActor vc ac, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
-
                 Plugin s msgs ->
                     ( Plugin.tooltip plugins s model.plugins vc |> Maybe.withDefault [], [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
     in
@@ -131,53 +128,6 @@ linkRow vc txt msg =
             |> Rs.s_onClick (Just msg)
             |> Button.linkButtonBlue vc
         )
-
-
-showActor : View.Config -> Actor -> List (Html msg)
-showActor vc a =
-    let
-        mainUri =
-            if not (String.startsWith "http://" a.uri) && not (String.startsWith "https://" a.uri) then
-                "https://" ++ a.uri
-
-            else
-                a.uri
-    in
-    [ tooltipRow
-        { tooltipRowLabel = { title = Locale.string vc.locale "actor" }
-        , tooltipRowValue = a.label |> val vc
-        }
-    , tooltipRowCustomValue (Locale.string vc.locale "Url") (Html.Styled.a [ Css.plainLinkStyle vc |> css, href mainUri, target "blank" ] [ text a.uri ])
-    , tooltipRowCustomValue
-        (Locale.string vc.locale "jurisdictions")
-        (let
-            jl =
-                List.length a.jurisdictions
-         in
-         a.jurisdictions
-            |> List.indexedMap
-                (\i z ->
-                    div
-                        [ title (Locale.string vc.locale z.label)
-                        , Css.mGap
-                            |> Css.paddingRight
-                            |> List.singleton
-                            |> css
-                        ]
-                        [ text
-                            (Locale.string vc.locale z.label
-                                ++ (if i /= (jl - 1) then
-                                        ", "
-
-                                    else
-                                        ""
-                                   )
-                            )
-                        ]
-                )
-            |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
-        )
-    ]
 
 
 tagConcept : View.Config -> Maybe msg -> String -> TagSummary -> List (Html msg)

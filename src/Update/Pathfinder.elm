@@ -1550,43 +1550,13 @@ updateByMsg plugins uc msg model =
                     _ ->
                         showHover () |> n
 
-        UserMovesMouseOutAddress id ->
-            ( unhover model
-            , CloseTooltipEffect
-                (Just { context = Id.toString id, domId = Id.toString id })
-                False
-                |> List.singleton
-            )
+        UserMovesMouseOutAddress _ ->
+            unhover model
+            |> n
+            
 
-        UserMovesMouseOverActorLabel ctx ->
-            case Dict.get ctx.context model.actors of
-                Just actor ->
-                    let
-                        tt =
-                            Tooltip.ActorDetails actor
-                                { openTooltip = UserMovesMouseOverActorLabel ctx
-                                , closeTooltip = UserMovesMouseOutActorLabel ctx
-                                , openDetails = Nothing
-                                }
-                    in
-                    ( model
-                    , OpenTooltipEffect ctx False tt
-                        |> List.singleton
-                    )
-
-                _ ->
-                    n model
-
-        UserMovesMouseOutActorLabel ctx ->
-            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
-
-        UserMovesMouseOutTx id ->
-            ( unhover model
-            , CloseTooltipEffect
-                (Just { context = Id.toString id, domId = Id.toString id })
-                False
-                |> List.singleton
-            )
+        UserMovesMouseOutTx _ ->
+            unhover model |> n
 
         UserPushesLeftMouseButtonOnUtxoTx id coords ->
             ( { model

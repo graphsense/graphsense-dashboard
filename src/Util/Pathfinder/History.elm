@@ -338,12 +338,6 @@ shallPushHistory plugins msg _ =
         UserMovesMouseOutAddress _ ->
             False
 
-        UserMovesMouseOverActorLabel _ ->
-            False
-
-        UserMovesMouseOutActorLabel _ ->
-            False
-
         UserInputsAnnotation _ _ ->
             True
 

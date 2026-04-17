@@ -1065,9 +1065,9 @@ tagsList vc model id =
             showTag ( tid, t ) =
                 Html.div
                     ([ HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
-                    , css [ Css.cursor Css.pointer ]
-                    , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
-                    ]
+                     , css [ Css.cursor Css.pointer ]
+                     , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
+                     ]
                         ++ (Util.TooltipType.TagLabel id tid
                                 |> Tooltip.attributes tid (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
                            )
@@ -1252,8 +1252,12 @@ labelOfActor vc model id =
                     text =
                         actorText |> Maybe.withDefault ""
 
-                    ctx =
-                        { context = aid, domId = aid ++ "_actor" }
+                    domId =
+                        aid ++ "_actor"
+
+                    tooltipAttributes =
+                        Util.TooltipType.ActorDetails aid
+                            |> Tooltip.attributes domId (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
                 in
                 Html.div
                     [ HA.css
@@ -1261,12 +1265,12 @@ labelOfActor vc model id =
                     ]
                     [ Html.div
                         [ css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
-                        , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
-                        , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
                         , css [ Css.cursor Css.default ]
-                        , HA.id ctx.domId
                         ]
-                        [ Html.text text
+                        [ Html.div
+                            tooltipAttributes
+                            [ Html.text text
+                            ]
                         ]
                     , if Maybe.map hasOnlyExchangeTags ts == Just True then
                         learnMoreButton vc id

@@ -72,8 +72,11 @@ view vc model tt =
                     |> Maybe.map (tagConcept vc id conceptId)
                     |> Maybe.withDefault [ Html.text "no tagsummary found" ]
 
-            ActorDetails ac ->
-                showActor vc ac
+            ActorDetails actorId ->
+                model.actors
+                    |> Dict.get actorId
+                    |> Maybe.map (showActor vc)
+                    |> Maybe.withDefault []
 
             ChangeHeuristics cfg ->
                 changeHeuristics vc cfg
