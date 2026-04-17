@@ -12,7 +12,7 @@ type TooltipType
     | AccountTx Tx.AccountTx
     | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress }
     | Address Id
-    | TagLabel String TagSummary
+    | TagLabel Id String
     | TagConcept Id String
     | ActorDetails Actor
     | Text String

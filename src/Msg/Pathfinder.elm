@@ -114,8 +114,6 @@ type Msg
     | UserMovesMouseOutTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
-    | UserMovesMouseOverTagLabel TooltipContext
-    | UserMovesMouseOutTagLabel TooltipContext
     | UserMovesMouseOverActorLabel TooltipContext
     | UserMovesMouseOutActorLabel TooltipContext
     | UserInputsAnnotation (List Id) String

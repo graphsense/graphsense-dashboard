@@ -256,10 +256,8 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                     changeTooltipAttrs =
                         case changeBadgeConfig.tooltip of
                             Just tt ->
-                                [ id tt.domId ]
-                                    ++ (TooltipType.ChangeHeuristics { confidence = tt.confidence, heuristics = tt.heuristics }
-                                        |> Tooltip.attributes tt.domId (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
-                                    )
+                                TooltipType.ChangeHeuristics { confidence = tt.confidence, heuristics = tt.heuristics }
+                                    |> Tooltip.attributes tt.domId (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
 
                             Nothing ->
                                 []

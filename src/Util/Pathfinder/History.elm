@@ -338,12 +338,6 @@ shallPushHistory plugins msg _ =
         UserMovesMouseOutAddress _ ->
             False
 
-        UserMovesMouseOverTagLabel _ ->
-            False
-
-        UserMovesMouseOutTagLabel _ ->
-            False
-
         UserMovesMouseOverActorLabel _ ->
             False
 

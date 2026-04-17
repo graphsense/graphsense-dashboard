@@ -1063,18 +1063,15 @@ tagsList vc model id =
     else if vc.showLabelsInTaggingOverview then
         let
             showTag ( tid, t ) =
-                let
-                    ctx =
-                        { context = tid, domId = tid }
-                in
                 Html.div
-                    [ onMouseEnter (Pathfinder.UserMovesMouseOverTagLabel ctx)
-                    , onMouseLeave (Pathfinder.UserMovesMouseOutTagLabel ctx)
-                    , HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
-                    , HA.id ctx.domId
+                    ([ HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
                     , css [ Css.cursor Css.pointer ]
                     , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
                     ]
+                        ++ (Util.TooltipType.TagLabel id tid
+                                |> Tooltip.attributes tid (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
+                           )
+                    )
                     [ Html.text t.label
                     ]
 

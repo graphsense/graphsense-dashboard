@@ -1558,40 +1558,6 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
-        UserMovesMouseOverTagLabel ctx ->
-            let
-                tsToTooltip ts =
-                    let
-                        tt =
-                            Tooltip.TagLabel ctx.context
-                                ts
-                                { openTooltip = UserMovesMouseOverTagLabel ctx
-                                , closeTooltip = UserMovesMouseOutTagLabel ctx
-                                , openDetails = Nothing
-                                }
-                    in
-                    ( model
-                    , OpenTooltipEffect ctx False tt |> List.singleton
-                    )
-            in
-            case model.details of
-                Just (AddressDetails id _) ->
-                    case Dict.get id model.tagSummaries of
-                        Just (HasTagSummaries { withCluster }) ->
-                            tsToTooltip withCluster
-
-                        Just (HasTagSummaryOnlyWithCluster ts) ->
-                            tsToTooltip ts
-
-                        Just (HasTagSummaryWithCluster ts) ->
-                            tsToTooltip ts
-
-                        _ ->
-                            n model
-
-                _ ->
-                    n model
-
         UserMovesMouseOverActorLabel ctx ->
             case Dict.get ctx.context model.actors of
                 Just actor ->
@@ -1612,9 +1578,6 @@ updateByMsg plugins uc msg model =
                     n model
 
         UserMovesMouseOutActorLabel ctx ->
-            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
-
-        UserMovesMouseOutTagLabel ctx ->
             ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
 
         UserMovesMouseOutTx id ->

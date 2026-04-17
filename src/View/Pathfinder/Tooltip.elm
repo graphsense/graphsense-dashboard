@@ -34,9 +34,6 @@ view plugins model vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
-                TagLabel lblid x msgs ->
-                    ( tagLabel vc lblid x, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
-
                 ActorDetails ac msgs ->
                     ( showActor vc ac, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 

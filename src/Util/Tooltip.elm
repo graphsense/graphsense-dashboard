@@ -60,8 +60,12 @@ view vc model tt =
                 |> Maybe.map (address vc (getTagSummary model id ))
                 |> Maybe.withDefault []
 
-            TagLabel lblid x ->
-                tagLabel vc lblid x
+            TagLabel addrId lblid ->
+                case getTagSummary model addrId of
+                    Just ts ->
+                        tagLabel vc lblid ts
+                    Nothing ->
+                        []
 
             TagConcept id conceptId ->
                 getTagSummary model id

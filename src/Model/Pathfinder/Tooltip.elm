@@ -21,8 +21,7 @@ type alias TooltipMessages msg =
 
 
 type TooltipType msg
-    = TagLabel String TagSummary (TooltipMessages msg)
-    | ActorDetails Actor (TooltipMessages msg)
+    = ActorDetails Actor (TooltipMessages msg)
     | Plugin { context : String, domId : String } (TooltipMessages msg)
 
 
@@ -34,9 +33,6 @@ mapMsgTooltipMsg m f =
 mapMsgTooltipType : TooltipType msgA -> (msgA -> msgB) -> TooltipType msgB
 mapMsgTooltipType toMap f =
     case toMap of
-        TagLabel a b msgs ->
-            TagLabel a b (mapMsgTooltipMsg msgs f)
-
         ActorDetails a msgs ->
             ActorDetails a (mapMsgTooltipMsg msgs f)
 
@@ -47,17 +43,11 @@ mapMsgTooltipType toMap f =
 isSameTooltip : Tooltip msg -> Tooltip msg -> Bool
 isSameTooltip t1 t2 =
     case ( t1.type_, t2.type_ ) of
-        ( TagLabel id1 _ _, TagLabel id2 _ _ ) ->
-            id1 == id2
-
         ( ActorDetails a1 _, ActorDetails a2 _ ) ->
             a1.id == a2.id
 
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
-
-        ( TagLabel _ _ _, _ ) ->
-            False
 
         ( ActorDetails _ _, _ ) ->
             False
