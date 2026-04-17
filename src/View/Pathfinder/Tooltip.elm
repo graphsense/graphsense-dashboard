@@ -34,9 +34,6 @@ view plugins model vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
-                Address a ts ->
-                    ( address vc ts a, [] )
-
                 TagLabel lblid x msgs ->
                     ( tagLabel vc lblid x, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 

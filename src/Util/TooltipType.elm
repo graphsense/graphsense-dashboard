@@ -11,7 +11,7 @@ type TooltipType
     = UtxoTx Tx.UtxoTx
     | AccountTx Tx.AccountTx
     | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress }
-    | Address Address (Maybe TagSummary)
+    | Address Id
     | TagLabel String TagSummary
     | TagConcept Id String
     | ActorDetails Actor

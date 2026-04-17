@@ -54,8 +54,11 @@ view vc model tt =
             AggEdge a ->
                 aggEdge vc a
 
-            Address a ts ->
-                address vc ts a
+            Address id ->
+                model.network.addresses
+                |> Dict.get id
+                |> Maybe.map (address vc (getTagSummary model id ))
+                |> Maybe.withDefault []
 
             TagLabel lblid x ->
                 tagLabel vc lblid x

@@ -1522,31 +1522,10 @@ updateByMsg plugins uc msg model =
 
             else
                 let
-                    domId =
-                        Id.toString id
-
                     showHover _ =
                         let
                             unhovered =
                                 unhover model
-
-                            maybeTT =
-                                unhovered.network.addresses
-                                    |> Dict.get id
-                                    |> Maybe.map
-                                        (\addr ->
-                                            Tooltip.Address addr
-                                                (case Dict.get id model.tagSummaries of
-                                                    Just (HasTagSummaries { withCluster }) ->
-                                                        Just withCluster
-
-                                                    Just (HasTagSummaryWithCluster ts) ->
-                                                        Just ts
-
-                                                    _ ->
-                                                        Nothing
-                                                )
-                                        )
 
                             nw2 =
                                 unhovered.network.addresses
@@ -1555,28 +1534,21 @@ updateByMsg plugins uc msg model =
                                     |> Maybe.map (\e -> Network.updateAddressesByClusterId e (s_clusterSiblingHovered True) unhovered.network)
                                     |> Maybe.withDefault model.network
                         in
-                        ( { unhovered
+                        { unhovered
                             | hovered = HoveredAddress id
                             , network = nw2
-                          }
-                        , case maybeTT of
-                            Just tt ->
-                                OpenTooltipEffect { context = domId, domId = domId } False tt |> List.singleton
-
-                            _ ->
-                                []
-                        )
+                        }
                 in
                 case model.details of
                     Just (AddressDetails aid _) ->
                         if id /= aid then
-                            showHover ()
+                            showHover () |> n
 
                         else
                             n model
 
                     _ ->
-                        showHover ()
+                        showHover () |> n
 
         UserMovesMouseOutAddress id ->
             ( unhover model

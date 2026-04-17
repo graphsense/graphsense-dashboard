@@ -2,7 +2,6 @@ module Model.Pathfinder.Tooltip exposing (Tooltip, TooltipMessages, TooltipType(
 
 import Api.Data exposing (Actor, TagSummary)
 import Hovercard
-import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
 
 
@@ -22,8 +21,7 @@ type alias TooltipMessages msg =
 
 
 type TooltipType msg
-    = Address Address (Maybe TagSummary)
-    | TagLabel String TagSummary (TooltipMessages msg)
+    = TagLabel String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
     | ChangeHeuristics { confidence : Float, heuristics : List String }
     | Plugin { context : String, domId : String } (TooltipMessages msg)
@@ -43,9 +41,6 @@ mapMsgTooltipType toMap f =
         ActorDetails a msgs ->
             ActorDetails a (mapMsgTooltipMsg msgs f)
 
-        Address a b ->
-            Address a b
-
         ChangeHeuristics cfg ->
             ChangeHeuristics cfg
 
@@ -56,9 +51,6 @@ mapMsgTooltipType toMap f =
 isSameTooltip : Tooltip msg -> Tooltip msg -> Bool
 isSameTooltip t1 t2 =
     case ( t1.type_, t2.type_ ) of
-        ( Address a1 _, Address a2 _ ) ->
-            a1.id == a2.id
-
         ( TagLabel id1 _ _, TagLabel id2 _ _ ) ->
             id1 == id2
 
@@ -73,9 +65,6 @@ isSameTooltip t1 t2 =
 
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
-
-        ( Address _ _, _ ) ->
-            False
 
         ( TagLabel _ _ _, _ ) ->
             False
