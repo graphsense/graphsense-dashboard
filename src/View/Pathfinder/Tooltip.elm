@@ -34,9 +34,6 @@ view plugins model vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
-                AggEdge a msgs ->
-                    ( aggEdge vc a, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
-
                 Address a ts ->
                     ( address vc ts a, [] )
 

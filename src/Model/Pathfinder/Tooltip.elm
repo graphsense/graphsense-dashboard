@@ -22,8 +22,7 @@ type alias TooltipMessages msg =
 
 
 type TooltipType msg
-    = AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress } (TooltipMessages msg)
-    | Address Address (Maybe TagSummary)
+    = Address Address (Maybe TagSummary)
     | TagLabel String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
     | ChangeHeuristics { confidence : Float, heuristics : List String }
@@ -46,9 +45,6 @@ mapMsgTooltipType toMap f =
 
         Address a b ->
             Address a b
-
-        AggEdge a msgs ->
-            AggEdge a (mapMsgTooltipMsg msgs f)
 
         ChangeHeuristics cfg ->
             ChangeHeuristics cfg
@@ -75,12 +71,6 @@ isSameTooltip t1 t2 =
                 && c1.heuristics
                 == c2.heuristics
 
-        ( AggEdge tt1 _, AggEdge tt2 _ ) ->
-            tt1.leftAddress
-                == tt2.leftAddress
-                && tt1.rightAddress
-                == tt2.rightAddress
-
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
 
@@ -94,9 +84,6 @@ isSameTooltip t1 t2 =
             False
 
         ( ChangeHeuristics _, _ ) ->
-            False
-
-        ( AggEdge _ _, _ ) ->
             False
 
         ( Plugin _ _, _ ) ->

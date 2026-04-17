@@ -2677,65 +2677,26 @@ updateByMsg plugins uc msg model =
 
             else
                 let
-                    domId =
-                        AggEdge.idToString id
-
                     hovered _ =
                         let
                             unhovered =
                                 unhover model
                         in
-                        ( { unhovered
+                        { unhovered
                             | network = Network.updateAggEdge id (s_hovered True) unhovered.network
                             , hovered = HoveredAggEdge id
-                          }
-                        , unhovered.network.aggEdges
-                            |> Dict.get id
-                            |> Maybe.andThen
-                                (\edge ->
-                                    Maybe.map4
-                                        (\a b a2b b2a ->
-                                            if a.x < b.x then
-                                                { leftAddress = a.id
-                                                , left = a2b
-                                                , rightAddress = b.id
-                                                , right = b2a
-                                                }
-
-                                            else
-                                                { leftAddress = b.id
-                                                , left = b2a
-                                                , rightAddress = a.id
-                                                , right = a2b
-                                                }
-                                        )
-                                        edge.aAddress
-                                        edge.bAddress
-                                        (RemoteData.toMaybe edge.a2b)
-                                        (RemoteData.toMaybe edge.b2a)
-                                )
-                            |> Maybe.map
-                                (flip Tooltip.AggEdge
-                                    { openTooltip = UserMovesMouseOverAggEdge id
-                                    , closeTooltip = UserMovesMouseOutAggEdge id
-                                    , openDetails = Nothing
-                                    }
-                                )
-                            |> Maybe.map (OpenTooltipEffect { context = domId, domId = domId } False)
-                            |> Maybe.map List.singleton
-                            |> Maybe.withDefault []
-                        )
+                        }
                 in
                 case model.details of
                     Just (RelationDetails rid _) ->
                         if id /= rid then
-                            hovered ()
+                            hovered () |> n
 
                         else
                             n model
 
                     _ ->
-                        hovered ()
+                        hovered () |> n
 
         UserMovesMouseOutAggEdge id ->
             ( unhover model

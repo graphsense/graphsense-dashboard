@@ -1,5 +1,7 @@
 module View.Pathfinder.AggEdge exposing (edge, highlight, view)
 
+import Basics.Extra exposing (flip)
+import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
 import Dict
@@ -23,6 +25,8 @@ import Theme.Svg.GraphComponentsAggregatedTracing as Theme
 import Tuple exposing (mapFirst)
 import Util.Graph exposing (translate)
 import Util.TextDimensions as TextDimensions
+import Util.Tooltip
+import Util.TooltipType as TooltipType
 import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
@@ -176,6 +180,36 @@ view vc ed aAddress bAddress =
 
         id =
             AggEdge.initId ed.a ed.b
+
+        tooltipAttributes =
+            Maybe.map4
+                (\a b a2b b2a ->
+                    if a.x < b.x then
+                        { leftAddress = a.id
+                        , left = a2b
+                        , rightAddress = b.id
+                        , right = b2a
+                        }
+
+                    else
+                        { leftAddress = b.id
+                        , left = b2a
+                        , rightAddress = a.id
+                        , right = a2b
+                        }
+                )
+                ed.aAddress
+                ed.bAddress
+                (RemoteData.toMaybe ed.a2b)
+                (RemoteData.toMaybe ed.b2a)
+                |> Maybe.map TooltipType.AggEdge
+                |> Maybe.map
+                    (Tooltip.attributes (AggEdge.idToString id)
+                        (Util.Tooltip.tooltipConfig vc TooltipMsg
+                            |> Tooltip.withOpenDelay 100
+                        )
+                    )
+                |> Maybe.withDefault []
     in
     g
         [ AggEdge.idToString id |> Svg.id
@@ -183,15 +217,14 @@ view vc ed aAddress bAddress =
         [ Theme.aggregatedLabelWithAttributes
             (Theme.aggregatedLabelAttributes
                 |> s_root
-                    [ translate
+                    ([ translate
                         (x - totalWidth / 2)
                         (y - (Theme.aggregatedLabel_details.height / 2))
                         |> transform
-                    , id
-                        |> UserMovesMouseOverAggEdge
-                        |> onMouseOver
-                    , pointer
-                    ]
+                     , pointer
+                     ]
+                        ++ tooltipAttributes
+                    )
                 |> s_rectangleOfAggregatedLabel
                     [ width <| String.fromFloat rectangleWidth
                     ]
