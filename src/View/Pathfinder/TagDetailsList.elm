@@ -7,8 +7,8 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.View
-import Html.Styled exposing (Html, div, span)
-import Html.Styled.Attributes exposing (css, id)
+import Html.Styled exposing (Html, div)
+import Html.Styled.Attributes exposing (css)
 import Model exposing (Msg(..))
 import Model.Dialog as Dialog
 import Model.Pathfinder.Id as Id

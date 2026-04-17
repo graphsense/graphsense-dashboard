@@ -9,7 +9,6 @@ import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Html.Styled exposing (Html, div)
-import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network

@@ -1,4 +1,4 @@
-module View.Pathfinder.Details exposing (DataTabConfig, closeAttrs, dataTab, emptyCell, valuesToCell, viewTooltips)
+module View.Pathfinder.Details exposing (DataTabConfig, closeAttrs, dataTab, emptyCell, valuesToCell)
 
 import Api.Data
 import Config.View as View
@@ -8,8 +8,6 @@ import Html.Styled exposing (Html)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model.Currency as Currency
-import Model.Pathfinder as Pathfinder
-import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.Styled
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -107,8 +105,3 @@ dataTab config =
                     }
                 }
             )
-
-
-viewTooltips : Pathfinder.Details -> List (Html Msg)
-viewTooltips model =
-    Debug.todo ""

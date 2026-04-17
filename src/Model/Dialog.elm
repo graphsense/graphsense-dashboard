@@ -3,7 +3,6 @@ module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig,
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
-import Components.Tooltip as Tooltip
 import Config.Update as Update
 import Config.View exposing (Config)
 import Html.Styled exposing (Html)

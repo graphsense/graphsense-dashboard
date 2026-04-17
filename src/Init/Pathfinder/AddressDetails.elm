@@ -1,6 +1,5 @@
 module Init.Pathfinder.AddressDetails exposing (getExposedAssetsForAddress, init)
 
-import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.Update as Update
 import Model.Address as Address

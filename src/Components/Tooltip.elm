@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, close, defaultConfig, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg, Viewport, attributes, close, defaultConfig, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
@@ -6,7 +6,7 @@ import Config.View as View exposing (Config)
 import Css
 import Hovercard
 import Html.Styled exposing (Attribute, Html, div, toUnstyled)
-import Html.Styled.Attributes exposing (css, title)
+import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick, onMouseLeave, onMouseOver)
 import Process
 import RecordSetter as Rs
@@ -14,8 +14,6 @@ import Task
 import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util exposing (n)
-import Util.Css as Css
-import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..))
 import Util.View exposing (none)
 import View.Locale as Locale
 

@@ -1,7 +1,6 @@
 module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 
 import Animation as A
-import Basics.Extra exposing (flip)
 import Color
 import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
@@ -208,14 +207,14 @@ view plugins vc pc address annotation =
                     ([ A.animate address.clock address.opacity
                         |> String.fromFloat
                         |> opacity
-                    , UserClickedAddress address.id |> onClickWithStop
-                    , UserPushesLeftMouseButtonOnAddress address.id
+                     , UserClickedAddress address.id |> onClickWithStop
+                     , UserPushesLeftMouseButtonOnAddress address.id
                         |> Util.Graph.mousedown
-                    , decodeCoords Coords.Coords
+                     , decodeCoords Coords.Coords
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.AddressContextMenu address.id), True ))
                         |> preventDefaultOn "contextmenu"
-                    , css [ Css.cursor Css.pointer ]
-                    ]
+                     , css [ Css.cursor Css.pointer ]
+                     ]
                         ++ tooltipAttributes
                     )
                 |> Rs.s_nodeBody

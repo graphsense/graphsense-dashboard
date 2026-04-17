@@ -8,9 +8,8 @@ import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.Table
-import Html.Styled exposing (a, div, span, text)
+import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
-import Html.Styled.Events exposing (onMouseOut, onMouseOver)
 import Model exposing (Msg(..))
 import Msg.Pathfinder
 import RecordSetter as Rs

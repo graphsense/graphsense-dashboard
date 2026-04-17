@@ -268,7 +268,7 @@ update _ id msg model =
 
                 newFilter =
                     TransactionFilter.update subMsg tbl.filter
-                        |> (\( nf, eff ) ->
+                        |> (\( nf, _ ) ->
                                 case subMsg of
                                     TransactionFilter.OpenDateRangePicker ->
                                         let

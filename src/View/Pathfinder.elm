@@ -1,4 +1,4 @@
-module View.Pathfinder exposing (annotationHovercardView, bottomCenterPanel, contextMenuView, detailsView, drawDragSelector, dropShadowEdgeHighlight, graph, graphActionsView, graphSvg, originShiftX, searchBoxView, settingsHovercardView, toolbarHovercardView, topCenterPanel, topRightPanel, view, viewTooltips)
+module View.Pathfinder exposing (annotationHovercardView, bottomCenterPanel, contextMenuView, detailsView, drawDragSelector, dropShadowEdgeHighlight, graph, graphActionsView, graphSvg, originShiftX, searchBoxView, settingsHovercardView, toolbarHovercardView, topCenterPanel, topRightPanel, view)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -10,11 +10,10 @@ import Css.Graph
 import Css.Pathfinder as Css
 import Dict
 import Hovercard
-import Html.Styled as Html exposing (Html, div, input, span)
+import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
-import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
+import Html.Styled.Events exposing (onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
-import Maybe.Extra
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Transform exposing (Transition(..))
@@ -29,7 +28,6 @@ import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import Sha256
 import String.Format
 import Svg.Styled exposing (Svg, defs, feComposite, feFlood, feGaussianBlur, feMerge, feMergeNode, feOffset, filter, linearGradient, stop, svg)
 import Svg.Styled.Attributes exposing (css, dx, dy, floodColor, height, id, in2, in_, offset, operator, preserveAspectRatio, result, stdDeviation, stopColor, transform, viewBox, width, x, y)
@@ -47,7 +45,6 @@ import Util.Annotations as Annotations
 import Util.Css as Css
 import Util.ExternalLinks
 import Util.Graph
-import Util.Pathfinder as PathfinderUtil
 import Util.Tooltip
 import Util.TooltipType
 import Util.View exposing (fixFillRule, hovercard, none)
@@ -57,7 +54,6 @@ import View.Locale as Locale
 import View.Pathfinder.AddressDetails as AddressDetails
 import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.ConversionDetails as ConversionDetails
-import View.Pathfinder.Details as Details
 import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.Toolbar as Toolbar
@@ -1030,8 +1026,3 @@ drawDragSelector _ m =
 
         _ ->
             none
-
-
-viewTooltips : Pathfinder.Model -> List (Html Msg)
-viewTooltips model =
-    Maybe.map Details.viewTooltips model.details |> Maybe.withDefault []

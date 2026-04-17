@@ -1,6 +1,5 @@
 module View.Dialog exposing (body, headRow, part, view)
 
-import Components.Tooltip as Tooltip
 import Config.View exposing (Config)
 import Css.Dialog as Css
 import Css.View

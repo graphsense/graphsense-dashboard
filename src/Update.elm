@@ -13,7 +13,6 @@ import Dict exposing (Dict)
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
-import Effect.Pathfinder as Pathfinder
 import Encode.Graph as Graph
 import Encode.Pathfinder as Pathfinder
 import File.Download

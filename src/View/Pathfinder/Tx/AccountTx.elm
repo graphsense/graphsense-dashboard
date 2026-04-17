@@ -16,7 +16,7 @@ import Model.Currency exposing (Currency(..), asset)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
@@ -197,7 +197,7 @@ view _ vc pc tx accTx annotation =
         )
 
 
-tooltipAttributes : View.Config -> Id.Id -> AccountTx -> List (Attribute Msg)
+tooltipAttributes : View.Config -> Id -> AccountTx -> List (Attribute Msg)
 tooltipAttributes vc id accTx =
     Util.TooltipType.AccountTx accTx
         |> Tooltip.attributes (Id.toString id)

@@ -1,6 +1,5 @@
 module View.Pathfinder.AggEdge exposing (edge, highlight, view)
 
-import Basics.Extra exposing (flip)
 import Components.Tooltip as Tooltip
 import Config.View as View
 import Css

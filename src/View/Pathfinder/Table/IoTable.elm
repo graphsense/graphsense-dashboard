@@ -9,8 +9,7 @@ import Css
 import Css.Table exposing (Styles)
 import Css.View
 import Html.Styled exposing (span)
-import Html.Styled.Attributes exposing (css, id, style, title)
-import Html.Styled.Events exposing (onMouseOut, onMouseOver)
+import Html.Styled.Attributes exposing (css, style, title)
 import Model.Currency exposing (assetFromBase)
 import Model.Direction
 import Model.Pathfinder exposing (HavingTags(..))

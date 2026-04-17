@@ -17,7 +17,7 @@ import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
@@ -355,7 +355,7 @@ edge _ vc pc level utxo tx annotation =
         |> g (tooltipAttributes vc tx.id utxo)
 
 
-tooltipAttributes : View.Config -> Id.Id -> UtxoTx -> List (Attribute Msg)
+tooltipAttributes : View.Config -> Id -> UtxoTx -> List (Attribute Msg)
 tooltipAttributes vc id utxo =
     Util.TooltipType.UtxoTx utxo
         |> Tooltip.attributes (Id.toString id)

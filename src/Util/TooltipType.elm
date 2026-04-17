@@ -1,10 +1,8 @@
 module Util.TooltipType exposing (TooltipType(..))
 
-import Api.Data exposing (Actor, TagSummary)
-import Model.Pathfinder.Address exposing (Address)
+import Api.Data
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
-import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..))
 
 
 type TooltipType

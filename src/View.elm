@@ -94,7 +94,7 @@ body plugins vc model =
             ++ hovercards plugins vc model
             ++ overlay plugins vc model
             ++ [ Notification.view vc model.notifications ]
-            ++ Maybe.withDefault [] (Plugin.tooltip plugins model.plugins vc |> Debug.log "tooltip")
+            ++ Maybe.withDefault [] (Plugin.tooltip plugins model.plugins vc)
         )
 
 

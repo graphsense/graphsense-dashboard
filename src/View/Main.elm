@@ -1,4 +1,4 @@
-module View.Main exposing (view, viewTooltips)
+module View.Main exposing (view)
 
 import Config.View as View
 import Css.View as Css
@@ -87,8 +87,3 @@ main_ vc { navbar, contents } =
                     contents
                ]
         )
-
-
-viewTooltips : Model key -> List (Html Msg)
-viewTooltips model =
-    Debug.todo "Pathfinder.viewTooltips model.pathfinder"

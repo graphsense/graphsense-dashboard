@@ -15,7 +15,7 @@ import Css.View
 import Dict exposing (Dict)
 import Html.Styled as Html exposing (Html, div, img)
 import Html.Styled.Attributes as HA exposing (src)
-import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
+import Html.Styled.Events exposing (onClick, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency exposing (asset, assetFromBase)
@@ -50,7 +50,6 @@ import Util.Css exposing (spread)
 import Util.Data as Data exposing (isAccountLike)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
-import Util.Pathfinder as Pathfinder
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
@@ -165,7 +164,7 @@ utxo plugins pluginStates vc model id viewState address =
                 cluster
                     |> Maybe.withDefault RemoteData.NotAsked
                     |> RemoteData.unpack (\_ -> loadingSpinner vc Css.View.loadingSpinner)
-                        (clusterInfoView vc viewState.isClusterDetailsOpen model.colors viewState
+                        (clusterInfoView vc viewState.isClusterDetailsOpen model.colors
                             >> Html.map (Pathfinder.AddressDetailsMsg id)
                         )
             }
@@ -507,8 +506,8 @@ relatedAddressesDataTab vc model _ viewState cluster =
         }
 
 
-clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> AddressDetails.Model -> Api.Data.Entity -> Html AddressDetails.Msg
-clusterInfoView vc open colors viewState clstr =
+clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html AddressDetails.Msg
+clusterInfoView vc open colors clstr =
     let
         tooltipConfig =
             Util.Tooltip.tooltipConfig vc AddressDetails.TooltipMsg
