@@ -146,6 +146,10 @@ view _ vc pc tx utxo annotation =
             |> Json.Encode.bool
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
+        , UserMovesMouseOverTx id
+            |> onMouseOver
+        , UserMovesMouseOutTx id
+            |> onMouseLeave
         ]
         (GraphComponents.txNodeUtxoWithAttributes
             { txNodeUtxoAttrs
@@ -153,10 +157,6 @@ view _ vc pc tx utxo annotation =
                     [ UserClickedTx id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx id
                         |> Util.Graph.mousedown
-                    , UserMovesMouseOverTx id
-                        |> onMouseOver
-                    , UserMovesMouseOutTx id
-                        |> onMouseLeave
                     , css [ Css.cursor Css.pointer ]
                     , Id.toString id
                         |> Svg.Styled.Attributes.id
@@ -164,12 +164,7 @@ view _ vc pc tx utxo annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
-                        ++ (Util.TooltipType.UtxoTx utxo
-                                |> Tooltip.attributes (Id.toString id)
-                                    (Util.Tooltip.tooltipConfig vc TooltipMsg
-                                        |> Tooltip.withOpenDelay 100
-                                    )
-                           )
+                        ++ tooltipAttributes vc tx.id utxo
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , date =
                     [ translate 0 offsetTxHash |> transform ]
@@ -356,3 +351,14 @@ edge _ vc pc level utxo tx annotation =
                 |> UserClickedTx
                 |> onClickWithStop
             ]
+        |> List.singleton
+        |> g (tooltipAttributes vc tx.id utxo)
+
+
+tooltipAttributes : View.Config -> Id.Id -> UtxoTx -> List (Attribute Msg)
+tooltipAttributes vc id utxo =
+    Util.TooltipType.UtxoTx utxo
+        |> Tooltip.attributes (Id.toString id)
+            (Util.Tooltip.tooltipConfig vc TooltipMsg
+                |> Tooltip.withOpenDelay 100
+            )

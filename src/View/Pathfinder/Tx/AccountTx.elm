@@ -135,6 +135,10 @@ view _ vc pc tx accTx annotation =
             |> Json.Encode.bool
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
+        , UserMovesMouseOverTx tx.id
+            |> onMouseOver
+        , UserMovesMouseOutTx tx.id
+            |> onMouseLeave
         ]
         (GraphComponents.txNodeEthWithAttributes
             { txNodeEthAttributes
@@ -142,10 +146,6 @@ view _ vc pc tx accTx annotation =
                     [ UserClickedTx tx.id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx tx.id
                         |> Util.Graph.mousedown
-                    , UserMovesMouseOverTx tx.id
-                        |> onMouseOver
-                    , UserMovesMouseOutTx tx.id
-                        |> onMouseLeave
                     , css [ Css.cursor Css.pointer ]
                     , Id.toString tx.id
                         |> Svg.Styled.Attributes.id
@@ -153,12 +153,7 @@ view _ vc pc tx accTx annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
-                        ++ (Util.TooltipType.AccountTx accTx
-                                |> Tooltip.attributes (Id.toString tx.id)
-                                    (Util.Tooltip.tooltipConfig vc TooltipMsg
-                                        |> Tooltip.withOpenDelay 100
-                                    )
-                           )
+                        ++ tooltipAttributes vc tx.id accTx
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , timestamp =
                     [ translate 0 offsetSecondValue |> transform ]
@@ -202,8 +197,17 @@ view _ vc pc tx accTx annotation =
         )
 
 
+tooltipAttributes : View.Config -> Id.Id -> AccountTx -> List (Attribute Msg)
+tooltipAttributes vc id accTx =
+    Util.TooltipType.AccountTx accTx
+        |> Tooltip.attributes (Id.toString id)
+            (Util.Tooltip.tooltipConfig vc TooltipMsg
+                |> Tooltip.withOpenDelay 100
+            )
+
+
 edge : Plugins -> View.Config -> Pathfinder.Config -> AccountTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ _ pc account tx annotation =
+edge _ vc pc account tx annotation =
     let
         radTx =
             GraphComponents.txNodeTypeNeutralTxNode_details.width / 2
@@ -295,6 +299,8 @@ edge _ _ pc account tx annotation =
                         |> UserClickedTx
                         |> onClickWithStop
                     ]
+                |> List.singleton
+                |> g (tooltipAttributes vc tx.id account)
         )
         account.fromAddress
         account.toAddress
