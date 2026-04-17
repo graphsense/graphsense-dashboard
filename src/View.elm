@@ -94,19 +94,8 @@ body plugins vc model =
          ]
             ++ hovercards plugins vc model
             ++ overlay plugins vc model
-            ++ Notification.view vc model.notifications
-            :: (model.tooltip
-                    |> Maybe.map (Tooltip.view plugins model vc)
-                    |> Maybe.map List.singleton
-                    |> Maybe.withDefault []
-               )
-         --++ viewTooltips model
+            ++ [ Notification.view vc model.notifications ]
         )
-
-
-viewTooltips : Model key -> List (Html Msg)
-viewTooltips model =
-    []
 
 
 navbarSubMenuView : Config -> Model key -> NavbarSubMenu -> Html Msg

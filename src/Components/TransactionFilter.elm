@@ -33,8 +33,8 @@ import Util exposing (n)
 import Util.Checkbox as Checkbox
 import Util.Css
 import Util.Data as Data
-import Util.Pathfinder as Pathfinder
 import Util.ThemedSelectBox as ThemedSelectBox
+import Util.TooltipType exposing (TooltipType)
 import Util.View exposing (fullWidthCss, none, pointer, truncateLongIdentifier)
 import View.Button as Button
 import View.Controls as Controls
@@ -46,7 +46,7 @@ type Model
 
 
 type Effect
-    = TooltipEffect Tooltip.Effect
+    = Effect
 
 
 type alias InternalModel =
@@ -55,7 +55,6 @@ type alias InternalModel =
     , quickFilterSelect : Maybe (ThemedSelectBox.Model (Maybe QuickFilterModel))
     , showCustomFilter : Bool
     , settings : SettingsModel
-    , tooltip : Tooltip.Model
     , showDialog : Bool
     , dialogPosition : DialogPosition
     , isDragging : Bool
@@ -129,6 +128,7 @@ getIncludeZeroValueTxs (Settings model) =
 
 type alias FilterHeaderConfig msg =
     { tag : Msg -> msg
+    , tooltipConfig : Tooltip.Config TooltipType msg
     , exportCsv : Maybe ( ExportCSV.Msg -> msg, ExportCSV.Model )
     }
 
@@ -155,7 +155,6 @@ type Msg
     | StartDrag Int Int
     | Drag Int Int
     | EndDrag
-    | TooltipMsg Tooltip.Msg
 
 
 update : Msg -> Model -> ( Model, List Effect )
@@ -361,7 +360,7 @@ update msg (Internal model) =
                         , isDragging = True
                       }
                         |> Internal
-                    , Tooltip.reposition model.tooltip |> List.map TooltipEffect
+                    , []
                     )
 
                 Nothing ->
@@ -376,18 +375,6 @@ update msg (Internal model) =
             }
                 |> Internal
                 |> n
-
-        TooltipMsg tm ->
-            let
-                ( tt, eff ) =
-                    Tooltip.update tm model.tooltip
-            in
-            ( Internal
-                { model
-                    | tooltip = tt
-                }
-            , List.map TooltipEffect eff
-            )
 
 
 resetAll : InternalModel -> InternalModel
@@ -743,12 +730,6 @@ filterHeader vc config (Internal model) =
         }
 
 
-tooltipConfig : View.Config -> FilterHeaderConfig msg -> Tooltip.Config msg
-tooltipConfig vc config =
-    Pathfinder.tooltipConfig vc "tx-filter-tooltip" (TooltipMsg >> config.tag)
-        |> Tooltip.withFixed
-
-
 view : View.Config -> String -> FilterHeaderConfig msg -> Model -> Html msg
 view vc net config (Internal model) =
     div
@@ -764,8 +745,6 @@ view vc net config (Internal model) =
                     |> css
                 ]
                 [ txFilterDialogView vc net config (Internal model)
-                , Html.text "tooltip"
-                    |> Tooltip.view (tooltipConfig vc config) model.tooltip
                 ]
 
           else
@@ -801,7 +780,9 @@ txFilterDialogView vc net config (Internal model) =
         (SidePanelComponents.filterTransactionsPopupDevAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick (config.tag ToggleDialog) ]
             |> Rs.s_iconsInfoSnoPaddingDev
-                (Tooltip.attributes (tooltipConfig vc config))
+                (Util.TooltipType.Text "tx-filter-utxo-only-tooltip"
+                    |> Tooltip.attributes "tx-filter-tooltip" config.tooltipConfig
+                )
             |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
                     [ Css.display Css.none ] |> css |> List.singleton
@@ -1167,7 +1148,6 @@ init (Settings settings) =
         , quickFilterSelect = Nothing
         , showCustomFilter = False
         , settings = settings
-        , tooltip = Tooltip.init 
         , showDialog = False
         , dialogPosition = { top = 100, right = 20 }
         , isDragging = False
@@ -1537,6 +1517,5 @@ subscriptions (Internal model) =
 perform : Effect -> Cmd Msg
 perform eff =
     case eff of
-        TooltipEffect e ->
-            Tooltip.perform e
-                |> Cmd.map TooltipMsg
+        Effect ->
+            Cmd.none

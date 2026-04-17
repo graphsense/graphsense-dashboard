@@ -116,10 +116,10 @@ import Util.EventualMessages as EventualMessages
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.Tag as Tag
+import Util.TooltipType exposing (TooltipType)
 import View.Locale as Locale exposing (makeTimestampFilename)
 import View.Pathfinder exposing (originShiftX)
 import Workflow
-import Msg.Pathfinder exposing (TooltipType(..))
 
 
 zoomFactor : Float
@@ -1008,6 +1008,9 @@ updateByMsg plugins uc msg model =
                     , eff
                     )
 
+                RelationDetails.TooltipMsg tm ->
+                    handleComponentTooltipMsg tm model
+
                 _ ->
                     n model
             )
@@ -1081,6 +1084,9 @@ updateByMsg plugins uc msg model =
 
                 AddressDetails.TooltipMsg tm ->
                     handleTooltipMsg tm model
+
+                AddressDetails.ComponentTooltipMsg tm ->
+                    handleComponentTooltipMsg tm model
 
                 AddressDetails.ExportCSVMsg table ms ->
                     let
@@ -1612,12 +1618,6 @@ updateByMsg plugins uc msg model =
                 False
                 |> List.singleton
             )
-
-        ShowTextTooltip config ->
-            ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
-
-        CloseTextTooltip config ->
-            ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
 
         ShowChangeTooltip config ->
             ( model
@@ -2817,20 +2817,19 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        TooltipMsg Tooltip tm ->
-            let
-                ( tooltipModel, eff ) =
-                    Components.Tooltip.update tm model.tracingModeTooltip
-            in
-            ( { model | tracingModeTooltip = tooltipModel }
-            , List.map (TooltipEffect Tooltip) eff
-            )
+        TooltipMsg tm ->
+            handleComponentTooltipMsg tm model
 
-        TooltipMsg TagsTooltip _ ->
-            n model
 
-        TooltipMsg ClusterTabTooltip _ ->
-            n model
+handleComponentTooltipMsg : Components.Tooltip.Msg TooltipType -> Model -> ( Model, List Effect )
+handleComponentTooltipMsg tm model =
+    let
+        ( tooltipModel, eff ) =
+            Components.Tooltip.update tm model.tooltip
+    in
+    ( { model | tooltip = tooltipModel }
+    , List.map TooltipEffect eff
+    )
 
 
 multiSearch : String -> Model -> ( Model, List Effect )
@@ -3480,32 +3479,7 @@ handleTooltipMsg : AddressDetails.TooltipMsgs -> Model -> ( Model, List Effect )
 handleTooltipMsg msg model =
     case model.details of
         Just (AddressDetails addressId addressDetailsModel) ->
-            case msg of
-                AddressDetails.RelatedAddressesTooltipMsg inner ->
-                    case inner of
-                        AddressDetails.ShowRelatedAddressesTooltip config ->
-                            ( model, OpenTooltipEffect { context = config.domId, domId = config.domId } False (Tooltip.Text config.text) |> List.singleton )
-
-                        AddressDetails.HideRelatedAddressesTooltip config ->
-                            ( model, CloseTooltipEffect (Just { context = config.domId, domId = config.domId }) True |> List.singleton )
-
-                AddressDetails.ComponentTooltipMsg tooltipMsg ->
-                    let
-                        ( tooltipModel, tooltipEff ) =
-                            Components.Tooltip.update tooltipMsg addressDetailsModel.tooltip
-
-                        performTooltipEffect : Components.Tooltip.Effect -> Effect
-                        performTooltipEffect eff =
-                            CmdEffect (Components.Tooltip.perform eff |> Cmd.map (AddressDetails.ComponentTooltipMsg >> AddressDetails.TooltipMsg >> AddressDetailsMsg addressId))
-                    in
-                    model
-                        |> updateAddressDetails addressId
-                            (\ads ->
-                                ( { ads | tooltip = tooltipModel }
-                                , List.map performTooltipEffect tooltipEff
-                                )
-                            )
-
+            case msg |> Debug.log "msg" of
                 AddressDetails.TagTooltipMsg inner ->
                     case inner of
                         Tag.UserMovesMouseOutTagConcept ctx ->

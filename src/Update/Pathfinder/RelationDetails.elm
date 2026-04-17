@@ -152,6 +152,9 @@ updateAggEdge _ edge model =
 update : Update.Config -> ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
 update _ id msg model =
     case msg of
+        TooltipMsg tm ->
+            n model
+
         UserClickedToggleTable isA2b ->
             let
                 gs =

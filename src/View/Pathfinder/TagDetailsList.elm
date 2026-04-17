@@ -17,8 +17,9 @@ import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.TagsComponents as TagsComponents
-import Util.Pathfinder as PathfinderUtil
-import Util.View exposing (copyIconPathfinder, fixFillRule, none, onClickWithStop)
+import Util.Tooltip as Util
+import Util.TooltipType
+import Util.View exposing (copyIconPathfinder, none, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
 
@@ -125,11 +126,8 @@ view vc conf =
                     [ Html.Styled.text (Locale.string vc.locale "address tags") ]
 
         clusterTabTooltipConfig =
-            PathfinderUtil.tooltipConfig vc "cluster-tab-tooltip" (\tipMsg -> PathfinderMsg (Msg.Pathfinder.TooltipMsg Msg.Pathfinder.ClusterTabTooltip tipMsg))
+            Util.tooltipConfig vc (\tipMsg -> PathfinderMsg (Msg.Pathfinder.TooltipMsg tipMsg))
                 |> Tooltip.withFixed
-
-        clusterTabTooltipHtml =
-            Tooltip.view clusterTabTooltipConfig conf.clusterTabTooltip (Html.Styled.text (Locale.string vc.locale "cluster tags disclaimer"))
 
         clusterTab =
             div
@@ -141,7 +139,9 @@ view vc conf =
                     (Icons.iconsInfoSnoPaddingDevAttributes
                         |> Rs.s_root
                             (css [ Css.width (Css.px 16), Css.height (Css.px 16) ]
-                                :: (Tooltip.attributes clusterTabTooltipConfig ++ [ fixFillRule ])
+                                :: (Util.TooltipType.Text "cluster tags disclaimer"
+                                        |> Tooltip.attributes "cluster-tab-tooltip" clusterTabTooltipConfig
+                                   )
                             )
                     )
                     {}
@@ -150,7 +150,7 @@ view vc conf =
         tabItems =
             case ( conf.showAddressTab, conf.showClusterTab ) of
                 ( True, True ) ->
-                    [ addressTab, clusterTab, clusterTabTooltipHtml ]
+                    [ addressTab, clusterTab ]
 
                 ( True, False ) ->
                     [ addressTab ]
@@ -177,12 +177,12 @@ view vc conf =
         tableContent =
             case conf.activeTab of
                 Dialog.AddressTagsTab ->
-                    tagsInfiniteTable vc conf TagsListDialogAddressTableMsg conf.addressTagsTable
+                    tagsInfiniteTable vc TagsListDialogAddressTableMsg conf.addressTagsTable
 
                 Dialog.ClusterTagsTab ->
                     case conf.clusterTagsState of
                         Dialog.ClusterTagsLoaded table ->
-                            tagsInfiniteTable vc conf TagsListDialogClusterTableMsg table
+                            tagsInfiniteTable vc TagsListDialogClusterTableMsg table
 
                         Dialog.ClusterTagsLoading ->
                             Util.View.loadingSpinner vc Css.View.loadingSpinner
@@ -207,8 +207,8 @@ view vc conf =
         ]
 
 
-tagsInfiniteTable : View.Config -> Dialog.TagListConfig Msg -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.Model Api.Data.AddressTag -> Html Msg
-tagsInfiniteTable vc conf tag tbl =
+tagsInfiniteTable : View.Config -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.Model Api.Data.AddressTag -> Html Msg
+tagsInfiniteTable vc tag tbl =
     if InfiniteTable.isEmpty tbl then
         if InfiniteTable.isLoading tbl then
             Util.View.loadingSpinner vc Css.View.loadingSpinner
@@ -217,6 +217,6 @@ tagsInfiniteTable vc conf tag tbl =
             Html.Styled.text ""
 
     else
-        InfiniteTable.view (TagsTable.config vc conf tag)
+        InfiniteTable.view (TagsTable.config vc tag)
             [ css (Css.maxHeight (Css.px 500) :: fullWidth) ]
             tbl

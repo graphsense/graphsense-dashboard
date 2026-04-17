@@ -35,5 +35,4 @@ type alias Model =
     , isClusterDetailsOpen : Bool
     , displayAllTagsInDetails : Bool
     , txsFilter : Maybe TransactionFilter.Settings
-    , tooltip : Tooltip.Model
     }

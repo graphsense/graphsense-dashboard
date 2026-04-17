@@ -27,7 +27,7 @@ import Util.Pathfinder.TagSummary as TagSummary
 import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
-import View.Pathfinder.RelationDetails exposing (makeValuesList)
+import Util.View exposing (makeValuesList)
 
 
 view : Plugins -> Model key -> View.Config -> Tooltip Msg -> Html Msg
@@ -58,9 +58,6 @@ view plugins model vc tt =
 
                 ChangeHeuristics cfg ->
                     ( changeHeuristics vc cfg, [] )
-
-                Text t ->
-                    ( [ div [ [ Css.width (Css.px GraphComponents.tooltipDown_details.width) ] |> css ] [ text t ] ], [] )
 
                 Plugin s msgs ->
                     ( Plugin.tooltip plugins s model.plugins vc |> Maybe.withDefault [], [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )

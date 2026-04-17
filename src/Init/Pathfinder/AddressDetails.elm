@@ -47,5 +47,4 @@ init txsFilter address =
     , isClusterDetailsOpen = False
     , displayAllTagsInDetails = False
     , txsFilter = txsFilter
-    , tooltip = Tooltip.init
     }

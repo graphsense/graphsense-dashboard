@@ -29,7 +29,7 @@ type Effect
     | ShowNotificationEffect Notification
     | InternalEffect Msg
     | TransactionFilterEffect TransactionFilter.Effect
-    | TooltipEffect Msg.Pathfinder.TooltipType Tooltip.Effect
+    | TooltipEffect Tooltip.Effect
 
 
 perform : Effect -> Cmd Msg
@@ -86,9 +86,9 @@ perform eff =
             TransactionFilter.perform e
                 |> Cmd.map TransactionFilterMsg
 
-        TooltipEffect tt e ->
+        TooltipEffect e ->
             Tooltip.perform e
-                |> Cmd.map (TooltipMsg tt)
+                |> Cmd.map TooltipMsg
 
 
 effectToTracker : Effect -> Maybe String

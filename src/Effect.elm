@@ -4,6 +4,7 @@ module Effect exposing (perform)
 
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
+import Components.Tooltip as Tooltip
 import Config
 import Config.UserSettings
 import Effect.Api

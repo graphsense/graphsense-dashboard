@@ -6,6 +6,8 @@ import Components.InfiniteTable as InfiniteTable
 import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
+import Util.TooltipType exposing (TooltipType)
+import Components.Tooltip as Tooltip
 
 
 type Msg
@@ -19,3 +21,5 @@ type Msg
     | TransactionFilterMsg Bool TransactionFilter.Msg
     | ExportCSVMsg Bool RelationTxsTable.Model ExportCSV.Msg
     | BrowserGotLinksForExport Bool RelationTxsTable.Model Api.Data.Links
+
+    | TooltipMsg (Tooltip.Msg TooltipType)

@@ -1427,8 +1427,6 @@ update plugins uc msg model =
                             , hasAddressTags = hasAddressTags
                             , id = id
                             , closeMsg = UserClosesDialog
-                            , tagsTooltip = Components.Tooltip.init
-                            , clusterTabTooltip = Components.Tooltip.init 
                             }
                         )
               }
@@ -1470,34 +1468,6 @@ update plugins uc msg model =
 
                     else
                         n model
-
-                _ ->
-                    n model
-
-        PathfinderMsg (Pathfinder.TooltipMsg Pathfinder.TagsTooltip tm) ->
-            case model.dialog of
-                Just (Dialog.TagsList config) ->
-                    let
-                        ( tooltipModel, eff ) =
-                            Components.Tooltip.update tm config.tagsTooltip
-                    in
-                    ( { model | dialog = Just (Dialog.TagsList { config | tagsTooltip = tooltipModel }) }
-                    , List.map (Pathfinder.TooltipEffect Pathfinder.TagsTooltip >> PathfinderEffect) eff
-                    )
-
-                _ ->
-                    n model
-
-        PathfinderMsg (Pathfinder.TooltipMsg Pathfinder.ClusterTabTooltip tm) ->
-            case model.dialog of
-                Just (Dialog.TagsList config) ->
-                    let
-                        ( tooltipModel, eff ) =
-                            Components.Tooltip.update tm config.clusterTabTooltip
-                    in
-                    ( { model | dialog = Just (Dialog.TagsList { config | clusterTabTooltip = tooltipModel }) }
-                    , List.map (Pathfinder.TooltipEffect Pathfinder.ClusterTabTooltip >> PathfinderEffect) eff
-                    )
 
                 _ ->
                     n model

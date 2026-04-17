@@ -1,5 +1,6 @@
 module Init exposing (init)
 
+import Components.Tooltip
 import Config exposing (config)
 import Config.Update as Update
 import Config.UserSettings

@@ -1,0 +1,19 @@
+module Util.TooltipType exposing (TooltipType(..))
+
+import Api.Data exposing (Actor, TagSummary)
+import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Tx as Tx
+import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..))
+
+
+type TooltipType
+    = UtxoTx Tx.UtxoTx
+    | AccountTx Tx.AccountTx
+    | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress }
+    | Address Address (Maybe TagSummary)
+    | TagLabel String TagSummary
+    | TagConcept Id String TagSummary
+    | ActorDetails Actor
+    | Text String
+    | ChangeHeuristics { confidence : Float, heuristics : List String }

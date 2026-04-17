@@ -1,4 +1,4 @@
-module View.Pathfinder exposing (originShiftX, view, viewTooltips)
+module View.Pathfinder exposing (annotationHovercardView, bottomCenterPanel, contextMenuView, detailsView, drawDragSelector, dropShadowEdgeHighlight, graph, graphActionsView, graphSvg, originShiftX, searchBoxView, settingsHovercardView, toolbarHovercardView, topCenterPanel, topRightPanel, view, viewTooltips)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -23,7 +23,7 @@ import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Selection as Pathfinder
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
-import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TooltipType(..))
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -47,6 +47,8 @@ import Util.Css as Css
 import Util.ExternalLinks
 import Util.Graph
 import Util.Pathfinder as PathfinderUtil
+import Util.Tooltip
+import Util.TooltipType
 import Util.View exposing (fixFillRule, hovercard, none)
 import View.Controls as Controls
 import View.Graph.Transform as Transform
@@ -91,6 +93,8 @@ graph plugins pluginStates vc gc model =
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc model
     , bottomCenterPanel vc model
+    , Util.Tooltip.view vc
+        |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
     ]
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)
@@ -385,13 +389,13 @@ bottomCenterPanel vc model =
         text =
             case model.config.tracingMode of
                 TransactionTracingMode ->
-                    Locale.string vc.locale "tx-tracing-mode-help-text"
+                    "tx-tracing-mode-help-text"
 
                 AggregateTracingMode ->
-                    Locale.string vc.locale "tx-relationship-mode-help-text"
+                    "tx-relationship-mode-help-text"
 
         tooltipConfig =
-            PathfinderUtil.tooltipConfig vc "tracing-mode-tooltip" (TooltipMsg Tooltip)
+            Util.Tooltip.tooltipConfig vc TooltipMsg
                 |> Tooltip.withFixed
     in
     div
@@ -417,20 +421,17 @@ bottomCenterPanel vc model =
             , rightCell = { variant = none }
             , root = { toggleLabel = "" }
             }
-        , div []
-            [ span
-                ([ css [ Css.pointerEventsAll ]
-                 , HA.id (Sha256.sha256 text)
-                 ]
-                    ++ Tooltip.attributes tooltipConfig 
+        , span
+            ([ css [ Css.pointerEventsAll ]
+             , HA.id (Sha256.sha256 text)
+             ]
+                ++ (Util.TooltipType.Text text |> Tooltip.attributes "tracing-mode-tooltip" tooltipConfig)
+            )
+            [ HIcons.iconsInfoLWithAttributes
+                (HIcons.iconsInfoLAttributes
+                    |> Rs.s_root [ fixFillRule ]
                 )
-                [ HIcons.iconsInfoLWithAttributes
-                    (HIcons.iconsInfoLAttributes
-                        |> Rs.s_root [ fixFillRule ]
-                    )
-                    {}
-                ]
-            , Tooltip.view tooltipConfig model.tracingModeTooltip (Html.text text)
+                {}
             ]
         ]
 

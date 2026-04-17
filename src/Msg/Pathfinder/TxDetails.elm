@@ -20,3 +20,4 @@ type Msg
     | UserClickedToggleSubTxsTable
     | UserClickedTxInSubTxsTable Api.Data.TxAccount
     | TransactionFilterMsg TransactionFilter.Msg
+    | NoOp

@@ -503,6 +503,9 @@ update uc msg model =
         TooltipMsg _ ->
             n model
 
+        ComponentTooltipMsg _ ->
+            Debug.todo "n model"
+
         UserClickedToggleClusterDetailsOpen ->
             not model.isClusterDetailsOpen
                 |> flip s_isClusterDetailsOpen model

@@ -140,8 +140,6 @@ mapMsg map model =
             , hasAddressTags = conf.hasAddressTags
             , closeMsg = map conf.closeMsg
             , id = conf.id
-            , tagsTooltip = conf.tagsTooltip
-            , clusterTabTooltip = conf.clusterTabTooltip
             }
                 |> TagsList
 

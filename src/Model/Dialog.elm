@@ -91,8 +91,6 @@ type alias TagListConfig msg =
     , showClusterTab : Bool
     , hasAddressTags : Bool
     , closeMsg : msg
-    , tagsTooltip : Tooltip.Model
-    , clusterTabTooltip : Tooltip.Model
     }
 
 

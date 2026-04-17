@@ -4,6 +4,7 @@ import Api.Data
 import Browser exposing (UrlRequest)
 import Browser.Dom
 import Components.InfiniteTable as InfiniteTable
+import Components.Tooltip as Tooltip
 import Config.UserSettings exposing (UserSettings)
 import Config.View
 import Dict exposing (Dict)

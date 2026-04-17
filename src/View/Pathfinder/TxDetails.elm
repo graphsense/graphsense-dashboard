@@ -4,6 +4,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Char
 import Components.Table exposing (Table)
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.View as View
 import Css
@@ -48,6 +49,7 @@ filterConfig : TransactionFilter.FilterHeaderConfig Msg
 filterConfig =
     { tag = TransactionFilterMsg
     , exportCsv = Nothing
+    , tooltipConfig = Tooltip.defaultConfig (\_ -> NoOp)
     }
 
 

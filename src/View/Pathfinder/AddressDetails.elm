@@ -13,7 +13,7 @@ import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, div, img, span)
+import Html.Styled as Html exposing (Html, div, img)
 import Html.Styled.Attributes as HA exposing (src)
 import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
@@ -34,13 +34,12 @@ import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
-import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..), RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
+import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..), TooltipMsgs(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData exposing (WebData)
 import Set
-import Sha256
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as HIcons
@@ -55,7 +54,9 @@ import Util.Pathfinder as Pathfinder
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, fixFillRule, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.Tooltip
+import Util.TooltipType
+import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -406,18 +407,17 @@ relatedAddressesDataTab vc model _ viewState cluster =
                 Just
                     (div []
                         [ let
-                            ttConfig =
-                                { domId = "related_addresses_select_help"
-                                , text =
-                                    case relatedAddressesVisibleTable of
-                                        AddressDetails.MultiInputCluster ->
-                                            "Multi Input Cluster Help"
-                                                |> Locale.string vc.locale
+                            helpText =
+                                case relatedAddressesVisibleTable of
+                                    AddressDetails.MultiInputCluster ->
+                                        "Multi Input Cluster Help"
 
-                                        AddressDetails.Pubkey ->
-                                            "Pubkey Cluster Help"
-                                                |> Locale.string vc.locale
-                                }
+                                    AddressDetails.Pubkey ->
+                                        "Pubkey Cluster Help"
+
+                            tooltipConfig =
+                                Util.Tooltip.tooltipConfig vc (\tipMsg -> AddressDetails.ComponentTooltipMsg tipMsg)
+                                    |> Tooltip.withFixed
                           in
                           div
                             [ css
@@ -436,18 +436,12 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                     relatedAddressesVisibleTable
                                     |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
                                 ]
-                            , span
-                                [ onMouseEnter (ShowRelatedAddressesTooltip ttConfig |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
-                                , onMouseLeave (HideRelatedAddressesTooltip ttConfig |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
-                                , Svg.Styled.Attributes.id ttConfig.domId
-                                , css [ Css.flexShrink (Css.int 0) ] -- Prevent the icon from shrinking
-                                ]
-                                [ HIcons.iconsInfoSnoPaddingWithAttributes
-                                    (HIcons.iconsInfoSnoPaddingAttributes
-                                        |> Rs.s_shape [ fixFillRule ]
-                                    )
-                                    {}
-                                ]
+                            , HIcons.iconsInfoSnoPaddingDevWithAttributes
+                                (HIcons.iconsInfoSnoPaddingDevAttributes
+                                    |> Rs.s_root
+                                        (Util.TooltipType.Text helpText |> Tooltip.attributes "related-addresses-tooltip" tooltipConfig)
+                                )
+                                {}
                             ]
                         , case relatedAddressesVisibleTable of
                             AddressDetails.MultiInputCluster ->
@@ -517,24 +511,20 @@ relatedAddressesDataTab vc model _ viewState cluster =
 clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> AddressDetails.Model -> Api.Data.Entity -> Html AddressDetails.Msg
 clusterInfoView vc open colors viewState clstr =
     let
-        text =
-            Locale.string vc.locale "cluster-details-info-help-text"
-
         tooltipConfig =
-            Pathfinder.tooltipConfig vc "address-details-text-tooltip" (AddressDetails.ComponentTooltipMsg >> AddressDetails.TooltipMsg)
+            Util.Tooltip.tooltipConfig vc AddressDetails.ComponentTooltipMsg
                 |> Tooltip.withFixed
 
         helpIcon =
             Just <|
                 HIcons.iconsInfoSnoPaddingDevWithAttributes
                     (HIcons.iconsInfoSnoPaddingDevAttributes
-                        |> Rs.s_root (Tooltip.attributes tooltipConfig)
+                        |> Rs.s_root
+                            (Util.TooltipType.Text "cluster-details-info-help-text"
+                                |> Tooltip.attributes "address-details-text-tooltip" tooltipConfig
+                            )
                     )
                     {}
-
-        tooltipHtml =
-            Html.text text
-                |> Tooltip.view tooltipConfig viewState.tooltip
     in
     if clstr.noAddresses <= 1 then
         none
@@ -567,51 +557,48 @@ clusterInfoView vc open colors viewState clstr =
             assetId =
                 assetFromBase clstr.currency
         in
-        div []
-            [ if open then
-                SidePanelComponents.clusterInformationOpenWithInstances
-                    (SidePanelComponents.clusterInformationOpenAttributes
-                        |> Rs.s_root headerAttr
-                        |> Rs.s_ellipse25 clusterColor
-                    )
-                    (SidePanelComponents.clusterInformationOpenInstances
-                        |> Rs.s_iconsInfoSnoPadding helpIcon
-                    )
-                    { root = { label = label }
-                    , titleOfClusterId = { infoLabel = Locale.string vc.locale "Cluster" }
-                    , valueOfClusterId = { label = String.fromInt clstr.entity }
-                    , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number-of-addresses" }
-                    , valueOfNumberOfAddresses =
-                        { firstRowText = String.fromInt clstr.noAddresses
-                        , secondRowText = ""
-                        , secondRowVisible = False
-                        }
-                    , sidePanelRowCustomValueCell = { valueCell = none }
-                    , titleOfSidePanelRowCustomValueCell = { infoLabel = "" }
-                    , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
-                    , valueOfBalance = valuesToCell vc assetId clstr.balance
-                    , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
-                    , valueOfTotalReceived = valuesToCell vc assetId clstr.totalReceived
-                    , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
-                    , valueOfTotalSent = valuesToCell vc assetId clstr.totalSpent
-                    , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-                    , valueOfLastUsage = timeToCell vc clstr.lastTx.timestamp
-                    , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-                    , valueOfFirstUsage = timeToCell vc clstr.firstTx.timestamp
+        if open then
+            SidePanelComponents.clusterInformationOpenWithInstances
+                (SidePanelComponents.clusterInformationOpenAttributes
+                    |> Rs.s_root headerAttr
+                    |> Rs.s_ellipse25 clusterColor
+                )
+                (SidePanelComponents.clusterInformationOpenInstances
+                    |> Rs.s_iconsInfoSnoPadding helpIcon
+                )
+                { root = { label = label }
+                , titleOfClusterId = { infoLabel = Locale.string vc.locale "Cluster" }
+                , valueOfClusterId = { label = String.fromInt clstr.entity }
+                , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number-of-addresses" }
+                , valueOfNumberOfAddresses =
+                    { firstRowText = String.fromInt clstr.noAddresses
+                    , secondRowText = ""
+                    , secondRowVisible = False
                     }
+                , sidePanelRowCustomValueCell = { valueCell = none }
+                , titleOfSidePanelRowCustomValueCell = { infoLabel = "" }
+                , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
+                , valueOfBalance = valuesToCell vc assetId clstr.balance
+                , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
+                , valueOfTotalReceived = valuesToCell vc assetId clstr.totalReceived
+                , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
+                , valueOfTotalSent = valuesToCell vc assetId clstr.totalSpent
+                , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
+                , valueOfLastUsage = timeToCell vc clstr.lastTx.timestamp
+                , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
+                , valueOfFirstUsage = timeToCell vc clstr.firstTx.timestamp
+                }
 
-              else
-                SidePanelComponents.clusterInformationClosedWithInstances
-                    (SidePanelComponents.clusterInformationClosedAttributes
-                        |> Rs.s_root headerAttr
-                    )
-                    (SidePanelComponents.clusterInformationClosedInstances
-                        |> Rs.s_iconsInfoSnoPadding helpIcon
-                    )
-                    { root = { label = label }
-                    }
-            , tooltipHtml
-            ]
+        else
+            SidePanelComponents.clusterInformationClosedWithInstances
+                (SidePanelComponents.clusterInformationClosedAttributes
+                    |> Rs.s_root headerAttr
+                )
+                (SidePanelComponents.clusterInformationClosedInstances
+                    |> Rs.s_iconsInfoSnoPadding helpIcon
+                )
+                { root = { label = label }
+                }
 
 
 transactionTableView : View.Config -> Id -> (Id -> Bool) -> Pathfinder.Model -> TransactionTable.Model -> Html AddressDetails.Msg
@@ -636,6 +623,8 @@ transactionTableView vc addressId txOnGraphFn model txs =
         (Id.network addressId)
         { tag = TransactionFilterMsg
         , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
+        , tooltipConfig =
+            Util.Tooltip.tooltipConfig vc AddressDetails.ComponentTooltipMsg
         }
         txs.filter
     , table

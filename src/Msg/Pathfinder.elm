@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TooltipType(..))
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TextTooltipConfig)
 
 import Api.Data
 import Color exposing (Color)
@@ -26,6 +26,7 @@ import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.Tag exposing (TooltipContext)
+import Util.TooltipType exposing (TooltipType)
 
 
 type alias AddingAddressConfig =
@@ -140,8 +141,6 @@ type Msg
     | UserGotMoreAddressTagsForDialog Id Api.Data.AddressTags
     | UserGotClusterTagsForDialog Id Api.Data.AddressTags
     | UserGotMoreClusterTagsForDialog Id Api.Data.AddressTags
-    | ShowTextTooltip TextTooltipConfig
-    | CloseTextTooltip TextTooltipConfig
     | ShowChangeTooltip ChangeTooltipConfig
     | CloseChangeTooltip ChangeTooltipConfig
     | UserClickedToggleTracingMode
@@ -159,14 +158,7 @@ type Msg
     | InternalExportGraphTxsCompleted
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
     | TransactionFilterMsg TransactionFilter.Msg
-    | TooltipMsg TooltipType Tooltip.Msg
-
-type TooltipType
-    = Tooltip
-    | ClusterTabTooltip
-    | TagsTooltip
-
-
+    | TooltipMsg (Tooltip.Msg TooltipType)
 
 
 type alias TextTooltipConfig =

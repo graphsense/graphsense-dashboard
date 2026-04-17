@@ -107,6 +107,9 @@ loadTxDetailsDataAccount model =
 update : Msg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
+        NoOp ->
+            n model
+
         TransactionFilterMsg subMsg ->
             let
                 ( newFilter, eff ) =

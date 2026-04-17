@@ -34,6 +34,7 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Tuple
 import Util.Annotations exposing (AnnotationModel)
 import Util.EventualMessages exposing (EventualMessages)
+import Util.TooltipType exposing (TooltipType)
 
 
 unit : Float
@@ -70,7 +71,7 @@ type alias Model =
     , exportCSVGraph : ExportCSV.Model
     , exportImage : Maybe ExportImage
     , txsFilters : AssocList.Dict TxsFilterId TransactionFilter.Settings
-    , tracingModeTooltip : Tooltip.Model
+    , tooltip : Tooltip.Model TooltipType
     }
 
 

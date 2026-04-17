@@ -183,6 +183,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.TooltipMsg _ ->
                     False
 
+                AddressDetails.ComponentTooltipMsg _ ->
+                    False
+
                 AddressDetails.ExportCSVMsg _ _ ->
                     False
 
@@ -232,6 +235,10 @@ shallPushHistory plugins msg _ =
 
                 RelationDetails.ExportCSVMsg _ _ _ ->
                     False
+
+                RelationDetails.TooltipMsg _ ->
+                    False
+
 
         AnimationFrameDeltaForTransform _ ->
             False
@@ -419,12 +426,6 @@ shallPushHistory plugins msg _ =
         UserGotMoreClusterTagsForDialog _ _ ->
             False
 
-        ShowTextTooltip _ ->
-            False
-
-        CloseTextTooltip _ ->
-            False
-
         ShowChangeTooltip _ ->
             False
 
@@ -467,5 +468,5 @@ shallPushHistory plugins msg _ =
         TransactionFilterMsg _ ->
             False
 
-        TooltipMsg _ _ ->
+        TooltipMsg _ ->
             False
