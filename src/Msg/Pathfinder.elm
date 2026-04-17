@@ -28,10 +28,6 @@ import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Util.TooltipType exposing (TooltipType)
 
 
-type alias TooltipContext =
-    { context : String, domId : String }
-
-
 type alias AddingAddressConfig =
     { id : Id
     , pos : FindPosition
@@ -156,6 +152,7 @@ type Msg
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
     | TransactionFilterMsg TransactionFilter.Msg
     | TooltipMsg (Tooltip.Msg TooltipType)
+    | RepositionTooltip
 
 
 type alias TextTooltipConfig =

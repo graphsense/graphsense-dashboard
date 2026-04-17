@@ -448,3 +448,6 @@ shallPushHistory plugins msg _ =
 
         TooltipMsg _ ->
             False
+
+        RepositionTooltip ->
+            False

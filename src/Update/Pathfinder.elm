@@ -8,7 +8,7 @@ import Basics.Extra exposing (flip)
 import Browser.Dom as Dom
 import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
-import Components.Tooltip
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
 import Config.Update as Update
@@ -62,7 +62,6 @@ import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
-import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx exposing (Io, Tx)
 import Model.Search as Search
 import Model.Tx as GTx exposing (parseTxIdentifier)
@@ -94,7 +93,6 @@ import Task
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
-import Tuple3
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
@@ -115,7 +113,6 @@ import Util.Data as Data
 import Util.EventualMessages as EventualMessages
 import Util.Pathfinder.History as History
 import Util.Pathfinder.TagSummary as TagSummary
-import Util.Tag as Tag
 import Util.TooltipType exposing (TooltipType)
 import View.Locale as Locale exposing (makeTimestampFilename)
 import View.Pathfinder exposing (originShiftX)
@@ -170,6 +167,19 @@ update plugins uc msg model =
         |> and syncUrl
         |> and (syncSidePanel uc)
         |> and dispatchEventualMessages
+        |> and (closeTooltip msg)
+
+
+closeTooltip : Msg -> Model -> ( Model, List Effect )
+closeTooltip msg model =
+    case msg of
+        TooltipMsg _ ->
+            n model
+
+        _ ->
+            Tooltip.close model.tooltip
+                |> mapFirst (flip s_tooltip model)
+                |> mapSecond (List.map TooltipEffect)
 
 
 syncUrl : Model -> ( Model, List Effect )
@@ -1457,7 +1467,7 @@ updateByMsg plugins uc msg model =
                         _ ->
                             NoDragging
               }
-            , CloseTooltipEffect Nothing False |> List.singleton
+            , []
             )
 
         UserPushesRightMouseButtonOnGraph coords ->
@@ -1471,7 +1481,7 @@ updateByMsg plugins uc msg model =
                         _ ->
                             NoDragging
               }
-            , CloseTooltipEffect Nothing False |> List.singleton
+            , []
             )
 
         UserPushesLeftMouseButtonOnAddress id coords ->
@@ -1484,7 +1494,7 @@ updateByMsg plugins uc msg model =
                         _ ->
                             model.dragging
               }
-            , CloseTooltipEffect Nothing False |> List.singleton
+            , []
             )
 
         UserMovesMouseOverTx id ->
@@ -1552,8 +1562,7 @@ updateByMsg plugins uc msg model =
 
         UserMovesMouseOutAddress _ ->
             unhover model
-            |> n
-            
+                |> n
 
         UserMovesMouseOutTx _ ->
             unhover model |> n
@@ -1568,13 +1577,13 @@ updateByMsg plugins uc msg model =
                         _ ->
                             model.dragging
               }
-            , CloseTooltipEffect Nothing False |> List.singleton
+            , []
             )
 
         UserMovesMouseOnGraph coords ->
             case model.dragging of
                 NoDragging ->
-                    ( model, CloseTooltipEffect Nothing False |> List.singleton )
+                    ( model, [] )
 
                 Dragging transform start _ ->
                     (case model.pointerTool of
@@ -1622,17 +1631,19 @@ updateByMsg plugins uc msg model =
                                 _ ->
                                     moveNode id model.network
                     in
-                    { model
+                    ( { model
                         | network = network
                         , dragging = DraggingNode id start coords
-                    }
-                        |> n
+                      }
+                    , [ RepositionTooltipEffect ]
+                    )
 
         AnimationFrameDeltaForTransform delta ->
-            n
-                { model
-                    | transform = Transform.transition delta model.transform
-                }
+            ( { model
+                | transform = Transform.transition delta model.transform
+              }
+            , [ RepositionTooltipEffect ]
+            )
 
         AnimationFrameDeltaForMove delta ->
             ( { model
@@ -2543,10 +2554,7 @@ updateByMsg plugins uc msg model =
 
                 _ ->
                     newModel
-            , CloseTooltipEffect
-                (Just { context = AggEdge.idToString id, domId = AggEdge.idToString id })
-                False
-                |> List.singleton
+            , []
             )
 
         UserClickedAggEdge id ->
@@ -2587,12 +2595,9 @@ updateByMsg plugins uc msg model =
                     _ ->
                         hovered () |> n
 
-        UserMovesMouseOutAggEdge id ->
+        UserMovesMouseOutAggEdge _ ->
             ( unhover model
-            , CloseTooltipEffect
-                (Just { context = AggEdge.idToString id, domId = AggEdge.idToString id })
-                False
-                |> List.singleton
+            , []
             )
 
         InternalExportGraphTxsCompleted ->
@@ -2637,12 +2642,18 @@ updateByMsg plugins uc msg model =
         TooltipMsg tm ->
             handleTooltipMsg tm model
 
+        RepositionTooltip ->
+            ( model
+            , Tooltip.reposition model.tooltip
+                |> List.map TooltipEffect
+            )
 
-handleTooltipMsg : Components.Tooltip.Msg TooltipType -> Model -> ( Model, List Effect )
+
+handleTooltipMsg : Tooltip.Msg TooltipType -> Model -> ( Model, List Effect )
 handleTooltipMsg tm model =
     let
         ( tooltipModel, eff ) =
-            Components.Tooltip.update tm model.tooltip
+            Tooltip.update tm model.tooltip
     in
     ( { model | tooltip = tooltipModel }
     , List.map TooltipEffect eff
@@ -3981,12 +3992,6 @@ updateByPluginOutMsg plugins uc outMsgs model =
 
                     PluginInterface.OutMsgsPathfinder _ ->
                         ( mo, eff )
-
-                    PluginInterface.OpenTooltip s msgs ->
-                        ( mo, [ OpenTooltipEffect s False (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg)) ] )
-
-                    PluginInterface.CloseTooltip s withDelay ->
-                        ( mo, [ CloseTooltipEffect (Just s) withDelay ] )
             )
             ( model, [] )
 
@@ -4205,7 +4210,7 @@ unselect model =
         |> s_details Nothing
         |> s_selection NoSelection
         |> s_modPressed False
-    , [ CloseTooltipEffect Nothing False ]
+    , []
     )
 
 
@@ -4760,7 +4765,7 @@ removeTx id model =
                 _ ->
                     model.selection
       }
-    , [ CloseTooltipEffect Nothing False ]
+    , []
     )
 
 
@@ -4780,7 +4785,7 @@ removeAggEdge id model =
                 _ ->
                     model.selection
       }
-    , [ CloseTooltipEffect Nothing False ]
+    , []
     )
 
 

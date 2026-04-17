@@ -4,7 +4,6 @@ module Effect exposing (perform)
 
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
-import Components.Tooltip as Tooltip
 import Config
 import Config.UserSettings
 import Effect.Api
@@ -15,7 +14,6 @@ import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Model, Msg(..))
 import Model.Notification
-import Model.Pathfinder.Tooltip
 import Msg.Graph as Graph
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
@@ -93,15 +91,6 @@ perform plugins model statusbarToken apiKey effect =
 
                 Pathfinder.ErrorEffect _ ->
                     Cmd.none
-
-                Pathfinder.OpenTooltipEffect ctx withDelay tttype ->
-                    Task.perform (always (OpeningTooltip ctx withDelay (Model.Pathfinder.Tooltip.mapMsgTooltipType tttype PathfinderMsg))) (Task.succeed ())
-
-                Pathfinder.CloseTooltipEffect ctx withDelay ->
-                    Task.perform (always (ClosingTooltip ctx withDelay)) (Task.succeed ())
-
-                Pathfinder.RepositionTooltipEffect ->
-                    Task.perform (always RepositionTooltip) (Task.succeed ())
 
                 Pathfinder.ShowNotificationEffect n ->
                     Task.perform (always (ShowNotification n)) (Task.succeed ())

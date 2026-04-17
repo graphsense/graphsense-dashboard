@@ -86,7 +86,6 @@ init plugins uc flags url key =
       , dirty = False
       , notifications = Notification.init
       , localeSelectBox = TSelectBox.init <| List.map first Locale.locales
-      , tooltip = Nothing
       , navbarSubMenu = Nothing
       }
     , List.map LocaleEffect localeEffect

@@ -6,7 +6,6 @@ import Effect.Api as Api
 import Effect.Search as Search
 import Model.Notification exposing (Notification)
 import Model.Pathfinder.Error exposing (Error)
-import Model.Pathfinder.Tooltip exposing (TooltipType)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Msg as Plugin
 import Process
@@ -22,9 +21,7 @@ type Effect
     | CmdEffect (Cmd Msg)
     | SearchEffect Search.Effect
     | ErrorEffect Error
-    | OpenTooltipEffect { context : String, domId : String } Bool (TooltipType Msg)
     | RepositionTooltipEffect
-    | CloseTooltipEffect (Maybe { context : String, domId : String }) Bool
     | PostponeUpdateByRouteEffect Route
     | ShowNotificationEffect Notification
     | InternalEffect Msg
@@ -63,16 +60,8 @@ perform eff =
         ErrorEffect _ ->
             Cmd.none
 
-        -- managed in Effect.elm
-        OpenTooltipEffect _ _ _ ->
-            Cmd.none
-
-        -- managed in Effect.elm
-        CloseTooltipEffect _ _ ->
-            Cmd.none
-
         RepositionTooltipEffect ->
-            Cmd.none
+            Task.perform (always RepositionTooltip) (Task.succeed ())
 
         PostponeUpdateByRouteEffect route ->
             Process.sleep 10

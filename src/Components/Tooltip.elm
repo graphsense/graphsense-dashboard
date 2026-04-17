@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, defaultConfig, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, close, defaultConfig, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
@@ -29,6 +29,7 @@ type alias ModelInternal a =
     , state : State
     , id : String
     , content : a
+    , closeDelay : Float
     }
 
 
@@ -139,8 +140,8 @@ withCloseDelay delay (Config c) =
 
 
 type Msg a
-    = OpenTooltip String a Float
-    | CloseTooltip Float
+    = OpenTooltip String a Float Float
+    | CloseTooltip
     | HovercardMsg Hovercard.Msg
     | DelayPassed
     | OpenDelayPassed String
@@ -161,8 +162,8 @@ init =
 
 attributes : String -> Config a msg -> a -> List (Attribute msg)
 attributes id (Config { tag, openDelay, closeDelay }) content =
-    [ OpenTooltip id content openDelay |> tag |> onMouseOver
-    , CloseTooltip closeDelay |> tag |> onMouseLeave
+    [ OpenTooltip id content openDelay closeDelay |> tag |> onMouseOver
+    , CloseTooltip |> tag |> onMouseLeave
     , Html.Styled.Attributes.id id
     ]
 
@@ -170,7 +171,7 @@ attributes id (Config { tag, openDelay, closeDelay }) content =
 update : Msg a -> Model a -> ( Model a, List Effect )
 update msg (Model model) =
     case msg of
-        OpenTooltip id content openDelay ->
+        OpenTooltip id content openDelay closeDelay ->
             model
                 |> Maybe.map
                     (\mo ->
@@ -179,6 +180,7 @@ update msg (Model model) =
                                 { mo
                                     | state = Opening
                                     , content = content
+                                    , closeDelay = closeDelay
                                     , hovercard =
                                         if mo.id /= id then
                                             Nothing
@@ -198,6 +200,7 @@ update msg (Model model) =
                      , content = content
                      , id = id
                      , hovercard = Nothing
+                     , closeDelay = closeDelay
                      }
                         |> Just
                         |> Model
@@ -226,14 +229,14 @@ update msg (Model model) =
                     )
                 |> Maybe.withDefault (model |> Model |> n)
 
-        CloseTooltip closeDelay ->
+        CloseTooltip ->
             model
                 |> Maybe.map
                     (\mo ->
                         { mo | state = Closing }
                             |> Just
                             |> Model
-                            |> flip pair [ CloseEffect closeDelay ]
+                            |> flip pair [ CloseEffect mo.closeDelay ]
                     )
                 |> Maybe.withDefault (model |> Model |> n)
 
@@ -309,7 +312,7 @@ view (Config config) (Model model) view_ =
                                         )
                                     , ClickTooltip |> config.tag |> onClick
                                     , HoverTooltip |> config.tag |> onMouseOver
-                                    , CloseTooltip config.closeDelay |> config.tag |> onMouseLeave
+                                    , CloseTooltip |> config.tag |> onMouseLeave
                                     ]
                                 |> toUnstyled
                                 |> List.singleton
@@ -398,3 +401,15 @@ subscriptions (Model model) =
         |> Maybe.map Hovercard.subscriptions
         |> Maybe.map (Sub.map HovercardMsg)
         |> Maybe.withDefault Sub.none
+
+
+close : Model a -> ( Model a, List Effect )
+close (Model model) =
+    model
+        |> Maybe.map
+            (\mo ->
+                ( Model model
+                , [ CloseEffect mo.closeDelay ]
+                )
+            )
+        |> Maybe.withDefault (n (Model model))
