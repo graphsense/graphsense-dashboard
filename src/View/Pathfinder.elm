@@ -93,7 +93,7 @@ graph plugins pluginStates vc gc model =
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc model
     , bottomCenterPanel vc model
-    , Util.Tooltip.view vc
+    , Util.Tooltip.view vc model
         |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
     ]
         ++ (model.toolbarHovercard

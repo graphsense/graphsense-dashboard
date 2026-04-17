@@ -22,7 +22,7 @@ import Model.Currency exposing (asset, assetFromBase)
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Locale as Locale
-import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
+import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
@@ -34,7 +34,7 @@ import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
-import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..), TooltipMsgs(..))
+import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
@@ -416,8 +416,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                         "Pubkey Cluster Help"
 
                             tooltipConfig =
-                                Util.Tooltip.tooltipConfig vc (\tipMsg -> AddressDetails.ComponentTooltipMsg tipMsg)
-                                    |> Tooltip.withFixed
+                                Util.Tooltip.tooltipConfig vc AddressDetails.TooltipMsg
                           in
                           div
                             [ css
@@ -512,8 +511,7 @@ clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Address
 clusterInfoView vc open colors viewState clstr =
     let
         tooltipConfig =
-            Util.Tooltip.tooltipConfig vc AddressDetails.ComponentTooltipMsg
-                |> Tooltip.withFixed
+            Util.Tooltip.tooltipConfig vc AddressDetails.TooltipMsg
 
         helpIcon =
             Just <|
@@ -623,8 +621,7 @@ transactionTableView vc addressId txOnGraphFn model txs =
         (Id.network addressId)
         { tag = TransactionFilterMsg
         , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
-        , tooltipConfig =
-            Util.Tooltip.tooltipConfig vc AddressDetails.ComponentTooltipMsg
+        , tooltipConfig = Util.Tooltip.tooltipConfig vc AddressDetails.TooltipMsg
         }
         txs.filter
     , table
@@ -1105,8 +1102,7 @@ tagsList vc model id =
         in
         (concepts
             |> tagsTruncated
-                (Tag.conceptItem vc id
-                    >> Html.map (TagTooltipMsg >> AddressDetails.TooltipMsg)
+                (Tag.conceptItem vc id AddressDetails.TooltipMsg
                     >> Html.map (Pathfinder.AddressDetailsMsg id)
                 )
         )
@@ -1119,22 +1115,6 @@ learnMoreButton vc id =
         |> Rs.s_text "learn more"
         |> Rs.s_onClick (Just (Pathfinder.UserOpensDialogWindow (TagsList id)))
         |> Button.linkButtonBlue vc
-
-
-getTagSummary : { a | tagSummaries : Dict Id Pathfinder.HavingTags } -> Id -> Maybe Api.Data.TagSummary
-getTagSummary model id =
-    case Dict.get id model.tagSummaries of
-        Just (Pathfinder.HasTagSummaries { withCluster }) ->
-            Just withCluster
-
-        Just (Pathfinder.HasTagSummaryWithCluster ts) ->
-            Just ts
-
-        Just (Pathfinder.HasTagSummaryOnlyWithCluster ts) ->
-            Just ts
-
-        _ ->
-            Nothing
 
 
 crosschainLedgerTargets : Id -> Address -> List ( String, Id )

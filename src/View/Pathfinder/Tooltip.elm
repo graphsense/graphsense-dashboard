@@ -43,9 +43,6 @@ view plugins model vc tt =
                 TagLabel lblid x msgs ->
                     ( tagLabel vc lblid x, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 
-                TagConcept _ conceptId x msgs ->
-                    ( tagConcept vc msgs.openDetails conceptId x, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
-
                 ActorDetails ac msgs ->
                     ( showActor vc ac, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 

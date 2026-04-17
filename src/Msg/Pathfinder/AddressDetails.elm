@@ -1,4 +1,4 @@
-module Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..), TooltipMsgs(..), relatedAddressTypeOptions)
+module Msg.Pathfinder.AddressDetails exposing (Msg(..), RelatedAddressTypes(..), relatedAddressTypeOptions)
 
 import Api.Data
 import Components.ExportCSV as ExportCSV
@@ -11,7 +11,6 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Table
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
-import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.TooltipType exposing (TooltipType)
 
@@ -26,14 +25,6 @@ relatedAddressTypeOptions =
     [ MultiInputCluster
     , Pubkey
     ]
-
-
-type alias TooltipContext =
-    { text : String, domId : String }
-
-
-type TooltipMsgs
-    = TagTooltipMsg Tag.Msg
 
 
 type Msg
@@ -66,8 +57,7 @@ type Msg
     | NoOp
     | BrowserGotAddressesForTags Api.Data.AddressTags (List Api.Data.Address)
     | BrowserGotPubkeyRelations Api.Data.RelatedAddresses
-    | TooltipMsg TooltipMsgs
-    | ComponentTooltipMsg (Tooltip.Msg TooltipType)
+    | TooltipMsg (Tooltip.Msg TooltipType)
     | RelatedAddressesVisibleTableSelectBoxMsg (ThemedSelectBox.Msg RelatedAddressTypes)
     | ExportCSVMsg TransactionTable.Model ExportCSV.Msg
     | GotAddressTxsForExport TransactionTable.Model Api.Data.AddressTxs

@@ -10,6 +10,7 @@ import Dict
 import Html.Styled as Html exposing (Html, div, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Model.Currency exposing (assetFromBase)
+import Model.Pathfinder as Pathfinder exposing (getTagSummary)
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
@@ -26,6 +27,7 @@ import Util.TooltipType exposing (TooltipType(..))
 import Util.View exposing (makeValuesList, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
+import Msg.Pathfinder exposing (OverlayWindows(..))
 
 
 tooltipConfig : View.Config -> (Tooltip.Msg TooltipType -> msg) -> Tooltip.Config TooltipType msg
@@ -39,8 +41,8 @@ tooltipConfig vc tag =
         |> Tooltip.withFixed
 
 
-view : View.Config -> TooltipType -> Html Msg
-view vc tt =
+view : View.Config -> Pathfinder.Model -> TooltipType -> Html Msg
+view vc model tt =
     div [] <|
         case tt of
             UtxoTx t ->
@@ -58,8 +60,10 @@ view vc tt =
             TagLabel lblid x ->
                 tagLabel vc lblid x
 
-            TagConcept _ conceptId x ->
-                tagConcept vc conceptId x
+            TagConcept id conceptId ->
+                getTagSummary model id
+                    |> Maybe.map (tagConcept vc id conceptId)
+                    |> Maybe.withDefault [ Html.text "no tagsummary found" ]
 
             ActorDetails ac ->
                 showActor vc ac
@@ -203,8 +207,8 @@ showActor vc a =
     ]
 
 
-tagConcept : View.Config -> String -> TagSummary -> List (Html Msg)
-tagConcept vc concept tag =
+tagConcept : View.Config -> Id -> String -> TagSummary -> List (Html Msg)
+tagConcept vc id concept tag =
     let
         relevantLabels =
             Dict.toList tag.labelSummary |> List.filter (Tuple.second >> (.concepts >> List.member concept)) |> List.map Tuple.second
@@ -250,7 +254,7 @@ tagConcept vc concept tag =
                 |> String.fromInt
                 |> val vc
         }
-    , UserOpensDialogWindow (Debug.todo "TagsList id") |> linkRow vc "learn more"
+    , TagsList id |> UserOpensDialogWindow |> linkRow vc "learn more"
     ]
 
 

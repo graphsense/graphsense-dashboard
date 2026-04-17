@@ -174,12 +174,12 @@ update msg (Model model) =
                         case mo.state of
                             Closing ->
                                 { mo
-                                    | state = Open id
+                                    | state = Opening
                                     , content = content
                                 }
                                     |> Just
                                     |> Model
-                                    |> n
+                                    |> flip pair [ OpenEffect id openDelay ]
 
                             _ ->
                                 model |> Model |> n

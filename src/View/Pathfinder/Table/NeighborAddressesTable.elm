@@ -111,8 +111,7 @@ config styles vc conf =
                         getSortedConceptsByWeight ts
                             |> List.head
                             |> Maybe.map
-                                (Tag.conceptItem vc (toId data)
-                                    >> Html.map (AddressDetails.TagTooltipMsg >> AddressDetails.TooltipMsg)
+                                (Tag.conceptItem vc (toId data) AddressDetails.TooltipMsg
                                     >> List.singleton
                                 )
                             |> Maybe.withDefault []

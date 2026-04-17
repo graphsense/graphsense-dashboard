@@ -501,10 +501,8 @@ update uc msg model =
                 |> updateRelatedAddressesTable model
 
         TooltipMsg _ ->
+            -- handled upstream
             n model
-
-        ComponentTooltipMsg _ ->
-            Debug.todo "n model"
 
         UserClickedToggleClusterDetailsOpen ->
             not model.isClusterDetailsOpen

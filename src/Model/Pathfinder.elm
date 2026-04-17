@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getVisibleTxs, graphId, unit, getTagSummary)
 
 import Api.Data exposing (Actor, Entity)
 import AssocList
@@ -177,3 +177,19 @@ getSelectedTxs { network, selection } =
             []
     )
         |> List.filterMap (flip Dict.get network.txs)
+
+
+getTagSummary : { a | tagSummaries : Dict Id HavingTags } -> Id -> Maybe Api.Data.TagSummary
+getTagSummary model id =
+    case Dict.get id model.tagSummaries of
+        Just (HasTagSummaries { withCluster }) ->
+            Just withCluster
+
+        Just (HasTagSummaryWithCluster ts) ->
+            Just ts
+
+        Just (HasTagSummaryOnlyWithCluster ts) ->
+            Just ts
+
+        _ ->
+            Nothing

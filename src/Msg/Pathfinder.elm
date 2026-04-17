@@ -25,8 +25,11 @@ import Route.Pathfinder exposing (Route)
 import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
-import Util.Tag exposing (TooltipContext)
 import Util.TooltipType exposing (TooltipType)
+
+
+type alias TooltipContext =
+    { context : String, domId : String }
 
 
 type alias AddingAddressConfig =

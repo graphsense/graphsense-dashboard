@@ -1009,7 +1009,7 @@ updateByMsg plugins uc msg model =
                     )
 
                 RelationDetails.TooltipMsg tm ->
-                    handleComponentTooltipMsg tm model
+                    handleTooltipMsg tm model
 
                 _ ->
                     n model
@@ -1084,9 +1084,6 @@ updateByMsg plugins uc msg model =
 
                 AddressDetails.TooltipMsg tm ->
                     handleTooltipMsg tm model
-
-                AddressDetails.ComponentTooltipMsg tm ->
-                    handleComponentTooltipMsg tm model
 
                 AddressDetails.ExportCSVMsg table ms ->
                     let
@@ -2788,11 +2785,11 @@ updateByMsg plugins uc msg model =
                     n model
 
         TooltipMsg tm ->
-            handleComponentTooltipMsg tm model
+            handleTooltipMsg tm model
 
 
-handleComponentTooltipMsg : Components.Tooltip.Msg TooltipType -> Model -> ( Model, List Effect )
-handleComponentTooltipMsg tm model =
+handleTooltipMsg : Components.Tooltip.Msg TooltipType -> Model -> ( Model, List Effect )
+handleTooltipMsg tm model =
     let
         ( tooltipModel, eff ) =
             Components.Tooltip.update tm model.tooltip
@@ -3443,78 +3440,6 @@ updateAddressRelatedData id x model =
                 )
                 model.network
     }
-
-
-handleTooltipMsg : AddressDetails.TooltipMsgs -> Model -> ( Model, List Effect )
-handleTooltipMsg msg model =
-    case model.details of
-        Just (AddressDetails addressId addressDetailsModel) ->
-            case msg |> Debug.log "msg" of
-                AddressDetails.TagTooltipMsg inner ->
-                    case inner of
-                        Tag.UserMovesMouseOutTagConcept ctx ->
-                            ( model, CloseTooltipEffect (Just ctx) True |> List.singleton )
-
-                        Tag.UserMovesMouseOverTagConcept ctx ->
-                            let
-                                decoder =
-                                    Json.Decode.map3 Tuple3.join
-                                        (Json.Decode.index 0 Json.Decode.string)
-                                        (Json.Decode.index 1 Json.Decode.string)
-                                        (Json.Decode.index 2 Json.Decode.string)
-                            in
-                            Json.Decode.decodeString decoder ctx.context
-                                |> Result.map
-                                    (\( concept, currency, address ) ->
-                                        let
-                                            id =
-                                                Id.init currency address
-
-                                            tsToTooltip ts =
-                                                Tooltip.TagConcept id
-                                                    concept
-                                                    ts
-                                                    { openTooltip =
-                                                        Tag.UserMovesMouseOverTagConcept ctx
-                                                            |> AddressDetails.TagTooltipMsg
-                                                            |> AddressDetails.TooltipMsg
-                                                            |> AddressDetailsMsg id
-                                                    , closeTooltip =
-                                                        Tag.UserMovesMouseOutTagConcept ctx
-                                                            |> AddressDetails.TagTooltipMsg
-                                                            |> AddressDetails.TooltipMsg
-                                                            |> AddressDetailsMsg id
-                                                    , openDetails = Just (UserOpensDialogWindow (TagsList id))
-                                                    }
-                                        in
-                                        case Dict.get id model.tagSummaries of
-                                            Just (HasTagSummaries { withCluster }) ->
-                                                ( model
-                                                , OpenTooltipEffect ctx False (tsToTooltip withCluster) |> List.singleton
-                                                )
-
-                                            Just (HasTagSummaryWithCluster ts) ->
-                                                ( model
-                                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
-                                                )
-
-                                            Just (HasTagSummaryWithoutCluster ts) ->
-                                                ( model
-                                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
-                                                )
-
-                                            Just (HasTagSummaryOnlyWithCluster ts) ->
-                                                ( model
-                                                , OpenTooltipEffect ctx False (tsToTooltip ts) |> List.singleton
-                                                )
-
-                                            _ ->
-                                                n model
-                                    )
-                                |> Result.withDefault (n model)
-
-        _ ->
-            n model
 
 
 userClickedAddressCheckboxInTable : Plugins -> Id -> Model -> ( Model, List Effect )

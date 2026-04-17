@@ -183,9 +183,6 @@ shallPushHistory plugins msg _ =
                 AddressDetails.TooltipMsg _ ->
                     False
 
-                AddressDetails.ComponentTooltipMsg _ ->
-                    False
-
                 AddressDetails.ExportCSVMsg _ _ ->
                     False
 
@@ -238,7 +235,6 @@ shallPushHistory plugins msg _ =
 
                 RelationDetails.TooltipMsg _ ->
                     False
-
 
         AnimationFrameDeltaForTransform _ ->
             False

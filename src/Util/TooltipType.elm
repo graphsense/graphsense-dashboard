@@ -13,7 +13,7 @@ type TooltipType
     | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress }
     | Address Address (Maybe TagSummary)
     | TagLabel String TagSummary
-    | TagConcept Id String TagSummary
+    | TagConcept Id String
     | ActorDetails Actor
     | Text String
     | ChangeHeuristics { confidence : Float, heuristics : List String }

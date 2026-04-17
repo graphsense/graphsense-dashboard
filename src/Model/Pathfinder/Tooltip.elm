@@ -25,7 +25,6 @@ type TooltipType msg
     = AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress } (TooltipMessages msg)
     | Address Address (Maybe TagSummary)
     | TagLabel String TagSummary (TooltipMessages msg)
-    | TagConcept Id String TagSummary (TooltipMessages msg)
     | ActorDetails Actor (TooltipMessages msg)
     | ChangeHeuristics { confidence : Float, heuristics : List String }
     | Plugin { context : String, domId : String } (TooltipMessages msg)
@@ -41,9 +40,6 @@ mapMsgTooltipType toMap f =
     case toMap of
         TagLabel a b msgs ->
             TagLabel a b (mapMsgTooltipMsg msgs f)
-
-        TagConcept a b c msgs ->
-            TagConcept a b c (mapMsgTooltipMsg msgs f)
 
         ActorDetails a msgs ->
             ActorDetails a (mapMsgTooltipMsg msgs f)
@@ -70,9 +66,6 @@ isSameTooltip t1 t2 =
         ( TagLabel id1 _ _, TagLabel id2 _ _ ) ->
             id1 == id2
 
-        ( TagConcept a1 id1 _ _, TagConcept a2 id2 _ _ ) ->
-            id1 == id2 && a1 == a2
-
         ( ActorDetails a1 _, ActorDetails a2 _ ) ->
             a1.id == a2.id
 
@@ -95,9 +88,6 @@ isSameTooltip t1 t2 =
             False
 
         ( TagLabel _ _ _, _ ) ->
-            False
-
-        ( TagConcept _ _ _ _, _ ) ->
             False
 
         ( ActorDetails _ _, _ ) ->
