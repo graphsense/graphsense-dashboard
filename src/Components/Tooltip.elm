@@ -7,7 +7,7 @@ import Css
 import Hovercard
 import Html.Styled exposing (Attribute, Html, div, toUnstyled)
 import Html.Styled.Attributes exposing (css, title)
-import Html.Styled.Events exposing (onMouseLeave, onMouseOver)
+import Html.Styled.Events exposing (onClick, onMouseLeave, onMouseOver)
 import Process
 import RecordSetter as Rs
 import Task
@@ -27,12 +27,13 @@ type Model a
 type alias ModelInternal a =
     { hovercard : Maybe Hovercard.Model
     , state : State
+    , id : String
     , content : a
     }
 
 
 type State
-    = Open String
+    = Open
     | Closing
     | Opening
 
@@ -143,6 +144,8 @@ type Msg a
     | HovercardMsg Hovercard.Msg
     | DelayPassed
     | OpenDelayPassed String
+    | ClickTooltip
+    | HoverTooltip
 
 
 type Effect
@@ -187,12 +190,35 @@ update msg (Model model) =
                 |> Maybe.withDefault
                     ({ state = Opening
                      , content = content
+                     , id = id
                      , hovercard = Nothing
                      }
                         |> Just
                         |> Model
                         |> flip pair [ OpenEffect id openDelay ]
                     )
+
+        ClickTooltip ->
+            Nothing |> Model |> n
+
+        HoverTooltip ->
+            model
+                |> Maybe.andThen
+                    (\mo ->
+                        case mo.state of
+                            Closing ->
+                                { mo
+                                    | state = Open
+                                }
+                                    |> Just
+                                    |> Model
+                                    |> n
+                                    |> Just
+
+                            _ ->
+                                Nothing
+                    )
+                |> Maybe.withDefault (model |> Model |> n)
 
         CloseTooltip closeDelay ->
             model
@@ -216,7 +242,8 @@ update msg (Model model) =
                                         Hovercard.init id
                                 in
                                 { mo
-                                    | state = Open id
+                                    | state = Open
+                                    , id = id
                                     , hovercard = Just hovercard
                                 }
                                     |> Just
@@ -275,6 +302,9 @@ view (Config config) (Model model) view_ =
                                         (GraphComponents.tooltipDown_details.styles
                                             ++ [ Css.minWidth (Css.px 230) ]
                                         )
+                                    , ClickTooltip |> config.tag |> onClick
+                                    , HoverTooltip |> config.tag |> onMouseOver
+                                    , CloseTooltip config.closeDelay |> config.tag |> onMouseLeave
                                     ]
                                 |> toUnstyled
                                 |> List.singleton
