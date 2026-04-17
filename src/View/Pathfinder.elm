@@ -421,18 +421,22 @@ bottomCenterPanel vc model =
             , rightCell = { variant = none }
             , root = { toggleLabel = "" }
             }
-        , span
-            ([ css [ Css.pointerEventsAll ]
-             , HA.id (Sha256.sha256 text)
-             ]
-                ++ (Util.TooltipType.Text text |> Tooltip.attributes "tracing-mode-tooltip" tooltipConfig)
+        , HIcons.framedIconCircleWithAttributes
+            (HIcons.framedIconCircleAttributes
+                |> Rs.s_root
+                    (css [ Css.pointerEventsAll ]
+                        :: (Util.TooltipType.Text text |> Tooltip.attributes "tracing-mode-tooltip" tooltipConfig)
+                    )
             )
-            [ HIcons.iconsInfoLWithAttributes
-                (HIcons.iconsInfoLAttributes
-                    |> Rs.s_root [ fixFillRule ]
-                )
-                {}
-            ]
+            { root =
+                { iconInstance =
+                    HIcons.iconsInfoLWithAttributes
+                        (HIcons.iconsInfoLAttributes
+                            |> Rs.s_root [ fixFillRule ]
+                        )
+                        {}
+                }
+            }
         ]
 
 
