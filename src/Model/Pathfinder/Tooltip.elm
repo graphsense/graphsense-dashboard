@@ -4,7 +4,6 @@ import Api.Data exposing (Actor, TagSummary)
 import Hovercard
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Tx as Tx
 
 
 type alias Tooltip msg =
@@ -23,9 +22,7 @@ type alias TooltipMessages msg =
 
 
 type TooltipType msg
-    = UtxoTx Tx.UtxoTx (TooltipMessages msg)
-    | AccountTx Tx.AccountTx (TooltipMessages msg)
-    | AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress } (TooltipMessages msg)
+    = AggEdge { leftAddress : Id, left : Maybe Api.Data.NeighborAddress, rightAddress : Id, right : Maybe Api.Data.NeighborAddress } (TooltipMessages msg)
     | Address Address (Maybe TagSummary)
     | TagLabel String TagSummary (TooltipMessages msg)
     | TagConcept Id String TagSummary (TooltipMessages msg)
@@ -54,12 +51,6 @@ mapMsgTooltipType toMap f =
         Address a b ->
             Address a b
 
-        AccountTx a msgs ->
-            AccountTx a (mapMsgTooltipMsg msgs f)
-
-        UtxoTx a msgs ->
-            UtxoTx a (mapMsgTooltipMsg msgs f)
-
         AggEdge a msgs ->
             AggEdge a (mapMsgTooltipMsg msgs f)
 
@@ -73,12 +64,6 @@ mapMsgTooltipType toMap f =
 isSameTooltip : Tooltip msg -> Tooltip msg -> Bool
 isSameTooltip t1 t2 =
     case ( t1.type_, t2.type_ ) of
-        ( UtxoTx tx1 _, UtxoTx tx2 _ ) ->
-            tx1 == tx2
-
-        ( AccountTx tx1 _, AccountTx tx2 _ ) ->
-            tx1 == tx2
-
         ( Address a1 _, Address a2 _ ) ->
             a1.id == a2.id
 
@@ -105,12 +90,6 @@ isSameTooltip t1 t2 =
 
         ( Plugin p1 _, Plugin p2 _ ) ->
             p1.domId == p2.domId
-
-        ( UtxoTx _ _, _ ) ->
-            False
-
-        ( AccountTx _ _, _ ) ->
-            False
 
         ( Address _ _, _ ) ->
             False

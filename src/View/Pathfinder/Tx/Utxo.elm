@@ -2,6 +2,7 @@ module View.Pathfinder.Tx.Utxo exposing (RenderLevel(..), edge, view)
 
 import Animation as A
 import Color
+import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..))
 import Config.View as View
 import Css
@@ -32,6 +33,8 @@ import Tuple exposing (pair, second)
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
+import Util.Tooltip
+import Util.TooltipType
 import Util.View exposing (ifTrue, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (labelsSep, pickPathFunction)
@@ -161,6 +164,12 @@ view _ vc pc tx utxo annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
+                        ++ (Util.TooltipType.UtxoTx utxo
+                                |> Tooltip.attributes (Id.toString id)
+                                    (Util.Tooltip.tooltipConfig vc TooltipMsg
+                                        |> Tooltip.withOpenDelay 100
+                                    )
+                           )
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , date =
                     [ translate 0 offsetTxHash |> transform ]

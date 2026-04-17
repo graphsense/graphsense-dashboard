@@ -2,6 +2,7 @@ module View.Pathfinder.Tx.AccountTx exposing (edge, view)
 
 import Animation as A
 import Color
+import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..))
 import Config.View as View
 import Css
@@ -30,6 +31,8 @@ import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
+import Util.Tooltip
+import Util.TooltipType
 import Util.View exposing (ifTrue, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (pickPathFunction)
@@ -150,6 +153,12 @@ view _ vc pc tx accTx annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
+                        ++ (Util.TooltipType.AccountTx accTx
+                                |> Tooltip.attributes (Id.toString tx.id)
+                                    (Util.Tooltip.tooltipConfig vc TooltipMsg
+                                        |> Tooltip.withOpenDelay 100
+                                    )
+                           )
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , timestamp =
                     [ translate 0 offsetSecondValue |> transform ]

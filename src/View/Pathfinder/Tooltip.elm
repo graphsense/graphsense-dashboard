@@ -24,10 +24,9 @@ import Util.Css as Css
 import Util.Data as Data
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
-import Util.View exposing (hovercardFullViewPort, none, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+import Util.View exposing (hovercardFullViewPort, makeValuesList, none, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
-import Util.View exposing (makeValuesList)
 
 
 view : Plugins -> Model key -> View.Config -> Tooltip Msg -> Html Msg
@@ -35,12 +34,6 @@ view plugins model vc tt =
     let
         ( content, containerAttributes ) =
             case tt.type_ of
-                UtxoTx t msgs ->
-                    ( genericTx vc { txId = t.raw.txHash, timestamp = t.raw.timestamp }, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
-
-                AccountTx t msgs ->
-                    ( genericTx vc { txId = t.raw.identifier, timestamp = t.raw.timestamp }, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
-
                 AggEdge a msgs ->
                     ( aggEdge vc a, [ onMouseEnter msgs.openTooltip, onMouseLeave msgs.closeTooltip ] )
 

@@ -1496,58 +1496,28 @@ updateByMsg plugins uc msg model =
 
             else
                 let
-                    domId =
-                        Id.toString id
-
                     hovered _ =
                         let
                             unhovered =
                                 unhover model
-
-                            maybeTT =
-                                unhovered.network.txs
-                                    |> Dict.get id
-                                    |> Maybe.map
-                                        (\tx ->
-                                            let
-                                                msgs =
-                                                    { openTooltip = UserMovesMouseOverTx tx.id
-                                                    , closeTooltip = UserMovesMouseOverTx tx.id
-                                                    , openDetails = Nothing
-                                                    }
-                                            in
-                                            case tx.type_ of
-                                                Tx.Utxo t ->
-                                                    Tooltip.UtxoTx t msgs
-
-                                                Tx.Account t ->
-                                                    Tooltip.AccountTx t msgs
-                                        )
                         in
-                        ( { unhovered
+                        { unhovered
                             | network =
                                 Network.updateTx id (s_hovered True) unhovered.network
                                     |> Network.trySetHoverConversionLoop id True
                             , hovered = HoveredTx id
-                          }
-                        , case maybeTT of
-                            Just tt ->
-                                OpenTooltipEffect { context = domId, domId = domId } False tt |> List.singleton
-
-                            _ ->
-                                []
-                        )
+                        }
                 in
                 case model.details of
                     Just (TxDetails txid _) ->
                         if id /= txid then
-                            hovered ()
+                            hovered () |> n
 
                         else
                             n model
 
                     _ ->
-                        hovered ()
+                        hovered () |> n
 
         UserMovesMouseOverAddress id ->
             if model.hovered == HoveredAddress id then

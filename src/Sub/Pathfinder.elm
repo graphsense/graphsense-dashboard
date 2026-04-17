@@ -1,6 +1,7 @@
 module Sub.Pathfinder exposing (subscriptions)
 
 import Browser.Events
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Json.Decode as Decode
@@ -154,5 +155,7 @@ subscriptions model =
 
         _ ->
             Sub.none
+    , Tooltip.subscriptions model.tooltip
+        |> Sub.map TooltipMsg
     ]
         |> Sub.batch

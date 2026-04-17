@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, defaultConfig, init, perform, reposition, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg, attributes, defaultConfig, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
@@ -354,3 +354,12 @@ reposition (Model model) =
     Maybe.andThen .hovercard model
         |> Maybe.map (Hovercard.getElement >> HovercardCmd >> List.singleton)
         |> Maybe.withDefault []
+
+
+subscriptions : Model a -> Sub (Msg a)
+subscriptions (Model model) =
+    model
+        |> Maybe.andThen .hovercard
+        |> Maybe.map Hovercard.subscriptions
+        |> Maybe.map (Sub.map HovercardMsg)
+        |> Maybe.withDefault Sub.none
