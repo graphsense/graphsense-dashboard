@@ -189,7 +189,10 @@ view plugins vc pc address annotation =
 
         tooltipAttributes =
             TooltipType.Address address.id
-                |> Tooltip.attributes nodeId (Util.Tooltip.tooltipConfig vc TooltipMsg)
+                |> Tooltip.attributes nodeId
+                    (Util.Tooltip.tooltipConfig vc TooltipMsg
+                        |> Tooltip.withOpenDelay 100
+                    )
     in
     g
         [ translate
