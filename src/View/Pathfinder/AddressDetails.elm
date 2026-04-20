@@ -625,7 +625,7 @@ transactionTableView vc addressId txOnGraphFn model txs =
         txs.filter
     , table
     ]
-        |> div [ css [ Css.width (Css.pct 100) ] ]
+        |> div [ css fullWidth ]
 
 
 transactionsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html AddressDetails.Msg

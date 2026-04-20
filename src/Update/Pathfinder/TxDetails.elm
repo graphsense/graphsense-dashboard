@@ -53,6 +53,29 @@ transactionTableConfig m =
     }
 
 
+ioTableConfig : InfiniteTable.Config Effect
+ioTableConfig =
+    let
+        noFetch : Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
+        noFetch _ _ _ =
+            CmdEffect Cmd.none
+
+        noEffectToTracker : Effect -> Maybe String
+        noEffectToTracker _ =
+            Nothing
+
+        noAbort : String -> Effect
+        noAbort _ =
+            CmdEffect Cmd.none
+    in
+    { fetch = noFetch
+    , force = False
+    , effectToTracker = noEffectToTracker
+    , abort = noAbort
+    , triggerOffset = 100
+    }
+
+
 transactionTableFilter : Table.Filter Api.Data.TxAccount
 transactionTableFilter =
     { search =
@@ -172,11 +195,47 @@ update msg model =
         UserClickedToggleIoTable Outputs ->
             n { model | outputsTableOpen = not model.outputsTableOpen }
 
+        UserClickedIoTableAddress id ->
+            ( model, [ InternalEffect (Pathfinder.UserClickedAddress id) ] )
+
+        UserClickedIoTableCheckbox id ->
+            ( model, [ InternalEffect (Pathfinder.UserClickedAddressCheckboxInTable id) ] )
+
+        UserClickedAllIoTableCheckboxes direction ->
+            ( model, [ InternalEffect (Pathfinder.UserClickedAllAddressCheckboxInTable direction) ] )
+
+        TooltipMsg tooltipMsgAsTooltipType ->
+            ( model, [ InternalEffect (Pathfinder.TooltipMsg tooltipMsgAsTooltipType) ] )
+
         TableMsg Inputs state ->
-            n { model | inputsTable = model.inputsTable |> s_state state }
+            ( { model | inputsTable = InfiniteTable.updateTable (s_state state) model.inputsTable }, [] )
 
         TableMsg Outputs state ->
-            n { model | outputsTable = model.outputsTable |> s_state state }
+            ( { model | outputsTable = InfiniteTable.updateTable (s_state state) model.outputsTable }, [] )
+
+        IoTableMsg ioDir m ->
+            let
+                table =
+                    case ioDir of
+                        Inputs ->
+                            model.inputsTable
+
+                        Outputs ->
+                            model.outputsTable
+
+                ( pt, cmd, eff ) =
+                    InfiniteTable.update ioTableConfig m table
+
+                ( newTable, msgTag ) =
+                    if ioDir == Inputs then
+                        ( { model | inputsTable = pt }, IoTableMsg Inputs )
+
+                    else
+                        ( { model | outputsTable = pt }, IoTableMsg Outputs )
+            in
+            ( newTable
+            , CmdEffect (Cmd.map (msgTag >> Pathfinder.TxDetailsMsg) cmd) :: eff
+            )
 
         TableMsgSubTxTable m ->
             let

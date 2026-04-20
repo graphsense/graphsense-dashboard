@@ -3,6 +3,7 @@ module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, config)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Char
+import Components.InfiniteTable as InfiniteTable
 import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
@@ -16,7 +17,6 @@ import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.IoTable exposing (titleValue)
 import Model.Pathfinder.Tx exposing (ioToId)
-import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
 import RecordSetter as Rs
 import Table
@@ -28,8 +28,9 @@ import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.Tooltip
 import Util.TooltipType as TooltipType
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
-import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
+import View.Pathfinder.InfiniteTable as PathfinderInfiniteTable
+import View.Pathfinder.PagedTable exposing (customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders, setHeaderCheckbox, wrapCell)
 
 
@@ -40,17 +41,11 @@ type alias IoColumnConfig =
     }
 
 
-config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> Bool -> IoColumnConfig -> Table.Config Api.Data.TxValue Pathfinder.Msg
+config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> Bool -> IoColumnConfig -> InfiniteTable.TableConfig Api.Data.TxValue Msg
 config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
     let
         styles_ =
             styles
-                |> Rs.s_headRow
-                    (styles.headRow
-                        >> flip (++)
-                            [ Css.property "background-color" Colors.white
-                            ]
-                    )
                 |> Rs.s_headCell
                     (styles.headCell
                         >> flip (++)
@@ -66,54 +61,59 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
         cc =
             initCustomHeaders
                 |> addHeaderAttributes titleValue [ css [ Css.textAlign Css.right ] ]
-                |> setHeaderCheckbox checkboxTitle allChecked msg
-                |> flip (applyHeaderCustomizations styles_ vc) (customizations styles_ vc)
+                |> setHeaderCheckbox checkboxTitle allChecked allCheckedMsg
+                |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
 
-        msg =
-            Pathfinder.UserClickedAllAddressCheckboxInTable
-                (case ioDirection of
-                    Inputs ->
-                        Model.Direction.Outgoing
+        direction =
+            case ioDirection of
+                Inputs ->
+                    Model.Direction.Outgoing
 
-                    Outputs ->
-                        Model.Direction.Incoming
-                )
+                Outputs ->
+                    Model.Direction.Incoming
+
+        allCheckedMsg =
+            UserClickedAllIoTableCheckboxes direction
 
         network =
             ioColumnConfig.network
     in
-    Table.customConfig
-        { toId = .address >> String.concat
-        , toMsg = TableMsg ioDirection >> Pathfinder.TxDetailsMsg
-        , columns =
-            [ PT.checkboxColumn vc
-                checkboxTitle
-                { isChecked =
-                    ioToId network
-                        >> Maybe.map isCheckedFn
-                        >> Maybe.withDefault False
-                , onClick =
-                    ioToId network >> Maybe.map Pathfinder.UserClickedAddressCheckboxInTable >> Maybe.withDefault Pathfinder.NoOp
-                , readonly = \_ -> False
-                }
-            , ioColumn vc
-                { label = "Address"
-                , accessor = .address >> String.join ","
-                , onClick = Just (ioToId network >> Maybe.map Pathfinder.UserClickedAddress >> Maybe.withDefault Pathfinder.NoOp)
-                }
-                ioColumnConfig
-            , PT.sortableDebitCreditColumn
-                (.value >> .value >> (>=) 0)
-                vc
-                (\_ -> assetFromBase network)
-                "Value"
-                .value
-            ]
-        , customizations = cc
-        }
+    { toId = .address >> String.concat
+    , columns =
+        [ PT.checkboxColumn vc
+            checkboxTitle
+            { isChecked =
+                ioToId network
+                    >> Maybe.map isCheckedFn
+                    >> Maybe.withDefault False
+            , onClick =
+                ioToId network
+                    >> Maybe.map UserClickedIoTableCheckbox
+                    >> Maybe.withDefault NoOp
+            , readonly = \_ -> False
+            }
+        , ioColumn vc
+            { label = "Address"
+            , accessor = .address >> String.join ","
+            , onClick =
+                Just (ioToId network >> Maybe.map UserClickedIoTableAddress >> Maybe.withDefault NoOp)
+            }
+            ioColumnConfig
+        , PT.sortableDebitCreditColumn
+            (.value >> .value >> (>=) 0)
+            vc
+            (\_ -> assetFromBase network)
+            "Value"
+            .value
+        ]
+    , customizations = cc
+    , tag = IoTableMsg ioDirection
+    , loadingPlaceholderAbove = PathfinderInfiniteTable.loadingPlaceholderAbove vc
+    , loadingPlaceholderBelow = PathfinderInfiniteTable.loadingPlaceholderBelow vc
+    }
 
 
-ioColumn : View.Config -> ColumnConfig Api.Data.TxValue Pathfinder.Msg -> IoColumnConfig -> Table.Column Api.Data.TxValue Pathfinder.Msg
+ioColumn : View.Config -> ColumnConfig Api.Data.TxValue Msg -> IoColumnConfig -> Table.Column Api.Data.TxValue Msg
 ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
     let
         exchangeIcon =
@@ -256,7 +256,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                         case changeBadgeConfig.tooltip of
                             Just tt ->
                                 TooltipType.ChangeHeuristics { confidence = tt.confidence, heuristics = tt.heuristics }
-                                    |> Tooltip.attributes tt.domId (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
+                                    |> Tooltip.attributes tt.domId (Util.Tooltip.tooltipConfig vc TooltipMsg)
 
                             Nothing ->
                                 []

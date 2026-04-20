@@ -3,7 +3,7 @@ module View.Pathfinder.TxDetails exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Char
-import Components.Table exposing (Table)
+import Components.InfiniteTable as ComponentsInfiniteTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.View as View
@@ -12,7 +12,7 @@ import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict
-import Html.Styled exposing (Html, div)
+import Html.Styled exposing (Html, div, map)
 import Html.Styled.Events exposing (preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import List.Extra
@@ -37,7 +37,6 @@ import Util.Css exposing (spread)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, timeToCell, truncateLongIdentifierWithLengths)
-import View.Graph.Table exposing (noTools)
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, emptyCell, valuesToCell)
 import View.Pathfinder.InfiniteTable as InfiniteTable
@@ -640,7 +639,7 @@ unsupportedConversionNotice vc conversions =
             Locale.interpolated vc.locale key [ address, network ]
 
 
-ioTableView : View.Config -> IoDirection -> Network -> Table Api.Data.TxValue -> IoColumnConfig -> Html Pathfinder.Msg
+ioTableView : View.Config -> IoDirection -> Network -> ComponentsInfiniteTable.Model Api.Data.TxValue -> IoColumnConfig -> Html Pathfinder.Msg
 ioTableView vc dir network table ioColumnConfig =
     let
         isCheckedFn =
@@ -657,14 +656,15 @@ ioTableView vc dir network table ioColumnConfig =
                     )
 
         allChecked =
-            table.data
+            ComponentsInfiniteTable.getPage table
                 |> List.map (ioToId ioColumnConfig.network >> Maybe.withDefault ( "", "" ))
                 |> List.all isCheckedFn
+
+        config =
+            IoTable.config styles vc dir isCheckedFn allChecked ioColumnConfig
     in
-    View.Graph.Table.table
-        styles
-        vc
-        [ css [ Css.overflowY Css.auto, Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 500) * 0.5)) ] ]
-        noTools
-        (IoTable.config styles vc dir isCheckedFn allChecked ioColumnConfig)
+    InfiniteTable.view vc
+        []
+        config
         table
+        |> map Pathfinder.TxDetailsMsg

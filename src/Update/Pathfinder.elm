@@ -1704,7 +1704,7 @@ updateByMsg plugins uc msg model =
                             data.tx |> Tx.getNetwork
 
                         idsTable =
-                            t.data
+                            InfiniteTable.getPage t
                                 |> List.filterMap (Tx.ioToId network)
 
                         allChecked =
