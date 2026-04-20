@@ -397,6 +397,7 @@ auto trace limit: Auto trace limit
 infobox-no-suitable-adjacent-transaction: Could not find a suitable adjacent transaction
   for address {0}. This is likely because the funds are not yet spent.
 save file: Save file
+export graph: Export graph
 reset: Reset
 tags list: Tags list
 note-tag-inherited: 'Note: This tag was inherited from the cluster level.'

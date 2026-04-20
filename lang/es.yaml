@@ -414,6 +414,7 @@ infobox-no-suitable-adjacent-transaction: No se ha encontrado una transacción a
   adecuada para la dirección {0}. Probablemente se deba a que los fondos aún no se
   han gastado.
 save file: Guardar archivo
+export graph: Exportar gráfico
 reset: Restablecer
 tags list: Lista de etiquetas
 note-tag-inherited: 'Nota: Esta etiqueta se ha heredado del nivel de clúster.'

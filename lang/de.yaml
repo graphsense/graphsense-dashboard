@@ -409,6 +409,7 @@ auto trace limit: Beschränkung der Auto-Nachverfolgung
 infobox-no-suitable-adjacent-transaction: Keine passende Anschlusstransaktion für
   Adresse {0} gefunden. Wahrscheinlich wurde der Betrag noch nicht weiter verwendet.
 save file: Als Datei speichen
+export graph: Graph exportieren
 reset: Zurücksetzen
 tags list: Schlagwortliste
 note-tag-inherited: 'Notiz: Dieser Tag wurde vom Cluster vererbt.'
