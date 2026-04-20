@@ -2432,7 +2432,7 @@ updateByUrl plugins uc url model =
                                     |> s_searchType
                                         (Search.initSearchAddressAndTxs Nothing)
                           }
-                        , []
+                        , [ Browser.Dom.focus Search.searchInputId |> Task.attempt (\_ -> NoOp) |> CmdEffect ]
                         )
 
                     Route.Stats ->
