@@ -121,9 +121,16 @@ maxApiRetries =
     3
 
 
-apiRetryDelaysMs : List Float
-apiRetryDelaysMs =
-    [ 500, 1500, 4500 ]
+{-| Delay in milliseconds before the Nth retry attempt (1-indexed).
+
+Current strategy: exponential backoff with base 500 ms and factor 3
+(500, 1500, 4500 ms). Swap this body to change the backoff curve
+(linear, fibonacci, jittered, capped, …) without touching callers.
+
+-}
+apiRetryDelayMs : Int -> Float
+apiRetryDelayMs attempt =
+    500 * (3 ^ toFloat (attempt - 1))
 
 
 isTransientHttpError : Http.Error -> Bool
@@ -459,11 +466,12 @@ update plugins uc msg model =
                                         current + 1
                                 in
                                 if next <= maxApiRetries then
-                                    List.Extra.getAt current apiRetryDelaysMs
-                                        |> Maybe.map
-                                            (\d ->
-                                                { key = key, effect = eff, attempt = next, delayMs = d }
-                                            )
+                                    Just
+                                        { key = key
+                                        , effect = eff
+                                        , attempt = next
+                                        , delayMs = apiRetryDelayMs next
+                                        }
 
                                 else
                                     Nothing
