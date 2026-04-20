@@ -1157,14 +1157,14 @@ quickFilterToLabel vc =
         (\qf ->
             Sc.filterGroupSmall
                 { filterList =
-                    (qf.tx
-                        |> txToAsset
-                        |> Maybe.map (stringFilterSmall vc >> List.singleton)
-                        |> Maybe.withDefault []
-                    )
-                        ++ [ qf.date |> dateTimeFilterSmall vc qf.direction
-                           , qf.direction |> directionFilterString |> stringFilterSmall vc
-                           ]
+                    [ qf.date |> dateTimeFilterSmall vc qf.direction
+                    , qf.direction |> directionFilterString |> stringFilterSmall vc
+                    ]
+                        ++ (qf.tx
+                                |> txToAsset
+                                |> Maybe.map (stringFilterSmall vc >> List.singleton)
+                                |> Maybe.withDefault []
+                           )
                 }
                 {}
         )
@@ -1197,10 +1197,10 @@ dateTimeFilterSmall vc direction date =
         txLabel =
             case direction of
                 Outgoing ->
-                    "Datefilter-starting"
+                    "datefilter-starting"
 
                 Incoming ->
-                    "Datefilter-until"
+                    "datefilter-until"
     in
     date
         |> Locale.timestampDateTimeUniform vc.locale False
