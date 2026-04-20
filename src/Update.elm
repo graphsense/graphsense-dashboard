@@ -2417,6 +2417,11 @@ updateByUrl plugins uc url model =
                         , pathfinder = { networks = c }
                         }
                    )
+
+        focusSearchEffect =
+            Browser.Dom.focus Search.searchInputId
+                |> Task.attempt (\_ -> NoOp)
+                |> CmdEffect
     in
     Route.parse routeConfig url
         |> Maybe.map2
@@ -2432,7 +2437,12 @@ updateByUrl plugins uc url model =
                                     |> s_searchType
                                         (Search.initSearchAddressAndTxs Nothing)
                           }
-                        , []
+                        , case oldRoute of
+                            Route.Home ->
+                                []
+
+                            _ ->
+                                [ focusSearchEffect ]
                         )
 
                     Route.Stats ->
@@ -2508,6 +2518,14 @@ updateByUrl plugins uc url model =
                         let
                             ( pfn, graphEffect ) =
                                 Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
+
+                            focusEffect =
+                                case oldRoute of
+                                    Route.Pathfinder _ ->
+                                        []
+
+                                    _ ->
+                                        [ focusSearchEffect ]
                         in
                         ( { model
                             | page = Pathfinder
@@ -2515,8 +2533,10 @@ updateByUrl plugins uc url model =
                             , url = url
                             , navbarSubMenu = Nothing
                           }
-                        , graphEffect
-                            |> List.map PathfinderEffect
+                        , focusEffect
+                            ++ (graphEffect
+                                    |> List.map PathfinderEffect
+                               )
                         )
 
                     Route.Plugin ( pluginType, urlValue ) ->
