@@ -545,3 +545,4 @@ filter-custom-filter: custom filter
 filter-follow-utxo: follow UTXO
 filter-none-selected: none selected 
 filter-utxo-only: UTXO only
+tx-filter-utxo-only-tooltip: Only list transactions which are referencing the selected transaction on a UTXO level
