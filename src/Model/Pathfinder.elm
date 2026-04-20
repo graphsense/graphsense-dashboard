@@ -1,9 +1,10 @@
-module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
 
 import Api.Data exposing (Actor, Entity)
 import AssocList
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
@@ -33,6 +34,7 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Tuple
 import Util.Annotations exposing (AnnotationModel)
 import Util.EventualMessages exposing (EventualMessages)
+import Util.TooltipType exposing (TooltipType)
 
 
 unit : Float
@@ -69,6 +71,7 @@ type alias Model =
     , exportCSVGraph : ExportCSV.Model
     , exportImage : Maybe ExportImage
     , txsFilters : AssocList.Dict TxsFilterId TransactionFilter.Settings
+    , tooltip : Tooltip.Model TooltipType
     }
 
 
@@ -174,3 +177,19 @@ getSelectedTxs { network, selection } =
             []
     )
         |> List.filterMap (flip Dict.get network.txs)
+
+
+getTagSummary : { a | tagSummaries : Dict Id HavingTags } -> Id -> Maybe Api.Data.TagSummary
+getTagSummary model id =
+    case Dict.get id model.tagSummaries of
+        Just (HasTagSummaries { withCluster }) ->
+            Just withCluster
+
+        Just (HasTagSummaryWithCluster ts) ->
+            Just ts
+
+        Just (HasTagSummaryOnlyWithCluster ts) ->
+            Just ts
+
+        _ ->
+            Nothing

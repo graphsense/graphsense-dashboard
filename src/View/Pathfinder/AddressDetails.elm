@@ -4,6 +4,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as Inf
 import Components.PagedTable as PagedTable
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
@@ -12,16 +13,16 @@ import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, div, img, span)
+import Html.Styled as Html exposing (Html, div, img)
 import Html.Styled.Attributes as HA exposing (src)
-import Html.Styled.Events exposing (onClick, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
+import Html.Styled.Events exposing (onClick, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency exposing (asset, assetFromBase)
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Locale as Locale
-import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance)
+import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
@@ -33,13 +34,12 @@ import Model.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
-import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..), RelatedAddressesTooltipMsgs(..), TooltipMsgs(..))
+import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
 import RemoteData exposing (WebData)
 import Set
-import Sha256
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as HIcons
@@ -53,7 +53,9 @@ import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
-import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, fixFillRule, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.Tooltip
+import Util.TooltipType
+import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -404,18 +406,16 @@ relatedAddressesDataTab vc model _ viewState cluster =
                 Just
                     (div []
                         [ let
-                            ttConfig =
-                                { domId = "related_addresses_select_help"
-                                , text =
-                                    case relatedAddressesVisibleTable of
-                                        AddressDetails.MultiInputCluster ->
-                                            "Multi Input Cluster Help"
-                                                |> Locale.string vc.locale
+                            helpText =
+                                case relatedAddressesVisibleTable of
+                                    AddressDetails.MultiInputCluster ->
+                                        "Multi Input Cluster Help"
 
-                                        AddressDetails.Pubkey ->
-                                            "Pubkey Cluster Help"
-                                                |> Locale.string vc.locale
-                                }
+                                    AddressDetails.Pubkey ->
+                                        "Pubkey Cluster Help"
+
+                            tooltipConfig =
+                                Util.Tooltip.tooltipConfig vc AddressDetails.TooltipMsg
                           in
                           div
                             [ css
@@ -434,18 +434,12 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                     relatedAddressesVisibleTable
                                     |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
                                 ]
-                            , span
-                                [ onMouseEnter (ShowRelatedAddressesTooltip ttConfig |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
-                                , onMouseLeave (HideRelatedAddressesTooltip ttConfig |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
-                                , Svg.Styled.Attributes.id ttConfig.domId
-                                , css [ Css.flexShrink (Css.int 0) ] -- Prevent the icon from shrinking
-                                ]
-                                [ HIcons.iconsInfoSnoPaddingWithAttributes
-                                    (HIcons.iconsInfoSnoPaddingAttributes
-                                        |> Rs.s_shape [ fixFillRule ]
-                                    )
-                                    {}
-                                ]
+                            , HIcons.iconsInfoSnoPaddingDevWithAttributes
+                                (HIcons.iconsInfoSnoPaddingDevAttributes
+                                    |> Rs.s_root
+                                        (Util.TooltipType.Text helpText |> Tooltip.attributes "related-addresses-tooltip" tooltipConfig)
+                                )
+                                {}
                             ]
                         , case relatedAddressesVisibleTable of
                             AddressDetails.MultiInputCluster ->
@@ -515,23 +509,17 @@ relatedAddressesDataTab vc model _ viewState cluster =
 clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html AddressDetails.Msg
 clusterInfoView vc open colors clstr =
     let
-        text =
-            Locale.string vc.locale "cluster-details-info-help-text"
-
-        ctxtt =
-            { text = text, domId = Sha256.sha256 text }
-
-        ttAttributes =
-            [ onMouseEnter (AddressDetails.ShowTextTooltip ctxtt |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
-            , onMouseLeave (AddressDetails.HideTextTooltip ctxtt |> RelatedAddressesTooltipMsg |> AddressDetails.TooltipMsg)
-            , Svg.Styled.Attributes.id ctxtt.domId
-            ]
+        tooltipConfig =
+            Util.Tooltip.tooltipConfig vc AddressDetails.TooltipMsg
 
         helpIcon =
             Just <|
-                HIcons.iconsInfoSnoPaddingWithAttributes
-                    (HIcons.iconsInfoSnoPaddingAttributes
-                        |> Rs.s_shape (fixFillRule :: ttAttributes)
+                HIcons.iconsInfoSnoPaddingDevWithAttributes
+                    (HIcons.iconsInfoSnoPaddingDevAttributes
+                        |> Rs.s_root
+                            (Util.TooltipType.Text "cluster-details-info-help-text"
+                                |> Tooltip.attributes "address-details-text-tooltip" tooltipConfig
+                            )
                     )
                     {}
     in
@@ -632,6 +620,7 @@ transactionTableView vc addressId txOnGraphFn model txs =
         (Id.network addressId)
         { tag = TransactionFilterMsg
         , exportCsv = Just ( AddressDetails.ExportCSVMsg txs, model.exportCSV )
+        , tooltipConfig = Util.Tooltip.tooltipConfig vc AddressDetails.TooltipMsg
         }
         txs.filter
     , table
@@ -1073,18 +1062,15 @@ tagsList vc model id =
     else if vc.showLabelsInTaggingOverview then
         let
             showTag ( tid, t ) =
-                let
-                    ctx =
-                        { context = tid, domId = tid }
-                in
                 Html.div
-                    [ onMouseEnter (Pathfinder.UserMovesMouseOverTagLabel ctx)
-                    , onMouseLeave (Pathfinder.UserMovesMouseOutTagLabel ctx)
-                    , HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
-                    , HA.id ctx.domId
-                    , css [ Css.cursor Css.pointer ]
-                    , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
-                    ]
+                    ([ HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
+                     , css [ Css.cursor Css.pointer ]
+                     , onClick (Pathfinder.UserOpensDialogWindow (TagsList id))
+                     ]
+                        ++ (Util.TooltipType.TagLabel id tid
+                                |> Tooltip.attributes tid (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
+                           )
+                    )
                     [ Html.text t.label
                     ]
 
@@ -1112,8 +1098,7 @@ tagsList vc model id =
         in
         (concepts
             |> tagsTruncated
-                (Tag.conceptItem vc id
-                    >> Html.map (TagTooltipMsg >> AddressDetails.TooltipMsg)
+                (Tag.conceptItem vc id AddressDetails.TooltipMsg
                     >> Html.map (Pathfinder.AddressDetailsMsg id)
                 )
         )
@@ -1126,22 +1111,6 @@ learnMoreButton vc id =
         |> Rs.s_text "learn more"
         |> Rs.s_onClick (Just (Pathfinder.UserOpensDialogWindow (TagsList id)))
         |> Button.linkButtonBlue vc
-
-
-getTagSummary : { a | tagSummaries : Dict Id Pathfinder.HavingTags } -> Id -> Maybe Api.Data.TagSummary
-getTagSummary model id =
-    case Dict.get id model.tagSummaries of
-        Just (Pathfinder.HasTagSummaries { withCluster }) ->
-            Just withCluster
-
-        Just (Pathfinder.HasTagSummaryWithCluster ts) ->
-            Just ts
-
-        Just (Pathfinder.HasTagSummaryOnlyWithCluster ts) ->
-            Just ts
-
-        _ ->
-            Nothing
 
 
 crosschainLedgerTargets : Id -> Address -> List ( String, Id )
@@ -1282,8 +1251,12 @@ labelOfActor vc model id =
                     text =
                         actorText |> Maybe.withDefault ""
 
-                    ctx =
-                        { context = aid, domId = aid ++ "_actor" }
+                    domId =
+                        aid ++ "_actor"
+
+                    tooltipAttributes =
+                        Util.TooltipType.ActorDetails aid
+                            |> Tooltip.attributes domId (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
                 in
                 Html.div
                     [ HA.css
@@ -1291,12 +1264,12 @@ labelOfActor vc model id =
                     ]
                     [ Html.div
                         [ css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
-                        , onMouseEnter (Pathfinder.UserMovesMouseOverActorLabel ctx)
-                        , onMouseLeave (Pathfinder.UserMovesMouseOutActorLabel ctx)
                         , css [ Css.cursor Css.default ]
-                        , HA.id ctx.domId
                         ]
-                        [ Html.text text
+                        [ Html.div
+                            tooltipAttributes
+                            [ Html.text text
+                            ]
                         ]
                     , if Maybe.map hasOnlyExchangeTags ts == Just True then
                         learnMoreButton vc id

@@ -313,8 +313,9 @@ update uc msg model =
                 |> RemoteData.map
                     (\txs ->
                         let
-                            newFilter =
+                            ( newFilter, eff ) =
                                 TransactionFilter.update subMsg txs.filter
+                                    |> mapSecond (List.map TransactionFilterEffect)
 
                             changed =
                                 TransactionFilter.hasChanged txs.filter newFilter
@@ -361,15 +362,17 @@ update uc msg model =
                             ( baseModel, baseEffects ) =
                                 resultWithEffects
                         in
-                        if changed then
+                        (if changed then
                             let
                                 ( loadedModel, loadEffects ) =
                                     loadFirstTxsPage True baseModel
                             in
                             ( loadedModel, baseEffects ++ loadEffects )
 
-                        else
+                         else
                             resultWithEffects
+                        )
+                            |> mapSecond ((++) eff)
                     )
                 |> RemoteData.withDefault (n model)
 
@@ -531,6 +534,7 @@ update uc msg model =
                 |> updateRelatedAddressesTable model
 
         TooltipMsg _ ->
+            -- handled upstream
             n model
 
         UserClickedToggleClusterDetailsOpen ->

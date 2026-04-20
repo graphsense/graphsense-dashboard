@@ -9,7 +9,7 @@
     "build": "NODE_ENV=${NODE_ENV:=production} vite build",
     "serve": "vite preview",
     "test": "elm-test-rs",
-    "compile": "elm make src/Main.elm --output=/dev/null --report=json"
+    "compile": "elm make src/Main.elm --output=/dev/null"
   },
   "devDependencies": {
     "elm": "^0.19.1-6",

@@ -16,7 +16,7 @@ import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.RelationDetails exposing (Model)
 import Model.Pathfinder.Table.RelationTxsTable as RelationTxsTable
 import Model.Pathfinder.Tx exposing (getRawTimestampForRelationTx)
-import Msg.Pathfinder as Pathfinder exposing (Msg(..))
+import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.RelationDetails as RelationDetails exposing (Msg(..))
 import RecordSetter as Rs exposing (s_a2bTable, s_a2bTableOpen, s_b2aTable, s_b2aTableOpen, s_table)
 import Table
@@ -55,7 +55,7 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
             settings |> TransactionFilter.getDateRange |> Maybe.andThen second
     in
     msg isA2b nextpage
-        >> RelationDetailsMsg id
+        >> Pathfinder.RelationDetailsMsg id
         |> Api.GetAddresslinkTxsEffect
             { currency = Id.network a
             , source = source
@@ -152,6 +152,9 @@ updateAggEdge _ edge model =
 update : Update.Config -> ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
 update _ id msg model =
     case msg of
+        TooltipMsg tm ->
+            n model
+
         UserClickedToggleTable isA2b ->
             let
                 gs =
@@ -200,7 +203,7 @@ update _ id msg model =
                 |> mapSecond
                     ((::)
                         (cmd
-                            |> Cmd.map (TableMsg isA2b >> RelationDetailsMsg id)
+                            |> Cmd.map (TableMsg isA2b >> Pathfinder.RelationDetailsMsg id)
                             |> CmdEffect
                         )
                     )
@@ -235,7 +238,7 @@ update _ id msg model =
                 |> mapSecond
                     ((::)
                         (cmd
-                            |> Cmd.map (TableMsg isA2b >> RelationDetailsMsg id)
+                            |> Cmd.map (TableMsg isA2b >> Pathfinder.RelationDetailsMsg id)
                             |> CmdEffect
                         )
                     )
@@ -265,7 +268,7 @@ update _ id msg model =
 
                 newFilter =
                     TransactionFilter.update subMsg tbl.filter
-                        |> (\nf ->
+                        |> (\( nf, _ ) ->
                                 case subMsg of
                                     TransactionFilter.OpenDateRangePicker ->
                                         let
@@ -368,7 +371,7 @@ makeExportCSVConfig uc isA2b id tbl =
         , cmdToEff =
             Cmd.map
                 (ExportCSVMsg isA2b tbl
-                    >> RelationDetailsMsg id
+                    >> Pathfinder.RelationDetailsMsg id
                 )
                 >> CmdEffect
         , fetch =

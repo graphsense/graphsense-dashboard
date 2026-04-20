@@ -10,7 +10,6 @@ import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Notification exposing (Notification)
 import Model.Pathfinder.Address as Pathfinder
-import Model.Pathfinder.Tooltip exposing (TooltipMessages, mapMsgTooltipMsg)
 import Route.Pathfinder exposing (PathHopType)
 import Update.Dialog
 
@@ -55,10 +54,6 @@ type OutMsg msg addressMsg entityMsg
     | ShowDialog (Model.Dialog.Model msg)
       -- close dialog
     | CloseDialog
-      -- open a tooltip
-    | OpenTooltip { context : String, domId : String } (TooltipMessages msg)
-      -- close a tooltip
-    | CloseTooltip { context : String, domId : String } Bool
       -- load address into graph
     | LoadAddressIntoGraph Address
       -- show notification
@@ -176,12 +171,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         CloseDialog ->
             CloseDialog
-
-        OpenTooltip x msgs ->
-            OpenTooltip x (mapMsgTooltipMsg msgs mapMsg)
-
-        CloseTooltip x delayed ->
-            CloseTooltip x delayed
 
         LoadAddressIntoGraph a ->
             LoadAddressIntoGraph a

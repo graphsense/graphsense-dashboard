@@ -1,10 +1,13 @@
-module Util.View exposing (HintConfig, HintPosition(..), aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, inputFieldStyles, loadingSpinner, longIdentifier, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
+import Api.Data
+import Basics.Extra exposing (flip)
 import Color as BColor
 import Config.View as View
 import Css exposing (Color, Style, paddingLeft, px)
 import Css.Graph
 import Css.View as Css
+import Dict
 import FontAwesome
 import Hex
 import Hovercard
@@ -15,10 +18,13 @@ import Html.Styled.Attributes exposing (classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import List.Extra
+import Model.Currency as Currency exposing (AssetIdentifier)
+import Model.Locale as Locale
 import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
 import Switch
 import Theme.Html.Fields as Fields
 import Theme.Html.GraphComponents
+import Tuple exposing (pair)
 import Util.Css
 import Util.Data as Data
 import View.Locale as Locale
@@ -123,13 +129,13 @@ setAlpha alpha =
 hovercardFullViewPort : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
 hovercardFullViewPort vc element zIndex =
     Hovercard.view
-        { tickLength = 16
-        , zIndex = zIndex
-        , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
-        , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
-        , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-        , viewport = Nothing
-        }
+        (Hovercard.defaultConfig
+            |> Hovercard.withTickLength 16
+            |> Hovercard.withZIndex zIndex
+            |> Hovercard.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
+            |> Hovercard.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
+            |> Hovercard.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+        )
         element
         (Css.hovercard vc
             |> List.map (\( k, v ) -> Html.Attributes.style k v)
@@ -140,13 +146,14 @@ hovercardFullViewPort vc element zIndex =
 hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
 hovercard vc element zIndex =
     Hovercard.view
-        { tickLength = 16
-        , zIndex = zIndex
-        , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
-        , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
-        , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-        , viewport = vc.size
-        }
+        (Hovercard.defaultConfig
+            |> Hovercard.withTickLength 16
+            |> Hovercard.withZIndex zIndex
+            |> Hovercard.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
+            |> Hovercard.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
+            |> Hovercard.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+            |> Hovercard.withViewport vc.size
+        )
         element
         (Css.hovercard vc
             |> List.map (\( k, v ) -> Html.Attributes.style k v)
@@ -567,3 +574,112 @@ ifTrue bool str =
 
     else
         ""
+
+
+type alias ValuesRow =
+    { leftValue : ValuesFormatted
+    , rightValue : ValuesFormatted
+    }
+
+
+type alias ValuesFormatted =
+    { fiat : String
+    , fiatFloat : Float
+    , coin : String
+    , value : Int
+    , asset : AssetIdentifier
+    }
+
+
+makeValuesList : View.Config -> String -> Maybe Api.Data.NeighborAddress -> Maybe Api.Data.NeighborAddress -> List ValuesRow
+makeValuesList vc network right left =
+    let
+        leftValues =
+            left
+                |> relationToValues
+
+        rightValues =
+            right
+                |> relationToValues
+
+        getValue ( asset, values ) =
+            let
+                fiatCurr =
+                    vc.preferredFiatCurrency
+
+                ass =
+                    Currency.asset network asset
+
+                coin =
+                    Locale.coin vc.locale ass values.value
+
+                fvalue =
+                    Locale.getFiatValue fiatCurr values
+                        |> Maybe.withDefault 0
+            in
+            { fiat =
+                fvalue
+                    |> Locale.fiat vc.locale fiatCurr
+            , fiatFloat = fvalue
+            , coin = coin
+            , value = values.value
+            , asset = ass
+            }
+                |> pair asset
+
+        emptyValues asset =
+            { fiat = Locale.fiat vc.locale vc.preferredFiatCurrency 0
+            , fiatFloat = 0
+            , coin = Locale.coin vc.locale (Currency.asset network asset) 0
+            , value = 0
+            , asset = Currency.asset network asset
+            }
+
+        relationToValues =
+            Maybe.map
+                (\{ value, tokenValues } ->
+                    getValue ( network, value )
+                        |> flip (::)
+                            (tokenValues
+                                |> Maybe.withDefault Dict.empty
+                                |> Dict.toList
+                                |> List.map getValue
+                            )
+                        |> Dict.fromList
+                )
+                >> Maybe.withDefault Dict.empty
+
+        sort { rightValue, leftValue } =
+            rightValue.fiatFloat + leftValue.fiatFloat
+
+        leftStep asset values =
+            Dict.insert
+                asset
+                { leftValue = values
+                , rightValue = emptyValues asset
+                }
+
+        rightStep asset values =
+            Dict.insert
+                asset
+                { leftValue = emptyValues asset
+                , rightValue = values
+                }
+
+        bothStep asset lv rv =
+            Dict.insert
+                asset
+                { leftValue = lv
+                , rightValue = rv
+                }
+    in
+    Dict.merge
+        leftStep
+        bothStep
+        rightStep
+        leftValues
+        rightValues
+        Dict.empty
+        |> Dict.values
+        |> List.sortBy sort
+        |> List.reverse

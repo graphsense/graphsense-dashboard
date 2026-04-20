@@ -1,7 +1,8 @@
-module View.Pathfinder exposing (originShiftX, view)
+module View.Pathfinder exposing (annotationHovercardView, bottomCenterPanel, contextMenuView, detailsView, drawDragSelector, dropShadowEdgeHighlight, graph, graphActionsView, graphSvg, originShiftX, searchBoxView, settingsHovercardView, toolbarHovercardView, topCenterPanel, topRightPanel, view)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
+import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -11,7 +12,7 @@ import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
-import Html.Styled.Events exposing (onClick, onInput, onMouseEnter, onMouseLeave, preventDefaultOn, stopPropagationOn)
+import Html.Styled.Events exposing (onClick, onInput, preventDefaultOn, stopPropagationOn)
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -27,7 +28,6 @@ import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter as Rs
-import Sha256
 import String.Format
 import Svg.Styled exposing (Svg, defs, feComposite, feFlood, feGaussianBlur, feMerge, feMergeNode, feOffset, filter, linearGradient, stop, svg)
 import Svg.Styled.Attributes exposing (css, dx, dy, floodColor, height, id, in2, in_, offset, operator, preserveAspectRatio, result, stdDeviation, stopColor, transform, viewBox, width, x, y)
@@ -45,6 +45,8 @@ import Util.Annotations as Annotations
 import Util.Css as Css
 import Util.ExternalLinks
 import Util.Graph
+import Util.Tooltip
+import Util.TooltipType
 import Util.View exposing (fixFillRule, hovercard, none)
 import View.Controls as Controls
 import View.Graph.Transform as Transform
@@ -88,6 +90,8 @@ graph plugins pluginStates vc gc model =
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc model
     , bottomCenterPanel vc model
+    , Util.Tooltip.view vc model
+        |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
     ]
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)
@@ -382,13 +386,14 @@ bottomCenterPanel vc model =
         text =
             case model.config.tracingMode of
                 TransactionTracingMode ->
-                    Locale.string vc.locale "tx-tracing-mode-help-text"
+                    "tx-tracing-mode-help-text"
 
                 AggregateTracingMode ->
-                    Locale.string vc.locale "tx-relationship-mode-help-text"
+                    "tx-relationship-mode-help-text"
 
-        ctx =
-            { text = text, domId = Sha256.sha256 text }
+        tooltipConfig =
+            Util.Tooltip.tooltipConfig vc TooltipMsg
+                |> Tooltip.withFixed
     in
     div
         [ css Css.bottomCenterPanelStyle
@@ -416,11 +421,9 @@ bottomCenterPanel vc model =
         , HIcons.framedIconCircleWithAttributes
             (HIcons.framedIconCircleAttributes
                 |> Rs.s_root
-                    [ onMouseEnter (ShowTextTooltip ctx)
-                    , onMouseLeave (CloseTextTooltip ctx)
-                    , HA.id ctx.domId
-                    , css [ Css.pointerEventsAll ]
-                    ]
+                    (css [ Css.pointerEventsAll ]
+                        :: (Util.TooltipType.Text text |> Tooltip.attributes "tracing-mode-tooltip" tooltipConfig)
+                    )
             )
             { root =
                 { iconInstance =

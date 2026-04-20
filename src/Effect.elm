@@ -14,7 +14,6 @@ import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Model, Msg(..))
 import Model.Notification
-import Model.Pathfinder.Tooltip
 import Msg.Graph as Graph
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
@@ -75,10 +74,6 @@ perform plugins model statusbarToken apiKey effect =
                         |> Route.toUrl
                         |> Nav.pushUrl model.key
 
-                Pathfinder.PluginEffect _ ->
-                    Pathfinder.perform eff
-                        |> Cmd.map PathfinderMsg
-
                 Pathfinder.CmdEffect cmd ->
                     cmd
                         |> Cmd.map PathfinderMsg
@@ -97,25 +92,16 @@ perform plugins model statusbarToken apiKey effect =
                 Pathfinder.ErrorEffect _ ->
                     Cmd.none
 
-                Pathfinder.PostponeUpdateByRouteEffect _ ->
-                    Pathfinder.perform eff
-                        |> Cmd.map PathfinderMsg
-
-                Pathfinder.OpenTooltipEffect ctx withDelay tttype ->
-                    Task.perform (always (OpeningTooltip ctx withDelay (Model.Pathfinder.Tooltip.mapMsgTooltipType tttype PathfinderMsg))) (Task.succeed ())
-
-                Pathfinder.CloseTooltipEffect ctx withDelay ->
-                    Task.perform (always (ClosingTooltip ctx withDelay)) (Task.succeed ())
-
-                Pathfinder.RepositionTooltipEffect ->
-                    Task.perform (always RepositionTooltip) (Task.succeed ())
-
                 Pathfinder.ShowNotificationEffect n ->
                     Task.perform (always (ShowNotification n)) (Task.succeed ())
 
                 Pathfinder.InternalEffect msg ->
                     Task.succeed (msg |> PathfinderMsg)
                         |> Task.perform identity
+
+                _ ->
+                    Pathfinder.perform eff
+                        |> Cmd.map PathfinderMsg
 
         GraphEffect eff ->
             case eff of

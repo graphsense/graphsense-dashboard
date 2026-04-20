@@ -1,6 +1,5 @@
-module View.Pathfinder.RelationDetails exposing (ValuesFormatted, ValuesRow, makeValuesList, view)
+module View.Pathfinder.RelationDetails exposing (view)
 
-import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable
 import Components.TransactionFilter as TransactionFilter
@@ -9,10 +8,7 @@ import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
-import Dict
 import Html.Styled exposing (Html, div)
-import Model.Currency as Currency exposing (AssetIdentifier)
-import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
@@ -25,10 +21,11 @@ import RemoteData exposing (RemoteData(..))
 import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Tuple exposing (first, pair, second)
+import Tuple exposing (first, second)
 import Util exposing (allAndNotEmpty)
 import Util.Css exposing (spread)
-import Util.View exposing (loadingSpinner, none, truncateLongIdentifier)
+import Util.Tooltip
+import Util.View exposing (loadingSpinner, makeValuesList, none, truncateLongIdentifier)
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab)
 import View.Pathfinder.InfiniteTable as InfiniteTable
@@ -262,6 +259,7 @@ tableTab vc model edgeId viewState isA2b =
                         (Id.network id)
                         { tag = RelationDetails.TransactionFilterMsg isA2b
                         , exportCsv = Just ( RelationDetails.ExportCSVMsg isA2b table, model.exportCSV )
+                        , tooltipConfig = Util.Tooltip.tooltipConfig vc RelationDetails.TooltipMsg
                         }
                         table.filter
                     , tableView
@@ -269,112 +267,3 @@ tableTab vc model edgeId viewState isA2b =
                     |> Just
         , onClick = RelationDetails.UserClickedToggleTable isA2b
         }
-
-
-type alias ValuesRow =
-    { leftValue : ValuesFormatted
-    , rightValue : ValuesFormatted
-    }
-
-
-type alias ValuesFormatted =
-    { fiat : String
-    , fiatFloat : Float
-    , coin : String
-    , value : Int
-    , asset : AssetIdentifier
-    }
-
-
-makeValuesList : View.Config -> String -> Maybe Api.Data.NeighborAddress -> Maybe Api.Data.NeighborAddress -> List ValuesRow
-makeValuesList vc network right left =
-    let
-        leftValues =
-            left
-                |> relationToValues
-
-        rightValues =
-            right
-                |> relationToValues
-
-        getValue ( asset, values ) =
-            let
-                fiatCurr =
-                    vc.preferredFiatCurrency
-
-                ass =
-                    Currency.asset network asset
-
-                coin =
-                    Locale.coin vc.locale ass values.value
-
-                fvalue =
-                    Locale.getFiatValue fiatCurr values
-                        |> Maybe.withDefault 0
-            in
-            { fiat =
-                fvalue
-                    |> Locale.fiat vc.locale fiatCurr
-            , fiatFloat = fvalue
-            , coin = coin
-            , value = values.value
-            , asset = ass
-            }
-                |> pair asset
-
-        emptyValues asset =
-            { fiat = Locale.fiat vc.locale vc.preferredFiatCurrency 0
-            , fiatFloat = 0
-            , coin = Locale.coin vc.locale (Currency.asset network asset) 0
-            , value = 0
-            , asset = Currency.asset network asset
-            }
-
-        relationToValues =
-            Maybe.map
-                (\{ value, tokenValues } ->
-                    getValue ( network, value )
-                        |> flip (::)
-                            (tokenValues
-                                |> Maybe.withDefault Dict.empty
-                                |> Dict.toList
-                                |> List.map getValue
-                            )
-                        |> Dict.fromList
-                )
-                >> Maybe.withDefault Dict.empty
-
-        sort { rightValue, leftValue } =
-            rightValue.fiatFloat + leftValue.fiatFloat
-
-        leftStep asset values =
-            Dict.insert
-                asset
-                { leftValue = values
-                , rightValue = emptyValues asset
-                }
-
-        rightStep asset values =
-            Dict.insert
-                asset
-                { leftValue = emptyValues asset
-                , rightValue = values
-                }
-
-        bothStep asset lv rv =
-            Dict.insert
-                asset
-                { leftValue = lv
-                , rightValue = rv
-                }
-    in
-    Dict.merge
-        leftStep
-        bothStep
-        rightStep
-        leftValues
-        rightValues
-        Dict.empty
-        |> Dict.values
-        |> List.sortBy sort
-        |> List.reverse

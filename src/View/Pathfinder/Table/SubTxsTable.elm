@@ -11,7 +11,7 @@ import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency as Currency
 import Model.Pathfinder.Id as Id exposing (Id)
-import Msg.Pathfinder exposing (TxDetailsMsg(..))
+import Msg.Pathfinder.TxDetails exposing (Msg(..))
 import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -25,7 +25,7 @@ titleValue =
     "Value"
 
 
-config : Styles -> View.Config -> { selectedSubTx : Id, isCheckedFn : Id -> Bool } -> InfiniteTable.TableConfig Api.Data.TxAccount TxDetailsMsg
+config : Styles -> View.Config -> { selectedSubTx : Id, isCheckedFn : Id -> Bool } -> InfiniteTable.TableConfig Api.Data.TxAccount Msg
 config styles vc { selectedSubTx, isCheckedFn } =
     let
         toId r =

@@ -2,6 +2,7 @@ module Init.Pathfinder exposing (init)
 
 import AssocList
 import Components.ExportCSV as ExportCSV
+import Components.Tooltip as Tooltip
 import Config.Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Dict
 import Init.Graph.History as History
@@ -57,6 +58,7 @@ init us =
       , exportCSVGraph = ExportCSV.init
       , exportImage = Nothing
       , txsFilters = AssocList.empty
+      , tooltip = Tooltip.init
       }
     , Cmd.none
     )

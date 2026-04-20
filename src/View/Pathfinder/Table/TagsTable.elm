@@ -3,13 +3,13 @@ module View.Pathfinder.Table.TagsTable exposing (config, styles)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
+import Components.Tooltip as Tooltip
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.Table
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
-import Html.Styled.Events exposing (onMouseOut, onMouseOver)
 import Model exposing (Msg(..))
 import Msg.Pathfinder
 import RecordSetter as Rs
@@ -24,7 +24,9 @@ import Url
 import Util.Data as Data
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (exchangeCategory)
-import Util.View exposing (fixFillRule, none)
+import Util.Tooltip as Util
+import Util.TooltipType
+import Util.View exposing (none)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as ViewInfiniteTable
@@ -213,9 +215,6 @@ cell vc c =
 
         TypeCell cc ->
             let
-                ttConfig =
-                    { domId = cc.cellid, text = cc.titletext }
-
                 lbl =
                     case cc.confidence of
                         High ->
@@ -247,21 +246,22 @@ cell vc c =
                             }
                         }
 
-                icon =
-                    span
-                        [ onMouseOver (Msg.Pathfinder.ShowTextTooltip ttConfig |> PathfinderMsg)
-                        , onMouseOut (Msg.Pathfinder.CloseTextTooltip ttConfig |> PathfinderMsg)
-                        , Html.Styled.Attributes.id ttConfig.domId
-                        ]
-                        [ Icons.iconsInfoSnoPaddingWithAttributes
-                            (Icons.iconsInfoSnoPaddingAttributes
-                                |> Rs.s_shape [ fixFillRule ]
-                            )
-                            {}
-                        ]
-
                 cellConfig =
                     { label = cc.label, subLabel = Just "" }
+
+                tooltipConfig =
+                    Util.tooltipConfig vc (\tipMsg -> PathfinderMsg (Msg.Pathfinder.TooltipMsg tipMsg))
+                        |> Tooltip.withFixed
+
+                icon =
+                    Icons.iconsInfoSnoPaddingDevWithAttributes
+                        (Icons.iconsInfoSnoPaddingDevAttributes
+                            |> Rs.s_root
+                                (Util.TooltipType.Text cc.titletext
+                                    |> Tooltip.attributes cc.cellid tooltipConfig
+                                )
+                        )
+                        {}
             in
             TagsComponents.tagRowCellWithInstances
                 (attrs False cellConfig |> Rs.s_root (cellWMinWidth |> css |> List.singleton))

@@ -2,6 +2,7 @@ module View.Pathfinder.Tx.Utxo exposing (RenderLevel(..), edge, view)
 
 import Animation as A
 import Color
+import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..))
 import Config.View as View
 import Css
@@ -16,7 +17,7 @@ import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
@@ -32,6 +33,8 @@ import Tuple exposing (pair, second)
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
+import Util.Tooltip
+import Util.TooltipType
 import Util.View exposing (ifTrue, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (labelsSep, pickPathFunction)
@@ -143,6 +146,10 @@ view _ vc pc tx utxo annotation =
             |> Json.Encode.bool
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
+        , UserMovesMouseOverTx id
+            |> onMouseOver
+        , UserMovesMouseOutTx id
+            |> onMouseLeave
         ]
         (GraphComponents.txNodeUtxoWithAttributes
             { txNodeUtxoAttrs
@@ -150,10 +157,6 @@ view _ vc pc tx utxo annotation =
                     [ UserClickedTx id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx id
                         |> Util.Graph.mousedown
-                    , UserMovesMouseOverTx id
-                        |> onMouseOver
-                    , UserMovesMouseOutTx id
-                        |> onMouseLeave
                     , css [ Css.cursor Css.pointer ]
                     , Id.toString id
                         |> Svg.Styled.Attributes.id
@@ -161,6 +164,7 @@ view _ vc pc tx utxo annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
+                        ++ tooltipAttributes vc tx.id utxo
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , date =
                     [ translate 0 offsetTxHash |> transform ]
@@ -347,3 +351,14 @@ edge _ vc pc level utxo tx annotation =
                 |> UserClickedTx
                 |> onClickWithStop
             ]
+        |> List.singleton
+        |> g (tooltipAttributes vc tx.id utxo)
+
+
+tooltipAttributes : View.Config -> Id -> UtxoTx -> List (Attribute Msg)
+tooltipAttributes vc id utxo =
+    Util.TooltipType.UtxoTx utxo
+        |> Tooltip.attributes (Id.toString id)
+            (Util.Tooltip.tooltipConfig vc TooltipMsg
+                |> Tooltip.withOpenDelay 100
+            )

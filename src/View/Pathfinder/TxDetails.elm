@@ -4,6 +4,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Char
 import Components.Table exposing (Table)
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.View as View
 import Css
@@ -24,7 +25,8 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tx as Tx exposing (ioToId)
 import Model.Pathfinder.TxDetails as TxDetails exposing (hasSubTxsTable)
-import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder as Pathfinder
+import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
 import RecordSetter as Rs
 import RemoteData
 import Svg.Styled.Attributes exposing (css)
@@ -43,14 +45,15 @@ import View.Pathfinder.Table.IoTable as IoTable exposing (IoColumnConfig)
 import View.Pathfinder.Table.SubTxsTable as SubTxsTable
 
 
-filterConfig : TransactionFilter.FilterHeaderConfig TxDetailsMsg
+filterConfig : TransactionFilter.FilterHeaderConfig Msg
 filterConfig =
     { tag = TransactionFilterMsg
     , exportCsv = Nothing
+    , tooltipConfig = Tooltip.defaultConfig (\_ -> NoOp)
     }
 
 
-view : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Msg
+view : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Html Pathfinder.Msg
 view vc model id viewState =
     case viewState.tx.type_ of
         Tx.Utxo tx ->
@@ -64,7 +67,7 @@ view vc model id viewState =
             account vc viewState id txExistsFn
 
 
-accountAssetList : View.Config -> TxDetails.Model -> (Id -> Bool) -> Html Msg
+accountAssetList : View.Config -> TxDetails.Model -> (Id -> Bool) -> Html Pathfinder.Msg
 accountAssetList vc viewState txExistsFn =
     if hasSubTxsTable viewState.tx then
         let
@@ -86,19 +89,19 @@ accountAssetList vc viewState txExistsFn =
 
                         else
                             Nothing
-                    , onClick = UserClickedToggleSubTxsTable |> TxDetailsMsg
+                    , onClick = UserClickedToggleSubTxsTable |> Pathfinder.TxDetailsMsg
                     }
         in
         [ TransactionFilter.view vc
             (Id.network viewState.tx.id)
             filterConfig
             viewState.subTxsTableFilter
-            |> Html.Styled.map TxDetailsMsg
+            |> Html.Styled.map Pathfinder.TxDetailsMsg
         , InfiniteTable.view vc
             [ css fullWidth, css [ Css.height (Css.px 200) ] ]
             (SubTxsTable.config Css.Table.styles vc { selectedSubTx = viewState.tx |> Tx.getTxIdForTx, isCheckedFn = txExistsFn })
             viewState.subTxsTable
-            |> Html.Styled.map TxDetailsMsg
+            |> Html.Styled.map Pathfinder.TxDetailsMsg
         ]
             |> div [ css [ Css.overflowY Css.auto ] ]
             |> subTxsTab
@@ -107,17 +110,17 @@ accountAssetList vc viewState txExistsFn =
         none
 
 
-account : View.Config -> TxDetails.Model -> Id -> (Id -> Bool) -> Html Msg
+account : View.Config -> TxDetails.Model -> Id -> (Id -> Bool) -> Html Pathfinder.Msg
 account vc viewState id txExistsFn =
     let
         chevronActions =
-            div [ stopPropagationOn "click" (Json.Decode.succeed ( Msg.Pathfinder.NoOp, True )) ]
+            div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
                 [ HIcons.iconsChevronDownThinWithAttributes
                     (HIcons.iconsChevronDownThinAttributes
                         |> Rs.s_root
                             [ Util.View.pointer
                             , decodeCoords Coords.Coords
-                                |> Json.Decode.map (\c -> ( Msg.Pathfinder.UserOpensContextMenu c (ContextMenu.TransactionIdChevronActions id), True ))
+                                |> Json.Decode.map (\c -> ( Pathfinder.UserOpensContextMenu c (ContextMenu.TransactionIdChevronActions id), True ))
                                 |> preventDefaultOn "click"
                             ]
                     )
@@ -146,7 +149,7 @@ account vc viewState id txExistsFn =
                         |> css
                     ]
                 |> Rs.s_sidePanelHeaderText [ spread ]
-                |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
+                |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
             )
             { identifierWithCopyIcon =
                 { identifier = baseTxIdString |> truncateLongIdentifierWithLengths 8 4
@@ -201,17 +204,17 @@ account vc viewState id txExistsFn =
         ]
 
 
-utxo : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Tx.UtxoTx -> Html Msg
+utxo : View.Config -> Pathfinder.Model -> Id -> TxDetails.Model -> Tx.UtxoTx -> Html Pathfinder.Msg
 utxo vc model id viewState tx =
     let
         chevronActions =
-            div [ stopPropagationOn "click" (Json.Decode.succeed ( Msg.Pathfinder.NoOp, True )) ]
+            div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
                 [ HIcons.iconsChevronDownThinWithAttributes
                     (HIcons.iconsChevronDownThinAttributes
                         |> Rs.s_root
                             [ Util.View.pointer
                             , decodeCoords Coords.Coords
-                                |> Json.Decode.map (\c -> ( Msg.Pathfinder.UserOpensContextMenu c (ContextMenu.TransactionIdChevronActions id), True ))
+                                |> Json.Decode.map (\c -> ( Pathfinder.UserOpensContextMenu c (ContextMenu.TransactionIdChevronActions id), True ))
                                 |> preventDefaultOn "click"
                             ]
                     )
@@ -268,7 +271,7 @@ utxo vc model id viewState tx =
                 ]
             -- |> Rs.s_sidePanelTxDetails [ css fullWidth ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            |> Rs.s_iconsCloseBlack (closeAttrs UserClosedDetailsView)
+            |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
         )
         sidePanelTxInstances
         { identifierWithCopyIcon =
@@ -327,7 +330,7 @@ utxo vc model id viewState tx =
                             Nothing
                     , onClick =
                         UserClickedToggleIoTable Inputs
-                            |> TxDetailsMsg
+                            |> Pathfinder.TxDetailsMsg
                     }
             , outputListInstance =
                 dataTab
@@ -360,7 +363,7 @@ utxo vc model id viewState tx =
                             Nothing
                     , onClick =
                         UserClickedToggleIoTable Outputs
-                            |> TxDetailsMsg
+                            |> Pathfinder.TxDetailsMsg
                     }
             }
         , sidePanelTxHeader =
@@ -637,7 +640,7 @@ unsupportedConversionNotice vc conversions =
             Locale.interpolated vc.locale key [ address, network ]
 
 
-ioTableView : View.Config -> IoDirection -> Network -> Table Api.Data.TxValue -> IoColumnConfig -> Html Msg
+ioTableView : View.Config -> IoDirection -> Network -> Table Api.Data.TxValue -> IoColumnConfig -> Html Pathfinder.Msg
 ioTableView vc dir network table ioColumnConfig =
     let
         isCheckedFn =
