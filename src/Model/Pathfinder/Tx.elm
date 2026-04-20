@@ -32,6 +32,7 @@ module Model.Pathfinder.Tx exposing
     , getTxIdForAddressTx
     , getTxIdForRelationTx
     , getTxIdForTx
+    , getTxIdForTxType
     , getUtxoTx
     , hasAddress
     , hasInput
@@ -372,7 +373,12 @@ getTxId tx =
 
 getTxIdForTx : Tx -> Id
 getTxIdForTx tx =
-    case tx.type_ of
+    getTxIdForTxType tx.type_
+
+
+getTxIdForTxType : TxType -> Id
+getTxIdForTxType type_ =
+    case type_ of
         Account t ->
             Id.init t.raw.network t.raw.identifier
 

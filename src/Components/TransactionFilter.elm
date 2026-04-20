@@ -1,4 +1,50 @@
-module Components.TransactionFilter exposing (DialogPosition, Effect, FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getHoveredQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getTxIdFromQuickFilter, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, perform, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
+module Components.TransactionFilter exposing
+    ( DialogPosition
+    , Effect
+    , FilterHeaderConfig
+    , InternalModel
+    , Model
+    , Msg(..)
+    , QuickFilter
+    , QuickFilterModel
+    , Range
+    , Settings
+    , SettingsModel
+    , applyQuickFilter
+    , getDateRange
+    , getDirection
+    , getDirectionFromQuickFilter
+    , getHoveredQuickFilter
+    , getIncludeZeroValueTxs
+    , getSelectedAsset
+    , getSelectedQuickFilter
+    , getSettings
+    , getTx
+    , getTxIdFromQuickFilter
+    , getUtxoFilter
+    , hasChanged
+    , init
+    , initQuickFilter
+    , initSettings
+    , initSettingsFromQuickFilter
+    , perform
+    , setFocusDate
+    , setSelectedQuickFilter
+    , subscriptions
+    , update
+    , updateDateRange
+    , updateDateRangeInternal
+    , updateDirection
+    , updateQuickFilters
+    , updateSelectedAsset
+    , view
+    , withAssetSelectBox
+    , withDateRange
+    , withDateRangePicker
+    , withDirection
+    , withIncludeZeroValueTxs
+    , withQuickFilter
+    )
 
 import Basics.Extra exposing (flip)
 import Browser.Events
@@ -19,7 +65,7 @@ import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
 import RecordSetter as Rs exposing (s_direction, s_settings)
 import String
@@ -1312,7 +1358,9 @@ updateOptions options select =
                 Just qf ->
                     let
                         txHash =
-                            qf.tx |> Tx.getRawBaseTxHashForTxType
+                            qf.tx
+                                |> Tx.getTxIdForTxType
+                                |> Id.id
 
                         currency =
                             txToAsset qf.tx
@@ -1545,7 +1593,7 @@ subscriptions (Internal model) =
 getTxIdFromQuickFilter : QuickFilter -> Id
 getTxIdFromQuickFilter (QuickFilterInternal qf) =
     qf.tx
-        |> Tx.getRawBaseTxIdForTxType
+        |> Tx.getTxIdForTxType
 
 
 perform : Effect -> Cmd Msg
