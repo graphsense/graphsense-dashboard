@@ -26,7 +26,7 @@ import Tuple exposing (mapFirst)
 import Util.Graph exposing (translate)
 import Util.TextDimensions as TextDimensions
 import Util.Tooltip
-import Util.TooltipType as TooltipType
+import Util.TooltipType as TooltipType exposing (TooltipType)
 import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
@@ -489,7 +489,7 @@ tooltipEventHandlers vc id ed =
         |> Maybe.withDefault []
 
 
-aggEdgeToTooltipType : AggEdge -> Maybe TooltipType.TooltipType
+aggEdgeToTooltipType : AggEdge -> Maybe TooltipType
 aggEdgeToTooltipType ed =
     Maybe.map4
         (\a b a2b b2a ->
