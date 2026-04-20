@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, Viewport, attributes, close, defaultConfig, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg, Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
@@ -159,10 +159,15 @@ init =
 
 
 attributes : String -> Config a msg -> a -> List (Attribute msg)
-attributes id (Config { tag, openDelay, closeDelay }) content =
+attributes id config content =
+    Html.Styled.Attributes.id id
+        :: eventHandlers id config content
+
+
+eventHandlers : String -> Config a msg -> a -> List (Attribute msg)
+eventHandlers id (Config { tag, openDelay, closeDelay }) content =
     [ OpenTooltip id content openDelay closeDelay |> tag |> onMouseOver
     , CloseTooltip |> tag |> onMouseLeave
-    , Html.Styled.Attributes.id id
     ]
 
 
