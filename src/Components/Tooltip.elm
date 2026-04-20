@@ -180,20 +180,25 @@ update msg (Model model) =
                     (\mo ->
                         case mo.state of
                             Closing ->
-                                { mo
-                                    | state = Opening
-                                    , content = content
-                                    , closeDelay = closeDelay
-                                    , hovercard =
-                                        if mo.id /= id then
-                                            Nothing
+                                if mo.id == id then
+                                    { mo
+                                        | state = Opening
+                                    }
+                                        |> Just
+                                        |> Model
+                                        |> n
 
-                                        else
-                                            mo.hovercard
-                                }
-                                    |> Just
-                                    |> Model
-                                    |> flip pair [ OpenEffect id openDelay ]
+                                else
+                                    { mo
+                                        | state = Opening
+                                        , content = content
+                                        , closeDelay = closeDelay
+                                        , hovercard = Nothing
+                                        , id = id
+                                    }
+                                        |> Just
+                                        |> Model
+                                        |> flip pair [ OpenEffect id openDelay ]
 
                             _ ->
                                 model |> Model |> n
@@ -247,23 +252,27 @@ update msg (Model model) =
             model
                 |> Maybe.map
                     (\mo ->
-                        case mo.state of
-                            Opening ->
-                                let
-                                    ( hovercard, cmd ) =
-                                        Hovercard.init id
-                                in
-                                { mo
-                                    | state = Open
-                                    , id = id
-                                    , hovercard = Just hovercard
-                                }
-                                    |> Just
-                                    |> Model
-                                    |> flip pair [ HovercardCmd cmd ]
+                        if mo.id /= id then
+                            n (Model model)
 
-                            _ ->
-                                n (Model model)
+                        else
+                            case mo.state of
+                                Opening ->
+                                    let
+                                        ( hovercard, cmd ) =
+                                            Hovercard.init id
+                                    in
+                                    { mo
+                                        | state = Open
+                                        , id = id
+                                        , hovercard = Just hovercard
+                                    }
+                                        |> Just
+                                        |> Model
+                                        |> flip pair [ HovercardCmd cmd ]
+
+                                _ ->
+                                    n (Model model)
                     )
                 |> Maybe.withDefault (model |> Model |> n)
 
