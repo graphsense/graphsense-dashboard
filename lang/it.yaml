@@ -382,6 +382,7 @@ infobox-no-suitable-adjacent-transaction: Impossibile trovare una transazione ad
   adeguata per l'indirizzo {0}. Questo probabilmente perché i fondi non sono ancora
   stati spesi.
 save file: Salva come file
+export graph: Esporta grafico
 reset: Reset
 note-tag-inherited: 'Nota: Questo tag è stato ereditato dal livello cluster.'
 learn more: Di più
