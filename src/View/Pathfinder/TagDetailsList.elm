@@ -2,13 +2,13 @@ module View.Pathfinder.TagDetailsList exposing (view)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
+import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.View
-import Html.Styled exposing (Html, div, span)
-import Html.Styled.Attributes exposing (css, id)
-import Html.Styled.Events exposing (onMouseOut, onMouseOver)
+import Html.Styled exposing (Html, div)
+import Html.Styled.Attributes exposing (css)
 import Model exposing (Msg(..))
 import Model.Dialog as Dialog
 import Model.Pathfinder.Id as Id
@@ -17,7 +17,9 @@ import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.TagsComponents as TagsComponents
-import Util.View exposing (copyIconPathfinder, fixFillRule, none, onClickWithStop)
+import Util.Tooltip as Util
+import Util.TooltipType
+import Util.View exposing (copyIconPathfinder, none, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
 
@@ -123,10 +125,9 @@ view vc conf =
                     [ css disabledTabStyle ]
                     [ Html.Styled.text (Locale.string vc.locale "address tags") ]
 
-        clusterTabTtConfig =
-            { domId = "cluster-tags-disclaimer-tooltip"
-            , text = Locale.string vc.locale "cluster tags disclaimer"
-            }
+        clusterTabTooltipConfig =
+            Util.tooltipConfig vc (\tipMsg -> PathfinderMsg (Msg.Pathfinder.TooltipMsg tipMsg))
+                |> Tooltip.withFixed
 
         clusterTab =
             div
@@ -134,19 +135,16 @@ view vc conf =
                 , onClickWithStop (UserClickedTagsDialogTab Dialog.ClusterTagsTab)
                 ]
                 [ Html.Styled.text (Locale.string vc.locale "cluster tags")
-                , span
-                    [ onMouseOver (Msg.Pathfinder.ShowTextTooltip clusterTabTtConfig |> PathfinderMsg)
-                    , onMouseOut (Msg.Pathfinder.CloseTextTooltip clusterTabTtConfig |> PathfinderMsg)
-                    , id clusterTabTtConfig.domId
-                    , css [ Css.displayFlex, Css.alignItems Css.center, Css.cursor Css.pointer ]
-                    ]
-                    [ Icons.iconsInfoSnoPaddingWithAttributes
-                        (Icons.iconsInfoSnoPaddingAttributes
-                            |> Rs.s_root [ css [ Css.width (Css.px 16), Css.height (Css.px 16) ] ]
-                            |> Rs.s_shape [ fixFillRule ]
-                        )
-                        {}
-                    ]
+                , Icons.iconsInfoSnoPaddingDevWithAttributes
+                    (Icons.iconsInfoSnoPaddingDevAttributes
+                        |> Rs.s_root
+                            (css [ Css.width (Css.px 16), Css.height (Css.px 16) ]
+                                :: (Util.TooltipType.Text "cluster tags disclaimer"
+                                        |> Tooltip.attributes "cluster-tab-tooltip" clusterTabTooltipConfig
+                                   )
+                            )
+                    )
+                    {}
                 ]
 
         tabItems =

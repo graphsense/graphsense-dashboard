@@ -22,7 +22,6 @@ import Init.Graph
 import Init.Pathfinder
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Table.TagsTable as TagsTable
-import Init.Pathfinder.Tooltip as Tooltip
 import Init.Search as Search
 import Json.Decode
 import Json.Encode exposing (Value)
@@ -41,7 +40,6 @@ import Model.Notification as Notification exposing (Notification)
 import Model.Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
 import Model.Pathfinder.Id as PathfinderId
-import Model.Pathfinder.Tooltip as Tooltip
 import Model.Search as Search
 import Model.Statusbar as Statusbar
 import Msg.ExportDialog as ExportDialog
@@ -103,62 +101,6 @@ setAbuseConcepts concepts model =
     }
 
 
-delay : Float -> msg -> Cmd msg
-delay time msg =
-    -- create a task that sleeps for `time`
-    Process.sleep time
-        |> -- once the sleep is over, ignore its output (using `always`)
-           -- and then we create a new task that simply returns a success, and the msg
-           Task.map (always <| msg)
-        |> -- finally, we ask Elm to perform the Task, which
-           -- takes the result of the above task and
-           -- returns it to our update function
-           Task.perform identity
-
-
-tooltipBeginClosing : Msg -> Bool -> ( Model key, List Effect ) -> ( Model key, List Effect )
-tooltipBeginClosing closingMsg withDelay ( model, eff ) =
-    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing True) }
-    , ((delay
-            (if withDelay then
-                500.0
-
-             else
-                0
-            )
-        <|
-            closingMsg
-       )
-        |> CmdEffect
-      )
-        :: eff
-    )
-
-
-tooltipAbortClosing : ( Model key, List Effect ) -> ( Model key, List Effect )
-tooltipAbortClosing ( model, eff ) =
-    ( { model | tooltip = model.tooltip |> Maybe.map (s_closing False) }, eff )
-
-
-tooltipCloseIfNotAborted : ( Model key, List Effect ) -> ( Model key, List Effect )
-tooltipCloseIfNotAborted ( model, eff ) =
-    ( { model
-        | tooltip =
-            case model.tooltip of
-                Just { closing } ->
-                    if closing then
-                        Nothing
-
-                    else
-                        model.tooltip
-
-                _ ->
-                    model.tooltip
-      }
-    , eff
-    )
-
-
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
     case Log.log "msg" msg of
@@ -179,130 +121,6 @@ update plugins uc msg model =
                             Nothing ->
                                 Just { type_ = t }
                 }
-
-        HovercardMsg hcMsg ->
-            model.tooltip
-                |> Maybe.map
-                    (\tooltip ->
-                        let
-                            ( hc, cmd ) =
-                                Hovercard.update hcMsg tooltip.hovercard
-                        in
-                        ( { model
-                            | tooltip = Just { tooltip | hovercard = hc }
-                          }
-                        , Cmd.map HovercardMsg cmd
-                            |> CmdEffect
-                            |> List.singleton
-                        )
-                    )
-                |> Maybe.withDefault (n model)
-
-        OpenTooltip ctx tttype ->
-            let
-                ( hc, cmd ) =
-                    ctx.domId |> Hovercard.init
-
-                tt =
-                    tttype |> Tooltip.init hc
-
-                ( hasToChange, newTooltip ) =
-                    ( model.tooltip
-                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                        |> Maybe.withDefault True
-                    , Just tt
-                    )
-
-                closing =
-                    model.tooltip
-                        |> Maybe.map .closing
-                        |> Maybe.withDefault False
-
-                open =
-                    model.tooltip
-                        |> Maybe.map .open
-                        |> Maybe.withDefault False
-            in
-            if not hasToChange && not closing && not open then
-                ( { model | tooltip = newTooltip |> Maybe.map (s_open True) }
-                , Cmd.map HovercardMsg cmd
-                    |> CmdEffect
-                    |> List.singleton
-                )
-
-            else
-                n model
-
-        OpeningTooltip ctx withDelay tttype ->
-            let
-                ( hc, _ ) =
-                    ctx.domId |> Hovercard.init
-
-                tt =
-                    tttype |> Tooltip.init hc
-
-                ( hasToChange, newTooltip ) =
-                    ( model.tooltip
-                        |> Maybe.map (Tooltip.isSameTooltip tt >> not)
-                        |> Maybe.withDefault True
-                    , Just tt
-                    )
-
-                openDelay =
-                    delay
-                        (if withDelay then
-                            2000.0
-
-                         else
-                            0.0
-                        )
-                        (OpenTooltip ctx tttype)
-            in
-            if hasToChange then
-                ( { model | tooltip = newTooltip }
-                , openDelay |> CmdEffect |> List.singleton
-                )
-
-            else
-                n model |> tooltipAbortClosing
-
-        ClosingTooltip ctx withDelay ->
-            case model.tooltip of
-                Just tt ->
-                    n model |> tooltipBeginClosing (CloseTooltip ctx tt.type_) withDelay
-
-                _ ->
-                    n model
-
-        RepositionTooltip ->
-            ( model
-            , Maybe.map
-                (.hovercard
-                    >> Hovercard.getElement
-                    >> Cmd.map HovercardMsg
-                    >> CmdEffect
-                    >> List.singleton
-                )
-                model.tooltip
-                |> Maybe.withDefault []
-            )
-
-        CloseTooltip ctx _ ->
-            let
-                ( nm, eff ) =
-                    model |> n |> tooltipCloseIfNotAborted
-
-                ( newPluginsState, outMsg, cmdp ) =
-                    if model.tooltip /= nm.tooltip then
-                        PluginInterface.ClosedTooltip ctx
-                            |> Plugin.updateByCoreMsg plugins uc nm.plugins
-
-                    else
-                        ( model.plugins, [], Cmd.none )
-            in
-            (( nm, eff ) |> Tuple.mapFirst (s_plugins newPluginsState))
-                |> updateByPluginOutMsg plugins uc outMsg
-                |> Tuple.mapSecond ((++) [ PluginEffect cmdp ])
 
         UserRequestsUrl request ->
             case request of
@@ -569,7 +387,11 @@ update plugins uc msg model =
                     n { model | dialog = Nothing }
 
                 Just (Dialog.TagsList _) ->
-                    n { model | dialog = Nothing, tooltip = Nothing, navbarSubMenu = Nothing }
+                    n
+                        { model
+                            | dialog = Nothing
+                            , navbarSubMenu = Nothing
+                        }
 
                 _ ->
                     n { model | dialog = Nothing }
@@ -2483,13 +2305,6 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                           }
                         , List.map NotificationEffect notificationEffects ++ eff
                         )
-
-                    PluginInterface.OpenTooltip s msgs ->
-                        update plugins uc (OpeningTooltip s False (Tooltip.Plugin s (Tooltip.mapMsgTooltipMsg msgs PluginMsg))) mo |> Tuple.mapSecond ((++) eff)
-
-                    PluginInterface.CloseTooltip s withDelay ->
-                        update plugins uc (ClosingTooltip (Just s) withDelay) mo
-                            |> Tuple.mapSecond ((++) eff)
             )
             ( mo, effects )
 
@@ -2515,7 +2330,6 @@ updateByUrl plugins uc url model =
                         ( { model
                             | page = Home
                             , url = url
-                            , tooltip = Nothing
                             , navbarSubMenu = Nothing
                             , search =
                                 model.search
@@ -2529,7 +2343,6 @@ updateByUrl plugins uc url model =
                         ( { model
                             | page = Stats
                             , url = url
-                            , tooltip = Nothing
                             , navbarSubMenu = Nothing
                           }
                         , case oldRoute of
@@ -2544,7 +2357,6 @@ updateByUrl plugins uc url model =
                         ( { model
                             | page = Model.Settings
                             , url = url
-                            , tooltip = Nothing
                             , navbarSubMenu = Nothing
                           }
                         , []
@@ -2561,7 +2373,6 @@ updateByUrl plugins uc url model =
                                     | plugins = new
                                     , page = Graph
                                     , url = url
-                                    , tooltip = Nothing
                                     , navbarSubMenu = Nothing
                                   }
                                 , [ PluginEffect cmd ]
@@ -2584,7 +2395,6 @@ updateByUrl plugins uc url model =
                                     | page = Graph
                                     , graph = graph
                                     , url = url
-                                    , tooltip = Nothing
                                     , navbarSubMenu = Nothing
                                     , notifications = nm
                                     , search =
@@ -2607,7 +2417,6 @@ updateByUrl plugins uc url model =
                             | page = Pathfinder
                             , pathfinder = pfn
                             , url = url
-                            , tooltip = Nothing
                             , navbarSubMenu = Nothing
                           }
                         , graphEffect
@@ -2623,7 +2432,6 @@ updateByUrl plugins uc url model =
                             | plugins = new
                             , page = Plugin pluginType
                             , url = url
-                            , tooltip = Nothing
                             , navbarSubMenu = Nothing
                           }
                         , [ PluginEffect cmd ]

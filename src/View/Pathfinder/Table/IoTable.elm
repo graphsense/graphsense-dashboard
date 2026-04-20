@@ -3,20 +3,21 @@ module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, config)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Char
+import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
 import Css.View
 import Html.Styled exposing (span)
-import Html.Styled.Attributes exposing (css, id, style, title)
-import Html.Styled.Events exposing (onMouseOut, onMouseOver)
+import Html.Styled.Attributes exposing (css, style, title)
 import Model.Currency exposing (assetFromBase)
 import Model.Direction
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.IoTable exposing (titleValue)
 import Model.Pathfinder.Tx exposing (ioToId)
-import Msg.Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder as Pathfinder
+import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
 import RecordSetter as Rs
 import Sha256
 import Table
@@ -25,6 +26,8 @@ import Theme.Html.Icons as Icons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
+import Util.Tooltip
+import Util.TooltipType as TooltipType
 import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (customizations)
 import View.Locale as Locale
@@ -38,7 +41,7 @@ type alias IoColumnConfig =
     }
 
 
-config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> Bool -> IoColumnConfig -> Table.Config Api.Data.TxValue Msg
+config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> Bool -> IoColumnConfig -> Table.Config Api.Data.TxValue Pathfinder.Msg
 config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
     let
         styles_ =
@@ -68,7 +71,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                 |> flip (applyHeaderCustomizations styles_ vc) (customizations styles_ vc)
 
         msg =
-            UserClickedAllAddressCheckboxInTable
+            Pathfinder.UserClickedAllAddressCheckboxInTable
                 (case ioDirection of
                     Inputs ->
                         Model.Direction.Outgoing
@@ -82,7 +85,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
     in
     Table.customConfig
         { toId = .address >> String.concat
-        , toMsg = TableMsg ioDirection >> TxDetailsMsg
+        , toMsg = TableMsg ioDirection >> Pathfinder.TxDetailsMsg
         , columns =
             [ PT.checkboxColumn vc
                 checkboxTitle
@@ -91,13 +94,13 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                         >> Maybe.map isCheckedFn
                         >> Maybe.withDefault False
                 , onClick =
-                    ioToId network >> Maybe.map UserClickedAddressCheckboxInTable >> Maybe.withDefault NoOp
+                    ioToId network >> Maybe.map Pathfinder.UserClickedAddressCheckboxInTable >> Maybe.withDefault Pathfinder.NoOp
                 , readonly = \_ -> False
                 }
             , ioColumn vc
                 { label = "Address"
                 , accessor = .address >> String.join ","
-                , onClick = Just (ioToId network >> Maybe.map UserClickedAddress >> Maybe.withDefault NoOp)
+                , onClick = Just (ioToId network >> Maybe.map Pathfinder.UserClickedAddress >> Maybe.withDefault Pathfinder.NoOp)
                 }
                 ioColumnConfig
             , PT.sortableDebitCreditColumn
@@ -111,7 +114,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
         }
 
 
-ioColumn : View.Config -> ColumnConfig Api.Data.TxValue Msg -> IoColumnConfig -> Table.Column Api.Data.TxValue Msg
+ioColumn : View.Config -> ColumnConfig Api.Data.TxValue Pathfinder.Msg -> IoColumnConfig -> Table.Column Api.Data.TxValue Pathfinder.Msg
 ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
     let
         exchangeIcon =
@@ -259,10 +262,8 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                     changeTooltipAttrs =
                         case changeBadgeConfig.tooltip of
                             Just tt ->
-                                [ id tt.domId
-                                , onMouseOver (ShowChangeTooltip tt)
-                                , onMouseOut (CloseChangeTooltip tt)
-                                ]
+                                TooltipType.ChangeHeuristics { confidence = tt.confidence, heuristics = tt.heuristics }
+                                    |> Tooltip.attributes tt.domId (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
 
                             Nothing ->
                                 []

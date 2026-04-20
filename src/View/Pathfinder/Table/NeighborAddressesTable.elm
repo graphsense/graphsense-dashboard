@@ -9,7 +9,6 @@ import Css.Pathfinder exposing (fullWidth)
 import Css.Table exposing (Styles)
 import Css.View
 import Dict
-import Html.Styled as Html
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.AggEdge as AggEdge
 import Init.Pathfinder.Id as Id
@@ -111,8 +110,7 @@ config styles vc conf =
                         getSortedConceptsByWeight ts
                             |> List.head
                             |> Maybe.map
-                                (Tag.conceptItem vc (toId data)
-                                    >> Html.map (AddressDetails.TagTooltipMsg >> AddressDetails.TooltipMsg)
+                                (Tag.conceptItem vc (toId data) AddressDetails.TooltipMsg
                                     >> List.singleton
                                 )
                             |> Maybe.withDefault []

@@ -1,8 +1,8 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), IoDirection(..), Msg(..), OverlayWindows(..), TextTooltipConfig, TxDetailsMsg(..))
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TextTooltipConfig)
 
 import Api.Data
 import Color exposing (Color)
-import Components.InfiniteTable as InfiniteTable
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Model.Dialog as Dialog
@@ -18,14 +18,14 @@ import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
+import Msg.Pathfinder.TxDetails as TxDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
-import Table
 import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
-import Util.Tag exposing (TooltipContext)
+import Util.TooltipType exposing (TooltipType)
 
 
 type alias AddingAddressConfig =
@@ -77,7 +77,7 @@ type Msg
     | UserPressedArrowKey Direction
     | AddressDetailsMsg Id AddressDetails.Msg
     | ConversionDetailsMsg ( Id, Id ) ConversionDetails.ConversionDetailsMsgs
-    | TxDetailsMsg TxDetailsMsg
+    | TxDetailsMsg TxDetails.Msg
     | RelationDetailsMsg ( Id, Id ) RelationDetails.Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
@@ -111,10 +111,6 @@ type Msg
     | UserMovesMouseOutTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
-    | UserMovesMouseOverTagLabel TooltipContext
-    | UserMovesMouseOutTagLabel TooltipContext
-    | UserMovesMouseOverActorLabel TooltipContext
-    | UserMovesMouseOutActorLabel TooltipContext
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | ToolbarHovercardMsg Hovercard.Msg
@@ -141,10 +137,6 @@ type Msg
     | UserGotMoreAddressTagsForDialog Id Api.Data.AddressTags
     | UserGotClusterTagsForDialog Id Api.Data.AddressTags
     | UserGotMoreClusterTagsForDialog Id Api.Data.AddressTags
-    | ShowTextTooltip TextTooltipConfig
-    | CloseTextTooltip TextTooltipConfig
-    | ShowChangeTooltip ChangeTooltipConfig
-    | CloseChangeTooltip ChangeTooltipConfig
     | UserClickedToggleTracingMode
     | BrowserGotRelationsToVisibleNeighbors AddingRelationsConfig Api.Data.NeighborAddresses
     | InternalPathfinderAddedAddress Id
@@ -160,6 +152,9 @@ type Msg
     | InternalExportGraphTxsCompleted
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
     | InternalHoveredQuickFilter (Maybe TransactionFilter.QuickFilter)
+    | TransactionFilterMsg TransactionFilter.Msg
+    | TooltipMsg (Tooltip.Msg TooltipType)
+    | RepositionTooltip
 
 
 type alias TextTooltipConfig =
@@ -190,19 +185,3 @@ type DisplaySettingsMsg
     | UserClickedToggleValueDetail
     | UserClickedToggleShowHash
     | UserClickedToggleAvoidOverlapingNodes
-
-
-type TxDetailsMsg
-    = UserClickedToggleIoTable IoDirection
-    | TableMsg IoDirection Table.State
-    | TableMsgSubTxTable InfiniteTable.Msg
-    | BrowserGotBaseTx Api.Data.Tx
-    | BrowserGotTxFlows (Maybe String) Api.Data.Txs
-    | UserClickedToggleSubTxsTable
-    | UserClickedTxInSubTxsTable Api.Data.TxAccount
-    | TransactionFilterMsg TransactionFilter.Msg
-
-
-type IoDirection
-    = Inputs
-    | Outputs

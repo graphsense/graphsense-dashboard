@@ -1,35 +1,22 @@
-module Util.Tag exposing (Msg(..), TooltipContext, conceptItem)
+module Util.Tag exposing (conceptItem)
 
+import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes as HA exposing (css)
-import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
-import Json.Encode
 import Model.Pathfinder.Id as Id exposing (Id)
 import Theme.Html.TagsComponents as TagComponents
+import Util.Tooltip
+import Util.TooltipType exposing (TooltipType(..))
 import Util.View
 
 
-type alias TooltipContext =
-    { context : String, domId : String }
-
-
-type Msg
-    = UserMovesMouseOverTagConcept TooltipContext
-    | UserMovesMouseOutTagConcept TooltipContext
-
-
-conceptItem : View.Config -> Id -> String -> Html Msg
-conceptItem vc id k =
+conceptItem : View.Config -> Id -> (Tooltip.Msg TooltipType -> msg) -> String -> Html msg
+conceptItem vc id tag k =
     let
-        ctx =
-            { context =
-                [ k, Id.network id, Id.id id ]
-                    |> Json.Encode.list Json.Encode.string
-                    |> Json.Encode.encode 0
-            , domId = k ++ Id.id id ++ "_tags_concept_tag"
-            }
+        domId =
+            k ++ Id.id id ++ "_tags_concept_tag"
 
         maxLblLength =
             15
@@ -39,19 +26,20 @@ conceptItem vc id k =
 
         lbl_truncated =
             lbl |> Util.View.truncate maxLblLength
+
+        tooltipAttributes =
+            TagConcept id k
+                |> Tooltip.attributes domId (Util.Tooltip.tooltipConfig vc tag)
     in
     Html.div
-        ([ onMouseEnter (UserMovesMouseOverTagConcept ctx)
-         , onMouseLeave (UserMovesMouseOutTagConcept ctx)
-         , HA.id ctx.domId
-         , css [ Css.cursor Css.default ]
-         ]
-            ++ (if String.length lbl > maxLblLength then
+        (css [ Css.cursor Css.default ]
+            :: (if String.length lbl > maxLblLength then
                     [ HA.title lbl ]
 
                 else
                     []
                )
+            ++ tooltipAttributes
         )
         [ TagComponents.categoryTag
             { root =

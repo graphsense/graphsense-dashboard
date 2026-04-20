@@ -1,6 +1,7 @@
 module Sub.Pathfinder exposing (subscriptions)
 
 import Browser.Events
+import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Hovercard
 import Json.Decode as Decode
@@ -11,6 +12,7 @@ import Msg.ExportDialog exposing (Msg(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails
 import Msg.Pathfinder.RelationDetails
+import Msg.Pathfinder.TxDetails
 import RemoteData
 import Set
 import Sub.Graph.Transform as Transform
@@ -127,7 +129,7 @@ subscriptions model =
     , case model.details of
         Just (TxDetails _ txDetailsModel) ->
             TransactionFilter.subscriptions txDetailsModel.subTxsTableFilter
-                |> Sub.map (\msg -> TxDetailsMsg (Msg.Pathfinder.TransactionFilterMsg msg))
+                |> Sub.map (\msg -> TxDetailsMsg (Msg.Pathfinder.TxDetails.TransactionFilterMsg msg))
 
         Just (AddressDetails aid addressDetailsModel) ->
             case addressDetailsModel.txs of
@@ -160,5 +162,7 @@ subscriptions model =
 
         _ ->
             Sub.none
+    , Tooltip.subscriptions model.tooltip
+        |> Sub.map TooltipMsg
     ]
         |> Sub.batch

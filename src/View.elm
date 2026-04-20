@@ -27,7 +27,6 @@ import View.Locale as Locale
 import View.Main as Main
 import View.Notification as Notification
 import View.Pathfinder.ContextMenuItem as ContextMenuItem
-import View.Pathfinder.Tooltip as Tooltip
 import View.Statusbar as Statusbar
 import View.User as User
 
@@ -94,12 +93,8 @@ body plugins vc model =
          ]
             ++ hovercards plugins vc model
             ++ overlay plugins vc model
-            ++ Notification.view vc model.notifications
-            :: (model.tooltip
-                    |> Maybe.map (Tooltip.view plugins model vc)
-                    |> Maybe.map List.singleton
-                    |> Maybe.withDefault []
-               )
+            ++ [ Notification.view vc model.notifications ]
+            ++ Maybe.withDefault [] (Plugin.tooltip plugins model.plugins vc)
         )
 
 

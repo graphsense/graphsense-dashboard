@@ -52,9 +52,6 @@ subscriptions model =
     , model.user.hovercard
         |> Maybe.map (Hovercard.subscriptions >> Sub.map UserHovercardMsg)
         |> Maybe.withDefault Sub.none
-    , model.tooltip
-        |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map HovercardMsg)
-        |> Maybe.withDefault Sub.none
     , Ports.sendBBox (ExportDialog.BrowserSentBBox >> ExportDialogMsg)
     , Ports.renderedImageForExport (\_ -> ExportDialog.BrowserRenderedGraphForExport |> ExportDialogMsg)
     , Ports.exportGraphResult (ExportDialog.BrowserSentExportGraphResult >> ExportDialogMsg)

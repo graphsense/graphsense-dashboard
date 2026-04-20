@@ -236,6 +236,9 @@ shallPushHistory plugins msg _ =
                 RelationDetails.ExportCSVMsg _ _ _ ->
                     False
 
+                RelationDetails.TooltipMsg _ ->
+                    False
+
         AnimationFrameDeltaForTransform _ ->
             False
 
@@ -338,18 +341,6 @@ shallPushHistory plugins msg _ =
         UserMovesMouseOutAddress _ ->
             False
 
-        UserMovesMouseOverTagLabel _ ->
-            False
-
-        UserMovesMouseOutTagLabel _ ->
-            False
-
-        UserMovesMouseOverActorLabel _ ->
-            False
-
-        UserMovesMouseOutActorLabel _ ->
-            False
-
         UserInputsAnnotation _ _ ->
             True
 
@@ -422,18 +413,6 @@ shallPushHistory plugins msg _ =
         UserGotMoreClusterTagsForDialog _ _ ->
             False
 
-        ShowTextTooltip _ ->
-            False
-
-        CloseTextTooltip _ ->
-            False
-
-        ShowChangeTooltip _ ->
-            False
-
-        CloseChangeTooltip _ ->
-            False
-
         BrowserGotTagSummaries _ _ ->
             False
 
@@ -468,4 +447,13 @@ shallPushHistory plugins msg _ =
             False
 
         InternalHoveredQuickFilter _ ->
+            False
+
+        TransactionFilterMsg _ ->
+            False
+
+        TooltipMsg _ ->
+            False
+
+        RepositionTooltip ->
             False

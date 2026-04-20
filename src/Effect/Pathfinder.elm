@@ -1,10 +1,11 @@
 module Effect.Pathfinder exposing (Effect(..), effectToTracker, perform)
 
+import Components.Tooltip as Tooltip
+import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Search as Search
 import Model.Notification exposing (Notification)
 import Model.Pathfinder.Error exposing (Error)
-import Model.Pathfinder.Tooltip exposing (TooltipType)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Msg as Plugin
 import Process
@@ -20,12 +21,12 @@ type Effect
     | CmdEffect (Cmd Msg)
     | SearchEffect Search.Effect
     | ErrorEffect Error
-    | OpenTooltipEffect { context : String, domId : String } Bool (TooltipType Msg)
     | RepositionTooltipEffect
-    | CloseTooltipEffect (Maybe { context : String, domId : String }) Bool
     | PostponeUpdateByRouteEffect Route
     | ShowNotificationEffect Notification
     | InternalEffect Msg
+    | TransactionFilterEffect TransactionFilter.Effect
+    | TooltipEffect Tooltip.Effect
 
 
 perform : Effect -> Cmd Msg
@@ -59,16 +60,8 @@ perform eff =
         ErrorEffect _ ->
             Cmd.none
 
-        -- managed in Effect.elm
-        OpenTooltipEffect _ _ _ ->
-            Cmd.none
-
-        -- managed in Effect.elm
-        CloseTooltipEffect _ _ ->
-            Cmd.none
-
         RepositionTooltipEffect ->
-            Cmd.none
+            Task.perform (always RepositionTooltip) (Task.succeed ())
 
         PostponeUpdateByRouteEffect route ->
             Process.sleep 10
@@ -77,6 +70,14 @@ perform eff =
         -- managed in Effect.elm
         InternalEffect _ ->
             Cmd.none
+
+        TransactionFilterEffect e ->
+            TransactionFilter.perform e
+                |> Cmd.map TransactionFilterMsg
+
+        TooltipEffect e ->
+            Tooltip.perform e
+                |> Cmd.map TooltipMsg
 
 
 effectToTracker : Effect -> Maybe String

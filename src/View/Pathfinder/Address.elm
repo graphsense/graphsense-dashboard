@@ -2,6 +2,7 @@ module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 
 import Animation as A
 import Color
+import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Config.View as View
 import Css
@@ -29,6 +30,8 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
+import Util.Tooltip
+import Util.TooltipType as TooltipType
 import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
@@ -180,6 +183,13 @@ view plugins vc pc address annotation =
             List.Extra.getAt index items
                 |> Maybe.map (\_ -> True)
                 |> Maybe.withDefault False
+
+        nodeId =
+            Id.toString address.id
+
+        tooltipAttributes =
+            TooltipType.Address address.id
+                |> Tooltip.attributes nodeId (Util.Tooltip.tooltipConfig vc TooltipMsg)
     in
     g
         [ translate
@@ -194,17 +204,19 @@ view plugins vc pc address annotation =
         (GraphComponents.addressNodeWithInstances
             (GraphComponents.addressNodeAttributes
                 |> Rs.s_root
-                    [ A.animate address.clock address.opacity
+                    ([ A.animate address.clock address.opacity
                         |> String.fromFloat
                         |> opacity
-                    , UserClickedAddress address.id |> onClickWithStop
-                    , UserPushesLeftMouseButtonOnAddress address.id
+                     , UserClickedAddress address.id |> onClickWithStop
+                     , UserPushesLeftMouseButtonOnAddress address.id
                         |> Util.Graph.mousedown
-                    , decodeCoords Coords.Coords
+                     , decodeCoords Coords.Coords
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.AddressContextMenu address.id), True ))
                         |> preventDefaultOn "contextmenu"
-                    , css [ Css.cursor Css.pointer ]
-                    ]
+                     , css [ Css.cursor Css.pointer ]
+                     ]
+                        ++ tooltipAttributes
+                    )
                 |> Rs.s_nodeBody
                     [ Id.toString address.id
                         |> Svg.id

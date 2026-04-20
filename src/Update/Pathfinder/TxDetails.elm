@@ -10,7 +10,8 @@ import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
-import Msg.Pathfinder as Pathfinder exposing (IoDirection(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder as Pathfinder
+import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
 import RecordSetter exposing (s_baseTx, s_state, s_subTxsTable)
 import RemoteData
 import Tuple exposing (mapFirst, mapSecond, pair)
@@ -32,7 +33,7 @@ transactionTableConfig m =
     in
     { fetch =
         \_ pagesize nextpage ->
-            (BrowserGotTxFlows nextpage >> TxDetailsMsg)
+            (BrowserGotTxFlows nextpage >> Pathfinder.TxDetailsMsg)
                 |> Api.ListTxFlowsEffect
                     { currency = currency
                     , txHash = baseTxHash
@@ -81,7 +82,7 @@ loadTxDetailsDataAccount model =
 
         effects =
             if hasToFetchMoreData then
-                [ (BrowserGotBaseTx >> TxDetailsMsg)
+                [ (BrowserGotBaseTx >> Pathfinder.TxDetailsMsg)
                     |> Api.GetTxEffect
                         { currency = model.tx |> Tx.getNetwork
                         , txHash = baseTxHash
@@ -103,12 +104,15 @@ loadTxDetailsDataAccount model =
         n model
 
 
-update : TxDetailsMsg -> Model -> ( Model, List Effect )
+update : Msg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
+        NoOp ->
+            n model
+
         TransactionFilterMsg subMsg ->
             let
-                newFilter =
+                ( newFilter, eff ) =
                     TransactionFilter.update subMsg model.subTxsTableFilter
 
                 changed =
@@ -159,7 +163,7 @@ update msg model =
             ( { model
                 | subTxsTable = nt
               }
-            , CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: meff
+            , CmdEffect (Cmd.map (TableMsgSubTxTable >> Pathfinder.TxDetailsMsg) cmd) :: meff
             )
 
         UserClickedToggleIoTable Inputs ->
@@ -179,7 +183,7 @@ update msg model =
                 ( pt, cmd, eff ) =
                     InfiniteTable.update (transactionTableConfig model) m model.subTxsTable
             in
-            ( { model | subTxsTable = pt }, CmdEffect (Cmd.map (TableMsgSubTxTable >> TxDetailsMsg) cmd) :: eff )
+            ( { model | subTxsTable = pt }, CmdEffect (Cmd.map (TableMsgSubTxTable >> Pathfinder.TxDetailsMsg) cmd) :: eff )
 
         UserClickedTxInSubTxsTable _ ->
             -- handled upstream

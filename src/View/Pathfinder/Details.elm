@@ -1,7 +1,5 @@
 module View.Pathfinder.Details exposing (DataTabConfig, closeAttrs, dataTab, emptyCell, valuesToCell)
 
--- import Msg.Pathfinder exposing (Msg(..))
-
 import Api.Data
 import Config.View as View
 import Css

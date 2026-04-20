@@ -2,6 +2,7 @@ module View.Pathfinder.Tx.AccountTx exposing (edge, view)
 
 import Animation as A
 import Color
+import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..))
 import Config.View as View
 import Css
@@ -15,7 +16,7 @@ import Model.Currency exposing (Currency(..), asset)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
@@ -30,6 +31,8 @@ import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Data as Data
 import Util.Graph exposing (decodeCoords, translate)
+import Util.Tooltip
+import Util.TooltipType
 import Util.View exposing (ifTrue, onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (pickPathFunction)
@@ -132,6 +135,10 @@ view _ vc pc tx accTx annotation =
             |> Json.Encode.bool
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
+        , UserMovesMouseOverTx tx.id
+            |> onMouseOver
+        , UserMovesMouseOutTx tx.id
+            |> onMouseLeave
         ]
         (GraphComponents.txNodeEthWithAttributes
             { txNodeEthAttributes
@@ -139,10 +146,6 @@ view _ vc pc tx accTx annotation =
                     [ UserClickedTx tx.id |> onClickWithStop
                     , UserPushesLeftMouseButtonOnUtxoTx tx.id
                         |> Util.Graph.mousedown
-                    , UserMovesMouseOverTx tx.id
-                        |> onMouseOver
-                    , UserMovesMouseOutTx tx.id
-                        |> onMouseLeave
                     , css [ Css.cursor Css.pointer ]
                     , Id.toString tx.id
                         |> Svg.Styled.Attributes.id
@@ -150,6 +153,7 @@ view _ vc pc tx accTx annotation =
                         |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id), True ))
                         |> preventDefaultOn "contextmenu"
                     ]
+                        ++ tooltipAttributes vc tx.id accTx
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
                 , timestamp =
                     [ translate 0 offsetSecondValue |> transform ]
@@ -193,8 +197,17 @@ view _ vc pc tx accTx annotation =
         )
 
 
+tooltipAttributes : View.Config -> Id -> AccountTx -> List (Attribute Msg)
+tooltipAttributes vc id accTx =
+    Util.TooltipType.AccountTx accTx
+        |> Tooltip.attributes (Id.toString id)
+            (Util.Tooltip.tooltipConfig vc TooltipMsg
+                |> Tooltip.withOpenDelay 100
+            )
+
+
 edge : Plugins -> View.Config -> Pathfinder.Config -> AccountTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ _ pc account tx annotation =
+edge _ vc pc account tx annotation =
     let
         radTx =
             GraphComponents.txNodeTypeNeutralTxNode_details.width / 2
@@ -286,6 +299,8 @@ edge _ _ pc account tx annotation =
                         |> UserClickedTx
                         |> onClickWithStop
                     ]
+                |> List.singleton
+                |> g (tooltipAttributes vc tx.id account)
         )
         account.fromAddress
         account.toAddress

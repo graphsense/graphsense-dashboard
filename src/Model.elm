@@ -20,7 +20,6 @@ import Model.Graph
 import Model.Notification
 import Model.Pathfinder
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType)
 import Model.Search
 import Model.Statusbar
 import Msg.ExportDialog
@@ -68,7 +67,6 @@ type alias Model navigationKey =
     , notifications : Model.Notification.Model
     , localeSelectBox : SelectBox.Model String
     , dirty : Bool
-    , tooltip : Maybe (Tooltip Msg)
     , navbarSubMenu : Maybe NavbarSubMenu
     }
 
@@ -137,12 +135,6 @@ type Msg
     | NotificationMsg Model.Notification.Msg
     | ShowNotification Model.Notification.Notification
     | RuntimePostponedUpdateByUrl Url
-    | OpeningTooltip { context : String, domId : String } Bool (TooltipType Msg)
-    | OpenTooltip { context : String, domId : String } (TooltipType Msg)
-    | ClosingTooltip (Maybe { context : String, domId : String }) Bool
-    | RepositionTooltip
-    | HovercardMsg Hovercard.Msg
-    | CloseTooltip (Maybe { context : String, domId : String }) (TooltipType Msg)
     | UserToggledNavbarSubMenu NavbarSubMenuType
     | UserClosesNavbarSubMenu
     | BrowserGotUncaughtError Json.Encode.Value
