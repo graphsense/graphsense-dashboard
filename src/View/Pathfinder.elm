@@ -751,6 +751,7 @@ searchBoxView plugins vc _ model =
                         |> Rs.s_dropdownFrame
                             [ Css.property "background-color" Colors.white
                             ]
+                        |> Rs.s_inputAttributes [ HA.autofocus True ]
                     )
                     model.search
                     |> Html.map SearchMsg
