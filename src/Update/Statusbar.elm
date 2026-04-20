@@ -1,4 +1,4 @@
-module Update.Statusbar exposing (add, messagesFromEffects, toggle, update, updateLastBlocks)
+module Update.Statusbar exposing (add, clearRetry, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
 
 import Api.Data
 import Api.Request.Entities
@@ -191,10 +191,34 @@ update key error model =
             (\msg ->
                 { model
                     | messages = Dict.remove key model.messages
+                    , retries = Dict.remove key model.retries
                     , log = addLog ( first msg, second msg, error ) model.log
                 }
             )
         |> Maybe.withDefault model
+
+
+{-| Record that attempt number `attempt` has been scheduled for the request
+identified by `key` (the statusbar token). Called from `Update.elm` when a
+transient HTTP error is observed and a retry is about to be delayed via
+`Process.sleep`. The stored attempt number is later compared against the
+firing `BrowserRetryApiEffect` to drop stale retries whose request was
+cancelled or superseded in the meantime — see the `retries` field docs on
+`Model.Statusbar.Model`.
+-}
+setRetry : String -> Int -> Model -> Model
+setRetry key attempt sb =
+    { sb | retries = Dict.insert key attempt sb.retries }
+
+
+{-| Drop any retry bookkeeping for `key`. Use this when a request is
+cancelled or otherwise abandoned outside the normal `update` path; the
+regular `update` function already clears the entry alongside the message
+when a final result arrives.
+-}
+clearRetry : String -> Model -> Model
+clearRetry key sb =
+    { sb | retries = Dict.remove key sb.retries }
 
 
 updateLastBlocks : Api.Data.Stats -> Model -> Model

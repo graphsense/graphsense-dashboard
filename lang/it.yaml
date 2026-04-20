@@ -589,3 +589,4 @@ tx-filter-utxo-only-tooltip: Elenca solo le transazioni che referenziano la tran
 filter-quick-filter: filtro veloce per transazione
 filter-custom-filter: filtro personalizzato
 filter-none-selected: nessuno selezionato
+retrying {0}/{1}: nuovo tentativo {0}/{1}

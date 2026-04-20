@@ -567,3 +567,4 @@ tx-filter-utxo-only-tooltip: Solo listar transacciones que referencian la transa
 filter-quick-filter: filtro rápido por transacción
 filter-custom-filter: filtro personalizado
 filter-none-selected: ninguno seleccionado
+retrying {0}/{1}: reintentando {0}/{1}

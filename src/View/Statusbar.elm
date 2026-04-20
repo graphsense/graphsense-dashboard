@@ -21,6 +21,15 @@ import View.Locale as Locale
 
 view : View.Config -> Model -> Html Msg
 view vc model =
+    let
+        entries =
+            model.messages
+                |> Dict.toList
+                |> List.map
+                    (\( id, ( key, values ) ) ->
+                        ( key, values, Dict.get id model.retries )
+                    )
+    in
     div
         ((Css.root vc model.visible |> css)
             :: (if model.visible then
@@ -32,8 +41,7 @@ view vc model =
                )
         )
         (if not model.visible then
-            [ model.messages
-                |> Dict.values
+            [ entries
                 |> List.head
                 |> Maybe.map (message vc)
                 |> Maybe.withDefault none
@@ -51,8 +59,7 @@ view vc model =
                 [ FontAwesome.icon FontAwesome.times
                     |> Html.Styled.fromUnstyled
                 ]
-                :: (model.messages
-                        |> Dict.values
+                :: (entries
                         |> List.map (message vc)
                         |> (\m ->
                                 m
@@ -64,13 +71,26 @@ view vc model =
         )
 
 
-message : View.Config -> ( String, List String ) -> Html Msg
-message vc ( key, values ) =
+message : View.Config -> ( String, List String, Maybe Int ) -> Html Msg
+message vc ( key, values, retryAttempt ) =
+    let
+        retrySuffix =
+            case retryAttempt of
+                Just attempt ->
+                    " ("
+                        ++ ([ String.fromInt attempt, String.fromInt 3 ]
+                                |> Locale.interpolated vc.locale "retrying {0}/{1}"
+                           )
+                        ++ ")"
+
+                Nothing ->
+                    ""
+    in
     div
         [ Css.log vc True |> css
         ]
         [ loadingSpinner vc Css.loadingSpinner
-        , messageString vc key values
+        , (messageString vc key values ++ retrySuffix)
             |> text
             |> List.singleton
             |> span []
