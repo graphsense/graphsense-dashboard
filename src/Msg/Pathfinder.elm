@@ -89,6 +89,7 @@ type Msg
     | BrowserGotClusterTagsProbe Id Bool
     | BrowserGotTagSummaries Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedAddressExpandHandle Id Direction
+    | UserClickedAddressExpandHandleInIoTable Id Id Direction
     | UserClickedAddress Id
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg

@@ -1670,6 +1670,26 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
+        UserClickedAddressExpandHandleInIoTable txId addressId direction ->
+            Dict.get txId model.network.txs
+                |> Maybe.andThen (Tx.getUtxoTx >> Maybe.map .raw)
+                |> Maybe.map
+                    (\utxo ->
+                        let
+                            config =
+                                { addressId = addressId
+                                , direction = direction
+                                , allowMultiple = False
+                                }
+                        in
+                        WorkflowNextUtxoTx.start config utxo
+                            |> Workflow.mapEffect (WorkflowNextUtxoTx config Nothing)
+                            |> Workflow.next
+                            |> List.map ApiEffect
+                            |> pair model
+                    )
+                |> Maybe.withDefault (n model)
+
         UserClickedAddress id ->
             if model.modPressed || model.pointerTool == Select then
                 multiSelect model [ MSelectedAddress id ] True

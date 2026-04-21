@@ -266,6 +266,9 @@ shallPushHistory plugins msg _ =
         UserClickedAddressExpandHandle _ _ ->
             True
 
+        UserClickedAddressExpandHandleInIoTable _ _ _ ->
+            True
+
         UserClickedAddress _ ->
             False
 

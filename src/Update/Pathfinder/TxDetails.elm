@@ -135,7 +135,7 @@ update msg model =
 
         TransactionFilterMsg subMsg ->
             let
-                ( newFilter, eff ) =
+                ( newFilter, _ ) =
                     TransactionFilter.update subMsg model.subTxsTableFilter
 
                 changed =
@@ -203,6 +203,13 @@ update msg model =
 
         UserClickedAllIoTableCheckboxes direction ->
             ( model, [ InternalEffect (Pathfinder.UserClickedAllAddressCheckboxInTable direction) ] )
+
+        UserClickedIoTableExpand id direction ->
+            let
+                txId =
+                    Tx.getTxIdForTx model.tx
+            in
+            ( model, [ InternalEffect (Pathfinder.UserClickedAddressExpandHandleInIoTable txId id direction) ] )
 
         TooltipMsg tooltipMsgAsTooltipType ->
             ( model, [ InternalEffect (Pathfinder.TooltipMsg tooltipMsgAsTooltipType) ] )

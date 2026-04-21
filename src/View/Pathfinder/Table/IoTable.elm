@@ -9,10 +9,11 @@ import Config.View as View
 import Css
 import Css.Table exposing (Styles)
 import Css.View
-import Html.Styled exposing (span)
+import Html.Styled exposing (button, span, text)
 import Html.Styled.Attributes exposing (css, style, title)
+import Html.Styled.Events exposing (onClick)
 import Model.Currency exposing (assetFromBase)
-import Model.Direction
+import Model.Direction as Direction
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.IoTable exposing (titleValue)
@@ -67,10 +68,10 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
         direction =
             case ioDirection of
                 Inputs ->
-                    Model.Direction.Outgoing
+                    Direction.Outgoing
 
                 Outputs ->
-                    Model.Direction.Incoming
+                    Direction.Incoming
 
         allCheckedMsg =
             UserClickedAllIoTableCheckboxes direction
@@ -105,6 +106,23 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
             (\_ -> assetFromBase network)
             "Value"
             .value
+        , PT.htmlColumn vc
+            "Expand"
+            { html =
+                \txValue ->
+                    case ioToId network txValue of
+                        Nothing ->
+                            none
+
+                        Just id ->
+                            button
+                                [ Direction.flip direction
+                                    |> UserClickedIoTableExpand id
+                                    |> onClick
+                                , css [ Css.cursor Css.pointer, Css.padding2 (Css.px 4) (Css.px 8) ]
+                                ]
+                                [ text "Expand" ]
+            }
         ]
     , customizations = cc
     , tag = IoTableMsg ioDirection
