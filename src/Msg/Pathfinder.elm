@@ -154,6 +154,7 @@ type Msg
     | TransactionFilterMsg TransactionFilter.Msg
     | TooltipMsg (Tooltip.Msg TooltipType)
     | RepositionTooltip
+    | InternalExpandSpecificTxAndAddress Id Id Direction
 
 
 type alias TextTooltipConfig =

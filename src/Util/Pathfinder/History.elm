@@ -13,6 +13,9 @@ shallPushHistory plugins msg _ =
         InternalConversionLoopAddressesLoaded _ ->
             False
 
+        InternalExpandSpecificTxAndAddress _ _ _ ->
+            False
+
         EventualMessagesHeartBeat ->
             False
 

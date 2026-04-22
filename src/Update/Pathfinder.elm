@@ -1671,6 +1671,30 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault (n model)
 
         UserClickedAddressExpandHandleInIoTable txId addressId direction ->
+            if Network.hasAddress addressId model.network then
+                ( model, [ InternalEffect (InternalExpandSpecificTxAndAddress txId addressId direction) ] )
+
+            else
+                let
+                    ( eventualMessagesNew, mcmd ) =
+                        model.eventualMessages
+                            |> EventualMessages.addMessage
+                                (Network.AddressIsLoaded addressId)
+                                (InternalExpandSpecificTxAndAddress txId addressId direction)
+
+                    getAddressEffect =
+                        InternalEffect
+                            (UserClickedAddressCheckboxInTable addressId)
+
+                    cmdEffect =
+                        mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []
+                in
+                ( model
+                    |> s_eventualMessages eventualMessagesNew
+                , getAddressEffect :: cmdEffect
+                )
+
+        InternalExpandSpecificTxAndAddress txId addressId direction ->
             Dict.get txId model.network.txs
                 |> Maybe.andThen (Tx.getUtxoTx >> Maybe.map .raw)
                 |> Maybe.map
