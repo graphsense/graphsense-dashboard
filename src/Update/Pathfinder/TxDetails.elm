@@ -7,6 +7,7 @@ import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
+import Init.Pathfinder.TxDetails exposing (dummyIoTableConfig)
 import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
@@ -50,29 +51,6 @@ transactionTableConfig m =
     , triggerOffset = 100
     , effectToTracker = effectToTracker
     , abort = Api.CancelEffect >> ApiEffect
-    }
-
-
-ioTableConfig : InfiniteTable.Config Effect
-ioTableConfig =
-    let
-        noFetch : Maybe ( String, Bool ) -> Int -> Maybe String -> Effect
-        noFetch _ _ _ =
-            CmdEffect Cmd.none
-
-        noEffectToTracker : Effect -> Maybe String
-        noEffectToTracker _ =
-            Nothing
-
-        noAbort : String -> Effect
-        noAbort _ =
-            CmdEffect Cmd.none
-    in
-    { fetch = noFetch
-    , force = False
-    , effectToTracker = noEffectToTracker
-    , abort = noAbort
-    , triggerOffset = 100
     }
 
 
@@ -231,7 +209,7 @@ update msg model =
                             model.outputsTable
 
                 ( pt, cmd, eff ) =
-                    InfiniteTable.update ioTableConfig m table
+                    InfiniteTable.update dummyIoTableConfig m table
 
                 ( newTable, msgTag ) =
                     if ioDir == Inputs then
