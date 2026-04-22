@@ -4,7 +4,6 @@ import Api.Data
 import Api.Request.Addresses
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
-import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
 import Config.Update as Update
 import Model.Direction exposing (Direction(..))
@@ -34,8 +33,8 @@ init uc network txsFilter addressId data assets =
                 |> Maybe.withDefault True
     in
     { table =
-        Table.initSorted isDesc TransactionTable.titleTimestamp
-            |> InfiniteTable.init "transactionTable" 25
+        InfiniteTable.init "transactionTable" 25
+            |> InfiniteTable.sortBy TransactionTable.titleTimestamp isDesc
     , order =
         if isDesc then
             Just Api.Request.Addresses.Order_Desc
