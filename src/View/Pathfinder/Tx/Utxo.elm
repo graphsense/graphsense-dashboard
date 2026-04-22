@@ -352,13 +352,22 @@ edge _ vc pc level utxo tx annotation =
                 |> onClickWithStop
             ]
         |> List.singleton
-        |> g (tooltipAttributes vc tx.id utxo)
+        |> g (tooltipEventHandlers vc tx.id utxo)
 
 
 tooltipAttributes : View.Config -> Id -> UtxoTx -> List (Attribute Msg)
 tooltipAttributes vc id utxo =
     Util.TooltipType.UtxoTx utxo
         |> Tooltip.attributes (Id.toString id)
+            (Util.Tooltip.tooltipConfig vc TooltipMsg
+                |> Tooltip.withOpenDelay 100
+            )
+
+
+tooltipEventHandlers : View.Config -> Id -> UtxoTx -> List (Attribute Msg)
+tooltipEventHandlers vc id utxo =
+    Util.TooltipType.UtxoTx utxo
+        |> Tooltip.eventHandlers (Id.toString id)
             (Util.Tooltip.tooltipConfig vc TooltipMsg
                 |> Tooltip.withOpenDelay 100
             )

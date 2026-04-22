@@ -1497,33 +1497,7 @@ updateByMsg plugins uc msg model =
             )
 
         UserMovesMouseOverTx id ->
-            if model.hovered == HoveredTx id then
-                n model
-
-            else
-                let
-                    hovered _ =
-                        let
-                            unhovered =
-                                unhover model
-                        in
-                        { unhovered
-                            | network =
-                                Network.updateTx id (s_hovered True) unhovered.network
-                                    |> Network.trySetHoverConversionLoop id True
-                            , hovered = HoveredTx id
-                        }
-                in
-                case model.details of
-                    Just (TxDetails txid _) ->
-                        if id /= txid then
-                            hovered () |> n
-
-                        else
-                            n model
-
-                    _ ->
-                        hovered () |> n
+            handleTxHover id model
 
         UserMovesMouseOverAddress id ->
             if model.hovered == HoveredAddress id then
@@ -1713,6 +1687,24 @@ updateByMsg plugins uc msg model =
                             |> pair model
                     )
                 |> Maybe.withDefault (n model)
+
+        UserPressedArrowKey direction ->
+            case model.selection of
+                SelectedAddress id ->
+                    Dict.get id model.network.addresses
+                        |> Maybe.map
+                            (\address ->
+                                case getTxs address direction of
+                                    Txs _ ->
+                                        focusNeighborAddress uc id direction model
+
+                                    _ ->
+                                        update plugins uc (UserClickedAddressExpandHandle id direction) model
+                            )
+                        |> Maybe.withDefault (n model)
+
+                _ ->
+                    n model
 
         UserClickedAddress id ->
             if model.modPressed || model.pointerTool == Select then
@@ -2649,6 +2641,12 @@ updateByMsg plugins uc msg model =
 
         InternalChangedTxFilter id filter ->
             n { model | txsFilters = AssocList.insert id filter model.txsFilters }
+
+        InternalHoveredQuickFilter qf ->
+            qf
+                |> Maybe.map TransactionFilter.getTxIdFromQuickFilter
+                |> Maybe.map (flip handleTxHover model)
+                |> Maybe.Extra.withDefaultLazy (\_ -> unhover model |> n)
 
         TransactionFilterMsg tm ->
             case model.details of
@@ -4159,6 +4157,57 @@ selectConversionEdge ( a, b ) model =
         |> Tuple.mapSecond ((++) eff)
 
 
+focusNeighborAddress : Update.Config -> Id -> Direction -> Model -> ( Model, List Effect )
+focusNeighborAddress uc anchorId direction model =
+    let
+        anchorKey =
+            Id.id anchorId
+
+        neighborId =
+            Network.getTxsForAddress model.network direction anchorId
+                |> List.filterMap
+                    (\tx ->
+                        getAddressForDirection tx direction (Set.singleton anchorKey)
+                            |> Maybe.andThen
+                                (\nid ->
+                                    if Dict.member nid model.network.addresses then
+                                        Just nid
+
+                                    else
+                                        Nothing
+                                )
+                    )
+                |> List.head
+    in
+    case neighborId |> Maybe.andThen (\nid -> Dict.get nid model.network.addresses) of
+        Just neighbor ->
+            let
+                ( m1, eff ) =
+                    selectAddress neighbor.id model
+
+                transform =
+                    (uc.size
+                        |> Maybe.map
+                            (\{ width, height } ->
+                                { width = width
+                                , height = height
+                                }
+                            )
+                        |> Maybe.map Transform.politeMove
+                        |> Maybe.withDefault Transform.move
+                    )
+                        { x = neighbor.x * unit
+                        , y = A.getTo neighbor.y * unit
+                        , z = Transform.initZ
+                        }
+                        m1.transform
+            in
+            ( { m1 | transform = transform }, eff )
+
+        Nothing ->
+            n model
+
+
 selectAddress : Id -> Model -> ( Model, List Effect )
 selectAddress id model =
     if model.selection == SelectedAddress id then
@@ -5533,3 +5582,38 @@ exportGraphImage _ conf model =
                 Nothing ->
                     exportGraph conf Nothing
             )
+
+
+
+-- Helper function for transaction hover logic
+
+
+handleTxHover : Id -> Model -> ( Model, List Effect )
+handleTxHover id model =
+    if model.hovered == HoveredTx id then
+        n model
+
+    else
+        let
+            hovered _ =
+                let
+                    unhovered =
+                        unhover model
+                in
+                { unhovered
+                    | network =
+                        Network.updateTx id (s_hovered True) unhovered.network
+                            |> Network.trySetHoverConversionLoop id True
+                    , hovered = HoveredTx id
+                }
+        in
+        case model.details of
+            Just (TxDetails txid _) ->
+                if id /= txid then
+                    hovered () |> n
+
+                else
+                    n model
+
+            _ ->
+                hovered () |> n

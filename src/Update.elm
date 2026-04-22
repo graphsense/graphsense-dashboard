@@ -101,6 +101,52 @@ setAbuseConcepts concepts model =
     }
 
 
+delay : Float -> msg -> Cmd msg
+delay time msg =
+    -- create a task that sleeps for `time`
+    Process.sleep time
+        |> -- once the sleep is over, ignore its output (using `always`)
+           -- and then we create a new task that simply returns a success, and the msg
+           Task.map (always <| msg)
+        |> -- finally, we ask Elm to perform the Task, which
+           -- takes the result of the above task and
+           -- returns it to our update function
+           Task.perform identity
+
+
+maxApiRetries : Int
+maxApiRetries =
+    3
+
+
+{-| Delay in milliseconds before the Nth retry attempt (1-indexed).
+
+Current strategy: exponential backoff with base 500 ms and factor 3
+(500, 1500, 4500 ms). Swap this body to change the backoff curve
+(linear, fibonacci, jittered, capped, …) without touching callers.
+
+-}
+apiRetryDelayMs : Int -> Float
+apiRetryDelayMs attempt =
+    500 * (3 ^ toFloat (attempt - 1))
+
+
+isTransientHttpError : Http.Error -> Bool
+isTransientHttpError err =
+    case err of
+        NetworkError ->
+            True
+
+        Timeout ->
+            True
+
+        BadStatus s ->
+            s == 502 || s == 503 || s == 504
+
+        _ ->
+            False
+
+
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
     case Log.log "msg" msg of
@@ -224,8 +270,49 @@ update plugins uc msg model =
                     | statusbar = Statusbar.update statusbarToken Nothing model.statusbar
                 }
 
+        BrowserRetryApiEffect key effect attempt ->
+            case Dict.get key model.statusbar.retries of
+                Just stored ->
+                    if stored == attempt then
+                        ( model, [ ApiEffect effect ] )
+
+                    else
+                        n model
+
+                Nothing ->
+                    n model
+
         BrowserGotResponseWithHeaders statusbarToken result ->
             let
+                retryPlan =
+                    case ( statusbarToken, result ) of
+                        ( Just key, Err ( err, _, eff ) ) ->
+                            if isTransientHttpError err then
+                                let
+                                    current =
+                                        Dict.get key model.statusbar.retries
+                                            |> Maybe.withDefault 0
+
+                                    next =
+                                        current + 1
+                                in
+                                if next <= maxApiRetries then
+                                    Just
+                                        { key = key
+                                        , effect = eff
+                                        , attempt = next
+                                        , delayMs = apiRetryDelayMs next
+                                        }
+
+                                else
+                                    Nothing
+
+                            else
+                                Nothing
+
+                        _ ->
+                            Nothing
+
                 notFound token =
                     Statusbar.getMessage token model.statusbar
                         |> Maybe.andThen
@@ -343,43 +430,52 @@ update plugins uc msg model =
                         _ ->
                             newDialog
             in
-            { model
-                | statusbar =
-                    case statusbarToken of
-                        Just t ->
-                            Statusbar.update
-                                t
-                                (case result of
-                                    Err ( Http.BadStatus 401, _, _ ) ->
-                                        Nothing
+            case retryPlan of
+                Just plan ->
+                    ( { model | statusbar = Statusbar.setRetry plan.key plan.attempt model.statusbar }
+                    , [ delay plan.delayMs (BrowserRetryApiEffect plan.key plan.effect plan.attempt)
+                            |> CmdEffect
+                      ]
+                    )
 
-                                    Err ( err, _, _ ) ->
-                                        Just err
+                Nothing ->
+                    { model
+                        | statusbar =
+                            case statusbarToken of
+                                Just t ->
+                                    Statusbar.update
+                                        t
+                                        (case result of
+                                            Err ( Http.BadStatus 401, _, _ ) ->
+                                                Nothing
 
-                                    Ok _ ->
-                                        Nothing
-                                )
-                                model.statusbar
+                                            Err ( err, _, _ ) ->
+                                                Just err
 
-                        Nothing ->
-                            if isNonCriticalApiError then
-                                model.statusbar
-
-                            else
-                                case result of
-                                    Err ( Http.BadStatus 429, _, _ ) ->
-                                        Just (Http.BadStatus 429)
-                                            |> Statusbar.add model.statusbar "search" []
-
-                                    _ ->
+                                            Ok _ ->
+                                                Nothing
+                                        )
                                         model.statusbar
-                , dialog = dialogAfterError
-                , notifications = notifications
-            }
-                |> handleResponse plugins
-                    uc
-                    result
-                |> mapSecond ((++) (List.map NotificationEffect notificationEffects))
+
+                                Nothing ->
+                                    if isNonCriticalApiError then
+                                        model.statusbar
+
+                                    else
+                                        case result of
+                                            Err ( Http.BadStatus 429, _, _ ) ->
+                                                Just (Http.BadStatus 429)
+                                                    |> Statusbar.add model.statusbar "search" []
+
+                                            _ ->
+                                                model.statusbar
+                        , dialog = dialogAfterError
+                        , notifications = notifications
+                    }
+                        |> handleResponse plugins
+                            uc
+                            result
+                        |> mapSecond ((++) (List.map NotificationEffect notificationEffects))
 
         UserClosesDialog ->
             case model.dialog of
@@ -1898,6 +1994,12 @@ update plugins uc msg model =
                 TSelectBox.NoSelection ->
                     n newModel
 
+                TSelectBox.Hovered _ ->
+                    n newModel
+
+                TSelectBox.Unhovered ->
+                    n newModel
+
         NotificationMsg ms ->
             n { model | notifications = Notification.update ms model.notifications }
 
@@ -2315,6 +2417,11 @@ updateByUrl plugins uc url model =
                         , pathfinder = { networks = c }
                         }
                    )
+
+        focusSearchEffect =
+            Browser.Dom.focus Search.searchInputId
+                |> Task.attempt (\_ -> NoOp)
+                |> CmdEffect
     in
     Route.parse routeConfig url
         |> Maybe.map2
@@ -2330,7 +2437,12 @@ updateByUrl plugins uc url model =
                                     |> s_searchType
                                         (Search.initSearchAddressAndTxs Nothing)
                           }
-                        , []
+                        , case oldRoute of
+                            Route.Home ->
+                                []
+
+                            _ ->
+                                [ focusSearchEffect ]
                         )
 
                     Route.Stats ->
@@ -2406,6 +2518,14 @@ updateByUrl plugins uc url model =
                         let
                             ( pfn, graphEffect ) =
                                 Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
+
+                            focusEffect =
+                                case oldRoute of
+                                    Route.Pathfinder _ ->
+                                        []
+
+                                    _ ->
+                                        [ focusSearchEffect ]
                         in
                         ( { model
                             | page = Pathfinder
@@ -2413,8 +2533,10 @@ updateByUrl plugins uc url model =
                             , url = url
                             , navbarSubMenu = Nothing
                           }
-                        , graphEffect
-                            |> List.map PathfinderEffect
+                        , focusEffect
+                            ++ (graphEffect
+                                    |> List.map PathfinderEffect
+                               )
                         )
 
                     Route.Plugin ( pluginType, urlValue ) ->

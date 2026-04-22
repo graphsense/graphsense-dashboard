@@ -1,4 +1,50 @@
-module Components.TransactionFilter exposing (DialogPosition, Effect, FilterHeaderConfig, InternalModel, Model, Msg(..), QuickFilter, QuickFilterModel, Range, Settings, SettingsModel, applyQuickFilter, getDateRange, getDirection, getDirectionFromQuickFilter, getIncludeZeroValueTxs, getSelectedAsset, getSelectedQuickFilter, getSettings, getTx, getUtxoFilter, hasChanged, init, initQuickFilter, initSettings, initSettingsFromQuickFilter, perform, setFocusDate, setSelectedQuickFilter, subscriptions, update, updateDateRange, updateDateRangeInternal, updateDirection, updateQuickFilters, updateSelectedAsset, view, withAssetSelectBox, withDateRange, withDateRangePicker, withDirection, withIncludeZeroValueTxs, withQuickFilter)
+module Components.TransactionFilter exposing
+    ( DialogPosition
+    , Effect
+    , FilterHeaderConfig
+    , InternalModel
+    , Model
+    , Msg(..)
+    , QuickFilter
+    , QuickFilterModel
+    , Range
+    , Settings
+    , SettingsModel
+    , applyQuickFilter
+    , getDateRange
+    , getDirection
+    , getDirectionFromQuickFilter
+    , getHoveredQuickFilter
+    , getIncludeZeroValueTxs
+    , getSelectedAsset
+    , getSelectedQuickFilter
+    , getSettings
+    , getTx
+    , getTxIdFromQuickFilter
+    , getUtxoFilter
+    , hasChanged
+    , init
+    , initQuickFilter
+    , initSettings
+    , initSettingsFromQuickFilter
+    , perform
+    , setFocusDate
+    , setSelectedQuickFilter
+    , subscriptions
+    , update
+    , updateDateRange
+    , updateDateRangeInternal
+    , updateDirection
+    , updateQuickFilters
+    , updateSelectedAsset
+    , view
+    , withAssetSelectBox
+    , withDateRange
+    , withDateRangePicker
+    , withDirection
+    , withIncludeZeroValueTxs
+    , withQuickFilter
+    )
 
 import Basics.Extra exposing (flip)
 import Browser.Events
@@ -19,6 +65,7 @@ import Maybe.Extra
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Locale as Locale
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
 import RecordSetter as Rs exposing (s_direction, s_settings)
 import String
@@ -35,7 +82,7 @@ import Util.Css
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.TooltipType exposing (TooltipType)
-import Util.View exposing (fullWidthCss, none, pointer, truncateLongIdentifier)
+import Util.View exposing (fullWidthCss, none, pointer)
 import View.Button as Button
 import View.Controls as Controls
 import View.Locale as Locale
@@ -59,6 +106,7 @@ type alias InternalModel =
     , dialogPosition : DialogPosition
     , isDragging : Bool
     , dragStart : Maybe { x : Int, y : Int, top : Float, right : Float }
+    , hoveredQuickFilter : Maybe QuickFilterModel
     }
 
 
@@ -148,6 +196,7 @@ type Msg
     | CloseDateRangePicker
     | UpdateDateRangePicker DatePicker.Msg
     | TxTableQuickFilterSelectBoxMsg (ThemedSelectBox.Msg (Maybe QuickFilterModel))
+    | TxTableQuickFilterHoverMsg (ThemedSelectBox.Msg (Maybe QuickFilterModel))
     | UserClickedCustomFilterLabel
     | UserClickedUtxoOnly
     | ResetTxUtxoOnlyFilter
@@ -304,6 +353,32 @@ update msg (Internal model) =
                                     _ ->
                                         identity
                                )
+                    )
+                |> Maybe.withDefault model
+                |> Internal
+                |> n
+
+        TxTableQuickFilterHoverMsg ms ->
+            model.quickFilterSelect
+                |> Maybe.map
+                    (\sb ->
+                        let
+                            ( newSelect, outMsg ) =
+                                ThemedSelectBox.update ms sb
+                        in
+                        { model
+                            | quickFilterSelect = Just newSelect
+                            , hoveredQuickFilter =
+                                case outMsg of
+                                    ThemedSelectBox.Hovered qf ->
+                                        qf
+
+                                    ThemedSelectBox.Unhovered ->
+                                        Nothing
+
+                                    _ ->
+                                        model.hoveredQuickFilter
+                        }
                     )
                 |> Maybe.withDefault model
                 |> Internal
@@ -558,20 +633,6 @@ dateTimeFilterRawSmall vc label text =
         }
 
 
-dateTimeFilterRaw : View.Config -> msg -> String -> String -> Html msg
-dateTimeFilterRaw vc msg label text =
-    SidePanelComponents.filterLabel
-        { root =
-            { iconInstance = closeButtonGrey msg
-            , text = text
-            , separator = Locale.string vc.locale label
-            , start = ""
-            , showSeparator = True
-            , showStart = False
-            }
-        }
-
-
 directionFilterHeader : View.Config -> msg -> Direction -> Html msg
 directionFilterHeader vc resetMsg dir =
     directionFilterString dir
@@ -641,9 +702,6 @@ utxoOnlyHeader vc resetMsg =
 filterHeader : View.Config -> FilterHeaderConfig msg -> Model -> Html msg
 filterHeader vc config (Internal model) =
     let
-        qf =
-            settingsToQuickFilter model
-
         utxoFilter =
             model
                 |> Internal
@@ -654,21 +712,12 @@ filterHeader vc config (Internal model) =
             model.settings.asset |> Maybe.map (assetFilterHeader vc ResetTxAssetFilter)
 
         filterList =
-            qf
-                |> Maybe.map
-                    (quickfilterHeader vc
-                        >> Just
-                        >> List.singleton
-                        >> (::) utxoFilter
-                        >> flip (++) [ asset ]
-                    )
-                |> Maybe.withDefault
-                    [ model.settings.range |> Maybe.map (dateTimeFilterHeaderFromRange vc ResetDateRangePicker)
-                    , model.settings.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
-                    , utxoFilter
-                    , asset
-                    , model.settings.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
-                    ]
+            [ model.settings.range |> Maybe.map (dateTimeFilterHeaderFromRange vc ResetDateRangePicker)
+            , model.settings.direction |> Maybe.Extra.join |> Maybe.map (directionFilterHeader vc ResetTxDirectionFilter)
+            , utxoFilter
+            , asset
+            , model.settings.includeZeroValueTxs |> Maybe.map (zeroValuesHeader vc ResetZeroValueSubTxsTableFilters)
+            ]
     in
     SidePanelComponents.sidePanelListFilterRowWithAttributes
         (SidePanelComponents.sidePanelListFilterRowAttributes
@@ -996,7 +1045,24 @@ txFilterDialogView vc net config (Internal model) =
                                 )
                                 qf
                                 (settingsToQuickFilter model)
-                                |> Html.map TxTableQuickFilterSelectBoxMsg
+                                |> Html.map
+                                    (\msg ->
+                                        case msg of
+                                            ThemedSelectBox.Select x ->
+                                                TxTableQuickFilterSelectBoxMsg (ThemedSelectBox.Select x)
+
+                                            ThemedSelectBox.Open ->
+                                                TxTableQuickFilterSelectBoxMsg ThemedSelectBox.Open
+
+                                            ThemedSelectBox.Close ->
+                                                TxTableQuickFilterSelectBoxMsg ThemedSelectBox.Close
+
+                                            ThemedSelectBox.Hover x ->
+                                                TxTableQuickFilterHoverMsg (ThemedSelectBox.Hover x)
+
+                                            ThemedSelectBox.Unhover ->
+                                                TxTableQuickFilterHoverMsg ThemedSelectBox.Unhover
+                                    )
                                 |> Html.map config.tag
                         )
                     |> Maybe.withDefault none
@@ -1091,8 +1157,10 @@ quickFilterToLabel vc =
         (\qf ->
             Sc.filterGroupSmall
                 { filterList =
-                    quickfilterHeaderSmall vc qf
-                        :: (qf.tx
+                    [ qf.date |> dateTimeFilterSmall vc qf.direction
+                    , qf.direction |> directionFilterString |> stringFilterSmall vc
+                    ]
+                        ++ (qf.tx
                                 |> txToAsset
                                 |> Maybe.map (stringFilterSmall vc >> List.singleton)
                                 |> Maybe.withDefault []
@@ -1103,41 +1171,40 @@ quickFilterToLabel vc =
         >> Maybe.withDefault (Html.text <| Locale.string vc.locale "filter-none-selected")
 
 
-quickfilterHeaderSmall : View.Config -> { a | direction : Direction, tx : Tx.TxType } -> Html msg
-quickfilterHeaderSmall vc qf =
+
+{-
+   txHashHeaderSmall : View.Config -> { a | direction : Direction, tx : Tx.TxType } -> Html msg
+   txHashHeaderSmall vc qf =
+       let
+           txLabel =
+               case qf.direction of
+                   Outgoing ->
+                       "Datefilter-starting-tx"
+
+                   Incoming ->
+                       "Datefilter-until-tx"
+       in
+       qf.tx
+           |> Tx.getRawBaseTxHashForTxType
+           |> truncateLongIdentifier
+           |> dateTimeFilterRawSmall vc txLabel
+-}
+
+
+dateTimeFilterSmall : View.Config -> Direction -> Time.Posix -> Html msg
+dateTimeFilterSmall vc direction date =
     let
         txLabel =
-            case qf.direction of
+            case direction of
                 Outgoing ->
-                    "Datefilter-starting-tx"
+                    "datefilter-starting"
 
                 Incoming ->
-                    "Datefilter-until-tx"
+                    "datefilter-until"
     in
-    qf.tx
-        |> Tx.getRawBaseTxHashForTxType
-        |> truncateLongIdentifier
+    date
+        |> Locale.timestampDateTimeUniform vc.locale False
         |> dateTimeFilterRawSmall vc txLabel
-
-
-quickfilterHeader : View.Config -> { a | direction : Direction, tx : Tx.TxType } -> Html Msg
-quickfilterHeader vc qf =
-    let
-        txLabel =
-            case qf.direction of
-                Outgoing ->
-                    "Datefilter-starting-tx"
-
-                Incoming ->
-                    "Datefilter-until-tx"
-
-        txHash =
-            qf.tx
-                |> Tx.getRawBaseTxHashForTxType
-    in
-    txHash
-        |> truncateLongIdentifier
-        |> dateTimeFilterRaw vc ResetAllTxFilters txLabel
 
 
 init : Settings -> Model
@@ -1152,6 +1219,7 @@ init (Settings settings) =
         , dialogPosition = { top = 100, right = 20 }
         , isDragging = False
         , dragStart = Nothing
+        , hoveredQuickFilter = Nothing
         }
 
 
@@ -1181,19 +1249,19 @@ txToAsset tx =
 
 quickFilterToSettings : QuickFilterModel -> SettingsModel
 quickFilterToSettings qf =
-    { asset = txToAsset qf.tx
-    , includeZeroValueTxs = Nothing
-    , direction = Just <| Just qf.direction
-    , range =
-        Just <|
+    { initSettingsModel
+        | asset = txToAsset qf.tx
+        , includeZeroValueTxs = Nothing
+        , direction = Just <| Just qf.direction
+        , range =
             Just <|
-                case qf.direction of
-                    Incoming ->
-                        Until qf.date
+                Just <|
+                    case qf.direction of
+                        Incoming ->
+                            Until qf.date
 
-                    Outgoing ->
-                        Starting qf.date
-    , utxoOnly = False
+                        Outgoing ->
+                            Starting qf.date
     }
 
 
@@ -1203,7 +1271,7 @@ initSettingsModel =
     , asset = Nothing
     , includeZeroValueTxs = Nothing
     , range = Nothing
-    , utxoOnly = False
+    , utxoOnly = True
     }
 
 
@@ -1290,7 +1358,9 @@ updateOptions options select =
                 Just qf ->
                     let
                         txHash =
-                            qf.tx |> Tx.getRawBaseTxHashForTxType
+                            qf.tx
+                                |> Tx.getTxIdForTxType
+                                |> Id.id
 
                         currency =
                             txToAsset qf.tx
@@ -1396,6 +1466,12 @@ hasChanged (Internal old) (Internal new) =
         || (old.settings.includeZeroValueTxs /= new.settings.includeZeroValueTxs)
         || (old.settings.direction /= new.settings.direction)
         || (old.settings.utxoOnly /= new.settings.utxoOnly)
+
+
+getHoveredQuickFilter : Model -> Maybe QuickFilter
+getHoveredQuickFilter (Internal model) =
+    model.hoveredQuickFilter
+        |> Maybe.map QuickFilterInternal
 
 
 setFocusDate : Time.Posix -> Model -> Model
@@ -1512,6 +1588,12 @@ subscriptions (Internal model) =
 
     else
         Sub.none
+
+
+getTxIdFromQuickFilter : QuickFilter -> Id
+getTxIdFromQuickFilter (QuickFilterInternal qf) =
+    qf.tx
+        |> Tx.getTxIdForTxType
 
 
 perform : Effect -> Cmd Msg

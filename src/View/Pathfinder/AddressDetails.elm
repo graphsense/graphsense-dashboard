@@ -13,8 +13,8 @@ import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, div, img)
-import Html.Styled.Attributes as HA exposing (src)
+import Html.Styled as Html exposing (Html, div, object)
+import Html.Styled.Attributes as HA
 import Html.Styled.Events exposing (onClick, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
 import Json.Decode
@@ -1180,14 +1180,13 @@ makeSidePanelData vc model id pluginTagsVisible crosschainVisible =
                             iconDetails =
                                 HIcons.iconsAssign_details
                         in
-                        img
-                            [ src imgSrc
-                            , HA.alt <| Maybe.withDefault "" <| actorText
+                        object
+                            [ HA.attribute "data" imgSrc
                             , HA.width <| round iconDetails.width
                             , HA.height <| round iconDetails.height
                             , HA.css iconDetails.styles
                             ]
-                            []
+                            [ HIcons.iconsAssign {} ]
                             |> List.singleton
                             |> div
                                 [ HA.css iconDetails.styles

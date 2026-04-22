@@ -351,7 +351,12 @@ utxo vc model id viewState tx =
                             ioTableConfig =
                                 { network = tx.raw.currency
                                 , hasTags = getHavingTags model
-                                , getChangeInfo = consensusChangeInfoForOutput consensusEntries
+                                , getChangeInfo =
+                                    if mixingDetails == Nothing then
+                                        consensusChangeInfoForOutput consensusEntries
+
+                                    else
+                                        always Nothing
                                 }
                         in
                         if viewState.outputsTableOpen then

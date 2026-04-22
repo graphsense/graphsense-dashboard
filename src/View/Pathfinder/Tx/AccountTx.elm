@@ -206,6 +206,15 @@ tooltipAttributes vc id accTx =
             )
 
 
+tooltipEventHandlers : View.Config -> Id -> AccountTx -> List (Attribute Msg)
+tooltipEventHandlers vc id accTx =
+    Util.TooltipType.AccountTx accTx
+        |> Tooltip.eventHandlers (Id.toString id)
+            (Util.Tooltip.tooltipConfig vc TooltipMsg
+                |> Tooltip.withOpenDelay 100
+            )
+
+
 edge : Plugins -> View.Config -> Pathfinder.Config -> AccountTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
 edge _ vc pc account tx annotation =
     let
@@ -300,7 +309,7 @@ edge _ vc pc account tx annotation =
                         |> onClickWithStop
                     ]
                 |> List.singleton
-                |> g (tooltipAttributes vc tx.id account)
+                |> g (tooltipEventHandlers vc tx.id account)
         )
         account.fromAddress
         account.toAddress

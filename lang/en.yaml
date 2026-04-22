@@ -397,6 +397,7 @@ auto trace limit: Auto trace limit
 infobox-no-suitable-adjacent-transaction: Could not find a suitable adjacent transaction
   for address {0}. This is likely because the funds are not yet spent.
 save file: Save file
+export graph: Export graph
 reset: Reset
 tags list: Tags list
 note-tag-inherited: 'Note: This tag was inherited from the cluster level.'
@@ -545,3 +546,5 @@ filter-custom-filter: custom filter
 filter-follow-utxo: follow UTXO
 filter-none-selected: none selected 
 filter-utxo-only: UTXO only
+tx-filter-utxo-only-tooltip: Only list transactions which are referencing the selected transaction on a UTXO level
+retrying {0}/{1}: retrying {0}/{1}

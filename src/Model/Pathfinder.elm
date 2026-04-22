@@ -188,6 +188,9 @@ getTagSummary model id =
         Just (HasTagSummaryWithCluster ts) ->
             Just ts
 
+        Just (HasTagSummaryWithoutCluster ts) ->
+            Just ts
+
         Just (HasTagSummaryOnlyWithCluster ts) ->
             Just ts
 

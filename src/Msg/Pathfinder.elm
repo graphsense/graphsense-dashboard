@@ -74,6 +74,7 @@ type Msg
     | UserReleasedEscape
     | UserPressedNormalKey String
     | UserReleasedNormalKey String
+    | UserPressedArrowKey Direction
     | AddressDetailsMsg Id AddressDetails.Msg
     | ConversionDetailsMsg ( Id, Id ) ConversionDetails.ConversionDetailsMsgs
     | TxDetailsMsg TxDetails.Msg
@@ -151,6 +152,7 @@ type Msg
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
     | InternalExportGraphTxsCompleted
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
+    | InternalHoveredQuickFilter (Maybe TransactionFilter.QuickFilter)
     | TransactionFilterMsg TransactionFilter.Msg
     | TooltipMsg (Tooltip.Msg TooltipType)
     | RepositionTooltip

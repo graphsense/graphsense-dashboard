@@ -85,6 +85,9 @@ shallPushHistory plugins msg _ =
         UserReleasedNormalKey _ ->
             False
 
+        UserPressedArrowKey _ ->
+            False
+
         UserClickedShowLegend ->
             False
 
@@ -447,6 +450,9 @@ shallPushHistory plugins msg _ =
             False
 
         InternalChangedTxFilter _ _ ->
+            False
+
+        InternalHoveredQuickFilter _ ->
             False
 
         TransactionFilterMsg _ ->

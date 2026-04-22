@@ -414,6 +414,7 @@ infobox-no-suitable-adjacent-transaction: No se ha encontrado una transacción a
   adecuada para la dirección {0}. Probablemente se deba a que los fondos aún no se
   han gastado.
 save file: Guardar archivo
+export graph: Exportar gráfico
 reset: Restablecer
 tags list: Lista de etiquetas
 note-tag-inherited: 'Nota: Esta etiqueta se ha heredado del nivel de clúster.'
@@ -563,6 +564,8 @@ datefilter-until: hasta el
 datefilter-starting-tx: posterior a
 datefilter-until-tx: anterior a
 filter-utxo-only: solo UTXO
+tx-filter-utxo-only-tooltip: Solo listar transacciones que referencian la transacción seleccionada a nivel UTXO
 filter-quick-filter: filtro rápido por transacción
 filter-custom-filter: filtro personalizado
 filter-none-selected: ninguno seleccionado
+retrying {0}/{1}: reintentando {0}/{1}

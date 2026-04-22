@@ -140,6 +140,7 @@ type Msg
     | BrowserGotUncaughtError Json.Encode.Value
     | DebouncePluginOutMsg Plugin.OutMsg
     | BrowserCancelledRequest String
+    | BrowserRetryApiEffect String (Effect.Api.Effect Msg) Int
     | ExportDialogMsg Msg.ExportDialog.Msg
 
 
