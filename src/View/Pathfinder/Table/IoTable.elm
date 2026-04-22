@@ -9,7 +9,7 @@ import Config.View as View
 import Css
 import Css.Table exposing (Styles)
 import Css.View
-import Html.Styled exposing (button, span, text)
+import Html.Styled exposing (span)
 import Html.Styled.Attributes exposing (css, style, title)
 import Html.Styled.Events exposing (onClick)
 import Model.Currency exposing (assetFromBase)
@@ -28,7 +28,7 @@ import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenc
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.Tooltip
 import Util.TooltipType as TooltipType
-import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, loadingSpinner, none, pointer, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as PathfinderInfiniteTable
 import View.Pathfinder.PagedTable exposing (customizations)
@@ -107,7 +107,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
             titleValue
             .value
         , PT.htmlColumn vc
-            "Expand"
+            ""
             { html =
                 \txValue ->
                     case ioToId network txValue of
@@ -115,13 +115,34 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                             none
 
                         Just id ->
-                            button
-                                [ Direction.flip direction
-                                    |> UserClickedIoTableExpand id
-                                    |> onClick
-                                , css [ Css.cursor Css.pointer, Css.padding2 (Css.px 4) (Css.px 8) ]
-                                ]
-                                [ text "Expand" ]
+                            let
+                                attrs =
+                                    [ Direction.flip direction
+                                        |> UserClickedIoTableExpand id
+                                        |> onClick
+                                    , pointer
+                                    ]
+                            in
+                            case direction of
+                                Direction.Incoming ->
+                                    Icons.iconsNodeOpenRightWithAttributes
+                                        (Icons.iconsNodeOpenRightAttributes
+                                            |> Rs.s_root attrs
+                                        )
+                                        { root =
+                                            { state = Icons.IconsNodeOpenRightStateActiv
+                                            }
+                                        }
+
+                                Direction.Outgoing ->
+                                    Icons.iconsNodeOpenLeftWithAttributes
+                                        (Icons.iconsNodeOpenLeftAttributes
+                                            |> Rs.s_root attrs
+                                        )
+                                        { root =
+                                            { state = Icons.IconsNodeOpenLeftStateActiv
+                                            }
+                                        }
             }
         ]
     , customizations = cc
