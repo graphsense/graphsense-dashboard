@@ -1,35 +1,45 @@
-module Init.Pathfinder.TxDetails exposing (init, initIoTable, initSubTxTable)
+module Init.Pathfinder.TxDetails exposing (dummyIoTableConfig, init, initIoTable, initSubTxTable)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
-import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
 import Effect.Pathfinder exposing (Effect(..))
-import Model.Pathfinder.Table.IoTable as IoTable
+import Model.Pathfinder.Table.IoTable as IoTable exposing (titleValue)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
+import Msg.Pathfinder.TxDetails exposing (IoDirection(..))
 import RemoteData
+import Tuple3
 import Util.Data exposing (negateTxValue)
 
 
 initSubTxTable : InfiniteTable.Model Api.Data.TxAccount
 initSubTxTable =
-    Table.initUnsorted
-        |> InfiniteTable.init "subTxTable" 6
+    InfiniteTable.init "subTxTable" 6
 
 
-initIoTable : String -> List Api.Data.TxValue -> InfiniteTable.Model Api.Data.TxValue
-initIoTable tableId data =
+initIoTable : String -> IoDirection -> List Api.Data.TxValue -> InfiniteTable.Model Api.Data.TxValue
+initIoTable tableId ioDirection data =
     let
-        baseTable =
-            Table.initUnsorted
-
-        ( model, _, _ ) =
-            baseTable
-                |> InfiniteTable.init tableId 6
-                |> InfiniteTable.setData dummyIoTableConfig IoTable.filter Nothing data
+        dataAsc =
+            data
+                |> List.sortBy (.value >> .value)
     in
-    model
+    InfiniteTable.init tableId 6
+        |> InfiniteTable.sortBy titleValue True
+        |> InfiniteTable.setData dummyIoTableConfig IoTable.filter Nothing dataAsc
+        |> Tuple3.first
+        |> InfiniteTable.sortBy titleValue False
+        |> InfiniteTable.setData dummyIoTableConfig IoTable.filter Nothing (List.reverse dataAsc)
+        |> Tuple3.first
+        |> InfiniteTable.sortBy titleValue
+            (case ioDirection of
+                Inputs ->
+                    True
+
+                Outputs ->
+                    False
+            )
 
 
 
@@ -64,8 +74,8 @@ init txsFilter assets tx =
     in
     { inputsTableOpen = False
     , outputsTableOpen = False
-    , inputsTable = initIoTable "inputsTable" inputs
-    , outputsTable = initIoTable "outputsTable" outputs
+    , inputsTable = initIoTable "inputsTable" Inputs inputs
+    , outputsTable = initIoTable "outputsTable" Outputs outputs
     , tx = tx
     , baseTx = RemoteData.NotAsked
     , subTxsTable = initSubTxTable
