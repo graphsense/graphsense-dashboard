@@ -3,7 +3,6 @@ module Update.Pathfinder.Table.RelatedAddressesTable exposing (abort, appendEnti
 import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
-import Components.Table as Table
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -33,7 +32,7 @@ pagesize =
 init : Id -> Api.Data.Entity -> Model
 init addressId entity =
     { table =
-        InfiniteTable.init "relatedAddressesTable" pagesize Table.initUnsorted
+        InfiniteTable.init "relatedAddressesTable" pagesize
     , addressId = addressId
     , entity = { currency = entity.currency, entity = entity.entity }
     , existingTaggedAddresses = Set.empty

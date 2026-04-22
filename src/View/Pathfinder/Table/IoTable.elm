@@ -103,7 +103,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
             (.value >> .value >> (>=) 0)
             vc
             (\_ -> assetFromBase network)
-            "Value"
+            titleValue
             .value
         ]
     , customizations = cc
