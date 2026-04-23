@@ -4,6 +4,7 @@ import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.TransactionFilter as TransactionFilter
 import Dict exposing (Dict)
+import IntDict exposing (IntDict)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData exposing (RemoteData, WebData)
 
@@ -21,8 +22,8 @@ type alias Model =
     , outputsTableOpen : Bool
     , inputsTable : InfiniteTable.Model Api.Data.TxValue
     , outputsTable : InfiniteTable.Model Api.Data.TxValue
-    , inputsRefs : Dict Int TxValueRefsData
-    , outputsRefs : Dict Int TxValueRefsData
+    , inputsRefs : IntDict TxValueRefsData
+    , outputsRefs : IntDict TxValueRefsData
     , tx : Tx
     , subTxsTableOpen : Bool
     , baseTx : WebData Api.Data.TxAccount

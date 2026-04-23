@@ -9,6 +9,7 @@ import Dict
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.TxDetails exposing (dummyIoTableConfig)
+import IntDict
 import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
@@ -149,7 +150,7 @@ update msg model =
                     gettersAndSetters ioDirection
 
                 updatedModel =
-                    Dict.insert index
+                    IntDict.insert index
                         (RemoteData.Success refs)
                         (refsGet model)
                         |> flip refsSet model
@@ -243,10 +244,10 @@ update msg model =
                     tableGet model
                         |> InfiniteTable.getPage
                         |> List.filterMap .index
-                        |> List.filter (flip Dict.member (refsGet model) >> not)
+                        |> List.filter (flip IntDict.member (refsGet model) >> not)
                         |> List.foldl
                             (\index ( accRefs, accEffects ) ->
-                                ( Dict.insert index RemoteData.Loading accRefs
+                                ( IntDict.insert index RemoteData.Loading accRefs
                                 , (BrowserGotTxRefsForIoTable ioDir index
                                     >> Pathfinder.TxDetailsMsg
                                     |> refsEffect
