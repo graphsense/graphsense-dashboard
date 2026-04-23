@@ -14,6 +14,7 @@ import Css.View
 import Dict
 import Html.Styled exposing (Html, div, map)
 import Html.Styled.Events exposing (preventDefaultOn, stopPropagationOn)
+import Init.Pathfinder.Id as Id
 import IntDict
 import Json.Decode
 import List.Extra
@@ -262,6 +263,22 @@ utxo vc model id viewState tx =
             { sidePanelTxInstancesBase
                 | secondRowTextOfMix = mixingConfidenceBadge
             }
+
+        checkIndex refsDict =
+            Maybe.andThen
+                (\i ->
+                    IntDict.get i refsDict
+                        |> Maybe.map
+                            (RemoteData.map
+                                (\refs ->
+                                    if List.all (\{ txHash } -> Network.hasTx (Id.init tx.raw.currency txHash) model.network) refs |> not then
+                                        refs
+
+                                    else
+                                        []
+                                )
+                            )
+                )
     in
     SidePanelComponents.sidePanelTransactionWithInstances
         (SidePanelComponents.sidePanelTransactionAttributes
@@ -320,7 +337,8 @@ utxo vc model id viewState tx =
                                 { network = tx.raw.currency
                                 , hasTags = getHavingTags model
                                 , getChangeInfo = always Nothing
-                                , getRefs = Maybe.andThen (\i -> IntDict.get i viewState.inputsRefs)
+                                , getRefs =
+                                    checkIndex viewState.inputsRefs
                                 }
                         in
                         if viewState.inputsTableOpen then
@@ -359,7 +377,8 @@ utxo vc model id viewState tx =
 
                                     else
                                         always Nothing
-                                , getRefs = Maybe.andThen (\i -> IntDict.get i viewState.outputsRefs)
+                                , getRefs =
+                                    checkIndex viewState.outputsRefs
                                 }
                         in
                         if viewState.outputsTableOpen then
