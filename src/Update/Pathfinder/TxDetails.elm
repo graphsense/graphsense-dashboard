@@ -5,14 +5,13 @@ import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
-import Dict
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.TxDetails exposing (dummyIoTableConfig)
-import IntDict
+import IntDict exposing (IntDict)
 import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx
-import Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
+import Model.Pathfinder.TxDetails exposing (Model, TxValueRefsData, hasSubTxsTable)
 import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
 import RecordSetter exposing (s_baseTx, s_inputsRefs, s_inputsTable, s_inputsTableOpen, s_outputsRefs, s_outputsTable, s_outputsTableOpen, s_state, s_subTxsTable)
@@ -235,16 +234,20 @@ update msg model =
                 refsEffect =
                     case ioDir of
                         Inputs ->
-                            Api.ListSpentInTxRefsEffect
+                            Api.ListSpendingTxRefsEffect
 
                         Outputs ->
-                            Api.ListSpendingTxRefsEffect
+                            Api.ListSpentInTxRefsEffect
 
                 ( modelWithRefs, fetchEffects ) =
                     tableGet model
                         |> InfiniteTable.getPage
                         |> List.filterMap .index
-                        |> List.filter (flip IntDict.member (refsGet model) >> not)
+                        |> List.filter
+                            (flip IntDict.get (refsGet model)
+                                >> Maybe.map (RemoteData.isSuccess >> not)
+                                >> Maybe.withDefault False
+                            )
                         |> List.foldl
                             (\index ( accRefs, accEffects ) ->
                                 ( IntDict.insert index RemoteData.Loading accRefs
@@ -300,6 +303,16 @@ update msg model =
                 n model
 
 
+gettersAndSetters :
+    IoDirection
+    ->
+        { openGet : Model -> Bool
+        , openSet : Bool -> Model -> Model
+        , tableGet : Model -> InfiniteTable.Model Api.Data.TxValue
+        , tableSet : InfiniteTable.Model Api.Data.TxValue -> Model -> Model
+        , refsGet : Model -> IntDict TxValueRefsData
+        , refsSet : IntDict TxValueRefsData -> Model -> Model
+        }
 gettersAndSetters ioDir =
     case ioDir of
         Inputs ->

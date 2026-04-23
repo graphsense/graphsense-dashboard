@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, config)
+module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, TxValueRefsData, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -9,7 +9,7 @@ import Config.View as View
 import Css
 import Css.Table exposing (Styles)
 import Css.View
-import Html.Styled exposing (span)
+import Html.Styled exposing (div, span)
 import Html.Styled.Attributes exposing (css, style, title)
 import Html.Styled.Events exposing (onClick)
 import Model.Currency exposing (assetFromBase)
@@ -20,6 +20,7 @@ import Model.Pathfinder.Table.IoTable exposing (titleValue)
 import Model.Pathfinder.Tx exposing (ioToId)
 import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
 import RecordSetter as Rs
+import RemoteData exposing (RemoteData(..))
 import Sha256
 import Table
 import Theme.Colors as Colors
@@ -36,16 +37,53 @@ import View.Pathfinder.PagedTable exposing (customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders, setHeaderCheckbox, wrapCell)
 
 
+type alias TxValueRefsData =
+    RemoteData String (List Api.Data.TxRef)
+
+
 type alias IoColumnConfig =
     { network : String
     , hasTags : Id -> HavingTags
     , getChangeInfo : Api.Data.TxValue -> Maybe { confidence : Float, heuristics : List String }
+    , getRefs : Maybe Int -> Maybe TxValueRefsData
     }
 
 
 config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> Bool -> IoColumnConfig -> InfiniteTable.TableConfig Api.Data.TxValue Msg
 config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
     let
+        loadingIcon_ =
+            div
+                [ Locale.string vc.locale "Loading references" |> title
+                , css
+                    [ Css.position Css.relative
+                    , Icons.iconsNodeOpenRightStateActiv_details.width
+                        |> Css.px
+                        |> Css.width
+                    , Icons.iconsNodeOpenRightStateActiv_details.height
+                        |> Css.px
+                        |> Css.height
+                    ]
+                ]
+                [ loadingSpinner vc
+                    (\_ ->
+                        [ Css.position Css.absolute
+                        , Icons.iconsNodeOpenRightStateActivBackground_details.height
+                            |> Css.px
+                            |> Css.height
+                        , Icons.iconsNodeOpenRightStateActivBackground_details.width
+                            |> Css.px
+                            |> Css.width
+                        , Icons.iconsNodeOpenRightStateActivBackground_details.x
+                            |> Css.px
+                            |> Css.left
+                        , Icons.iconsNodeOpenRightStateActivBackground_details.y
+                            |> Css.px
+                            |> Css.top
+                        ]
+                    )
+                ]
+
         styles_ =
             styles
                 |> Rs.s_headCell
@@ -117,15 +155,17 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
 
                         Just id ->
                             let
+                                refs =
+                                    ioColumnConfig.getRefs txValue.index
+
                                 attrs =
                                     [ Direction.flip direction
                                         |> UserClickedIoTableExpand id
                                         |> onClick
                                     , pointer
                                     ]
-                            in
-                            case direction of
-                                Direction.Incoming ->
+
+                                expandIcon =
                                     Icons.iconsNodeOpenRightWithAttributes
                                         (Icons.iconsNodeOpenRightAttributes
                                             |> Rs.s_root attrs
@@ -134,16 +174,26 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                                             { state = Icons.IconsNodeOpenRightStateActiv
                                             }
                                         }
+                            in
+                            case refs of
+                                Nothing ->
+                                    none
 
-                                Direction.Outgoing ->
-                                    Icons.iconsNodeOpenLeftWithAttributes
-                                        (Icons.iconsNodeOpenLeftAttributes
-                                            |> Rs.s_root attrs
-                                        )
-                                        { root =
-                                            { state = Icons.IconsNodeOpenLeftStateActiv
-                                            }
-                                        }
+                                Just NotAsked ->
+                                    none
+
+                                Just Loading ->
+                                    loadingIcon_
+
+                                Just (Success refsList) ->
+                                    if List.isEmpty refsList then
+                                        none
+
+                                    else
+                                        expandIcon
+
+                                Just (Failure _) ->
+                                    none
             }
         ]
     , customizations = cc

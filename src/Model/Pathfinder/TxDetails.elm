@@ -1,9 +1,8 @@
-module Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
+module Model.Pathfinder.TxDetails exposing (Model, TxValueRefsData, hasSubTxsTable)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.TransactionFilter as TransactionFilter
-import Dict exposing (Dict)
 import IntDict exposing (IntDict)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData exposing (RemoteData, WebData)
