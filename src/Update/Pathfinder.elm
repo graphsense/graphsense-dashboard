@@ -4116,22 +4116,22 @@ selectConversionEdge ( a, b ) model =
 focusNeighborAddress : Update.Config -> Id -> Direction -> Model -> ( Model, List Effect )
 focusNeighborAddress uc anchorId direction model =
     let
-        anchorKey =
-            Id.id anchorId
-
+        -- Collect every graph-loaded address on the tx's `direction` side
+        -- rather than the single "biggest" candidate from
+        -- getAddressForDirection. That heuristic can pick an address that
+        -- isn't on the graph (e.g. the biggest non-change output of a UTXO
+        -- tx), which would make navigation skip over the neighbor we came
+        -- from and get stuck.
         neighborId =
             Network.getTxsForAddress model.network direction anchorId
+                |> List.concatMap Tx.listAddressesForTx
                 |> List.filterMap
-                    (\tx ->
-                        getAddressForDirection tx direction (Set.singleton anchorKey)
-                            |> Maybe.andThen
-                                (\nid ->
-                                    if Dict.member nid model.network.addresses then
-                                        Just nid
+                    (\( d, addr ) ->
+                        if d == direction && addr.id /= anchorId then
+                            Just addr.id
 
-                                    else
-                                        Nothing
-                                )
+                        else
+                            Nothing
                     )
                 |> List.head
     in
