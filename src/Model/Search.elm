@@ -1,4 +1,4 @@
-module Model.Search exposing (Model, ResultLine(..), SearchType(..), addToAutoComplete, firstResult, getLatestBlocks, getMulti, isLikelyPathSearchInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, query, searchInputId, selectedValue, setIsPickingCurrency, setQuery)
+module Model.Search exposing (Model, ResultLine(..), SearchType(..), addRecent, addToAutoComplete, filteredRecents, firstResult, getLatestBlocks, getMulti, isCompatibleWithSearchType, isLikelyPathSearchInput, lastResult, maxRecentSearches, minSearchInputLength, minSearchLengthWithResultExpected, persistRecentSearches, query, searchInputId, selectedValue, setIsPickingCurrency, setQuery)
 
 import Api.Data
 import Autocomplete exposing (Autocomplete)
@@ -32,7 +32,61 @@ type alias Model =
     { searchType : SearchType
     , visible : Bool
     , autocomplete : Autocomplete ResultLine
+    , recentSearches : List ResultLine
+    , userInitiatedFocus : Bool
     }
+
+
+maxRecentSearches : Int
+maxRecentSearches =
+    10
+
+
+{-| Dev flip: persist recent searches to localStorage across sessions.
+Set to False to keep recents session-only (wiped on reload).
+-}
+persistRecentSearches : Bool
+persistRecentSearches =
+    True
+
+
+isCompatibleWithSearchType : SearchType -> ResultLine -> Bool
+isCompatibleWithSearchType searchType rl =
+    case ( searchType, rl ) of
+        ( SearchAll _, _ ) ->
+            True
+
+        ( SearchAddressAndTx _, Address _ _ ) ->
+            True
+
+        ( SearchAddressAndTx _, Tx _ _ ) ->
+            True
+
+        ( SearchAddressAndTx _, _ ) ->
+            False
+
+        ( SearchTagsOnly, Label _ ) ->
+            True
+
+        ( SearchTagsOnly, _ ) ->
+            False
+
+        ( SearchActorsOnly, Actor _ ) ->
+            True
+
+        ( SearchActorsOnly, _ ) ->
+            False
+
+
+filteredRecents : SearchType -> List ResultLine -> List ResultLine
+filteredRecents searchType =
+    List.filter (isCompatibleWithSearchType searchType)
+
+
+addRecent : ResultLine -> List ResultLine -> List ResultLine
+addRecent rl recents =
+    (rl :: List.filter ((/=) rl) recents)
+        |> List.take maxRecentSearches
 
 
 type SearchType

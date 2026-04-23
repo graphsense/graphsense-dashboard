@@ -66,7 +66,7 @@ init plugins uc flags url key =
             , showBothValues = False
             }
       , page = Home
-      , search = Search.init (Search.initSearchAddressAndTxs Nothing)
+      , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) settings.recentSearches
       , graph = Graph.init settings flags.now
       , pathfinder = pathfinderState
       , user =

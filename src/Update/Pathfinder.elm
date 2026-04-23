@@ -941,6 +941,20 @@ updateByMsg plugins uc msg model =
                                 ( m2, List.map Pathfinder.SearchEffect eff )
                                     |> and (multiSearch query)
 
+                Search.UserClicksRecentResultLine rl ->
+                    let
+                        ( search, eff ) =
+                            Search.update m model.search
+
+                        m2 =
+                            { model | search = search }
+                    in
+                    rl
+                        |> resultLineToRoute
+                        |> NavPushRouteEffect
+                        |> flip (::) (List.map Pathfinder.SearchEffect eff)
+                        |> Tuple.pair m2
+
                 _ ->
                     Search.update m model.search
                         |> Tuple.mapFirst (\s -> s_search s model)
@@ -4992,6 +5006,7 @@ fromDeserialized plugins deserialized model =
                 , highlightClusterFriends = Just model.config.highlightClusterFriends
                 , tracingMode = Just model.config.tracingMode
                 , avoidOverlapingNodes = Just model.config.avoidOverlapingNodes
+                , recentSearches = model.search.recentSearches
                 }
     in
     ( { newAndEmptyPathfinder

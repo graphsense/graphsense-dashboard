@@ -937,6 +937,53 @@ update plugins uc msg model =
                 Search.PluginMsg ms ->
                     updatePlugins plugins uc ms model
 
+                Search.UserClicksRecentResultLine rl ->
+                    let
+                        ( search, _ ) =
+                            Search.update m model.search
+
+                        m2 =
+                            syncRecentsToPathfinder { model | search = search }
+
+                        route =
+                            case ( model.page, rl ) of
+                                ( Pathfinder, Search.Address currency address ) ->
+                                    Route.Pathfinder.addressRoute
+                                        { network = currency
+                                        , address = address
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( Pathfinder, Search.Tx currency tx ) ->
+                                    Route.Pathfinder.txRoute
+                                        { network = currency
+                                        , txHash = tx
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( Home, Search.Address currency address ) ->
+                                    Route.Pathfinder.addressRoute
+                                        { network = currency
+                                        , address = address
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( Home, Search.Tx currency tx ) ->
+                                    Route.Pathfinder.txRoute
+                                        { network = currency
+                                        , txHash = tx
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( _, s ) ->
+                                    Route.Graph.resultLineToRoute s
+                                        |> Route.graphRoute
+                    in
+                    [ route |> Route.toUrl |> NavPushUrlEffect
+                    , saveUserSettings m2
+                    ]
+                        |> pair m2
+
                 Search.UserClicksResultLine ->
                     let
                         query =
@@ -950,7 +997,7 @@ update plugins uc msg model =
                             Search.update m model.search
 
                         m2 =
-                            { model | search = search }
+                            syncRecentsToPathfinder { model | search = search }
 
                         resultLineToRoute v =
                             case ( model.page, v ) of
@@ -992,11 +1039,12 @@ update plugins uc msg model =
                     else
                         case selectedValue of
                             Just value ->
-                                value
+                                [ value
                                     |> resultLineToRoute
                                     |> Route.toUrl
                                     |> NavPushUrlEffect
-                                    |> List.singleton
+                                , saveUserSettings m2
+                                ]
                                     |> pair m2
 
                             Nothing ->
@@ -1598,9 +1646,26 @@ update plugins uc msg model =
 
                                 nm =
                                     { model | pathfinder = pathfinder }
+
+                                recentsChanged =
+                                    pathfinder.search.recentSearches /= pathfinderOld.search.recentSearches
+
+                                syncedModel =
+                                    if recentsChanged then
+                                        syncRecentsFromPathfinder nm
+
+                                    else
+                                        nm
+
+                                extraEff =
+                                    if recentsChanged then
+                                        [ saveUserSettings syncedModel ]
+
+                                    else
+                                        []
                             in
-                            ( nm
-                            , List.map PathfinderEffect eff
+                            ( syncedModel
+                            , List.map PathfinderEffect eff ++ extraEff
                             )
             in
             if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
@@ -2939,6 +3004,35 @@ togglShowTimestampOnTxEdge m =
 saveUserSettings : Model key -> Effect
 saveUserSettings =
     SaveUserSettingsEffect << Model.userSettingsFromMainModel
+
+
+{-| Copy recentSearches from model.search into model.pathfinder.search so both
+search instances share a single list.
+-}
+syncRecentsToPathfinder : Model key -> Model key
+syncRecentsToPathfinder model =
+    let
+        pf =
+            model.pathfinder
+
+        pfSearch =
+            pf.search
+    in
+    { model
+        | pathfinder =
+            { pf | search = { pfSearch | recentSearches = model.search.recentSearches } }
+    }
+
+
+{-| Copy recentSearches from model.pathfinder.search into model.search (the inverse).
+-}
+syncRecentsFromPathfinder : Model key -> Model key
+syncRecentsFromPathfinder model =
+    let
+        s =
+            model.search
+    in
+    { model | search = { s | recentSearches = model.pathfinder.search.recentSearches } }
 
 
 fetchClusterTagsEffect : PathfinderId.Id -> Model.Pathfinder.Model -> List Effect

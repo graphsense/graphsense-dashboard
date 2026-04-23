@@ -1,15 +1,22 @@
-module Init.Search exposing (init, initSearchAddressAndTxs, initSearchAll)
+module Init.Search exposing (init, initSearchAddressAndTxs, initSearchAll, initWithRecents)
 
 import Api.Data
 import Autocomplete
-import Model.Search exposing (Model, SearchType(..), getLatestBlocks, minSearchInputLength)
+import Model.Search exposing (Model, ResultLine, SearchType(..), getLatestBlocks, minSearchInputLength)
 
 
 init : SearchType -> Model
 init searchType =
+    initWithRecents searchType []
+
+
+initWithRecents : SearchType -> List ResultLine -> Model
+initWithRecents searchType recents =
     { searchType = searchType
     , visible = False
     , autocomplete = Autocomplete.init minSearchInputLength { query = "", choices = [], ignoreList = [] }
+    , recentSearches = recents
+    , userInitiatedFocus = False
     }
 
 
