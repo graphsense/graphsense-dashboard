@@ -3,6 +3,7 @@ module Init.Pathfinder.TxDetails exposing (dummyIoTableConfig, init, initIoTable
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.TransactionFilter as TransactionFilter
+import Dict
 import Effect.Pathfinder exposing (Effect(..))
 import Model.Pathfinder.Table.IoTable as IoTable exposing (titleValue)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -76,6 +77,8 @@ init txsFilter assets tx =
     , outputsTableOpen = False
     , inputsTable = initIoTable "inputsTable" Inputs inputs
     , outputsTable = initIoTable "outputsTable" Outputs outputs
+    , inputsRefs = Dict.empty
+    , outputsRefs = Dict.empty
     , tx = tx
     , baseTx = RemoteData.NotAsked
     , subTxsTable = initSubTxTable

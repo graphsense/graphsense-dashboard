@@ -28,6 +28,7 @@ type Msg
     | BrowserGotTxFlows (Maybe String) Api.Data.Txs
     | UserClickedToggleSubTxsTable
     | UserClickedTxInSubTxsTable Api.Data.TxAccount
+    | BrowserGotTxRefsForIoTable IoDirection Int (List Api.Data.TxRef)
     | TransactionFilterMsg TransactionFilter.Msg
     | TooltipMsg (Tooltip.Msg TooltipType)
     | NoOp

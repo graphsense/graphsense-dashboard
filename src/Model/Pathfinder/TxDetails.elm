@@ -3,8 +3,17 @@ module Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
 import Components.TransactionFilter as TransactionFilter
+import Dict exposing (Dict)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
-import RemoteData exposing (WebData)
+import RemoteData exposing (RemoteData, WebData)
+
+
+
+-- Type alias for TxValue refs with error and success types
+
+
+type alias TxValueRefsData =
+    RemoteData String (List Api.Data.TxRef)
 
 
 type alias Model =
@@ -12,6 +21,8 @@ type alias Model =
     , outputsTableOpen : Bool
     , inputsTable : InfiniteTable.Model Api.Data.TxValue
     , outputsTable : InfiniteTable.Model Api.Data.TxValue
+    , inputsRefs : Dict Int TxValueRefsData
+    , outputsRefs : Dict Int TxValueRefsData
     , tx : Tx
     , subTxsTableOpen : Bool
     , baseTx : WebData Api.Data.TxAccount

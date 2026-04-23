@@ -5,6 +5,7 @@ import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Components.TransactionFilter as TransactionFilter
+import Dict
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.TxDetails exposing (dummyIoTableConfig)
@@ -13,7 +14,7 @@ import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
 import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
-import RecordSetter exposing (s_baseTx, s_state, s_subTxsTable)
+import RecordSetter exposing (s_baseTx, s_inputsRefs, s_inputsTable, s_inputsTableOpen, s_outputsRefs, s_outputsTable, s_outputsTableOpen, s_state, s_subTxsTable)
 import RemoteData
 import Tuple exposing (mapFirst, mapSecond, pair)
 import Util exposing (and, n)
@@ -142,6 +143,19 @@ update msg model =
                             |> Maybe.withDefault RemoteData.NotAsked
                 }
 
+        BrowserGotTxRefsForIoTable ioDirection index refs ->
+            let
+                { refsGet, refsSet } =
+                    gettersAndSetters ioDirection
+
+                updatedModel =
+                    Dict.insert index
+                        (RemoteData.Success refs)
+                        (refsGet model)
+                        |> flip refsSet model
+            in
+            n updatedModel
+
         BrowserGotTxFlows fetchedPage txs ->
             let
                 config =
@@ -211,15 +225,47 @@ update msg model =
                 ( pt, cmd, eff ) =
                     InfiniteTable.update dummyIoTableConfig m table
 
-                ( newTable, msgTag ) =
-                    if ioDir == Inputs then
-                        ( { model | inputsTable = pt }, IoTableMsg Inputs )
+                { tableGet, tableSet, refsGet, refsSet } =
+                    gettersAndSetters ioDir
 
-                    else
-                        ( { model | outputsTable = pt }, IoTableMsg Outputs )
+                txId =
+                    Tx.getTxIdForTx model.tx
+
+                refsEffect =
+                    case ioDir of
+                        Inputs ->
+                            Api.ListSpentInTxRefsEffect
+
+                        Outputs ->
+                            Api.ListSpendingTxRefsEffect
+
+                ( modelWithRefs, fetchEffects ) =
+                    tableGet model
+                        |> InfiniteTable.getPage
+                        |> List.filterMap .index
+                        |> List.filter (flip Dict.member (refsGet model) >> not)
+                        |> List.foldl
+                            (\index ( accRefs, accEffects ) ->
+                                ( Dict.insert index RemoteData.Loading accRefs
+                                , (BrowserGotTxRefsForIoTable ioDir index
+                                    >> Pathfinder.TxDetailsMsg
+                                    |> refsEffect
+                                        { currency = Id.network txId
+                                        , txHash = Id.id txId
+                                        , index = Just index
+                                        }
+                                    |> Effect.Pathfinder.ApiEffect
+                                  )
+                                    :: accEffects
+                                )
+                            )
+                            ( refsGet model, [] )
+                        |> mapFirst (flip refsSet model)
             in
-            ( newTable
-            , CmdEffect (Cmd.map (msgTag >> Pathfinder.TxDetailsMsg) cmd) :: eff
+            ( tableSet pt modelWithRefs
+            , CmdEffect (Cmd.map (IoTableMsg ioDir >> Pathfinder.TxDetailsMsg) cmd)
+                :: eff
+                ++ fetchEffects
             )
 
         TableMsgSubTxTable m ->
@@ -251,3 +297,24 @@ update msg model =
 
             else
                 n model
+
+
+gettersAndSetters ioDir =
+    case ioDir of
+        Inputs ->
+            { openGet = .inputsTableOpen
+            , openSet = s_inputsTableOpen
+            , tableGet = .inputsTable
+            , tableSet = s_inputsTable
+            , refsGet = .inputsRefs
+            , refsSet = s_inputsRefs
+            }
+
+        Outputs ->
+            { openGet = .outputsTableOpen
+            , openSet = s_outputsTableOpen
+            , tableGet = .outputsTable
+            , tableSet = s_outputsTable
+            , refsGet = .outputsRefs
+            , refsSet = s_outputsRefs
+            }
