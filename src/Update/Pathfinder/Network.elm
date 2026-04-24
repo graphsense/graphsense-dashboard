@@ -949,7 +949,10 @@ getMinY =
 
 findAddressCoords : Id -> Network -> Maybe Coords
 findAddressCoords id network =
+    -- Dedupe by tx.id: a self-loop tx shows up twice in listTxsForAddress
+    -- (once per direction), but for positioning we want one entry per tx.
     listTxsForAddress network id
+        |> uniqueByTxId
         |> NList.fromList
         |> Maybe.andThen
             (\list ->
@@ -970,6 +973,20 @@ findAddressCoords id network =
                         |> NList.fromList
                         |> Maybe.map Coords.avg
             )
+
+
+uniqueByTxId : List ( Direction, Tx ) -> List ( Direction, Tx )
+uniqueByTxId =
+    List.foldr
+        (\(( _, tx ) as entry) ( seen, acc ) ->
+            if Set.member tx.id seen then
+                ( seen, acc )
+
+            else
+                ( Set.insert tx.id seen, entry :: acc )
+        )
+        ( Set.empty, [] )
+        >> Tuple.second
 
 
 addTx : Pathfinder.Config -> Api.Data.Tx -> Network -> ( Tx, Network )
