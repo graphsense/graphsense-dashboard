@@ -43,6 +43,8 @@ SETEM=npx setem --output $(GENERATED_UTILS) && touch $(RECORDSETTER_ELM)
 export ELM_HOME=$(PWD)/elm_packages
 ELM_PACKAGES_DIR=$(ELM_HOME)/0.19.1/packages
 
+export NODE_OPTIONS=--max-old-space-size=8192
+
 serve: prepare gen
 	npm run dev
 
