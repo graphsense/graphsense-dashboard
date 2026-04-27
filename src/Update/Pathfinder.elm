@@ -1301,7 +1301,7 @@ updateByMsg plugins uc msg model =
                         |> s_toolbarHovercard Nothing
                         |> s_contextMenu Nothing
             in
-            if click then
+            if click && not model.modPressed then
                 unselect m1
 
             else
