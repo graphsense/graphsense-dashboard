@@ -60,8 +60,8 @@ value_usd: USD
 timestamp_utc: Fecha y hora (UTC)
 receiving_address: A
 sending_address: De
-no_inputs: Entradas
-no_outputs: Salidas
+inputs: Entradas
+outputs: Salidas
 total_input: Importe total de las entradas
 total_output: Importe total de las salidas
 success_download_csv: '{0} filas de datos descargadas como CSV'

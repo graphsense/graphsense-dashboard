@@ -52,8 +52,8 @@ value_usd: USD
 timestamp_utc: DateTime (UTC)
 receiving_address: To
 sending_address: From
-no_inputs: Inputs
-no_outputs: Outputs
+inputs: Inputs
+outputs: Outputs
 total_input: Total input amount
 total_output: Total output amount
 success_download_csv: Downloaded {0} data rows as CSV

@@ -258,8 +258,8 @@ value_usd: USD
 timestamp_utc: Data/Ora (UTC)
 receiving_address: Indirizzo di ricezione
 sending_address: Indirizzo di invio
-no_inputs: Ingressi
-no_outputs: Uscite
+inputs: Ingressi
+outputs: Uscite
 total_input: Valore totale in ingresso
 total_output: Valore totale in uscita
 success_download_csv: '{0} record scaricati come CSV'

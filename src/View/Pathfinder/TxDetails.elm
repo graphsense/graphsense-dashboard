@@ -308,8 +308,12 @@ utxo vc model id viewState tx =
                                     [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
-                                { title = Locale.string vc.locale "Sending addresses"
-                                , totalNumber = Locale.int vc.locale tx.raw.noInputs
+                                { title = Locale.string vc.locale "Inputs"
+                                , totalNumber =
+                                    tx.raw.inputs
+                                        |> Maybe.map List.length
+                                        |> Maybe.withDefault tx.raw.noInputs
+                                        |> Locale.int vc.locale
                                 }
                             }
                     , disabled = tx.raw.noInputs == 0
@@ -341,8 +345,12 @@ utxo vc model id viewState tx =
                                     [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
-                                { title = Locale.string vc.locale "Receiving addresses"
-                                , totalNumber = Locale.int vc.locale tx.raw.noOutputs
+                                { title = Locale.string vc.locale "Outputs"
+                                , totalNumber =
+                                    tx.raw.outputs
+                                        |> Maybe.map List.length
+                                        |> Maybe.withDefault tx.raw.noOutputs
+                                        |> Locale.int vc.locale
                                 }
                             }
                     , disabled = tx.raw.noOutputs == 0
