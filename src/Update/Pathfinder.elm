@@ -1301,7 +1301,7 @@ updateByMsg plugins uc msg model =
                         |> s_toolbarHovercard Nothing
                         |> s_contextMenu Nothing
             in
-            if click then
+            if click && not model.modPressed then
                 unselect m1
 
             else
@@ -1664,7 +1664,7 @@ updateByMsg plugins uc msg model =
 
         UserClickedAddress id ->
             if model.modPressed || model.pointerTool == Select then
-                multiSelect model [ MSelectedAddress id ] True
+                toggleMultiSelect model (MSelectedAddress id)
                     |> n
 
             else
@@ -3361,7 +3361,7 @@ userClickedTx id model =
     if model.modPressed || model.pointerTool == Select then
         let
             modelS =
-                multiSelect model [ MSelectedTx id ] True
+                toggleMultiSelect model (MSelectedTx id)
         in
         n { modelS | details = Nothing }
 
@@ -4904,6 +4904,60 @@ multiSelect m sel keepOld =
 
         nNet =
             List.foldl (selectItem True) (Network.clearSelection m.network) newSelection
+    in
+    { m | selection = liftedNewSelection, network = nNet }
+
+
+toggleMultiSelect : Model -> MultiSelectOptions -> Model
+toggleMultiSelect m item =
+    let
+        currentList =
+            case m.selection of
+                MultiSelect x ->
+                    x
+
+                SelectedAddress oid ->
+                    [ MSelectedAddress oid ]
+
+                SelectedTx oid ->
+                    [ MSelectedTx oid ]
+
+                _ ->
+                    []
+
+        newSelection =
+            if List.member item currentList then
+                List.filter ((/=) item) currentList
+
+            else
+                List.Extra.unique (item :: currentList)
+
+        liftedNewSelection =
+            case newSelection of
+                [] ->
+                    NoSelection
+
+                x :: [] ->
+                    case x of
+                        MSelectedAddress id ->
+                            SelectedAddress id
+
+                        MSelectedTx id ->
+                            SelectedTx id
+
+                _ ->
+                    MultiSelect newSelection
+
+        selectItem s n =
+            case s of
+                MSelectedAddress id ->
+                    Network.updateAddress id (s_selected True) n
+
+                MSelectedTx id ->
+                    Network.updateTx id (s_selected True) n
+
+        nNet =
+            List.foldl selectItem (Network.clearSelection m.network) newSelection
     in
     { m | selection = liftedNewSelection, network = nNet }
 
