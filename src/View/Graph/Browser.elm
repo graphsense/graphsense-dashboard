@@ -1,6 +1,6 @@
 module View.Graph.Browser exposing (browseRow, browseValue, browser, frame, properties, propertyBox)
 
-import Api.Data exposing (Entity)
+import Api.Data
 import Basics.Extra exposing (uncurry)
 import Components.Table exposing (Table)
 import Config.Graph as Graph
@@ -551,7 +551,7 @@ browseValue vc value =
                     [ "("
                         ++ Locale.string vc.locale "ID"
                         ++ ": "
-                        ++ String.fromInt entity.entity.entity
+                        ++ String.fromInt entity.entity.cluster
                         ++ ")"
                         |> text
                     ]
@@ -1198,7 +1198,7 @@ rowsEntity vc gc now table ent =
             ent
                 |> makeTableLink
                     (.entity >> .currency)
-                    (.entity >> .entity)
+                    (.entity >> .cluster)
                     (\currency id ->
                         let
                             active =

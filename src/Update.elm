@@ -1277,7 +1277,7 @@ update plugins uc msg model =
                     pathfinder.network.addresses
                         |> Dict.get id
                         |> Maybe.andThen (.data >> RD.toMaybe)
-                        |> Maybe.map (\addr -> Id.initClusterId addr.currency addr.entity)
+                        |> Maybe.map (\addr -> Id.initClusterId addr.currency addr.cluster)
                         |> Maybe.andThen (\cid -> Dict.get cid pathfinder.clusters)
                         |> Maybe.andThen RD.toMaybe
                         |> Maybe.map .noAddresses
@@ -1559,7 +1559,7 @@ update plugins uc msg model =
                         Pathfinder.BrowserGotClusterData _ data ->
                             let
                                 ( new, outMsg, cmd ) =
-                                    { currency = data.currency, entity = data.entity }
+                                    { currency = data.currency, entity = data.cluster }
                                         |> List.singleton
                                         |> PluginInterface.EntitiesAdded
                                         |> Plugin.updateByCoreMsg plugins uc model.plugins
@@ -2237,7 +2237,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                                                         |> Maybe.andThen (.data >> RD.toMaybe)
                                                         |> Maybe.andThen
                                                             (\a ->
-                                                                Dict.get (Id.initClusterId a.currency a.entity) model.pathfinder.clusters
+                                                                Dict.get (Id.initClusterId a.currency a.cluster) model.pathfinder.clusters
                                                             )
                                             in
                                             case addr of
@@ -2950,7 +2950,7 @@ fetchClusterTagsEffect id pathfinderModel =
             (\addr ->
                 Effect.Api.GetEntityAddressTagsEffect
                     { currency = PathfinderId.network id
-                    , entity = addr.entity
+                    , entity = addr.cluster
                     , pagesize = TagsTable.pagesize
                     , nextpage = Nothing
                     }
@@ -3001,7 +3001,7 @@ clusterTagsInfiniteTableConfig id pathfinderModel =
             pathfinderModel.network.addresses
                 |> Dict.get id
                 |> Maybe.andThen (.data >> RD.toMaybe)
-                |> Maybe.map .entity
+                |> Maybe.map .cluster
                 |> Maybe.withDefault 0
     in
     { fetch =

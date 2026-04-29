@@ -28,7 +28,7 @@ import View.Pathfinder.Tx.Utxo exposing (RenderLevel(..))
 
 
 type alias ClusterContext =
-    { clusters : Dict Id (WebData Api.Data.Entity)
+    { clusters : Dict Id (WebData Api.Data.Cluster)
     , hoveredAddressId : Maybe Id
     , hoveredClusterId : Maybe Id
     }

@@ -4,7 +4,7 @@ import Api
 import Api.Data
 import Api.Request.Addresses
 import Api.Request.Blocks
-import Api.Request.Entities
+import Api.Request.Clusters
 import Api.Request.Experimental
 import Api.Request.General
 import Api.Request.MyBulk
@@ -84,14 +84,14 @@ type Effect msg
         { currency : String
         , entity : Int
         }
-        (Api.Data.Entity -> msg)
+        (Api.Data.Cluster -> msg)
     | GetEntityEffectWithDetails
         { currency : String
         , entity : Int
         , includeActors : Bool
         , includeBestTag : Bool
         }
-        (Api.Data.Entity -> msg)
+        (Api.Data.Cluster -> msg)
     | GetActorEffect
         { actorId : String
         }
@@ -110,7 +110,7 @@ type Effect msg
         { currency : String
         , address : String
         }
-        (Api.Data.Entity -> msg)
+        (Api.Data.Cluster -> msg)
     | GetEntityNeighborsEffect
         { currency : String
         , entity : Int
@@ -120,7 +120,7 @@ type Effect msg
         , pagesize : Int
         , nextpage : Maybe String
         }
-        (Api.Data.NeighborEntities -> msg)
+        (Api.Data.NeighborClusters -> msg)
     | GetAddressNeighborsEffect
         { currency : String
         , address : String
@@ -162,7 +162,7 @@ type Effect msg
         , pagesize : Int
         , nextpage : Maybe String
         }
-        (Api.Data.EntityAddresses -> msg)
+        (Api.Data.ClusterAddresses -> msg)
     | GetEntityTxsEffect
         { currency : String
         , entity : Int
@@ -208,7 +208,7 @@ type Effect msg
         { currency : String
         , entity : Int
         , isOutgoing : Bool
-        , key : Api.Request.Entities.Key
+        , key : Api.Request.Clusters.Key
         , value : List String
         , depth : Int
         , breadth : Int
@@ -266,7 +266,7 @@ type Effect msg
         , target : Int
         , minHeight : Maybe Int
         , maxHeight : Maybe Int
-        , order : Maybe Api.Request.Entities.Order_
+        , order : Maybe Api.Request.Clusters.Order_
         , nextpage : Maybe String
         , pagesize : Int
         }
@@ -292,19 +292,19 @@ type Effect msg
         { currency : String
         , entities : List Int
         }
-        (List Api.Data.Entity -> msg)
+        (List Api.Data.Cluster -> msg)
     | BulkGetAddressEntityEffect
         { currency : String
         , addresses : List String
         }
-        (List ( String, Api.Data.Entity ) -> msg)
+        (List ( String, Api.Data.Cluster ) -> msg)
     | BulkGetEntityNeighborsEffect
         { currency : String
         , isOutgoing : Bool
         , entities : List Int
         , onlyIds : Bool
         }
-        (List ( Int, Api.Data.NeighborEntity ) -> msg)
+        (List ( Int, Api.Data.NeighborCluster ) -> msg)
     | BulkGetAddressNeighborsEffect
         { currency : String
         , isOutgoing : Bool
@@ -347,7 +347,7 @@ type Effect msg
 
 getEntityEgonet :
     { currency : String, entity : Int }
-    -> (String -> Int -> Bool -> Api.Data.NeighborEntities -> msg)
+    -> (String -> Int -> Bool -> Api.Data.NeighborClusters -> msg)
     -> IntDict Layer
     -> List (Effect msg)
 getEntityEgonet { currency, entity } msg layers =
@@ -356,7 +356,7 @@ getEntityEgonet { currency, entity } msg layers =
         onlyIds =
             layers
                 |> Layer.entities
-                |> List.map (.entity >> .entity)
+                |> List.map (.entity >> .cluster)
 
         effect isOut =
             msg currency entity isOut
@@ -680,7 +680,7 @@ perform apiKey wrapMsg cancelMsg effect =
                 direction =
                     isOutgoingToDirection isOutgoing
             in
-            Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just False) (Just False) (Just True) nextpage (Just pagesize)
+            Api.Request.Clusters.listClusterNeighbors currency entity direction onlyIds (Just False) (Just False) (Just True) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, includeActors, nextpage } toMsg ->
@@ -701,11 +701,11 @@ perform apiKey wrapMsg cancelMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityEffect { currency, entity } toMsg ->
-            Api.Request.Entities.getEntity currency entity (Just False) (Just True)
+            Api.Request.Clusters.getCluster currency entity (Just False) (Just True)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityEffectWithDetails { currency, entity, includeActors, includeBestTag } toMsg ->
-            Api.Request.Entities.getEntity currency entity (Just (not includeBestTag)) (Just includeActors)
+            Api.Request.Clusters.getCluster currency entity (Just (not includeBestTag)) (Just includeActors)
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorEffect { actorId } toMsg ->
@@ -772,7 +772,7 @@ perform apiKey wrapMsg cancelMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->
-            Api.Request.Entities.listEntityLinks currency source target minHeight maxHeight Nothing Nothing order Nothing nextpage (Just pagesize)
+            Api.Request.Clusters.listClusterLinks currency source target minHeight maxHeight Nothing Nothing order Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTagsEffect { currency, address, pagesize, nextpage, includeBestClusterTag } toMsg ->
@@ -785,17 +785,17 @@ perform apiKey wrapMsg cancelMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityAddressTagsEffect { currency, entity, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listAddressTagsByEntity currency entity nextpage (Just pagesize)
+            Api.Request.Clusters.listAddressTagsByCluster currency entity nextpage (Just pagesize)
                 |> withTracker
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityAddressesEffect { currency, entity, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityAddresses currency entity nextpage (Just pagesize)
+            Api.Request.Clusters.listClusterAddresses currency entity nextpage (Just pagesize)
                 |> withTracker
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityTxsEffect { currency, entity, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing Nothing Nothing Nothing nextpage (Just pagesize)
+            Api.Request.Clusters.listClusterTxs currency entity Nothing Nothing Nothing Nothing Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetBlockTxsEffect { currency, block } toMsg ->
@@ -840,7 +840,7 @@ perform apiKey wrapMsg cancelMsg effect =
                 direction =
                     isOutgoingToDirection e.isOutgoing
             in
-            Api.Request.Entities.searchEntityNeighbors e.currency e.entity direction e.key e.value e.depth (Just e.breadth) (Just e.maxAddresses)
+            Api.Request.Clusters.searchClusterNeighbors e.currency e.entity direction e.key e.value e.depth (Just e.breadth) (Just e.maxAddresses)
                 |> send apiKey wrapMsg effect toMsg
 
         ListAddressTagsEffect { label, nextpage, pagesize } toMsg ->
@@ -898,7 +898,7 @@ perform apiKey wrapMsg cancelMsg effect =
                     |> Task.perform toMsg
 
             else
-                listWithMaybes Api.Data.entityDecoder
+                listWithMaybes Api.Data.clusterDecoder
                     |> Api.Request.MyBulk.bulkJson
                         e.currency
                         Api.Request.MyBulk.OperationGetEntity
@@ -921,7 +921,7 @@ perform apiKey wrapMsg cancelMsg effect =
                             (\requestAddress ->
                                 Json.Decode.map
                                     (\entity -> ( requestAddress, entity ))
-                                    Api.Data.entityDecoder
+                                    Api.Data.clusterDecoder
                             )
                     )
                     |> Api.Request.MyBulk.bulkJson
@@ -946,7 +946,7 @@ perform apiKey wrapMsg cancelMsg effect =
                             (\requestEntity ->
                                 Json.Decode.map
                                     (\entity -> ( requestEntity, entity ))
-                                    Api.Data.neighborEntityDecoder
+                                    Api.Data.neighborClusterDecoder
                             )
                     )
                     |> Api.Request.MyBulk.bulkJson
@@ -956,12 +956,12 @@ perform apiKey wrapMsg cancelMsg effect =
                             [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
                             , ( "direction"
                               , Json.Encode.string <|
-                                    Api.Request.Entities.stringFromDirection <|
+                                    Api.Request.Clusters.stringFromDirection <|
                                         if e.isOutgoing then
-                                            Api.Request.Entities.DirectionOut
+                                            Api.Request.Clusters.DirectionOut
 
                                         else
-                                            Api.Request.Entities.DirectionIn
+                                            Api.Request.Clusters.DirectionIn
                               )
                             ]
                                 ++ (if e.onlyIds then
@@ -997,12 +997,12 @@ perform apiKey wrapMsg cancelMsg effect =
                             [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
                             , ( "direction"
                               , Json.Encode.string <|
-                                    Api.Request.Entities.stringFromDirection <|
+                                    Api.Request.Clusters.stringFromDirection <|
                                         if e.isOutgoing then
-                                            Api.Request.Entities.DirectionOut
+                                            Api.Request.Clusters.DirectionOut
 
                                         else
-                                            Api.Request.Entities.DirectionIn
+                                            Api.Request.Clusters.DirectionIn
                               )
                             ]
                                 ++ (e.onlyIds
@@ -1204,13 +1204,13 @@ send apiKey wrapMsg effect toMsg =
         >> Api.sendAndAlsoReceiveHeaders wrapMsg effect toMsg
 
 
-isOutgoingToDirection : Bool -> Api.Request.Entities.Direction
+isOutgoingToDirection : Bool -> Api.Request.Clusters.Direction
 isOutgoingToDirection isOutgoing =
     if isOutgoing then
-        Api.Request.Entities.DirectionOut
+        Api.Request.Clusters.DirectionOut
 
     else
-        Api.Request.Entities.DirectionIn
+        Api.Request.Clusters.DirectionIn
 
 
 isOutgoingToAddressDirection : Bool -> Api.Request.Addresses.Direction

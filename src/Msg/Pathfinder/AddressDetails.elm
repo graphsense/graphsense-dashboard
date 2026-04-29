@@ -44,7 +44,7 @@ type Msg
     | TableMsg Table.State
     | RelatedAddressesTableMsg Table.State
     | RelatedAddressesPubkeyTableMsg Table.State
-    | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
+    | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.ClusterAddresses
     | BrowserGotEntityAddressTagsForRelatedAddressesTable String Api.Data.AddressTags
     | UserClickedToggleRelatedAddressesTable
     | RelatedAddressesTableSubTableMsg InfiniteTable.Msg

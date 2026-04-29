@@ -181,7 +181,7 @@ getLabel vc gc ent =
                                 )
                         )
             )
-        |> Maybe.withDefault (String.fromInt ent.entity.entity)
+        |> Maybe.withDefault (String.fromInt ent.entity.cluster)
 
 
 addFlagsOffset : (Float -> List (Svg Msg)) -> List (Svg Msg) -> List (Svg Msg)

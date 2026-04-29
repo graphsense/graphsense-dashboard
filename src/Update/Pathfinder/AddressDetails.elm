@@ -798,7 +798,7 @@ getNeighborsTableAndSetter model dir =
                     )
 
 
-syncByAddress : Update.Config -> Network -> Dict Id (WebData Api.Data.Entity) -> Maybe DateFilterRaw -> Model -> Address -> ( Model, List Effect )
+syncByAddress : Update.Config -> Network -> Dict Id (WebData Api.Data.Cluster) -> Maybe DateFilterRaw -> Model -> Address -> ( Model, List Effect )
 syncByAddress uc network clusters dateFilterPreset model address =
     address.data
         |> RemoteData.map
@@ -826,7 +826,7 @@ syncByAddress uc network clusters dateFilterPreset model address =
                                 )
 
                     cluster =
-                        Id.initClusterId data.currency data.entity
+                        Id.initClusterId data.currency data.cluster
                             |> flip Dict.get clusters
 
                     related =

@@ -856,7 +856,7 @@ updateByMsg plugins uc msg model =
         BrowserGotClusterData _ data ->
             let
                 clusterId =
-                    Id.initClusterId data.currency data.entity
+                    Id.initClusterId data.currency data.cluster
 
                 setServiceType addr =
                     Just data
@@ -3169,7 +3169,7 @@ browserGotAddressData uc plugins providedId position data model =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
         clusterId =
-            Id.initClusterId data.currency data.entity
+            Id.initClusterId data.currency data.cluster
 
         isSecondAddressFromSameCluster =
             Network.isClusterFriendAlreadyOnGraph clusterId
@@ -3201,7 +3201,7 @@ browserGotAddressData uc plugins providedId position data model =
                 , [ BrowserGotClusterData id
                         |> Api.GetEntityEffectWithDetails
                             { currency = Id.network id
-                            , entity = data.entity
+                            , entity = data.cluster
                             , includeActors = False
                             , includeBestTag = False
                             }
@@ -4514,7 +4514,7 @@ addTagSummaryToModel includesBestClusterTag id data m =
                             |> Dict.get id
                             |> Maybe.andThen (.data >> RemoteData.toMaybe)
                             |> Maybe.map
-                                (.entity
+                                (.cluster
                                     >> (\entityId ->
                                             Api.GetEntityAddressTagsEffect
                                                 { currency = Id.network id

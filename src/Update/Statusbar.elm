@@ -1,7 +1,7 @@
 module Update.Statusbar exposing (add, clearRetry, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
 
 import Api.Data
-import Api.Request.Entities
+import Api.Request.Clusters
 import Dict
 import Effect.Api as Api
 import Effect.Graph as Graph
@@ -310,7 +310,7 @@ messageFromApiEffect model effect =
                         "for incoming neighbors"
                   , e.entity |> String.fromInt
                   , case e.key of
-                        Api.Request.Entities.KeyCategory ->
+                        Api.Request.Clusters.KeyCategory ->
                             e.value
                                 |> List.head
                                 |> Maybe.map

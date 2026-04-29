@@ -5,4 +5,4 @@ import Msg.Store exposing (Msg)
 
 
 type Effect
-    = GetEntityForAddressEffect { currency : String, address : String, toMsg : Api.Data.Entity -> Msg }
+    = GetEntityForAddressEffect { currency : String, address : String, toMsg : Api.Data.Cluster -> Msg }

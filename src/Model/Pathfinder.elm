@@ -1,6 +1,6 @@
 module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
 
-import Api.Data exposing (Actor, Entity)
+import Api.Data exposing (Actor, Cluster)
 import AssocList
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -47,7 +47,7 @@ type alias Model =
     , network : Network
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
-    , clusters : Dict Id (WebData Entity)
+    , clusters : Dict Id (WebData Cluster)
     , colors : ScopedColorAssignment
     , annotations : AnnotationModel
     , dragging : Dragging Id
