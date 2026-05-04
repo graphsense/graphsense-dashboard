@@ -1193,7 +1193,7 @@ init (Settings settings) =
         , showCustomFilter = False
         , settings = settings
         , showDialog = False
-        , dialogPosition = { top = 100, right = 20 }
+        , dialogPosition = { top = 120, right = 80 }
         , isDragging = False
         , dragStart = Nothing
         , hoveredQuickFilter = Nothing
