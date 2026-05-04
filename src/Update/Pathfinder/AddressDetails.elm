@@ -585,23 +585,27 @@ handleWorkflowNextUtxo config wf model =
                             setter =
                                 InfiniteTable.appendData
 
-                            result =
-                                case wf of
-                                    Workflow.Ok tx ->
-                                        tx
-                                            |> utxoToAddressTx config.direction config.addressId
-                                            |> List.map Api.Data.AddressTxAddressTxUtxo
-
-                                    _ ->
-                                        []
-
-                            ( table, cmd, eff ) =
+                            setData data =
                                 txsTable.table
                                     |> setter
                                         (transactionTableConfig txsTable model.address.id)
                                         TransactionTable.filter
                                         Nothing
-                                        result
+                                        data
+
+                            ( table, cmd, eff ) =
+                                case wf of
+                                    Workflow.Ok tx ->
+                                        tx
+                                            |> utxoToAddressTx config.direction config.addressId
+                                            |> List.map Api.Data.AddressTxAddressTxUtxo
+                                            |> setData
+
+                                    Workflow.Err (MaxChangeHopsLimit maxHops tx) ->
+                                        Debug.todo "pass this data to the txsTable (add a new field in TransactionTable Model) and if this is filled, show a button in AddressDetails View in the place of the TransactionTable where the user can trigger another WorkflowNextUtxoTx given the MaxChangeHopsLimit tx"
+
+                                    _ ->
+                                        setData []
                         in
                         ( table, eff )
                             |> mapFirst (flip s_table txsTable)
