@@ -832,6 +832,10 @@ txFilterDialogView vc net config (Internal model) =
                 (Util.TooltipType.Text "tx-filter-utxo-only-tooltip"
                     |> Tooltip.attributes "tx-filter-tooltip" config.tooltipConfig
                 )
+            |> Rs.s_quickFilterHelpIcon
+                (Util.TooltipType.Text "tx-filter-quickfilter-tooltip"
+                    |> Tooltip.attributes "tx-filter-quickfilter-tooltip" config.tooltipConfig
+                )
             |> Rs.s_transactionDirection
                 (if List.isEmpty directionRadios then
                     [ Css.display Css.none ] |> css |> List.singleton
@@ -853,18 +857,6 @@ txFilterDialogView vc net config (Internal model) =
                  else
                     [ Css.display Css.none ] |> css |> List.singleton
                 )
-            |> Rs.s_customFilterHeader
-                [ UserClickedCustomFilterLabel
-                    |> config.tag
-                    |> onClick
-                , pointer
-                , css <|
-                    if not showQuickFilter then
-                        [ Css.display Css.none ]
-
-                    else
-                        []
-                ]
             |> Rs.s_iconsDragHandle
                 [ on "mousedown"
                     (Json.Decode.map2 (\x y -> config.tag <| StartDrag x y)
@@ -1026,8 +1018,6 @@ txFilterDialogView vc net config (Internal model) =
                         )
                     |> Maybe.withDefault none
             , showQuickFilter = showQuickFilter
-            , showCustomFilter = model.showCustomFilter || not showQuickFilter
-            , customFilterLabel = Locale.string vc.locale "filter-custom-filter" |> Locale.titleCase vc.locale
             , quickFilterLabel = Locale.string vc.locale "Filter-quick-filter" |> Locale.titleCase vc.locale
             , showUtxoConstraint = not isAssetFilterVisible
             , quickfilterDropdown =
@@ -1087,19 +1077,6 @@ txFilterDialogView vc net config (Internal model) =
                     , msg = Just (UserClickedUtxoOnly |> config.tag)
                     }
                     []
-            }
-        , customFilterChevron =
-            { variant =
-                Icons.iconsChevronRightThin
-                    { root =
-                        { state =
-                            if model.showCustomFilter then
-                                Icons.IconsChevronRightThinStateDown
-
-                            else
-                                Icons.IconsChevronRightThinStateDefault
-                        }
-                    }
             }
         , zeroValueSwitch =
             { variant =
