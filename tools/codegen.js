@@ -231,7 +231,7 @@ async function runCodegen(name, flags, outputDir) {
             str.indexOf(" was generated!") !== -1) {
           success = str
         }
-        logs += str
+        logs += str + "\n"
       }
     console.warn = () => {}
     let errors = ""
@@ -257,10 +257,14 @@ async function runCodegen(name, flags, outputDir) {
       console.error('Code generation completed with errors:');
       console.error(logs)
       console.error(errors)
+    }
+    if(debug || !success) {
       const out_file = '/tmp/codegen_options_' + Date.now() + '.json'
       writeFileSync(out_file, JSON.stringify(options, null, 2))
       console.error('Input options written to ' + out_file)
-      process.exit(1);
+      const log_file = '/tmp/codegen_log_' + Date.now() + '.log'
+      writeFileSync(log_file, logs)
+      console.error('Logs written to ' + log_file)
     }
 }
 
