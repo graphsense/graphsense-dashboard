@@ -276,16 +276,29 @@ callStyles { parentName, componentName, instanceName } elementName =
 
 sanitize : String -> String
 sanitize s =
-    let
-        c =
-            toCamelCaseLower s
-    in
-    if String.left 1 c |> String.toList |> List.all Char.isDigit then
+    (if String.left 1 s |> String.toList |> List.all Char.isDigit then
         "n"
-            ++ c
+            ++ s
+            |> Just
 
-    else
-        c
+     else
+        String.uncons s
+            |> Maybe.andThen
+                (\( firstChar, rest ) ->
+                    String.uncons rest
+                        |> Maybe.andThen
+                            (\( secondChar, restRest ) ->
+                                if Char.isLower firstChar && Char.isUpper secondChar then
+                                    String.cons firstChar (String.cons ' ' (String.cons secondChar restRest))
+                                        |> Just
+
+                                else
+                                    Nothing
+                            )
+                )
+    )
+        |> Maybe.withDefault s
+        |> toCamelCaseLower
 
 
 addIdAttribute : Config -> String -> Elm.Expression -> Elm.Expression

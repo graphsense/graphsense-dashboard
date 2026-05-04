@@ -10,8 +10,8 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Html.TypeStyle as TypeStyle
-import Generate.Util exposing (addIdAttribute, callStyles, getElementAttributes, getTextProperty, withVisibility)
-import Types exposing (ColorMap, Config, Details)
+import Generate.Util exposing (callStyles, getElementAttributes, getTextProperty, withVisibility)
+import Types exposing (ColorMap, Config)
 
 
 toExpressions : Config -> String -> TextNode -> List Elm.Expression
