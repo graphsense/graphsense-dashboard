@@ -21,16 +21,23 @@ messagesFromEffects model effects =
     effects
         |> List.foldl
             (\eff ( statusbar, newEffects ) ->
-                messageFromEffect model eff
-                    |> Maybe.map
-                        (\( id, key, message ) ->
-                            ( { statusbar
-                                | messages = Dict.insert id ( key, message ) statusbar.messages
-                              }
-                            , ( Just id, eff ) :: newEffects
-                            )
+                case eff of
+                    Model.PathfinderEffect (Pathfinder.StatusbarLogEffect key values) ->
+                        ( { statusbar | log = addLog ( key, values, Nothing ) statusbar.log }
+                        , newEffects
                         )
-                    |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
+
+                    _ ->
+                        messageFromEffect model eff
+                            |> Maybe.map
+                                (\( id, key, message ) ->
+                                    ( { statusbar
+                                        | messages = Dict.insert id ( key, message ) statusbar.messages
+                                      }
+                                    , ( Just id, eff ) :: newEffects
+                                    )
+                                )
+                            |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
             )
             ( model.statusbar, [] )
         |> mapFirst
@@ -163,6 +170,10 @@ messageFromEffect model effect =
             Nothing
 
         Model.PathfinderEffect (Pathfinder.TooltipEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.StatusbarLogEffect _ _) ->
+            -- consumed earlier in messagesFromEffects; no in-flight message
             Nothing
 
 

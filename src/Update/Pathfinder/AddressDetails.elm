@@ -587,7 +587,7 @@ handleWorkflowNextUtxo config wf model =
 
                             result =
                                 case wf of
-                                    Workflow.Ok tx ->
+                                    Workflow.Ok { tx } ->
                                         tx
                                             |> utxoToAddressTx config.direction config.addressId
                                             |> List.map Api.Data.AddressTxAddressTxUtxo

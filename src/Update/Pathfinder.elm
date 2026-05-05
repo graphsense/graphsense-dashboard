@@ -95,6 +95,7 @@ import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
+import Update.Pathfinder.Address as PathfinderAddress
 import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.AggEdge as AggEdge
 import Update.Pathfinder.ConversionDetails as ConversionDetails
@@ -3098,9 +3099,50 @@ placeNeighborIfError plugins uc config nid model =
 handleWorkflowNextUtxo : Plugins -> Update.Config -> WorkflowNextUtxoTx.Config -> Maybe Id -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
 handleWorkflowNextUtxo plugins uc config neighborId wf model =
     case wf of
-        Workflow.Ok tx ->
-            Api.Data.TxTxUtxo tx
-                |> flip (handleTx plugins uc config neighborId) model
+        Workflow.Ok { tx, skippedCount } ->
+            let
+                ( newModel, eff ) =
+                    Api.Data.TxTxUtxo tx
+                        |> flip (handleTx plugins uc config neighborId) model
+
+                txId =
+                    Id.init tx.currency tx.txHash
+
+                -- The workflow direction's TxsLoading needs to be cleared even
+                -- when the per-address propagation in Network.addTxWithPosition
+                -- doesn't touch it (e.g. self-loop txs where Init.Pathfinder.Tx
+                -- filters the anchor out of `outputs` because it's in `inputs`,
+                -- so backward navigation ending on a peeling tx never updates
+                -- incomingTxs). Insert the result tx into the workflow-direction
+                -- tx-set explicitly; idempotent if it's already there.
+                modelWithLoadingCleared =
+                    newModel
+                        |> s_network
+                            (Network.updateAddress config.addressId
+                                (\addr ->
+                                    case config.direction of
+                                        Incoming ->
+                                            { addr | incomingTxs = PathfinderAddress.txsInsertId txId addr.incomingTxs }
+
+                                        Outgoing ->
+                                            { addr | outgoingTxs = PathfinderAddress.txsInsertId txId addr.outgoingTxs }
+                                )
+                                newModel.network
+                            )
+
+                extraEff =
+                    if skippedCount > 0 then
+                        [ StatusbarLogEffect
+                            "Auto-extended through {0} skipped change/self transaction(s) for address {1}"
+                            [ String.fromInt skippedCount
+                            , Id.id config.addressId
+                            ]
+                        ]
+
+                    else
+                        []
+            in
+            ( modelWithLoadingCleared, eff ++ extraEff )
 
         Workflow.Next eff ->
             eff
@@ -3128,10 +3170,15 @@ handleWorkflowNextUtxo plugins uc config neighborId wf model =
                             ( model
                                 |> s_network
                                     (Network.updateAddress config.addressId (TxsLastCheckedChangeTx lastTx |> txsSetter config.direction) model.network)
-                            , MaxChangeHopsLimitReached maxHops config.addressId
-                                |> InfoError
-                                |> ErrorEffect
-                                |> List.singleton
+                            , [ StatusbarLogEffect
+                                    "Auto-extension hit the {0}-hop limit for address {1}. Click again to continue from the last checked change/self transaction."
+                                    [ String.fromInt maxHops
+                                    , Id.id config.addressId
+                                    ]
+                              , MaxChangeHopsLimitReached maxHops config.addressId
+                                    |> InfoError
+                                    |> ErrorEffect
+                              ]
                             )
 
 
@@ -4639,7 +4686,26 @@ getAddressForDirection tx direction exceptAddress =
 addTx : Plugins -> Update.Config -> Id -> Direction -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
 addTx plugins uc anchorAddressId direction addressId tx model =
     if Dict.member (Tx.getTxId tx) model.network.txs then
-        n model
+        -- Tx is already on the graph. Skip the layout work, but still link
+        -- this tx to the anchor address's tx-set so a TxsLoading state
+        -- (set by expandAddress before the workflow ran) resolves to a
+        -- proper Txs set and the loading spinner clears.
+        let
+            txId =
+                Tx.getTxId tx
+
+            updateAnchorTxs addr =
+                case direction of
+                    Incoming ->
+                        { addr | incomingTxs = PathfinderAddress.txsInsertId txId addr.incomingTxs }
+
+                    Outgoing ->
+                        { addr | outgoingTxs = PathfinderAddress.txsInsertId txId addr.outgoingTxs }
+        in
+        ( model
+            |> s_network (Network.updateAddress anchorAddressId updateAnchorTxs model.network)
+        , []
+        )
 
     else
         let
