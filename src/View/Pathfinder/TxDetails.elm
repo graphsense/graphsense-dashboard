@@ -308,7 +308,7 @@ utxo vc model id viewState tx =
                                     [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
-                                { title = Locale.string vc.locale "Sending addresses"
+                                { title = Locale.string vc.locale "Inputs"
                                 , totalNumber = Locale.int vc.locale tx.raw.noInputs
                                 }
                             }
@@ -341,7 +341,7 @@ utxo vc model id viewState tx =
                                     [ css [ Css.property "display" "unset" |> Css.important ] ]
                             )
                             { root =
-                                { title = Locale.string vc.locale "Receiving addresses"
+                                { title = Locale.string vc.locale "Outputs"
                                 , totalNumber = Locale.int vc.locale tx.raw.noOutputs
                                 }
                             }

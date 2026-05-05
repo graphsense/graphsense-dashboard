@@ -82,7 +82,7 @@ import Util.Css
 import Util.Data as Data
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.TooltipType exposing (TooltipType)
-import Util.View exposing (fullWidthCss, none, pointer)
+import Util.View exposing (fullWidthCss, none)
 import View.Button as Button
 import View.Controls as Controls
 import View.Locale as Locale
