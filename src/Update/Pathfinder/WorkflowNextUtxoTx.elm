@@ -129,13 +129,17 @@ type alias Config =
   - `tx` — the tx the user lands on; the caller adds this to the graph.
   - `skippedCount` — number of intermediate txs auto-extended past on
     the way to `tx`. Surfaced to the user as a statusbar log line
-    ("Auto-extended through N skipped change/self transaction(s) …")
     when greater than zero. Informational; not used for layout.
+  - `skippedHashes` — tx hashes of the skipped intermediate txs in the
+    order they were walked through (oldest first). Used by the caller to
+    show the actual hashes in the statusbar log when the count is small.
+    Always equal in length to `skippedCount`.
 
 -}
 type alias Result =
     { tx : Api.Data.TxUtxo
     , skippedCount : Int
+    , skippedHashes : List String
     }
 
 
@@ -162,11 +166,15 @@ type Error
     before the first skip. When refs come back empty mid-chain, this
     lets us fall back to "the deepest tx we walked through" as a
     successful landing instead of erroring with `NoTxFound`.
+  - `skippedHashes` — accumulated tx hashes of every skipped tx,
+    newest-first. Reversed when surfaced in the `Result` so the caller
+    sees them in chronological walk order.
 
 -}
 type alias Trail =
     { hops : Int
     , lastSkipped : Maybe Api.Data.TxUtxo
+    , skippedHashes : List String
     }
 
 
@@ -194,7 +202,7 @@ immediately if there's no leg to follow on the start tx.
 -}
 start : Config -> Api.Data.TxUtxo -> Workflow
 start =
-    continueWorkflow { hops = 0, lastSkipped = Nothing }
+    continueWorkflow { hops = 0, lastSkipped = Nothing, skippedHashes = [] }
 
 
 {-| Drive one step of the workflow forward in response to an arriving
@@ -228,9 +236,17 @@ update config msg =
                         -- ran out of further spending. Land on the last skipped
                         -- tx (the deepest reached) so the user sees where the
                         -- chain effectively ends rather than an empty toast.
+                        -- The landing tx is at the head of skippedHashes;
+                        -- drop it from the reported "skipped" list since the
+                        -- user does see it on the graph.
+                        let
+                            passedThrough =
+                                trail.skippedHashes |> List.drop 1 |> List.reverse
+                        in
                         Workflow.Ok
                             { tx = tx
-                            , skippedCount = max 0 (trail.hops - 1)
+                            , skippedCount = List.length passedThrough
+                            , skippedHashes = passedThrough
                             }
 
                     Nothing ->
@@ -257,14 +273,22 @@ update config msg =
 
                 else
                     continueWorkflow
-                        { hops = trail.hops, lastSkipped = Just tx }
+                        { hops = trail.hops
+                        , lastSkipped = Just tx
+                        , skippedHashes = tx.txHash :: trail.skippedHashes
+                        }
                         config
                         tx
 
             else
+                let
+                    passedThrough =
+                        List.reverse trail.skippedHashes
+                in
                 Workflow.Ok
                     { tx = tx
-                    , skippedCount = trail.hops
+                    , skippedCount = List.length passedThrough
+                    , skippedHashes = passedThrough
                     }
 
         BrowserGotTxForReferencedTx _ (Api.Data.TxTxAccount _) ->
@@ -376,9 +400,14 @@ continueWorkflow trail config tx =
         -- surface NoTxFound.
         case trail.lastSkipped of
             Just last ->
+                let
+                    passedThrough =
+                        trail.skippedHashes |> List.drop 1 |> List.reverse
+                in
                 Workflow.Ok
                     { tx = last
-                    , skippedCount = max 0 (trail.hops - 1)
+                    , skippedCount = List.length passedThrough
+                    , skippedHashes = passedThrough
                     }
 
             Nothing ->

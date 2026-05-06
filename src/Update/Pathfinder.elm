@@ -3099,7 +3099,7 @@ placeNeighborIfError plugins uc config nid model =
 handleWorkflowNextUtxo : Plugins -> Update.Config -> WorkflowNextUtxoTx.Config -> Maybe Id -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
 handleWorkflowNextUtxo plugins uc config neighborId wf model =
     case wf of
-        Workflow.Ok { tx, skippedCount } ->
+        Workflow.Ok { tx, skippedCount, skippedHashes } ->
             let
                 ( newModel, eff ) =
                     Api.Data.TxTxUtxo tx
@@ -3132,12 +3132,22 @@ handleWorkflowNextUtxo plugins uc config neighborId wf model =
 
                 extraEff =
                     if skippedCount > 0 then
-                        [ StatusbarLogEffect
-                            "Auto-extended through {0} skipped change/self transaction(s) for address {1}"
-                            [ String.fromInt skippedCount
-                            , Id.id config.addressId
+                        if skippedCount < 3 then
+                            [ StatusbarLogEffect
+                                "Auto-extended through {0} skipped change/self transaction(s) ({1}) for address {2}"
+                                [ String.fromInt skippedCount
+                                , String.join ", " skippedHashes
+                                , Id.id config.addressId
+                                ]
                             ]
-                        ]
+
+                        else
+                            [ StatusbarLogEffect
+                                "Auto-extended through {0} skipped change/self transaction(s) for address {1}"
+                                [ String.fromInt skippedCount
+                                , Id.id config.addressId
+                                ]
+                            ]
 
                     else
                         []
