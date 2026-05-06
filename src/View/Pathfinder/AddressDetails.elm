@@ -135,7 +135,7 @@ utxo plugins pluginStates vc model id viewState address =
             viewState.address.data
                 |> RemoteData.toMaybe
                 |> Maybe.map
-                    (\data -> Id.initClusterId data.currency data.entity)
+                    (\data -> Id.initClusterId data.currency data.cluster)
                 |> Maybe.andThen (flip Dict.get model.clusters)
 
         relatedAddressesTab =
@@ -346,7 +346,7 @@ relatedAddressesSelectBoxConfig vc id =
             )
 
 
-relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Entity -> Html AddressDetails.Msg
+relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Cluster -> Html AddressDetails.Msg
 relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
@@ -509,7 +509,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
         }
 
 
-clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html AddressDetails.Msg
+clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Cluster -> Html AddressDetails.Msg
 clusterInfoView vc open colors clstr =
     let
         tooltipConfig =
@@ -532,7 +532,7 @@ clusterInfoView vc open colors clstr =
     else
         let
             clstrid =
-                Id.initClusterId clstr.currency clstr.entity
+                Id.initClusterId clstr.currency clstr.cluster
 
             clusterColor =
                 Colors.getAssignedColor Colors.Clusters clstrid colors
@@ -568,7 +568,7 @@ clusterInfoView vc open colors clstr =
                 )
                 { root = { label = label }
                 , titleOfClusterId = { infoLabel = Locale.string vc.locale "Cluster" }
-                , valueOfClusterId = { label = String.fromInt clstr.entity }
+                , valueOfClusterId = { label = String.fromInt clstr.cluster }
                 , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number-of-addresses" }
                 , valueOfNumberOfAddresses =
                     { firstRowText = String.fromInt clstr.noAddresses
@@ -674,7 +674,7 @@ transactionTableView vc addressId txOnGraphFn model txs =
         txs.filter
     , tableOrButton
     ]
-        |> div [ css [ Css.width (Css.pct 100) ] ]
+        |> div [ css fullWidth ]
 
 
 transactionsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html AddressDetails.Msg

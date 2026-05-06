@@ -229,7 +229,7 @@ type Effect
 
 
 type Thing
-    = Entity Api.Data.Entity
+    = Entity Api.Data.Cluster
 
 
 userSettingsFromMainModel : Model key -> UserSettings

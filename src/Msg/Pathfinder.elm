@@ -84,7 +84,7 @@ type Msg
     | BrowserGotAddressData AddingAddressConfig Api.Data.Address
     | BrowserGotAddressPubkeyRelations Id Api.Data.RelatedAddresses
     | BrowserGotAddressDataToRefresh Api.Data.Address
-    | BrowserGotClusterData Id Api.Data.Entity
+    | BrowserGotClusterData Id Api.Data.Cluster
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
     | BrowserGotClusterTagsProbe Id Bool

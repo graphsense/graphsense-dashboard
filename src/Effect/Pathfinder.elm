@@ -27,6 +27,7 @@ type Effect
     | InternalEffect Msg
     | TransactionFilterEffect TransactionFilter.Effect
     | TooltipEffect Tooltip.Effect
+    | StatusbarLogEffect String (List String)
 
 
 perform : Effect -> Cmd Msg
@@ -78,6 +79,10 @@ perform eff =
         TooltipEffect e ->
             Tooltip.perform e
                 |> Cmd.map TooltipMsg
+
+        -- managed in Update.Statusbar.messagesFromEffects (folded into model.statusbar.log)
+        StatusbarLogEffect _ _ ->
+            Cmd.none
 
 
 effectToTracker : Effect -> Maybe String

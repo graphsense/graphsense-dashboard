@@ -85,9 +85,9 @@ addAddress :
     -> Update.Config
     ->
         { address : Api.Data.Address
-        , entity : Api.Data.Entity
-        , incoming : List Api.Data.NeighborEntity
-        , outgoing : List Api.Data.NeighborEntity
+        , entity : Api.Data.Cluster
+        , incoming : List Api.Data.NeighborCluster
+        , outgoing : List Api.Data.NeighborCluster
         , anchor : Maybe ( Bool, Id.AddressId )
         }
     -> Model
@@ -192,7 +192,7 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
-addEntity : Plugins -> Update.Config -> { entity : Api.Data.Entity, incoming : List Api.Data.NeighborEntity, outgoing : List Api.Data.NeighborEntity } -> Maybe ( Bool, Id.EntityId ) -> Model -> ( Model, List Effect )
+addEntity : Plugins -> Update.Config -> { entity : Api.Data.Cluster, incoming : List Api.Data.NeighborCluster, outgoing : List Api.Data.NeighborCluster } -> Maybe ( Bool, Id.EntityId ) -> Model -> ( Model, List Effect )
 addEntity plugins uc { entity, incoming, outgoing } anchor model =
     anchor
         |> Maybe.andThen
@@ -212,11 +212,11 @@ addEntity plugins uc { entity, incoming, outgoing } anchor model =
                 let
                     findEntities e =
                         (++)
-                            (Layer.getEntities e.entity.currency e.entity.entity model.layers)
+                            (Layer.getEntities e.entity.currency e.entity.cluster model.layers)
 
-                    filterSelf : Api.Data.NeighborEntity -> Bool
+                    filterSelf : Api.Data.NeighborCluster -> Bool
                     filterSelf neighbor =
-                        neighbor.entity.entity /= entity.entity
+                        neighbor.entity.cluster /= entity.cluster
 
                     outgoingAnchors =
                         incoming
@@ -265,8 +265,8 @@ addEntity plugins uc { entity, incoming, outgoing } anchor model =
                             | layers = added.layers
                         }
                             |> syncLinks added.repositioned
-                            |> addEntityEgonet entity.currency entity.entity True outgoing
-                            |> addEntityEgonet entity.currency entity.entity False incoming
+                            |> addEntityEgonet entity.currency entity.cluster True outgoing
+                            |> addEntityEgonet entity.currency entity.cluster False incoming
                 in
                 added.new
                     |> Set.toList
@@ -848,7 +848,7 @@ updateByMsg plugins uc msg model =
                     ( { model | adding = adding }
                     , getEntityEgonet
                         { currency = entity.currency
-                        , entity = entity.entity
+                        , entity = entity.cluster
                         }
                         (BrowserGotEntityEgonetForAddress address)
                         model.layers
@@ -863,7 +863,7 @@ updateByMsg plugins uc msg model =
             let
                 id =
                     { currency = entity.currency
-                    , entity = entity.entity
+                    , entity = entity.cluster
                     }
 
                 adding =
@@ -970,7 +970,7 @@ updateByMsg plugins uc msg model =
                     (\n -> Util.Graph.filterTxValue model.config n.address.currency n.value n.tokenValues)
                 |> List.foldl
                     (\neighbor acc ->
-                        Dict.update ( neighbor.address.currency, neighbor.address.entity )
+                        Dict.update ( neighbor.address.currency, neighbor.address.cluster )
                             (Maybe.map ((::) neighbor)
                                 >> Maybe.withDefault [ neighbor ]
                                 >> Just
@@ -1016,7 +1016,7 @@ updateByMsg plugins uc msg model =
                     ((++)
                         (getEntityEgonet
                             { currency = entity.currency
-                            , entity = entity.entity
+                            , entity = entity.cluster
                             }
                             BrowserGotEntityEgonet
                             model.layers
@@ -1441,7 +1441,7 @@ updateByMsg plugins uc msg model =
                                                     Id.layer addressId
                                                         |> layerDelta isOutgoing
                                                 , id =
-                                                    neighbor.address.entity
+                                                    neighbor.address.cluster
                                                 }
 
                                         added =
@@ -1463,7 +1463,7 @@ updateByMsg plugins uc msg model =
                                                     , neighbors = [ neighbor ]
                                                     }
                                                     |> GetEntityEffect
-                                                        { entity = neighbor.address.entity
+                                                        { entity = neighbor.address.cluster
                                                         , currency = Id.currency addressId
                                                         }
                                                     |> ApiEffect
@@ -1841,7 +1841,7 @@ updateByMsg plugins uc msg model =
                                         Nothing
                             )
                      )
-                        ++ List.map .entity addresses
+                        ++ List.map .cluster addresses
                     )
                         |> List.foldl Set.insert Set.empty
                         |> Set.toList
@@ -1963,7 +1963,7 @@ updateByMsg plugins uc msg model =
                     |> BulkGetEntityNeighborsEffect
                         { currency = currency
                         , isOutgoing = True
-                        , entities = List.map .entity deser.entities
+                        , entities = List.map .cluster deser.entities
                         , onlyIds = True
                         }
                     |> ApiEffect
@@ -2015,7 +2015,7 @@ updateByMsg plugins uc msg model =
                                                             entityId =
                                                                 Id.initEntityId
                                                                     { currency = currency
-                                                                    , id = neighbor.entity.entity
+                                                                    , id = neighbor.entity.cluster
                                                                     , layer =
                                                                         Id.layer anchor.id
                                                                             |> layerDelta isOutgoing
@@ -2236,7 +2236,7 @@ updateByMsg plugins uc msg model =
 
 type alias SearchResult =
     { matchingAddresses : List Api.Data.Address
-    , neighbor : Api.Data.NeighborEntity
+    , neighbor : Api.Data.NeighborCluster
     , paths : More
     }
 
@@ -2325,7 +2325,7 @@ handleEntitySearchResult plugins uc anchor nodes isOutgoing ( model, effects ) =
                     id =
                         Id.initEntityId
                             { currency = neighbor.entity.currency
-                            , id = neighbor.entity.entity
+                            , id = neighbor.entity.cluster
                             , layer =
                                 Id.layer anchor.id |> layerDelta isOutgoing
                             }
@@ -2603,7 +2603,7 @@ updateByRoute_ plugins route model =
             n model
 
 
-addAddressNeighborsWithEntity : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( List Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> { model : Model, newAddresses : List Address, newEntities : List EntityId, repositioned : Set EntityId }
+addAddressNeighborsWithEntity : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( List Api.Data.NeighborAddress, Api.Data.Cluster ) -> Model -> { model : Model, newAddresses : List Address, newEntities : List EntityId, repositioned : Set EntityId }
 addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgoing ( neighbors, entity ) model =
     let
         acc =
@@ -2654,7 +2654,7 @@ addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgo
             }
 
 
-addEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> List Api.Data.NeighborEntity -> Model -> ( Model, List ( Api.Data.NeighborEntity, Entity ), Set EntityId )
+addEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> List Api.Data.NeighborCluster -> Model -> ( Model, List ( Api.Data.NeighborCluster, Entity ), Set EntityId )
 addEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     let
         acc =
@@ -2670,7 +2670,7 @@ addEntityNeighbors plugins uc anchor isOutgoing neighbors model =
                                     { currency = anchor.entity.currency
                                     , layer =
                                         Id.layer anchor.id |> layerDelta isOutgoing
-                                    , id = neighbor.entity.entity
+                                    , id = neighbor.entity.cluster
                                     }
                         in
                         if Set.member entityId acc.new then
@@ -2689,7 +2689,7 @@ addEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     )
 
 
-addEntityLinks : Entity -> Bool -> List ( Api.Data.NeighborEntity, Entity ) -> Model -> Model
+addEntityLinks : Entity -> Bool -> List ( Api.Data.NeighborCluster, Entity ) -> Model -> Model
 addEntityLinks anchor isOutgoing neighbors model =
     let
         linkData =
@@ -2741,13 +2741,13 @@ addAddressLinks anchor isOutgoing neighbors model =
     }
 
 
-addEntityEgonet : String -> Int -> Bool -> List Api.Data.NeighborEntity -> Model -> Model
+addEntityEgonet : String -> Int -> Bool -> List Api.Data.NeighborCluster -> Model -> Model
 addEntityEgonet currency entity isOutgoing neighbors model =
     let
         entities =
             List.concatMap
                 (\neighbor ->
-                    Layer.getEntities neighbor.entity.currency neighbor.entity.entity model.layers
+                    Layer.getEntities neighbor.entity.currency neighbor.entity.cluster model.layers
                         |> List.map (pair neighbor)
                 )
                 neighbors
@@ -2763,7 +2763,7 @@ addEntityEgonet currency entity isOutgoing neighbors model =
         anchors
 
 
-handleEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> List Api.Data.NeighborEntity -> Model -> ( Model, List Effect )
+handleEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> List Api.Data.NeighborCluster -> Model -> ( Model, List Effect )
 handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     let
         ( newModel, new, repositioned ) =
@@ -2777,7 +2777,7 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
             (\{ entity } ->
                 getEntityEgonet
                     { currency = entity.currency
-                    , entity = entity.entity
+                    , entity = entity.cluster
                     }
                     BrowserGotEntityEgonet
                     newModel.layers
@@ -2797,7 +2797,7 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     neighbors contains a list of address neighbors and their parent entity.
 
 -}
-handleAddressNeighbor : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( List Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, List Effect )
+handleAddressNeighbor : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( List Api.Data.NeighborAddress, Api.Data.Cluster ) -> Model -> ( Model, List Effect )
 handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
     let
         added =
@@ -2921,7 +2921,7 @@ selectAddress address table model =
 
 selectEntity : Entity -> Maybe Route.EntityTable -> Model -> ( Model, List Effect )
 selectEntity entity table model =
-    if model.selectIfLoaded /= Just (SelectEntity { currency = entity.entity.currency, entity = entity.entity.entity }) then
+    if model.selectIfLoaded /= Just (SelectEntity { currency = entity.entity.currency, entity = entity.entity.cluster }) then
         n model
 
     else
@@ -3254,7 +3254,7 @@ refreshBrowserAddress id model =
 refreshBrowserEntity : E.Entity -> Model -> Model
 refreshBrowserEntity id model =
     refreshBrowserEntityIf
-        (\en -> en.entity.currency == id.currency && en.entity.entity == id.entity)
+        (\en -> en.entity.currency == id.currency && en.entity.cluster == id.entity)
         model
 
 
@@ -3815,14 +3815,14 @@ loadEntity _ { currency, entity, table, layer } model =
             )
 
 
-normalizeDeserializedEntityTag : List Api.Data.Entity -> DeserializedEntityTag -> Maybe Tag.UserTag
+normalizeDeserializedEntityTag : List Api.Data.Cluster -> DeserializedEntityTag -> Maybe Tag.UserTag
 normalizeDeserializedEntityTag entities entityTag =
     case entityTag of
         TagUserTag tag ->
             Just tag
 
         DeserializedEntityUserTagTag tag ->
-            List.Extra.find (.entity >> (==) tag.entity) entities
+            List.Extra.find (.cluster >> (==) tag.entity) entities
                 |> Maybe.map
                     (\entity ->
                         { currency = tag.currency
