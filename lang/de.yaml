@@ -566,4 +566,10 @@ filter-quick-filter: Schnellfilter per Transaktion
 filter-custom-filter: Benutzerdefinierter Filter
 filter-none-selected: keinen ausgewählt
 retrying {0}/{1}: erneuter Versuch {0}/{1}
-continue tracing change: Weitersuchen
+continue search: Weitersuchen
+transaction-table-trace-further: Noch keine Transaktionen gefunden
+transaction-tracing-not-possible: Transaktionsverfolgung nicht möglich
+no-adjacent-tx-between-addresses: Keine passende benachbarte Transaktion zwischen Adressen {0} und {1} gefunden.
+could-not-link-neighbor-address: Nachbaradresse konnte nicht verknüpft werden
+max-change-hops-reached: Keine benachbarte Transaktion für Adresse {0} gefunden, die nicht nur Change ist. Bitte versuchen Sie es erneut, um weiterzusuchen.
+transaction-tracing-across-change: Transaktionsverfolgung über Changes
