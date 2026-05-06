@@ -570,3 +570,11 @@ filter-quick-filter: filtro rápido por transacción
 filter-custom-filter: filtro personalizado
 filter-none-selected: ninguno seleccionado
 retrying {0}/{1}: reintentando {0}/{1}
+transaction-table-trace-further-button: Continuar rastreo 
+transaction-table-trace-further-title: No se encontró ninguna transacción todavía
+transaction-table-trace-further: No se encontró ninguna transacción vinculada a UTXO que tenga otras entradas además de la dirección seleccionada al rastrear sobre {0} saltos. ¿Desea buscar más?
+transaction-tracing-not-possible: Seguimiento de transacción no es posible
+no-adjacent-tx-between-addresses: No se encontró una transacción adyacente adecuada entre la dirección {0} y {1}.
+could-not-link-neighbor-address: No se pudo vincular la dirección vecina
+max-change-hops-reached: No se encontró una transacción adyacente para la dirección {0} que no sea solo cambio para {1} saltos. Intente nuevamente para buscar más lejos.
+transaction-tracing-across-change: Seguimiento de transacción a través de cambio

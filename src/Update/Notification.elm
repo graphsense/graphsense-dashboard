@@ -57,19 +57,19 @@ pathFinderErrorToNotifications err =
 
         InfoError (NoAdjaccentTxForAddressFound tid) ->
             Notify.infoDefault "Infobox-no-suitable-adjacent-transaction"
-                |> Notify.map (Rs.s_title (Just "Transaction tracing not possible"))
+                |> Notify.map (Rs.s_title (Just "Transaction-tracing-not-possible"))
                 |> Notify.map (Rs.s_variables (Id.id tid |> truncateLongIdentifier |> List.singleton))
                 |> List.singleton
 
         InfoError (NoAdjacentTxForAddressAndNeighborFound aid nid) ->
-            Notify.infoDefault "Could not find a suitable adjacent transaction between address {0} and {1}."
-                |> Notify.map (Rs.s_title (Just "Could not link neighbor address"))
+            Notify.infoDefault "No-adjacent-tx-between-addresses"
+                |> Notify.map (Rs.s_title (Just "Could-not-link-neighbor-address"))
                 |> Notify.map (Rs.s_variables [ Id.id aid |> truncateLongIdentifier, Id.id nid |> truncateLongIdentifier ])
                 |> List.singleton
 
         InfoError (MaxChangeHopsLimitReached max tid) ->
-            Notify.infoDefault "Could not find a adjacent transaction for address {0} which is not just change for {1} hops. Please try again to look further."
-                |> Notify.map (Rs.s_title (Just "Transaction tracing across change"))
+            Notify.infoDefault "Max-change-hops-reached"
+                |> Notify.map (Rs.s_title (Just "Transaction-tracing-across-change"))
                 |> Notify.map (Rs.s_variables [ Id.id tid |> truncateLongIdentifier, String.fromInt max ])
                 |> List.singleton
 
