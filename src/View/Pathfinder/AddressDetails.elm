@@ -649,7 +649,7 @@ transactionTableView vc addressId txOnGraphFn model txs =
                                         |> Just
                                     )
                             )
-                            { root = { title = "No transaction found yet", text = "" } }
+                            { root = { title = Locale.string vc.locale "transaction-table-trace-further-title", text = "" } }
                             |> List.singleton
                             |> div
                                 [ css

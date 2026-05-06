@@ -549,8 +549,9 @@ filter-utxo-only: UTXO only
 tx-filter-utxo-only-tooltip: Only list transactions which are referencing the selected transaction on a UTXO level
 tx-filter-quickfilter-tooltip: Automatically filter by transaction nodes in the graph
 retrying {0}/{1}: retrying {0}/{1}
-continue search: Continue search
-transaction-table-trace-further: No transactions found yet
+transaction-table-trace-further-button: Continue search
+transaction-table-trace-further-title: No transaction found yet
+transaction-table-trace-further: No UTXO-linked transaction found which has other inputs than the selected address by tracing over {0} hops. Do you want to look further?
 transaction-tracing-not-possible: Transaction tracing not possible
 no-adjacent-tx-between-addresses: Could not find a suitable adjacent transaction between address {0} and {1}.
 could-not-link-neighbor-address: Could not link neighbor address
