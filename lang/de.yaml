@@ -575,3 +575,5 @@ no-adjacent-tx-between-addresses: Keine passende benachbarte Transaktion zwische
 could-not-link-neighbor-address: Nachbaradresse konnte nicht verknüpft werden
 max-change-hops-reached: Keine benachbarte Transaktion für Adresse {0} gefunden, die nicht nur Change ist. Bitte versuchen Sie es erneut, um weiterzusuchen.
 transaction-tracing-across-change: Transaktionsverfolgung über Changes
+hint-auto-trace-title: Vermögenswerte automatisch verfolgen
+hint-auto-trace-description: Verfolgen Sie Vermögenswerte, indem Sie automatisch die nächste Transaktion finden (auf UTXO-Ebene, falls vom Ledger unterstützt)

@@ -579,3 +579,5 @@ no-adjacent-tx-between-addresses: No se encontró una transacción adyacente ade
 could-not-link-neighbor-address: No se pudo vincular la dirección vecina
 max-change-hops-reached: No se encontró una transacción adyacente para la dirección {0} que no sea solo cambio para {1} saltos. Intente nuevamente para buscar más lejos.
 transaction-tracing-across-change: Seguimiento de transacción a través de cambio
+hint-auto-trace-title: Rastrear fondos automáticamente
+hint-auto-trace-description: Siga el dinero encontrando automáticamente la próxima transacción (a nivel UTXO si el ledger lo admite)

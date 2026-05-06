@@ -27,25 +27,25 @@ legendItem vc itemt { description, icon, label } =
             { root =
                 { description = Locale.string vc.locale description
                 , iconInstance = icon
-                , label = Locale.string vc.locale label
+                , label = Locale.string vc.locale label |> Locale.titleCase vc.locale
                 }
             }
 
         attrDesc =
-            [ [ Css.whiteSpace Css.normal, Css.textAlign Css.left ] |> css ]
+            [ css [ Css.width <| Css.pct 100 ] ]
     in
     case itemt of
         Node ->
             Theme.Html.Dialogs.legendItemNodeWithAttributes
                 (Theme.Html.Dialogs.legendItemNodeAttributes
-                    |> Rs.s_description attrDesc
+                    |> Rs.s_root attrDesc
                 )
                 data
 
         IconItem ->
             Theme.Html.Dialogs.legendItemIconWithAttributes
                 (Theme.Html.Dialogs.legendItemIconAttributes
-                    |> Rs.s_description attrDesc
+                    |> Rs.s_root attrDesc
                 )
                 data
 
@@ -143,6 +143,12 @@ legendView plugins vc closeMsg =
                 { description = "Hint-simplified-address"
                 , icon = GraphComponents.swapNode { root = { highlightInvisible = False } }
                 , label = "Hint-swap-bridge"
+                }
+            , legendItem vc
+                IconItem
+                { description = "Hint-auto-trace-description"
+                , icon = Icons.iconsNodeOpenRight { root = { state = Icons.IconsNodeOpenRightStateActiv } }
+                , label = "Hint-auto-trace-title"
                 }
             ]
         }
