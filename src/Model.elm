@@ -253,4 +253,5 @@ userSettingsFromMainModel model =
     , showHash = Just model.config.showHash
     , showBothValues = Just model.config.showBothValues
     , avoidOverlapingNodes = Just model.pathfinder.config.avoidOverlapingNodes
+    , recentSearches = model.search.recentSearches
     }
