@@ -613,8 +613,15 @@ transactionTableView vc addressId txOnGraphFn model txs =
                 |> List.map Tx.getTxIdForAddressTx
                 |> allAndNotEmpty txOnGraphFn
 
+        maxChangeHopsLimit =
+            if Inf.isEmpty txs.table then
+                txs.maxChangeHopsLimit
+
+            else
+                Nothing
+
         tableOrButton =
-            txs.maxChangeHopsLimit
+            maxChangeHopsLimit
                 |> Maybe.map
                     (\{ maxHops } ->
                         ErrorMessagesAlerts.alertMessageSmallWithInstances
@@ -642,7 +649,7 @@ transactionTableView vc addressId txOnGraphFn model txs =
                                         , Button.secondaryButton vc
                                             (Button.defaultConfig
                                                 |> Rs.s_size Buttons.ButtonSizeSmall
-                                                |> Rs.s_text (Locale.string vc.locale "Continue tracing change")
+                                                |> Rs.s_text (Locale.string vc.locale "Transaction-table-trace-further-button")
                                                 |> Rs.s_onClick (Just UserClickedContinueChangeTracing)
                                             )
                                         ]

@@ -329,6 +329,12 @@ update uc msg model =
                             baseResult =
                                 { txs
                                     | filter = newFilter
+                                    , maxChangeHopsLimit =
+                                        if TransactionFilter.getUtxoFilter newFilter == Nothing then
+                                            Nothing
+
+                                        else
+                                            txs.maxChangeHopsLimit
                                 }
                                     |> RemoteData.Success
                                     |> flip s_txs model
@@ -570,23 +576,31 @@ update uc msg model =
         UserClickedContinueChangeTracing ->
             model.txs
                 |> RemoteData.toMaybe
-                |> Maybe.andThen .maxChangeHopsLimit
-                |> Maybe.map
-                    (\data ->
-                        let
-                            config_ =
-                                { addressId = model.address.id
-                                , direction = data.direction
-                                , allowMultiple = True
-                                }
-                        in
-                        WorkflowNextUtxoTx.start config_ data.tx
-                            |> Workflow.mapEffect (WorkflowNextUtxoTx config_ >> Pathfinder.AddressDetailsMsg model.address.id)
-                            |> Workflow.next
-                            |> List.map ApiEffect
+                |> Maybe.andThen
+                    (\txs ->
+                        txs.maxChangeHopsLimit
+                            |> Maybe.map
+                                (\data ->
+                                    let
+                                        config_ =
+                                            { addressId = model.address.id
+                                            , direction = data.direction
+                                            , allowMultiple = True
+                                            }
+                                    in
+                                    WorkflowNextUtxoTx.start config_ data.tx
+                                        |> Workflow.mapEffect (WorkflowNextUtxoTx config_ >> Pathfinder.AddressDetailsMsg model.address.id)
+                                        |> Workflow.next
+                                        |> List.map ApiEffect
+                                        |> pair
+                                            (txs
+                                                |> s_maxChangeHopsLimit Nothing
+                                                |> RemoteData.Success
+                                                |> flip s_txs model
+                                            )
+                                )
                     )
-                |> Maybe.withDefault []
-                |> pair model
+                |> Maybe.withDefault (n model)
 
 
 handleWorkflowNextUtxo : WorkflowNextUtxoTx.Config -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
