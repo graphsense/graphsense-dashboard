@@ -5,12 +5,11 @@ import Elm exposing (Expression)
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (cx, cy, rx, ry)
-import Generate.Common.DefaultShapeTraits as Common
-import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
-import Generate.Util exposing (addIdAttribute, callStyles, getElementAttributes, withVisibility)
+import Generate.Svg.HasGeometryTrait as HasGeometryTrait
+import Generate.Util exposing (callStyles, getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
-import Types exposing (ColorMap, Config, Details)
+import Types exposing (ColorMap, Config)
 
 
 toExpressions : Config -> String -> EllipseNode -> List Elm.Expression
@@ -42,7 +41,7 @@ getName node =
 toStyles : ColorMap -> EllipseNode -> List Elm.Expression
 toStyles colorMap node =
     HasGeometryTrait.toStyles colorMap node.defaultShapeTraits.hasGeometryTrait
-    ++ HasBlendModeAndOpacityTrait.toStyles node.defaultShapeTraits.hasBlendModeAndOpacityTrait
+        ++ HasBlendModeAndOpacityTrait.toStyles node.defaultShapeTraits.hasBlendModeAndOpacityTrait
 
 
 toAttributes : EllipseNode -> List Elm.Expression

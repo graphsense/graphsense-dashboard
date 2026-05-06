@@ -21,11 +21,11 @@ titleNoAddresses =
     "No. addresses"
 
 
-filter : Graph.Config -> Table.Filter Api.Data.NeighborEntity
+filter : Graph.Config -> Table.Filter Api.Data.NeighborCluster
 filter gc =
     { search =
         \term a ->
-            String.contains term (String.fromInt a.entity.entity)
+            String.contains term (String.fromInt a.entity.cluster)
                 || (Maybe.map (List.any (String.contains term)) a.labels |> Maybe.withDefault True)
     , filter =
         \a ->

@@ -566,6 +566,7 @@ datefilter-starting-tx: posterior a
 datefilter-until-tx: anterior a
 filter-utxo-only: solo UTXO
 tx-filter-utxo-only-tooltip: Solo listar transacciones que referencian la transacción seleccionada a nivel UTXO
+tx-filter-quickfilter-tooltip: Filtrar automáticamente por nodos de transacción en el gráfico
 filter-quick-filter: filtro rápido por transacción
 filter-custom-filter: filtro personalizado
 filter-none-selected: ninguno seleccionado

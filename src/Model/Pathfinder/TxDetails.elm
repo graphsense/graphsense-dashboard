@@ -2,7 +2,6 @@ module Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
-import Components.Table exposing (Table)
 import Components.TransactionFilter as TransactionFilter
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RemoteData exposing (WebData)
@@ -11,8 +10,8 @@ import RemoteData exposing (WebData)
 type alias Model =
     { inputsTableOpen : Bool
     , outputsTableOpen : Bool
-    , inputsTable : Table Api.Data.TxValue
-    , outputsTable : Table Api.Data.TxValue
+    , inputsTable : InfiniteTable.Model Api.Data.TxValue
+    , outputsTable : InfiniteTable.Model Api.Data.TxValue
     , tx : Tx
     , subTxsTableOpen : Bool
     , baseTx : WebData Api.Data.TxAccount

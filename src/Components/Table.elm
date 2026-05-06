@@ -26,11 +26,11 @@ init =
 
 
 initSorted : Bool -> String -> Table a
-initSorted desc col =
+initSorted asc col =
     { data = []
     , filtered = []
     , loading = False
-    , state = Table.sortBy col desc
+    , state = Table.sortBy col asc
     , nextpage = Nothing
     , searchTerm = Nothing
     }
@@ -125,5 +125,5 @@ filterTable filter table =
 
 
 sortBy : String -> Bool -> Table d -> Table d
-sortBy col desc table =
-    { table | state = Table.sortBy col desc }
+sortBy col asc table =
+    { table | state = Table.sortBy col asc }

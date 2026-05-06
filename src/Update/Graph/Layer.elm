@@ -93,7 +93,7 @@ addAddress plugins uc address layers =
 
 {-| Add an entity to the root of the graph
 -}
-addEntity : Plugins -> Update.Config -> Api.Data.Entity -> IntDict Layer -> Acc EntityId
+addEntity : Plugins -> Update.Config -> Api.Data.Cluster -> IntDict Layer -> Acc EntityId
 addEntity plugins uc entity layers =
     addEntitiesAt plugins
         uc
@@ -132,7 +132,7 @@ addAddressAtEntity plugins uc entityId address acc =
 
 {-| Add neighbors next to an entity. Also insert placeholder links
 -}
-addEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
+addEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> List Api.Data.Cluster -> IntDict Layer -> Acc EntityId
 addEntityNeighbors plugins uc entity isOutgoing neighbors layers =
     let
         added =
@@ -256,7 +256,7 @@ anchorsToPositions anchors layers =
                     IntDict.empty
 
 
-addEntitiesAt : Plugins -> Update.Config -> IntDict Position -> List Api.Data.Entity -> Acc EntityId -> Acc EntityId
+addEntitiesAt : Plugins -> Update.Config -> IntDict Position -> List Api.Data.Cluster -> Acc EntityId -> Acc EntityId
 addEntitiesAt plugins uc positions entities acc =
     IntDict.foldl
         (\layerId position acc_ ->
@@ -292,11 +292,11 @@ type alias AccEntity =
     }
 
 
-addEntityHere : Plugins -> Update.Config -> Position -> Api.Data.Entity -> AccEntity -> AccEntity
+addEntityHere : Plugins -> Update.Config -> Position -> Api.Data.Cluster -> AccEntity -> AccEntity
 addEntityHere plugins uc position entity { layer, new, repositioned } =
     let
         entityId =
-            Id.initEntityId { currency = entity.currency, id = entity.entity, layer = layer.id }
+            Id.initEntityId { currency = entity.currency, id = entity.cluster, layer = layer.id }
 
         ( ( newEntities, newRepositioned ), newEntity ) =
             case Dict.get entityId layer.entities of
@@ -1089,8 +1089,8 @@ deserialize plugins uc { deserialized, addresses, entities } =
         entityByAddress =
             addresses
                 |> List.foldl
-                    (\{ currency, address, entity } ->
-                        Dict.insert ( currency, address ) entity
+                    (\{ currency, address, cluster } ->
+                        Dict.insert ( currency, address ) cluster
                     )
                     Dict.empty
 
@@ -1108,7 +1108,7 @@ deserialize plugins uc { deserialized, addresses, entities } =
                             |> pair i
                     )
 
-        entitiesWithPositionByLayer : IntDict (List ( Api.Data.Entity, Position ))
+        entitiesWithPositionByLayer : IntDict (List ( Api.Data.Cluster, Position ))
         entitiesWithPositionByLayer =
             addressNodesByLayerWithEntity
                 |> List.foldl
@@ -1120,7 +1120,7 @@ deserialize plugins uc { deserialized, addresses, entities } =
                                     |> List.map (\( fst, more ) -> ( second fst, first fst :: List.map first more ))
                                     |> List.filterMap
                                         (\( e, addrs ) ->
-                                            List.Extra.find (.entity >> (==) e) entities
+                                            List.Extra.find (.cluster >> (==) e) entities
                                                 |> Maybe.andThen
                                                     (\entity ->
                                                         addressesToPosition addrs
@@ -1132,14 +1132,14 @@ deserialize plugins uc { deserialized, addresses, entities } =
                     )
                     entitiesWithoutAddressesByLayer
 
-        entitiesWithoutAddressesByLayer : IntDict (List ( Api.Data.Entity, Position ))
+        entitiesWithoutAddressesByLayer : IntDict (List ( Api.Data.Cluster, Position ))
         entitiesWithoutAddressesByLayer =
             deserialized.entities
                 |> List.filterMap
                     (\e ->
                         List.Extra.find
                             (\entity ->
-                                entity.entity
+                                entity.cluster
                                     == Id.entityId e.id
                                     && entity.currency
                                     == Id.currency e.id

@@ -7,9 +7,9 @@ import Model.Graph.Entity exposing (..)
 import Plugin.Update as Plugin exposing (Plugins)
 
 
-init : Plugins -> { x : Float, y : Float, layer : Int } -> Api.Data.Entity -> Entity
+init : Plugins -> { x : Float, y : Float, layer : Int } -> Api.Data.Cluster -> Entity
 init plugins { x, y, layer } entity =
-    { id = initEntityId { layer = layer, currency = entity.currency, id = entity.entity }
+    { id = initEntityId { layer = layer, currency = entity.currency, id = entity.cluster }
     , entity = entity
     , addresses = Dict.empty
     , category =

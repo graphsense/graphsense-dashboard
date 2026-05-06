@@ -121,10 +121,10 @@ type Direction
     | Bottom
 
 
-init : String -> Int -> Table d -> Model d
-init tableId pagesize table =
+init : String -> Int -> Model d
+init tableId pagesize =
     Model
-        { table = table
+        { table = Table.initUnsorted
         , tableId = tableId
         , pagesize = pagesize
         , iterations = 0
@@ -224,10 +224,10 @@ setIntDict nextpage loaded dict model =
 
         set =
             if isReversed then
-                s_desc
+                s_asc
 
             else
-                s_asc
+                s_desc
     in
     Maybe.withDefault initData
         >> set ( dict, nextpage, loaded )
@@ -555,8 +555,8 @@ infiniteScroll mapper =
 
 
 sortBy : String -> Bool -> Model d -> Model d
-sortBy col desc (Model model) =
-    Table.sortBy col desc model.table
+sortBy col asc (Model model) =
+    Table.sortBy col asc model.table
         |> flip s_table model
         |> Model
 
@@ -716,10 +716,10 @@ getIntDict model =
     Dict.get col model.data
         |> Maybe.map
             (if isReversed then
-                .desc
+                .asc
 
              else
-                .asc
+                .desc
             )
         |> Maybe.withDefault ( IntDict.empty, Nothing, False )
 

@@ -36,7 +36,7 @@ setAddress { currency, address } data model =
     }
 
 
-setEntityForAddress : { currency : String, address : String } -> Api.Data.Entity -> Model -> Model
+setEntityForAddress : { currency : String, address : String } -> Api.Data.Cluster -> Model -> Model
 setEntityForAddress { currency, address } data model =
     { model
         | addresses =
@@ -67,7 +67,7 @@ setEntityPath currency fst entities model =
     }
 
 
-setOutgoingForAddress : { currency : String, address : String } -> List Api.Data.NeighborEntity -> Model -> Model
+setOutgoingForAddress : { currency : String, address : String } -> List Api.Data.NeighborCluster -> Model -> Model
 setOutgoingForAddress { currency, address } data model =
     { model
         | addresses =
@@ -78,7 +78,7 @@ setOutgoingForAddress { currency, address } data model =
     }
 
 
-setIncomingForAddress : { currency : String, address : String } -> List Api.Data.NeighborEntity -> Model -> Model
+setIncomingForAddress : { currency : String, address : String } -> List Api.Data.NeighborCluster -> Model -> Model
 setIncomingForAddress { currency, address } data model =
     { model
         | addresses =
@@ -96,7 +96,7 @@ loadEntity { currency, entity } model =
     }
 
 
-setEntityForEntity : { currency : String, entity : Int } -> Api.Data.Entity -> Model -> Model
+setEntityForEntity : { currency : String, entity : Int } -> Api.Data.Cluster -> Model -> Model
 setEntityForEntity { currency, entity } data model =
     { model
         | entities =
@@ -107,7 +107,7 @@ setEntityForEntity { currency, entity } data model =
     }
 
 
-setOutgoingForEntity : { currency : String, entity : Int } -> List Api.Data.NeighborEntity -> Model -> Model
+setOutgoingForEntity : { currency : String, entity : Int } -> List Api.Data.NeighborCluster -> Model -> Model
 setOutgoingForEntity { currency, entity } data model =
     { model
         | entities =
@@ -118,7 +118,7 @@ setOutgoingForEntity { currency, entity } data model =
     }
 
 
-setIncomingForEntity : { currency : String, entity : Int } -> List Api.Data.NeighborEntity -> Model -> Model
+setIncomingForEntity : { currency : String, entity : Int } -> List Api.Data.NeighborCluster -> Model -> Model
 setIncomingForEntity { currency, entity } data model =
     { model
         | entities =
@@ -149,9 +149,9 @@ readyAddress :
     ->
         Maybe
             { address : Api.Data.Address
-            , entity : Api.Data.Entity
-            , outgoing : List Api.Data.NeighborEntity
-            , incoming : List Api.Data.NeighborEntity
+            , entity : Api.Data.Cluster
+            , outgoing : List Api.Data.NeighborCluster
+            , incoming : List Api.Data.NeighborCluster
             , anchor : Maybe ( Bool, Id.AddressId )
             }
 readyAddress { currency, address } model =
@@ -181,7 +181,7 @@ removeEntity { currency, entity } model =
     }
 
 
-readyEntity : { currency : String, entity : Int } -> Model -> Maybe { entity : Api.Data.Entity, outgoing : List Api.Data.NeighborEntity, incoming : List Api.Data.NeighborEntity }
+readyEntity : { currency : String, entity : Int } -> Model -> Maybe { entity : Api.Data.Cluster, outgoing : List Api.Data.NeighborCluster, incoming : List Api.Data.NeighborCluster }
 readyEntity { currency, entity } model =
     Dict.get ( currency, entity ) model.entities
         |> Maybe.andThen

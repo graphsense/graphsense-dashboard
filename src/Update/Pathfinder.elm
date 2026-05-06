@@ -95,6 +95,7 @@ import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
+import Update.Pathfinder.Address as PathfinderAddress
 import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.AggEdge as AggEdge
 import Update.Pathfinder.ConversionDetails as ConversionDetails
@@ -856,7 +857,7 @@ updateByMsg plugins uc msg model =
         BrowserGotClusterData _ data ->
             let
                 clusterId =
-                    Id.initClusterId data.currency data.entity
+                    Id.initClusterId data.currency data.cluster
 
                 setServiceType addr =
                     Just data
@@ -1315,7 +1316,7 @@ updateByMsg plugins uc msg model =
                         |> s_toolbarHovercard Nothing
                         |> s_contextMenu Nothing
             in
-            if click then
+            if click && not model.modPressed then
                 unselect m1
 
             else
@@ -1678,7 +1679,7 @@ updateByMsg plugins uc msg model =
 
         UserClickedAddress id ->
             if model.modPressed || model.pointerTool == Select then
-                multiSelect model [ MSelectedAddress id ] True
+                toggleMultiSelect model (MSelectedAddress id)
                     |> n
 
             else
@@ -1710,7 +1711,7 @@ updateByMsg plugins uc msg model =
                             data.tx |> Tx.getNetwork
 
                         idsTable =
-                            t.data
+                            InfiniteTable.getPage t
                                 |> List.filterMap (Tx.ioToId network)
 
                         allChecked =
@@ -3112,9 +3113,50 @@ placeNeighborIfError plugins uc config nid model =
 handleWorkflowNextUtxo : Plugins -> Update.Config -> WorkflowNextUtxoTx.Config -> Maybe Id -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
 handleWorkflowNextUtxo plugins uc config neighborId wf model =
     case wf of
-        Workflow.Ok tx ->
-            Api.Data.TxTxUtxo tx
-                |> flip (handleTx plugins uc config neighborId) model
+        Workflow.Ok { tx, skippedCount } ->
+            let
+                ( newModel, eff ) =
+                    Api.Data.TxTxUtxo tx
+                        |> flip (handleTx plugins uc config neighborId) model
+
+                txId =
+                    Id.init tx.currency tx.txHash
+
+                -- The workflow direction's TxsLoading needs to be cleared even
+                -- when the per-address propagation in Network.addTxWithPosition
+                -- doesn't touch it (e.g. self-loop txs where Init.Pathfinder.Tx
+                -- filters the anchor out of `outputs` because it's in `inputs`,
+                -- so backward navigation ending on a peeling tx never updates
+                -- incomingTxs). Insert the result tx into the workflow-direction
+                -- tx-set explicitly; idempotent if it's already there.
+                modelWithLoadingCleared =
+                    newModel
+                        |> s_network
+                            (Network.updateAddress config.addressId
+                                (\addr ->
+                                    case config.direction of
+                                        Incoming ->
+                                            { addr | incomingTxs = PathfinderAddress.txsInsertId txId addr.incomingTxs }
+
+                                        Outgoing ->
+                                            { addr | outgoingTxs = PathfinderAddress.txsInsertId txId addr.outgoingTxs }
+                                )
+                                newModel.network
+                            )
+
+                extraEff =
+                    if skippedCount > 0 then
+                        [ StatusbarLogEffect
+                            "Auto-extended through {0} skipped change/self transaction(s) for address {1}"
+                            [ String.fromInt skippedCount
+                            , Id.id config.addressId
+                            ]
+                        ]
+
+                    else
+                        []
+            in
+            ( modelWithLoadingCleared, eff ++ extraEff )
 
         Workflow.Next eff ->
             eff
@@ -3142,10 +3184,15 @@ handleWorkflowNextUtxo plugins uc config neighborId wf model =
                             ( model
                                 |> s_network
                                     (Network.updateAddress config.addressId (TxsLastCheckedChangeTx lastTx |> txsSetter config.direction) model.network)
-                            , MaxChangeHopsLimitReached maxHops config.addressId
-                                |> InfoError
-                                |> ErrorEffect
-                                |> List.singleton
+                            , [ StatusbarLogEffect
+                                    "Auto-extension hit the {0}-hop limit for address {1}. Click again to continue from the last checked change/self transaction."
+                                    [ String.fromInt maxHops
+                                    , Id.id config.addressId
+                                    ]
+                              , MaxChangeHopsLimitReached maxHops config.addressId
+                                    |> InfoError
+                                    |> ErrorEffect
+                              ]
                             )
 
 
@@ -3183,7 +3230,7 @@ browserGotAddressData uc plugins providedId position data model =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
         clusterId =
-            Id.initClusterId data.currency data.entity
+            Id.initClusterId data.currency data.cluster
 
         isSecondAddressFromSameCluster =
             Network.isClusterFriendAlreadyOnGraph clusterId
@@ -3215,7 +3262,7 @@ browserGotAddressData uc plugins providedId position data model =
                 , [ BrowserGotClusterData id
                         |> Api.GetEntityEffectWithDetails
                             { currency = Id.network id
-                            , entity = data.entity
+                            , entity = data.cluster
                             , includeActors = False
                             , includeBestTag = False
                             }
@@ -3375,7 +3422,7 @@ userClickedTx id model =
     if model.modPressed || model.pointerTool == Select then
         let
             modelS =
-                multiSelect model [ MSelectedTx id ] True
+                toggleMultiSelect model (MSelectedTx id)
         in
         n { modelS | details = Nothing }
 
@@ -4130,22 +4177,22 @@ selectConversionEdge ( a, b ) model =
 focusNeighborAddress : Update.Config -> Id -> Direction -> Model -> ( Model, List Effect )
 focusNeighborAddress uc anchorId direction model =
     let
-        anchorKey =
-            Id.id anchorId
-
+        -- Collect every graph-loaded address on the tx's `direction` side
+        -- rather than the single "biggest" candidate from
+        -- getAddressForDirection. That heuristic can pick an address that
+        -- isn't on the graph (e.g. the biggest non-change output of a UTXO
+        -- tx), which would make navigation skip over the neighbor we came
+        -- from and get stuck.
         neighborId =
             Network.getTxsForAddress model.network direction anchorId
+                |> List.concatMap Tx.listAddressesForTx
                 |> List.filterMap
-                    (\tx ->
-                        getAddressForDirection tx direction (Set.singleton anchorKey)
-                            |> Maybe.andThen
-                                (\nid ->
-                                    if Dict.member nid model.network.addresses then
-                                        Just nid
+                    (\( d, addr ) ->
+                        if d == direction && addr.id /= anchorId then
+                            Just addr.id
 
-                                    else
-                                        Nothing
-                                )
+                        else
+                            Nothing
                     )
                 |> List.head
     in
@@ -4528,7 +4575,7 @@ addTagSummaryToModel includesBestClusterTag id data m =
                             |> Dict.get id
                             |> Maybe.andThen (.data >> RemoteData.toMaybe)
                             |> Maybe.map
-                                (.entity
+                                (.cluster
                                     >> (\entityId ->
                                             Api.GetEntityAddressTagsEffect
                                                 { currency = Id.network id
@@ -4653,7 +4700,26 @@ getAddressForDirection tx direction exceptAddress =
 addTx : Plugins -> Update.Config -> Id -> Direction -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
 addTx plugins uc anchorAddressId direction addressId tx model =
     if Dict.member (Tx.getTxId tx) model.network.txs then
-        n model
+        -- Tx is already on the graph. Skip the layout work, but still link
+        -- this tx to the anchor address's tx-set so a TxsLoading state
+        -- (set by expandAddress before the workflow ran) resolves to a
+        -- proper Txs set and the loading spinner clears.
+        let
+            txId =
+                Tx.getTxId tx
+
+            updateAnchorTxs addr =
+                case direction of
+                    Incoming ->
+                        { addr | incomingTxs = PathfinderAddress.txsInsertId txId addr.incomingTxs }
+
+                    Outgoing ->
+                        { addr | outgoingTxs = PathfinderAddress.txsInsertId txId addr.outgoingTxs }
+        in
+        ( model
+            |> s_network (Network.updateAddress anchorAddressId updateAnchorTxs model.network)
+        , []
+        )
 
     else
         let
@@ -4918,6 +4984,60 @@ multiSelect m sel keepOld =
 
         nNet =
             List.foldl (selectItem True) (Network.clearSelection m.network) newSelection
+    in
+    { m | selection = liftedNewSelection, network = nNet }
+
+
+toggleMultiSelect : Model -> MultiSelectOptions -> Model
+toggleMultiSelect m item =
+    let
+        currentList =
+            case m.selection of
+                MultiSelect x ->
+                    x
+
+                SelectedAddress oid ->
+                    [ MSelectedAddress oid ]
+
+                SelectedTx oid ->
+                    [ MSelectedTx oid ]
+
+                _ ->
+                    []
+
+        newSelection =
+            if List.member item currentList then
+                List.filter ((/=) item) currentList
+
+            else
+                List.Extra.unique (item :: currentList)
+
+        liftedNewSelection =
+            case newSelection of
+                [] ->
+                    NoSelection
+
+                x :: [] ->
+                    case x of
+                        MSelectedAddress id ->
+                            SelectedAddress id
+
+                        MSelectedTx id ->
+                            SelectedTx id
+
+                _ ->
+                    MultiSelect newSelection
+
+        selectItem s n =
+            case s of
+                MSelectedAddress id ->
+                    Network.updateAddress id (s_selected True) n
+
+                MSelectedTx id ->
+                    Network.updateTx id (s_selected True) n
+
+        nNet =
+            List.foldl selectItem (Network.clearSelection m.network) newSelection
     in
     { m | selection = liftedNewSelection, network = nNet }
 

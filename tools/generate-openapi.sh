@@ -50,7 +50,7 @@ sed -i 's/relatedAddressrelationTypeVariants/relatedAddressRelationTypeVariants/
 
 # remove duplicate Direction and order types
 patterns='^type Direction,^directionVariants : List Direction,^stringFromDirection : Direction -> String,^makeDirectionFromString : String -> Maybe Direction,^type Order_,^orderVariants : List Order_,^stringFromOrder_ : Order_ -> String,^makeOrder_FromString : String -> Maybe Order_'
-python3 ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/Api/Request/Entities.elm
+python3 ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/Api/Request/Clusters.elm
 python3 ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/Api/Request/Addresses.elm
 
 

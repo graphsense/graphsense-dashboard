@@ -1,7 +1,7 @@
 module Update.Statusbar exposing (add, clearRetry, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
 
 import Api.Data
-import Api.Request.Entities
+import Api.Request.Clusters
 import Dict
 import Effect.Api as Api
 import Effect.Graph as Graph
@@ -21,16 +21,23 @@ messagesFromEffects model effects =
     effects
         |> List.foldl
             (\eff ( statusbar, newEffects ) ->
-                messageFromEffect model eff
-                    |> Maybe.map
-                        (\( id, key, message ) ->
-                            ( { statusbar
-                                | messages = Dict.insert id ( key, message ) statusbar.messages
-                              }
-                            , ( Just id, eff ) :: newEffects
-                            )
+                case eff of
+                    Model.PathfinderEffect (Pathfinder.StatusbarLogEffect key values) ->
+                        ( { statusbar | log = addLog ( key, values, Nothing ) statusbar.log }
+                        , newEffects
                         )
-                    |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
+
+                    _ ->
+                        messageFromEffect model eff
+                            |> Maybe.map
+                                (\( id, key, message ) ->
+                                    ( { statusbar
+                                        | messages = Dict.insert id ( key, message ) statusbar.messages
+                                      }
+                                    , ( Just id, eff ) :: newEffects
+                                    )
+                                )
+                            |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
             )
             ( model.statusbar, [] )
         |> mapFirst
@@ -163,6 +170,10 @@ messageFromEffect model effect =
             Nothing
 
         Model.PathfinderEffect (Pathfinder.TooltipEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.StatusbarLogEffect _ _) ->
+            -- consumed earlier in messagesFromEffects; no in-flight message
             Nothing
 
 
@@ -310,7 +321,7 @@ messageFromApiEffect model effect =
                         "for incoming neighbors"
                   , e.entity |> String.fromInt
                   , case e.key of
-                        Api.Request.Entities.KeyCategory ->
+                        Api.Request.Clusters.KeyCategory ->
                             e.value
                                 |> List.head
                                 |> Maybe.map

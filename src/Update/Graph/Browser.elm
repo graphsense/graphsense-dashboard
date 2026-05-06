@@ -588,7 +588,7 @@ createEntityTable route loadable t =
                     ( curr, e )
 
                 Loaded a ->
-                    ( a.entity.currency, a.entity.entity )
+                    ( a.entity.currency, a.entity.cluster )
     in
     case ( route, t ) of
         ( Route.EntityTagsTable, Just (EntityTagsTable _) ) ->
@@ -987,7 +987,7 @@ showEntity entity model =
                     Entity loadable table ->
                         if
                             loadableEntityId loadable
-                                == entity.entity.entity
+                                == entity.entity.cluster
                                 && loadableEntityCurrency loadable
                                 == entity.entity.currency
                         then
@@ -1539,7 +1539,7 @@ showAddressTags id data model =
                         |> Maybe.map
                             (Tag.userTagToApiTag
                                 { address = a.address.address
-                                , entity = a.address.entity
+                                , cluster = a.address.cluster
                                 , currency = a.address.currency
                                 }
                                 False
@@ -1627,7 +1627,7 @@ showAddressNeighbors gc id isOutgoing data model =
             model
 
 
-showEntityNeighbors : Graph.Config -> { currency : String, entity : Int } -> Bool -> Api.Data.NeighborEntities -> Model -> Model
+showEntityNeighbors : Graph.Config -> { currency : String, entity : Int } -> Bool -> Api.Data.NeighborClusters -> Model -> Model
 showEntityNeighbors gc id isOutgoing data model =
     case model.type_ of
         Entity loadable table ->
@@ -1668,7 +1668,7 @@ showEntityNeighbors gc id isOutgoing data model =
             model
 
 
-showEntityAddresses : { currency : String, entity : Int } -> Api.Data.EntityAddresses -> Model -> Model
+showEntityAddresses : { currency : String, entity : Int } -> Api.Data.ClusterAddresses -> Model -> Model
 showEntityAddresses id data model =
     case model.type_ of
         Entity loadable table ->
@@ -1794,7 +1794,7 @@ showEntityAddressTags id data model =
                         |> Maybe.map
                             (Tag.userTagToApiTag
                                 { address = a.entity.rootAddress
-                                , entity = a.entity.entity
+                                , cluster = a.entity.cluster
                                 , currency = a.entity.currency
                                 }
                                 False
@@ -1860,7 +1860,7 @@ matchEntityId { currency, entity } loadable =
             c == currency && id == entity
 
         Loaded a ->
-            a.entity.currency == currency && a.entity.entity == entity
+            a.entity.currency == currency && a.entity.cluster == entity
 
 
 matchTxId : { currency : String, txHash : String } -> Loadable String { a | currency : String, txHash : String } -> Bool
@@ -2988,8 +2988,8 @@ tableAsCSV locale uc { type_ } =
                     src.entity.currency
 
                 title =
-                    [ String.fromInt src.entity.entity
-                    , String.fromInt lnk.node.entity.entity
+                    [ String.fromInt src.entity.cluster
+                    , String.fromInt lnk.node.entity.cluster
                     , String.toUpper src.entity.currency
                     ]
                         |> Locale.interpolated locale "Transactions-between-entities"

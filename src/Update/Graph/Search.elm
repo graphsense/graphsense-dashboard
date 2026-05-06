@@ -1,7 +1,7 @@
 module Update.Graph.Search exposing (Config, selectCategory, selectCriterion, selectDirection, submit)
 
 import Api.Data
-import Api.Request.Entities
+import Api.Request.Clusters
 import Effect.Api
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Search exposing (initCriterion)
@@ -61,7 +61,7 @@ submit { depth, breadth, maxAddresses } model =
         ( key, value ) =
             case model.criterion of
                 Category _ active ->
-                    ( Api.Request.Entities.KeyCategory
+                    ( Api.Request.Clusters.KeyCategory
                     , [ active ]
                     )
 

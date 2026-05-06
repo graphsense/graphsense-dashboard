@@ -37,16 +37,16 @@ columnTitleFromDirection isOutgoing =
         ++ " entity"
 
 
-config : View.Config -> Bool -> String -> Maybe EntityId -> (EntityId -> Bool -> E.Entity -> Bool) -> Table.Config Api.Data.NeighborEntity Msg
+config : View.Config -> Bool -> String -> Maybe EntityId -> (EntityId -> Bool -> E.Entity -> Bool) -> Table.Config Api.Data.NeighborCluster Msg
 config vc isOutgoing coinCode id neighborLayerHasEntity =
     Table.customConfig
-        { toId = .entity >> .entity >> String.fromInt
+        { toId = .entity >> .cluster >> String.fromInt
         , toMsg = TableNewState
         , columns =
             [ T.htmlColumn styles
                 vc
                 (columnTitleFromDirection isOutgoing)
-                (.entity >> .entity >> String.fromInt)
+                (.entity >> .cluster >> String.fromInt)
                 (\data ->
                     [ id
                         |> Maybe.map
@@ -55,7 +55,7 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                                     vc
                                     (neighborLayerHasEntity eid isOutgoing)
                                     { currency = data.entity.currency
-                                    , entity = data.entity.entity
+                                    , entity = data.entity.cluster
                                     }
                             )
                         |> Maybe.withDefault none
@@ -70,7 +70,7 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ data.entity.entity
+                        [ data.entity.cluster
                             |> String.fromInt
                             |> text
                         ]
@@ -133,11 +133,11 @@ valueColumns :
     -> AssetIdentifier
     -> List String
     ->
-        { balance : Api.Data.NeighborEntity -> Api.Data.Values
-        , totalReceived : Api.Data.NeighborEntity -> Api.Data.Values
-        , value : Api.Data.NeighborEntity -> Api.Data.Values
+        { balance : Api.Data.NeighborCluster -> Api.Data.Values
+        , totalReceived : Api.Data.NeighborCluster -> Api.Data.Values
+        , value : Api.Data.NeighborCluster -> Api.Data.Values
         }
-    -> List (Table.Column Api.Data.NeighborEntity Msg)
+    -> List (Table.Column Api.Data.NeighborCluster Msg)
 valueColumns styles vc coinCode tokens getValues =
     [ T.valueAndTokensColumnWithOptions styles
         True
@@ -170,7 +170,7 @@ zero =
     }
 
 
-prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborEntity -> List ( String, String )
+prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborCluster -> List ( String, String )
 prepareCSV locale _ network row =
     let
         suffix =
@@ -187,7 +187,7 @@ prepareCSV locale _ network row =
             else
                 "estimated_value"
     in
-    [ ( "entity", Util.Csv.int row.entity.entity )
+    [ ( "entity", Util.Csv.int row.entity.cluster )
     , ( "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
     , ( "no_txs", Util.Csv.int row.noTxs )
     , ( "no_addresses", Util.Csv.int row.entity.noAddresses )
@@ -203,7 +203,7 @@ prepareCSV locale _ network row =
            )
 
 
-prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborEntity -> List ( String, String )
+prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborCluster -> List ( String, String )
 prepareCsvTokens locale coinCode row =
     Locale.tokenCurrencies coinCode locale
         |> List.concatMap

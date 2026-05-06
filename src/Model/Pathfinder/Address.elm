@@ -184,10 +184,10 @@ getClusterId { data } =
     data
         |> RemoteData.toMaybe
         |> Maybe.map
-            (\{ entity, currency } -> Id.initClusterId currency entity)
+            (\{ cluster, currency } -> Id.initClusterId currency cluster)
 
 
-getAddressType : Address -> Maybe Api.Data.Entity -> AddressServiceType
+getAddressType : Address -> Maybe Api.Data.Cluster -> AddressServiceType
 getAddressType address cluster =
     if Maybe.map isPossibleServiceUtxo cluster |> Maybe.withDefault False then
         if address.actor == Nothing then
