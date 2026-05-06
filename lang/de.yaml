@@ -567,7 +567,8 @@ filter-custom-filter: Benutzerdefinierter Filter
 filter-none-selected: keinen ausgewählt
 retrying {0}/{1}: erneuter Versuch {0}/{1}
 transaction-table-trace-further-button: Weitersuchen
-transaction-table-trace-further: Noch keine Transaktionen gefunden
+transaction-table-trace-further-title: Noch keine Transaktion gefunden
+transaction-table-trace-further: Nach {0} Hops keine UTXO-verknüpfte Transaktion gefunden, die andere Inputs als die ausgewählte Adresse enthält. Möchten Sie weiter suchen?
 transaction-tracing-not-possible: Transaktionsverfolgung nicht möglich
 no-adjacent-tx-between-addresses: Keine passende benachbarte Transaktion zwischen Adressen {0} und {1} gefunden.
 could-not-link-neighbor-address: Nachbaradresse konnte nicht verknüpft werden
