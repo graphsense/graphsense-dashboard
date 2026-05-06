@@ -2519,9 +2519,30 @@ updateByUrl plugins uc url model =
                             ( pfn, graphEffect ) =
                                 Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
 
+                            -- Skip the search auto-focus when the URL loads an
+                            -- address/tx — the focused search input swallows
+                            -- keyboard events (e.g. arrow-key navigation) that
+                            -- the user expects to act on the selected node.
+                            pfRouteLoadsContent =
+                                case pfRoute of
+                                    Route.Pathfinder.Network _ (Route.Pathfinder.Address _ _) ->
+                                        True
+
+                                    Route.Pathfinder.Network _ (Route.Pathfinder.Tx _) ->
+                                        True
+
+                                    Route.Pathfinder.Path _ _ ->
+                                        True
+
+                                    _ ->
+                                        False
+
                             focusEffect =
-                                case oldRoute of
-                                    Route.Pathfinder _ ->
+                                case ( oldRoute, pfRouteLoadsContent ) of
+                                    ( Route.Pathfinder _, _ ) ->
+                                        []
+
+                                    ( _, True ) ->
                                         []
 
                                     _ ->
