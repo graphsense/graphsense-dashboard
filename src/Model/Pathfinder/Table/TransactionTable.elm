@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table.TransactionTable exposing (Model, filter, getQuickFilters, quickFilterFromTx, titleHash, titleTimestamp, titleValue)
+module Model.Pathfinder.Table.TransactionTable exposing (MaxChangeHopsLimitData, Model, filter, getQuickFilters, maxChangeHopsLimit, quickFilterFromTx, titleHash, titleTimestamp, titleValue)
 
 import Api.Data
 import Api.Request.Addresses
@@ -13,11 +13,24 @@ import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Util.Data exposing (timestampToPosix)
 
 
+type alias MaxChangeHopsLimitData =
+    { maxHops : Int
+    , tx : Api.Data.TxUtxo
+    , direction : Direction
+    }
+
+
 type alias Model =
     { table : InfiniteTable.Model Api.Data.AddressTx
     , order : Maybe Api.Request.Addresses.Order_
     , filter : TransactionFilter.Model
+    , maxChangeHopsLimit : Maybe MaxChangeHopsLimitData
     }
+
+
+maxChangeHopsLimit : Model -> Maybe MaxChangeHopsLimitData
+maxChangeHopsLimit model =
+    model.maxChangeHopsLimit
 
 
 titleHash : String

@@ -64,3 +64,4 @@ type Msg
     | BrowserGotBulkTxsForExport TransactionTable.Model (List Api.Data.AddressTxUtxo) (Maybe String) Int (List ( String, Api.Data.Tx )) (List ( String, Api.Data.Tx ))
     | BrowserGotBulkTagsForExport TransactionTable.Model ( List Api.Data.TxAccount, Maybe String ) Bool (List ( Id, Api.Data.TagSummary ))
     | WorkflowNextUtxoTx WorkflowNextUtxoTx.Config WorkflowNextUtxoTx.Msg
+    | UserClickedContinueChangeTracing

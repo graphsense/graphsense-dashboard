@@ -549,3 +549,5 @@ filter-utxo-only: UTXO only
 tx-filter-utxo-only-tooltip: Only list transactions which are referencing the selected transaction on a UTXO level
 tx-filter-quickfilter-tooltip: Automatically filter by transaction nodes in the graph
 retrying {0}/{1}: retrying {0}/{1}
+continue tracing change: Continue tracing change
+transaction-table-trace-further: No UTXO-linked transaction found which has other inputs than the selected address by tracing over {0} hops. Do you want to look further?

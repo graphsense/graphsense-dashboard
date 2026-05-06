@@ -567,6 +567,27 @@ update uc msg model =
             WorkflowNextUtxoTx.update config subMsg
                 |> flip (handleWorkflowNextUtxo config) model
 
+        UserClickedContinueChangeTracing ->
+            model.txs
+                |> RemoteData.toMaybe
+                |> Maybe.andThen .maxChangeHopsLimit
+                |> Maybe.map
+                    (\data ->
+                        let
+                            config_ =
+                                { addressId = model.address.id
+                                , direction = data.direction
+                                , allowMultiple = True
+                                }
+                        in
+                        WorkflowNextUtxoTx.start config_ data.tx
+                            |> Workflow.mapEffect (WorkflowNextUtxoTx config_ >> Pathfinder.AddressDetailsMsg model.address.id)
+                            |> Workflow.next
+                            |> List.map ApiEffect
+                    )
+                |> Maybe.withDefault []
+                |> pair model
+
 
 handleWorkflowNextUtxo : WorkflowNextUtxoTx.Config -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
 handleWorkflowNextUtxo config wf model =
@@ -593,33 +614,56 @@ handleWorkflowNextUtxo config wf model =
                                         Nothing
                                         data
 
-                            ( table, cmd, eff ) =
-                                case wf of
-                                    Workflow.Ok tx ->
-                                        tx
-                                            |> utxoToAddressTx config.direction config.addressId
-                                            |> List.map Api.Data.AddressTxAddressTxUtxo
-                                            |> setData
-
-                                    Workflow.Err (MaxChangeHopsLimit maxHops tx) ->
-                                        Debug.todo "pass this data to the txsTable (add a new field in TransactionTable Model) and if this is filled, show a button in AddressDetails View in the place of the TransactionTable where the user can trigger another WorkflowNextUtxoTx given the MaxChangeHopsLimit tx"
-
-                                    _ ->
-                                        setData []
-                        in
-                        ( table, eff )
-                            |> mapFirst (flip s_table txsTable)
-                            |> mapFirst (RemoteData.Success >> flip s_txs model)
-                            |> mapSecond
-                                ((::)
-                                    (cmd
-                                        |> Cmd.map
-                                            (TransactionsTableSubTableMsg
-                                                >> Pathfinder.AddressDetailsMsg model.address.id
-                                            )
-                                        |> CmdEffect
-                                    )
+                            handleMaxHopsLimit maxHops tx =
+                                let
+                                    updatedTxsTable =
+                                        { txsTable
+                                            | maxChangeHopsLimit =
+                                                Just
+                                                    { maxHops = maxHops
+                                                    , tx = tx
+                                                    , direction = config.direction
+                                                    }
+                                        }
+                                in
+                                ( model
+                                    |> s_txs (RemoteData.Success updatedTxsTable)
+                                , []
                                 )
+
+                            handleNormal table cmd eff =
+                                ( table, eff )
+                                    |> mapFirst (flip s_table txsTable)
+                                    |> mapFirst (RemoteData.Success >> flip s_txs model)
+                                    |> mapSecond
+                                        ((::)
+                                            (cmd
+                                                |> Cmd.map
+                                                    (TransactionsTableSubTableMsg
+                                                        >> Pathfinder.AddressDetailsMsg model.address.id
+                                                    )
+                                                |> CmdEffect
+                                            )
+                                        )
+                        in
+                        case wf of
+                            Workflow.Err (WorkflowNextUtxoTx.MaxChangeHopsLimit maxHops tx) ->
+                                handleMaxHopsLimit maxHops tx
+
+                            _ ->
+                                let
+                                    ( table, cmd, eff ) =
+                                        case wf of
+                                            Workflow.Ok tx ->
+                                                tx
+                                                    |> utxoToAddressTx config.direction config.addressId
+                                                    |> List.map Api.Data.AddressTxAddressTxUtxo
+                                                    |> setData
+
+                                            _ ->
+                                                setData []
+                                in
+                                handleNormal table cmd eff
             )
         |> RemoteData.withDefault (n model)
 

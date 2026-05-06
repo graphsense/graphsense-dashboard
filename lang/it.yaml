@@ -592,3 +592,4 @@ filter-quick-filter: filtro veloce per transazione
 filter-custom-filter: filtro personalizzato
 filter-none-selected: nessuno selezionato
 retrying {0}/{1}: nuovo tentativo {0}/{1}
+continue tracing change: Continua tracciamento cambio

@@ -117,6 +117,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleTransactionTable ->
                     False
 
+                AddressDetails.UserClickedContinueChangeTracing ->
+                    False
+
                 AddressDetails.UserClickedToggleBalanceDetails ->
                     False
 
