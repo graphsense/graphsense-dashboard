@@ -905,32 +905,65 @@ update plugins uc msg model =
                     n model
 
         ExportDialogMsg smsg ->
-            case model.dialog of
-                Just (Dialog.Export conf) ->
+            -- Port replies for in-flight exports must run at this top layer,
+            -- not inside the dialog-gated branch below: the user may have
+            -- closed the export dialog while the JS-side render was still
+            -- running, and the export keeps going regardless. Without this
+            -- the toolbar spinner / render state would never be reset, and
+            -- a BrowserSentBBox reply arriving after dismissal would never
+            -- kick off the actual SVG export, so the file would never appear.
+            case smsg of
+                ExportDialog.BrowserSentBBox bbox ->
                     let
-                        ( export, eff ) =
-                            ExportDialog.update uc smsg conf
-
                         ( pathfinder, pathfinderEff ) =
-                            Pathfinder.updateByExportMsg uc smsg conf model.pathfinder
+                            Pathfinder.continueImageExport bbox model.pathfinder
                     in
-                    ( { model
-                        | pathfinder = pathfinder
-                        , dialog =
-                            case smsg of
-                                ExportDialog.BrowserSentExportGraphResult Nothing ->
+                    ( { model | pathfinder = pathfinder }
+                    , List.map PathfinderEffect pathfinderEff
+                    )
+
+                ExportDialog.BrowserRenderedGraphForExport ->
+                    n { model | pathfinder = Pathfinder.endExportRendering model.pathfinder }
+
+                ExportDialog.BrowserSentExportGraphResult error ->
+                    let
+                        ( pathfinder, pathfinderEff ) =
+                            Pathfinder.finishImageExport error model.pathfinder
+
+                        newDialog =
+                            case error of
+                                Nothing ->
                                     Nothing
 
-                                _ ->
-                                    export
-                                        |> Dialog.Export
-                                        |> Just
-                      }
-                    , eff ++ List.map PathfinderEffect pathfinderEff
+                                Just _ ->
+                                    model.dialog
+                    in
+                    ( { model | pathfinder = pathfinder, dialog = newDialog }
+                    , List.map PathfinderEffect pathfinderEff
                     )
 
                 _ ->
-                    n model
+                    case model.dialog of
+                        Just (Dialog.Export conf) ->
+                            let
+                                ( export, eff ) =
+                                    ExportDialog.update uc smsg conf
+
+                                ( pathfinder, pathfinderEff ) =
+                                    Pathfinder.updateByExportMsg uc smsg conf model.pathfinder
+                            in
+                            ( { model
+                                | pathfinder = pathfinder
+                                , dialog =
+                                    export
+                                        |> Dialog.Export
+                                        |> Just
+                              }
+                            , eff ++ List.map PathfinderEffect pathfinderEff
+                            )
+
+                        _ ->
+                            n model
 
         SearchMsg m ->
             case m of

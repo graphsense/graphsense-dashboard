@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -2690,20 +2690,67 @@ multiSearch query model =
         n model
 
 
-exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
-exportGraph conf bbox model =
+exportGraph : ImageExport -> Maybe BBox -> Model -> ( Model, List Effect )
+exportGraph imgExp bbox model =
     ( model.config
-        |> s_hideForExport (Exporting <| not conf.keepSelectionHighlight)
+        |> s_hideForExport (Exporting <| not imgExp.keepSelectionHighlight)
         |> flip s_config model
-        |> s_exportImage (Just ExportingImage)
-    , [ { filename = conf.filename
+        |> s_exportImage (Just (ExportingImage imgExp))
+    , [ { filename = imgExp.filename
         , graphId = graphId
         , viewbox = bbox |> Maybe.map addMarginForExport
-        , transparentBackground = conf.transparentBackground
+        , transparentBackground = imgExp.transparentBackground
         }
             |> Ports.exportGraph
             |> Pathfinder.CmdEffect
       ]
+    )
+
+
+endExportRendering : Model -> Model
+endExportRendering model =
+    model.config
+        |> s_hideForExport NoExport
+        |> flip s_config model
+
+
+continueImageExport : Maybe BBox -> Model -> ( Model, List Effect )
+continueImageExport bbox model =
+    -- Resumes an image export after the BBox port round-trip. The port reply
+    -- may arrive after the user has closed the export dialog; reading the
+    -- export parameters from the model (instead of dialog config) lets the
+    -- export proceed regardless.
+    case model.exportImage of
+        Just (PrepareImageForExport imgExp) ->
+            exportGraph imgExp bbox model
+
+        _ ->
+            n model
+
+
+finishImageExport : Maybe String -> Model -> ( Model, List Effect )
+finishImageExport error model =
+    let
+        type_ =
+            model.exportImage
+                |> Maybe.map (getImageExport >> .fileFormat >> Dialog.exportFormatToString)
+                |> Maybe.withDefault "image"
+    in
+    ( { model | exportImage = Nothing }
+    , error
+        |> Maybe.map
+            (Notification.errorDefault
+                >> Notification.map (s_title (Just "An error occurred"))
+            )
+        |> Maybe.withDefault
+            (Notification.successDefault "check download folder"
+                |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
+                |> Notification.map (s_isEphemeral True)
+                |> Notification.map (s_showClose False)
+                |> Notification.map (s_removeDelayMs 4000.0)
+            )
+        |> ShowNotificationEffect
+        |> List.singleton
     )
 
 
@@ -5524,38 +5571,11 @@ updateByExportMsg uc msg conf model =
                 Dialog.ExportFormatPNG ->
                     exportGraphImage uc conf model
 
-        ExportDialog.BrowserRenderedGraphForExport ->
-            model.config
-                |> s_hideForExport NoExport
-                |> flip s_config model
-                |> n
-
-        ExportDialog.BrowserSentBBox bbox ->
-            exportGraph conf bbox model
-
-        ExportDialog.BrowserSentExportGraphResult error ->
-            let
-                type_ =
-                    Dialog.exportFormatToString conf.fileFormat
-            in
-            ( { model | exportImage = Nothing }
-            , error
-                |> Maybe.map
-                    (Notification.errorDefault
-                        >> Notification.map (s_title (Just "An error occurred"))
-                    )
-                |> Maybe.withDefault
-                    (Notification.successDefault "check download folder"
-                        |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
-                        |> Notification.map (s_isEphemeral True)
-                        |> Notification.map (s_showClose False)
-                        |> Notification.map (s_removeDelayMs 4000.0)
-                    )
-                |> ShowNotificationEffect
-                |> List.singleton
-            )
-
         _ ->
+            -- Port-reply messages (BrowserSentBBox, BrowserRenderedGraphForExport,
+            -- BrowserSentExportGraphResult) are dispatched at the top-level
+            -- Update so that they fire even when the user has closed the export
+            -- dialog mid-flight. See Update.elm `ExportDialogMsg`.
             n model
 
 
@@ -5649,10 +5669,17 @@ exportGraphImage _ conf model =
 
                 Dialog.ExportAreaVisible ->
                     Nothing
+
+        imgExp =
+            { filename = conf.filename
+            , fileFormat = conf.fileFormat
+            , transparentBackground = conf.transparentBackground
+            , keepSelectionHighlight = conf.keepSelectionHighlight
+            }
     in
     { model
         | exportImage =
-            PrepareImageForExport
+            PrepareImageForExport imgExp
                 |> Just
     }
         |> n
@@ -5666,7 +5693,7 @@ exportGraphImage _ conf model =
                             |> pair mo
 
                 Nothing ->
-                    exportGraph conf Nothing
+                    exportGraph imgExp Nothing
             )
 
 

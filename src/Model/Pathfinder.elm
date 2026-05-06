@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), Model, coordsWithUnit, getHavingTags, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -8,6 +8,7 @@ import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
+import Model.Dialog as Dialog
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (isInBBox)
 import Model.Graph.History as History
@@ -104,8 +105,26 @@ type Details
 
 
 type ExportImage
-    = PrepareImageForExport
-    | ExportingImage
+    = PrepareImageForExport ImageExport
+    | ExportingImage ImageExport
+
+
+type alias ImageExport =
+    { filename : String
+    , fileFormat : Dialog.ExportFormat
+    , transparentBackground : Bool
+    , keepSelectionHighlight : Bool
+    }
+
+
+getImageExport : ExportImage -> ImageExport
+getImageExport ex =
+    case ex of
+        PrepareImageForExport e ->
+            e
+
+        ExportingImage e ->
+            e
 
 
 getLoadedAddress : Model -> Id -> Maybe Address
