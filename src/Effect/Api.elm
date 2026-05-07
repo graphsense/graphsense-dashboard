@@ -1,4 +1,4 @@
-module Effect.Api exposing (Effect(..), SearchRequestConfig, UserInfo, defaultSearchConfig, effectToTracker, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, isUserEndpointConfigured, listWithMaybes, map, perform, send, withAuthorization)
+module Effect.Api exposing (Effect(..), SearchRequestConfig, UserInfo, defaultSearchConfig, effectToTracker, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, isUserEndpointConfigured, listWithMaybes, map, perform, retryToken, send, withAuthorization)
 
 import Api
 import Api.Data
@@ -21,6 +21,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Pathfinder.Id exposing (Id)
+import Sha256
 import Task
 import Time
 import Tuple exposing (pair)
@@ -1187,6 +1188,278 @@ effectToTracker effect =
 
         _ ->
             Nothing
+
+
+{-| Stable per-request key used to gate retries on transient HTTP errors and
+to index the `model.statusbar.retries` dict. Returning `Nothing` opts the
+effect out of the retry mechanism entirely (e.g. mutations, search).
+
+For effects that already carry an `effectToTracker` (HTTP-cancellation
+tracker) the same key is reused so that `BrowserCancelledRequest` cleans up
+the matching `retries` entry. For other effects the key is a sha256 of a
+parameter-bearing fingerprint, which keeps dict keys bounded in size while
+still distinguishing simultaneous in-flight requests with different params.
+
+-}
+retryToken : Effect msg -> Maybe String
+retryToken effect =
+    let
+        hash s =
+            Just (Sha256.sha256 s)
+
+        b x =
+            if x then
+                "1"
+
+            else
+                "0"
+
+        mb f =
+            Maybe.map f >> Maybe.withDefault ""
+
+        mbs =
+            mb identity
+
+        mbi =
+            mb String.fromInt
+
+        i =
+            String.fromInt
+
+        p =
+            Time.posixToMillis >> String.fromInt
+
+        join =
+            String.join "|"
+
+        dir =
+            Model.Direction.toString
+
+        ord =
+            Api.Request.Addresses.stringFromOrder_
+
+        cord =
+            Api.Request.Clusters.stringFromOrder_
+
+        ckey =
+            Api.Request.Clusters.stringFromKey
+
+        rel =
+            Api.Request.Addresses.stringFromAddressRelationType
+    in
+    case effect of
+        -- Opt-outs: never retried.
+        SearchEffect _ _ ->
+            Nothing
+
+        GetMeEffect _ ->
+            Nothing
+
+        AddUserReportedTag _ _ ->
+            Nothing
+
+        CancelEffect _ ->
+            Nothing
+
+        -- Effects with an HTTP-cancellation tracker reuse that key so the
+        -- cancellation handler clears the matching retries entry.
+        GetAddressTxsByDateEffect _ _ ->
+            effectToTracker effect
+
+        GetAddresslinkTxsEffect _ _ ->
+            effectToTracker effect
+
+        GetAddressNeighborsEffect _ _ ->
+            effectToTracker effect
+
+        GetEntityAddressesEffect _ _ ->
+            effectToTracker effect
+
+        GetEntityAddressTagsEffect _ _ ->
+            effectToTracker effect
+
+        GetAddressTagsEffect _ _ ->
+            effectToTracker effect
+
+        -- Everything else: sha256 over a parameter-bearing fingerprint.
+        GetStatisticsEffect _ ->
+            hash "GetStatisticsEffect"
+
+        GetConceptsEffect taxonomy _ ->
+            hash (join [ "GetConceptsEffect", taxonomy ])
+
+        ListSupportedTokensEffect currency _ ->
+            hash (join [ "ListSupportedTokensEffect", currency ])
+
+        GetAddressEffect { currency, address, includeActors } _ ->
+            hash (join [ "GetAddressEffect", currency, address, b includeActors ])
+
+        GetEntityEffect { currency, entity } _ ->
+            hash (join [ "GetEntityEffect", currency, i entity ])
+
+        GetEntityEffectWithDetails { currency, entity, includeActors, includeBestTag } _ ->
+            hash (join [ "GetEntityEffectWithDetails", currency, i entity, b includeActors, b includeBestTag ])
+
+        GetActorEffect { actorId } _ ->
+            hash (join [ "GetActorEffect", actorId ])
+
+        GetBlockEffect { currency, height } _ ->
+            hash (join [ "GetBlockEffect", currency, i height ])
+
+        GetBlockByDateEffect { currency, datetime } _ ->
+            hash (join [ "GetBlockByDateEffect", currency, p datetime ])
+
+        GetEntityForAddressEffect { currency, address } _ ->
+            hash (join [ "GetEntityForAddressEffect", currency, address ])
+
+        GetEntityNeighborsEffect { currency, entity, isOutgoing, onlyIds, includeLabels, pagesize, nextpage } _ ->
+            hash
+                (join
+                    [ "GetEntityNeighborsEffect"
+                    , currency
+                    , i entity
+                    , b isOutgoing
+                    , mb (List.map String.fromInt >> String.join ",") onlyIds
+                    , b includeLabels
+                    , i pagesize
+                    , mbs nextpage
+                    ]
+                )
+
+        GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, tokenCurrency, order, pagesize, nextpage } _ ->
+            hash
+                (join
+                    [ "GetAddressTxsEffect"
+                    , currency
+                    , address
+                    , mb dir direction
+                    , mbi minHeight
+                    , mbi maxHeight
+                    , mbs tokenCurrency
+                    , mb ord order
+                    , i pagesize
+                    , mbs nextpage
+                    ]
+                )
+
+        GetEntityTxsEffect { currency, entity, pagesize, nextpage } _ ->
+            hash (join [ "GetEntityTxsEffect", currency, i entity, i pagesize, mbs nextpage ])
+
+        GetAddressTagSummaryEffect { currency, address, includeBestClusterTag } _ ->
+            hash (join [ "GetAddressTagSummaryEffect", currency, address, b includeBestClusterTag ])
+
+        GetActorTagsEffect { actorId, pagesize, nextpage } _ ->
+            hash (join [ "GetActorTagsEffect", actorId, i pagesize, mbs nextpage ])
+
+        GetBlockTxsEffect { currency, block, pagesize, nextpage } _ ->
+            hash (join [ "GetBlockTxsEffect", currency, i block, i pagesize, mbs nextpage ])
+
+        SearchEntityNeighborsEffect { currency, entity, isOutgoing, key, value, depth, breadth, maxAddresses } _ ->
+            hash
+                (join
+                    [ "SearchEntityNeighborsEffect"
+                    , currency
+                    , i entity
+                    , b isOutgoing
+                    , ckey key
+                    , String.join "," value
+                    , i depth
+                    , i breadth
+                    , i maxAddresses
+                    ]
+                )
+
+        GetTxEffect { currency, txHash, tokenTxId, includeIo } _ ->
+            hash (join [ "GetTxEffect", currency, txHash, mbi tokenTxId, b includeIo ])
+
+        GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } _ ->
+            hash (join [ "GetTxUtxoAddressesEffect", currency, txHash, b isOutgoing ])
+
+        ListSpendingTxRefsEffect { currency, txHash, index } _ ->
+            hash (join [ "ListSpendingTxRefsEffect", currency, txHash, mbi index ])
+
+        ListSpentInTxRefsEffect { currency, txHash, index } _ ->
+            hash (join [ "ListSpentInTxRefsEffect", currency, txHash, mbi index ])
+
+        ListAddressTagsEffect { label, nextpage, pagesize } _ ->
+            hash (join [ "ListAddressTagsEffect", label, mbs nextpage, mbi pagesize ])
+
+        GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, order, nextpage, pagesize } _ ->
+            hash
+                (join
+                    [ "GetEntitylinkTxsEffect"
+                    , currency
+                    , i source
+                    , i target
+                    , mbi minHeight
+                    , mbi maxHeight
+                    , mb cord order
+                    , mbs nextpage
+                    , i pagesize
+                    ]
+                )
+
+        GetTokenTxsEffect { currency, txHash } _ ->
+            hash (join [ "GetTokenTxsEffect", currency, txHash ])
+
+        BulkGetAddressEffect { currency, addresses } _ ->
+            hash (join [ "BulkGetAddressEffect", currency, String.join "," addresses ])
+
+        BulkGetAddressTagsEffect { currency, addresses, pagesize, includeBestClusterTag } _ ->
+            hash (join [ "BulkGetAddressTagsEffect", currency, String.join "," addresses, mbi pagesize, b includeBestClusterTag ])
+
+        BulkGetEntityEffect { currency, entities } _ ->
+            hash (join [ "BulkGetEntityEffect", currency, String.join "," (List.map String.fromInt entities) ])
+
+        BulkGetAddressEntityEffect { currency, addresses } _ ->
+            hash (join [ "BulkGetAddressEntityEffect", currency, String.join "," addresses ])
+
+        BulkGetEntityNeighborsEffect { currency, isOutgoing, entities, onlyIds } _ ->
+            hash
+                (join
+                    [ "BulkGetEntityNeighborsEffect"
+                    , currency
+                    , b isOutgoing
+                    , String.join "," (List.map String.fromInt entities)
+                    , b onlyIds
+                    ]
+                )
+
+        BulkGetAddressNeighborsEffect { currency, isOutgoing, addresses, onlyIds } _ ->
+            hash
+                (join
+                    [ "BulkGetAddressNeighborsEffect"
+                    , currency
+                    , b isOutgoing
+                    , String.join "," addresses
+                    , mb (String.join ",") onlyIds
+                    ]
+                )
+
+        BulkGetTxEffect { currency, txs } _ ->
+            hash (join [ "BulkGetTxEffect", currency, String.join "," txs ])
+
+        BulkGetAddressTagSummaryEffect { currency, addresses, includeBestClusterTag } _ ->
+            hash (join [ "BulkGetAddressTagSummaryEffect", currency, String.join "," addresses, b includeBestClusterTag ])
+
+        ListRelatedAddressesEffect { currency, address, reltype, pagesize, nextpage } _ ->
+            hash (join [ "ListRelatedAddressesEffect", currency, address, rel reltype, i pagesize, mbs nextpage ])
+
+        GetConversionEffect { currency, txHash } _ ->
+            hash (join [ "GetConversionEffect", currency, txHash ])
+
+        ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, token_currency, pagesize, nextpage } _ ->
+            hash
+                (join
+                    [ "ListTxFlowsEffect"
+                    , currency
+                    , txHash
+                    , b includeZeroValueSubTxs
+                    , mbs token_currency
+                    , mbi pagesize
+                    , mbs nextpage
+                    ]
+                )
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

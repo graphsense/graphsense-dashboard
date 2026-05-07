@@ -28,16 +28,21 @@ messagesFromEffects model effects =
                         )
 
                     _ ->
-                        messageFromEffect model eff
-                            |> Maybe.map
-                                (\( id, key, message ) ->
-                                    ( { statusbar
-                                        | messages = Dict.insert id ( key, message ) statusbar.messages
-                                      }
-                                    , ( Just id, eff ) :: newEffects
-                                    )
+                        case messageFromEffect model eff of
+                            Just ( id, key, message ) ->
+                                ( { statusbar
+                                    | messages = Dict.insert id ( key, message ) statusbar.messages
+                                  }
+                                , ( Just id, eff ) :: newEffects
                                 )
-                            |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
+
+                            Nothing ->
+                                -- Even without a visible statusbar message, attach a
+                                -- retry token so transient HTTP errors trigger the
+                                -- retry path instead of an immediate red notification.
+                                ( statusbar
+                                , ( retryTokenFromEffect eff, eff ) :: newEffects
+                                )
             )
             ( model.statusbar, [] )
         |> mapFirst
@@ -197,16 +202,39 @@ isOutputToString isOutgoing =
 
 update : String -> Maybe Http.Error -> Model -> Model
 update key error model =
+    let
+        modelMinusRetry =
+            { model | retries = Dict.remove key model.retries }
+    in
     Dict.get key model.messages
         |> Maybe.map
             (\msg ->
-                { model
+                { modelMinusRetry
                     | messages = Dict.remove key model.messages
-                    , retries = Dict.remove key model.retries
                     , log = addLog ( first msg, second msg, error ) model.log
                 }
             )
-        |> Maybe.withDefault model
+        |> Maybe.withDefault modelMinusRetry
+
+
+{-| Retry token for an effect that has no visible statusbar message. Lifts
+`Effect.Api.retryToken` over the wrapper effect types so transient HTTP
+errors on label-less api requests still go through the retry path.
+-}
+retryTokenFromEffect : Model.Effect -> Maybe String
+retryTokenFromEffect effect =
+    case effect of
+        Model.ApiEffect eff ->
+            Api.retryToken eff
+
+        Model.GraphEffect (Graph.ApiEffect eff) ->
+            Api.retryToken eff
+
+        Model.PathfinderEffect (Pathfinder.ApiEffect eff) ->
+            Api.retryToken eff
+
+        _ ->
+            Nothing
 
 
 {-| Record that attempt number `attempt` has been scheduled for the request
