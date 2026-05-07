@@ -120,6 +120,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleTransactionTable ->
                     False
 
+                AddressDetails.UserClickedContinueChangeTracing ->
+                    False
+
                 AddressDetails.UserClickedToggleBalanceDetails ->
                     False
 
@@ -133,6 +136,9 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.UserClickedToggleDisplayAllTagsInDetails ->
+                    False
+
+                AddressDetails.UserClickedShowPubkeyRelatedAddresses ->
                     False
 
                 AddressDetails.TransactionsTableSubTableMsg _ ->
@@ -277,6 +283,9 @@ shallPushHistory plugins msg _ =
 
         UserClickedAddress _ ->
             False
+
+        UserClickedCrosschainAddress _ ->
+            True
 
         NoOp ->
             False

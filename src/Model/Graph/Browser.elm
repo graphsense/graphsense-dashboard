@@ -119,7 +119,7 @@ loadableEntity l =
 
         Loaded a ->
             { currency = a.entity.currency
-            , entity = a.entity.entity
+            , entity = a.entity.cluster
             }
 
 
@@ -219,7 +219,7 @@ loadableActorId =
 
 loadableEntityId : Loadable Int Entity -> Int
 loadableEntityId =
-    Loadable.id (.entity >> .entity)
+    Loadable.id (.entity >> .cluster)
 
 
 loadableTxId : Loadable String { a | txHash : String } -> String

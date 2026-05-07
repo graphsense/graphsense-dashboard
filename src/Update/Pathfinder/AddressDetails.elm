@@ -329,6 +329,12 @@ update uc msg model =
                             baseResult =
                                 { txs
                                     | filter = newFilter
+                                    , maxChangeHopsLimit =
+                                        if TransactionFilter.getUtxoFilter newFilter == Nothing then
+                                            Nothing
+
+                                        else
+                                            txs.maxChangeHopsLimit
                                 }
                                     |> RemoteData.Success
                                     |> flip s_txs model
@@ -414,6 +420,14 @@ update uc msg model =
                                 )
                     )
                 |> RemoteData.withDefault (n nm)
+
+        UserClickedShowPubkeyRelatedAddresses ->
+            ( { model
+                | relatedAddressesTableOpen = True
+                , relatedAddressesVisibleTable = Just Pubkey
+              }
+            , []
+            )
 
         RelatedAddressesTableSubTableMsg pm ->
             (\rm ->
@@ -567,6 +581,35 @@ update uc msg model =
             WorkflowNextUtxoTx.update config subMsg
                 |> flip (handleWorkflowNextUtxo config) model
 
+        UserClickedContinueChangeTracing ->
+            model.txs
+                |> RemoteData.toMaybe
+                |> Maybe.andThen
+                    (\txs ->
+                        txs.maxChangeHopsLimit
+                            |> Maybe.map
+                                (\data ->
+                                    let
+                                        config_ =
+                                            { addressId = model.address.id
+                                            , direction = data.direction
+                                            , allowMultiple = True
+                                            }
+                                    in
+                                    WorkflowNextUtxoTx.start config_ data.tx
+                                        |> Workflow.mapEffect (WorkflowNextUtxoTx config_ >> Pathfinder.AddressDetailsMsg model.address.id)
+                                        |> Workflow.next
+                                        |> List.map ApiEffect
+                                        |> pair
+                                            (txs
+                                                |> s_maxChangeHopsLimit Nothing
+                                                |> RemoteData.Success
+                                                |> flip s_txs model
+                                            )
+                                )
+                    )
+                |> Maybe.withDefault (n model)
+
 
 handleWorkflowNextUtxo : WorkflowNextUtxoTx.Config -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
 handleWorkflowNextUtxo config wf model =
@@ -585,37 +628,64 @@ handleWorkflowNextUtxo config wf model =
                             setter =
                                 InfiniteTable.appendData
 
-                            result =
-                                case wf of
-                                    Workflow.Ok tx ->
-                                        tx
-                                            |> utxoToAddressTx config.direction config.addressId
-                                            |> List.map Api.Data.AddressTxAddressTxUtxo
-
-                                    _ ->
-                                        []
-
-                            ( table, cmd, eff ) =
+                            setData data =
                                 txsTable.table
                                     |> setter
                                         (transactionTableConfig txsTable model.address.id)
                                         TransactionTable.filter
                                         Nothing
-                                        result
-                        in
-                        ( table, eff )
-                            |> mapFirst (flip s_table txsTable)
-                            |> mapFirst (RemoteData.Success >> flip s_txs model)
-                            |> mapSecond
-                                ((::)
-                                    (cmd
-                                        |> Cmd.map
-                                            (TransactionsTableSubTableMsg
-                                                >> Pathfinder.AddressDetailsMsg model.address.id
-                                            )
-                                        |> CmdEffect
-                                    )
+                                        data
+
+                            handleMaxHopsLimit maxHops tx =
+                                let
+                                    updatedTxsTable =
+                                        { txsTable
+                                            | maxChangeHopsLimit =
+                                                Just
+                                                    { maxHops = maxHops
+                                                    , tx = tx
+                                                    , direction = config.direction
+                                                    }
+                                        }
+                                in
+                                ( model
+                                    |> s_txs (RemoteData.Success updatedTxsTable)
+                                , []
                                 )
+
+                            handleNormal table cmd eff =
+                                ( table, eff )
+                                    |> mapFirst (flip s_table txsTable)
+                                    |> mapFirst (RemoteData.Success >> flip s_txs model)
+                                    |> mapSecond
+                                        ((::)
+                                            (cmd
+                                                |> Cmd.map
+                                                    (TransactionsTableSubTableMsg
+                                                        >> Pathfinder.AddressDetailsMsg model.address.id
+                                                    )
+                                                |> CmdEffect
+                                            )
+                                        )
+                        in
+                        case wf of
+                            Workflow.Err (WorkflowNextUtxoTx.MaxChangeHopsLimit maxHops tx) ->
+                                handleMaxHopsLimit maxHops tx
+
+                            _ ->
+                                let
+                                    ( table, cmd, eff ) =
+                                        case wf of
+                                            Workflow.Ok { tx } ->
+                                                tx
+                                                    |> utxoToAddressTx config.direction config.addressId
+                                                    |> List.map Api.Data.AddressTxAddressTxUtxo
+                                                    |> setData
+
+                                            _ ->
+                                                setData []
+                                in
+                                handleNormal table cmd eff
             )
         |> RemoteData.withDefault (n model)
 
@@ -798,7 +868,7 @@ getNeighborsTableAndSetter model dir =
                     )
 
 
-syncByAddress : Update.Config -> Network -> Dict Id (WebData Api.Data.Entity) -> Maybe DateFilterRaw -> Model -> Address -> ( Model, List Effect )
+syncByAddress : Update.Config -> Network -> Dict Id (WebData Api.Data.Cluster) -> Maybe DateFilterRaw -> Model -> Address -> ( Model, List Effect )
 syncByAddress uc network clusters dateFilterPreset model address =
     address.data
         |> RemoteData.map
@@ -826,7 +896,7 @@ syncByAddress uc network clusters dateFilterPreset model address =
                                 )
 
                     cluster =
-                        Id.initClusterId data.currency data.entity
+                        Id.initClusterId data.currency data.cluster
                             |> flip Dict.get clusters
 
                     related =

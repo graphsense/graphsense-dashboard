@@ -13,11 +13,12 @@ import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
 import Css.View
 import Dict exposing (Dict)
-import Html.Styled as Html exposing (Html, div, object)
+import Html.Styled as Html exposing (Html, div, object, text)
 import Html.Styled.Attributes as HA
 import Html.Styled.Events exposing (onClick, preventDefaultOn, stopPropagationOn)
 import Init.Pathfinder.Id as Id
 import Json.Decode
+import Maybe.Extra
 import Model.Currency exposing (asset, assetFromBase)
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
@@ -42,6 +43,8 @@ import RemoteData exposing (WebData)
 import Set
 import Svg.Styled exposing (Svg)
 import Svg.Styled.Attributes exposing (css)
+import Theme.Html.Buttons as Buttons
+import Theme.Html.ErrorMessagesAlerts as ErrorMessagesAlerts
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Html.TagsComponents as TagsComponents
@@ -100,11 +103,11 @@ utxo plugins pluginStates vc model id viewState address =
             not (List.isEmpty crosschainTargets)
 
         crosschainLedgersList =
-            crosschainTargets
+            (crosschainTargets
                 |> List.map
                     (\( network, targetId ) ->
                         div
-                            [ onClick (Pathfinder.UserClickedAddress targetId)
+                            [ onClick (Pathfinder.UserClickedCrosschainAddress targetId)
                             , css [ Css.cursor Css.pointer ]
                             ]
                             [ TagsComponents.categoryTag
@@ -115,6 +118,8 @@ utxo plugins pluginStates vc model id viewState address =
                                 }
                             ]
                     )
+            )
+                ++ [ crosschainMoreInfoButton vc id ]
 
         pluginTagsVisible =
             List.length pluginTagsList > 0
@@ -132,7 +137,7 @@ utxo plugins pluginStates vc model id viewState address =
             viewState.address.data
                 |> RemoteData.toMaybe
                 |> Maybe.map
-                    (\data -> Id.initClusterId data.currency data.entity)
+                    (\data -> Id.initClusterId data.currency data.cluster)
                 |> Maybe.andThen (flip Dict.get model.clusters)
 
         relatedAddressesTab =
@@ -343,7 +348,7 @@ relatedAddressesSelectBoxConfig vc id =
             )
 
 
-relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Entity -> Html AddressDetails.Msg
+relatedAddressesDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> WebData Api.Data.Cluster -> Html AddressDetails.Msg
 relatedAddressesDataTab vc model _ viewState cluster =
     let
         label =
@@ -506,7 +511,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
         }
 
 
-clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Entity -> Html AddressDetails.Msg
+clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Api.Data.Cluster -> Html AddressDetails.Msg
 clusterInfoView vc open colors clstr =
     let
         tooltipConfig =
@@ -529,7 +534,7 @@ clusterInfoView vc open colors clstr =
     else
         let
             clstrid =
-                Id.initClusterId clstr.currency clstr.entity
+                Id.initClusterId clstr.currency clstr.cluster
 
             clusterColor =
                 Colors.getAssignedColor Colors.Clusters clstrid colors
@@ -565,7 +570,7 @@ clusterInfoView vc open colors clstr =
                 )
                 { root = { label = label }
                 , titleOfClusterId = { infoLabel = Locale.string vc.locale "Cluster" }
-                , valueOfClusterId = { label = String.fromInt clstr.entity }
+                , valueOfClusterId = { label = String.fromInt clstr.cluster }
                 , titleOfNumberOfAddresses = { infoLabel = Locale.string vc.locale "Number-of-addresses" }
                 , valueOfNumberOfAddresses =
                     { firstRowText = String.fromInt clstr.noAddresses
@@ -610,11 +615,64 @@ transactionTableView vc addressId txOnGraphFn model txs =
                 |> List.map Tx.getTxIdForAddressTx
                 |> allAndNotEmpty txOnGraphFn
 
-        table =
-            InfiniteTable.view vc
-                []
-                (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
-                txs.table
+        maxChangeHopsLimit =
+            if Inf.isEmpty txs.table then
+                txs.maxChangeHopsLimit
+
+            else
+                Nothing
+
+        tableOrButton =
+            maxChangeHopsLimit
+                |> Maybe.map
+                    (\{ maxHops } ->
+                        ErrorMessagesAlerts.alertMessageSmallWithInstances
+                            (ErrorMessagesAlerts.alertMessageSmallAttributes
+                                |> Rs.s_root [ css [ Css.maxWidth <| Css.px 350 ] ]
+                            )
+                            (ErrorMessagesAlerts.alertMessageSmallInstances
+                                |> Rs.s_text
+                                    (div
+                                        [ css
+                                            [ Css.displayFlex
+                                            , Css.flexDirection Css.column
+                                            , Css.alignItems Css.center
+                                            , Css.property "gap" "10px"
+                                            ]
+                                        ]
+                                        [ Locale.interpolated vc.locale
+                                            "transaction-table-trace-further"
+                                            [ String.fromInt maxHops ]
+                                            |> text
+                                            |> List.singleton
+                                            |> div
+                                                [ css ErrorMessagesAlerts.alertMessageSmallText_details.styles
+                                                ]
+                                        , Button.secondaryButton vc
+                                            (Button.defaultConfig
+                                                |> Rs.s_size Buttons.ButtonSizeSmall
+                                                |> Rs.s_text (Locale.string vc.locale "Transaction-table-trace-further-button")
+                                                |> Rs.s_onClick (Just UserClickedContinueChangeTracing)
+                                            )
+                                        ]
+                                        |> Just
+                                    )
+                            )
+                            { root = { title = Locale.string vc.locale "transaction-table-trace-further-title", text = "" } }
+                            |> List.singleton
+                            |> div
+                                [ css
+                                    [ Css.padding <| Css.px 10
+                                    ]
+                                ]
+                    )
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        InfiniteTable.view vc
+                            []
+                            (TransactionTable.config styles vc addressId txOnGraphFn allChecked)
+                            txs.table
+                    )
     in
     [ TransactionFilter.view vc
         (Id.network addressId)
@@ -623,7 +681,7 @@ transactionTableView vc addressId txOnGraphFn model txs =
         , tooltipConfig = Util.Tooltip.tooltipConfig vc AddressDetails.TooltipMsg
         }
         txs.filter
-    , table
+    , tableOrButton
     ]
         |> div [ css fullWidth ]
 
@@ -831,7 +889,7 @@ account plugins pluginStates vc model id viewState address =
             not (List.isEmpty crosschainTargets)
 
         crosschainLedgersList =
-            crosschainTargets
+            (crosschainTargets
                 |> List.map
                     (\( network, targetId ) ->
                         div
@@ -846,6 +904,8 @@ account plugins pluginStates vc model id viewState address =
                                 }
                             ]
                     )
+            )
+                ++ [ crosschainMoreInfoButton vc id ]
 
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
@@ -1106,11 +1166,22 @@ tagsList vc model id =
 
 
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg
-learnMoreButton vc id =
-    Button.defaultConfig
-        |> Rs.s_text "learn more"
-        |> Rs.s_onClick (Just (Pathfinder.UserOpensDialogWindow (TagsList id)))
-        |> Button.linkButtonBlue vc
+learnMoreButton _ id =
+    Pathfinder.UserOpensDialogWindow (TagsList id)
+        |> Button.threeDots []
+
+
+crosschainMoreInfoButton : View.Config -> Id -> Html Pathfinder.Msg
+crosschainMoreInfoButton vc id =
+    Pathfinder.AddressDetailsMsg id AddressDetails.UserClickedShowPubkeyRelatedAddresses
+        |> Button.threeDots
+            (Locale.string vc.locale "tooltip-opens-pubkey-related-addresses-table"
+                |> Util.TooltipType.Text
+                |> Tooltip.attributes "more-info-crosschain"
+                    (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg
+                        |> Tooltip.withOpenDelay 500
+                    )
+            )
 
 
 crosschainLedgerTargets : Id -> Address -> List ( String, Id )

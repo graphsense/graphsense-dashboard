@@ -5,7 +5,8 @@ import Autocomplete
 import Basics.Extra exposing (flip)
 import Effect.Api as Api
 import Effect.Search exposing (Effect(..))
-import Init.Search exposing (init)
+import Init.Search
+import Maybe.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Ports
@@ -159,7 +160,14 @@ update msg model =
         UserFocusSearch ->
             n
                 { model
-                    | visible = True
+                    | visible = model.userInitiatedFocus
+                }
+
+        UserInputPressed ->
+            n
+                { model
+                    | userInitiatedFocus = True
+                    , visible = True
                 }
 
         UserLeavesSearch ->
@@ -212,7 +220,22 @@ update msg model =
             n model
 
         UserClicksResultLine ->
-            ( clear model
+            let
+                picked =
+                    selectedValue model
+                        |> Maybe.Extra.orElse (firstResult model)
+
+                recents =
+                    picked
+                        |> Maybe.map (\rl -> addRecent rl model.recentSearches)
+                        |> Maybe.withDefault model.recentSearches
+            in
+            ( { model | recentSearches = recents } |> clear
+            , [ Ports.blur searchInputId |> CmdEffect ]
+            )
+
+        UserClicksRecentResultLine rl ->
+            ( { model | recentSearches = addRecent rl model.recentSearches } |> clear
             , [ Ports.blur searchInputId |> CmdEffect ]
             )
 
@@ -252,9 +275,10 @@ update msg model =
                             else
                                 Autocomplete.setChoices blockResults ac
                         , visible =
-                            query
-                                |> String.isEmpty
-                                |> not
+                            not (String.isEmpty query)
+                                || (model.userInitiatedFocus
+                                        && not (List.isEmpty (filteredRecents model.searchType model.recentSearches))
+                                   )
                     }
 
                 eff =
@@ -364,10 +388,10 @@ triggerSearch query model =
 
 clear : Model -> Model
 clear model =
-    init model.searchType
+    Init.Search.initWithRecents model.searchType model.recentSearches
 
 
 hide : Model -> Model
 hide model =
-    { model | visible = False }
+    { model | visible = False, userInitiatedFocus = False }
         |> setQuery (query model)

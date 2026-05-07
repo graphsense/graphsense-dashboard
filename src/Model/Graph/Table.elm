@@ -54,8 +54,8 @@ type EntityTable
     = EntityTagsTable (Table Api.Data.AddressTag)
     | EntityTxsUtxoTable (Table Api.Data.AddressTxUtxo)
     | EntityTxsAccountTable (Table Api.Data.TxAccount)
-    | EntityIncomingNeighborsTable (Table Api.Data.NeighborEntity)
-    | EntityOutgoingNeighborsTable (Table Api.Data.NeighborEntity)
+    | EntityIncomingNeighborsTable (Table Api.Data.NeighborCluster)
+    | EntityOutgoingNeighborsTable (Table Api.Data.NeighborCluster)
     | EntityAddressesTable (Table Api.Data.Address)
     | EntityTotalReceivedAllAssetsTable AllAssetsTable
     | EntityFinalBalanceAllAssetsTable AllAssetsTable

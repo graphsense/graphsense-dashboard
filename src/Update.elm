@@ -905,37 +905,117 @@ update plugins uc msg model =
                     n model
 
         ExportDialogMsg smsg ->
-            case model.dialog of
-                Just (Dialog.Export conf) ->
+            -- Port replies for in-flight exports must run at this top layer,
+            -- not inside the dialog-gated branch below: the user may have
+            -- closed the export dialog while the JS-side render was still
+            -- running, and the export keeps going regardless. Without this
+            -- the toolbar spinner / render state would never be reset, and
+            -- a BrowserSentBBox reply arriving after dismissal would never
+            -- kick off the actual SVG export, so the file would never appear.
+            case smsg of
+                ExportDialog.BrowserSentBBox bbox ->
                     let
-                        ( export, eff ) =
-                            ExportDialog.update uc smsg conf
-
                         ( pathfinder, pathfinderEff ) =
-                            Pathfinder.updateByExportMsg uc smsg conf model.pathfinder
+                            Pathfinder.continueImageExport bbox model.pathfinder
                     in
-                    ( { model
-                        | pathfinder = pathfinder
-                        , dialog =
-                            case smsg of
-                                ExportDialog.BrowserSentExportGraphResult Nothing ->
+                    ( { model | pathfinder = pathfinder }
+                    , List.map PathfinderEffect pathfinderEff
+                    )
+
+                ExportDialog.BrowserRenderedGraphForExport ->
+                    n { model | pathfinder = Pathfinder.endExportRendering model.pathfinder }
+
+                ExportDialog.BrowserSentExportGraphResult error ->
+                    let
+                        ( pathfinder, pathfinderEff ) =
+                            Pathfinder.finishImageExport error model.pathfinder
+
+                        newDialog =
+                            case error of
+                                Nothing ->
                                     Nothing
 
-                                _ ->
-                                    export
-                                        |> Dialog.Export
-                                        |> Just
-                      }
-                    , eff ++ List.map PathfinderEffect pathfinderEff
+                                Just _ ->
+                                    model.dialog
+                    in
+                    ( { model | pathfinder = pathfinder, dialog = newDialog }
+                    , List.map PathfinderEffect pathfinderEff
                     )
 
                 _ ->
-                    n model
+                    case model.dialog of
+                        Just (Dialog.Export conf) ->
+                            let
+                                ( export, eff ) =
+                                    ExportDialog.update uc smsg conf
+
+                                ( pathfinder, pathfinderEff ) =
+                                    Pathfinder.updateByExportMsg uc smsg conf model.pathfinder
+                            in
+                            ( { model
+                                | pathfinder = pathfinder
+                                , dialog =
+                                    export
+                                        |> Dialog.Export
+                                        |> Just
+                              }
+                            , eff ++ List.map PathfinderEffect pathfinderEff
+                            )
+
+                        _ ->
+                            n model
 
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
                     updatePlugins plugins uc ms model
+
+                Search.UserClicksRecentResultLine rl ->
+                    let
+                        ( search, _ ) =
+                            Search.update m model.search
+
+                        m2 =
+                            syncRecentsToPathfinder { model | search = search }
+
+                        route =
+                            case ( model.page, rl ) of
+                                ( Pathfinder, Search.Address currency address ) ->
+                                    Route.Pathfinder.addressRoute
+                                        { network = currency
+                                        , address = address
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( Pathfinder, Search.Tx currency tx ) ->
+                                    Route.Pathfinder.txRoute
+                                        { network = currency
+                                        , txHash = tx
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( Home, Search.Address currency address ) ->
+                                    Route.Pathfinder.addressRoute
+                                        { network = currency
+                                        , address = address
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( Home, Search.Tx currency tx ) ->
+                                    Route.Pathfinder.txRoute
+                                        { network = currency
+                                        , txHash = tx
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( _, s ) ->
+                                    Route.Graph.resultLineToRoute s
+                                        |> Route.graphRoute
+                    in
+                    [ route |> Route.toUrl |> NavPushUrlEffect
+                    , saveUserSettings m2
+                    ]
+                        |> pair m2
 
                 Search.UserClicksResultLine ->
                     let
@@ -950,7 +1030,7 @@ update plugins uc msg model =
                             Search.update m model.search
 
                         m2 =
-                            { model | search = search }
+                            syncRecentsToPathfinder { model | search = search }
 
                         resultLineToRoute v =
                             case ( model.page, v ) of
@@ -992,11 +1072,12 @@ update plugins uc msg model =
                     else
                         case selectedValue of
                             Just value ->
-                                value
+                                [ value
                                     |> resultLineToRoute
                                     |> Route.toUrl
                                     |> NavPushUrlEffect
-                                    |> List.singleton
+                                , saveUserSettings m2
+                                ]
                                     |> pair m2
 
                             Nothing ->
@@ -1277,7 +1358,7 @@ update plugins uc msg model =
                     pathfinder.network.addresses
                         |> Dict.get id
                         |> Maybe.andThen (.data >> RD.toMaybe)
-                        |> Maybe.map (\addr -> Id.initClusterId addr.currency addr.entity)
+                        |> Maybe.map (\addr -> Id.initClusterId addr.currency addr.cluster)
                         |> Maybe.andThen (\cid -> Dict.get cid pathfinder.clusters)
                         |> Maybe.andThen RD.toMaybe
                         |> Maybe.map .noAddresses
@@ -1559,7 +1640,7 @@ update plugins uc msg model =
                         Pathfinder.BrowserGotClusterData _ data ->
                             let
                                 ( new, outMsg, cmd ) =
-                                    { currency = data.currency, entity = data.entity }
+                                    { currency = data.currency, entity = data.cluster }
                                         |> List.singleton
                                         |> PluginInterface.EntitiesAdded
                                         |> Plugin.updateByCoreMsg plugins uc model.plugins
@@ -1598,9 +1679,26 @@ update plugins uc msg model =
 
                                 nm =
                                     { model | pathfinder = pathfinder }
+
+                                recentsChanged =
+                                    pathfinder.search.recentSearches /= pathfinderOld.search.recentSearches
+
+                                syncedModel =
+                                    if recentsChanged then
+                                        syncRecentsFromPathfinder nm
+
+                                    else
+                                        nm
+
+                                extraEff =
+                                    if recentsChanged then
+                                        [ saveUserSettings syncedModel ]
+
+                                    else
+                                        []
                             in
-                            ( nm
-                            , List.map PathfinderEffect eff
+                            ( syncedModel
+                            , List.map PathfinderEffect eff ++ extraEff
                             )
             in
             if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
@@ -2237,7 +2335,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                                                         |> Maybe.andThen (.data >> RD.toMaybe)
                                                         |> Maybe.andThen
                                                             (\a ->
-                                                                Dict.get (Id.initClusterId a.currency a.entity) model.pathfinder.clusters
+                                                                Dict.get (Id.initClusterId a.currency a.cluster) model.pathfinder.clusters
                                                             )
                                             in
                                             case addr of
@@ -2519,9 +2617,30 @@ updateByUrl plugins uc url model =
                             ( pfn, graphEffect ) =
                                 Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
 
+                            -- Skip the search auto-focus when the URL loads an
+                            -- address/tx — the focused search input swallows
+                            -- keyboard events (e.g. arrow-key navigation) that
+                            -- the user expects to act on the selected node.
+                            pfRouteLoadsContent =
+                                case pfRoute of
+                                    Route.Pathfinder.Network _ (Route.Pathfinder.Address _ _) ->
+                                        True
+
+                                    Route.Pathfinder.Network _ (Route.Pathfinder.Tx _) ->
+                                        True
+
+                                    Route.Pathfinder.Path _ _ ->
+                                        True
+
+                                    _ ->
+                                        False
+
                             focusEffect =
-                                case oldRoute of
-                                    Route.Pathfinder _ ->
+                                case ( oldRoute, pfRouteLoadsContent ) of
+                                    ( Route.Pathfinder _, _ ) ->
+                                        []
+
+                                    ( _, True ) ->
                                         []
 
                                     _ ->
@@ -2941,6 +3060,35 @@ saveUserSettings =
     SaveUserSettingsEffect << Model.userSettingsFromMainModel
 
 
+{-| Copy recentSearches from model.search into model.pathfinder.search so both
+search instances share a single list.
+-}
+syncRecentsToPathfinder : Model key -> Model key
+syncRecentsToPathfinder model =
+    let
+        pf =
+            model.pathfinder
+
+        pfSearch =
+            pf.search
+    in
+    { model
+        | pathfinder =
+            { pf | search = { pfSearch | recentSearches = model.search.recentSearches } }
+    }
+
+
+{-| Copy recentSearches from model.pathfinder.search into model.search (the inverse).
+-}
+syncRecentsFromPathfinder : Model key -> Model key
+syncRecentsFromPathfinder model =
+    let
+        s =
+            model.search
+    in
+    { model | search = { s | recentSearches = model.pathfinder.search.recentSearches } }
+
+
 fetchClusterTagsEffect : PathfinderId.Id -> Model.Pathfinder.Model -> List Effect
 fetchClusterTagsEffect id pathfinderModel =
     pathfinderModel.network.addresses
@@ -2950,7 +3098,7 @@ fetchClusterTagsEffect id pathfinderModel =
             (\addr ->
                 Effect.Api.GetEntityAddressTagsEffect
                     { currency = PathfinderId.network id
-                    , entity = addr.entity
+                    , entity = addr.cluster
                     , pagesize = TagsTable.pagesize
                     , nextpage = Nothing
                     }
@@ -3001,7 +3149,7 @@ clusterTagsInfiniteTableConfig id pathfinderModel =
             pathfinderModel.network.addresses
                 |> Dict.get id
                 |> Maybe.andThen (.data >> RD.toMaybe)
-                |> Maybe.map .entity
+                |> Maybe.map .cluster
                 |> Maybe.withDefault 0
     in
     { fetch =

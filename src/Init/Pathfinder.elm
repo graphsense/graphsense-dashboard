@@ -16,13 +16,14 @@ import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Selection exposing (Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
+import Model.Search
 import Msg.Pathfinder exposing (Msg(..))
 import Route.Pathfinder as Route
 import Util.Annotations as Annotations
 import Util.EventualMessages as EventualMessages
 
 
-init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool, tracingMode : Maybe TracingMode, avoidOverlapingNodes : Maybe Bool } -> ( Model, Cmd Msg )
+init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool, tracingMode : Maybe TracingMode, avoidOverlapingNodes : Maybe Bool, recentSearches : List Model.Search.ResultLine } -> ( Model, Cmd Msg )
 init us =
     ( { route = Route.Root
       , network = Network.init
@@ -33,7 +34,7 @@ init us =
       , clusters = Dict.empty
       , selection = NoSelection
       , hovered = NoHover
-      , search = Search.init (Search.initSearchAddressAndTxs Nothing)
+      , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) us.recentSearches
       , dragging = NoDragging
       , transform = Transform.init
       , history = History.init

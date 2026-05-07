@@ -52,30 +52,30 @@ type Msg
     | BrowserGotBrowserElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserWheeledOnGraph Float Float Float
     | UserPushesLeftMouseButtonOnEntity EntityId Coords
-    | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborEntities
-    | BrowserGotEntityEgonet String Int Bool Api.Data.NeighborEntities
-    | BrowserGotEntityEgonetForAddress String String Int Bool Api.Data.NeighborEntities
+    | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborClusters
+    | BrowserGotEntityEgonet String Int Bool Api.Data.NeighborClusters
+    | BrowserGotEntityEgonetForAddress String String Int Bool Api.Data.NeighborClusters
     | BrowserGotAddressEgonet AddressId Bool Api.Data.NeighborAddresses
     | BrowserGotAddressNeighbors AddressId Bool Api.Data.NeighborAddresses
     | BrowserGotAddressNeighborsTable A.Address Bool Api.Data.NeighborAddresses
     | BrowserGotNow Time.Posix
     | BrowserGotAddress Api.Data.Address
     | BrowserGotActor Api.Data.Actor
-    | BrowserGotEntity Api.Data.Entity
+    | BrowserGotEntity Api.Data.Cluster
     | BrowserGotBlock Api.Data.Block
-    | BrowserGotEntityForAddress String Api.Data.Entity
+    | BrowserGotEntityForAddress String Api.Data.Cluster
     | BrowserGotEntityForAddressNeighbor
         { anchor : AddressId
         , isOutgoing : Bool
         , neighbors : List Api.Data.NeighborAddress
         }
-        Api.Data.Entity
-    | BrowserGotEntityNeighborsTable E.Entity Bool Api.Data.NeighborEntities
+        Api.Data.Cluster
+    | BrowserGotEntityNeighborsTable E.Entity Bool Api.Data.NeighborClusters
     | BrowserGotAddressTxs A.Address Api.Data.AddressTxs
     | BrowserGotAddresslinkTxs A.Addresslink Api.Data.Links
-    | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
+    | BrowserGotEntityAddresses EntityId Api.Data.ClusterAddresses
     | BrowserGotAddressForEntity EntityId Api.Data.Address
-    | BrowserGotEntityAddressesForTable E.Entity Api.Data.EntityAddresses
+    | BrowserGotEntityAddressesForTable E.Entity Api.Data.ClusterAddresses
     | BrowserGotEntityTxs E.Entity Api.Data.AddressTxs
     | BrowserGotEntitylinkTxs E.Entitylink Api.Data.Links
     | BrowserGotBlockTxs B.Block (List Api.Data.Tx)
@@ -101,7 +101,7 @@ type Msg
     | UserClickedAddressInEntityTagsTable EntityId String
     | UserClickedAddressInTable A.Address
     | UserClickedAddressInNeighborsTable AddressId Bool Api.Data.NeighborAddress
-    | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
+    | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborCluster
     | InternalGraphAddedAddresses (Set AddressId)
     | InternalGraphAddedEntities (Set EntityId)
     | InternalGraphSelectedAddress AddressId
@@ -149,9 +149,9 @@ type Msg
     | UserClickedUserTags
     | BrowserGotBulkAddresses String Deserializing (List Api.Data.Address)
     | BrowserGotBulkAddressTags String (List Api.Data.AddressTag)
-    | BrowserGotBulkEntities String Deserializing (List Api.Data.Entity)
-    | BrowserGotBulkAddressEntities String Deserializing (List ( String, Api.Data.Entity ))
-    | BrowserGotBulkEntityNeighbors String Bool (List ( Int, Api.Data.NeighborEntity ))
+    | BrowserGotBulkEntities String Deserializing (List Api.Data.Cluster)
+    | BrowserGotBulkAddressEntities String Deserializing (List ( String, Api.Data.Cluster ))
+    | BrowserGotBulkEntityNeighbors String Bool (List ( Int, Api.Data.NeighborCluster ))
     | BrowserGotBulkAddressNeighbors String Bool (List ( String, Api.Data.NeighborAddress ))
     | UserClickedNew
     | UserClickedNewYes

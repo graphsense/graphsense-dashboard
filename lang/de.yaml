@@ -268,8 +268,8 @@ value_usd: USD
 timestamp_utc: Datum/Zeit (UTC)
 receiving_address: Empfänger
 sending_address: Sender
-no_inputs: Eingänge
-no_outputs: Ausgänge
+inputs: Eingänge
+outputs: Ausgänge
 total_input: Eingangswerte Gesamt
 total_output: Ausgangswerte Gesamt
 success_download_csv: '{0} Datensätze als CSV heruntergeladen'
@@ -342,6 +342,7 @@ popup-address-not-found-typos: Es gibt Tippfehler
 token-transactions-of: Token-Transaktionen von {0} ({1})
 actor: Akteur
 actors: Akteure
+Recent searches: Letzte Suchen
 other Links: Links
 social: Social Media
 jurisdictions: Gerichtsbarkeit
@@ -561,7 +562,19 @@ datefilter-starting-tx: nachfolgende zu
 datefilter-until-tx: vorangehende zu
 filter-utxo-only: nur UTXO
 tx-filter-utxo-only-tooltip: Nur Transaktionen auflisten, die auf UTXO-Ebene auf die ausgewählte Transaktion verweisen
+tx-filter-quickfilter-tooltip: Filter automatisch nach Transaktionsknoten am Graphen setzen
 filter-quick-filter: Schnellfilter per Transaktion
 filter-custom-filter: Benutzerdefinierter Filter
 filter-none-selected: keinen ausgewählt
 retrying {0}/{1}: erneuter Versuch {0}/{1}
+transaction-table-trace-further-button: Weitersuchen
+transaction-table-trace-further-title: Noch keine Transaktion gefunden
+transaction-table-trace-further: Nach {0} Hops keine UTXO-verknüpfte Transaktion gefunden, die andere Inputs als die ausgewählte Adresse enthält. Möchten Sie weiter suchen?
+transaction-tracing-not-possible: Transaktionsverfolgung nicht möglich
+no-adjacent-tx-between-addresses: Keine passende benachbarte Transaktion zwischen Adressen {0} und {1} gefunden.
+could-not-link-neighbor-address: Nachbaradresse konnte nicht verknüpft werden
+max-change-hops-reached: Keine benachbarte Transaktion für Adresse {0} gefunden, die nicht nur Change ist. Bitte versuchen Sie es erneut, um weiterzusuchen.
+transaction-tracing-across-change: Transaktionsverfolgung über Changes
+hint-auto-trace-title: Vermögenswerte automatisch verfolgen
+hint-auto-trace-description: Verfolgen Sie Vermögenswerte, indem Sie automatisch die nächste Transaktion finden (auf UTXO-Ebene, falls vom Ledger unterstützt)
+tooltip-opens-pubkey-related-addresses-table: Adressen in anderen Crytpo-Währungen, die über denselben öffentlichen Schlüssel verknüpft sind. Klicken, um die entsprechende Tabelle unterhalb zu öffnen.

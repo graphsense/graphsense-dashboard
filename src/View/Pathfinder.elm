@@ -801,26 +801,19 @@ graphSvg plugins vc gc model dim =
 
         gradient prefix { outgoing, reverse } =
             let
-                ( from, to ) =
+                ( ( from, fromOffset ), ( to, toOffset ) ) =
                     case ( outgoing, reverse ) of
                         ( True, False ) ->
-                            ( Colors.pathMiddle, Colors.pathOut )
+                            ( ( Colors.pathMiddle, 10 ), ( Colors.pathOut, 50 ) )
 
                         ( False, False ) ->
-                            ( Colors.pathIn, Colors.pathMiddle )
+                            ( ( Colors.pathIn, 50 ), ( Colors.pathMiddle, 90 ) )
 
                         ( True, True ) ->
-                            ( Colors.pathOut, Colors.pathMiddle )
+                            ( ( Colors.pathOut, 50 ), ( Colors.pathMiddle, 90 ) )
 
                         ( False, True ) ->
-                            ( Colors.pathMiddle, Colors.pathIn )
-
-                ( fromOffset, toOffset ) =
-                    if outgoing then
-                        ( "10%", "50%" )
-
-                    else
-                        ( "50%", "80%" )
+                            ( ( Colors.pathMiddle, 10 ), ( Colors.pathIn, 50 ) )
             in
             linearGradient
                 [ "{{ prefix }}{{ direction }}Edge{{ reverse }}"
@@ -844,11 +837,15 @@ graphSvg plugins vc gc model dim =
                 [ stop
                     [ from
                         |> stopColor
-                    , offset fromOffset
+                    , String.fromInt fromOffset
+                        |> flip (++) "%"
+                        |> offset
                     ]
                     []
                 , stop
-                    [ offset toOffset
+                    [ String.fromInt toOffset
+                        |> flip (++) "%"
+                        |> offset
                     , to
                         |> stopColor
                     ]

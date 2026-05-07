@@ -21,6 +21,6 @@ initFromRecord { address, currency } =
     init currency address
 
 
-initClusterIdFromRecord : { t | entity : Int, currency : String } -> Id
-initClusterIdFromRecord { entity, currency } =
-    initClusterId currency entity
+initClusterIdFromRecord : { t | cluster : Int, currency : String } -> Id
+initClusterIdFromRecord { cluster, currency } =
+    initClusterId currency cluster

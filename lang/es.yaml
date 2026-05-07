@@ -60,8 +60,8 @@ value_usd: USD
 timestamp_utc: Fecha y hora (UTC)
 receiving_address: A
 sending_address: De
-no_inputs: Entradas
-no_outputs: Salidas
+inputs: Entradas
+outputs: Salidas
 total_input: Importe total de las entradas
 total_output: Importe total de las salidas
 success_download_csv: '{0} filas de datos descargadas como CSV'
@@ -347,6 +347,7 @@ popup-address-not-found-typos: hay errores tipográficos
 token-transactions-of: transacciones de tokens de {0} ({1})
 actor: Actor
 actors: Actores
+Recent searches: Búsquedas recientes
 other Links: Otros enlaces
 social: Social
 jurisdictions: Jurisdicciones
@@ -565,7 +566,19 @@ datefilter-starting-tx: posterior a
 datefilter-until-tx: anterior a
 filter-utxo-only: solo UTXO
 tx-filter-utxo-only-tooltip: Solo listar transacciones que referencian la transacción seleccionada a nivel UTXO
+tx-filter-quickfilter-tooltip: Filtrar automáticamente por nodos de transacción en el gráfico
 filter-quick-filter: filtro rápido por transacción
 filter-custom-filter: filtro personalizado
 filter-none-selected: ninguno seleccionado
 retrying {0}/{1}: reintentando {0}/{1}
+transaction-table-trace-further-button: Continuar rastreo 
+transaction-table-trace-further-title: No se encontró ninguna transacción todavía
+transaction-table-trace-further: No se encontró ninguna transacción vinculada a UTXO que tenga otras entradas además de la dirección seleccionada al rastrear sobre {0} saltos. ¿Desea buscar más?
+transaction-tracing-not-possible: Seguimiento de transacción no es posible
+no-adjacent-tx-between-addresses: No se encontró una transacción adyacente adecuada entre la dirección {0} y {1}.
+could-not-link-neighbor-address: No se pudo vincular la dirección vecina
+max-change-hops-reached: No se encontró una transacción adyacente para la dirección {0} que no sea solo cambio para {1} saltos. Intente nuevamente para buscar más lejos.
+transaction-tracing-across-change: Seguimiento de transacción a través de cambio
+hint-auto-trace-title: Rastrear fondos automáticamente
+hint-auto-trace-description: Siga el dinero encontrando automáticamente la próxima transacción (a nivel UTXO si el ledger lo admite)
+tooltip-opens-pubkey-related-addresses-table: Direcciones en otras criptomonedas vinculadas por la misma clave pública. Haga clic para abrir la tabla correspondiente a continuación.

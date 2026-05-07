@@ -229,7 +229,7 @@ type Effect
 
 
 type Thing
-    = Entity Api.Data.Entity
+    = Entity Api.Data.Cluster
 
 
 userSettingsFromMainModel : Model key -> UserSettings
@@ -253,4 +253,5 @@ userSettingsFromMainModel model =
     , showHash = Just model.config.showHash
     , showBothValues = Just model.config.showBothValues
     , avoidOverlapingNodes = Just model.pathfinder.config.avoidOverlapingNodes
+    , recentSearches = model.search.recentSearches
     }

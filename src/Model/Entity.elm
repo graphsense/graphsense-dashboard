@@ -41,12 +41,12 @@ encoder entity =
         ]
 
 
-isPossibleServiceUtxo : Api.Data.Entity -> Bool
+isPossibleServiceUtxo : Api.Data.Cluster -> Bool
 isPossibleServiceUtxo =
     isPossibleService
 
 
-isPossibleService : Api.Data.Entity -> Bool
+isPossibleService : Api.Data.Cluster -> Bool
 isPossibleService cluster =
     let
         maxClusterSizeUser =

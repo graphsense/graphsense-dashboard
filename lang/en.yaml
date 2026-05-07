@@ -52,8 +52,8 @@ value_usd: USD
 timestamp_utc: DateTime (UTC)
 receiving_address: To
 sending_address: From
-no_inputs: Inputs
-no_outputs: Outputs
+inputs: Inputs
+outputs: Outputs
 total_input: Total input amount
 total_output: Total output amount
 success_download_csv: Downloaded {0} data rows as CSV
@@ -333,6 +333,7 @@ popup-address-not-found-typos: there are typos
 token-transactions-of: token transactions of {0} ({1})
 actor: Actor
 actors: Actors
+Recent searches: Recent searches
 other Links: Other Links
 social: Social
 jurisdictions: Jurisdictions
@@ -547,4 +548,16 @@ filter-follow-utxo: follow UTXO
 filter-none-selected: none selected 
 filter-utxo-only: UTXO only
 tx-filter-utxo-only-tooltip: Only list transactions which are referencing the selected transaction on a UTXO level
+tx-filter-quickfilter-tooltip: Automatically filter by transaction nodes in the graph
 retrying {0}/{1}: retrying {0}/{1}
+transaction-table-trace-further-button: Continue search
+transaction-table-trace-further-title: No transaction found yet
+transaction-table-trace-further: No UTXO-linked transaction found which has other inputs than the selected address by tracing over {0} hops. Do you want to look further?
+transaction-tracing-not-possible: Transaction tracing not possible
+no-adjacent-tx-between-addresses: Could not find a suitable adjacent transaction between address {0} and {1}.
+could-not-link-neighbor-address: Could not link neighbor address
+max-change-hops-reached: Could not find a adjacent transaction for address {0} which is not just change for {1} hops. Please try again to look further.
+transaction-tracing-across-change: Transaction tracing across change
+hint-auto-trace-title: Auto trace funds
+hint-auto-trace-description: Follow the money by automatically finding the next transaction (on UTXO-level if supported by ledger)
+tooltip-opens-pubkey-related-addresses-table: Addresses in other cryptocurrencies linked by the same public key. Click to open the corresponding table below.
