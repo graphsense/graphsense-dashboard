@@ -577,3 +577,4 @@ max-change-hops-reached: Keine benachbarte Transaktion für Adresse {0} gefunden
 transaction-tracing-across-change: Transaktionsverfolgung über Changes
 hint-auto-trace-title: Vermögenswerte automatisch verfolgen
 hint-auto-trace-description: Verfolgen Sie Vermögenswerte, indem Sie automatisch die nächste Transaktion finden (auf UTXO-Ebene, falls vom Ledger unterstützt)
+tooltip-opens-pubkey-related-addresses-table: Adressen in anderen Crytpo-Währungen, die über denselben öffentlichen Schlüssel verknüpft sind. Klicken, um die entsprechende Tabelle unterhalb zu öffnen.

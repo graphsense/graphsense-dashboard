@@ -603,3 +603,4 @@ max-change-hops-reached: Impossibile trovare una transazione adiacente per l'ind
 transaction-tracing-across-change: Tracciamento transazione attraverso il resto
 hint-auto-trace-title: Traccia fondi automaticamente
 hint-auto-trace-description: Segui i soldi trovando automaticamente la prossima transazione (a livello UTXO se supportato dal ledger)
+tooltip-opens-pubkey-related-addresses-table: Indirizzi in altre criptovalute collegati dalla stessa chiave pubblica. Fare clic per aprire la tabella corrispondente di seguito.

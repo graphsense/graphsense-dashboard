@@ -1166,19 +1166,22 @@ tagsList vc model id =
 
 
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg
-learnMoreButton vc id =
-    Button.defaultConfig
-        |> Rs.s_text "learn more"
-        |> Rs.s_onClick (Just (Pathfinder.UserOpensDialogWindow (TagsList id)))
-        |> Button.linkButtonBlue vc
+learnMoreButton _ id =
+    Pathfinder.UserOpensDialogWindow (TagsList id)
+        |> Button.threeDots []
 
 
 crosschainMoreInfoButton : View.Config -> Id -> Html Pathfinder.Msg
 crosschainMoreInfoButton vc id =
-    Button.defaultConfig
-        |> Rs.s_text "learn more"
-        |> Rs.s_onClick (Just (Pathfinder.AddressDetailsMsg id AddressDetails.UserClickedShowPubkeyRelatedAddresses))
-        |> Button.linkButtonBlue vc
+    Pathfinder.AddressDetailsMsg id AddressDetails.UserClickedShowPubkeyRelatedAddresses
+        |> Button.threeDots
+            (Locale.string vc.locale "tooltip-opens-pubkey-related-addresses-table"
+                |> Util.TooltipType.Text
+                |> Tooltip.attributes "more-info-crosschain"
+                    (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg
+                        |> Tooltip.withOpenDelay 500
+                    )
+            )
 
 
 crosschainLedgerTargets : Id -> Address -> List ( String, Id )

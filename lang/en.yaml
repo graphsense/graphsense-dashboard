@@ -560,3 +560,4 @@ max-change-hops-reached: Could not find a adjacent transaction for address {0} w
 transaction-tracing-across-change: Transaction tracing across change
 hint-auto-trace-title: Auto trace funds
 hint-auto-trace-description: Follow the money by automatically finding the next transaction (on UTXO-level if supported by ledger)
+tooltip-opens-pubkey-related-addresses-table: Addresses in other cryptocurrencies linked by the same public key. Click to open the corresponding table below.

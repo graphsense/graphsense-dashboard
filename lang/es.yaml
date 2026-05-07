@@ -581,3 +581,4 @@ max-change-hops-reached: No se encontró una transacción adyacente para la dire
 transaction-tracing-across-change: Seguimiento de transacción a través de cambio
 hint-auto-trace-title: Rastrear fondos automáticamente
 hint-auto-trace-description: Siga el dinero encontrando automáticamente la próxima transacción (a nivel UTXO si el ledger lo admite)
+tooltip-opens-pubkey-related-addresses-table: Direcciones en otras criptomonedas vinculadas por la misma clave pública. Haga clic para abrir la tabla correspondiente a continuación.

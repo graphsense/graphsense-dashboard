@@ -1,4 +1,4 @@
-module View.Button exposing (BtnConfig, actorLink, button, buttonWithAttributes, defaultConfig, linkButtonBlue, linkButtonUnderlinedGray, primaryButton, primaryButtonGreen, secondaryButton, tool)
+module View.Button exposing (BtnConfig, actorLink, button, buttonWithAttributes, defaultConfig, linkButtonBlue, linkButtonUnderlinedGray, primaryButton, primaryButtonGreen, secondaryButton, threeDots, tool)
 
 import Config.View as View
 import Css
@@ -11,9 +11,10 @@ import Json.Decode as Json
 import RecordSetter as Rs
 import Route exposing (toUrl)
 import Route.Graph as Route
-import Theme.Colors
+import Theme.Colors as Colors
 import Theme.Html.Buttons as Buttons
-import Util.Css
+import Theme.Html.Icons as Icons
+import Util.Css exposing (overrideBlack)
 import Util.View exposing (none, onClickWithStop, pointer)
 import View.Locale as Locale
 
@@ -118,7 +119,7 @@ buttonWithAttributes attr vc btn =
         style =
             ((Css.paddingTop <| Css.px 2)
                 :: (if btn.disabled then
-                        [ Util.Css.overrideBlack Theme.Colors.greyBlue100 ]
+                        [ Util.Css.overrideBlack Colors.greyBlue100 ]
 
                     else
                         []
@@ -176,13 +177,13 @@ primaryButtonGreen : View.Config -> BtnConfig msg -> Html msg
 primaryButtonGreen vc btn =
     buttonWithAttributes
         { root =
-            [ Css.property "background-color" Theme.Colors.green300
+            [ Css.property "background-color" Colors.green300
                 |> Css.important
             ]
                 |> css
                 |> List.singleton
         , button =
-            [ Css.property "color" Theme.Colors.grey900
+            [ Css.property "color" Colors.grey900
                 |> Css.important
             ]
                 |> css
@@ -230,3 +231,23 @@ onEnterOrSpacebar onEnterAction =
                     Json.fail (String.fromInt keyCode)
             )
             keyCode
+
+
+threeDots : List (Attribute msg) -> msg -> Html msg
+threeDots attrs msg =
+    Icons.iconsMoreHorizWithAttributes
+        (Icons.iconsMoreHorizAttributes
+            |> Rs.s_root
+                ([ msg
+                    |> onClick
+                 , pointer
+                 , css
+                    [ overrideBlack Colors.grey300
+                    , Css.hover
+                        [ overrideBlack Colors.grey900 ]
+                    ]
+                 ]
+                    ++ attrs
+                )
+        )
+        {}
