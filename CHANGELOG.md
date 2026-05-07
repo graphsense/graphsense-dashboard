@@ -9,20 +9,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Expand a transaction directly from the inputs/outputs table (with expand icon and keyboard shortcut)
-- Auto-expand of UTXO-linked transactions, with continue-finding info box
-- Recent searches
+- Auto-expand of UTXO-linked transactions, add continue-finding info box, to continue skip chains 
+- 10 last recent changes are now saved and displayed
 - Automatic retry for failed requests, with retry status shown in the status bar
 - New transaction filter component with timestamp display and info icon
 - New tooltip/hovercard component, plus a plugin tooltip interface
 - Legend item for auto-tracing
-- Auto-focus of address/tx input field
+- Auto-focus of Search field on entering empty pathfinder
 
 ### Changed
 
 - Inputs/outputs table is now infinitely scrollable
 - Renamed "Sending/receiving addresses" to "Inputs/Outputs"
-- Retired `/entities/` endpoints in favor of `/clusters/`
-- UTXO-only mode by default
+- Retired `/entities/` endpoints in favor of `/clusters/` -> backend deprecations
 - Clicking a cross-chain address moves the graph to the added address
 - Cross-ledger list shows a "more info" button that opens the public key table; collapsed cross-chain entries show three dots with a tooltip
 - Keep multi-selection when ctrl+clicking the graph background; ctrl+click on an already-selected tx/address toggles it
