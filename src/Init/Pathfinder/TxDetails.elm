@@ -1,14 +1,17 @@
 module Init.Pathfinder.TxDetails exposing (dummyIoTableConfig, init, initIoTable, initSubTxTable)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.TransactionFilter as TransactionFilter
 import Effect.Pathfinder exposing (Effect(..))
+import IntDict
 import Model.Pathfinder.Table.IoTable as IoTable exposing (titleValue)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
 import Msg.Pathfinder.TxDetails exposing (IoDirection(..))
 import RemoteData
+import Tuple exposing (pair)
 import Tuple3
 import Util.Data exposing (negateTxValue)
 
@@ -76,6 +79,14 @@ init txsFilter assets tx =
     , outputsTableOpen = False
     , inputsTable = initIoTable "inputsTable" Inputs inputs
     , outputsTable = initIoTable "outputsTable" Outputs outputs
+    , inputsRefs =
+        inputs
+            |> List.filterMap (.index >> Maybe.map (flip pair RemoteData.Loading))
+            |> IntDict.fromList
+    , outputsRefs =
+        outputs
+            |> List.filterMap (.index >> Maybe.map (flip pair RemoteData.Loading))
+            |> IntDict.fromList
     , tx = tx
     , baseTx = RemoteData.NotAsked
     , subTxsTable = initSubTxTable

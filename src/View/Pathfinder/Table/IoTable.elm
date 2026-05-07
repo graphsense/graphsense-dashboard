@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, config)
+module View.Pathfinder.Table.IoTable exposing (IoColumnConfig, TxValueRefsData, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -9,16 +9,18 @@ import Config.View as View
 import Css
 import Css.Table exposing (Styles)
 import Css.View
-import Html.Styled exposing (span)
+import Html.Styled exposing (div, span)
 import Html.Styled.Attributes exposing (css, style, title)
+import Html.Styled.Events exposing (onClick)
 import Model.Currency exposing (assetFromBase)
-import Model.Direction
+import Model.Direction as Direction
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Table.IoTable exposing (titleValue)
 import Model.Pathfinder.Tx exposing (ioToId)
 import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
 import RecordSetter as Rs
+import RemoteData exposing (RemoteData(..))
 import Sha256
 import Table
 import Theme.Colors as Colors
@@ -28,23 +30,60 @@ import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenc
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.Tooltip
 import Util.TooltipType as TooltipType
-import Util.View exposing (copyIconPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, loadingSpinner, none, pointer, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as PathfinderInfiniteTable
 import View.Pathfinder.PagedTable exposing (customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders, setHeaderCheckbox, wrapCell)
 
 
+type alias TxValueRefsData =
+    RemoteData String (List Api.Data.TxRef)
+
+
 type alias IoColumnConfig =
     { network : String
     , hasTags : Id -> HavingTags
     , getChangeInfo : Api.Data.TxValue -> Maybe { confidence : Float, heuristics : List String }
+    , getRefs : Maybe Int -> Maybe TxValueRefsData
     }
 
 
 config : Styles -> View.Config -> IoDirection -> (Id -> Bool) -> Bool -> IoColumnConfig -> InfiniteTable.TableConfig Api.Data.TxValue Msg
 config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
     let
+        loadingIcon_ =
+            div
+                [ Locale.string vc.locale "Loading references" |> title
+                , css
+                    [ Css.position Css.relative
+                    , Icons.iconsNodeOpenRightStateActiv_details.width
+                        |> Css.px
+                        |> Css.width
+                    , Icons.iconsNodeOpenRightStateActiv_details.height
+                        |> Css.px
+                        |> Css.height
+                    ]
+                ]
+                [ loadingSpinner vc
+                    (\_ ->
+                        [ Css.position Css.absolute
+                        , Icons.iconsNodeOpenRightStateActivBackground_details.height
+                            |> Css.px
+                            |> Css.height
+                        , Icons.iconsNodeOpenRightStateActivBackground_details.width
+                            |> Css.px
+                            |> Css.width
+                        , Icons.iconsNodeOpenRightStateActivBackground_details.x
+                            |> Css.px
+                            |> Css.left
+                        , Icons.iconsNodeOpenRightStateActivBackground_details.y
+                            |> Css.px
+                            |> Css.top
+                        ]
+                    )
+                ]
+
         styles_ =
             styles
                 |> Rs.s_headCell
@@ -68,10 +107,10 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
         direction =
             case ioDirection of
                 Inputs ->
-                    Model.Direction.Outgoing
+                    Direction.Outgoing
 
                 Outputs ->
-                    Model.Direction.Incoming
+                    Direction.Incoming
 
         allCheckedMsg =
             UserClickedAllIoTableCheckboxes direction
@@ -106,6 +145,60 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
             (\_ -> assetFromBase network)
             titleValue
             .value
+        , PT.htmlColumn vc
+            ""
+            { html =
+                \txValue ->
+                    case ioToId network txValue of
+                        Nothing ->
+                            none
+
+                        Just id ->
+                            case txValue.index of
+                                Nothing ->
+                                    none
+
+                                Just index ->
+                                    let
+                                        refs =
+                                            ioColumnConfig.getRefs (Just index)
+
+                                        attrs =
+                                            [ UserClickedIoTableExpand id (Direction.flip direction) index
+                                                |> onClick
+                                            , pointer
+                                            ]
+
+                                        expandIcon =
+                                            Icons.iconsNodeOpenRightWithAttributes
+                                                (Icons.iconsNodeOpenRightAttributes
+                                                    |> Rs.s_root attrs
+                                                )
+                                                { root =
+                                                    { state = Icons.IconsNodeOpenRightStateActiv
+                                                    }
+                                                }
+                                    in
+                                    case refs of
+                                        Nothing ->
+                                            none
+
+                                        Just NotAsked ->
+                                            none
+
+                                        Just Loading ->
+                                            loadingIcon_
+
+                                        Just (Success refsList) ->
+                                            if List.isEmpty refsList then
+                                                none
+
+                                            else
+                                                expandIcon
+
+                                        Just (Failure _) ->
+                                            none
+            }
         ]
     , customizations = cc
     , tag = IoTableMsg ioDirection

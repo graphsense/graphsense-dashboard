@@ -13,6 +13,9 @@ shallPushHistory plugins msg _ =
         InternalConversionLoopAddressesLoaded _ ->
             False
 
+        InternalExpandSpecificTxAndAddress _ _ _ _ ->
+            False
+
         EventualMessagesHeartBeat ->
             False
 
@@ -273,6 +276,9 @@ shallPushHistory plugins msg _ =
             False
 
         UserClickedAddressExpandHandle _ _ ->
+            True
+
+        UserClickedAddressExpandHandleInIoTable _ _ _ _ ->
             True
 
         UserClickedAddress _ ->

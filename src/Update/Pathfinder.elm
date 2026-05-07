@@ -1659,6 +1659,50 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
+        UserClickedAddressExpandHandleInIoTable txId addressId direction index ->
+            if Network.hasAddress addressId model.network then
+                ( model, [ InternalEffect (InternalExpandSpecificTxAndAddress txId addressId direction index) ] )
+
+            else
+                let
+                    ( eventualMessagesNew, mcmd ) =
+                        model.eventualMessages
+                            |> EventualMessages.addMessage
+                                (Network.AddressIsLoaded addressId)
+                                (InternalExpandSpecificTxAndAddress txId addressId direction index)
+
+                    getAddressEffect =
+                        InternalEffect
+                            (UserClickedAddressCheckboxInTable addressId)
+
+                    cmdEffect =
+                        mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []
+                in
+                ( model
+                    |> s_eventualMessages eventualMessagesNew
+                , getAddressEffect :: cmdEffect
+                )
+
+        InternalExpandSpecificTxAndAddress txId addressId direction index ->
+            Dict.get txId model.network.txs
+                |> Maybe.andThen (Tx.getUtxoTx >> Maybe.map .raw)
+                |> Maybe.map
+                    (\utxo ->
+                        let
+                            config =
+                                { addressId = addressId
+                                , direction = direction
+                                , indexSelection = WorkflowNextUtxoTx.Specific index
+                                }
+                        in
+                        WorkflowNextUtxoTx.start config utxo
+                            |> Workflow.mapEffect (WorkflowNextUtxoTx config Nothing)
+                            |> Workflow.next
+                            |> List.map ApiEffect
+                            |> pair model
+                    )
+                |> Maybe.withDefault (n model)
+
         UserPressedArrowKey direction ->
             case model.selection of
                 SelectedAddress id ->
@@ -3550,7 +3594,7 @@ expandAddress address direction model =
                 config =
                     { addressId = id
                     , direction = direction
-                    , allowMultiple = False
+                    , indexSelection = WorkflowNextUtxoTx.BiggestByValue
                     }
               in
               WorkflowNextUtxoTx.start config tx
@@ -3716,7 +3760,7 @@ getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } ne
                                 config =
                                     { addressId = addressId
                                     , direction = direction
-                                    , allowMultiple = False
+                                    , indexSelection = WorkflowNextUtxoTx.BiggestByValue
                                     }
                             in
                             WorkflowNextUtxoTx.start config t.raw

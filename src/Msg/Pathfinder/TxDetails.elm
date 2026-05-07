@@ -23,10 +23,12 @@ type Msg
     | UserClickedIoTableAddress Id
     | UserClickedIoTableCheckbox Id
     | UserClickedAllIoTableCheckboxes Direction
+    | UserClickedIoTableExpand Id Direction Int
     | BrowserGotBaseTx Api.Data.Tx
     | BrowserGotTxFlows (Maybe String) Api.Data.Txs
     | UserClickedToggleSubTxsTable
     | UserClickedTxInSubTxsTable Api.Data.TxAccount
+    | BrowserGotTxRefsForIoTable IoDirection Int (List Api.Data.TxRef)
     | TransactionFilterMsg TransactionFilter.Msg
     | TooltipMsg (Tooltip.Msg TooltipType)
     | NoOp

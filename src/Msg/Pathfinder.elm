@@ -90,6 +90,7 @@ type Msg
     | BrowserGotClusterTagsProbe Id Bool
     | BrowserGotTagSummaries Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedAddressExpandHandle Id Direction
+    | UserClickedAddressExpandHandleInIoTable Id Id Direction Int
     | UserClickedAddress Id
     | UserClickedCrosschainAddress Id
     | PluginMsg Plugin.Msg
@@ -156,6 +157,7 @@ type Msg
     | TransactionFilterMsg TransactionFilter.Msg
     | TooltipMsg (Tooltip.Msg TooltipType)
     | RepositionTooltip
+    | InternalExpandSpecificTxAndAddress Id Id Direction Int
 
 
 type alias TextTooltipConfig =

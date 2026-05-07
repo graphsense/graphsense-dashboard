@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, assetsCell, assetsColumnWithOptions, checkboxColumn, debitCreditColumn, initCustomHeaders, selectionIndicatorColumn, setHeaderCheckbox, setHeaderHtml, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, HtmlColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, assetsCell, assetsColumnWithOptions, checkboxColumn, debitCreditColumn, htmlColumn, initCustomHeaders, selectionIndicatorColumn, setHeaderCheckbox, setHeaderHtml, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -286,6 +286,23 @@ checkboxColumn _ name { isChecked, onClick, readonly } =
                         }
                         attrs
                     ]
+        , sorter = Table.unsortable
+        }
+
+
+type alias HtmlColumnConfig data msg =
+    { html : data -> Html msg
+    }
+
+
+htmlColumn : View.Config -> String -> HtmlColumnConfig data msg -> Table.Column data msg
+htmlColumn _ name { html } =
+    Table.veryCustomColumn
+        { name = name
+        , viewData =
+            \data ->
+                Table.HtmlDetails [ [ PCSS.mGap |> Css.padding, Css.verticalAlign Css.middle ] |> css ]
+                    [ html data ]
         , sorter = Table.unsortable
         }
 

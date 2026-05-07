@@ -8,12 +8,13 @@ import Components.TransactionFilter as TransactionFilter
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..), effectToTracker)
 import Init.Pathfinder.TxDetails exposing (dummyIoTableConfig)
+import IntDict exposing (IntDict)
 import Model.Pathfinder.Id as Id exposing (TxsFilterId(..))
 import Model.Pathfinder.Tx as Tx
-import Model.Pathfinder.TxDetails exposing (Model, hasSubTxsTable)
+import Model.Pathfinder.TxDetails exposing (Model, TxValueRefsData, hasSubTxsTable)
 import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
-import RecordSetter exposing (s_baseTx, s_state, s_subTxsTable)
+import RecordSetter exposing (s_baseTx, s_inputsRefs, s_inputsTable, s_inputsTableOpen, s_outputsRefs, s_outputsTable, s_outputsTableOpen, s_state, s_subTxsTable)
 import RemoteData
 import Tuple exposing (mapFirst, mapSecond, pair)
 import Util exposing (and, n)
@@ -113,7 +114,7 @@ update msg model =
 
         TransactionFilterMsg subMsg ->
             let
-                ( newFilter, eff ) =
+                ( newFilter, _ ) =
                     TransactionFilter.update subMsg model.subTxsTableFilter
 
                 changed =
@@ -141,6 +142,19 @@ update msg model =
                             |> Maybe.map RemoteData.Success
                             |> Maybe.withDefault RemoteData.NotAsked
                 }
+
+        BrowserGotTxRefsForIoTable ioDirection index refs ->
+            let
+                { refsGet, refsSet } =
+                    gettersAndSetters ioDirection
+
+                updatedModel =
+                    IntDict.insert index
+                        (RemoteData.Success refs)
+                        (refsGet model)
+                        |> flip refsSet model
+            in
+            n updatedModel
 
         BrowserGotTxFlows fetchedPage txs ->
             let
@@ -182,6 +196,13 @@ update msg model =
         UserClickedAllIoTableCheckboxes direction ->
             ( model, [ InternalEffect (Pathfinder.UserClickedAllAddressCheckboxInTable direction) ] )
 
+        UserClickedIoTableExpand id direction index ->
+            let
+                txId =
+                    Tx.getTxIdForTx model.tx
+            in
+            ( model, [ InternalEffect (Pathfinder.UserClickedAddressExpandHandleInIoTable txId id direction index) ] )
+
         TooltipMsg tooltipMsgAsTooltipType ->
             ( model, [ InternalEffect (Pathfinder.TooltipMsg tooltipMsgAsTooltipType) ] )
 
@@ -204,15 +225,51 @@ update msg model =
                 ( pt, cmd, eff ) =
                     InfiniteTable.update dummyIoTableConfig m table
 
-                ( newTable, msgTag ) =
-                    if ioDir == Inputs then
-                        ( { model | inputsTable = pt }, IoTableMsg Inputs )
+                { tableGet, tableSet, refsGet, refsSet } =
+                    gettersAndSetters ioDir
 
-                    else
-                        ( { model | outputsTable = pt }, IoTableMsg Outputs )
+                txId =
+                    Tx.getTxIdForTx model.tx
+
+                refsEffect =
+                    case ioDir of
+                        Inputs ->
+                            Api.ListSpendingTxRefsEffect
+
+                        Outputs ->
+                            Api.ListSpentInTxRefsEffect
+
+                ( modelWithRefs, fetchEffects ) =
+                    tableGet model
+                        |> InfiniteTable.getPage
+                        |> List.filterMap .index
+                        |> List.filter
+                            (flip IntDict.get (refsGet model)
+                                >> Maybe.map (RemoteData.isSuccess >> not)
+                                >> Maybe.withDefault False
+                            )
+                        |> List.foldl
+                            (\index ( accRefs, accEffects ) ->
+                                ( IntDict.insert index RemoteData.Loading accRefs
+                                , (BrowserGotTxRefsForIoTable ioDir index
+                                    >> Pathfinder.TxDetailsMsg
+                                    |> refsEffect
+                                        { currency = Id.network txId
+                                        , txHash = Id.id txId
+                                        , index = Just index
+                                        }
+                                    |> Effect.Pathfinder.ApiEffect
+                                  )
+                                    :: accEffects
+                                )
+                            )
+                            ( refsGet model, [] )
+                        |> mapFirst (flip refsSet model)
             in
-            ( newTable
-            , CmdEffect (Cmd.map (msgTag >> Pathfinder.TxDetailsMsg) cmd) :: eff
+            ( tableSet pt modelWithRefs
+            , CmdEffect (Cmd.map (IoTableMsg ioDir >> Pathfinder.TxDetailsMsg) cmd)
+                :: eff
+                ++ fetchEffects
             )
 
         TableMsgSubTxTable m ->
@@ -244,3 +301,34 @@ update msg model =
 
             else
                 n model
+
+
+gettersAndSetters :
+    IoDirection
+    ->
+        { openGet : Model -> Bool
+        , openSet : Bool -> Model -> Model
+        , tableGet : Model -> InfiniteTable.Model Api.Data.TxValue
+        , tableSet : InfiniteTable.Model Api.Data.TxValue -> Model -> Model
+        , refsGet : Model -> IntDict TxValueRefsData
+        , refsSet : IntDict TxValueRefsData -> Model -> Model
+        }
+gettersAndSetters ioDir =
+    case ioDir of
+        Inputs ->
+            { openGet = .inputsTableOpen
+            , openSet = s_inputsTableOpen
+            , tableGet = .inputsTable
+            , tableSet = s_inputsTable
+            , refsGet = .inputsRefs
+            , refsSet = s_inputsRefs
+            }
+
+        Outputs ->
+            { openGet = .outputsTableOpen
+            , openSet = s_outputsTableOpen
+            , tableGet = .outputsTable
+            , tableSet = s_outputsTable
+            , refsGet = .outputsRefs
+            , refsSet = s_outputsRefs
+            }
