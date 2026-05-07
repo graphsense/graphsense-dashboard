@@ -1692,7 +1692,7 @@ updateByMsg plugins uc msg model =
                             config =
                                 { addressId = addressId
                                 , direction = direction
-                                , allowMultiple = False
+                                , indexSelection = WorkflowNextUtxoTx.BiggestByValue
                                 }
                         in
                         WorkflowNextUtxoTx.start config utxo
@@ -3594,7 +3594,7 @@ expandAddress address direction model =
                 config =
                     { addressId = id
                     , direction = direction
-                    , allowMultiple = False
+                    , indexSelection = WorkflowNextUtxoTx.BiggestByValue
                     }
               in
               WorkflowNextUtxoTx.start config tx
@@ -3760,7 +3760,7 @@ getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } ne
                                 config =
                                     { addressId = addressId
                                     , direction = direction
-                                    , allowMultiple = False
+                                    , indexSelection = WorkflowNextUtxoTx.BiggestByValue
                                     }
                             in
                             WorkflowNextUtxoTx.start config t.raw

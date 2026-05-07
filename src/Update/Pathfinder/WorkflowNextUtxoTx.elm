@@ -1,4 +1,4 @@
-module Update.Pathfinder.WorkflowNextUtxoTx exposing (Config, Error(..), Msg, Result, Workflow, start, update)
+module Update.Pathfinder.WorkflowNextUtxoTx exposing (Config, Error(..), IndexSelection(..), Msg, Result, Workflow, start, update)
 
 {-| Chain-walking auto-extension for UTXO transactions in the Pathfinder
 graph view.
@@ -77,15 +77,17 @@ missing leg.
 # Picking among multiple candidates
 
 When the current tx has more than one input (backward) or output
-(forward) involving the anchor, [`Config.allowMultiple`](#Config)
+(forward) involving the anchor, [`Config.indexSelection`](#Config)
 controls fan-out:
 
-  - `True`: follow every matching index — multiple HTTP requests in
+  - `AllMatching`: follow every matching index — multiple HTTP requests in
     parallel, each producing its own continuation chain. Used when the
     caller wants every reachable next tx.
-  - `False` (typical): pick exactly one. Forward prefers outputs the
-    consensus change-heuristic did NOT flag as change (i.e. the "real"
-    value flow), then biggest by value; backward picks biggest by value.
+  - `BiggestByValue`: pick exactly one — the biggest by value. Forward
+    prefers outputs the consensus change-heuristic did NOT flag as
+    change first, then falls back to biggest by value; backward picks
+    biggest by value.
+  - `Specific index`: pick exactly one — the specific index number provided.
 
 -}
 
@@ -107,20 +109,40 @@ maxHops =
     50
 
 
+{-| Strategy for picking which input/output index to follow when there are
+multiple candidates involving the anchor address.
+
+  - `AllMatching`: follow every matching index — multiple HTTP requests in
+    parallel, each producing its own continuation chain. Used when the
+    caller wants every reachable next tx.
+  - `BiggestByValue`: pick exactly one — the biggest by value. Forward
+    prefers outputs the consensus change-heuristic did NOT flag as
+    change first, then falls back to biggest by value; backward picks
+    biggest by value.
+  - `Specific index`: pick exactly one — the specific index number provided.
+
+-}
+type IndexSelection
+    = AllMatching
+    | BiggestByValue
+    | Specific Int
+
+
 {-| Workflow inputs.
 
   - `addressId` — the anchor address the user is expanding.
   - `direction` — `Outgoing` for forward (where did the anchor's value
     go?), `Incoming` for backward (where did the anchor's value come
     from?).
-  - `allowMultiple` — fan out to every matching index instead of picking
-    one. See module docs § "Picking among multiple candidates".
+  - `indexSelection` — strategy for picking which index to follow when
+    there are multiple candidates. See [`IndexSelection`](#IndexSelection)
+    and module docs § "Picking among multiple candidates".
 
 -}
 type alias Config =
     { addressId : Id
     , direction : Direction
-    , allowMultiple : Bool
+    , indexSelection : IndexSelection
     }
 
 
@@ -376,7 +398,7 @@ the workflow from emitting an empty effect list that would silently stall
 the loading state.
 
 The hop counter is incremented here, on dispatch (not on response), so a
-fan-out via `allowMultiple = True` still counts as one logical hop.
+fan-out via `AllMatching` still counts as one logical hop.
 
 -}
 continueWorkflow : Trail -> Config -> Api.Data.TxUtxo -> Workflow
@@ -430,8 +452,11 @@ continueWorkflow trail config tx =
 {-| Backward picker. Among the input values that include the anchor, pick
 which index(es) to follow back via `ListSpendingTxRefsEffect`.
 
-  - `allowMultiple = True`: every matching input.
-  - `allowMultiple = False`: the biggest by value (the "main" funding leg).
+The selection strategy is controlled by `config.indexSelection`:
+
+  - `AllMatching`: every matching input.
+  - `BiggestByValue`: the biggest by value (the "main" funding leg).
+  - `Specific n`: only the input at index `n` (if it matches the anchor).
 
 No consensus heuristic here — change classification only applies to
 outputs. Returns the raw `index` field where available, falling back to
@@ -439,28 +464,37 @@ the positional index in the list.
 
 -}
 findOwnAddressIoIndex : Config -> Maybe (List Api.Data.TxValue) -> List Int
-findOwnAddressIoIndex { addressId, allowMultiple } values =
+findOwnAddressIoIndex { addressId, indexSelection } values =
     let
         anchor =
             Id.id addressId
 
         matchesAnchor =
             .address >> List.member anchor
-    in
-    values
-        |> Maybe.withDefault []
-        |> List.indexedMap Tuple.pair
-        |> List.filter (Tuple.second >> matchesAnchor)
-        |> (if allowMultiple then
-                List.map (\( pos, v ) -> v.index |> Maybe.withDefault pos)
 
-            else
-                -- Pick the biggest input from the anchor by value. No consensus
-                -- to consider on the input side.
-                List.Extra.maximumBy (Tuple.second >> .value >> .value)
-                    >> Maybe.map (\( pos, v ) -> [ v.index |> Maybe.withDefault pos ])
-                    >> Maybe.withDefault []
-           )
+        indexedMatches =
+            values
+                |> Maybe.withDefault []
+                |> List.indexedMap Tuple.pair
+                |> List.filter (Tuple.second >> matchesAnchor)
+    in
+    case indexSelection of
+        AllMatching ->
+            indexedMatches |> List.map (\( pos, v ) -> v.index |> Maybe.withDefault pos)
+
+        BiggestByValue ->
+            -- Pick the biggest input from the anchor by value. No consensus
+            -- to consider on the input side.
+            indexedMatches
+                |> List.Extra.maximumBy (Tuple.second >> .value >> .value)
+                |> Maybe.map (\( pos, v ) -> [ v.index |> Maybe.withDefault pos ])
+                |> Maybe.withDefault []
+
+        Specific idx ->
+            -- Pick only the specific index if it matches the anchor
+            indexedMatches
+                |> List.filter (\( pos, v ) -> (v.index |> Maybe.withDefault pos) == idx)
+                |> List.map (\( pos, v ) -> v.index |> Maybe.withDefault pos)
 
 
 {-| Forward picker. Among the outputs that go to the anchor, pick which
@@ -472,12 +506,16 @@ distinct from change peeled back to self. If every anchor-output is
 flagged as change (typical pure peel-chain step), fall back to the full
 set.
 
-  - `allowMultiple = True`: every output in the chosen pool.
-  - `allowMultiple = False`: the biggest by value within the pool.
+The selection strategy is controlled by `config.indexSelection`:
+
+  - `AllMatching`: every output in the chosen pool.
+  - `BiggestByValue`: the biggest by value within the pool.
+  - `Specific n`: only the output at index `n` (if it matches the anchor
+    and is in the candidate pool).
 
 -}
 findOutgoingContinuationIndex : Config -> Api.Data.TxUtxo -> List Int
-findOutgoingContinuationIndex { addressId, allowMultiple } tx =
+findOutgoingContinuationIndex { addressId, indexSelection } tx =
     let
         anchor =
             Id.id addressId
@@ -510,12 +548,22 @@ findOutgoingContinuationIndex { addressId, allowMultiple } tx =
 
         toIndex ( pos, v ) =
             v.index |> Maybe.withDefault pos
-    in
-    if allowMultiple then
-        candidatePool |> List.map toIndex
 
-    else
-        candidatePool
-            |> List.Extra.maximumBy (Tuple.second >> .value >> .value)
-            |> Maybe.map (toIndex >> List.singleton)
-            |> Maybe.withDefault []
+        indexedPool =
+            candidatePool |> List.map (\( pos, v ) -> ( toIndex ( pos, v ), v ))
+    in
+    case indexSelection of
+        AllMatching ->
+            candidatePool |> List.map toIndex
+
+        BiggestByValue ->
+            candidatePool
+                |> List.Extra.maximumBy (Tuple.second >> .value >> .value)
+                |> Maybe.map (toIndex >> List.singleton)
+                |> Maybe.withDefault []
+
+        Specific idx ->
+            -- Pick only the specific index if it's in the candidate pool
+            indexedPool
+                |> List.filter (\( i, _ ) -> i == idx)
+                |> List.map Tuple.first

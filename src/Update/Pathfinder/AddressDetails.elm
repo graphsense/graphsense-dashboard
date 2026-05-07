@@ -121,7 +121,7 @@ fetchTransactionsWithPathfinderMsg msg txs addressId sorting pagesize nextpage =
                     config =
                         { addressId = addressId
                         , direction = dir
-                        , allowMultiple = True
+                        , indexSelection = WorkflowNextUtxoTx.AllMatching
                         }
                 in
                 WorkflowNextUtxoTx.start config raw
@@ -593,7 +593,7 @@ update uc msg model =
                                         config_ =
                                             { addressId = model.address.id
                                             , direction = data.direction
-                                            , allowMultiple = True
+                                            , indexSelection = WorkflowNextUtxoTx.AllMatching
                                             }
                                     in
                                     WorkflowNextUtxoTx.start config_ data.tx
