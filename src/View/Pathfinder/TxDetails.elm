@@ -309,7 +309,11 @@ utxo vc model id viewState tx =
                             )
                             { root =
                                 { title = Locale.string vc.locale "Inputs"
-                                , totalNumber = Locale.int vc.locale tx.raw.noInputs
+                                , totalNumber =
+                                    tx.raw.inputs
+                                        |> Maybe.map List.length
+                                        |> Maybe.withDefault tx.raw.noInputs
+                                        |> Locale.int vc.locale
                                 }
                             }
                     , disabled = tx.raw.noInputs == 0
@@ -342,7 +346,11 @@ utxo vc model id viewState tx =
                             )
                             { root =
                                 { title = Locale.string vc.locale "Outputs"
-                                , totalNumber = Locale.int vc.locale tx.raw.noOutputs
+                                , totalNumber =
+                                    tx.raw.outputs
+                                        |> Maybe.map List.length
+                                        |> Maybe.withDefault tx.raw.noOutputs
+                                        |> Locale.int vc.locale
                                 }
                             }
                     , disabled = tx.raw.noOutputs == 0
