@@ -421,6 +421,14 @@ update uc msg model =
                     )
                 |> RemoteData.withDefault (n nm)
 
+        UserClickedShowPubkeyRelatedAddresses ->
+            ( { model
+                | relatedAddressesTableOpen = True
+                , relatedAddressesVisibleTable = Just Pubkey
+              }
+            , []
+            )
+
         RelatedAddressesTableSubTableMsg pm ->
             (\rm ->
                 RelatedAddressesTable.updateTable

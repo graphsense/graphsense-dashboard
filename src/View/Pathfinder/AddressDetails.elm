@@ -103,7 +103,7 @@ utxo plugins pluginStates vc model id viewState address =
             not (List.isEmpty crosschainTargets)
 
         crosschainLedgersList =
-            crosschainTargets
+            (crosschainTargets
                 |> List.map
                     (\( network, targetId ) ->
                         div
@@ -118,6 +118,8 @@ utxo plugins pluginStates vc model id viewState address =
                                 }
                             ]
                     )
+            )
+                ++ [ crosschainMoreInfoButton vc id ]
 
         pluginTagsVisible =
             List.length pluginTagsList > 0
@@ -887,7 +889,7 @@ account plugins pluginStates vc model id viewState address =
             not (List.isEmpty crosschainTargets)
 
         crosschainLedgersList =
-            crosschainTargets
+            (crosschainTargets
                 |> List.map
                     (\( network, targetId ) ->
                         div
@@ -902,6 +904,8 @@ account plugins pluginStates vc model id viewState address =
                                 }
                             ]
                     )
+            )
+                ++ [ crosschainMoreInfoButton vc id ]
 
         pluginList =
             Plugin.addressSidePanelHeader plugins pluginStates vc address
@@ -1166,6 +1170,14 @@ learnMoreButton vc id =
     Button.defaultConfig
         |> Rs.s_text "learn more"
         |> Rs.s_onClick (Just (Pathfinder.UserOpensDialogWindow (TagsList id)))
+        |> Button.linkButtonBlue vc
+
+
+crosschainMoreInfoButton : View.Config -> Id -> Html Pathfinder.Msg
+crosschainMoreInfoButton vc id =
+    Button.defaultConfig
+        |> Rs.s_text "learn more"
+        |> Rs.s_onClick (Just (Pathfinder.AddressDetailsMsg id AddressDetails.UserClickedShowPubkeyRelatedAddresses))
         |> Button.linkButtonBlue vc
 
 

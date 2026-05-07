@@ -135,6 +135,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleDisplayAllTagsInDetails ->
                     False
 
+                AddressDetails.UserClickedShowPubkeyRelatedAddresses ->
+                    False
+
                 AddressDetails.TransactionsTableSubTableMsg _ ->
                     False
 

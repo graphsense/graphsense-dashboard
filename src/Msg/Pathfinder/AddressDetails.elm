@@ -36,6 +36,7 @@ type Msg
     | UserClickedToggleTotalSpentDetails
     | UserClickedToggleClusterDetailsOpen
     | UserClickedToggleDisplayAllTagsInDetails
+    | UserClickedShowPubkeyRelatedAddresses
     | TransactionsTableSubTableMsg InfiniteTable.Msg
     | NeighborsTableSubTableMsg Direction InfiniteTable.Msg
     | GotTxsForAddressDetails (Maybe String) Api.Data.AddressTxs
