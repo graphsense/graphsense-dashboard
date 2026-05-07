@@ -93,6 +93,18 @@ const app = Elm.Main.init(
 
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
+// Prevent default Ctrl+A behavior (select all text) since we handle it in Elm for Pathfinder
+// But allow default behavior when cursor is in an input field
+window.addEventListener('keydown', (evt) => {
+  if (evt.ctrlKey && evt.key === 'a') {
+    const activeElement = document.activeElement
+    const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
+    if (!isInputField) {
+      evt.preventDefault()
+    }
+  }
+})
+
 let isDirty = false
 
 window.onbeforeunload = (evt) => {

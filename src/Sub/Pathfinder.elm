@@ -86,6 +86,9 @@ toKeyUp keyValue =
         "z" ->
             UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
+        "a" ->
+            UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
+
         "y" ->
             UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
 

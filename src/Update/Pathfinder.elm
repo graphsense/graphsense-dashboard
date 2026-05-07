@@ -646,6 +646,21 @@ updateByMsg plugins uc msg model =
 
         UserReleasedNormalKey key ->
             case ( model.modPressed, key ) of
+                ( True, "a" ) ->
+                    let
+                        allAddresses =
+                            Dict.keys model.network.addresses
+                                |> List.map MSelectedAddress
+
+                        allTxs =
+                            Dict.keys model.network.txs
+                                |> List.map MSelectedTx
+
+                        allItems =
+                            allAddresses ++ allTxs
+                    in
+                    n (multiSelect model allItems False)
+
                 ( True, "z" ) ->
                     update plugins uc UserClickedUndo model
 
