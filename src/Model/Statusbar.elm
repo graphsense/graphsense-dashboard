@@ -1,4 +1,4 @@
-module Model.Statusbar exposing (Model, getMessage, loadingActorKey, loadingActorTagsKey, loadingAddressEntityKey, loadingAddressKey, loadingTransactionKey, searchNeighborsKey)
+module Model.Statusbar exposing (Model, getMessage, loadingActorKey, loadingActorTagsKey, loadingAddressEntityKey, loadingAddressKey, loadingTransactionKey, retryWarningKey, searchNeighborsKey)
 
 import Dict exposing (Dict)
 import Http
@@ -32,6 +32,18 @@ loadingActorTagsKey =
 loadingAddressEntityKey : String
 loadingAddressEntityKey =
     "Statusbar-loading-entity-for-address"
+
+
+{-| Log key for a one-line warning written each time a transient HTTP error
+triggers a retry. The entry is added with `error = Nothing` so it reuses the
+non-error log styling; `View.Statusbar` branches on this key to swap the icon
+for a warning glyph and to format the inner request description plus the
+retry counter. Values are encoded as
+`[ attempt, maxApiRetries, innerKey, innerValues... ]`.
+-}
+retryWarningKey : String
+retryWarningKey =
+    "Statusbar-retry-warning"
 
 
 {-| Statusbar state.

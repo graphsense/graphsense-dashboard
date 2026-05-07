@@ -593,6 +593,7 @@ filter-quick-filter: filtro veloce per transazione
 filter-custom-filter: filtro personalizzato
 filter-none-selected: nessuno selezionato
 retrying {0}/{1}: nuovo tentativo {0}/{1}
+about to retry: nuovo tentativo in corso
 transaction-table-trace-further-button: Continua tracciamento 
 transaction-table-trace-further-title: Nessuna transazione trovata ancora
 transaction-table-trace-further: Nessuna transazione collegata all'UTXO trovata con input diversi dall'indirizzo selezionato tracciando per {0} passaggi. Vuoi cercare ulteriormente?

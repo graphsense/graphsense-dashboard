@@ -567,6 +567,7 @@ filter-quick-filter: Schnellfilter per Transaktion
 filter-custom-filter: Benutzerdefinierter Filter
 filter-none-selected: keinen ausgewählt
 retrying {0}/{1}: erneuter Versuch {0}/{1}
+about to retry: starte neuen Versuch
 transaction-table-trace-further-button: Weitersuchen
 transaction-table-trace-further-title: Noch keine Transaktion gefunden
 transaction-table-trace-further: Nach {0} Hops keine UTXO-verknüpfte Transaktion gefunden, die andere Inputs als die ausgewählte Adresse enthält. Möchten Sie weiter suchen?

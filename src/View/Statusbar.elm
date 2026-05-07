@@ -106,6 +106,49 @@ messageString vc key values =
 
 log : View.Config -> List ( String, Int ) -> ( String, List String, Maybe Http.Error ) -> Html Msg
 log vc lastBlocks ( key, values, error ) =
+    if key == retryWarningKey then
+        retryWarningLog vc values
+
+    else
+        defaultLog vc lastBlocks ( key, values, error )
+
+
+retryWarningLog : View.Config -> List String -> Html Msg
+retryWarningLog vc values =
+    let
+        ( attemptStr, maxStr, ( innerKey, innerValues ) ) =
+            case values of
+                a :: m :: ik :: ivs ->
+                    ( a, m, ( ik, ivs ) )
+
+                _ ->
+                    ( "?", "?", ( "", [] ) )
+
+        retrySuffix =
+            " ("
+                ++ ([ attemptStr, maxStr ]
+                        |> Locale.interpolated vc.locale "retrying {0}/{1}"
+                   )
+                ++ ")"
+    in
+    div
+        [ Css.log vc True |> css
+        ]
+        [ FontAwesome.exclamationTriangle
+            |> FontAwesome.icon
+            |> Html.Styled.fromUnstyled
+            |> List.singleton
+            |> span [ Css.logIcon vc True |> css ]
+        , Locale.string vc.locale "about to retry"
+            ++ ": "
+            ++ messageString vc innerKey innerValues
+            ++ retrySuffix
+            |> text
+        ]
+
+
+defaultLog : View.Config -> List ( String, Int ) -> ( String, List String, Maybe Http.Error ) -> Html Msg
+defaultLog vc lastBlocks ( key, values, error ) =
     div
         [ Css.log vc (error == Nothing) |> css
         ]

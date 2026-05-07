@@ -432,7 +432,29 @@ update plugins uc msg model =
             in
             case retryPlan of
                 Just plan ->
-                    ( { model | statusbar = Statusbar.setRetry plan.key plan.attempt model.statusbar }
+                    let
+                        warningValues =
+                            Statusbar.getMessage plan.key model.statusbar
+                                |> Maybe.map
+                                    (\( innerKey, innerValues ) ->
+                                        [ String.fromInt plan.attempt
+                                        , String.fromInt maxApiRetries
+                                        , innerKey
+                                        ]
+                                            ++ innerValues
+                                    )
+                                |> Maybe.withDefault
+                                    [ String.fromInt plan.attempt
+                                    , String.fromInt maxApiRetries
+                                    , ""
+                                    ]
+
+                        newStatusbar =
+                            model.statusbar
+                                |> Statusbar.setRetry plan.key plan.attempt
+                                |> (\sb -> Statusbar.add sb Statusbar.retryWarningKey warningValues Nothing)
+                    in
+                    ( { model | statusbar = newStatusbar }
                     , [ delay plan.delayMs (BrowserRetryApiEffect plan.key plan.effect plan.attempt)
                             |> CmdEffect
                       ]
