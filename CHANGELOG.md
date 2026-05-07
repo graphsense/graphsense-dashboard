@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [26.05.0] - 2026-05-07
+
+### Added
+
+- Expand a transaction directly from the inputs/outputs table (with expand icon and keyboard shortcut)
+- Auto-expand of UTXO-linked transactions, with continue-finding info box
+- Recent searches
+- Automatic retry for failed requests, with retry status shown in the status bar
+- New transaction filter component with timestamp display and info icon
+- New tooltip/hovercard component, plus a plugin tooltip interface
+- Legend item for auto-tracing
+- Auto-focus of address/tx input field
+
+### Changed
+
+- Inputs/outputs table is now infinitely scrollable
+- Renamed "Sending/receiving addresses" to "Inputs/Outputs"
+- Retired `/entities/` endpoints in favor of `/clusters/`
+- UTXO-only mode by default
+- Clicking a cross-chain address moves the graph to the added address
+- Cross-ledger list shows a "more info" button that opens the public key table; collapsed cross-chain entries show three dots with a tooltip
+- Keep multi-selection when ctrl+clicking the graph background; ctrl+click on an already-selected tx/address toggles it
+- Display the actual length of inputs/outputs in transaction details
+- Tooltips stay open on hover and close on click; improved opening/closing delays
+- Improve max-change-hops message
+- Refined tag icon positioning and new info icon
+
+### Fixed
+
+- Stuck loading spinner on PDF export when the dialog is closed
+- Path coloring on reverse edges
+- Don't show change badge if the transaction is a coinjoin
+- Tooltip bug with multiple change outputs
+- Auto-expand getting stuck on self-loops
+- Transaction filter popup positioning
+- Tag summary handling without cluster
+- Handling of non-existent or broken actor images
+- Standalone Docker deployment
+- Codegen sanitization for names starting with a single lowercase letter
+- Several translation fixes
+
 ## [26.04.0] - 2026-04-02
 
 ### Added
