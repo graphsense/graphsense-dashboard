@@ -1374,7 +1374,7 @@ updateByMsg plugins uc msg model =
                                     List.filter isInBBoxAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
 
                                 modelS =
-                                    multiSelect model (selectedTxs ++ selectedAdr) False
+                                    multiSelect model (selectedTxs ++ selectedAdr) model.modPressed
                             in
                             n
                                 { modelS
