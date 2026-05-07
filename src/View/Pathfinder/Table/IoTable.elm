@@ -154,46 +154,50 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                             none
 
                         Just id ->
-                            let
-                                refs =
-                                    ioColumnConfig.getRefs txValue.index
-
-                                attrs =
-                                    [ Direction.flip direction
-                                        |> UserClickedIoTableExpand id
-                                        |> onClick
-                                    , pointer
-                                    ]
-
-                                expandIcon =
-                                    Icons.iconsNodeOpenRightWithAttributes
-                                        (Icons.iconsNodeOpenRightAttributes
-                                            |> Rs.s_root attrs
-                                        )
-                                        { root =
-                                            { state = Icons.IconsNodeOpenRightStateActiv
-                                            }
-                                        }
-                            in
-                            case refs of
+                            case txValue.index of
                                 Nothing ->
                                     none
 
-                                Just NotAsked ->
-                                    none
+                                Just index ->
+                                    let
+                                        refs =
+                                            ioColumnConfig.getRefs (Just index)
 
-                                Just Loading ->
-                                    loadingIcon_
+                                        attrs =
+                                            [ UserClickedIoTableExpand id (Direction.flip direction) index
+                                                |> onClick
+                                            , pointer
+                                            ]
 
-                                Just (Success refsList) ->
-                                    if List.isEmpty refsList then
-                                        none
+                                        expandIcon =
+                                            Icons.iconsNodeOpenRightWithAttributes
+                                                (Icons.iconsNodeOpenRightAttributes
+                                                    |> Rs.s_root attrs
+                                                )
+                                                { root =
+                                                    { state = Icons.IconsNodeOpenRightStateActiv
+                                                    }
+                                                }
+                                    in
+                                    case refs of
+                                        Nothing ->
+                                            none
 
-                                    else
-                                        expandIcon
+                                        Just NotAsked ->
+                                            none
 
-                                Just (Failure _) ->
-                                    none
+                                        Just Loading ->
+                                            loadingIcon_
+
+                                        Just (Success refsList) ->
+                                            if List.isEmpty refsList then
+                                                none
+
+                                            else
+                                                expandIcon
+
+                                        Just (Failure _) ->
+                                            none
             }
         ]
     , customizations = cc

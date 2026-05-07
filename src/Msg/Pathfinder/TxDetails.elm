@@ -23,7 +23,7 @@ type Msg
     | UserClickedIoTableAddress Id
     | UserClickedIoTableCheckbox Id
     | UserClickedAllIoTableCheckboxes Direction
-    | UserClickedIoTableExpand Id Direction
+    | UserClickedIoTableExpand Id Direction Int
     | BrowserGotBaseTx Api.Data.Tx
     | BrowserGotTxFlows (Maybe String) Api.Data.Txs
     | UserClickedToggleSubTxsTable

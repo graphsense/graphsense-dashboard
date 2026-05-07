@@ -196,12 +196,12 @@ update msg model =
         UserClickedAllIoTableCheckboxes direction ->
             ( model, [ InternalEffect (Pathfinder.UserClickedAllAddressCheckboxInTable direction) ] )
 
-        UserClickedIoTableExpand id direction ->
+        UserClickedIoTableExpand id direction index ->
             let
                 txId =
                     Tx.getTxIdForTx model.tx
             in
-            ( model, [ InternalEffect (Pathfinder.UserClickedAddressExpandHandleInIoTable txId id direction) ] )
+            ( model, [ InternalEffect (Pathfinder.UserClickedAddressExpandHandleInIoTable txId id direction index) ] )
 
         TooltipMsg tooltipMsgAsTooltipType ->
             ( model, [ InternalEffect (Pathfinder.TooltipMsg tooltipMsgAsTooltipType) ] )

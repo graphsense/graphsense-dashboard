@@ -1659,9 +1659,9 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        UserClickedAddressExpandHandleInIoTable txId addressId direction ->
+        UserClickedAddressExpandHandleInIoTable txId addressId direction index ->
             if Network.hasAddress addressId model.network then
-                ( model, [ InternalEffect (InternalExpandSpecificTxAndAddress txId addressId direction) ] )
+                ( model, [ InternalEffect (InternalExpandSpecificTxAndAddress txId addressId direction index) ] )
 
             else
                 let
@@ -1669,7 +1669,7 @@ updateByMsg plugins uc msg model =
                         model.eventualMessages
                             |> EventualMessages.addMessage
                                 (Network.AddressIsLoaded addressId)
-                                (InternalExpandSpecificTxAndAddress txId addressId direction)
+                                (InternalExpandSpecificTxAndAddress txId addressId direction index)
 
                     getAddressEffect =
                         InternalEffect
@@ -1683,7 +1683,7 @@ updateByMsg plugins uc msg model =
                 , getAddressEffect :: cmdEffect
                 )
 
-        InternalExpandSpecificTxAndAddress txId addressId direction ->
+        InternalExpandSpecificTxAndAddress txId addressId direction index ->
             Dict.get txId model.network.txs
                 |> Maybe.andThen (Tx.getUtxoTx >> Maybe.map .raw)
                 |> Maybe.map
@@ -1692,7 +1692,7 @@ updateByMsg plugins uc msg model =
                             config =
                                 { addressId = addressId
                                 , direction = direction
-                                , indexSelection = WorkflowNextUtxoTx.BiggestByValue
+                                , indexSelection = WorkflowNextUtxoTx.Specific index
                                 }
                         in
                         WorkflowNextUtxoTx.start config utxo
