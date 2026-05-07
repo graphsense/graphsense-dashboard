@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New tooltip/hovercard component, plus a plugin tooltip interface
 - Legend item for auto-tracing
 - Auto-focus of Search field on entering empty pathfinder
+- Ctrl+A shortcut to select all nodes on graph
 
 ### Changed
 
