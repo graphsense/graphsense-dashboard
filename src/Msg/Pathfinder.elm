@@ -91,6 +91,7 @@ type Msg
     | BrowserGotTagSummaries Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id
+    | UserClickedCrosschainAddress Id
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
     | NoOp

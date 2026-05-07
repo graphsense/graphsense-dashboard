@@ -278,6 +278,9 @@ shallPushHistory plugins msg _ =
         UserClickedAddress _ ->
             False
 
+        UserClickedCrosschainAddress _ ->
+            True
+
         NoOp ->
             False
 

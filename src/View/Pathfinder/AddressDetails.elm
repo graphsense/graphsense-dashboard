@@ -107,7 +107,7 @@ utxo plugins pluginStates vc model id viewState address =
                 |> List.map
                     (\( network, targetId ) ->
                         div
-                            [ onClick (Pathfinder.UserClickedAddress targetId)
+                            [ onClick (Pathfinder.UserClickedCrosschainAddress targetId)
                             , css [ Css.cursor Css.pointer ]
                             ]
                             [ TagsComponents.categoryTag

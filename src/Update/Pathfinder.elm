@@ -1692,6 +1692,9 @@ updateByMsg plugins uc msg model =
                     |> List.singleton
                 )
 
+        UserClickedCrosschainAddress id ->
+            loadAddress plugins False id model
+
         UserClickedAddressCheckboxInTable id ->
             userClickedAddressCheckboxInTable plugins id model
 
