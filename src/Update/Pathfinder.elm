@@ -1472,7 +1472,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserPushesLeftMouseButtonOnGraph coords ->
-            ( { model
+            { model
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
@@ -1480,12 +1480,16 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             NoDragging
-              }
-            , []
-            )
+            }
+                |> (if not model.modPressed && model.pointerTool == Select then
+                        unselect
+
+                    else
+                        n
+                   )
 
         UserPushesRightMouseButtonOnGraph coords ->
-            ( { model
+            { model
                 | pointerTool = Select
                 , dragging =
                     case ( model.dragging, model.transform.state ) of
@@ -1494,9 +1498,13 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             NoDragging
-              }
-            , []
-            )
+            }
+                |> (if not model.modPressed then
+                        unselect
+
+                    else
+                        n
+                   )
 
         UserPushesLeftMouseButtonOnAddress id coords ->
             ( { model
