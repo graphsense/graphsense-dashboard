@@ -17,15 +17,15 @@ type alias Model =
 
 type alias AddingAddress =
     { address : Maybe Api.Data.Address
-    , entity : Maybe Api.Data.Entity
-    , outgoing : Maybe (List Api.Data.NeighborEntity)
-    , incoming : Maybe (List Api.Data.NeighborEntity)
+    , entity : Maybe Api.Data.Cluster
+    , outgoing : Maybe (List Api.Data.NeighborCluster)
+    , incoming : Maybe (List Api.Data.NeighborCluster)
     , anchor : Maybe ( Bool, Id.AddressId )
     }
 
 
 type alias AddingEntity =
-    { entity : Maybe Api.Data.Entity
-    , outgoing : Maybe (List Api.Data.NeighborEntity)
-    , incoming : Maybe (List Api.Data.NeighborEntity)
+    { entity : Maybe Api.Data.Cluster
+    , outgoing : Maybe (List Api.Data.NeighborCluster)
+    , incoming : Maybe (List Api.Data.NeighborCluster)
     }

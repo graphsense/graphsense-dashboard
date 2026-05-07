@@ -8,7 +8,10 @@ import Data.Pathfinder.Id as Id
 import Data.Pathfinder.Network as Data
 import Dict
 import Expect exposing (Expectation)
+import Init.Pathfinder.Network as Init
 import Model.Direction exposing (Direction(..))
+import Model.Pathfinder.Address exposing (Txs(..))
+import Model.Pathfinder.Id as ModelId
 import Model.Pathfinder.Network exposing (FindPosition(..), Network)
 import Plugin.Update as Plugin
 import Test exposing (Test)
@@ -146,4 +149,60 @@ suite =
                     |> Network.addAddressWithPosition Plugin.empty config (NextTo ( Outgoing, Id.tx4 )) Id.address8
                     |> Tuple.second
                     |> equalCoords Data.one2TwoTxs2ThreeAddressesWithOverlapping
+        , Test.test "account self-loop tx + address added after: both incoming and outgoing Txs populated" <|
+            \_ ->
+                -- Regression test: when a self-loop account tx (sender == recipient)
+                -- is added to the network before the address, adding the address
+                -- must populate both incomingTxs and outgoingTxs. Previously only
+                -- one side was populated, which left the other side as TxsNotFetched
+                -- and caused the expand-handle spinner to get stuck forever (the
+                -- subsequent expand click's response was a no-op because the tx
+                -- was already in the network).
+                let
+                    selfTx =
+                        { contractCreation = Nothing
+                        , currency = ModelId.network Id.address1
+                        , fee = Nothing
+                        , fromAddress = ModelId.id Id.address1
+                        , height = 100
+                        , identifier = "selfloop-tx"
+                        , isExternal = Nothing
+                        , network = ModelId.network Id.address1
+                        , timestamp = 0
+                        , toAddress = ModelId.id Id.address1
+                        , tokenTxId = Nothing
+                        , txHash = "0xselfloop"
+                        , txType = "account"
+                        , value = Api.values
+                        }
+
+                    network =
+                        Init.init
+                            |> Network.addTx config (Api.Data.TxTxAccount selfTx)
+                            |> Tuple.second
+                            |> Network.addAddress Plugin.empty config Id.address1
+                            |> Tuple.second
+                in
+                case Dict.get Id.address1 network.addresses of
+                    Just a ->
+                        Expect.all
+                            [ \x ->
+                                case x.incomingTxs of
+                                    Txs _ ->
+                                        Expect.pass
+
+                                    _ ->
+                                        Expect.fail "incomingTxs should be Txs containing the self-loop tx"
+                            , \x ->
+                                case x.outgoingTxs of
+                                    Txs _ ->
+                                        Expect.pass
+
+                                    _ ->
+                                        Expect.fail "outgoingTxs should be Txs containing the self-loop tx"
+                            ]
+                            a
+
+                    Nothing ->
+                        Expect.fail "address was lost"
         ]

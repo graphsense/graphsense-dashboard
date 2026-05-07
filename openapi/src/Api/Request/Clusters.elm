@@ -13,7 +13,7 @@
 -}
 
 
-module Api.Request.Entities exposing (..)
+module Api.Request.Clusters exposing (..)
 
 import Api
 import Api.Data
@@ -22,8 +22,6 @@ import Dict
 import Http
 import Json.Decode
 import Json.Encode
-
-
 
 
 
@@ -172,25 +170,25 @@ makeKeyFromString str =
 
 
 
-getEntity : (String) -> (Int) -> Maybe (Bool) -> Maybe (Bool) -> Api.Request Api.Data.Entity
-getEntity currency_path entity_path excludeBestAddressTag_query includeActors_query =
+getCluster : (String) -> (Int) -> Maybe (Bool) -> Maybe (Bool) -> Api.Request Api.Data.Cluster
+getCluster currency_path cluster_path excludeBestAddressTag_query includeActors_query =
     Api.request
         "GET"
-        "/{currency}/entities/{entity}"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
+        "/{currency}/clusters/{cluster}"
+        [ ( "currency", identity currency_path ), ( "cluster", String.fromInt cluster_path ) ]
         [ ( "exclude_best_address_tag", Maybe.map ((\val -> if val then "true" else "false")) excludeBestAddressTag_query ), ( "include_actors", Maybe.map ((\val -> if val then "true" else "false")) includeActors_query ) ]
         []
         Nothing
-        Api.Data.entityDecoder
+        Api.Data.clusterDecoder
 
 
 
-listAddressTagsByEntity : (String) -> (Int) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTags
-listAddressTagsByEntity currency_path entity_path page_query pagesize_query =
+listAddressTagsByCluster : (String) -> (Int) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTags
+listAddressTagsByCluster currency_path cluster_path page_query pagesize_query =
     Api.request
         "GET"
-        "/{currency}/entities/{entity}/tags"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
+        "/{currency}/clusters/{cluster}/tags"
+        [ ( "currency", identity currency_path ), ( "cluster", String.fromInt cluster_path ) ]
         [ ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
@@ -198,25 +196,25 @@ listAddressTagsByEntity currency_path entity_path page_query pagesize_query =
 
 
 
-listEntityAddresses : (String) -> (Int) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.EntityAddresses
-listEntityAddresses currency_path entity_path page_query pagesize_query =
+listClusterAddresses : (String) -> (Int) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.ClusterAddresses
+listClusterAddresses currency_path cluster_path page_query pagesize_query =
     Api.request
         "GET"
-        "/{currency}/entities/{entity}/addresses"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
+        "/{currency}/clusters/{cluster}/addresses"
+        [ ( "currency", identity currency_path ), ( "cluster", String.fromInt cluster_path ) ]
         [ ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
-        Api.Data.entityAddressesDecoder
+        Api.Data.clusterAddressesDecoder
 
 
 
-listEntityLinks : (String) -> (Int) -> (Int) -> Maybe (Int) -> Maybe (Int) -> Maybe (Posix) -> Maybe (Posix) -> Maybe (Order_) -> Maybe (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.Links
-listEntityLinks currency_path entity_path neighbor_query minHeight_query maxHeight_query minDate_query maxDate_query order_query tokenCurrency_query page_query pagesize_query =
+listClusterLinks : (String) -> (Int) -> (Int) -> Maybe (Int) -> Maybe (Int) -> Maybe (Posix) -> Maybe (Posix) -> Maybe (Order_) -> Maybe (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.Links
+listClusterLinks currency_path cluster_path neighbor_query minHeight_query maxHeight_query minDate_query maxDate_query order_query tokenCurrency_query page_query pagesize_query =
     Api.request
         "GET"
-        "/{currency}/entities/{entity}/links"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
+        "/{currency}/clusters/{cluster}/links"
+        [ ( "currency", identity currency_path ), ( "cluster", String.fromInt cluster_path ) ]
         [ ( "neighbor", Just <| (String.fromInt) neighbor_query ), ( "min_height", Maybe.map (String.fromInt) minHeight_query ), ( "max_height", Maybe.map (String.fromInt) maxHeight_query ), ( "min_date", Maybe.map (Api.Time.dateTimeToString) minDate_query ), ( "max_date", Maybe.map (Api.Time.dateTimeToString) maxDate_query ), ( "order", Maybe.map (stringFromOrder_) order_query ), ( "token_currency", Maybe.map (identity) tokenCurrency_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
@@ -224,25 +222,25 @@ listEntityLinks currency_path entity_path neighbor_query minHeight_query maxHeig
 
 
 
-listEntityNeighbors : (String) -> (Int) -> (Direction) -> Maybe (List Int) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.NeighborEntities
-listEntityNeighbors currency_path entity_path direction_query onlyIds_query includeLabels_query excludeBestAddressTag_query includeActors_query page_query pagesize_query =
+listClusterNeighbors : (String) -> (Int) -> (Direction) -> Maybe (List Int) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.NeighborClusters
+listClusterNeighbors currency_path cluster_path direction_query onlyIds_query includeLabels_query excludeBestAddressTag_query includeActors_query page_query pagesize_query =
     Api.request
         "GET"
-        "/{currency}/entities/{entity}/neighbors"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
+        "/{currency}/clusters/{cluster}/neighbors"
+        [ ( "currency", identity currency_path ), ( "cluster", String.fromInt cluster_path ) ]
         [ ( "direction", Just <| (stringFromDirection) direction_query ), ( "only_ids", Maybe.map (String.join "," << List.map String.fromInt) onlyIds_query ), ( "include_labels", Maybe.map ((\val -> if val then "true" else "false")) includeLabels_query ), ( "exclude_best_address_tag", Maybe.map ((\val -> if val then "true" else "false")) excludeBestAddressTag_query ), ( "include_actors", Maybe.map ((\val -> if val then "true" else "false")) includeActors_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
-        Api.Data.neighborEntitiesDecoder
+        Api.Data.neighborClustersDecoder
 
 
 
-listEntityTxs : (String) -> (Int) -> Maybe (Direction) -> Maybe (Int) -> Maybe (Int) -> Maybe (Posix) -> Maybe (Posix) -> Maybe (Order_) -> Maybe (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTxs
-listEntityTxs currency_path entity_path direction_query minHeight_query maxHeight_query minDate_query maxDate_query order_query tokenCurrency_query page_query pagesize_query =
+listClusterTxs : (String) -> (Int) -> Maybe (Direction) -> Maybe (Int) -> Maybe (Int) -> Maybe (Posix) -> Maybe (Posix) -> Maybe (Order_) -> Maybe (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTxs
+listClusterTxs currency_path cluster_path direction_query minHeight_query maxHeight_query minDate_query maxDate_query order_query tokenCurrency_query page_query pagesize_query =
     Api.request
         "GET"
-        "/{currency}/entities/{entity}/txs"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
+        "/{currency}/clusters/{cluster}/txs"
+        [ ( "currency", identity currency_path ), ( "cluster", String.fromInt cluster_path ) ]
         [ ( "direction", Maybe.map (stringFromDirection) direction_query ), ( "min_height", Maybe.map (String.fromInt) minHeight_query ), ( "max_height", Maybe.map (String.fromInt) maxHeight_query ), ( "min_date", Maybe.map (Api.Time.dateTimeToString) minDate_query ), ( "max_date", Maybe.map (Api.Time.dateTimeToString) maxDate_query ), ( "order", Maybe.map (stringFromOrder_) order_query ), ( "token_currency", Maybe.map (identity) tokenCurrency_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
@@ -250,14 +248,13 @@ listEntityTxs currency_path entity_path direction_query minHeight_query maxHeigh
 
 
 
-searchEntityNeighbors : (String) -> (Int) -> (Direction) -> (Key) -> (List String) -> (Int) -> Maybe (Int) -> Maybe (Int) -> Api.Request (List Api.Data.SearchResultLevel1)
-searchEntityNeighbors currency_path entity_path direction_query key_query value_query depth_query breadth_query skipNumAddresses_query =
+searchClusterNeighbors : (String) -> (Int) -> (Direction) -> (Key) -> (List String) -> (Int) -> Maybe (Int) -> Maybe (Int) -> Api.Request (List Api.Data.SearchResultLevel1)
+searchClusterNeighbors currency_path cluster_path direction_query key_query value_query depth_query breadth_query skipNumAddresses_query =
     Api.request
         "GET"
-        "/{currency}/entities/{entity}/search"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
+        "/{currency}/clusters/{cluster}/search"
+        [ ( "currency", identity currency_path ), ( "cluster", String.fromInt cluster_path ) ]
         [ ( "direction", Just <| (stringFromDirection) direction_query ), ( "key", Just <| (stringFromKey) key_query ), ( "value", Just <| (String.join "," << List.map identity) value_query ), ( "depth", Just <| (String.fromInt) depth_query ), ( "breadth", Maybe.map (String.fromInt) breadth_query ), ( "skip_num_addresses", Maybe.map (String.fromInt) skipNumAddresses_query ) ]
         []
         Nothing
         (Json.Decode.list Api.Data.searchResultLevel1Decoder)
-

@@ -151,20 +151,26 @@ getAddressIdsInCluster cstrId n =
 
 listTxsForAddress : Network -> Id -> List ( Direction, Tx )
 listTxsForAddress network id =
+    -- Emits both (Incoming, tx) and (Outgoing, tx) when the address sits on
+    -- both sides of the tx (account self-loops). A single entry per side would
+    -- leave downstream folds (insertAddress, updateAddress, deleteAddress)
+    -- updating only one side of the address/tx link.
     network.txs
         |> Dict.values
-        |> List.filterMap
+        |> List.concatMap
             (\tx ->
-                if Tx.hasInput id tx then
-                    Just ( Incoming, tx )
-                    -- TODO: Revise for UTXO, depends on total flow not only if address is on the in side.
-                    -- TODO: Also a problem for Account self loops there we should emit an in and out for both
+                (if Tx.hasInput id tx then
+                    [ ( Incoming, tx ) ]
 
-                else if Tx.hasOutput id tx then
-                    Just ( Outgoing, tx )
+                 else
+                    []
+                )
+                    ++ (if Tx.hasOutput id tx then
+                            [ ( Outgoing, tx ) ]
 
-                else
-                    Nothing
+                        else
+                            []
+                       )
             )
 
 
@@ -172,17 +178,20 @@ listTxsForAddressByRaw : Network -> Id -> List ( Direction, Tx )
 listTxsForAddressByRaw network id =
     network.txs
         |> Dict.values
-        |> List.filterMap
+        |> List.concatMap
             (\tx ->
-                if Tx.isRawInFlow id tx then
-                    Just ( Incoming, tx )
-                    -- TODO: Revise for UTXO, depends on total flow not only if address is on the in side.
+                (if Tx.isRawInFlow id tx then
+                    [ ( Incoming, tx ) ]
 
-                else if Tx.isRawOutFlow id tx then
-                    Just ( Outgoing, tx )
+                 else
+                    []
+                )
+                    ++ (if Tx.isRawOutFlow id tx then
+                            [ ( Outgoing, tx ) ]
 
-                else
-                    Nothing
+                        else
+                            []
+                       )
             )
 
 

@@ -9,7 +9,7 @@ import Model.Graph.Tag as Tag
 type alias Deserializing =
     { deserialized : Deserialized
     , addresses : List Api.Data.Address
-    , entities : List Api.Data.Entity
+    , entities : List Api.Data.Cluster
     }
 
 

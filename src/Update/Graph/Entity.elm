@@ -41,7 +41,7 @@ addAddress : Plugins -> Update.Config -> Int -> Api.Data.Address -> Acc -> Acc
 addAddress plugins uc layerId address acc =
     let
         entityId =
-            Id.initEntityId { layer = layerId, currency = address.currency, id = address.entity }
+            Id.initEntityId { layer = layerId, currency = address.currency, id = address.cluster }
     in
     Dict.get entityId acc.entities
         |> Maybe.andThen (addAddressToEntity plugins uc address)

@@ -24,7 +24,7 @@ type OutMsg msg addressMsg entityMsg
       -- send addressMsg to all address nodes in the graph which match the one in `Address`
     | UpdateAddresses Address addressMsg
     | UpdateAddressesByRootAddress Address addressMsg
-    | UpdateAddressesByEntityPathfinder Api.Data.Entity addressMsg
+    | UpdateAddressesByEntityPathfinder Api.Data.Cluster addressMsg
       -- send entityMsg to the entity of all address nodes in the graph which match the one in `Address`
       -- core calls the `update.updateAddress` hook
     | UpdateAddressEntities Address entityMsg
@@ -37,9 +37,9 @@ type OutMsg msg addressMsg entityMsg
       -- push url to the browser history (updates the URL in the browser address bar)
     | PushUrl String
       -- retrieve entities for the given list of addresses
-    | GetEntitiesForAddresses (List Address) (List ( Address, Api.Data.Entity ) -> msg)
+    | GetEntitiesForAddresses (List Address) (List ( Address, Api.Data.Cluster ) -> msg)
       -- retrieve entities for the given list of entities
-    | GetEntities (List Entity) (List Api.Data.Entity -> msg)
+    | GetEntities (List Entity) (List Api.Data.Cluster -> msg)
       -- retrieve a serialized state of the graph
     | GetSerialized (Json.Encode.Value -> msg)
       -- load given value as deserialization of graph

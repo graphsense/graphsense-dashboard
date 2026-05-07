@@ -29,12 +29,12 @@ pagesize =
     25
 
 
-init : Id -> Api.Data.Entity -> Model
+init : Id -> Api.Data.Cluster -> Model
 init addressId entity =
     { table =
         InfiniteTable.init "relatedAddressesTable" pagesize
     , addressId = addressId
-    , entity = { currency = entity.currency, entity = entity.entity }
+    , entity = { currency = entity.currency, entity = entity.cluster }
     , existingTaggedAddresses = Set.empty
     , allTaggedAddressesFetched = False
     }

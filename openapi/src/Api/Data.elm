@@ -30,8 +30,8 @@ module Api.Data exposing
     , ConsensusEntry
     , CurrencyStats
     , DirectChangeHeuristic
-    , Entity
-    , EntityAddresses
+    , Cluster
+    , ClusterAddresses
     , ExternalConversion, ExternalConversionConversionType(..), externalConversionConversionTypeVariants
     , LabelSummary, LabelSummaryInheritedFrom(..), labelSummaryInheritedFromVariants
     , LabeledItemRef
@@ -41,8 +41,8 @@ module Api.Data exposing
     , MultiInputChangeHeuristic
     , NeighborAddress
     , NeighborAddresses
-    , NeighborEntities
-    , NeighborEntity
+    , NeighborClusters
+    , NeighborCluster
     , OneTimeChangeHeuristic
     , Rate
     , Rates
@@ -91,8 +91,8 @@ module Api.Data exposing
     , encodeConsensusEntry
     , encodeCurrencyStats
     , encodeDirectChangeHeuristic
-    , encodeEntity
-    , encodeEntityAddresses
+    , encodeCluster
+    , encodeClusterAddresses
     , encodeExternalConversion
     , encodeLabelSummary
     , encodeLabeledItemRef
@@ -102,8 +102,8 @@ module Api.Data exposing
     , encodeMultiInputChangeHeuristic
     , encodeNeighborAddress
     , encodeNeighborAddresses
-    , encodeNeighborEntities
-    , encodeNeighborEntity
+    , encodeNeighborClusters
+    , encodeNeighborCluster
     , encodeOneTimeChangeHeuristic
     , encodeRate
     , encodeRates
@@ -152,8 +152,8 @@ module Api.Data exposing
     , consensusEntryDecoder
     , currencyStatsDecoder
     , directChangeHeuristicDecoder
-    , entityDecoder
-    , entityAddressesDecoder
+    , clusterDecoder
+    , clusterAddressesDecoder
     , externalConversionDecoder
     , labelSummaryDecoder
     , labeledItemRefDecoder
@@ -163,8 +163,8 @@ module Api.Data exposing
     , multiInputChangeHeuristicDecoder
     , neighborAddressDecoder
     , neighborAddressesDecoder
-    , neighborEntitiesDecoder
-    , neighborEntityDecoder
+    , neighborClustersDecoder
+    , neighborClusterDecoder
     , oneTimeChangeHeuristicDecoder
     , rateDecoder
     , ratesDecoder
@@ -236,7 +236,7 @@ type alias Address =
     , address : String
     , balance : Values
     , currency : String
-    , entity : Int
+    , cluster : Int
     , firstTx : TxSummary
     , inDegree : Int
     , isContract : Maybe Bool
@@ -286,7 +286,7 @@ type alias AddressTag =
     , tagpackTitle : String
     , tagpackUri : Maybe String
     , address : String
-    , entity : Maybe Int
+    , cluster : Maybe Int
     }
 
 
@@ -467,12 +467,12 @@ type alias CurrencyStats =
     }
 
 
-type alias Entity =
+type alias Cluster =
     { actors : Maybe (List (LabeledItemRef))
     , balance : Values
     , bestAddressTag : Maybe AddressTag
     , currency : String
-    , entity : Int
+    , cluster : Int
     , firstTx : TxSummary
     , inDegree : Int
     , lastTx : TxSummary
@@ -490,7 +490,7 @@ type alias Entity =
     }
 
 
-type alias EntityAddresses =
+type alias ClusterAddresses =
     { addresses : List (Address)
     , nextPage : Maybe String
     }
@@ -596,14 +596,14 @@ type alias NeighborAddresses =
     }
 
 
-type alias NeighborEntities =
-    { neighbors : List (NeighborEntity)
+type alias NeighborClusters =
+    { neighbors : List (NeighborCluster)
     , nextPage : Maybe String
     }
 
 
-type alias NeighborEntity =
-    { entity : Entity
+type alias NeighborCluster =
+    { entity : Cluster
     , labels : Maybe (List (String))
     , noTxs : Int
     , tokenValues : Maybe (Dict.Dict String (Values))
@@ -662,48 +662,48 @@ type alias SearchResultByCurrency =
 
 type alias SearchResultLeaf =
     { matchingAddresses : List (Address)
-    , neighbor : NeighborEntity
+    , neighbor : NeighborCluster
     }
 
 
 type alias SearchResultLevel1 =
     { matchingAddresses : List (Address)
-    , neighbor : NeighborEntity
+    , neighbor : NeighborCluster
     , paths : List (SearchResultLevel2)
     }
 
 
 type alias SearchResultLevel2 =
     { matchingAddresses : List (Address)
-    , neighbor : NeighborEntity
+    , neighbor : NeighborCluster
     , paths : List (SearchResultLevel3)
     }
 
 
 type alias SearchResultLevel3 =
     { matchingAddresses : List (Address)
-    , neighbor : NeighborEntity
+    , neighbor : NeighborCluster
     , paths : List (SearchResultLevel4)
     }
 
 
 type alias SearchResultLevel4 =
     { matchingAddresses : List (Address)
-    , neighbor : NeighborEntity
+    , neighbor : NeighborCluster
     , paths : List (SearchResultLevel5)
     }
 
 
 type alias SearchResultLevel5 =
     { matchingAddresses : List (Address)
-    , neighbor : NeighborEntity
+    , neighbor : NeighborCluster
     , paths : List (SearchResultLevel6)
     }
 
 
 type alias SearchResultLevel6 =
     { matchingAddresses : List (Address)
-    , neighbor : NeighborEntity
+    , neighbor : NeighborCluster
     , paths : List (SearchResultLeaf)
     }
 
@@ -948,7 +948,7 @@ encodeAddressPairs model =
             , encode "address" Json.Encode.string model.address
             , encode "balance" encodeValues model.balance
             , encode "currency" Json.Encode.string model.currency
-            , encode "entity" Json.Encode.int model.entity
+            , encode "cluster" Json.Encode.int model.cluster
             , encode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
             , maybeEncode "is_contract" Json.Encode.bool model.isContract
@@ -1034,7 +1034,7 @@ encodeAddressTagPairs model =
             , encode "tagpack_title" Json.Encode.string model.tagpackTitle
             , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
             , encode "address" Json.Encode.string model.address
-            , maybeEncode "entity" Json.Encode.int model.entity
+            , maybeEncode "cluster" Json.Encode.int model.cluster
             ]
     in
     pairs
@@ -1544,25 +1544,25 @@ encodeCurrencyStatsPairs model =
     pairs
 
 
-encodeEntity : Entity -> Json.Encode.Value
-encodeEntity =
-    encodeObject << encodeEntityPairs
+encodeCluster : Cluster -> Json.Encode.Value
+encodeCluster =
+    encodeObject << encodeClusterPairs
 
 
-encodeEntityWithTag : ( String, String ) -> Entity -> Json.Encode.Value
-encodeEntityWithTag (tagField, tag) model =
-    encodeObject (encodeEntityPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeClusterWithTag : ( String, String ) -> Cluster -> Json.Encode.Value
+encodeClusterWithTag (tagField, tag) model =
+    encodeObject (encodeClusterPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeEntityPairs : Entity -> List EncodedField
-encodeEntityPairs model =
+encodeClusterPairs : Cluster -> List EncodedField
+encodeClusterPairs model =
     let
         pairs =
             [ maybeEncode "actors" (Json.Encode.list encodeLabeledItemRef) model.actors
             , encode "balance" encodeValues model.balance
             , maybeEncode "best_address_tag" encodeAddressTag model.bestAddressTag
             , encode "currency" Json.Encode.string model.currency
-            , encode "entity" Json.Encode.int model.entity
+            , encode "cluster" Json.Encode.int model.cluster
             , encode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
             , encode "last_tx" encodeTxSummary model.lastTx
@@ -1582,18 +1582,18 @@ encodeEntityPairs model =
     pairs
 
 
-encodeEntityAddresses : EntityAddresses -> Json.Encode.Value
-encodeEntityAddresses =
-    encodeObject << encodeEntityAddressesPairs
+encodeClusterAddresses : ClusterAddresses -> Json.Encode.Value
+encodeClusterAddresses =
+    encodeObject << encodeClusterAddressesPairs
 
 
-encodeEntityAddressesWithTag : ( String, String ) -> EntityAddresses -> Json.Encode.Value
-encodeEntityAddressesWithTag (tagField, tag) model =
-    encodeObject (encodeEntityAddressesPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeClusterAddressesWithTag : ( String, String ) -> ClusterAddresses -> Json.Encode.Value
+encodeClusterAddressesWithTag (tagField, tag) model =
+    encodeObject (encodeClusterAddressesPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeEntityAddressesPairs : EntityAddresses -> List EncodedField
-encodeEntityAddressesPairs model =
+encodeClusterAddressesPairs : ClusterAddresses -> List EncodedField
+encodeClusterAddressesPairs model =
     let
         pairs =
             [ encode "addresses" (Json.Encode.list encodeAddress) model.addresses
@@ -1852,42 +1852,42 @@ encodeNeighborAddressesPairs model =
     pairs
 
 
-encodeNeighborEntities : NeighborEntities -> Json.Encode.Value
-encodeNeighborEntities =
-    encodeObject << encodeNeighborEntitiesPairs
+encodeNeighborClusters : NeighborClusters -> Json.Encode.Value
+encodeNeighborClusters =
+    encodeObject << encodeNeighborClustersPairs
 
 
-encodeNeighborEntitiesWithTag : ( String, String ) -> NeighborEntities -> Json.Encode.Value
-encodeNeighborEntitiesWithTag (tagField, tag) model =
-    encodeObject (encodeNeighborEntitiesPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeNeighborClustersWithTag : ( String, String ) -> NeighborClusters -> Json.Encode.Value
+encodeNeighborClustersWithTag (tagField, tag) model =
+    encodeObject (encodeNeighborClustersPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeNeighborEntitiesPairs : NeighborEntities -> List EncodedField
-encodeNeighborEntitiesPairs model =
+encodeNeighborClustersPairs : NeighborClusters -> List EncodedField
+encodeNeighborClustersPairs model =
     let
         pairs =
-            [ encode "neighbors" (Json.Encode.list encodeNeighborEntity) model.neighbors
+            [ encode "neighbors" (Json.Encode.list encodeNeighborCluster) model.neighbors
             , maybeEncode "next_page" Json.Encode.string model.nextPage
             ]
     in
     pairs
 
 
-encodeNeighborEntity : NeighborEntity -> Json.Encode.Value
-encodeNeighborEntity =
-    encodeObject << encodeNeighborEntityPairs
+encodeNeighborCluster : NeighborCluster -> Json.Encode.Value
+encodeNeighborCluster =
+    encodeObject << encodeNeighborClusterPairs
 
 
-encodeNeighborEntityWithTag : ( String, String ) -> NeighborEntity -> Json.Encode.Value
-encodeNeighborEntityWithTag (tagField, tag) model =
-    encodeObject (encodeNeighborEntityPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeNeighborClusterWithTag : ( String, String ) -> NeighborCluster -> Json.Encode.Value
+encodeNeighborClusterWithTag (tagField, tag) model =
+    encodeObject (encodeNeighborClusterPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeNeighborEntityPairs : NeighborEntity -> List EncodedField
-encodeNeighborEntityPairs model =
+encodeNeighborClusterPairs : NeighborCluster -> List EncodedField
+encodeNeighborClusterPairs model =
     let
         pairs =
-            [ encode "entity" encodeEntity model.entity
+            [ encode "entity" encodeCluster model.entity
             , maybeEncode "labels" (Json.Encode.list Json.Encode.string) model.labels
             , encode "no_txs" Json.Encode.int model.noTxs
             , maybeEncode "token_values" (Json.Encode.dict identity encodeValues) model.tokenValues
@@ -2064,7 +2064,7 @@ encodeSearchResultLeafPairs model =
     let
         pairs =
             [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "neighbor" encodeNeighborCluster model.neighbor
             ]
     in
     pairs
@@ -2085,7 +2085,7 @@ encodeSearchResultLevel1Pairs model =
     let
         pairs =
             [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "neighbor" encodeNeighborCluster model.neighbor
             , encode "paths" (Json.Encode.list encodeSearchResultLevel2) model.paths
             ]
     in
@@ -2107,7 +2107,7 @@ encodeSearchResultLevel2Pairs model =
     let
         pairs =
             [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "neighbor" encodeNeighborCluster model.neighbor
             , encode "paths" (Json.Encode.list encodeSearchResultLevel3) model.paths
             ]
     in
@@ -2129,7 +2129,7 @@ encodeSearchResultLevel3Pairs model =
     let
         pairs =
             [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "neighbor" encodeNeighborCluster model.neighbor
             , encode "paths" (Json.Encode.list encodeSearchResultLevel4) model.paths
             ]
     in
@@ -2151,7 +2151,7 @@ encodeSearchResultLevel4Pairs model =
     let
         pairs =
             [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "neighbor" encodeNeighborCluster model.neighbor
             , encode "paths" (Json.Encode.list encodeSearchResultLevel5) model.paths
             ]
     in
@@ -2173,7 +2173,7 @@ encodeSearchResultLevel5Pairs model =
     let
         pairs =
             [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "neighbor" encodeNeighborCluster model.neighbor
             , encode "paths" (Json.Encode.list encodeSearchResultLevel6) model.paths
             ]
     in
@@ -2195,7 +2195,7 @@ encodeSearchResultLevel6Pairs model =
     let
         pairs =
             [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "neighbor" encodeNeighborCluster model.neighbor
             , encode "paths" (Json.Encode.list encodeSearchResultLeaf) model.paths
             ]
     in
@@ -2669,10 +2669,10 @@ addressDecoder =
         |> maybeDecode "actors" (Json.Decode.list labeledItemRefDecoder) Nothing
         |> decode "address" Json.Decode.string 
         |> decode "balance" valuesDecoder 
-        |> decode "currency" Json.Decode.string 
-        |> decode "entity" Json.Decode.int 
-        |> decode "first_tx" txSummaryDecoder 
-        |> decode "in_degree" Json.Decode.int 
+        |> decode "currency" Json.Decode.string
+        |> decode "cluster" Json.Decode.int
+        |> decode "first_tx" txSummaryDecoder
+        |> decode "in_degree" Json.Decode.int
         |> maybeDecode "is_contract" Json.Decode.bool Nothing
         |> decode "last_tx" txSummaryDecoder 
         |> decode "no_incoming_txs" Json.Decode.int 
@@ -2727,8 +2727,8 @@ addressTagDecoder =
         |> decode "tagpack_is_public" Json.Decode.bool 
         |> decode "tagpack_title" Json.Decode.string 
         |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
-        |> decode "address" Json.Decode.string 
-        |> maybeDecode "entity" Json.Decode.int Nothing
+        |> decode "address" Json.Decode.string
+        |> maybeDecode "cluster" Json.Decode.int Nothing
 
 
 addressTagInheritedFromDecoder : Json.Decode.Decoder AddressTagInheritedFrom
@@ -2841,34 +2841,34 @@ currencyStatsDecoder =
         |> decode "timestamp" Json.Decode.int 
 
 
-entityDecoder : Json.Decode.Decoder Entity
-entityDecoder =
-    Json.Decode.succeed Entity
+clusterDecoder : Json.Decode.Decoder Cluster
+clusterDecoder =
+    Json.Decode.succeed Cluster
         |> maybeDecode "actors" (Json.Decode.list labeledItemRefDecoder) Nothing
-        |> decode "balance" valuesDecoder 
+        |> decode "balance" valuesDecoder
         |> maybeDecode "best_address_tag" addressTagDecoder Nothing
-        |> decode "currency" Json.Decode.string 
-        |> decode "entity" Json.Decode.int 
-        |> decode "first_tx" txSummaryDecoder 
-        |> decode "in_degree" Json.Decode.int 
-        |> decode "last_tx" txSummaryDecoder 
-        |> decode "no_address_tags" Json.Decode.int 
-        |> decode "no_addresses" Json.Decode.int 
-        |> decode "no_incoming_txs" Json.Decode.int 
-        |> decode "no_outgoing_txs" Json.Decode.int 
-        |> decode "out_degree" Json.Decode.int 
-        |> decode "root_address" Json.Decode.string 
+        |> decode "currency" Json.Decode.string
+        |> decode "cluster" Json.Decode.int
+        |> decode "first_tx" txSummaryDecoder
+        |> decode "in_degree" Json.Decode.int
+        |> decode "last_tx" txSummaryDecoder
+        |> decode "no_address_tags" Json.Decode.int
+        |> decode "no_addresses" Json.Decode.int
+        |> decode "no_incoming_txs" Json.Decode.int
+        |> decode "no_outgoing_txs" Json.Decode.int
+        |> decode "out_degree" Json.Decode.int
+        |> decode "root_address" Json.Decode.string
         |> maybeDecode "token_balances" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
-        |> decode "total_received" valuesDecoder 
-        |> decode "total_spent" valuesDecoder 
+        |> decode "total_received" valuesDecoder
+        |> decode "total_spent" valuesDecoder
         |> maybeDecode "total_tokens_received" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
         |> maybeDecode "total_tokens_spent" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
 
 
-entityAddressesDecoder : Json.Decode.Decoder EntityAddresses
-entityAddressesDecoder =
-    Json.Decode.succeed EntityAddresses
-        |> decode "addresses" (Json.Decode.list addressDecoder) 
+clusterAddressesDecoder : Json.Decode.Decoder ClusterAddresses
+clusterAddressesDecoder =
+    Json.Decode.succeed ClusterAddresses
+        |> decode "addresses" (Json.Decode.list addressDecoder)
         |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
@@ -3006,17 +3006,17 @@ neighborAddressesDecoder =
         |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
-neighborEntitiesDecoder : Json.Decode.Decoder NeighborEntities
-neighborEntitiesDecoder =
-    Json.Decode.succeed NeighborEntities
-        |> decode "neighbors" (Json.Decode.list neighborEntityDecoder) 
+neighborClustersDecoder : Json.Decode.Decoder NeighborClusters
+neighborClustersDecoder =
+    Json.Decode.succeed NeighborClusters
+        |> decode "neighbors" (Json.Decode.list neighborClusterDecoder) 
         |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
-neighborEntityDecoder : Json.Decode.Decoder NeighborEntity
-neighborEntityDecoder =
-    Json.Decode.succeed NeighborEntity
-        |> decode "entity" entityDecoder 
+neighborClusterDecoder : Json.Decode.Decoder NeighborCluster
+neighborClusterDecoder =
+    Json.Decode.succeed NeighborCluster
+        |> decode "entity" clusterDecoder
         |> maybeDecode "labels" (Json.Decode.list Json.Decode.string) Nothing
         |> decode "no_txs" Json.Decode.int 
         |> maybeDecode "token_values" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
@@ -3087,14 +3087,14 @@ searchResultLeafDecoder : Json.Decode.Decoder SearchResultLeaf
 searchResultLeafDecoder =
     Json.Decode.succeed SearchResultLeaf
         |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
-        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "neighbor" neighborClusterDecoder 
 
 
 searchResultLevel1Decoder : Json.Decode.Decoder SearchResultLevel1
 searchResultLevel1Decoder =
     Json.Decode.succeed SearchResultLevel1
         |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
-        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "neighbor" neighborClusterDecoder 
         |> decode "paths" (Json.Decode.list searchResultLevel2Decoder) 
 
 
@@ -3102,7 +3102,7 @@ searchResultLevel2Decoder : Json.Decode.Decoder SearchResultLevel2
 searchResultLevel2Decoder =
     Json.Decode.succeed SearchResultLevel2
         |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
-        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "neighbor" neighborClusterDecoder 
         |> decode "paths" (Json.Decode.list searchResultLevel3Decoder) 
 
 
@@ -3110,7 +3110,7 @@ searchResultLevel3Decoder : Json.Decode.Decoder SearchResultLevel3
 searchResultLevel3Decoder =
     Json.Decode.succeed SearchResultLevel3
         |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
-        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "neighbor" neighborClusterDecoder 
         |> decode "paths" (Json.Decode.list searchResultLevel4Decoder) 
 
 
@@ -3118,7 +3118,7 @@ searchResultLevel4Decoder : Json.Decode.Decoder SearchResultLevel4
 searchResultLevel4Decoder =
     Json.Decode.succeed SearchResultLevel4
         |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
-        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "neighbor" neighborClusterDecoder 
         |> decode "paths" (Json.Decode.list searchResultLevel5Decoder) 
 
 
@@ -3126,7 +3126,7 @@ searchResultLevel5Decoder : Json.Decode.Decoder SearchResultLevel5
 searchResultLevel5Decoder =
     Json.Decode.succeed SearchResultLevel5
         |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
-        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "neighbor" neighborClusterDecoder 
         |> decode "paths" (Json.Decode.list searchResultLevel6Decoder) 
 
 
@@ -3134,7 +3134,7 @@ searchResultLevel6Decoder : Json.Decode.Decoder SearchResultLevel6
 searchResultLevel6Decoder =
     Json.Decode.succeed SearchResultLevel6
         |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
-        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "neighbor" neighborClusterDecoder 
         |> decode "paths" (Json.Decode.list searchResultLeafDecoder) 
 
 

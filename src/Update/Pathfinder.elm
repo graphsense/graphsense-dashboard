@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, deserialize, exportGraph, fetchTagSummaryForId, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -95,6 +95,7 @@ import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
+import Update.Pathfinder.Address as PathfinderAddress
 import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.AggEdge as AggEdge
 import Update.Pathfinder.ConversionDetails as ConversionDetails
@@ -856,7 +857,7 @@ updateByMsg plugins uc msg model =
         BrowserGotClusterData _ data ->
             let
                 clusterId =
-                    Id.initClusterId data.currency data.entity
+                    Id.initClusterId data.currency data.cluster
 
                 setServiceType addr =
                     Just data
@@ -940,6 +941,20 @@ updateByMsg plugins uc msg model =
                             Nothing ->
                                 ( m2, List.map Pathfinder.SearchEffect eff )
                                     |> and (multiSearch query)
+
+                Search.UserClicksRecentResultLine rl ->
+                    let
+                        ( search, eff ) =
+                            Search.update m model.search
+
+                        m2 =
+                            { model | search = search }
+                    in
+                    rl
+                        |> resultLineToRoute
+                        |> NavPushRouteEffect
+                        |> flip (::) (List.map Pathfinder.SearchEffect eff)
+                        |> Tuple.pair m2
 
                 _ ->
                     Search.update m model.search
@@ -1301,7 +1316,7 @@ updateByMsg plugins uc msg model =
                         |> s_toolbarHovercard Nothing
                         |> s_contextMenu Nothing
             in
-            if click then
+            if click && not model.modPressed then
                 unselect m1
 
             else
@@ -1497,33 +1512,7 @@ updateByMsg plugins uc msg model =
             )
 
         UserMovesMouseOverTx id ->
-            if model.hovered == HoveredTx id then
-                n model
-
-            else
-                let
-                    hovered _ =
-                        let
-                            unhovered =
-                                unhover model
-                        in
-                        { unhovered
-                            | network =
-                                Network.updateTx id (s_hovered True) unhovered.network
-                                    |> Network.trySetHoverConversionLoop id True
-                            , hovered = HoveredTx id
-                        }
-                in
-                case model.details of
-                    Just (TxDetails txid _) ->
-                        if id /= txid then
-                            hovered () |> n
-
-                        else
-                            n model
-
-                    _ ->
-                        hovered () |> n
+            handleTxHover id model
 
         UserMovesMouseOverAddress id ->
             if model.hovered == HoveredAddress id then
@@ -1670,9 +1659,27 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
+        UserPressedArrowKey direction ->
+            case model.selection of
+                SelectedAddress id ->
+                    Dict.get id model.network.addresses
+                        |> Maybe.map
+                            (\address ->
+                                case getTxs address direction of
+                                    Txs _ ->
+                                        focusNeighborAddress uc id direction model
+
+                                    _ ->
+                                        update plugins uc (UserClickedAddressExpandHandle id direction) model
+                            )
+                        |> Maybe.withDefault (n model)
+
+                _ ->
+                    n model
+
         UserClickedAddress id ->
             if model.modPressed || model.pointerTool == Select then
-                multiSelect model [ MSelectedAddress id ] True
+                toggleMultiSelect model (MSelectedAddress id)
                     |> n
 
             else
@@ -1684,6 +1691,9 @@ updateByMsg plugins uc msg model =
                     |> NavPushRouteEffect
                     |> List.singleton
                 )
+
+        UserClickedCrosschainAddress id ->
+            loadAddress plugins False id model
 
         UserClickedAddressCheckboxInTable id ->
             userClickedAddressCheckboxInTable plugins id model
@@ -2606,6 +2616,12 @@ updateByMsg plugins uc msg model =
         InternalChangedTxFilter id filter ->
             n { model | txsFilters = AssocList.insert id filter model.txsFilters }
 
+        InternalHoveredQuickFilter qf ->
+            qf
+                |> Maybe.map TransactionFilter.getTxIdFromQuickFilter
+                |> Maybe.map (flip handleTxHover model)
+                |> Maybe.Extra.withDefaultLazy (\_ -> unhover model |> n)
+
         TransactionFilterMsg tm ->
             case model.details of
                 Just (TxDetails tid txDetailsModel) ->
@@ -2691,20 +2707,67 @@ multiSearch query model =
         n model
 
 
-exportGraph : Dialog.ExportConfig msg -> Maybe BBox -> Model -> ( Model, List Effect )
-exportGraph conf bbox model =
+exportGraph : ImageExport -> Maybe BBox -> Model -> ( Model, List Effect )
+exportGraph imgExp bbox model =
     ( model.config
-        |> s_hideForExport (Exporting <| not conf.keepSelectionHighlight)
+        |> s_hideForExport (Exporting <| not imgExp.keepSelectionHighlight)
         |> flip s_config model
-        |> s_exportImage (Just ExportingImage)
-    , [ { filename = conf.filename
+        |> s_exportImage (Just (ExportingImage imgExp))
+    , [ { filename = imgExp.filename
         , graphId = graphId
         , viewbox = bbox |> Maybe.map addMarginForExport
-        , transparentBackground = conf.transparentBackground
+        , transparentBackground = imgExp.transparentBackground
         }
             |> Ports.exportGraph
             |> Pathfinder.CmdEffect
       ]
+    )
+
+
+endExportRendering : Model -> Model
+endExportRendering model =
+    model.config
+        |> s_hideForExport NoExport
+        |> flip s_config model
+
+
+continueImageExport : Maybe BBox -> Model -> ( Model, List Effect )
+continueImageExport bbox model =
+    -- Resumes an image export after the BBox port round-trip. The port reply
+    -- may arrive after the user has closed the export dialog; reading the
+    -- export parameters from the model (instead of dialog config) lets the
+    -- export proceed regardless.
+    case model.exportImage of
+        Just (PrepareImageForExport imgExp) ->
+            exportGraph imgExp bbox model
+
+        _ ->
+            n model
+
+
+finishImageExport : Maybe String -> Model -> ( Model, List Effect )
+finishImageExport error model =
+    let
+        type_ =
+            model.exportImage
+                |> Maybe.map (getImageExport >> .fileFormat >> Dialog.exportFormatToString)
+                |> Maybe.withDefault "image"
+    in
+    ( { model | exportImage = Nothing }
+    , error
+        |> Maybe.map
+            (Notification.errorDefault
+                >> Notification.map (s_title (Just "An error occurred"))
+            )
+        |> Maybe.withDefault
+            (Notification.successDefault "check download folder"
+                |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
+                |> Notification.map (s_isEphemeral True)
+                |> Notification.map (s_showClose False)
+                |> Notification.map (s_removeDelayMs 4000.0)
+            )
+        |> ShowNotificationEffect
+        |> List.singleton
     )
 
 
@@ -3100,9 +3163,60 @@ placeNeighborIfError plugins uc config nid model =
 handleWorkflowNextUtxo : Plugins -> Update.Config -> WorkflowNextUtxoTx.Config -> Maybe Id -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
 handleWorkflowNextUtxo plugins uc config neighborId wf model =
     case wf of
-        Workflow.Ok tx ->
-            Api.Data.TxTxUtxo tx
-                |> flip (handleTx plugins uc config neighborId) model
+        Workflow.Ok { tx, skippedCount, skippedHashes } ->
+            let
+                ( newModel, eff ) =
+                    Api.Data.TxTxUtxo tx
+                        |> flip (handleTx plugins uc config neighborId) model
+
+                txId =
+                    Id.init tx.currency tx.txHash
+
+                -- The workflow direction's TxsLoading needs to be cleared even
+                -- when the per-address propagation in Network.addTxWithPosition
+                -- doesn't touch it (e.g. self-loop txs where Init.Pathfinder.Tx
+                -- filters the anchor out of `outputs` because it's in `inputs`,
+                -- so backward navigation ending on a peeling tx never updates
+                -- incomingTxs). Insert the result tx into the workflow-direction
+                -- tx-set explicitly; idempotent if it's already there.
+                modelWithLoadingCleared =
+                    newModel
+                        |> s_network
+                            (Network.updateAddress config.addressId
+                                (\addr ->
+                                    case config.direction of
+                                        Incoming ->
+                                            { addr | incomingTxs = PathfinderAddress.txsInsertId txId addr.incomingTxs }
+
+                                        Outgoing ->
+                                            { addr | outgoingTxs = PathfinderAddress.txsInsertId txId addr.outgoingTxs }
+                                )
+                                newModel.network
+                            )
+
+                extraEff =
+                    if skippedCount > 0 then
+                        if skippedCount < 3 then
+                            [ StatusbarLogEffect
+                                "Auto-extended through {0} skipped change/self transaction(s) ({1}) for address {2}"
+                                [ String.fromInt skippedCount
+                                , String.join ", " skippedHashes
+                                , Id.id config.addressId
+                                ]
+                            ]
+
+                        else
+                            [ StatusbarLogEffect
+                                "Auto-extended through {0} skipped change/self transaction(s) for address {1}"
+                                [ String.fromInt skippedCount
+                                , Id.id config.addressId
+                                ]
+                            ]
+
+                    else
+                        []
+            in
+            ( modelWithLoadingCleared, eff ++ extraEff )
 
         Workflow.Next eff ->
             eff
@@ -3130,10 +3244,15 @@ handleWorkflowNextUtxo plugins uc config neighborId wf model =
                             ( model
                                 |> s_network
                                     (Network.updateAddress config.addressId (TxsLastCheckedChangeTx lastTx |> txsSetter config.direction) model.network)
-                            , MaxChangeHopsLimitReached maxHops config.addressId
-                                |> InfoError
-                                |> ErrorEffect
-                                |> List.singleton
+                            , [ StatusbarLogEffect
+                                    "Auto-extension hit the {0}-hop limit for address {1}. Click again to continue from the last checked change/self transaction."
+                                    [ String.fromInt maxHops
+                                    , Id.id config.addressId
+                                    ]
+                              , MaxChangeHopsLimitReached maxHops config.addressId
+                                    |> InfoError
+                                    |> ErrorEffect
+                              ]
                             )
 
 
@@ -3171,7 +3290,7 @@ browserGotAddressData uc plugins providedId position data model =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
         clusterId =
-            Id.initClusterId data.currency data.entity
+            Id.initClusterId data.currency data.cluster
 
         isSecondAddressFromSameCluster =
             Network.isClusterFriendAlreadyOnGraph clusterId
@@ -3203,7 +3322,7 @@ browserGotAddressData uc plugins providedId position data model =
                 , [ BrowserGotClusterData id
                         |> Api.GetEntityEffectWithDetails
                             { currency = Id.network id
-                            , entity = data.entity
+                            , entity = data.cluster
                             , includeActors = False
                             , includeBestTag = False
                             }
@@ -3363,7 +3482,7 @@ userClickedTx id model =
     if model.modPressed || model.pointerTool == Select then
         let
             modelS =
-                multiSelect model [ MSelectedTx id ] True
+                toggleMultiSelect model (MSelectedTx id)
         in
         n { modelS | details = Nothing }
 
@@ -4115,6 +4234,57 @@ selectConversionEdge ( a, b ) model =
         |> Tuple.mapSecond ((++) eff)
 
 
+focusNeighborAddress : Update.Config -> Id -> Direction -> Model -> ( Model, List Effect )
+focusNeighborAddress uc anchorId direction model =
+    let
+        -- Collect every graph-loaded address on the tx's `direction` side
+        -- rather than the single "biggest" candidate from
+        -- getAddressForDirection. That heuristic can pick an address that
+        -- isn't on the graph (e.g. the biggest non-change output of a UTXO
+        -- tx), which would make navigation skip over the neighbor we came
+        -- from and get stuck.
+        neighborId =
+            Network.getTxsForAddress model.network direction anchorId
+                |> List.concatMap Tx.listAddressesForTx
+                |> List.filterMap
+                    (\( d, addr ) ->
+                        if d == direction && addr.id /= anchorId then
+                            Just addr.id
+
+                        else
+                            Nothing
+                    )
+                |> List.head
+    in
+    case neighborId |> Maybe.andThen (\nid -> Dict.get nid model.network.addresses) of
+        Just neighbor ->
+            let
+                ( m1, eff ) =
+                    selectAddress neighbor.id model
+
+                transform =
+                    (uc.size
+                        |> Maybe.map
+                            (\{ width, height } ->
+                                { width = width
+                                , height = height
+                                }
+                            )
+                        |> Maybe.map Transform.politeMove
+                        |> Maybe.withDefault Transform.move
+                    )
+                        { x = neighbor.x * unit
+                        , y = A.getTo neighbor.y * unit
+                        , z = Transform.initZ
+                        }
+                        m1.transform
+            in
+            ( { m1 | transform = transform }, eff )
+
+        Nothing ->
+            n model
+
+
 selectAddress : Id -> Model -> ( Model, List Effect )
 selectAddress id model =
     if model.selection == SelectedAddress id then
@@ -4465,7 +4635,7 @@ addTagSummaryToModel includesBestClusterTag id data m =
                             |> Dict.get id
                             |> Maybe.andThen (.data >> RemoteData.toMaybe)
                             |> Maybe.map
-                                (.entity
+                                (.cluster
                                     >> (\entityId ->
                                             Api.GetEntityAddressTagsEffect
                                                 { currency = Id.network id
@@ -4590,7 +4760,26 @@ getAddressForDirection tx direction exceptAddress =
 addTx : Plugins -> Update.Config -> Id -> Direction -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
 addTx plugins uc anchorAddressId direction addressId tx model =
     if Dict.member (Tx.getTxId tx) model.network.txs then
-        n model
+        -- Tx is already on the graph. Skip the layout work, but still link
+        -- this tx to the anchor address's tx-set so a TxsLoading state
+        -- (set by expandAddress before the workflow ran) resolves to a
+        -- proper Txs set and the loading spinner clears.
+        let
+            txId =
+                Tx.getTxId tx
+
+            updateAnchorTxs addr =
+                case direction of
+                    Incoming ->
+                        { addr | incomingTxs = PathfinderAddress.txsInsertId txId addr.incomingTxs }
+
+                    Outgoing ->
+                        { addr | outgoingTxs = PathfinderAddress.txsInsertId txId addr.outgoingTxs }
+        in
+        ( model
+            |> s_network (Network.updateAddress anchorAddressId updateAnchorTxs model.network)
+        , []
+        )
 
     else
         let
@@ -4859,6 +5048,60 @@ multiSelect m sel keepOld =
     { m | selection = liftedNewSelection, network = nNet }
 
 
+toggleMultiSelect : Model -> MultiSelectOptions -> Model
+toggleMultiSelect m item =
+    let
+        currentList =
+            case m.selection of
+                MultiSelect x ->
+                    x
+
+                SelectedAddress oid ->
+                    [ MSelectedAddress oid ]
+
+                SelectedTx oid ->
+                    [ MSelectedTx oid ]
+
+                _ ->
+                    []
+
+        newSelection =
+            if List.member item currentList then
+                List.filter ((/=) item) currentList
+
+            else
+                List.Extra.unique (item :: currentList)
+
+        liftedNewSelection =
+            case newSelection of
+                [] ->
+                    NoSelection
+
+                x :: [] ->
+                    case x of
+                        MSelectedAddress id ->
+                            SelectedAddress id
+
+                        MSelectedTx id ->
+                            SelectedTx id
+
+                _ ->
+                    MultiSelect newSelection
+
+        selectItem s n =
+            case s of
+                MSelectedAddress id ->
+                    Network.updateAddress id (s_selected True) n
+
+                MSelectedTx id ->
+                    Network.updateTx id (s_selected True) n
+
+        nNet =
+            List.foldl selectItem (Network.clearSelection m.network) newSelection
+    in
+    { m | selection = liftedNewSelection, network = nNet }
+
+
 deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized
 deserialize =
     Json.Decode.index 0 Json.Decode.string
@@ -4943,6 +5186,7 @@ fromDeserialized plugins deserialized model =
                 , highlightClusterFriends = Just model.config.highlightClusterFriends
                 , tracingMode = Just model.config.tracingMode
                 , avoidOverlapingNodes = Just model.config.avoidOverlapingNodes
+                , recentSearches = model.search.recentSearches
                 }
     in
     ( { newAndEmptyPathfinder
@@ -5345,38 +5589,11 @@ updateByExportMsg uc msg conf model =
                 Dialog.ExportFormatPNG ->
                     exportGraphImage uc conf model
 
-        ExportDialog.BrowserRenderedGraphForExport ->
-            model.config
-                |> s_hideForExport NoExport
-                |> flip s_config model
-                |> n
-
-        ExportDialog.BrowserSentBBox bbox ->
-            exportGraph conf bbox model
-
-        ExportDialog.BrowserSentExportGraphResult error ->
-            let
-                type_ =
-                    Dialog.exportFormatToString conf.fileFormat
-            in
-            ( { model | exportImage = Nothing }
-            , error
-                |> Maybe.map
-                    (Notification.errorDefault
-                        >> Notification.map (s_title (Just "An error occurred"))
-                    )
-                |> Maybe.withDefault
-                    (Notification.successDefault "check download folder"
-                        |> Notification.map (s_title (Just <| "generating " ++ type_ ++ " success"))
-                        |> Notification.map (s_isEphemeral True)
-                        |> Notification.map (s_showClose False)
-                        |> Notification.map (s_removeDelayMs 4000.0)
-                    )
-                |> ShowNotificationEffect
-                |> List.singleton
-            )
-
         _ ->
+            -- Port-reply messages (BrowserSentBBox, BrowserRenderedGraphForExport,
+            -- BrowserSentExportGraphResult) are dispatched at the top-level
+            -- Update so that they fire even when the user has closed the export
+            -- dialog mid-flight. See Update.elm `ExportDialogMsg`.
             n model
 
 
@@ -5470,10 +5687,17 @@ exportGraphImage _ conf model =
 
                 Dialog.ExportAreaVisible ->
                     Nothing
+
+        imgExp =
+            { filename = conf.filename
+            , fileFormat = conf.fileFormat
+            , transparentBackground = conf.transparentBackground
+            , keepSelectionHighlight = conf.keepSelectionHighlight
+            }
     in
     { model
         | exportImage =
-            PrepareImageForExport
+            PrepareImageForExport imgExp
                 |> Just
     }
         |> n
@@ -5487,5 +5711,40 @@ exportGraphImage _ conf model =
                             |> pair mo
 
                 Nothing ->
-                    exportGraph conf Nothing
+                    exportGraph imgExp Nothing
             )
+
+
+
+-- Helper function for transaction hover logic
+
+
+handleTxHover : Id -> Model -> ( Model, List Effect )
+handleTxHover id model =
+    if model.hovered == HoveredTx id then
+        n model
+
+    else
+        let
+            hovered _ =
+                let
+                    unhovered =
+                        unhover model
+                in
+                { unhovered
+                    | network =
+                        Network.updateTx id (s_hovered True) unhovered.network
+                            |> Network.trySetHoverConversionLoop id True
+                    , hovered = HoveredTx id
+                }
+        in
+        case model.details of
+            Just (TxDetails txid _) ->
+                if id /= txid then
+                    hovered () |> n
+
+                else
+                    n model
+
+            _ ->
+                hovered () |> n

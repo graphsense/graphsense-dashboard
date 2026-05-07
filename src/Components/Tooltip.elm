@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, Viewport, attributes, close, defaultConfig, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withOpenDelay, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg, Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withKeepOpenOnHover, withOpenDelay, withViewport, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
@@ -28,6 +28,7 @@ type alias ModelInternal a =
     , id : String
     , content : a
     , closeDelay : Float
+    , keepOpenOnHover : Bool
     }
 
 
@@ -55,6 +56,7 @@ type alias ConfigInternal a msg =
     , fixed : Bool
     , openDelay : Float
     , closeDelay : Float
+    , keepOpenOnHover : Bool
     }
 
 
@@ -74,6 +76,7 @@ defaultConfig tag =
         , fixed = False
         , openDelay = 0
         , closeDelay = 0
+        , keepOpenOnHover = False
         }
 
 
@@ -137,8 +140,13 @@ withCloseDelay delay (Config c) =
     Config { c | closeDelay = delay }
 
 
+withKeepOpenOnHover : Config a msg -> Config a msg
+withKeepOpenOnHover (Config c) =
+    Config { c | keepOpenOnHover = True }
+
+
 type Msg a
-    = OpenTooltip String a Float Float
+    = OpenTooltip String a Float Float Bool
     | CloseTooltip
     | HovercardMsg Hovercard.Msg
     | DelayPassed
@@ -159,36 +167,46 @@ init =
 
 
 attributes : String -> Config a msg -> a -> List (Attribute msg)
-attributes id (Config { tag, openDelay, closeDelay }) content =
-    [ OpenTooltip id content openDelay closeDelay |> tag |> onMouseOver
+attributes id config content =
+    Html.Styled.Attributes.id id
+        :: eventHandlers id config content
+
+
+eventHandlers : String -> Config a msg -> a -> List (Attribute msg)
+eventHandlers id (Config { tag, openDelay, closeDelay, keepOpenOnHover }) content =
+    [ OpenTooltip id content openDelay closeDelay keepOpenOnHover |> tag |> onMouseOver
     , CloseTooltip |> tag |> onMouseLeave
-    , Html.Styled.Attributes.id id
     ]
 
 
 update : Msg a -> Model a -> ( Model a, List Effect )
 update msg (Model model) =
     case msg of
-        OpenTooltip id content openDelay closeDelay ->
+        OpenTooltip id content openDelay closeDelay keepOpenOnHover ->
             model
                 |> Maybe.map
                     (\mo ->
                         case mo.state of
                             Closing ->
-                                { mo
-                                    | state = Opening
-                                    , content = content
-                                    , closeDelay = closeDelay
-                                    , hovercard =
-                                        if mo.id /= id then
-                                            Nothing
+                                if mo.id == id then
+                                    { mo
+                                        | state = Opening
+                                    }
+                                        |> Just
+                                        |> Model
+                                        |> n
 
-                                        else
-                                            mo.hovercard
-                                }
-                                    |> Just
-                                    |> Model
-                                    |> flip pair [ OpenEffect id openDelay ]
+                                else
+                                    { mo
+                                        | state = Opening
+                                        , content = content
+                                        , closeDelay = closeDelay
+                                        , hovercard = Nothing
+                                        , id = id
+                                    }
+                                        |> Just
+                                        |> Model
+                                        |> flip pair [ OpenEffect id openDelay ]
 
                             _ ->
                                 model |> Model |> n
@@ -199,6 +217,7 @@ update msg (Model model) =
                      , id = id
                      , hovercard = Nothing
                      , closeDelay = closeDelay
+                     , keepOpenOnHover = keepOpenOnHover
                      }
                         |> Just
                         |> Model
@@ -242,23 +261,27 @@ update msg (Model model) =
             model
                 |> Maybe.map
                     (\mo ->
-                        case mo.state of
-                            Opening ->
-                                let
-                                    ( hovercard, cmd ) =
-                                        Hovercard.init id
-                                in
-                                { mo
-                                    | state = Open
-                                    , id = id
-                                    , hovercard = Just hovercard
-                                }
-                                    |> Just
-                                    |> Model
-                                    |> flip pair [ HovercardCmd cmd ]
+                        if mo.id /= id then
+                            n (Model model)
 
-                            _ ->
-                                n (Model model)
+                        else
+                            case mo.state of
+                                Opening ->
+                                    let
+                                        ( hovercard, cmd ) =
+                                            Hovercard.init id
+                                    in
+                                    { mo
+                                        | state = Open
+                                        , id = id
+                                        , hovercard = Just hovercard
+                                    }
+                                        |> Just
+                                        |> Model
+                                        |> flip pair [ HovercardCmd cmd ]
+
+                                _ ->
+                                    n (Model model)
                     )
                 |> Maybe.withDefault (model |> Model |> n)
 
@@ -304,14 +327,21 @@ view (Config config) (Model model) view_ =
                         (\hovercard ->
                             view_ mo.content
                                 |> div
-                                    [ css
+                                    ([ css
                                         (GraphComponents.tooltipDown_details.styles
                                             ++ [ Css.minWidth (Css.px 230) ]
                                         )
-                                    , ClickTooltip |> config.tag |> onClick
-                                    , HoverTooltip |> config.tag |> onMouseOver
-                                    , CloseTooltip |> config.tag |> onMouseLeave
-                                    ]
+                                     , ClickTooltip |> config.tag |> onClick
+                                     , CloseTooltip |> config.tag |> onMouseLeave
+                                     ]
+                                        ++ (if mo.keepOpenOnHover then
+                                                [ HoverTooltip |> config.tag |> onMouseOver
+                                                ]
+
+                                            else
+                                                []
+                                           )
+                                    )
                                 |> toUnstyled
                                 |> List.singleton
                                 |> Hovercard.view

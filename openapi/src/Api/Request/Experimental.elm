@@ -37,15 +37,3 @@ getTagSummaryByAddress currency_path address_path includeBestClusterTag_query =
         Api.Data.tagSummaryDecoder
 
 
-
-getTagSummaryByEntity : (String) -> (Int) -> Api.Request Api.Data.TagSummary
-getTagSummaryByEntity currency_path entity_path =
-    Api.request
-        "GET"
-        "/{currency}/entities/{entity}/tag_summary"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
-        []
-        []
-        Nothing
-        Api.Data.tagSummaryDecoder
-

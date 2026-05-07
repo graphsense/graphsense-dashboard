@@ -52,14 +52,14 @@ getEntity id =
         >> Maybe.andThen (.entities >> Dict.get id)
 
 
-getEntityForAddress : A.Address -> IntDict Layer -> Maybe Api.Data.Entity
+getEntityForAddress : A.Address -> IntDict Layer -> Maybe Api.Data.Cluster
 getEntityForAddress address layers =
     layers
         |> IntDict.values
         |> getEntityForAddressHelp address
 
 
-getEntityForAddressHelp : A.Address -> List Layer -> Maybe Api.Data.Entity
+getEntityForAddressHelp : A.Address -> List Layer -> Maybe Api.Data.Cluster
 getEntityForAddressHelp address layers =
     case layers of
         [] ->
@@ -78,7 +78,7 @@ getEntityForAddressHelp address layers =
                     Just found
 
 
-getEntityForAddressHelp2 : A.Address -> List Entity -> Maybe Api.Data.Entity
+getEntityForAddressHelp2 : A.Address -> List Entity -> Maybe Api.Data.Cluster
 getEntityForAddressHelp2 { currency, address } =
     List.Extra.find
         (.addresses
@@ -123,7 +123,7 @@ getEntities currency entity =
             layer.entities
                 |> Dict.foldl
                     (\_ entityNode acc_ ->
-                        if currency == entityNode.entity.currency && entity == entityNode.entity.entity then
+                        if currency == entityNode.entity.currency && entity == entityNode.entity.cluster then
                             entityNode :: acc_
 
                         else

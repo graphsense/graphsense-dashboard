@@ -82,6 +82,9 @@ shallPushHistory plugins msg _ =
         UserReleasedNormalKey _ ->
             False
 
+        UserPressedArrowKey _ ->
+            False
+
         UserClickedShowLegend ->
             False
 
@@ -114,6 +117,9 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleTransactionTable ->
                     False
 
+                AddressDetails.UserClickedContinueChangeTracing ->
+                    False
+
                 AddressDetails.UserClickedToggleBalanceDetails ->
                     False
 
@@ -127,6 +133,9 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.UserClickedToggleDisplayAllTagsInDetails ->
+                    False
+
+                AddressDetails.UserClickedShowPubkeyRelatedAddresses ->
                     False
 
                 AddressDetails.TransactionsTableSubTableMsg _ ->
@@ -268,6 +277,9 @@ shallPushHistory plugins msg _ =
 
         UserClickedAddress _ ->
             False
+
+        UserClickedCrosschainAddress _ ->
+            True
 
         NoOp ->
             False
@@ -441,6 +453,9 @@ shallPushHistory plugins msg _ =
             False
 
         InternalChangedTxFilter _ _ ->
+            False
+
+        InternalHoveredQuickFilter _ ->
             False
 
         TransactionFilterMsg _ ->

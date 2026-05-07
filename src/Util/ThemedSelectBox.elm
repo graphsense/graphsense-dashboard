@@ -21,7 +21,7 @@ module Util.ThemedSelectBox exposing
 import Css
 import Html.Styled exposing (Html)
 import Html.Styled.Attributes exposing (css)
-import Html.Styled.Events exposing (onMouseLeave)
+import Html.Styled.Events exposing (onMouseLeave, onMouseOut, onMouseOver)
 import List.Extra
 import RecordSetter as Rs
 import Theme.Html.Fields as F
@@ -35,11 +35,15 @@ type Msg a
     = Select a
     | Open
     | Close
+    | Hover a
+    | Unhover
 
 
 type OutMsg a
     = Selected a
     | NoSelection
+    | Hovered a
+    | Unhovered
 
 
 type Model a
@@ -105,6 +109,12 @@ update msg model =
 
         Close ->
             ( close model, NoSelection )
+
+        Hover x ->
+            ( model, Hovered x )
+
+        Unhover ->
+            ( model, Unhovered )
 
 
 defaultConfig : (a -> String) -> Config a
@@ -195,6 +205,8 @@ view (Config config) (SelectBox sBox) selected =
                            )
                         |> css
                     , Util.View.onClickWithStop (Select x)
+                    , onMouseOver (Hover x)
+                    , onMouseOut Unhover
                     ]
                         ++ config.attributes
             in

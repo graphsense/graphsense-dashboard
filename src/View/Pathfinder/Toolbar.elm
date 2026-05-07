@@ -82,7 +82,7 @@ view vc config =
             |> Rs.s_iconsSave
                 (iconsAttr "save file" False (UserClickedSaveGraph Nothing))
             |> Rs.s_iconsExport
-                (iconsAttr "export" False (UserClickedExportGraph Nothing))
+                (iconsAttr "export graph" False (UserClickedExportGraph Nothing))
             |> Rs.s_iconsOpen
                 (iconsAttr "open" False UserClickedOpenGraph)
             |> Rs.s_iconsHorizontalAlign

@@ -127,6 +127,7 @@ searchWithMoreCss plugins vc sc model =
                  , Locale.string vc.locale "The search" |> title
                  , onBlur UserLeavesSearch
                  , onFocus UserFocusSearch
+                 , on "mousedown" (Json.Decode.succeed UserInputPressed)
                  , value query
                  , id searchInputId
                  ]
@@ -213,7 +214,14 @@ searchResult plugins vc sc model =
             Data.parseMultiIdentifierInput viewState.query
                 |> List.length
     in
-    if (viewState.query |> removeLeading0x |> String.length) < min_search_length && model.visible then
+    if String.isEmpty viewState.query && model.visible && not (List.isEmpty (filteredRecents model.searchType model.recentSearches)) then
+        recentList vc sc model
+            |> Autocomplete.dropdownStyled
+                config1
+                vc
+                config2
+
+    else if (viewState.query |> removeLeading0x |> String.length) < min_search_length && model.visible then
         [ text (Locale.interpolated vc.locale "Hint-minimum-input" [ String.fromInt min_search_length ]) ]
             |> Autocomplete.dropdownStyled
                 config1
@@ -246,6 +254,46 @@ searchResult plugins vc sc model =
 
     else
         text ""
+
+
+recentList : Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
+recentList vc sc model =
+    let
+        recents =
+            filteredRecents model.searchType model.recentSearches
+
+        lineEvents rl =
+            [ preventDefaultOn "mousedown" (Json.Decode.succeed ( NoOp, True ))
+            , onClick (UserClicksRecentResultLine rl)
+            ]
+    in
+    if List.isEmpty recents then
+        []
+
+    else
+        [ div
+            [ Css.resultGroup vc |> css
+            , css sc.resultGroup
+            ]
+            [ div
+                [ Css.resultGroupTitle vc |> css
+                , css sc.resultGroupTitle
+                ]
+                [ text (Locale.string vc.locale "Recent searches")
+                ]
+            , recents
+                |> List.map
+                    (\rl ->
+                        resultLineToHtml vc
+                            ""
+                            sc
+                            Nothing
+                            (lineEvents rl)
+                            rl
+                    )
+                |> ol [ Css.resultGroupList vc |> css ]
+            ]
+        ]
 
 
 resultList : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
@@ -438,7 +486,7 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
                 [ Css.resultLineIcon vc |> css
                 , css sc.resultLineIcon
                 ]
-        , if String.startsWith querycomp (removeLeading0x label) && highlight_suffix then
+        , if not (String.isEmpty querycomp) && String.startsWith querycomp (removeLeading0x label) && highlight_suffix then
             let
                 left =
                     String.Extra.leftOf querycomp label

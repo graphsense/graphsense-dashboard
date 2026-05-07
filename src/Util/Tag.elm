@@ -29,7 +29,10 @@ conceptItem vc id tag k =
 
         tooltipAttributes =
             TagConcept id k
-                |> Tooltip.attributes domId (Util.Tooltip.tooltipConfig vc tag)
+                |> Tooltip.attributes domId
+                    (Util.Tooltip.tooltipConfig vc tag
+                        |> Tooltip.withKeepOpenOnHover
+                    )
     in
     Html.div
         (css [ Css.cursor Css.default ]

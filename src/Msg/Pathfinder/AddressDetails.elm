@@ -36,6 +36,7 @@ type Msg
     | UserClickedToggleTotalSpentDetails
     | UserClickedToggleClusterDetailsOpen
     | UserClickedToggleDisplayAllTagsInDetails
+    | UserClickedShowPubkeyRelatedAddresses
     | TransactionsTableSubTableMsg InfiniteTable.Msg
     | NeighborsTableSubTableMsg Direction InfiniteTable.Msg
     | GotTxsForAddressDetails (Maybe String) Api.Data.AddressTxs
@@ -44,7 +45,7 @@ type Msg
     | TableMsg Table.State
     | RelatedAddressesTableMsg Table.State
     | RelatedAddressesPubkeyTableMsg Table.State
-    | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.EntityAddresses
+    | BrowserGotEntityAddressesForRelatedAddressesTable Api.Data.ClusterAddresses
     | BrowserGotEntityAddressTagsForRelatedAddressesTable String Api.Data.AddressTags
     | UserClickedToggleRelatedAddressesTable
     | RelatedAddressesTableSubTableMsg InfiniteTable.Msg
@@ -64,3 +65,4 @@ type Msg
     | BrowserGotBulkTxsForExport TransactionTable.Model (List Api.Data.AddressTxUtxo) (Maybe String) Int (List ( String, Api.Data.Tx )) (List ( String, Api.Data.Tx ))
     | BrowserGotBulkTagsForExport TransactionTable.Model ( List Api.Data.TxAccount, Maybe String ) Bool (List ( Id, Api.Data.TagSummary ))
     | WorkflowNextUtxoTx WorkflowNextUtxoTx.Config WorkflowNextUtxoTx.Msg
+    | UserClickedContinueChangeTracing

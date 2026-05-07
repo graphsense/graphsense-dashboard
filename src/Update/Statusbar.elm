@@ -1,7 +1,7 @@
-module Update.Statusbar exposing (add, messagesFromEffects, toggle, update, updateLastBlocks)
+module Update.Statusbar exposing (add, clearRetry, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
 
 import Api.Data
-import Api.Request.Entities
+import Api.Request.Clusters
 import Dict
 import Effect.Api as Api
 import Effect.Graph as Graph
@@ -21,16 +21,23 @@ messagesFromEffects model effects =
     effects
         |> List.foldl
             (\eff ( statusbar, newEffects ) ->
-                messageFromEffect model eff
-                    |> Maybe.map
-                        (\( id, key, message ) ->
-                            ( { statusbar
-                                | messages = Dict.insert id ( key, message ) statusbar.messages
-                              }
-                            , ( Just id, eff ) :: newEffects
-                            )
+                case eff of
+                    Model.PathfinderEffect (Pathfinder.StatusbarLogEffect key values) ->
+                        ( { statusbar | log = addLog ( key, values, Nothing ) statusbar.log }
+                        , newEffects
                         )
-                    |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
+
+                    _ ->
+                        messageFromEffect model eff
+                            |> Maybe.map
+                                (\( id, key, message ) ->
+                                    ( { statusbar
+                                        | messages = Dict.insert id ( key, message ) statusbar.messages
+                                      }
+                                    , ( Just id, eff ) :: newEffects
+                                    )
+                                )
+                            |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
             )
             ( model.statusbar, [] )
         |> mapFirst
@@ -165,6 +172,10 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.TooltipEffect _) ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.StatusbarLogEffect _ _) ->
+            -- consumed earlier in messagesFromEffects; no in-flight message
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =
@@ -191,10 +202,34 @@ update key error model =
             (\msg ->
                 { model
                     | messages = Dict.remove key model.messages
+                    , retries = Dict.remove key model.retries
                     , log = addLog ( first msg, second msg, error ) model.log
                 }
             )
         |> Maybe.withDefault model
+
+
+{-| Record that attempt number `attempt` has been scheduled for the request
+identified by `key` (the statusbar token). Called from `Update.elm` when a
+transient HTTP error is observed and a retry is about to be delayed via
+`Process.sleep`. The stored attempt number is later compared against the
+firing `BrowserRetryApiEffect` to drop stale retries whose request was
+cancelled or superseded in the meantime — see the `retries` field docs on
+`Model.Statusbar.Model`.
+-}
+setRetry : String -> Int -> Model -> Model
+setRetry key attempt sb =
+    { sb | retries = Dict.insert key attempt sb.retries }
+
+
+{-| Drop any retry bookkeeping for `key`. Use this when a request is
+cancelled or otherwise abandoned outside the normal `update` path; the
+regular `update` function already clears the entry alongside the message
+when a final result arrives.
+-}
+clearRetry : String -> Model -> Model
+clearRetry key sb =
+    { sb | retries = Dict.remove key sb.retries }
 
 
 updateLastBlocks : Api.Data.Stats -> Model -> Model
@@ -286,7 +321,7 @@ messageFromApiEffect model effect =
                         "for incoming neighbors"
                   , e.entity |> String.fromInt
                   , case e.key of
-                        Api.Request.Entities.KeyCategory ->
+                        Api.Request.Clusters.KeyCategory ->
                             e.value
                                 |> List.head
                                 |> Maybe.map

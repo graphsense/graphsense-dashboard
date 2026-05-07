@@ -19,6 +19,7 @@ import Model.Pathfinder.Table.IoTable exposing (titleValue)
 import Model.Pathfinder.Tx exposing (ioToId)
 import Msg.Pathfinder.TxDetails exposing (IoDirection(..), Msg(..))
 import RecordSetter as Rs
+import Sha256
 import Table
 import Theme.Colors as Colors
 import Theme.Html.Icons as Icons
@@ -184,7 +185,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                             )
                         |> String.join " "
 
-        changeBadgeConfigFromInfo maybeChangeInfo =
+        changeBadgeConfigFromInfo rowDomScope maybeChangeInfo =
             case maybeChangeInfo of
                 Just changeInfo ->
                     let
@@ -225,6 +226,8 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                         Just
                             { domId =
                                 "txdetails_change_"
+                                    ++ rowDomScope
+                                    ++ "_"
                                     ++ String.fromInt confidencePercent
                                     ++ "_"
                                     ++ (String.join "_" heuristics |> String.replace " " "_")
@@ -245,9 +248,13 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
         , viewData =
             \data ->
                 let
+                    rowDomScope =
+                        accessor data
+                            |> Sha256.sha256
+
                     changeBadgeConfig =
                         getChangeInfo data
-                            |> changeBadgeConfigFromInfo
+                            |> changeBadgeConfigFromInfo rowDomScope
 
                     attributes =
                         SidePanelComponents.sidePanelIoListIdentifierCellAttributes

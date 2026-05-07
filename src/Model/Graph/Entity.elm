@@ -21,7 +21,7 @@ import Plugin.Model exposing (EntityState)
 
 type alias Entity =
     { id : EntityId
-    , entity : Api.Data.Entity
+    , entity : Api.Data.Cluster
     , addresses : Dict AddressId Address
     , category : Maybe String
     , addressTags : List Api.Data.AddressTag
@@ -87,7 +87,7 @@ getActorById ent actorId =
     getActorByIdApi ent.entity actorId
 
 
-getActorByIdApi : Api.Data.Entity -> String -> Maybe Api.Data.LabeledItemRef
+getActorByIdApi : Api.Data.Cluster -> String -> Maybe Api.Data.LabeledItemRef
 getActorByIdApi ent actorId =
     List.Extra.find (\x -> x.id == actorId) (ent.actors |> Maybe.withDefault [])
 
@@ -97,7 +97,7 @@ getBestActor ent =
     getBestActorApi ent.entity
 
 
-getBestActorApi : Api.Data.Entity -> Maybe Api.Data.LabeledItemRef
+getBestActorApi : Api.Data.Cluster -> Maybe Api.Data.LabeledItemRef
 getBestActorApi ent =
     ent.bestAddressTag
         |> Maybe.map (.actor >> Maybe.map (getActorByIdApi ent))

@@ -11,6 +11,7 @@ import Model.Currency as Currency
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge as AggEdge exposing (AggEdge)
+import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (s_dividerLine, s_leftArrow, s_leftArrowGroup, s_leftValue, s_rectangleOfAggregatedLabel, s_rectangleOfHighlight, s_rightArrow, s_rightArrowGroup, s_rightEllipseOfHighlight, s_rightValue, s_root)
 import RemoteData
@@ -25,7 +26,7 @@ import Tuple exposing (mapFirst)
 import Util.Graph exposing (translate)
 import Util.TextDimensions as TextDimensions
 import Util.Tooltip
-import Util.TooltipType as TooltipType
+import Util.TooltipType as TooltipType exposing (TooltipType)
 import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
@@ -179,51 +180,21 @@ view vc ed aAddress bAddress =
 
         id =
             AggEdge.initId ed.a ed.b
-
-        tooltipAttributes =
-            Maybe.map4
-                (\a b a2b b2a ->
-                    if a.x < b.x then
-                        { leftAddress = a.id
-                        , left = a2b
-                        , rightAddress = b.id
-                        , right = b2a
-                        }
-
-                    else
-                        { leftAddress = b.id
-                        , left = b2a
-                        , rightAddress = a.id
-                        , right = a2b
-                        }
-                )
-                ed.aAddress
-                ed.bAddress
-                (RemoteData.toMaybe ed.a2b)
-                (RemoteData.toMaybe ed.b2a)
-                |> Maybe.map TooltipType.AggEdge
-                |> Maybe.map
-                    (Tooltip.attributes (AggEdge.idToString id)
-                        (Util.Tooltip.tooltipConfig vc TooltipMsg
-                            |> Tooltip.withOpenDelay 100
-                        )
-                    )
-                |> Maybe.withDefault []
     in
     g
-        [ AggEdge.idToString id |> Svg.id
-        ]
+        (tooltipAttributes vc id ed)
         [ Theme.aggregatedLabelWithAttributes
             (Theme.aggregatedLabelAttributes
                 |> s_root
-                    ([ translate
+                    [ translate
                         (x - totalWidth / 2)
                         (y - (Theme.aggregatedLabel_details.height / 2))
                         |> transform
-                     , pointer
-                     ]
-                        ++ tooltipAttributes
-                    )
+                    , id
+                        |> UserMovesMouseOverAggEdge
+                        |> onMouseOver
+                    , pointer
+                    ]
                 |> s_rectangleOfAggregatedLabel
                     [ width <| String.fromFloat rectangleWidth
                     ]
@@ -328,8 +299,7 @@ highlight vc ed aAddress bAddress =
             ]
     in
     g
-        [ AggEdge.idToString id |> Svg.id
-        , id
+        [ id
             |> UserClickedAggEdge
             |> onClickWithStop
         , id
@@ -491,3 +461,54 @@ edge vc ed aAddress bAddress hl =
             ]
             []
         ]
+        |> List.singleton
+        |> g (tooltipEventHandlers vc id ed)
+
+
+tooltipAttributes : View.Config -> ( Id, Id ) -> AggEdge -> List (Svg.Styled.Attribute Msg)
+tooltipAttributes vc id ed =
+    aggEdgeToTooltipType ed
+        |> Maybe.map
+            (Tooltip.attributes (AggEdge.idToString id)
+                (Util.Tooltip.tooltipConfig vc TooltipMsg
+                    |> Tooltip.withOpenDelay 100
+                )
+            )
+        |> Maybe.withDefault []
+
+
+tooltipEventHandlers : View.Config -> ( Id, Id ) -> AggEdge -> List (Svg.Styled.Attribute Msg)
+tooltipEventHandlers vc id ed =
+    aggEdgeToTooltipType ed
+        |> Maybe.map
+            (Tooltip.eventHandlers (AggEdge.idToString id)
+                (Util.Tooltip.tooltipConfig vc TooltipMsg
+                    |> Tooltip.withOpenDelay 100
+                )
+            )
+        |> Maybe.withDefault []
+
+
+aggEdgeToTooltipType : AggEdge -> Maybe TooltipType
+aggEdgeToTooltipType ed =
+    Maybe.map4
+        (\a b a2b b2a ->
+            if a.x < b.x then
+                { leftAddress = a.id
+                , left = a2b
+                , rightAddress = b.id
+                , right = b2a
+                }
+
+            else
+                { leftAddress = b.id
+                , left = b2a
+                , rightAddress = a.id
+                , right = a2b
+                }
+        )
+        ed.aAddress
+        ed.bAddress
+        (RemoteData.toMaybe ed.a2b)
+        (RemoteData.toMaybe ed.b2a)
+        |> Maybe.map TooltipType.AggEdge
