@@ -1057,11 +1057,10 @@ updateByMsg plugins uc msg model =
 
         AddressDetailsMsg addressId subm ->
             let
+                network =
+                    Id.network addressId
+
                 fetchTagSummariesForNeigbors neighbors =
-                    let
-                        network =
-                            Id.network addressId
-                    in
                     neighbors
                         |> List.map (.address >> .address)
                         |> fetchTagSummaryForIds True model.tagSummaries BrowserGotTagSummaries network
@@ -1076,10 +1075,6 @@ updateByMsg plugins uc msg model =
                     fetchTagSummariesForNeigbors neighbors
 
                 AddressDetails.BrowserGotAddressesForTags _ addresses ->
-                    let
-                        network =
-                            Id.network addressId
-                    in
                     addresses
                         |> List.map .address
                         |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
@@ -4678,17 +4673,20 @@ addTagSummaryToModel includesBestClusterTag id data m =
                 || (data.bestLabel /= Nothing)
                 || (data.bestActor /= Nothing)
 
+        directTagCount =
+            data.tagCount - Maybe.withDefault 0 data.tagCountIndirect
+
         d =
-            if data.tagCount > 0 && includesBestClusterTag then
+            if directTagCount > 0 && includesBestClusterTag then
                 HasTagSummaryWithCluster data
 
-            else if data.tagCount > 0 && not includesBestClusterTag then
+            else if directTagCount > 0 && not includesBestClusterTag then
                 HasTagSummaryWithoutCluster data
 
-            else if data.tagCount == 0 && includesBestClusterTag && hasClusterTagSummaryData then
+            else if directTagCount == 0 && includesBestClusterTag && hasClusterTagSummaryData then
                 HasTagSummaryOnlyWithCluster data
 
-            else if data.tagCount == 0 && not includesBestClusterTag then
+            else if directTagCount == 0 && not includesBestClusterTag then
                 NoTagsWithoutCluster
 
             else
