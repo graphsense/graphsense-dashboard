@@ -111,8 +111,9 @@ config styles vc ratc _ =
                     HasTagSummaryWithCluster ts ->
                         withTagSummary ts
 
-                    HasTagSummaryOnlyWithCluster ts ->
-                        withTagSummary ts
+                    HasTagSummaryOnlyWithCluster _ ->
+                        -- don't show cluster tags in this table
+                        []
 
                     HasTagSummaryWithoutCluster ts ->
                         withTagSummary ts

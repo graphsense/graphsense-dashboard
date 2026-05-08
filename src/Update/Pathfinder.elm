@@ -646,6 +646,21 @@ updateByMsg plugins uc msg model =
 
         UserReleasedNormalKey key ->
             case ( model.modPressed, key ) of
+                ( True, "a" ) ->
+                    let
+                        allAddresses =
+                            Dict.keys model.network.addresses
+                                |> List.map MSelectedAddress
+
+                        allTxs =
+                            Dict.keys model.network.txs
+                                |> List.map MSelectedTx
+
+                        allItems =
+                            allAddresses ++ allTxs
+                    in
+                    n (multiSelect model allItems False)
+
                 ( True, "z" ) ->
                     update plugins uc UserClickedUndo model
 
@@ -1042,11 +1057,10 @@ updateByMsg plugins uc msg model =
 
         AddressDetailsMsg addressId subm ->
             let
+                network =
+                    Id.network addressId
+
                 fetchTagSummariesForNeigbors neighbors =
-                    let
-                        network =
-                            Id.network addressId
-                    in
                     neighbors
                         |> List.map (.address >> .address)
                         |> fetchTagSummaryForIds True model.tagSummaries BrowserGotTagSummaries network
@@ -1061,10 +1075,6 @@ updateByMsg plugins uc msg model =
                     fetchTagSummariesForNeigbors neighbors
 
                 AddressDetails.BrowserGotAddressesForTags _ addresses ->
-                    let
-                        network =
-                            Id.network addressId
-                    in
                     addresses
                         |> List.map .address
                         |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
@@ -1374,7 +1384,7 @@ updateByMsg plugins uc msg model =
                                     List.filter isInBBoxAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
 
                                 modelS =
-                                    multiSelect model (selectedTxs ++ selectedAdr) False
+                                    multiSelect model (selectedTxs ++ selectedAdr) model.modPressed
                             in
                             n
                                 { modelS
@@ -1472,7 +1482,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserPushesLeftMouseButtonOnGraph coords ->
-            ( { model
+            { model
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
@@ -1480,12 +1490,16 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             NoDragging
-              }
-            , []
-            )
+            }
+                |> (if not model.modPressed && model.pointerTool == Select then
+                        unselect
+
+                    else
+                        n
+                   )
 
         UserPushesRightMouseButtonOnGraph coords ->
-            ( { model
+            { model
                 | pointerTool = Select
                 , dragging =
                     case ( model.dragging, model.transform.state ) of
@@ -1494,9 +1508,13 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             NoDragging
-              }
-            , []
-            )
+            }
+                |> (if not model.modPressed then
+                        unselect
+
+                    else
+                        n
+                   )
 
         UserPushesLeftMouseButtonOnAddress id coords ->
             ( { model
@@ -4745,17 +4763,20 @@ addTagSummaryToModel includesBestClusterTag id data m =
                 || (data.bestLabel /= Nothing)
                 || (data.bestActor /= Nothing)
 
+        directTagCount =
+            data.tagCount - Maybe.withDefault 0 data.tagCountIndirect
+
         d =
-            if data.tagCount > 0 && includesBestClusterTag then
+            if directTagCount > 0 && includesBestClusterTag then
                 HasTagSummaryWithCluster data
 
-            else if data.tagCount > 0 && not includesBestClusterTag then
+            else if directTagCount > 0 && not includesBestClusterTag then
                 HasTagSummaryWithoutCluster data
 
-            else if data.tagCount == 0 && includesBestClusterTag && hasClusterTagSummaryData then
+            else if directTagCount == 0 && includesBestClusterTag && hasClusterTagSummaryData then
                 HasTagSummaryOnlyWithCluster data
 
-            else if data.tagCount == 0 && not includesBestClusterTag then
+            else if directTagCount == 0 && not includesBestClusterTag then
                 NoTagsWithoutCluster
 
             else
