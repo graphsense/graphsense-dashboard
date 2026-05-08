@@ -10,7 +10,7 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
-import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -1717,6 +1717,22 @@ updateByMsg plugins uc msg model =
                                         update plugins uc (UserClickedAddressExpandHandle id direction) model
                             )
                         |> Maybe.withDefault (n model)
+
+                _ ->
+                    n model
+
+        UserPressedArrowKeyUp ->
+            case model.selection of
+                SelectedAddress id ->
+                    focusVerticalNeighborAddress uc id True model
+
+                _ ->
+                    n model
+
+        UserPressedArrowKeyDown ->
+            case model.selection of
+                SelectedAddress id ->
+                    focusVerticalNeighborAddress uc id False model
 
                 _ ->
                     n model
@@ -4319,6 +4335,80 @@ focusNeighborAddress uc anchorId direction model =
                     )
                         { x = neighbor.x * unit
                         , y = A.getTo neighbor.y * unit
+                        , z = Transform.initZ
+                        }
+                        m1.transform
+            in
+            ( { m1 | transform = transform }, eff )
+
+        Nothing ->
+            n model
+
+
+focusVerticalNeighborAddress : Update.Config -> Id -> Bool -> Model -> ( Model, List Effect )
+focusVerticalNeighborAddress uc anchorId goingUp model =
+    let
+        minDy =
+            nodeYOffset / 2
+
+        xWeight =
+            2
+
+        neighbor =
+            Dict.get anchorId model.network.addresses
+                |> Maybe.andThen
+                    (\anchor ->
+                        let
+                            anchorY =
+                                A.getTo anchor.y
+                        in
+                        Dict.values model.network.addresses
+                            |> List.filterMap
+                                (\addr ->
+                                    if addr.id == anchorId then
+                                        Nothing
+
+                                    else
+                                        let
+                                            dy =
+                                                A.getTo addr.y - anchorY
+
+                                            isAbove =
+                                                dy <= -minDy
+
+                                            isBelow =
+                                                dy >= minDy
+                                        in
+                                        if (goingUp && isAbove) || (not goingUp && isBelow) then
+                                            Just ( addr, abs dy + xWeight * abs (addr.x - anchor.x) )
+
+                                        else
+                                            Nothing
+                                )
+                            |> List.sortBy Tuple.second
+                            |> List.head
+                            |> Maybe.map Tuple.first
+                    )
+    in
+    case neighbor of
+        Just n_ ->
+            let
+                ( m1, eff ) =
+                    selectAddress n_.id model
+
+                transform =
+                    (uc.size
+                        |> Maybe.map
+                            (\{ width, height } ->
+                                { width = width
+                                , height = height
+                                }
+                            )
+                        |> Maybe.map Transform.politeMove
+                        |> Maybe.withDefault Transform.move
+                    )
+                        { x = n_.x * unit
+                        , y = A.getTo n_.y * unit
                         , z = Transform.initZ
                         }
                         m1.transform

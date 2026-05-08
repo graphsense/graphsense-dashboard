@@ -64,6 +64,12 @@ toKeyDown keyValue =
         "ArrowRight" ->
             UserPressedArrowKey Outgoing |> onlyFireOutsideOfTextInput
 
+        "ArrowUp" ->
+            UserPressedArrowKeyUp |> onlyFireOutsideOfTextInput
+
+        "ArrowDown" ->
+            UserPressedArrowKeyDown |> onlyFireOutsideOfTextInput
+
         _ ->
             Decode.fail "not handled"
 

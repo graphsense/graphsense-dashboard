@@ -88,6 +88,12 @@ shallPushHistory plugins msg _ =
         UserPressedArrowKey _ ->
             False
 
+        UserPressedArrowKeyUp ->
+            False
+
+        UserPressedArrowKeyDown ->
+            False
+
         UserClickedShowLegend ->
             False
 
