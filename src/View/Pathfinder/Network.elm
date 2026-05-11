@@ -10,6 +10,7 @@ import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
@@ -34,13 +35,13 @@ type alias ClusterContext =
     }
 
 
-addresses : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses plugins vc pc annotations =
+addresses : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses plugins vc pc searchBox annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
             , Annotations.getAnnotation id annotations
-                |> Svg.lazy5 Address.view plugins vc pc address
+                |> Svg.lazy6 Address.view plugins vc pc (SearchBox.highlightFor searchBox id) address
             )
                 :: svg
         )
@@ -48,8 +49,8 @@ addresses plugins vc pc annotations =
         >> Keyed.node "g" []
 
 
-relations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-relations plugins vc gc annotations txs agg conversions =
+relations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+relations plugins vc gc searchBox annotations txs agg conversions =
     (case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
             ( Dict.values agg, [], [] )
@@ -93,7 +94,7 @@ relations plugins vc gc annotations txs agg conversions =
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "te"
                                     , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc Edge tx
+                                        |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
                                     )
                                 )
                             |> Keyed.node "g" []
@@ -102,7 +103,7 @@ relations plugins vc gc annotations txs agg conversions =
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "tl"
                                     , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc Label tx
+                                        |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
                                     )
                                 )
                             |> Keyed.node "g" []
@@ -111,7 +112,7 @@ relations plugins vc gc annotations txs agg conversions =
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "tn"
                                     , Annotations.getAnnotation tx.id annotations
-                                        |> Svg.lazy5 Tx.view plugins vc gc tx
+                                        |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
                                     )
                                 )
                             |> Keyed.node "g" []
@@ -145,7 +146,7 @@ relations plugins vc gc annotations txs agg conversions =
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "teh"
                                     , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc Edge tx
+                                        |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
                                     )
                                 )
                             |> Keyed.node "g" []
@@ -154,7 +155,7 @@ relations plugins vc gc annotations txs agg conversions =
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "tlh"
                                     , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc Label tx
+                                        |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
                                     )
                                 )
                             |> Keyed.node "g" []
@@ -163,7 +164,7 @@ relations plugins vc gc annotations txs agg conversions =
                                 (\tx ->
                                     ( Id.toString tx.id |> (++) "tnh"
                                     , Annotations.getAnnotation tx.id annotations
-                                        |> Svg.lazy5 Tx.view plugins vc gc tx
+                                        |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
                                     )
                                 )
                             |> Keyed.node "g" []

@@ -13,6 +13,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails
 import Msg.Pathfinder.RelationDetails
 import Msg.Pathfinder.TxDetails
+import Ports
 import RemoteData
 import Set
 import Sub.Graph.Transform as Transform
@@ -124,6 +125,7 @@ subscriptions model =
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
+    , Ports.searchHotkeyPressed (\_ -> UserPressedSearchHotkey)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)
 
     -- , Time.every 60000 Tick

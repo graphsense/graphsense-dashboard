@@ -58,6 +58,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.SearchBox as OnGraphSearch
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
@@ -75,6 +76,7 @@ import Msg.Pathfinder
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
+import Msg.Pathfinder.SearchBox as OnGraphSearchMsg
 import Msg.Pathfinder.TxDetails as TxDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
@@ -102,6 +104,7 @@ import Update.Pathfinder.ConversionDetails as ConversionDetails
 import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestAggEdges, ingestTxs)
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.RelationDetails as RelationDetails
+import Update.Pathfinder.SearchBox as OnGraphSearchUpdate
 import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
@@ -159,6 +162,54 @@ dispatchEventualMessages model =
     )
 
 
+panToCurrentMatch : Update.Config -> Maybe Id -> Model -> ( Model, List Effect )
+panToCurrentMatch uc previousMatch model =
+    let
+        matchId =
+            OnGraphSearch.currentMatch model.onGraphSearch
+    in
+    case matchId of
+        Just id ->
+            if previousMatch == Just id then
+                n model
+
+            else
+                case matchCoords id model.network of
+                    Just ( x, y ) ->
+                        let
+                            move =
+                                uc.size
+                                    |> Maybe.map (\s -> Transform.politeMove { width = s.width, height = s.height })
+                                    |> Maybe.withDefault Transform.move
+
+                            transform =
+                                move
+                                    { x = x * unit
+                                    , y = y * unit
+                                    , z = Transform.getCurrent model.transform |> .z
+                                    }
+                                    model.transform
+                        in
+                        n { model | transform = transform }
+
+                    Nothing ->
+                        n model
+
+        Nothing ->
+            n model
+
+
+matchCoords : Id -> Network -> Maybe ( Float, Float )
+matchCoords id network =
+    case Dict.get id network.addresses of
+        Just a ->
+            Just ( a.x + a.dx, A.getTo a.y + a.dy )
+
+        Nothing ->
+            Dict.get id network.txs
+                |> Maybe.map (\t -> ( t.x + t.dx, A.getTo t.y + t.dy ))
+
+
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
@@ -167,7 +218,52 @@ update plugins uc msg model =
         |> and syncUrl
         |> and (syncSidePanel uc)
         |> and dispatchEventualMessages
+        |> and refreshSearchMatches
+        |> and (closeSearchOnNodeClick msg)
         |> and (closeTooltip msg)
+
+
+refreshSearchMatches : Model -> ( Model, List Effect )
+refreshSearchMatches model =
+    n { model | onGraphSearch = OnGraphSearchUpdate.refreshMatches (searchContext model) model.onGraphSearch }
+
+
+searchContext : Model -> OnGraphSearchUpdate.Context
+searchContext model =
+    { network = model.network
+    , annotations = model.annotations
+    , tagSummaries = model.tagSummaries
+    }
+
+
+closeSearchOnNodeClick : Msg -> Model -> ( Model, List Effect )
+closeSearchOnNodeClick msg model =
+    let
+        isNodeClick =
+            case msg of
+                UserClickedAddress _ ->
+                    True
+
+                UserClickedTx _ ->
+                    True
+
+                UserClickedCrosschainAddress _ ->
+                    True
+
+                UserClickedAggEdge _ ->
+                    True
+
+                UserClickedConversionEdge _ _ ->
+                    True
+
+                _ ->
+                    False
+    in
+    if isNodeClick && model.onGraphSearch.visible then
+        n { model | onGraphSearch = OnGraphSearchUpdate.close }
+
+    else
+        n model
 
 
 closeTooltip : Msg -> Model -> ( Model, List Effect )
@@ -606,6 +702,71 @@ updateByMsg plugins uc msg model =
         NoOp ->
             n model
 
+        UserPressedSearchHotkey ->
+            let
+                newSearch =
+                    OnGraphSearchUpdate.open (searchContext model) model.onGraphSearch
+
+                focusCmd =
+                    Dom.focus OnGraphSearch.inputId
+                        |> Task.attempt (\_ -> NoOp)
+                        |> CmdEffect
+            in
+            ( { model | onGraphSearch = newSearch }
+            , [ focusCmd ]
+            )
+                |> and (panToCurrentMatch uc Nothing)
+
+        OnGraphSearchMsg sbMsg ->
+            let
+                previousMatch =
+                    OnGraphSearch.currentMatch model.onGraphSearch
+
+                newSearch =
+                    OnGraphSearchUpdate.update sbMsg (searchContext model) model.onGraphSearch
+
+                shouldKeepFocus =
+                    case sbMsg of
+                        OnGraphSearchMsg.UserClickedClose ->
+                            False
+
+                        _ ->
+                            True
+
+                forcePan =
+                    case sbMsg of
+                        OnGraphSearchMsg.UserClickedNext ->
+                            True
+
+                        OnGraphSearchMsg.UserClickedPrev ->
+                            True
+
+                        OnGraphSearchMsg.UserPressedEnterInBox ->
+                            True
+
+                        _ ->
+                            False
+
+                prevForPan =
+                    if forcePan then
+                        Nothing
+
+                    else
+                        previousMatch
+
+                focusEff =
+                    if shouldKeepFocus then
+                        [ Dom.focus OnGraphSearch.inputId
+                            |> Task.attempt (\_ -> NoOp)
+                            |> CmdEffect
+                        ]
+
+                    else
+                        []
+            in
+            ( { model | onGraphSearch = newSearch }, focusEff )
+                |> and (panToCurrentMatch uc prevForPan)
+
         BrowserGotActor id data ->
             let
                 isMatchingActor ( aid, a ) =
@@ -639,7 +800,11 @@ updateByMsg plugins uc msg model =
             n { model | modPressed = False }
 
         UserReleasedEscape ->
-            unselect model |> Tuple.mapFirst (s_details Nothing)
+            if model.onGraphSearch.visible then
+                n { model | onGraphSearch = OnGraphSearchUpdate.close }
+
+            else
+                unselect model |> Tuple.mapFirst (s_details Nothing)
 
         UserReleasedDeleteKey ->
             deleteSelection model

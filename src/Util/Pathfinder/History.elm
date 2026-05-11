@@ -296,6 +296,12 @@ shallPushHistory plugins msg _ =
         NoOp ->
             False
 
+        UserPressedSearchHotkey ->
+            False
+
+        OnGraphSearchMsg _ ->
+            False
+
         BrowserGotActor _ _ ->
             False
 

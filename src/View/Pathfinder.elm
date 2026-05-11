@@ -56,6 +56,7 @@ import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.ConversionDetails as ConversionDetails
 import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
+import View.Pathfinder.SearchBox as OnGraphSearchView
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.TxDetails as TxDetails
 import View.Search
@@ -90,6 +91,7 @@ graph plugins pluginStates vc gc model =
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc model
     , bottomCenterPanel vc model
+    , OnGraphSearchView.view vc model.onGraphSearch
     , Util.Tooltip.view vc model
         |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
     ]
@@ -921,8 +923,8 @@ graphSvg plugins vc gc model dim =
             , gradient "account" { outgoing = False, reverse = True }
             , dropShadowEdgeHighlight
             ]
-        , Svg.lazy7 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy5 Network.addresses plugins vc gc model.annotations model.network.addresses
+        , Network.relations plugins vc gc model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
+        , Svg.lazy6 Network.addresses plugins vc gc model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

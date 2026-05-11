@@ -611,3 +611,11 @@ app.ports.blur.subscribe(id => {
   if (typeof el.blur !== 'function') return
   el.blur()
 })
+
+document.addEventListener('keydown', (e) => {
+  const isFindKey = (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'f' || e.key === 'F')
+  if (!isFindKey) return
+  if (!window.location.pathname.startsWith('/pathfinder')) return
+  e.preventDefault()
+  app.ports.searchHotkeyPressed.send(null)
+}, true)
