@@ -19,7 +19,6 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Tuple3
 import Util.Annotations as Annotations
 import View.Pathfinder.Address as Address
 import View.Pathfinder.AggEdge as AggEdge
@@ -51,126 +50,137 @@ addresses plugins vc pc searchBox annotations =
 
 relations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
 relations plugins vc gc searchBox annotations txs agg conversions =
-    (case gc.tracingMode of
+    case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
-            ( Dict.values agg, [], [] )
+            Svg.lazy5 aggRelations plugins vc gc annotations agg
 
         Pathfinder.TransactionTracingMode ->
-            ( []
-            , Dict.values txs
-            , Dict.values conversions
-              --|> List.concat
-            )
-    )
-        |> Tuple3.mapFirst
-            (List.filter
-                (\edge ->
-                    RemoteData.isSuccess edge.a2b && RemoteData.isSuccess edge.b2a
-                )
-            )
-        |> (\( agg_, txs_, conversions_ ) ->
-                let
-                    ( txsHighlighted_, txsRegular_ ) =
-                        List.partition (\tx -> tx.hovered || tx.selected) txs_
-                in
-                (if vc.showConversionEdges then
-                    [ conversions_
-                        |> List.filterMap
-                            (\x -> Maybe.map2 (\a b -> ( x, a, b )) x.inputAddress x.outputAddress)
-                        |> List.Extra.gatherEqualsBy (\( _, a, b ) -> ( a, b ))
-                        |> List.concatMap (uncurry (::) >> List.indexedMap Tuple.pair)
-                        |> List.map
-                            (\( i, ( conversion, a, b ) ) ->
-                                conversionEdge plugins vc gc conversion i a b
-                            )
-                        |> Keyed.node "g" []
-                    ]
+            Svg.lazy7 txRelations plugins vc gc searchBox annotations txs conversions
 
-                 else
-                    []
+
+aggRelations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict ( Id, Id ) AggEdge -> Svg Msg
+aggRelations plugins vc gc _ agg =
+    let
+        agg_ =
+            Dict.values agg
+                |> List.filter
+                    (\edge ->
+                        RemoteData.isSuccess edge.a2b && RemoteData.isSuccess edge.b2a
+                    )
+    in
+    Svg.g []
+        [ agg_
+            |> List.filterMap
+                (\edge ->
+                    Maybe.map2 (aggEdgeEdge plugins vc gc edge)
+                        edge.aAddress
+                        edge.bAddress
                 )
-                    ++ [ txsRegular_
-                            |> List.map
-                                (\tx ->
-                                    ( Id.toString tx.id |> (++) "te"
-                                    , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
-                                    )
-                                )
-                            |> Keyed.node "g" []
-                       , txsRegular_
-                            |> List.map
-                                (\tx ->
-                                    ( Id.toString tx.id |> (++) "tl"
-                                    , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
-                                    )
-                                )
-                            |> Keyed.node "g" []
-                       , txsRegular_
-                            |> List.map
-                                (\tx ->
-                                    ( Id.toString tx.id |> (++) "tn"
-                                    , Annotations.getAnnotation tx.id annotations
-                                        |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
-                                    )
-                                )
-                            |> Keyed.node "g" []
-                       , agg_
-                            |> List.filterMap
-                                (\edge ->
-                                    Maybe.map2 (aggEdgeEdge plugins vc gc edge)
-                                        edge.aAddress
-                                        edge.bAddress
-                                )
-                            |> Keyed.node "g" []
-                       , agg_
-                            |> List.filterMap
-                                (\edge ->
-                                    Maybe.map2 (aggEdgeNode plugins vc gc edge)
-                                        edge.aAddress
-                                        edge.bAddress
-                                )
-                            |> Keyed.node "g" []
-                       , agg_
-                            |> List.filter (\a -> a.selected || a.hovered)
-                            |> List.filterMap
-                                (\edge ->
-                                    Maybe.map2 (aggEdgeNodeHighlight plugins vc gc edge)
-                                        edge.aAddress
-                                        edge.bAddress
-                                )
-                            |> Keyed.node "g" []
-                       , txsHighlighted_
-                            |> List.map
-                                (\tx ->
-                                    ( Id.toString tx.id |> (++) "teh"
-                                    , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
-                                    )
-                                )
-                            |> Keyed.node "g" []
-                       , txsHighlighted_
-                            |> List.map
-                                (\tx ->
-                                    ( Id.toString tx.id |> (++) "tlh"
-                                    , Annotations.getAnnotation tx.id annotations
-                                        |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
-                                    )
-                                )
-                            |> Keyed.node "g" []
-                       , txsHighlighted_
-                            |> List.map
-                                (\tx ->
-                                    ( Id.toString tx.id |> (++) "tnh"
-                                    , Annotations.getAnnotation tx.id annotations
-                                        |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
-                                    )
-                                )
-                            |> Keyed.node "g" []
-                       ]
-                    |> Svg.g []
-           )
+            |> Keyed.node "g" []
+        , agg_
+            |> List.filterMap
+                (\edge ->
+                    Maybe.map2 (aggEdgeNode plugins vc gc edge)
+                        edge.aAddress
+                        edge.bAddress
+                )
+            |> Keyed.node "g" []
+        , agg_
+            |> List.filter (\a -> a.selected || a.hovered)
+            |> List.filterMap
+                (\edge ->
+                    Maybe.map2 (aggEdgeNodeHighlight plugins vc gc edge)
+                        edge.aAddress
+                        edge.bAddress
+                )
+            |> Keyed.node "g" []
+        ]
+
+
+txRelations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+txRelations plugins vc gc searchBox annotations txs conversions =
+    let
+        txs_ =
+            Dict.values txs
+
+        conversions_ =
+            Dict.values conversions
+
+        ( txsHighlighted_, txsRegular_ ) =
+            List.partition (\tx -> tx.hovered || tx.selected) txs_
+    in
+    (if vc.showConversionEdges then
+        [ conversions_
+            |> List.filterMap
+                (\x -> Maybe.map2 (\a b -> ( x, a, b )) x.inputAddress x.outputAddress)
+            |> List.Extra.gatherEqualsBy (\( _, a, b ) -> ( a, b ))
+            |> List.concatMap (uncurry (::) >> List.indexedMap Tuple.pair)
+            |> List.map
+                (\( i, ( conversion, a, b ) ) ->
+                    conversionEdge plugins vc gc conversion i a b
+                )
+            |> Keyed.node "g" []
+        ]
+
+     else
+        []
+    )
+        ++ [ txsRegular_
+                |> List.map
+                    (\tx ->
+                        ( Id.toString tx.id |> (++) "te"
+                        , Annotations.getAnnotation tx.id annotations
+                            |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
+                        )
+                    )
+                |> Keyed.node "g" []
+           , txsRegular_
+                |> List.map
+                    (\tx ->
+                        ( Id.toString tx.id |> (++) "tl"
+                        , Annotations.getAnnotation tx.id annotations
+                            |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
+                        )
+                    )
+                |> Keyed.node "g" []
+           , txsRegular_
+                |> List.map
+                    (\tx ->
+                        ( Id.toString tx.id |> (++) "tn"
+                        , Annotations.getAnnotation tx.id annotations
+                            |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
+                        )
+                    )
+                |> Keyed.node "g" []
+           , txsHighlighted_
+                |> List.map
+                    (\tx ->
+                        ( Id.toString tx.id |> (++) "teh"
+                        , Annotations.getAnnotation tx.id annotations
+                            |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
+                        )
+                    )
+                |> Keyed.node "g" []
+           , txsHighlighted_
+                |> List.map
+                    (\tx ->
+                        ( Id.toString tx.id |> (++) "tlh"
+                        , Annotations.getAnnotation tx.id annotations
+                            |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
+                        )
+                    )
+                |> Keyed.node "g" []
+           , txsHighlighted_
+                |> List.map
+                    (\tx ->
+                        ( Id.toString tx.id |> (++) "tnh"
+                        , Annotations.getAnnotation tx.id annotations
+                            |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
+                        )
+                    )
+                |> Keyed.node "g" []
+           ]
+        |> Svg.g []
 
 
 aggEdgeNodeHighlight : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
