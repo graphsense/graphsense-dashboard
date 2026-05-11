@@ -65,9 +65,11 @@ address plugins vc gc addr =
         [ Css.addressRoot vc gc.highlighter |> css
         , Json.Decode.succeed ( UserClickedAddress addr.id, True )
             |> stopPropagationOn "click"
+        , Json.Decode.succeed ( NoOp, True )
+            |> preventDefaultOn "contextmenu"
         , decodeCoords Coords
-            |> Json.Decode.map (\c -> { message = UserRightClickedAddress addr.id c, stopPropagation = True, preventDefault = True })
-            |> custom "contextmenu"
+            |> Json.Decode.map (UserRightClickedAddress addr.id)
+            |> Util.onRightMousedownWithStop
         , UserHoversAddress addr.id
             |> onMouseOver
         , UserLeavesThing

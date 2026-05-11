@@ -27,6 +27,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Tuple exposing (second)
 import Util.Data as Data
 import Util.Graph exposing (decodeCoords, filterTxValue)
+import Util.View as Util
 import View.Graph.Label as Label
 import View.Locale as Locale
 
@@ -278,9 +279,11 @@ drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver,
         , Json.Decode.succeed ( onClick, True )
             |> Svg.stopPropagationOn "click"
         , onMouseOut UserLeavesThing
+        , Json.Decode.succeed ( NoOp, True )
+            |> preventDefaultOn "contextmenu"
         , decodeCoords Coords
-            |> Json.Decode.map (\c -> { message = onRightClick c, stopPropagation = True, preventDefault = True })
-            |> custom "contextmenu"
+            |> Json.Decode.map onRightClick
+            |> Util.onRightMousedownWithStop
         ]
         [ S.path
             [ dd
