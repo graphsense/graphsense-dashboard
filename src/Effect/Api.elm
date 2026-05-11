@@ -722,7 +722,7 @@ perform apiKey wrapMsg cancelMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityForAddressEffect { currency, address } toMsg ->
-            Api.Request.Addresses.getAddressEntity currency address Nothing
+            Api.Request.Addresses.getAddressCluster currency address Nothing
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, order, tokenCurrency, pagesize, nextpage } toMsg ->
