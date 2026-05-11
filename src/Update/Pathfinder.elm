@@ -2343,8 +2343,7 @@ updateByMsg plugins uc msg model =
         UserOpensContextMenu coordsNew cmtype ->
             case model.contextMenu of
                 Nothing ->
-                    { model | contextMenu = Just ( coordsNew, cmtype ) }
-                        |> selectFromContextMenu cmtype
+                    n { model | contextMenu = Just ( coordsNew, cmtype ) }
 
                 Just ( coords, type_ ) ->
                     let
@@ -2357,8 +2356,7 @@ updateByMsg plugins uc msg model =
                         -- close on second click
 
                     else
-                        { model | contextMenu = Just ( coordsNew, cmtype ) }
-                            |> selectFromContextMenu cmtype
+                        n { model | contextMenu = Just ( coordsNew, cmtype ) }
 
         UserClosesContextMenu ->
             n { model | contextMenu = Nothing, helpDropdownOpen = False }
@@ -2726,22 +2724,6 @@ updateByMsg plugins uc msg model =
             , Tooltip.reposition model.tooltip
                 |> List.map TooltipEffect
             )
-
-
-selectFromContextMenu : ContextMenu.ContextMenuType -> Model -> ( Model, List Effect )
-selectFromContextMenu cmtype model =
-    case cmtype of
-        ContextMenu.AddressContextMenu id ->
-            selectAddress id model
-
-        ContextMenu.TransactionContextMenu id ->
-            selectTx id model
-
-        ContextMenu.AddressIdChevronActions _ ->
-            n model
-
-        ContextMenu.TransactionIdChevronActions _ ->
-            n model
 
 
 handleTooltipMsg : Tooltip.Msg TooltipType -> Model -> ( Model, List Effect )

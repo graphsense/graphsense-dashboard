@@ -47,7 +47,7 @@ import Util.ExternalLinks
 import Util.Graph
 import Util.Tooltip
 import Util.TooltipType
-import Util.View exposing (fixFillRule, hovercard, none)
+import Util.View exposing (fixFillRule, hovercard, none, onRightMousedownWithStop)
 import View.Controls as Controls
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -231,7 +231,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                         --     |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuAlignHorizontally
                           , icon = HIcons.iconsHorizontalAlign {}
-                          , text = Locale.string vc.locale "align horizontally"
+                          , text = Locale.string vc.locale "Align horizontally"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.setDisabled
@@ -245,7 +245,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
-                          , text = "copy address ID"
+                          , text = "Copy address ID"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.setDisabled
@@ -259,7 +259,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
                           , icon = HIcons.iconsDeleteS {}
-                          , text = "remove from graph"
+                          , text = "Remove from graph"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
@@ -279,7 +279,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserOpensDialogWindow (AddTags id)
                           , icon = HIcons.iconsAddTagOutlinedS {}
-                          , text = "report a tag"
+                          , text = "Report a tag"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.setDisabled
@@ -874,15 +874,8 @@ graphSvg plugins vc gc model dim =
                 (Json.Decode.field "offsetX" Json.Decode.float)
                 (Json.Decode.field "offsetY" Json.Decode.float)
             )
-         , Util.Graph.decodeCoords Coords.Coords
-            |> Json.Decode.map
-                (\c ->
-                    { message = UserPushesRightMouseButtonOnGraph c
-                    , stopPropagation = True
-                    , preventDefault = True
-                    }
-                )
-            |> Svg.custom "contextmenu"
+         , Json.Decode.succeed ( NoOp, True )
+            |> Svg.preventDefaultOn "contextmenu"
          , Svg.custom "mousedown"
             (Json.Decode.map2
                 (\button coords ->
@@ -902,9 +895,6 @@ graphSvg plugins vc gc model dim =
                 (Json.Decode.field "button" Json.Decode.int)
                 (Util.Graph.decodeCoords Coords)
             )
-         , Util.Graph.decodeCoords Coords.Coords
-            |> Json.Decode.map (\_ -> { message = NoOp, stopPropagation = True, preventDefault = True })
-            |> custom "contextmenu"
          , Util.View.noTextSelection
          ]
             ++ (if model.dragging /= NoDragging then

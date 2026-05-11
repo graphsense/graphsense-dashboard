@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, onRightMousedownWithStop, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -15,7 +15,7 @@ import Html as BHtml
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title)
-import Html.Styled.Events exposing (stopPropagationOn)
+import Html.Styled.Events exposing (custom, stopPropagationOn)
 import Json.Decode
 import List.Extra
 import Model.Currency as Currency exposing (AssetIdentifier)
@@ -494,6 +494,29 @@ onClickWithStop : msg -> Attribute msg
 onClickWithStop msg =
     Json.Decode.succeed ( msg, True )
         |> stopPropagationOn "click"
+
+
+onRightMousedownWithStop : Json.Decode.Decoder msg -> Attribute msg
+onRightMousedownWithStop decoder =
+    custom "mousedown"
+        (Json.Decode.field "button" Json.Decode.int
+            |> Json.Decode.andThen
+                (\button ->
+                    Json.Decode.andThen
+                        (\msg ->
+                            if button == 2 then
+                                Json.Decode.succeed
+                                    { message = msg
+                                    , stopPropagation = True
+                                    , preventDefault = True
+                                    }
+
+                            else
+                                Json.Decode.fail "no right click"
+                        )
+                        decoder
+                )
+        )
 
 
 pointer : Attribute msg
