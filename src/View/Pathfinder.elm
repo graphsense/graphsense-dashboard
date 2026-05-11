@@ -12,7 +12,7 @@ import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
-import Html.Styled.Events exposing (onClick, onInput, preventDefaultOn, stopPropagationOn)
+import Html.Styled.Events exposing (custom, onClick, onInput, stopPropagationOn)
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -874,6 +874,15 @@ graphSvg plugins vc gc model dim =
                 (Json.Decode.field "offsetX" Json.Decode.float)
                 (Json.Decode.field "offsetY" Json.Decode.float)
             )
+         , Util.Graph.decodeCoords Coords.Coords
+            |> Json.Decode.map
+                (\c ->
+                    { message = UserPushesRightMouseButtonOnGraph c
+                    , stopPropagation = True
+                    , preventDefault = True
+                    }
+                )
+            |> Svg.custom "contextmenu"
          , Svg.custom "mousedown"
             (Json.Decode.map2
                 (\button coords ->
@@ -894,8 +903,8 @@ graphSvg plugins vc gc model dim =
                 (Util.Graph.decodeCoords Coords)
             )
          , Util.Graph.decodeCoords Coords.Coords
-            |> Json.Decode.map (\_ -> ( NoOp, True ))
-            |> preventDefaultOn "contextmenu"
+            |> Json.Decode.map (\_ -> { message = NoOp, stopPropagation = True, preventDefault = True })
+            |> custom "contextmenu"
          , Util.View.noTextSelection
          ]
             ++ (if model.dragging /= NoDragging then

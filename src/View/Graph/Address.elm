@@ -66,8 +66,8 @@ address plugins vc gc addr =
         , Json.Decode.succeed ( UserClickedAddress addr.id, True )
             |> stopPropagationOn "click"
         , decodeCoords Coords
-            |> Json.Decode.map (\c -> ( UserRightClickedAddress addr.id c, True ))
-            |> preventDefaultOn "contextmenu"
+            |> Json.Decode.map (\c -> { message = UserRightClickedAddress addr.id c, stopPropagation = True, preventDefault = True })
+            |> custom "contextmenu"
         , UserHoversAddress addr.id
             |> onMouseOver
         , UserLeavesThing
