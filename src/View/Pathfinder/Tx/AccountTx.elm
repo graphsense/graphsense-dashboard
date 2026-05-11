@@ -149,11 +149,9 @@ view _ vc pc tx accTx annotation =
                     , css [ Css.cursor Css.pointer ]
                     , Id.toString tx.id
                         |> Svg.Styled.Attributes.id
-                    , Json.Decode.succeed ( NoOp, True )
-                        |> preventDefaultOn "contextmenu"
                     , decodeCoords Coords.Coords
-                        |> Json.Decode.map (\c -> UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id))
-                        |> Util.View.onRightMousedownWithStop
+                        |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.TransactionContextMenu tx.id), True ))
+                        |> preventDefaultOn "contextmenu"
                     ]
                         ++ tooltipAttributes vc tx.id accTx
                 , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton

@@ -25,7 +25,7 @@ import RecordSetter as Rs
 import RemoteData
 import Svg.Styled as Svg exposing (Svg, g, image, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
-import Svg.Styled.Events exposing (custom, onMouseOver, preventDefaultOn, stopPropagationOn)
+import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
@@ -213,11 +213,9 @@ view plugins vc pc address annotation =
                      , UserClickedAddress address.id |> onClickWithStop
                      , UserPushesLeftMouseButtonOnAddress address.id
                         |> Util.Graph.mousedown
-                     , Json.Decode.succeed ( NoOp, True )
-                        |> stopPropagationOn "contextmenu"
                      , decodeCoords Coords.Coords
-                        |> Json.Decode.map (\c -> UserOpensContextMenu c (ContextMenu.AddressContextMenu address.id))
-                        |> Util.View.onRightMousedownWithStop
+                        |> Json.Decode.map (\c -> ( UserOpensContextMenu c (ContextMenu.AddressContextMenu address.id), True ))
+                        |> preventDefaultOn "contextmenu"
                      , css [ Css.cursor Css.pointer ]
                      ]
                         ++ tooltipAttributes

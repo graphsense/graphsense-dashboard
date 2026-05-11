@@ -12,10 +12,10 @@ import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
-import Html.Styled.Events exposing (custom, onClick, onInput, stopPropagationOn)
+import Html.Styled.Events exposing (onClick, onInput, stopPropagationOn)
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
@@ -47,7 +47,7 @@ import Util.ExternalLinks
 import Util.Graph
 import Util.Tooltip
 import Util.TooltipType
-import Util.View exposing (fixFillRule, hovercard, none, onRightMousedownWithStop)
+import Util.View exposing (fixFillRule, hovercard, none)
 import View.Controls as Controls
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -851,11 +851,14 @@ graphSvg plugins vc gc model dim =
                     ]
                     []
                 ]
+
+        updTransform =
+            model.transform
+                |> Transform.update { x = 0, y = 0 } { x = -originShiftX, y = 0 }
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
-         , model.transform
-            |> Transform.update { x = 0, y = 0 } { x = -originShiftX, y = 0 }
+         , updTransform
             |> Transform.viewBox dim
             |> viewBox
          , (Css.Graph.svgRoot vc ++ pointerStyle) |> css
@@ -876,25 +879,6 @@ graphSvg plugins vc gc model dim =
             )
          , Json.Decode.succeed ( NoOp, True )
             |> Svg.preventDefaultOn "contextmenu"
-         , Svg.custom "mousedown"
-            (Json.Decode.map2
-                (\button coords ->
-                    { message =
-                        if button == 2 then
-                            UserPushesRightMouseButtonOnGraph coords
-
-                        else if button == 0 then
-                            UserPushesLeftMouseButtonOnGraph coords
-
-                        else
-                            NoOp
-                    , stopPropagation = False
-                    , preventDefault = button == 2
-                    }
-                )
-                (Json.Decode.field "button" Json.Decode.int)
-                (Util.Graph.decodeCoords Coords)
-            )
          , Util.View.noTextSelection
          ]
             ++ (if model.dragging /= NoDragging then
@@ -920,6 +904,29 @@ graphSvg plugins vc gc model dim =
             , gradient "account" { outgoing = False, reverse = True }
             , dropShadowEdgeHighlight
             ]
+        , updTransform
+            |> Transform.background
+                [ Svg.custom "mousedown"
+                    (Json.Decode.map2
+                        (\button coords ->
+                            { message =
+                                if button == 2 then
+                                    UserPushesRightMouseButtonOnGraph coords
+
+                                else if button == 0 then
+                                    UserPushesLeftMouseButtonOnGraph coords
+
+                                else
+                                    NoOp
+                            , stopPropagation = False
+                            , preventDefault = button == 2
+                            }
+                        )
+                        (Json.Decode.field "button" Json.Decode.int)
+                        (Util.Graph.decodeCoords Coords)
+                    )
+                ]
+                dim
         , Svg.lazy7 Network.relations plugins vc gc model.annotations model.network.txs model.network.aggEdges model.network.conversions
         , Svg.lazy5 Network.addresses plugins vc gc model.annotations model.network.addresses
         , drawDragSelector vc model

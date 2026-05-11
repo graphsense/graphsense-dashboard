@@ -279,11 +279,9 @@ drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver,
         , Json.Decode.succeed ( onClick, True )
             |> Svg.stopPropagationOn "click"
         , onMouseOut UserLeavesThing
-        , Json.Decode.succeed ( NoOp, True )
-            |> preventDefaultOn "contextmenu"
         , decodeCoords Coords
-            |> Json.Decode.map onRightClick
-            |> Util.onRightMousedownWithStop
+            |> Json.Decode.map (\c -> ( onRightClick c, True ))
+            |> preventDefaultOn "contextmenu"
         ]
         [ S.path
             [ dd
