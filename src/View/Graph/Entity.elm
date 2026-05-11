@@ -76,11 +76,9 @@ entity plugins vc gc ent =
         [ Css.entityRoot vc gc.highlighter |> css
         , Json.Decode.succeed ( UserClickedEntity ent.id { x = ent.dx, y = ent.dy }, True )
             |> stopPropagationOn "click"
-        , Json.Decode.succeed ( NoOp, True )
-            |> preventDefaultOn "contextmenu"
         , decodeCoords Coords
-            |> Json.Decode.map (UserRightClickedEntity ent.id)
-            |> Util.onRightMousedownWithStop
+            |> Json.Decode.map (\c -> ( UserRightClickedEntity ent.id c, True ))
+            |> preventDefaultOn "contextmenu"
         , UserHoversEntity ent.id
             |> onMouseOver
         , UserLeavesThing
