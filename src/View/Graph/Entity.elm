@@ -77,8 +77,8 @@ entity plugins vc gc ent =
         , Json.Decode.succeed ( UserClickedEntity ent.id { x = ent.dx, y = ent.dy }, True )
             |> stopPropagationOn "click"
         , decodeCoords Coords
-            |> Json.Decode.map (\c -> ( UserRightClickedEntity ent.id c, True ))
-            |> preventDefaultOn "contextmenu"
+            |> Json.Decode.map (\c -> { message = UserRightClickedEntity ent.id c, stopPropagation = True, preventDefault = True })
+            |> custom "contextmenu"
         , UserHoversEntity ent.id
             |> onMouseOver
         , UserLeavesThing
