@@ -117,7 +117,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
             |> List.concatMap (uncurry (::) >> List.indexedMap Tuple.pair)
             |> List.map
                 (\( i, ( conversion, a, b ) ) ->
-                    conversionEdge plugins vc gc conversion i a b
+                    conversionEdge plugins vc gc searchBox conversion i a b
                 )
             |> Keyed.node "g" []
         ]
@@ -204,10 +204,14 @@ aggEdgeEdge _ vc _ edge aAddress bAddress =
     )
 
 
-conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> ConversionEdge -> Int -> Address -> Address -> ( String, Svg Msg )
-conversionEdge _ vc _ conversion displacementIndex aAddress bAddress =
+conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> ConversionEdge -> Int -> Address -> Address -> ( String, Svg Msg )
+conversionEdge _ vc _ searchBox conversion displacementIndex aAddress bAddress =
+    let
+        ( inputTxId, outputTxId ) =
+            conversion.id
+    in
     ( ConversionEdge.toIdString conversion |> (++) "ce"
-    , Svg.lazy5 ConversionEdge.view vc conversion displacementIndex aAddress bAddress
+    , Svg.lazy6 ConversionEdge.view vc (SearchBox.highlightForAny searchBox [ aAddress.id, bAddress.id, inputTxId, outputTxId ]) conversion displacementIndex aAddress bAddress
     )
 
 

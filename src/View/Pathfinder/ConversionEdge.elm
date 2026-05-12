@@ -7,6 +7,7 @@ import Html.Styled.Events exposing (onMouseLeave)
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
+import Model.Pathfinder.SearchBox exposing (Highlight(..))
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.PathD exposing (Segment(..), pathD)
@@ -64,8 +65,8 @@ calcDimensions _ _ aAddress bAddress =
     }
 
 
-view : View.Config -> ConversionEdge -> Int -> Address -> Address -> Svg Msg
-view vc conversion displacementIndex inputAddress outputAddress =
+view : View.Config -> Highlight -> ConversionEdge -> Int -> Address -> Address -> Svg Msg
+view vc searchHighlight conversion displacementIndex inputAddress outputAddress =
     let
         cr =
             conversion.raw
@@ -309,13 +310,21 @@ view vc conversion displacementIndex inputAddress outputAddress =
                     ]
     in
     g
-        [ UserClickedConversionEdge id conversion
+        ([ UserClickedConversionEdge id conversion
             |> onClickWithStop
-        , UserMovesMouseOutConversionEdge id conversion
+         , UserMovesMouseOutConversionEdge id conversion
             |> onMouseLeave
-        , UserMovesMouseOverConversionEdge id conversion
+         , UserMovesMouseOverConversionEdge id conversion
             |> onMouseOver
-        ]
+         ]
+            ++ (case searchHighlight of
+                    Dimmed ->
+                        [ Svg.opacity "0.25" ]
+
+                    _ ->
+                        []
+               )
+        )
         ((if hl then
             [ path
                 [ Svg.d pat
@@ -366,6 +375,6 @@ view vc conversion displacementIndex inputAddress outputAddress =
 -- Keep the original edge function for backward compatibility with default curvature
 
 
-edge : View.Config -> ConversionEdge -> Int -> Address -> Address -> Svg Msg
-edge vc conversionEdge displacementIndex inputAddress outputAddress =
-    view vc conversionEdge displacementIndex inputAddress outputAddress
+edge : View.Config -> Highlight -> ConversionEdge -> Int -> Address -> Address -> Svg Msg
+edge vc searchHighlight conversionEdge displacementIndex inputAddress outputAddress =
+    view vc searchHighlight conversionEdge displacementIndex inputAddress outputAddress

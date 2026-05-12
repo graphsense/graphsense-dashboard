@@ -4,6 +4,7 @@ module Model.Pathfinder.SearchBox exposing
     , currentMatch
     , empty
     , highlightFor
+    , highlightForAny
     , inputId
     , isActive
     , isCurrentMatch
@@ -75,6 +76,18 @@ highlightFor m id =
         CurrentMatch
 
     else if Set.member id m.matchSet then
+        NoHighlight
+
+    else
+        Dimmed
+
+
+highlightForAny : Model -> List Id -> Highlight
+highlightForAny m ids =
+    if not (isActive m) then
+        NoHighlight
+
+    else if List.any (\id -> Set.member id m.matchSet) ids then
         NoHighlight
 
     else
