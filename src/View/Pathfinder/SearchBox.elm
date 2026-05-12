@@ -25,7 +25,7 @@ view vc model =
             , stopPropagationOn "click" (Decode.succeed ( NoOp, True ))
             , stopPropagationOn "mousedown" (Decode.succeed ( NoOp, True ))
             ]
-            [ div [ css iconStyle ] [ Icons.iconsSearchS {} ]
+            [ div [ css iconSlotStyle ] [ Icons.iconsSearchLarge {} ]
             , input
                 [ id SearchBox.inputId
                 , type_ "text"
@@ -37,8 +37,7 @@ view vc model =
                 , css inputStyle
                 ]
                 []
-            , div [ css counterStyle ]
-                [ matchCounter vc model ]
+            , matchCounter vc model
             , navButton (OnGraphSearchMsg SearchBoxMsg.UserClickedPrev)
                 "Previous match"
                 chevronUp
@@ -70,7 +69,7 @@ matchCounter vc model =
             else
                 String.fromInt current ++ " / " ++ String.fromInt total
     in
-    span [] [ text label ]
+    span [ css counterStyle ] [ text label ]
 
 
 navButton : Msg -> String -> Html Msg -> Html Msg
@@ -135,22 +134,24 @@ containerStyle =
     , Css.displayFlex
     , Css.alignItems Css.center
     , Css.height (Css.px 30)
-    , Css.padding2 Css.zero (Css.px 6)
-    , Css.property "gap" "4px"
+    , Css.boxSizing Css.borderBox
     , Css.property "background-color" Colors.white
-    , Css.borderRadius (Css.px 4)
+    , Css.borderRadius (Css.px 5)
+    , Css.property "border" ("1px solid " ++ Colors.greyBlue100)
     , Css.property "box-shadow" "0 1px 4px rgba(0, 0, 0, 0.12)"
-    , Css.property "border" ("1px solid " ++ Colors.greyBlue50)
+    , Css.paddingLeft (Css.px 3)
+    , Css.paddingRight (Css.px 4)
+    , Css.property "gap" "2px"
     ]
 
 
-iconStyle : List Css.Style
-iconStyle =
+iconSlotStyle : List Css.Style
+iconSlotStyle =
     [ Css.displayFlex
     , Css.alignItems Css.center
     , Css.justifyContent Css.center
+    , Css.flexShrink (Css.num 0)
     , Css.lineHeight (Css.num 0)
-    , Css.color (Css.hex "999")
     ]
 
 
@@ -159,18 +160,29 @@ inputStyle =
     [ Css.border Css.zero
     , Css.outline Css.none
     , Css.width (Css.px 180)
-    , Css.fontSize (Css.px 12)
+    , Css.minWidth Css.zero
+    , Css.height (Css.px 28)
     , Css.padding2 Css.zero (Css.px 4)
     , Css.property "background-color" "transparent"
+    , Css.fontFamilies [ "Roboto" ]
+    , Css.fontSize (Css.px 12)
+    , Css.fontWeight (Css.int 400)
+    , Css.letterSpacing (Css.px 0)
+    , Css.property "color" Colors.sidebarNeutral
+    , Css.pseudoClass "placeholder"
+        [ Css.property "color" Colors.greyBlue200
+        ]
     ]
 
 
 counterStyle : List Css.Style
 counterStyle =
     [ Css.fontSize (Css.px 11)
-    , Css.color (Css.hex "777")
+    , Css.fontFamilies [ "Roboto" ]
+    , Css.property "color" Colors.greyBlue200
     , Css.minWidth (Css.px 44)
     , Css.textAlign Css.center
+    , Css.paddingLeft (Css.px 4)
     ]
 
 
@@ -184,5 +196,5 @@ navButtonStyle =
     , Css.alignItems Css.center
     , Css.justifyContent Css.center
     , Css.borderRadius (Css.px 3)
-    , Css.hover [ Css.property "background-color" Colors.greyBlue50 ]
+    , Css.hover [ Css.property "background-color" Colors.greyBlue100 ]
     ]
