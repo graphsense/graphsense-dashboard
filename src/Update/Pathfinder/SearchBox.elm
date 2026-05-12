@@ -11,6 +11,7 @@ import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Msg.Pathfinder.SearchBox exposing (Msg(..))
 import RemoteData
 import Set
+import Util exposing (removeLeading0x)
 import Util.Annotations as Annotations
 
 
@@ -66,6 +67,7 @@ recompute ctx model =
     let
         q =
             String.toLower (String.trim model.query)
+                |> removeLeading0x
 
         addressMatches =
             if String.isEmpty q then
@@ -112,6 +114,7 @@ addressMatchesQuery q ctx address =
                 |> RemoteData.toMaybe
                 |> Maybe.map (.address >> String.toLower)
                 |> Maybe.withDefault (String.toLower (Id.id address.id))
+                |> removeLeading0x
 
         idMatch =
             String.contains q addrStr
@@ -139,6 +142,7 @@ txMatchesQuery q ctx tx =
         hashMatch =
             Tx.getRawBaseTxHashForTx tx
                 |> String.toLower
+                |> removeLeading0x
                 |> String.contains q
     in
     hashMatch || annotationMatches q ctx.annotations tx.id
