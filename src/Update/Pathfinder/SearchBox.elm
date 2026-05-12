@@ -2,11 +2,12 @@ module Update.Pathfinder.SearchBox exposing (Context, close, open, refreshMatche
 
 import Api.Data
 import Dict exposing (Dict)
+import List.Extra
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
-import Model.Pathfinder.SearchBox exposing (Model, empty)
+import Model.Pathfinder.SearchBox as SearchBox exposing (Model, empty)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Msg.Pathfinder.SearchBox exposing (Msg(..))
 import RemoteData
@@ -92,12 +93,18 @@ recompute ctx model =
         matches =
             addressMatches ++ txMatches
 
+        previousCurrent =
+            SearchBox.currentMatch model
+
         currentIdx =
             if List.isEmpty matches then
                 Nothing
 
             else
-                Just 0
+                previousCurrent
+                    |> Maybe.andThen (\id -> List.Extra.findIndex ((==) id) matches)
+                    |> Maybe.withDefault 0
+                    |> Just
     in
     { model
         | matches = matches
