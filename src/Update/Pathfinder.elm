@@ -162,38 +162,39 @@ dispatchEventualMessages model =
     )
 
 
+panToId : Update.Config -> Id -> Model -> ( Model, List Effect )
+panToId uc id model =
+    case matchCoords id model.network of
+        Just ( x, y ) ->
+            let
+                move =
+                    uc.size
+                        |> Maybe.map (\s -> Transform.politeMove { width = s.width, height = s.height })
+                        |> Maybe.withDefault Transform.move
+
+                transform =
+                    move
+                        { x = x * unit
+                        , y = y * unit
+                        , z = Transform.getCurrent model.transform |> .z
+                        }
+                        model.transform
+            in
+            n { model | transform = transform }
+
+        Nothing ->
+            n model
+
+
 panToCurrentMatch : Update.Config -> Maybe Id -> Model -> ( Model, List Effect )
 panToCurrentMatch uc previousMatch model =
-    let
-        matchId =
-            OnGraphSearch.currentMatch model.onGraphSearch
-    in
-    case matchId of
+    case OnGraphSearch.currentMatch model.onGraphSearch of
         Just id ->
             if previousMatch == Just id then
                 n model
 
             else
-                case matchCoords id model.network of
-                    Just ( x, y ) ->
-                        let
-                            move =
-                                uc.size
-                                    |> Maybe.map (\s -> Transform.politeMove { width = s.width, height = s.height })
-                                    |> Maybe.withDefault Transform.move
-
-                            transform =
-                                move
-                                    { x = x * unit
-                                    , y = y * unit
-                                    , z = Transform.getCurrent model.transform |> .z
-                                    }
-                                    model.transform
-                        in
-                        n { model | transform = transform }
-
-                    Nothing ->
-                        n model
+                panToId uc id model
 
         Nothing ->
             n model
@@ -4214,6 +4215,7 @@ updateByRoute_ plugins uc route model =
             { model | network = Network.clearSelection model.network }
                 |> loadAddressWithPosition plugins True viewportCenter id
                 |> and (selectAddress id)
+                |> and (panToId uc id)
 
         Route.Network network (Route.Tx a) ->
             let
@@ -4223,6 +4225,7 @@ updateByRoute_ plugins uc route model =
             { model | network = Network.clearSelection model.network }
                 |> loadTxWithPosition viewportCenter True True plugins id
                 |> and (selectTx id)
+                |> and (panToId uc id)
 
         Route.Network network (Route.Relation a b) ->
             let

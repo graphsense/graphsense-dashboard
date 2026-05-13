@@ -13,6 +13,7 @@ import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
 import Html.Styled.Events exposing (onClick, onInput, preventDefaultOn, stopPropagationOn)
+import Init.Pathfinder.Id as IdInit
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -21,8 +22,10 @@ import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Network as PfNetwork
 import Model.Pathfinder.Selection as Pathfinder
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
+import Model.Search as Search
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
@@ -713,6 +716,18 @@ graphActionsView vc _ model =
 
 searchBoxView : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 searchBoxView plugins vc _ model =
+    let
+        isOnGraph rl =
+            case rl of
+                Search.Address net addr ->
+                    PfNetwork.hasAddress (IdInit.init net addr) model.network
+
+                Search.Tx net h ->
+                    PfNetwork.hasTx (IdInit.init net h) model.network
+
+                _ ->
+                    False
+    in
     Sc.searchBarFieldStateTypingWithInstances
         Sc.searchBarFieldStateTypingAttributes
         (Sc.searchBarFieldStateTypingInstances
@@ -720,6 +735,7 @@ searchBoxView plugins vc _ model =
                 (View.Search.searchWithMoreCss plugins
                     vc
                     (View.Search.default
+                        |> View.Search.withIsOnGraph isOnGraph
                         |> Rs.s_css
                             (\_ ->
                                 Css.outline Css.none
