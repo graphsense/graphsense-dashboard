@@ -7,7 +7,7 @@ import Html.Styled.Events exposing (onMouseLeave)
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
-import Model.Pathfinder.SearchBox exposing (Highlight(..))
+import Model.Pathfinder.SearchBox exposing (Highlight, dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.PathD exposing (Segment(..), pathD)
@@ -317,13 +317,7 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
          , UserMovesMouseOverConversionEdge id conversion
             |> onMouseOver
          ]
-            ++ (case searchHighlight of
-                    Dimmed ->
-                        [ Svg.opacity "0.25" ]
-
-                    _ ->
-                        []
-               )
+            ++ dimmedOpacity searchHighlight
         )
         ((if hl then
             [ path

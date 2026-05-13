@@ -19,7 +19,7 @@ import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id
-import Model.Pathfinder.SearchBox exposing (Highlight(..))
+import Model.Pathfinder.SearchBox exposing (Highlight(..), dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
@@ -208,12 +208,7 @@ view plugins vc pc searchHighlight address annotation =
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
          ]
-            ++ (if searchHighlight == Dimmed then
-                    [ opacity "0.25" ]
-
-                else
-                    []
-               )
+            ++ dimmedOpacity searchHighlight
         )
         (GraphComponents.addressNodeWithInstances
             (GraphComponents.addressNodeAttributes

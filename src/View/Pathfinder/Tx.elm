@@ -2,12 +2,11 @@ module View.Pathfinder.Tx exposing (edge, view)
 
 import Config.Pathfinder as Pathfinder
 import Config.View as View
-import Model.Pathfinder.SearchBox exposing (Highlight(..))
+import Model.Pathfinder.SearchBox exposing (Highlight, dimmedOpacity)
 import Model.Pathfinder.Tx exposing (Tx, TxType(..))
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
 import Svg.Styled exposing (Svg, g)
-import Svg.Styled.Attributes exposing (opacity)
 import Svg.Styled.Lazy as Svg
 import Util.Annotations as Annotations
 import View.Pathfinder.Tx.AccountTx as AccountTx
@@ -26,13 +25,15 @@ view plugins vc gc searchHighlight tx annotation =
                 Account t ->
                     annotation
                         |> AccountTx.view plugins vc gc tx t
-    in
-    case searchHighlight of
-        Dimmed ->
-            g [ opacity "0.25" ] [ inner ]
 
-        _ ->
-            inner
+        attrs =
+            dimmedOpacity searchHighlight
+    in
+    if List.isEmpty attrs then
+        inner
+
+    else
+        g attrs [ inner ]
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> Highlight -> RenderLevel -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
@@ -45,10 +46,12 @@ edge plugins vc gc searchHighlight level tx annotation =
 
                 Account t ->
                     Svg.lazy6 AccountTx.edge plugins vc gc t tx annotation
-    in
-    case searchHighlight of
-        Dimmed ->
-            g [ opacity "0.25" ] [ inner ]
 
-        _ ->
-            inner
+        attrs =
+            dimmedOpacity searchHighlight
+    in
+    if List.isEmpty attrs then
+        inner
+
+    else
+        g attrs [ inner ]

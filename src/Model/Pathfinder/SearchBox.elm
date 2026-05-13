@@ -2,6 +2,7 @@ module Model.Pathfinder.SearchBox exposing
     ( Highlight(..)
     , Model
     , currentMatch
+    , dimmedOpacity
     , empty
     , highlightFor
     , highlightForAny
@@ -14,6 +15,8 @@ module Model.Pathfinder.SearchBox exposing
 import List.Extra
 import Model.Pathfinder.Id exposing (Id)
 import Set exposing (Set)
+import Svg.Styled exposing (Attribute)
+import Svg.Styled.Attributes exposing (opacity)
 
 
 type alias Model =
@@ -34,6 +37,17 @@ type Highlight
 inputId : String
 inputId =
     "pathfinder-on-graph-search-input"
+
+
+{-| Append opacity "0.25" to attributes if highlight is Dimmed
+-}
+dimmedOpacity : Highlight -> List (Attribute msg)
+dimmedOpacity highlight =
+    if highlight == Dimmed then
+        [ opacity "0.25" ]
+
+    else
+        []
 
 
 empty : Model

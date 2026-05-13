@@ -63,6 +63,10 @@ Single test files: not supported by elm-test-rs natively; tests live in `tests/`
 - `Api/` — Generated REST API client (from OpenAPI)
 - `PluginInterface/` — Plugin hook definitions
 
+### Elm Packages
+
+Elm packages are installed locally in `./elm_packages`
+
 ### Code Generation Pipeline
 
 Several directories are **generated** — do not edit directly:
