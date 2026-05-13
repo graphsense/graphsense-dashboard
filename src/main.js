@@ -93,15 +93,19 @@ const app = Elm.Main.init(
 
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
+const shortCutKeys = ['a','f','z','s']
+
 // Prevent default Ctrl+A behavior (select all text) since we handle it in Elm for Pathfinder
 // But allow default behavior when cursor is in an input field
-window.addEventListener('keydown', (evt) => {
-  if (evt.ctrlKey && evt.key === 'a') {
-    const activeElement = document.activeElement
-    const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
-    if (!isInputField) {
-      evt.preventDefault()
-    }
+window.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
+  if (!window.location.pathname.startsWith('/pathfinder')) return
+  const key = e.key.toLowerCase()
+  if (shortCutKeys.indexOf(key) === -1) return
+  const activeElement = document.activeElement
+  const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
+  if (!isInputField || key !== 'a') {
+    e.preventDefault()
   }
 })
 
@@ -612,27 +616,3 @@ app.ports.blur.subscribe(id => {
   el.blur()
 })
 
-// Pathfinder hotkeys that need preventDefault to override the browser
-// (find bar, save page, print). Elm's Browser.Events.onKeyDown cannot
-// preventDefault, so these go through ports. Shortcuts without a browser
-// default (Ctrl+Z, Ctrl+Y, Ctrl+A, arrows, etc.) stay on Elm subscriptions
-// in Sub/Pathfinder.elm.
-document.addEventListener('keydown', (e) => {
-  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
-  if (!window.location.pathname.startsWith('/pathfinder')) return
-  const key = e.key.toLowerCase()
-  switch (key) {
-    case 'f':
-      e.preventDefault()
-      app.ports.searchHotkeyPressed.send(null)
-      break
-    case 's':
-      e.preventDefault()
-      app.ports.saveHotkeyPressed.send(null)
-      break
-    case 'p':
-      e.preventDefault()
-      app.ports.exportHotkeyPressed.send(null)
-      break
-  }
-}, true)

@@ -828,10 +828,29 @@ updateByMsg plugins uc msg model =
                     n (multiSelect model allItems False)
 
                 ( True, "z" ) ->
-                    update plugins uc UserClickedUndo model
+                    ( model
+                    , [ InternalEffect UserClickedUndo ]
+                    )
 
                 ( True, "y" ) ->
-                    update plugins uc UserClickedRedo model
+                    ( model
+                    , [ InternalEffect UserClickedRedo ]
+                    )
+
+                ( True, "f" ) ->
+                    ( model
+                    , [ InternalEffect UserPressedSearchHotkey ]
+                    )
+
+                ( True, "s" ) ->
+                    ( model
+                    , [ InternalEffect (UserClickedSaveGraph Nothing) ]
+                    )
+
+                ( True, "e" ) ->
+                    ( model
+                    , [ InternalEffect (UserClickedExportGraph Nothing) ]
+                    )
 
                 _ ->
                     n model

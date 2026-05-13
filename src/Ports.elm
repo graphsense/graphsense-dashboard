@@ -1,4 +1,4 @@
-port module Ports exposing (blur, console, deserialize, deserialized, exportGraph, exportGraphResult, exportGraphics, exportHotkeyPressed, getBBox, newTab, pluginsIn, pluginsOut, renderedImageForExport, saveHotkeyPressed, saveToLocalStorage, searchHotkeyPressed, sendBBox, serialize, setDirty, toClipboard, uncaughtError)
+port module Ports exposing (blur, console, deserialize, deserialized, exportGraph, exportGraphResult, exportGraphics, getBBox, newTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError)
 
 import Json.Encode exposing (Value)
 import Model.Graph.Coords as Coords
@@ -62,20 +62,3 @@ port renderedImageForExport : (Bool -> msg) -> Sub msg
 
 
 port blur : String -> Cmd msg
-
-
-
--- Hotkey ports: used for shortcuts that the browser claims by default
--- (Ctrl+F find bar, Ctrl+S save page, Ctrl+P print). The JS listener in
--- main.js calls preventDefault() and forwards via these ports. Subscribed
--- to in Sub/Pathfinder.elm. Shortcuts without a browser default use
--- Browser.Events directly.
-
-
-port searchHotkeyPressed : (() -> msg) -> Sub msg
-
-
-port saveHotkeyPressed : (() -> msg) -> Sub msg
-
-
-port exportHotkeyPressed : (() -> msg) -> Sub msg

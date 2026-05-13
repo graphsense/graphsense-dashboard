@@ -13,7 +13,6 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails
 import Msg.Pathfinder.RelationDetails
 import Msg.Pathfinder.TxDetails
-import Ports
 import RemoteData
 import Set
 import Sub.Graph.Transform as Transform
@@ -99,6 +98,15 @@ toKeyUp keyValue =
         "y" ->
             UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
+        "f" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
+
+        "s" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
+
+        "e" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
+
         "Backspace" ->
             UserReleasedDeleteKey |> onlyFireOutsideOfTextInput
 
@@ -125,14 +133,9 @@ subscriptions model =
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
 
     -- Keys with no browser default: handled directly via Elm subscriptions.
+    -- for keys with a browser default preventDefault() is called. See main.js.
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
-
-    -- Keys the browser claims (Ctrl+F/S/P): routed via JS port that calls
-    -- preventDefault() before sending. See main.js and Ports.elm.
-    , Ports.searchHotkeyPressed (\_ -> UserPressedSearchHotkey)
-    , Ports.saveHotkeyPressed (\_ -> UserClickedSaveGraph Nothing)
-    , Ports.exportHotkeyPressed (\_ -> UserClickedExportGraph Nothing)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)
 
     -- , Time.every 60000 Tick
