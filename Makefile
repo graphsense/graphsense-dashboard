@@ -185,7 +185,7 @@ check-plugin-exists:
 	fi
 
 plugin-theme-refresh: 
-	$(CODEGEN_TOOL) --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh 
+	$(CODEGEN_TOOL) --plugin=$(PLUGIN_NAME) --file-id=$(FIGMA_FILE_ID) --refresh --api-token=$(FIGMA_API_TOKEN)
 
 $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 	@# only update an existing figma.json
