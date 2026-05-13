@@ -1,4 +1,4 @@
-module View.Search exposing (SearchConfig, SearchConfigWithMoreCss, default, search, searchWithMoreCss, withIsOnGraph)
+module View.Search exposing (SearchConfig, SearchConfigWithMoreCss, default, search, searchWithMoreCss)
 
 import Autocomplete
 import Autocomplete.Styled as Autocomplete
@@ -50,7 +50,6 @@ type alias SearchConfigWithMoreCss msg =
     , multiline : Bool
     , showIcon : Bool
     , inputAttributes : List (Html.Styled.Attribute msg)
-    , isOnGraph : ResultLine -> Bool
     }
 
 
@@ -72,13 +71,7 @@ default =
     , dropdownFrame = []
     , dropdownResult = []
     , inputAttributes = []
-    , isOnGraph = \_ -> False
     }
-
-
-withIsOnGraph : (ResultLine -> Bool) -> SearchConfigWithMoreCss msg -> SearchConfigWithMoreCss msg
-withIsOnGraph predicate sc =
-    { sc | isOnGraph = predicate }
 
 
 search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
@@ -101,7 +94,6 @@ search plugins vc sc model =
         , dropdownFrame = []
         , dropdownResult = []
         , inputAttributes = []
-        , isOnGraph = \_ -> False
         }
         model
 
@@ -491,17 +483,9 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> span
-                ([ Css.resultLineIcon vc |> css
-                 , css sc.resultLineIcon
-                 , css (onGraphIconStyle sc resultLine)
-                 ]
-                    ++ (if sc.isOnGraph resultLine then
-                            [ Locale.string vc.locale "Already on graph" |> title ]
-
-                        else
-                            []
-                       )
-                )
+                [ Css.resultLineIcon vc |> css
+                , css sc.resultLineIcon
+                ]
         , if not (String.isEmpty querycomp) && String.startsWith querycomp (removeLeading0x label) && highlight_suffix then
             let
                 left =
@@ -532,15 +516,6 @@ resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
           else
             text label
         ]
-
-
-onGraphIconStyle : SearchConfigWithMoreCss Msg -> ResultLine -> List Style
-onGraphIconStyle sc resultLine =
-    if sc.isOnGraph resultLine then
-        [ Css.property "color" TColor.green400 |> Css.important ]
-
-    else
-        []
 
 
 resultLineCurrency : ResultLine -> Maybe String

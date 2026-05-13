@@ -612,10 +612,27 @@ app.ports.blur.subscribe(id => {
   el.blur()
 })
 
+// Pathfinder hotkeys that need preventDefault to override the browser
+// (find bar, save page, print). Elm's Browser.Events.onKeyDown cannot
+// preventDefault, so these go through ports. Shortcuts without a browser
+// default (Ctrl+Z, Ctrl+Y, Ctrl+A, arrows, etc.) stay on Elm subscriptions
+// in Sub/Pathfinder.elm.
 document.addEventListener('keydown', (e) => {
-  const isFindKey = (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'f' || e.key === 'F')
-  if (!isFindKey) return
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
   if (!window.location.pathname.startsWith('/pathfinder')) return
-  e.preventDefault()
-  app.ports.searchHotkeyPressed.send(null)
+  const key = e.key.toLowerCase()
+  switch (key) {
+    case 'f':
+      e.preventDefault()
+      app.ports.searchHotkeyPressed.send(null)
+      break
+    case 's':
+      e.preventDefault()
+      app.ports.saveHotkeyPressed.send(null)
+      break
+    case 'p':
+      e.preventDefault()
+      app.ports.exportHotkeyPressed.send(null)
+      break
+  }
 }, true)

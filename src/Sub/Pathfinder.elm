@@ -123,9 +123,16 @@ subscriptions model =
         _ ->
             Browser.Events.onMouseUp (Decode.succeed UserReleasesMouseButton)
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
+
+    -- Keys with no browser default: handled directly via Elm subscriptions.
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
+
+    -- Keys the browser claims (Ctrl+F/S/P): routed via JS port that calls
+    -- preventDefault() before sending. See main.js and Ports.elm.
     , Ports.searchHotkeyPressed (\_ -> UserPressedSearchHotkey)
+    , Ports.saveHotkeyPressed (\_ -> UserClickedSaveGraph Nothing)
+    , Ports.exportHotkeyPressed (\_ -> UserClickedExportGraph Nothing)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)
 
     -- , Time.every 60000 Tick
