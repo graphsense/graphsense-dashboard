@@ -130,7 +130,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "te"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
+                            |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -139,7 +139,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tl"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
+                            |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -157,7 +157,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "teh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
+                            |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -166,7 +166,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tlh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
+                            |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
                         )
                     )
                 |> Keyed.node "g" []
