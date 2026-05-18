@@ -12,10 +12,10 @@ import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
-import Html.Styled.Events exposing (onClick, onInput, preventDefaultOn, stopPropagationOn)
+import Html.Styled.Events exposing (onClick, onInput, stopPropagationOn)
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
@@ -233,7 +233,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                         --     |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuAlignHorizontally
                           , icon = HIcons.iconsHorizontalAlign {}
-                          , text = Locale.string vc.locale "align horizontally"
+                          , text = Locale.string vc.locale "Align horizontally"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.setDisabled
@@ -247,7 +247,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuIdToClipboard menu
                           , icon = HIcons.iconsCopyS {}
-                          , text = "copy address ID"
+                          , text = "Copy address ID"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.setDisabled
@@ -261,7 +261,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
                           , icon = HIcons.iconsDeleteS {}
-                          , text = "remove from graph"
+                          , text = "Remove from graph"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
@@ -281,7 +281,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserOpensDialogWindow (AddTags id)
                           , icon = HIcons.iconsAddTagOutlinedS {}
-                          , text = "report a tag"
+                          , text = "Report a tag"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.setDisabled
@@ -853,11 +853,14 @@ graphSvg plugins vc gc model dim =
                     ]
                     []
                 ]
+
+        updTransform =
+            model.transform
+                |> Transform.update { x = 0, y = 0 } { x = -originShiftX, y = 0 }
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
-         , model.transform
-            |> Transform.update { x = 0, y = 0 } { x = -originShiftX, y = 0 }
+         , updTransform
             |> Transform.viewBox dim
             |> viewBox
          , (Css.Graph.svgRoot vc ++ pointerStyle) |> css
@@ -876,28 +879,8 @@ graphSvg plugins vc gc model dim =
                 (Json.Decode.field "offsetX" Json.Decode.float)
                 (Json.Decode.field "offsetY" Json.Decode.float)
             )
-         , Svg.custom "mousedown"
-            (Json.Decode.map2
-                (\button coords ->
-                    { message =
-                        if button == 2 then
-                            UserPushesRightMouseButtonOnGraph coords
-
-                        else if button == 0 then
-                            UserPushesLeftMouseButtonOnGraph coords
-
-                        else
-                            NoOp
-                    , stopPropagation = False
-                    , preventDefault = button == 2
-                    }
-                )
-                (Json.Decode.field "button" Json.Decode.int)
-                (Util.Graph.decodeCoords Coords)
-            )
-         , Util.Graph.decodeCoords Coords.Coords
-            |> Json.Decode.map (\_ -> ( NoOp, True ))
-            |> preventDefaultOn "contextmenu"
+         , Json.Decode.succeed ( NoOp, True )
+            |> Svg.preventDefaultOn "contextmenu"
          , Util.View.noTextSelection
          ]
             ++ (if model.dragging /= NoDragging then
@@ -923,6 +906,29 @@ graphSvg plugins vc gc model dim =
             , gradient "account" { outgoing = False, reverse = True }
             , dropShadowEdgeHighlight
             ]
+        , updTransform
+            |> Transform.background
+                [ Svg.custom "mousedown"
+                    (Json.Decode.map2
+                        (\button coords ->
+                            { message =
+                                if button == 2 then
+                                    UserPushesRightMouseButtonOnGraph coords
+
+                                else if button == 0 then
+                                    UserPushesLeftMouseButtonOnGraph coords
+
+                                else
+                                    NoOp
+                            , stopPropagation = False
+                            , preventDefault = button == 2
+                            }
+                        )
+                        (Json.Decode.field "button" Json.Decode.int)
+                        (Util.Graph.decodeCoords Coords)
+                    )
+                ]
+                dim
         , Network.relations plugins vc gc model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
         , Svg.lazy6 Network.addresses plugins vc gc model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model

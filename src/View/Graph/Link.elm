@@ -27,6 +27,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Tuple exposing (second)
 import Util.Data as Data
 import Util.Graph exposing (decodeCoords, filterTxValue)
+import Util.View as Util
 import View.Graph.Label as Label
 import View.Locale as Locale
 
