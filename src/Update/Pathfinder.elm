@@ -3641,7 +3641,10 @@ browserGotAddressData uc plugins providedId position data model =
                         |> Maybe.withDefault Transform.move
                     )
                         { x = newAddress.x * unit
-                        , y = A.getTo newAddress.y * unit
+
+                        -- Pan horizontally only: keep the current vertical
+                        -- position so auto-expand doesn't jump up/down.
+                        , y = Transform.getCurrent model.transform |> .y
                         , z = Transform.initZ
                         }
                         model.transform
@@ -4567,7 +4570,12 @@ focusNeighborAddress uc anchorId direction model =
                         |> Maybe.withDefault Transform.move
                     )
                         { x = neighbor.x * unit
-                        , y = A.getTo neighbor.y * unit
+
+                        -- Pan horizontally only: keep the current vertical
+                        -- position so left/right navigation doesn't jump
+                        -- up/down. Vertical navigation
+                        -- (focusVerticalNeighborAddress) does pan vertically.
+                        , y = Transform.getCurrent m1.transform |> .y
                         , z = Transform.initZ
                         }
                         m1.transform
@@ -5171,7 +5179,10 @@ addTx plugins uc anchorAddressId direction addressId tx model =
                     |> Maybe.withDefault Transform.move
                 )
                     { x = newTx.x * unit
-                    , y = A.getTo newTx.y * unit
+
+                    -- Pan horizontally only: keep the current vertical
+                    -- position so auto-expand doesn't jump up/down.
+                    , y = Transform.getCurrent model.transform |> .y
                     , z = Transform.initZ
                     }
                     model.transform
