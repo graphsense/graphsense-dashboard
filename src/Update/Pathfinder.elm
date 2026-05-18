@@ -569,6 +569,22 @@ resultLineToRoute search =
             Route.Root
 
 
+{-| The graph-node id a search result refers to, if any. Only addresses and
+txs are nodes on the graph; blocks/labels/actors have no node to pan to.
+-}
+resultLineToId : Search.ResultLine -> Maybe Id
+resultLineToId search =
+    case search of
+        Search.Address net address ->
+            Just (Id.init net address)
+
+        Search.Tx net h ->
+            Just (Id.init net h)
+
+        _ ->
+            Nothing
+
+
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
@@ -1131,12 +1147,21 @@ updateByMsg plugins uc msg model =
                     else
                         case selectedValue of
                             Just value ->
+                                -- Pan to the node only on an explicit search.
+                                -- panToId is a no-op unless the node is
+                                -- already on the graph (matchCoords).
+                                let
+                                    ( m3, panEff ) =
+                                        resultLineToId value
+                                            |> Maybe.map (\id -> panToId uc id m2)
+                                            |> Maybe.withDefault (n m2)
+                                in
                                 value
                                     |> resultLineToRoute
                                     |> NavPushRouteEffect
                                     |> flip (::)
-                                        (List.map Pathfinder.SearchEffect eff)
-                                    |> Tuple.pair m2
+                                        (List.map Pathfinder.SearchEffect eff ++ panEff)
+                                    |> Tuple.pair m3
 
                             Nothing ->
                                 ( m2, List.map Pathfinder.SearchEffect eff )
@@ -1149,12 +1174,17 @@ updateByMsg plugins uc msg model =
 
                         m2 =
                             { model | search = search }
+
+                        ( m3, panEff ) =
+                            resultLineToId rl
+                                |> Maybe.map (\id -> panToId uc id m2)
+                                |> Maybe.withDefault (n m2)
                     in
                     rl
                         |> resultLineToRoute
                         |> NavPushRouteEffect
-                        |> flip (::) (List.map Pathfinder.SearchEffect eff)
-                        |> Tuple.pair m2
+                        |> flip (::) (List.map Pathfinder.SearchEffect eff ++ panEff)
+                        |> Tuple.pair m3
 
                 _ ->
                     Search.update m model.search
@@ -4234,7 +4264,6 @@ updateByRoute_ plugins uc route model =
             { model | network = Network.clearSelection model.network }
                 |> loadAddressWithPosition plugins True viewportCenter id
                 |> and (selectAddress id)
-                |> and (panToId uc id)
 
         Route.Network network (Route.Tx a) ->
             let
@@ -4244,7 +4273,6 @@ updateByRoute_ plugins uc route model =
             { model | network = Network.clearSelection model.network }
                 |> loadTxWithPosition viewportCenter True True plugins id
                 |> and (selectTx id)
-                |> and (panToId uc id)
 
         Route.Network network (Route.Relation a b) ->
             let
