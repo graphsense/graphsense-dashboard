@@ -52,14 +52,14 @@ relations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> An
 relations plugins vc gc searchBox annotations txs agg conversions =
     case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
-            Svg.lazy5 aggRelations plugins vc gc annotations agg
+            Svg.lazy6 aggRelations plugins vc gc searchBox annotations agg
 
         Pathfinder.TransactionTracingMode ->
             Svg.lazy7 txRelations plugins vc gc searchBox annotations txs conversions
 
 
-aggRelations : Plugins -> View.Config -> Pathfinder.Config -> Annotations.AnnotationModel -> Dict ( Id, Id ) AggEdge -> Svg Msg
-aggRelations plugins vc gc _ agg =
+aggRelations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict ( Id, Id ) AggEdge -> Svg Msg
+aggRelations plugins vc gc searchBox _ agg =
     let
         agg_ =
             Dict.values agg
@@ -72,7 +72,7 @@ aggRelations plugins vc gc _ agg =
         [ agg_
             |> List.filterMap
                 (\edge ->
-                    Maybe.map2 (aggEdgeEdge plugins vc gc edge)
+                    Maybe.map2 (aggEdgeEdge plugins vc gc searchBox edge)
                         edge.aAddress
                         edge.bAddress
                 )
@@ -80,7 +80,7 @@ aggRelations plugins vc gc _ agg =
         , agg_
             |> List.filterMap
                 (\edge ->
-                    Maybe.map2 (aggEdgeNode plugins vc gc edge)
+                    Maybe.map2 (aggEdgeNode plugins vc gc searchBox edge)
                         edge.aAddress
                         edge.bAddress
                 )
@@ -190,17 +190,21 @@ aggEdgeNodeHighlight _ vc _ edge aAddress bAddress =
     )
 
 
-aggEdgeNode : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeNode _ vc _ edge aAddress bAddress =
+aggEdgeNode : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeNode _ vc _ searchBox edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "en"
-    , Svg.lazy4 AggEdge.view vc edge aAddress bAddress
+    , Svg.g
+        (SearchBox.dimmedOpacity (SearchBox.highlightForAny searchBox [ aAddress.id, bAddress.id ]))
+        [ Svg.lazy4 AggEdge.view vc edge aAddress bAddress ]
     )
 
 
-aggEdgeEdge : Plugins -> View.Config -> Pathfinder.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeEdge _ vc _ edge aAddress bAddress =
+aggEdgeEdge : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeEdge _ vc _ searchBox edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "ee"
-    , Svg.lazy5 AggEdge.edge vc edge aAddress bAddress False
+    , Svg.g
+        (SearchBox.dimmedOpacity (SearchBox.highlightForAny searchBox [ aAddress.id, bAddress.id ]))
+        [ Svg.lazy5 AggEdge.edge vc edge aAddress bAddress False ]
     )
 
 
