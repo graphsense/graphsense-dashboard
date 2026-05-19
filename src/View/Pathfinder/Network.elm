@@ -4,14 +4,16 @@ import Api.Data
 import Basics.Extra exposing (uncurry)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
+import Css
 import Dict exposing (Dict)
 import List.Extra
-import Model.Pathfinder exposing (unit)
+import Model.Pathfinder exposing (Hovered(..), unit)
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.SearchBox as SearchBox
+import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
@@ -50,11 +52,11 @@ addresses plugins vc pc searchBox annotations =
         >> Keyed.node "g" []
 
 
-relations : Plugins -> View.Config -> Pathfinder.Config -> Bool -> List Id -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-relations plugins vc gc showAggLabels focusAddressIds searchBox annotations txs agg conversions =
+relations : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+relations plugins vc gc showAggLabels hovered selection searchBox annotations txs agg conversions =
     case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
-            Svg.lazy5 aggRelations vc showAggLabels focusAddressIds searchBox agg
+            Svg.lazy6 aggRelations vc showAggLabels hovered selection searchBox agg
 
         Pathfinder.TransactionTracingMode ->
             Svg.lazy7 txRelations plugins vc gc searchBox annotations txs conversions
@@ -65,13 +67,16 @@ relations plugins vc gc showAggLabels focusAddressIds searchBox annotations txs 
   - `showAggLabels` — when False the always-on mid-point value labels are
     omitted to reduce clutter when zoomed out; hovered/selected edges still
     show their label via the highlight layer.
-  - `focusAddressIds` — the currently hovered and/or selected addresses. When
-    an edge is hovered/selected or an address is hovered/selected, edges not
+  - `hovered`/`selection` — the hovered and selected graph elements. When an
+    edge is hovered/selected or an address is hovered/selected, edges not
     incident to that focus are dimmed so the relevant edges are easy to trace.
+    These are passed as the raw model values (rather than a derived list) so
+    that `Svg.lazy` memoization holds: they keep a stable reference between
+    renders unless the hover/selection actually changes.
 
 -}
-aggRelations : View.Config -> Bool -> List Id -> SearchBox.Model -> Dict ( Id, Id ) AggEdge -> Svg Msg
-aggRelations vc showAggLabels focusAddressIds searchBox agg =
+aggRelations : View.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Dict ( Id, Id ) AggEdge -> Svg Msg
+aggRelations vc showAggLabels hovered selection searchBox agg =
     let
         agg_ =
             Dict.values agg
@@ -79,6 +84,35 @@ aggRelations vc showAggLabels focusAddressIds searchBox agg =
                     (\edge ->
                         RemoteData.isSuccess edge.a2b && RemoteData.isSuccess edge.b2a
                     )
+
+        -- hovered and/or selected addresses that drive the focus dimming
+        focusAddressIds =
+            (case hovered of
+                HoveredAddress id ->
+                    [ id ]
+
+                _ ->
+                    []
+            )
+                ++ (case selection of
+                        SelectedAddress id ->
+                            [ id ]
+
+                        MultiSelect opts ->
+                            List.filterMap
+                                (\o ->
+                                    case o of
+                                        MSelectedAddress aid ->
+                                            Just aid
+
+                                        MSelectedTx _ ->
+                                            Nothing
+                                )
+                                opts
+
+                        _ ->
+                            []
+                   )
 
         -- nodes touched by a hovered/selected edge, plus the hovered/selected
         -- addresses
@@ -309,16 +343,26 @@ txRelations plugins vc gc searchBox annotations txs conversions =
         |> Svg.g []
 
 
-{-| Append a strong opacity reduction when an edge is dimmed for focus or
-on-graph search.
+{-| Opacity for an aggregate edge: reduced when dimmed for focus or on-graph
+search. The opacity is always set (not only when dimmed) and carries a CSS
+transition, so focus changes fade smoothly instead of snapping — this avoids
+the flicker that hard toggling caused when the mouse moves across the graph.
 -}
 dimAttrs : Bool -> List (Svg.Attribute Msg)
 dimAttrs dimmed =
-    if dimmed then
-        [ opacity "0.15" ]
+    [ css
+        [ Css.opacity
+            (Css.num
+                (if dimmed then
+                    0.15
 
-    else
-        []
+                 else
+                    1
+                )
+            )
+        , Css.property "transition" "opacity 0.2s ease-in-out"
+        ]
+    ]
 
 
 aggEdgeNodeHighlight : View.Config -> Float -> AggEdge -> Address -> Address -> ( String, Svg Msg )
