@@ -1,4 +1,4 @@
-module View.Pathfinder.AggEdge exposing (edge, highlight, view)
+module View.Pathfinder.AggEdge exposing (edge, highlight, labelMetrics, view)
 
 import Components.Tooltip as Tooltip
 import Config.View as View
@@ -47,8 +47,8 @@ type alias Dimensions =
     }
 
 
-calcDimensions : View.Config -> AggEdge -> Address -> Address -> Dimensions
-calcDimensions vc ed aAddress bAddress =
+calcDimensions : View.Config -> Float -> AggEdge -> Address -> Address -> Dimensions
+calcDimensions vc offsetY ed aAddress bAddress =
     let
         padding =
             15
@@ -144,7 +144,7 @@ calcDimensions vc ed aAddress bAddress =
                 + rightLabelWidth
     in
     { x = x * unit
-    , y = y * unit
+    , y = y * unit + offsetY
     , totalWidth = totalWidth
     , leftLabelWidth = leftLabelWidth
     , rightLabelWidth = rightLabelWidth
@@ -157,8 +157,8 @@ calcDimensions vc ed aAddress bAddress =
     }
 
 
-view : View.Config -> AggEdge -> Address -> Address -> Svg Msg
-view vc ed aAddress bAddress =
+view : View.Config -> Float -> AggEdge -> Address -> Address -> Svg Msg
+view vc offsetY ed aAddress bAddress =
     let
         originalWidth =
             Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
@@ -167,7 +167,7 @@ view vc ed aAddress bAddress =
             originalWidth / 2
 
         { leftLabelWidth, rightLabelWidth, x, y, leftLabel, rightLabel, leftVisible, rightVisible, totalWidth } =
-            calcDimensions vc ed aAddress bAddress
+            calcDimensions vc offsetY ed aAddress bAddress
 
         rectangleWidth =
             leftLabelWidth + rightLabelWidth
@@ -278,14 +278,14 @@ view vc ed aAddress bAddress =
         ]
 
 
-highlight : View.Config -> AggEdge -> Address -> Address -> Svg Msg
-highlight vc ed aAddress bAddress =
+highlight : View.Config -> Float -> AggEdge -> Address -> Address -> Svg Msg
+highlight vc offsetY ed aAddress bAddress =
     let
         originalWidth =
             Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
 
         { leftLabelWidth, rightLabelWidth, x, y, totalWidth } =
-            calcDimensions vc ed aAddress bAddress
+            calcDimensions vc offsetY ed aAddress bAddress
 
         rectangleWidth =
             leftLabelWidth + rightLabelWidth
@@ -341,42 +341,75 @@ highlight vc ed aAddress bAddress =
                 , showHighlight = True
                 }
             }
-        , edge vc ed aAddress bAddress True
-        , view vc ed aAddress bAddress
+        , edge vc offsetY ed aAddress bAddress True
+        , view vc offsetY ed aAddress bAddress
         ]
 
 
-{-| Stroke width of the main edge line, scaled by transaction volume so that
-heavier edges visually stand out on large graphs. A log scale keeps the width
-within a bounded range regardless of how large the transaction count gets.
+{-| The bounding box of an edge's value label, used by the placement pass to
+keep labels from overlapping each other and the address nodes. Coordinates are
+in pixels and `x`/`y` is the box center.
 -}
-mainStrokeWidth : AggEdge -> Float
-mainStrokeWidth ed =
+labelMetrics : View.Config -> AggEdge -> Address -> Address -> { x : Float, y : Float, width : Float, height : Float }
+labelMetrics vc ed aAddress bAddress =
     let
-        noTxs relation =
-            relation
-                |> RemoteData.toMaybe
-                |> Maybe.Extra.join
-                |> Maybe.map .noTxs
-                |> Maybe.withDefault 0
-
-        total =
-            noTxs ed.a2b + noTxs ed.b2a |> toFloat
-
-        base =
-            Theme.aggregatedLinkMainLine_details.strokeWidth
+        d =
+            calcDimensions vc 0 ed aAddress bAddress
     in
-    base
-        + 1.6
-        * logBase 10 (1 + total)
-        |> clamp base 8
+    { x = d.x
+    , y = d.y
+    , width = d.totalWidth
+    , height = Theme.aggregatedLabel_details.height
+    }
 
 
-edge : View.Config -> AggEdge -> Address -> Address -> Bool -> Svg Msg
-edge vc ed aAddress bAddress hl =
+
+{- Edge weighting disabled — it gave little visual benefit. Kept here in case
+   we want to revisit it. To re-enable: uncomment this, restore the
+   `import Model.Locale exposing (getFiatValue)` import, and use
+   `mainStrokeWidth vc ed` for the main line's stroke-width in `edge`.
+
+   mainStrokeWidth : View.Config -> AggEdge -> Float
+   mainStrokeWidth vc ed =
+       let
+           fiatCode =
+               String.toLower vc.preferredFiatCurrency
+
+           fiat values =
+               getFiatValue fiatCode values |> Maybe.withDefault 0
+
+           relationFiat relation =
+               relation
+                   |> RemoteData.toMaybe
+                   |> Maybe.Extra.join
+                   |> Maybe.map
+                       (\data ->
+                           fiat data.value
+                               + (data.tokenValues
+                                   |> Maybe.map (Dict.values >> List.map fiat >> List.sum)
+                                   |> Maybe.withDefault 0
+                                 )
+                       )
+                   |> Maybe.withDefault 0
+
+           total =
+               relationFiat ed.a2b + relationFiat ed.b2a
+
+           base =
+               Theme.aggregatedLinkMainLine_details.strokeWidth
+       in
+       base
+           + 0.65
+           * logBase 10 (1 + total)
+           |> clamp base 8
+-}
+
+
+edge : View.Config -> Float -> AggEdge -> Address -> Address -> Bool -> Svg Msg
+edge vc offsetY ed aAddress bAddress hl =
     let
         { left, right, totalWidth, x, y } =
-            calcDimensions vc ed aAddress bAddress
+            calcDimensions vc offsetY ed aAddress bAddress
 
         fd =
             GraphComponents.addressNodeNodeFrame_details
@@ -479,7 +512,7 @@ edge vc ed aAddress bAddress hl =
             [ Svg.d pat
             , css Theme.aggregatedLinkMainLine_details.styles
             , css
-                [ Css.property "stroke-width" <| String.fromFloat (mainStrokeWidth ed)
+                [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
                 , Css.property "stroke" Colors.pathAggregated
                 , Css.property "fill" "none" |> Css.important
                 , Css.property "stroke-linecap" "square"
