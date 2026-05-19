@@ -346,6 +346,32 @@ highlight vc ed aAddress bAddress =
         ]
 
 
+{-| Stroke width of the main edge line, scaled by transaction volume so that
+heavier edges visually stand out on large graphs. A log scale keeps the width
+within a bounded range regardless of how large the transaction count gets.
+-}
+mainStrokeWidth : AggEdge -> Float
+mainStrokeWidth ed =
+    let
+        noTxs relation =
+            relation
+                |> RemoteData.toMaybe
+                |> Maybe.Extra.join
+                |> Maybe.map .noTxs
+                |> Maybe.withDefault 0
+
+        total =
+            noTxs ed.a2b + noTxs ed.b2a |> toFloat
+
+        base =
+            Theme.aggregatedLinkMainLine_details.strokeWidth
+    in
+    base
+        + 1.6
+        * logBase 10 (1 + total)
+        |> clamp base 8
+
+
 edge : View.Config -> AggEdge -> Address -> Address -> Bool -> Svg Msg
 edge vc ed aAddress bAddress hl =
     let
@@ -453,7 +479,7 @@ edge vc ed aAddress bAddress hl =
             [ Svg.d pat
             , css Theme.aggregatedLinkMainLine_details.styles
             , css
-                [ Css.property "stroke-width" <| String.fromFloat Theme.aggregatedLinkMainLine_details.strokeWidth
+                [ Css.property "stroke-width" <| String.fromFloat (mainStrokeWidth ed)
                 , Css.property "stroke" Colors.pathAggregated
                 , Css.property "fill" "none" |> Css.important
                 , Css.property "stroke-linecap" "square"
