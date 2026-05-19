@@ -843,36 +843,6 @@ graphSvg plugins vc gc model dim =
         showAggLabels =
             getZ model.transform <= 2.5
 
-        -- addresses driving the aggregate-edge focus dimming: the hovered
-        -- address (transient) and any selected addresses (persistent)
-        focusAddressIds =
-            (case model.hovered of
-                Pathfinder.HoveredAddress id ->
-                    [ id ]
-
-                _ ->
-                    []
-            )
-                ++ (case model.selection of
-                        Pathfinder.SelectedAddress id ->
-                            [ id ]
-
-                        Pathfinder.MultiSelect opts ->
-                            List.filterMap
-                                (\o ->
-                                    case o of
-                                        Pathfinder.MSelectedAddress aid ->
-                                            Just aid
-
-                                        Pathfinder.MSelectedTx _ ->
-                                            Nothing
-                                )
-                                opts
-
-                        _ ->
-                            []
-                   )
-
         pointer =
             case ( model.dragging, model.pointerTool ) of
                 ( Dragging _ _ _, Drag ) ->
@@ -1010,7 +980,7 @@ graphSvg plugins vc gc model dim =
             , dropShadowEdgeHighlight
             ]
         , Svg.lazy4 Network.groups model.annotations draggedIds model.network.addresses model.network.txs
-        , Network.relations plugins vc gc showAggLabels focusAddressIds model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
+        , Network.relations plugins vc gc showAggLabels model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
         , Svg.lazy6 Network.addresses plugins vc gc model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model
 
