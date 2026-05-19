@@ -261,7 +261,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuDeleteIcon menu
                           , icon = HIcons.iconsDeleteS {}
-                          , text = "remove from graph"
+                          , text = "Remove from Graph"
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
