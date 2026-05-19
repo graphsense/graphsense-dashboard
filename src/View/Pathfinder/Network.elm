@@ -10,7 +10,8 @@ import Dict exposing (Dict)
 import Html.Styled.Attributes as HA
 import Html.Styled.Events exposing (onDoubleClick)
 import List.Extra
-import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder exposing (unit)
+import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.GroupBox as GroupBox
@@ -148,11 +149,11 @@ groupBox draggedIds addresses_ txs group =
             )
 
 
-relations : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Maybe Id -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-relations plugins vc gc showAggLabels focusAddressId searchBox annotations txs agg conversions =
+relations : Plugins -> View.Config -> Pathfinder.Config -> Bool -> List Id -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+relations plugins vc gc showAggLabels focusAddressIds searchBox annotations txs agg conversions =
     case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
-            Svg.lazy5 aggRelations vc showAggLabels focusAddressId searchBox agg
+            Svg.lazy5 aggRelations vc showAggLabels focusAddressIds searchBox agg
 
         Pathfinder.TransactionTracingMode ->
             Svg.lazy7 txRelations plugins vc gc searchBox annotations txs conversions
@@ -163,13 +164,13 @@ relations plugins vc gc showAggLabels focusAddressId searchBox annotations txs a
   - `showAggLabels` — when False the always-on mid-point value labels are
     omitted to reduce clutter when zoomed out; hovered/selected edges still
     show their label via the highlight layer.
-  - `focusAddressId` — the currently hovered address, if any. When an edge is
-    hovered/selected or an address is hovered, edges not incident to that
-    focus are dimmed so the relevant edges are easy to trace.
+  - `focusAddressIds` — the currently hovered and/or selected addresses. When
+    an edge is hovered/selected or an address is hovered/selected, edges not
+    incident to that focus are dimmed so the relevant edges are easy to trace.
 
 -}
-aggRelations : View.Config -> Bool -> Maybe Id -> SearchBox.Model -> Dict ( Id, Id ) AggEdge -> Svg Msg
-aggRelations vc showAggLabels focusAddressId searchBox agg =
+aggRelations : View.Config -> Bool -> List Id -> SearchBox.Model -> Dict ( Id, Id ) AggEdge -> Svg Msg
+aggRelations vc showAggLabels focusAddressIds searchBox agg =
     let
         agg_ =
             Dict.values agg
@@ -178,7 +179,8 @@ aggRelations vc showAggLabels focusAddressId searchBox agg =
                         RemoteData.isSuccess edge.a2b && RemoteData.isSuccess edge.b2a
                     )
 
-        -- nodes touched by a hovered/selected edge, plus the hovered address
+        -- nodes touched by a hovered/selected edge, plus the hovered/selected
+        -- addresses
         focusedNodes =
             agg_
                 |> List.concatMap
@@ -189,14 +191,7 @@ aggRelations vc showAggLabels focusAddressId searchBox agg =
                         else
                             []
                     )
-                |> (\ids ->
-                        case focusAddressId of
-                            Just fid ->
-                                fid :: ids
-
-                            Nothing ->
-                                ids
-                   )
+                |> (++) focusAddressIds
                 |> Set.fromList
 
         focusActive =
@@ -214,38 +209,117 @@ aggRelations vc showAggLabels focusAddressId searchBox agg =
                         && not (Set.member edge.b focusedNodes)
             in
             searchDimmed || focusDimmed
-    in
-    Svg.g []
-        [ agg_
-            |> List.filterMap
-                (\edge ->
-                    Maybe.map2 (aggEdgeEdge vc (isDimmed edge) edge)
-                        edge.aAddress
-                        edge.bAddress
-                )
-            |> Keyed.node "g" []
-        , if showAggLabels then
+
+        -- edges paired with their resolved endpoint addresses
+        placedEdges =
             agg_
                 |> List.filterMap
                     (\edge ->
-                        Maybe.map2 (aggEdgeNode vc (isDimmed edge) edge)
-                            edge.aAddress
-                            edge.bAddress
+                        Maybe.map2 (\a b -> ( edge, a, b )) edge.aAddress edge.bAddress
                     )
+
+        -- per-edge vertical label offset that keeps labels from overlapping
+        -- each other and the address nodes
+        labelOffsets =
+            resolveLabelOffsets vc placedEdges
+
+        offsetFor edge =
+            Dict.get ( edge.a, edge.b ) labelOffsets |> Maybe.withDefault 0
+    in
+    Svg.g []
+        [ placedEdges
+            |> List.map
+                (\( edge, a, b ) -> aggEdgeEdge vc (isDimmed edge) (offsetFor edge) edge a b)
+            |> Keyed.node "g" []
+        , if showAggLabels then
+            placedEdges
+                |> List.map
+                    (\( edge, a, b ) -> aggEdgeNode vc (isDimmed edge) (offsetFor edge) edge a b)
                 |> Keyed.node "g" []
 
           else
             Svg.g [] []
-        , agg_
-            |> List.filter (\a -> a.selected || a.hovered)
-            |> List.filterMap
-                (\edge ->
-                    Maybe.map2 (aggEdgeNodeHighlight vc edge)
-                        edge.aAddress
-                        edge.bAddress
-                )
+        , placedEdges
+            |> List.filter (\( edge, _, _ ) -> edge.selected || edge.hovered)
+            |> List.map
+                (\( edge, a, b ) -> aggEdgeNodeHighlight vc (offsetFor edge) edge a b)
             |> Keyed.node "g" []
         ]
+
+
+{-| An axis-aligned box, centered on `( x, y )`, in pixel coordinates.
+-}
+type alias Box =
+    { x : Float, y : Float, w : Float, h : Float }
+
+
+boxesOverlap : Box -> Box -> Bool
+boxesOverlap a b =
+    let
+        margin =
+            4
+    in
+    (abs (a.x - b.x) < (a.w + b.w) / 2 + margin)
+        && (abs (a.y - b.y) < (a.h + b.h) / 2 + margin)
+
+
+{-| Assign each aggregate-edge label a vertical pixel offset so that labels do
+not overlap each other or the address nodes. Greedy placement: edges are
+processed left-to-right, and each label takes the first candidate offset (0,
+then alternating up/down) that is collision-free against the nodes and the
+labels already placed.
+-}
+resolveLabelOffsets : View.Config -> List ( AggEdge, Address, Address ) -> Dict ( Id, Id ) Float
+resolveLabelOffsets vc placedEdges =
+    let
+        nodeBox address =
+            let
+                c =
+                    Address.getCoords address
+            in
+            { x = c.x * unit, y = c.y * unit, w = unit, h = unit }
+
+        nodeObstacles =
+            placedEdges
+                |> List.concatMap (\( _, a, b ) -> [ nodeBox a, nodeBox b ])
+
+        labels =
+            placedEdges
+                |> List.map
+                    (\( edge, a, b ) ->
+                        let
+                            m =
+                                AggEdge.labelMetrics vc edge a b
+                        in
+                        ( ( edge.a, edge.b ), Box m.x m.y m.width m.height )
+                    )
+                |> List.sortBy (Tuple.second >> .x)
+
+        step =
+            labels
+                |> List.head
+                |> Maybe.map (Tuple.second >> .h)
+                |> Maybe.withDefault 30
+                |> (*) 1.2
+
+        candidates =
+            0 :: List.concatMap (\i -> [ step * toFloat i, step * toFloat -i ]) (List.range 1 5)
+
+        place ( key, box ) ( obstacles, offsets ) =
+            let
+                chosen =
+                    candidates
+                        |> List.Extra.find
+                            (\off -> not (List.any (boxesOverlap { box | y = box.y + off }) obstacles))
+                        |> Maybe.withDefault 0
+            in
+            ( { box | y = box.y + chosen } :: obstacles
+            , Dict.insert key chosen offsets
+            )
+    in
+    labels
+        |> List.foldl place ( nodeObstacles, Dict.empty )
+        |> Tuple.second
 
 
 txRelations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
@@ -346,28 +420,28 @@ dimAttrs dimmed =
         []
 
 
-aggEdgeNodeHighlight : View.Config -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeNodeHighlight vc edge aAddress bAddress =
+aggEdgeNodeHighlight : View.Config -> Float -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeNodeHighlight vc offsetY edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "eh"
-    , Svg.lazy4 AggEdge.highlight vc edge aAddress bAddress
+    , Svg.lazy5 AggEdge.highlight vc offsetY edge aAddress bAddress
     )
 
 
-aggEdgeNode : View.Config -> Bool -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeNode vc dimmed edge aAddress bAddress =
+aggEdgeNode : View.Config -> Bool -> Float -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeNode vc dimmed offsetY edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "en"
     , Svg.g
         (dimAttrs dimmed)
-        [ Svg.lazy4 AggEdge.view vc edge aAddress bAddress ]
+        [ Svg.lazy5 AggEdge.view vc offsetY edge aAddress bAddress ]
     )
 
 
-aggEdgeEdge : View.Config -> Bool -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeEdge vc dimmed edge aAddress bAddress =
+aggEdgeEdge : View.Config -> Bool -> Float -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeEdge vc dimmed offsetY edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "ee"
     , Svg.g
         (dimAttrs dimmed)
-        [ Svg.lazy5 AggEdge.edge vc edge aAddress bAddress False ]
+        [ Svg.lazy6 AggEdge.edge vc offsetY edge aAddress bAddress False ]
     )
 
 
