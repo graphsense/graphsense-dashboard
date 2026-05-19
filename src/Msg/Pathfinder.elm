@@ -120,6 +120,9 @@ type Msg
     | UserMovesMouseOutAddress Id
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
+    | UserTogglesAnnotationGroup (List Id)
+    | UserDoubleClickedGroup (List Id)
+    | UserPushesLeftMouseButtonOnGroup (List Id) Coords
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraph (Maybe Time.Posix)
     | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool (List ( Id, Api.Data.TagSummary ))

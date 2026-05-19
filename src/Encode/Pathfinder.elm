@@ -79,6 +79,7 @@ encodeAnnotation ( id, annotation ) =
     [ id |> encodeId
     , annotation.label |> string
     , annotation.color |> encodeColor
+    , annotation.groupId |> Maybe.map int |> Maybe.withDefault null
     ]
         |> list identity
 

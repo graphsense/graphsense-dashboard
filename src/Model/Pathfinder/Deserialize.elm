@@ -26,6 +26,7 @@ type alias DeserializedAnnotation =
     { id : Id
     , label : String
     , color : Maybe Color
+    , groupId : Maybe Int
     }
 
 

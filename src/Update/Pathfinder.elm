@@ -54,6 +54,7 @@ import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.ConversionEdge as ConversionEdge
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
+import Model.Pathfinder.GroupBox as GroupBox
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
@@ -1649,6 +1650,22 @@ updateByMsg plugins uc msg model =
                                 MSelectedTx tid ->
                                     moveNode tid net
 
+                        selectionToId sel =
+                            case sel of
+                                MSelectedAddress aid ->
+                                    aid
+
+                                MSelectedTx tid ->
+                                    tid
+
+                        draggedIds =
+                            case model.selection of
+                                MultiSelect sel ->
+                                    List.map selectionToId sel
+
+                                _ ->
+                                    [ id ]
+
                         network =
                             case model.selection of
                                 MultiSelect sel ->
@@ -1672,10 +1689,12 @@ updateByMsg plugins uc msg model =
                                    )
                     in
                     n
-                        { model
-                            | network = nn
-                            , dragging = NoDragging
-                        }
+                        (applyGroupMembershipAfterDrag draggedIds
+                            { model
+                                | network = nn
+                                , dragging = NoDragging
+                            }
+                        )
 
         UserWheeledOnGraph x y z ->
             uc.size
@@ -2566,10 +2585,71 @@ updateByMsg plugins uc msg model =
             )
 
         UserInputsAnnotation ids str ->
-            n { model | annotations = List.foldl (\id ann -> Annotations.setLabel id str ann) model.annotations ids }
+            -- A label edit on a grouped node applies to the whole group.
+            n
+                { model
+                    | annotations =
+                        Annotations.expandToGroups ids model.annotations
+                            |> List.foldl (\id ann -> Annotations.setLabel id str ann) model.annotations
+                }
 
         UserSelectsAnnotationColor ids clr ->
-            n { model | annotations = List.foldl (\id ann -> Annotations.setColor id clr ann) model.annotations ids }
+            -- A color change on a grouped node applies to the whole group.
+            n
+                { model
+                    | annotations =
+                        Annotations.expandToGroups ids model.annotations
+                            |> List.foldl (\id ann -> Annotations.setColor id clr ann) model.annotations
+                }
+
+        UserTogglesAnnotationGroup ids ->
+            let
+                -- Already grouped if every id shares a (non-Nothing) group id.
+                alreadyGrouped =
+                    not (List.isEmpty ids)
+                        && List.all
+                            (\id ->
+                                Annotations.getAnnotation id model.annotations
+                                    |> Maybe.andThen .groupId
+                                    |> (/=) Nothing
+                            )
+                            ids
+
+                groupId =
+                    if alreadyGrouped then
+                        Nothing
+
+                    else
+                        Just (Annotations.newGroupId model.annotations)
+            in
+            n
+                { model
+                    | annotations =
+                        List.foldl (\id ann -> Annotations.setGroup id groupId ann) model.annotations ids
+                            |> Annotations.harmonizeGroups
+                }
+
+        UserDoubleClickedGroup ids ->
+            n (selectNodesExactly ids model)
+
+        UserPushesLeftMouseButtonOnGroup ids coords ->
+            -- Grabbing the group header selects all members and starts a
+            -- normal multi-node drag, so the whole group moves together.
+            case ( model.dragging, model.transform.state ) of
+                ( NoDragging, Transform.Settled _ ) ->
+                    case List.head ids of
+                        Just anchor ->
+                            let
+                                selected =
+                                    selectNodesExactly ids model
+                            in
+                            n { selected | dragging = DraggingNode anchor coords coords }
+
+                        Nothing ->
+                            n model
+
+                _ ->
+                    n model
 
         UserOpensContextMenu coordsNew cmtype ->
             case model.contextMenu of
@@ -3585,6 +3665,9 @@ browserGotAddressData uc plugins providedId position data model =
         clusterId =
             Id.initClusterId data.currency data.cluster
 
+        wasNew =
+            not (Network.hasLoadedAddress id model.network)
+
         isSecondAddressFromSameCluster =
             Network.isClusterFriendAlreadyOnGraph clusterId
                 model.network
@@ -3656,6 +3739,12 @@ browserGotAddressData uc plugins providedId position data model =
         --|> s_details details
         |> s_colors ncolors
         |> s_clusters clusters
+        |> (if wasNew then
+                nudgeOutOfGroups id
+
+            else
+                identity
+           )
         |> pairTo
             (fetchTagSummaryForId True model.tagSummaries id
                 :: fetchActorsForAddress data model.actors
@@ -5192,6 +5281,7 @@ addTx plugins uc anchorAddressId direction addressId tx model =
                     | network = network
                     , transform = transform
                 }
+                    |> nudgeOutOfGroups newTx.id
 
             address =
                 Id.id anchorAddressId
@@ -5379,6 +5469,141 @@ removeIsolatedTransactions model =
             Dict.keys (Dict.filter (\_ v -> isIsolatedTx model v) model.network.txs)
     in
     List.foldl (\i ( m, _ ) -> removeTx i m) ( model, [] ) idsToRemove
+
+
+{-| After a node drag, a node dropped inside a different group's box joins
+that group. Dragging never _removes_ a node from its group — that would be
+indistinguishable from simply repositioning the node. Removal is done via the
+Group checkbox in the annotation dialog.
+-}
+applyGroupMembershipAfterDrag : List Id -> Model -> Model
+applyGroupMembershipAfterDrag draggedIds model =
+    case Annotations.groups model.annotations of
+        [] ->
+            model
+
+        allGroups ->
+            let
+                currentGroupId nodeId =
+                    Annotations.getAnnotation nodeId model.annotations
+                        |> Maybe.andThen .groupId
+
+                targetGroupId nodeId =
+                    case GroupBox.pointFor model.network.addresses model.network.txs nodeId of
+                        Nothing ->
+                            currentGroupId nodeId
+
+                        Just point ->
+                            -- Other groups whose box now encloses the node;
+                            -- join the smallest one. Otherwise keep current.
+                            allGroups
+                                |> List.filter (\g -> Just g.id /= currentGroupId nodeId)
+                                |> List.filterMap
+                                    (\g ->
+                                        GroupBox.boundsFor model.network.addresses model.network.txs g.members
+                                            |> Maybe.andThen
+                                                (\b ->
+                                                    if GroupBox.contains b point then
+                                                        Just ( g.id, GroupBox.area b )
+
+                                                    else
+                                                        Nothing
+                                                )
+                                    )
+                                |> List.sortBy Tuple.second
+                                |> List.head
+                                |> Maybe.map (Tuple.first >> Just)
+                                |> Maybe.withDefault (currentGroupId nodeId)
+
+                changes =
+                    draggedIds
+                        |> List.filterMap
+                            (\nodeId ->
+                                let
+                                    target =
+                                        targetGroupId nodeId
+                                in
+                                if target == currentGroupId nodeId then
+                                    Nothing
+
+                                else
+                                    Just ( nodeId, target )
+                            )
+
+                -- A node joining a group adopts that group's color and label.
+                applyChange ( nodeId, gid ) anns =
+                    let
+                        moved =
+                            Annotations.setGroup nodeId gid anns
+                    in
+                    case gid |> Maybe.andThen (\g -> List.Extra.find (.id >> (==) g) allGroups) of
+                        Just g ->
+                            Annotations.set nodeId g.label g.color moved
+
+                        Nothing ->
+                            moved
+            in
+            { model | annotations = List.foldl applyChange model.annotations changes }
+
+
+{-| Select exactly the given nodes (addresses/txs), replacing any current
+selection.
+-}
+selectNodesExactly : List Id -> Model -> Model
+selectNodesExactly ids model =
+    let
+        options =
+            ids
+                |> List.filterMap
+                    (\id ->
+                        if Dict.member id model.network.addresses then
+                            Just (MSelectedAddress id)
+
+                        else if Dict.member id model.network.txs then
+                            Just (MSelectedTx id)
+
+                        else
+                            Nothing
+                    )
+    in
+    multiSelect { model | selection = NoSelection } options False
+
+
+{-| If a newly added, non-grouped node landed inside a group's box, move it
+just outside that box — new nodes default to being outside groups.
+-}
+nudgeOutOfGroups : Id -> Model -> Model
+nudgeOutOfGroups id model =
+    let
+        isMember =
+            Annotations.getAnnotation id model.annotations
+                |> Maybe.andThen .groupId
+                |> (/=) Nothing
+    in
+    if isMember then
+        model
+
+    else
+        let
+            boxes =
+                Annotations.groups model.annotations
+                    |> List.filterMap (\g -> GroupBox.boundsFor model.network.addresses model.network.txs g.members)
+        in
+        case GroupBox.pointFor model.network.addresses model.network.txs id |> Maybe.andThen (GroupBox.nudgeOut boxes) of
+            Just ( npx, npy ) ->
+                let
+                    setPos node =
+                        { node | x = npx / unit, y = A.static (npy / unit), dx = 0, dy = 0 }
+                in
+                { model
+                    | network =
+                        model.network
+                            |> Network.updateAddress id setPos
+                            |> Network.updateTx id setPos
+                }
+
+            Nothing ->
+                model
 
 
 multiSelect : Model -> List MultiSelectOptions -> Bool -> Model
@@ -5574,7 +5799,9 @@ fromDeserialized plugins deserialized model =
         | network =
             ingestAddresses plugins model.config Network.init deserialized.addresses
                 |> ingestAggEdges model.config deserialized.aggEdges
-        , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
+        , annotations =
+            List.foldl (\i m -> Annotations.set i.id i.label i.color m |> Annotations.setGroup i.id i.groupId) model.annotations deserialized.annotations
+                |> Annotations.harmonizeGroups
         , history = History.init
         , name = deserialized.name
       }
@@ -6064,7 +6291,7 @@ exportGraphImage _ conf model =
                     Just "g[data-selected=true]"
 
                 Dialog.ExportAreaWhole ->
-                    Just "g[data-selected]"
+                    Just "g[data-selected], g[data-group]"
 
                 Dialog.ExportAreaVisible ->
                     Nothing

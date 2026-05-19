@@ -28,10 +28,11 @@ aggEdgeDecoder =
 
 annotationDecoder : Decoder DeserializedAnnotation
 annotationDecoder =
-    map3 DeserializedAnnotation
+    map4 DeserializedAnnotation
         (index 0 idDecoder)
         (index 1 string)
         (maybe (index 2 decodeColor))
+        (maybe (index 3 int))
 
 
 thingDecoder : Decoder DeserializedThing

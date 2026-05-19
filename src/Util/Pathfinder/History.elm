@@ -374,6 +374,15 @@ shallPushHistory plugins msg _ =
         UserSelectsAnnotationColor _ _ ->
             True
 
+        UserTogglesAnnotationGroup _ ->
+            True
+
+        UserDoubleClickedGroup _ ->
+            False
+
+        UserPushesLeftMouseButtonOnGroup _ _ ->
+            False
+
         ToolbarHovercardMsg _ ->
             False
 

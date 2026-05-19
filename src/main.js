@@ -157,8 +157,11 @@ const getGraphBBox = (svg, selector) => {
     const allElements = svg.querySelectorAll(selector)
     allElements.forEach(el => {
       try {
-        // Get the transformation matrix of the element
-        const matrix = el.transform.baseVal.consolidate().matrix;
+        // Get the transformation matrix of the element. Elements without a
+        // transform (e.g. group boxes) have no consolidated matrix; treat
+        // those as identity so their bbox still counts.
+        const consolidated = el.transform.baseVal.consolidate()
+        const matrix = consolidated ? consolidated.matrix : new DOMMatrix()
 
         const bbox = el.getBBox()
 

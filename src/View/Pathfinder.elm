@@ -549,6 +549,18 @@ annotationHovercardView vc ids annotation hc =
         selectedColor =
             annotation |> Maybe.andThen .color
 
+        isGrouped =
+            annotation |> Maybe.andThen .groupId |> (/=) Nothing
+
+        groupCheckbox =
+            Controls.checkboxWithLabel
+                { label = Locale.string vc.locale "Group"
+                , checked = isGrouped
+                , disabled = False
+                , msg = UserTogglesAnnotationGroup ids
+                , size = Controls.Small
+                }
+
         inputField =
             input
                 [ Sc.labelFieldStateActive_details.styles
@@ -582,23 +594,40 @@ annotationHovercardView vc ids annotation hc =
                             |> Rs.s_root [ css [ Css.cursor Css.pointer ], onClick (UserSelectsAnnotationColor ids Nothing) ]
                         )
                         { root = { selectionVisible = isSelected } }
+
+        annotationComponent =
+            Sc.annotationWithAttributes
+                (Sc.annotationAttributes
+                    -- Strip the component's own card chrome so it blends into
+                    -- the shared card that also holds the Group checkbox.
+                    |> Rs.s_root
+                        [ css
+                            [ Css.property "background-color" "transparent"
+                            , Css.property "border" "none"
+                            , Css.property "box-shadow" "none"
+                            , Css.padding Css.zero
+                            ]
+                        ]
+                )
+                { root = { colorText = Locale.string vc.locale "color", labelText = Locale.string vc.locale "Label" }
+                , labelField = { variant = inputField }
+                , noColor = { variant = colorBtn selectedColor Nothing }
+                , color1 = { variant = colorBtn selectedColor (Just Colors.annotation1_color) }
+                , color2 = { variant = colorBtn selectedColor (Just Colors.annotation2_color) }
+                , color3 = { variant = colorBtn selectedColor (Just Colors.annotation3_color) }
+                , color4 = { variant = colorBtn selectedColor (Just Colors.annotation4_color) }
+                , color5 = { variant = colorBtn selectedColor (Just Colors.annotation5_color) }
+                , color6 = { variant = colorBtn selectedColor (Just Colors.annotation6_color) }
+                , color7 = { variant = colorBtn selectedColor (Just Colors.annotation7_color) }
+                , color8 = { variant = colorBtn selectedColor (Just Colors.annotation8_color) }
+                , color9 = { variant = colorBtn selectedColor (Just Colors.annotation9_color) }
+                , color10 = { variant = colorBtn selectedColor (Just Colors.annotation10_color) }
+                }
     in
-    Sc.annotationWithAttributes
-        Sc.annotationAttributes
-        { root = { colorText = Locale.string vc.locale "color", labelText = Locale.string vc.locale "Label" }
-        , labelField = { variant = inputField }
-        , noColor = { variant = colorBtn selectedColor Nothing }
-        , color1 = { variant = colorBtn selectedColor (Just Colors.annotation1_color) }
-        , color2 = { variant = colorBtn selectedColor (Just Colors.annotation2_color) }
-        , color3 = { variant = colorBtn selectedColor (Just Colors.annotation3_color) }
-        , color4 = { variant = colorBtn selectedColor (Just Colors.annotation4_color) }
-        , color5 = { variant = colorBtn selectedColor (Just Colors.annotation5_color) }
-        , color6 = { variant = colorBtn selectedColor (Just Colors.annotation6_color) }
-        , color7 = { variant = colorBtn selectedColor (Just Colors.annotation7_color) }
-        , color8 = { variant = colorBtn selectedColor (Just Colors.annotation8_color) }
-        , color9 = { variant = colorBtn selectedColor (Just Colors.annotation9_color) }
-        , color10 = { variant = colorBtn selectedColor (Just Colors.annotation10_color) }
-        }
+    [ annotationComponent
+    , groupCheckbox
+    ]
+        |> div [ HA.css Sc.annotation_details.styles ]
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc hc (Css.zIndexMainValue + 1)
@@ -787,6 +816,28 @@ detailsView plugin pluginStates vc model =
 graphSvg : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> { a | width : Float, height : Float } -> Svg Msg
 graphSvg plugins vc gc model dim =
     let
+        draggedIds =
+            case model.dragging of
+                DraggingNode draggedId _ _ ->
+                    case model.selection of
+                        Pathfinder.MultiSelect sel ->
+                            List.map
+                                (\s ->
+                                    case s of
+                                        Pathfinder.MSelectedAddress aid ->
+                                            aid
+
+                                        Pathfinder.MSelectedTx tid ->
+                                            tid
+                                )
+                                sel
+
+                        _ ->
+                            [ draggedId ]
+
+                _ ->
+                    []
+
         pointer =
             case ( model.dragging, model.pointerTool ) of
                 ( Dragging _ _ _, Drag ) ->
@@ -923,6 +974,7 @@ graphSvg plugins vc gc model dim =
             , gradient "account" { outgoing = False, reverse = True }
             , dropShadowEdgeHighlight
             ]
+        , Svg.lazy4 Network.groups model.annotations draggedIds model.network.addresses model.network.txs
         , Network.relations plugins vc gc model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
         , Svg.lazy6 Network.addresses plugins vc gc model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model

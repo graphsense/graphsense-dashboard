@@ -1,25 +1,33 @@
-module View.Pathfinder.Network exposing (ClusterContext, addresses, relations)
+module View.Pathfinder.Network exposing (ClusterContext, addresses, groups, relations)
 
 import Api.Data
 import Basics.Extra exposing (uncurry)
+import Color
 import Config.Pathfinder as Pathfinder
 import Config.View as View
+import Css
 import Dict exposing (Dict)
+import Html.Styled.Attributes as HA
+import Html.Styled.Events exposing (onDoubleClick)
 import List.Extra
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
+import Model.Pathfinder.GroupBox as GroupBox
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Tx exposing (Tx)
-import Msg.Pathfinder exposing (Msg)
+import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RemoteData exposing (WebData)
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
+import Theme.Colors as Colors
+import Theme.Svg.GraphComponents as GraphComponents
 import Util.Annotations as Annotations
+import Util.Graph
 import View.Pathfinder.Address as Address
 import View.Pathfinder.AggEdge as AggEdge
 import View.Pathfinder.ConversionEdge as ConversionEdge
@@ -39,13 +47,104 @@ addresses plugins vc pc searchBox annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
-            , Annotations.getAnnotation id annotations
+            , Annotations.getVisibleAnnotation id annotations
                 |> Svg.lazy6 Address.view plugins vc pc (SearchBox.highlightFor searchBox id) address
             )
                 :: svg
         )
         []
         >> Keyed.node "g" []
+
+
+{-| Render one colored box per group, behind the nodes. The box bounds the
+member nodes; its color/label come from the group's annotations. `draggedIds`
+are the nodes currently being dragged — a dragged non-member inside a box is
+previewed as captured (the box grows to include it).
+-}
+groups : Annotations.AnnotationModel -> List Id -> Dict Id Address -> Dict Id Tx -> Svg Msg
+groups annotations draggedIds addresses_ txs =
+    Annotations.groups annotations
+        |> List.filterMap (groupBox draggedIds addresses_ txs)
+        |> Keyed.node "g" []
+
+
+groupBox : List Id -> Dict Id Address -> Dict Id Tx -> Annotations.Group -> Maybe ( String, Svg Msg )
+groupBox draggedIds addresses_ txs group =
+    GroupBox.boundsFor addresses_ txs group.members
+        |> Maybe.map
+            (\realBounds ->
+                let
+                    -- dragged non-members currently inside the box: previewed
+                    -- as captured, so the box grows to enclose them
+                    captured =
+                        draggedIds
+                            |> List.filter (\d -> not (List.member d group.members))
+                            |> List.filter
+                                (\d ->
+                                    GroupBox.pointFor addresses_ txs d
+                                        |> Maybe.map (GroupBox.contains realBounds)
+                                        |> Maybe.withDefault False
+                                )
+
+                    b =
+                        if List.isEmpty captured then
+                            realBounds
+
+                        else
+                            GroupBox.boundsFor addresses_ txs (group.members ++ captured)
+                                |> Maybe.withDefault realBounds
+
+                    color =
+                        group.color
+                            |> Maybe.map Color.toCssString
+                            |> Maybe.withDefault Colors.brandBlack
+                in
+                ( "group" ++ String.fromInt group.id
+                  -- marks the box for inclusion in graph-export bounds
+                , Svg.g [ HA.attribute "data-group" "true" ]
+                    [ -- box body: non-interactive so the canvas stays pannable
+                      rect
+                        [ x (String.fromFloat b.minX)
+                        , y (String.fromFloat b.minY)
+                        , width (String.fromFloat (b.maxX - b.minX))
+                        , height (String.fromFloat (b.maxY - b.minY))
+                        , rx "8"
+                        , stroke color
+                        , strokeWidth "2"
+                        , fill color
+                        , fillOpacity "0.08"
+                        , pointerEvents "none"
+                        ]
+                        []
+                    , -- header strip: drag handle for the whole group
+                      rect
+                        [ x (String.fromFloat b.minX)
+                        , y (String.fromFloat b.minY)
+                        , width (String.fromFloat (b.maxX - b.minX))
+                        , height (String.fromFloat GroupBox.headerHeight)
+                        , rx "8"
+                        , fill color
+                        , fillOpacity "0.22"
+                        , css [ Css.cursor Css.move ]
+                        , onDoubleClick (UserDoubleClickedGroup group.members)
+                        , Util.Graph.mousedown (UserPushesLeftMouseButtonOnGroup group.members)
+                        ]
+                        []
+                    , if String.isEmpty group.label then
+                        text ""
+
+                      else
+                        Svg.text_
+                            [ x (String.fromFloat (b.minX + 8))
+                            , y (String.fromFloat (b.minY + 15))
+                            , css GraphComponents.annotationLabel2Label_details.styles
+                            , fill color
+                            , pointerEvents "none"
+                            ]
+                            [ text group.label ]
+                    ]
+                )
+            )
 
 
 relations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
@@ -129,7 +228,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                 |> List.map
                     (\tx ->
                         ( Id.toString tx.id |> (++) "te"
-                        , Annotations.getAnnotation tx.id annotations
+                        , Annotations.getVisibleAnnotation tx.id annotations
                             |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
                         )
                     )
@@ -138,7 +237,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                 |> List.map
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tl"
-                        , Annotations.getAnnotation tx.id annotations
+                        , Annotations.getVisibleAnnotation tx.id annotations
                             |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
                         )
                     )
@@ -147,7 +246,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                 |> List.map
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tn"
-                        , Annotations.getAnnotation tx.id annotations
+                        , Annotations.getVisibleAnnotation tx.id annotations
                             |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
                         )
                     )
@@ -156,7 +255,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                 |> List.map
                     (\tx ->
                         ( Id.toString tx.id |> (++) "teh"
-                        , Annotations.getAnnotation tx.id annotations
+                        , Annotations.getVisibleAnnotation tx.id annotations
                             |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
                         )
                     )
@@ -165,7 +264,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                 |> List.map
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tlh"
-                        , Annotations.getAnnotation tx.id annotations
+                        , Annotations.getVisibleAnnotation tx.id annotations
                             |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
                         )
                     )
@@ -174,7 +273,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                 |> List.map
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tnh"
-                        , Annotations.getAnnotation tx.id annotations
+                        , Annotations.getVisibleAnnotation tx.id annotations
                             |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
                         )
                     )
@@ -226,7 +325,7 @@ conversionEdge _ vc _ searchBox conversion displacementIndex aAddress bAddress =
        List.foldl
            (\tx svg ->
                ( Id.bString tx.id
-               , Annotations.getAnnotation tx.id annotations
+               , Annotations.getVisibleAnnotation tx.id annotations
                    |> Svg.lazy5 Tx.view plugins vc gc tx
                )
                    :: svg

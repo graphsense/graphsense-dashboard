@@ -1,4 +1,4 @@
-module Util.Annotations exposing (AnnotationItem, AnnotationModel, annotationToAttrAndLabel, empty, getAnnotation, set, setColor, setLabel, toList)
+module Util.Annotations exposing (AnnotationItem, AnnotationModel, Group, annotationToAttrAndLabel, empty, expandToGroups, getAnnotation, getVisibleAnnotation, groups, harmonizeGroups, newGroupId, set, setColor, setGroup, setLabel, toList)
 
 import Animation as A
 import Basics.Extra exposing (flip)
@@ -9,6 +9,7 @@ import Dict exposing (Dict)
 import List.Extra
 import Model.Pathfinder.Id exposing (Id)
 import RecordSetter as Rs
+import Set
 import String.Format
 import Svg.Styled as Svg exposing (Svg, path, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
@@ -33,6 +34,18 @@ type alias ModelInternal =
 type alias AnnotationItem =
     { label : String
     , color : Maybe Color
+    , groupId : Maybe Int
+    }
+
+
+{-| A group of nodes sharing the same groupId. Rendered as a single colored
+box behind its members instead of per-node annotations.
+-}
+type alias Group =
+    { id : Int
+    , members : List Id
+    , label : String
+    , color : Maybe Color
     }
 
 
@@ -48,7 +61,7 @@ toList (Annotation m) =
 
 defaultAnnotation : AnnotationItem
 defaultAnnotation =
-    { label = "", color = Nothing }
+    { label = "", color = Nothing, groupId = Nothing }
 
 
 set : Id -> String -> Maybe Color -> AnnotationModel -> AnnotationModel
@@ -77,9 +90,134 @@ setColor item clr (Annotation m) =
     { m | annotations = Dict.insert item ((Dict.get item m.annotations |> Maybe.withDefault defaultAnnotation) |> Rs.s_color clr) m.annotations } |> Annotation
 
 
+setGroup : Id -> Maybe Int -> AnnotationModel -> AnnotationModel
+setGroup item gid (Annotation m) =
+    { m | annotations = Dict.insert item ((Dict.get item m.annotations |> Maybe.withDefault defaultAnnotation) |> Rs.s_groupId gid) m.annotations } |> Annotation
+
+
 getAnnotation : Id -> AnnotationModel -> Maybe AnnotationItem
 getAnnotation item (Annotation m) =
     Dict.get item m.annotations
+
+
+{-| The annotation as it should be rendered on the node. Grouped nodes carry
+a lightened version of the group color (to show membership) and no per-node
+label — the label belongs on the group box.
+-}
+getVisibleAnnotation : Id -> AnnotationModel -> Maybe AnnotationItem
+getVisibleAnnotation item annotations =
+    getAnnotation item annotations
+        |> Maybe.map
+            (\ann ->
+                if ann.groupId == Nothing then
+                    ann
+
+                else
+                    { ann
+                        | label = ""
+                        , color = Maybe.map lighten ann.color
+                    }
+            )
+
+
+{-| Mix a color toward white — used to tint grouped nodes lighter than a
+regular annotation.
+-}
+lighten : Color -> Color
+lighten color =
+    let
+        c =
+            Color.toHsla color
+    in
+    Color.fromHsla { c | lightness = c.lightness + (1 - c.lightness) * 0.6 }
+
+
+{-| Expand a list of ids with all their group-mates, so an edit made on one
+grouped node propagates to the whole group.
+-}
+expandToGroups : List Id -> AnnotationModel -> List Id
+expandToGroups ids (Annotation m) =
+    let
+        targetGroups =
+            ids
+                |> List.filterMap (\id -> Dict.get id m.annotations |> Maybe.andThen .groupId)
+                |> Set.fromList
+    in
+    if Set.isEmpty targetGroups then
+        ids
+
+    else
+        m.annotations
+            |> Dict.toList
+            |> List.filterMap
+                (\( id, ann ) ->
+                    ann.groupId
+                        |> Maybe.andThen
+                            (\g ->
+                                if Set.member g targetGroups then
+                                    Just id
+
+                                else
+                                    Nothing
+                            )
+                )
+            |> (++) ids
+            |> List.Extra.unique
+
+
+{-| Force every group's members to share one label and color (the group's
+derived ones), so grouped annotations stay consistent.
+-}
+harmonizeGroups : AnnotationModel -> AnnotationModel
+harmonizeGroups annotations =
+    groups annotations
+        |> List.concatMap (\g -> List.map (\id -> ( id, g.label, g.color )) g.members)
+        |> List.foldl (\( id, lbl, clr ) -> set id lbl clr) annotations
+
+
+{-| The next free group id: one above the highest existing one. Computed from
+the current annotations so it survives save/load and never collides.
+-}
+newGroupId : AnnotationModel -> Int
+newGroupId (Annotation m) =
+    m.annotations
+        |> Dict.values
+        |> List.filterMap .groupId
+        |> List.maximum
+        |> Maybe.withDefault 0
+        |> (+) 1
+
+
+{-| All groups with their member node ids. Label and color are taken from the
+members (the dialog sets them for all selected nodes together).
+-}
+groups : AnnotationModel -> List Group
+groups (Annotation m) =
+    Dict.toList m.annotations
+        |> List.filterMap (\( id, ann ) -> ann.groupId |> Maybe.map (\gid -> ( gid, ( id, ann ) )))
+        |> List.Extra.gatherEqualsBy Tuple.first
+        |> List.map
+            (\( first, rest ) ->
+                let
+                    members =
+                        first :: rest
+
+                    items =
+                        List.map (Tuple.second >> Tuple.second) members
+                in
+                { id = Tuple.first first
+                , members = List.map (Tuple.second >> Tuple.first) members
+                , label =
+                    items
+                        |> List.map .label
+                        |> List.Extra.find (String.isEmpty >> not)
+                        |> Maybe.withDefault ""
+                , color =
+                    items
+                        |> List.filterMap .color
+                        |> List.head
+                }
+            )
 
 
 annotationToAttrAndLabel : View.Config -> Node a -> { b | height : Float, width : Float } -> Float -> (Id -> msg) -> AnnotationItem -> ( List (Svg.Attribute msg), List (Svg msg) )
