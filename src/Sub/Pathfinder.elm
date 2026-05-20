@@ -124,8 +124,8 @@ toKeyUp keyValue =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    [ case model.dragging of
-        NoDragging ->
+    [ case ( model.dragging, model.draggingAggEdgeLabel ) of
+        ( NoDragging, Nothing ) ->
             Sub.none
 
         _ ->

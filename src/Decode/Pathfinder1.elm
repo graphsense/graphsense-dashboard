@@ -2,7 +2,7 @@ module Decode.Pathfinder1 exposing (decoder)
 
 import Color exposing (Color)
 import Init.Pathfinder.Id as Id
-import Json.Decode exposing (Decoder, bool, float, index, int, list, map, map2, map3, map4, map5, maybe, oneOf, string, succeed)
+import Json.Decode exposing (Decoder, bool, float, index, int, list, map, map2, map4, map5, maybe, oneOf, string, succeed)
 import Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedAggEdge, DeserializedAnnotation, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Set
@@ -20,10 +20,29 @@ decoder =
 
 aggEdgeDecoder : Decoder DeserializedAggEdge
 aggEdgeDecoder =
-    map3 DeserializedAggEdge
+    map4 DeserializedAggEdge
         (index 0 idDecoder)
         (index 1 idDecoder)
         (index 2 (list idDecoder |> map Set.fromList))
+        -- Optional: missing in pre-`labelOffset` save files.
+        -- Also tolerates the brief intermediate vertical-only encoding
+        -- where it was a single number instead of [x, y].
+        (oneOf
+            [ index 3 labelOffsetDecoder
+            , succeed Nothing
+            ]
+        )
+
+
+labelOffsetDecoder : Decoder (Maybe { x : Float, y : Float })
+labelOffsetDecoder =
+    oneOf
+        [ map2 (\x y -> Just { x = x, y = y })
+            (index 0 float)
+            (index 1 float)
+        , map (\y -> Just { x = 0, y = y }) float
+        , succeed Nothing
+        ]
 
 
 annotationDecoder : Decoder DeserializedAnnotation

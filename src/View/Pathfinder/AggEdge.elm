@@ -23,7 +23,7 @@ import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.GraphComponentsAggregatedTracing as Theme
 import Tuple exposing (mapFirst)
-import Util.Graph exposing (translate)
+import Util.Graph exposing (mousedown, translate)
 import Util.TextDimensions as TextDimensions
 import Util.Tooltip
 import Util.TooltipType as TooltipType exposing (TooltipType)
@@ -47,8 +47,8 @@ type alias Dimensions =
     }
 
 
-calcDimensions : View.Config -> Float -> AggEdge -> Address -> Address -> Dimensions
-calcDimensions vc offsetY ed aAddress bAddress =
+calcDimensions : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Dimensions
+calcDimensions vc offset ed aAddress bAddress =
     let
         padding =
             15
@@ -143,8 +143,8 @@ calcDimensions vc offsetY ed aAddress bAddress =
                 + leftLabelWidth
                 + rightLabelWidth
     in
-    { x = x * unit
-    , y = y * unit + offsetY
+    { x = x * unit + offset.x
+    , y = y * unit + offset.y
     , totalWidth = totalWidth
     , leftLabelWidth = leftLabelWidth
     , rightLabelWidth = rightLabelWidth
@@ -157,8 +157,8 @@ calcDimensions vc offsetY ed aAddress bAddress =
     }
 
 
-view : View.Config -> Float -> AggEdge -> Address -> Address -> Svg Msg
-view vc offsetY ed aAddress bAddress =
+view : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Svg Msg
+view vc offset ed aAddress bAddress =
     let
         originalWidth =
             Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
@@ -167,7 +167,7 @@ view vc offsetY ed aAddress bAddress =
             originalWidth / 2
 
         { leftLabelWidth, rightLabelWidth, x, y, leftLabel, rightLabel, leftVisible, rightVisible, totalWidth } =
-            calcDimensions vc offsetY ed aAddress bAddress
+            calcDimensions vc offset ed aAddress bAddress
 
         rectangleWidth =
             leftLabelWidth + rightLabelWidth
@@ -193,6 +193,7 @@ view vc offsetY ed aAddress bAddress =
                     , id
                         |> UserMovesMouseOverAggEdge
                         |> onMouseOver
+                    , mousedown (UserPushesLeftMouseButtonOnAggEdgeLabel id offset)
                     , pointer
                     ]
                 |> s_rectangleOfAggregatedLabel
@@ -278,14 +279,14 @@ view vc offsetY ed aAddress bAddress =
         ]
 
 
-highlight : View.Config -> Float -> AggEdge -> Address -> Address -> Svg Msg
-highlight vc offsetY ed aAddress bAddress =
+highlight : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Svg Msg
+highlight vc offset ed aAddress bAddress =
     let
         originalWidth =
             Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
 
         { leftLabelWidth, rightLabelWidth, x, y, totalWidth } =
-            calcDimensions vc offsetY ed aAddress bAddress
+            calcDimensions vc offset ed aAddress bAddress
 
         rectangleWidth =
             leftLabelWidth + rightLabelWidth
@@ -341,8 +342,8 @@ highlight vc offsetY ed aAddress bAddress =
                 , showHighlight = True
                 }
             }
-        , edge vc offsetY ed aAddress bAddress True
-        , view vc offsetY ed aAddress bAddress
+        , edge vc offset ed aAddress bAddress True
+        , view vc offset ed aAddress bAddress
         ]
 
 
@@ -354,7 +355,7 @@ labelMetrics : View.Config -> AggEdge -> Address -> Address -> { x : Float, y : 
 labelMetrics vc ed aAddress bAddress =
     let
         d =
-            calcDimensions vc 0 ed aAddress bAddress
+            calcDimensions vc { x = 0, y = 0 } ed aAddress bAddress
     in
     { x = d.x
     , y = d.y
@@ -405,11 +406,11 @@ labelMetrics vc ed aAddress bAddress =
 -}
 
 
-edge : View.Config -> Float -> AggEdge -> Address -> Address -> Bool -> Svg Msg
-edge vc offsetY ed aAddress bAddress hl =
+edge : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Bool -> Svg Msg
+edge vc offset ed aAddress bAddress hl =
     let
         { left, right, totalWidth, x, y } =
-            calcDimensions vc offsetY ed aAddress bAddress
+            calcDimensions vc offset ed aAddress bAddress
 
         fd =
             GraphComponents.addressNodeNodeFrame_details

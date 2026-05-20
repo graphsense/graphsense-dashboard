@@ -383,6 +383,9 @@ shallPushHistory plugins msg _ =
         UserPushesLeftMouseButtonOnGroup _ _ ->
             False
 
+        UserPushesLeftMouseButtonOnAggEdgeLabel _ _ _ ->
+            False
+
         ToolbarHovercardMsg _ ->
             False
 

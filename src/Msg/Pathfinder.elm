@@ -123,6 +123,7 @@ type Msg
     | UserTogglesAnnotationGroup (List Id)
     | UserDoubleClickedGroup (List Id)
     | UserPushesLeftMouseButtonOnGroup (List Id) Coords
+    | UserPushesLeftMouseButtonOnAggEdgeLabel ( Id, Id ) { x : Float, y : Float } Coords
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraph (Maybe Time.Posix)
     | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool (List ( Id, Api.Data.TagSummary ))
