@@ -386,6 +386,9 @@ shallPushHistory plugins msg _ =
         UserPushesLeftMouseButtonOnAggEdgeLabel _ _ _ ->
             False
 
+        UserSelectedAggEdgeFilter _ ->
+            False
+
         ToolbarHovercardMsg _ ->
             False
 

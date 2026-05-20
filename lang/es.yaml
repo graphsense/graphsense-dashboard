@@ -485,6 +485,10 @@ Added tag: Etiqueta añadida
 num-more-assets: '{0} activos más'
 relationship-based: Basado en relaciones
 transaction-based: Basado en transacciones
+agg-edge-filter-all: Todas
+agg-edge-filter-connected: Conectadas
+agg-edge-filter-new: Nuevas
+agg-edge-filter-tooltip: Filtrar las aristas agregadas mostradas en el lienzo
 annotate transaction: Anotar transacción
 statusbar-loading-swap-bridge-events: 'Cargando eventos de intercambio y puente para
   Tx {0}: {1}'

@@ -26,6 +26,7 @@ config =
     , tracingMode = TransactionTracingMode
     , avoidOverlapingNodes = True
     , hideForExport = NoExport
+    , aggEdgeFilter = Pathfinder.AllAggEdges
     }
 
 

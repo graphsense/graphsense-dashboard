@@ -3,7 +3,7 @@ module View.Pathfinder exposing (annotationHovercardView, bottomCenterPanel, con
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
 import Components.Tooltip as Tooltip
-import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
+import Config.Pathfinder as Pathfinder exposing (AggEdgeFilter(..), TracingMode(..))
 import Config.View as View
 import Css
 import Css.Graph
@@ -91,6 +91,7 @@ graph plugins pluginStates vc gc model =
     , topCenterPanel plugins pluginStates vc gc model
     , topRightPanel plugins pluginStates vc model
     , bottomCenterPanel vc model
+    , bottomRightPanel vc model
     , OnGraphSearchView.view vc model.onGraphSearch
     , Util.Tooltip.view vc model
         |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
@@ -436,6 +437,89 @@ bottomCenterPanel vc model =
                         {}
                 }
             }
+        ]
+
+
+{-| Bottom-right panel: small box with radio buttons for the aggregate-edge
+filter. Visible only in aggregate-tracing mode.
+-}
+bottomRightPanel : View.Config -> Pathfinder.Model -> Html Msg
+bottomRightPanel vc model =
+    if model.config.tracingMode == AggregateTracingMode then
+        div
+            [ css
+                [ Css.position Css.absolute
+                , Css.bottom (Css.px 20)
+                , Css.right (Css.px 20)
+                , Css.pointerEvents Css.none
+                ]
+            ]
+            [ aggEdgeFilterControl vc model.config.aggEdgeFilter ]
+
+    else
+        Html.text ""
+
+
+aggEdgeFilterControl : View.Config -> AggEdgeFilter -> Html Msg
+aggEdgeFilterControl vc current =
+    let
+        radio filter labelKey =
+            let
+                checked =
+                    current == filter
+
+                inputId =
+                    "agg-edge-filter-" ++ filterId filter
+            in
+            Html.label
+                [ HA.for inputId
+                , css
+                    [ Css.displayFlex
+                    , Css.alignItems Css.center
+                    , Css.property "gap" "6px"
+                    , Css.cursor Css.pointer
+                    , Css.fontSize (Css.px 12)
+                    ]
+                ]
+                [ input
+                    [ HA.type_ "radio"
+                    , HA.id inputId
+                    , HA.name "agg-edge-filter"
+                    , HA.checked checked
+                    , onClick (UserSelectedAggEdgeFilter filter)
+                    , css [ Css.cursor Css.pointer ]
+                    ]
+                    []
+                , Html.text (Locale.string vc.locale labelKey)
+                ]
+
+        filterId f =
+            case f of
+                AllAggEdges ->
+                    "all"
+
+                OnlyTxBacked ->
+                    "connected"
+
+                OnlyNew ->
+                    "new"
+    in
+    div
+        [ css
+            [ Css.displayFlex
+            , Css.flexDirection Css.column
+            , Css.property "gap" "4px"
+            , Css.padding2 (Css.px 8) (Css.px 10)
+            , Css.backgroundColor (Css.rgba 255 255 255 0.92)
+            , Css.border3 (Css.px 1) Css.solid (Css.hex "ccc")
+            , Css.borderRadius (Css.px 6)
+            , Css.boxShadow4 Css.zero (Css.px 1) (Css.px 3) (Css.rgba 0 0 0 0.1)
+            , Css.pointerEvents Css.visible
+            ]
+        ]
+        [ radio AllAggEdges "agg-edge-filter-all"
+        , radio OnlyTxBacked "agg-edge-filter-connected"
+        , radio OnlyNew "agg-edge-filter-new"
         ]
 
 

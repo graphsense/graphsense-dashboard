@@ -483,6 +483,10 @@ Added tag: Tag hinzugefügt
 num-more-assets: '{0} weitere Vermögenswerte'
 relationship-based: Beziehungsbasiert
 transaction-based: Transaktionsbasiert
+agg-edge-filter-all: Alle
+agg-edge-filter-connected: Verbunden
+agg-edge-filter-new: Neu
+agg-edge-filter-tooltip: Filtere die aggregierten Kanten auf der Zeichenfläche
 annotate transaction: Transaktion annotieren
 statusbar-loading-swap-bridge-events: 'Lade Swaps und Bridging-Ereignisse für Transaktion
   {0}: {1}'
