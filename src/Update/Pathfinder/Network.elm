@@ -1594,8 +1594,8 @@ ingestAggEdges : Pathfinder.Config -> List DeserializedAggEdge -> Network -> Net
 ingestAggEdges pc aggEdges network =
     aggEdges
         |> List.foldl
-            (\{ a, b, txs } ->
-                s_txs txs
+            (\{ a, b, txs, labelOffset } ->
+                (s_txs txs >> s_labelOffset labelOffset)
                     |> rupsertAggEdge pc (AggEdge.initId a b)
             )
             network

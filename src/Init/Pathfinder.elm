@@ -38,6 +38,7 @@ init us =
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) us.recentSearches
       , onGraphSearch = SearchBox.empty
       , dragging = NoDragging
+      , draggingAggEdgeLabel = Nothing
       , transform = Transform.init
       , history = History.init
       , details = Nothing

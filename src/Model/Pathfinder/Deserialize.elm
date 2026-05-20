@@ -42,4 +42,5 @@ type alias DeserializedAggEdge =
     { a : Id
     , b : Id
     , txs : Set Id
+    , labelOffset : Maybe { x : Float, y : Float }
     }

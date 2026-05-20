@@ -41,6 +41,9 @@ encodeAggEdge edge =
     , edge.txs
         |> Set.toList
         |> list encodeId
+    , edge.labelOffset
+        |> Maybe.map (\o -> list float [ o.x, o.y ])
+        |> Maybe.withDefault null
     ]
         |> list identity
 

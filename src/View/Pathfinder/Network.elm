@@ -169,13 +169,13 @@ aggRelations vc showAggLabels hovered selection searchBox txs agg =
                     )
                 |> Dict.fromList
 
-        -- per-edge vertical label offset that keeps labels from overlapping
-        -- each other and the address nodes
+        -- per-edge 2D label offset: auto-placed Y plus any user-pinned x/y
         labelOffsets =
             resolveLabelOffsets vc hintsByEdge placedEdges
 
         offsetFor edge =
-            Dict.get ( edge.a, edge.b ) labelOffsets |> Maybe.withDefault 0
+            Dict.get ( edge.a, edge.b ) labelOffsets
+                |> Maybe.withDefault { x = 0, y = 0 }
     in
     Svg.g []
         [ placedEdges
@@ -220,7 +220,7 @@ processed left-to-right, and each label takes the first collision-free
 candidate offset. The candidate ladder for each label starts with the
 tx-position hint (if available), then 0, then alternating up/down.
 -}
-resolveLabelOffsets : View.Config -> Dict ( Id, Id ) Float -> List ( AggEdge, Address, Address ) -> Dict ( Id, Id ) Float
+resolveLabelOffsets : View.Config -> Dict ( Id, Id ) Float -> List ( AggEdge, Address, Address ) -> Dict ( Id, Id ) { x : Float, y : Float }
 resolveLabelOffsets vc hints placedEdges =
     let
         nodeBox address =
@@ -250,7 +250,7 @@ resolveLabelOffsets vc hints placedEdges =
                                 Dict.get key hints
                                     |> Maybe.map (\hy -> hy - m.y)
                         in
-                        ( key, Box m.x m.y m.width m.height, preferredOff )
+                        ( key, Box m.x m.y m.width m.height, ( preferredOff, edge.labelOffset ) )
                     )
                 |> List.sortBy (\( _, b, _ ) -> b.x)
 
@@ -264,25 +264,35 @@ resolveLabelOffsets vc hints placedEdges =
         defaultCandidates =
             0 :: List.concatMap (\i -> [ step * toFloat i, step * toFloat -i ]) (List.range 1 5)
 
-        place ( key, box, preferredOff ) ( obstacles, offsets ) =
-            let
-                candidates =
-                    case preferredOff of
-                        Just p ->
-                            p :: defaultCandidates
+        place ( key, box, ( preferredOff, manualOff ) ) ( obstacles, offsets ) =
+            case manualOff of
+                Just m ->
+                    -- User-pinned label: keep the chosen position even if
+                    -- it overlaps something. Still seeded as an obstacle so
+                    -- auto-placed neighbours avoid sitting on top of it.
+                    ( { box | x = box.x + m.x, y = box.y + m.y } :: obstacles
+                    , Dict.insert key m offsets
+                    )
 
-                        Nothing ->
-                            defaultCandidates
+                Nothing ->
+                    let
+                        candidates =
+                            case preferredOff of
+                                Just p ->
+                                    p :: defaultCandidates
 
-                chosen =
-                    candidates
-                        |> List.Extra.find
-                            (\off -> not (List.any (boxesOverlap { box | y = box.y + off }) obstacles))
-                        |> Maybe.withDefault 0
-            in
-            ( { box | y = box.y + chosen } :: obstacles
-            , Dict.insert key chosen offsets
-            )
+                                Nothing ->
+                                    defaultCandidates
+
+                        chosen =
+                            candidates
+                                |> List.Extra.find
+                                    (\off -> not (List.any (boxesOverlap { box | y = box.y + off }) obstacles))
+                                |> Maybe.withDefault 0
+                    in
+                    ( { box | y = box.y + chosen } :: obstacles
+                    , Dict.insert key { x = 0, y = chosen } offsets
+                    )
     in
     labels
         |> List.foldl place ( nodeObstacles, Dict.empty )
@@ -418,28 +428,28 @@ dimAttrs dimmed =
     ]
 
 
-aggEdgeNodeHighlight : View.Config -> Float -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeNodeHighlight vc offsetY edge aAddress bAddress =
+aggEdgeNodeHighlight : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeNodeHighlight vc offset edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "eh"
-    , Svg.lazy5 AggEdge.highlight vc offsetY edge aAddress bAddress
+    , Svg.lazy5 AggEdge.highlight vc offset edge aAddress bAddress
     )
 
 
-aggEdgeNode : View.Config -> Bool -> Float -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeNode vc dimmed offsetY edge aAddress bAddress =
+aggEdgeNode : View.Config -> Bool -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeNode vc dimmed offset edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "en"
     , Svg.g
         (dimAttrs dimmed)
-        [ Svg.lazy5 AggEdge.view vc offsetY edge aAddress bAddress ]
+        [ Svg.lazy5 AggEdge.view vc offset edge aAddress bAddress ]
     )
 
 
-aggEdgeEdge : View.Config -> Bool -> Float -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeEdge vc dimmed offsetY edge aAddress bAddress =
+aggEdgeEdge : View.Config -> Bool -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeEdge vc dimmed offset edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "ee"
     , Svg.g
         (dimAttrs dimmed)
-        [ Svg.lazy6 AggEdge.edge vc offsetY edge aAddress bAddress False ]
+        [ Svg.lazy6 AggEdge.edge vc offset edge aAddress bAddress False ]
     )
 
 

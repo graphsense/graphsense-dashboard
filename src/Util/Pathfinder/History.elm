@@ -374,6 +374,9 @@ shallPushHistory plugins msg _ =
         UserSelectsAnnotationColor _ _ ->
             True
 
+        UserPushesLeftMouseButtonOnAggEdgeLabel _ _ _ ->
+            False
+
         ToolbarHovercardMsg _ ->
             False
 
