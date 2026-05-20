@@ -1680,27 +1680,78 @@ updateByMsg plugins uc msg model =
                                 _ ->
                                     moveNode id model_.network
 
-                        nn =
-                            (if model_.config.snapToGrid then
+                        -- Is the dropped node JOINING a new group? True when
+                        -- it landed inside the box of some group it isn't
+                        -- already a member of. Tested against the
+                        -- un-snapped position, so the decision is based on
+                        -- where the user actually let go (not on where
+                        -- snap-to-grid would have pulled it — which can be
+                        -- a member's own grid cell). Existing members
+                        -- dragged within their own group fall through to
+                        -- the normal snap + overlap-resolve flow.
+                        currentGid =
+                            Annotations.getAnnotation id model_.annotations
+                                |> Maybe.andThen .groupId
+
+                        landedInGroup =
+                            case GroupBox.pointFor network.addresses network.txs id of
+                                Just point ->
+                                    Annotations.groups model_.annotations
+                                        |> List.any
+                                            (\g ->
+                                                (Just g.id /= currentGid)
+                                                    && (GroupBox.boundsFor network.addresses network.txs g.members
+                                                            |> Maybe.map (\b -> GroupBox.contains b point)
+                                                            |> Maybe.withDefault False
+                                                       )
+                                            )
+
+                                Nothing ->
+                                    False
+
+                        -- When dropping into a group, skip snap-to-grid so
+                        -- the node isn't pulled onto a member's cell.
+                        snapped =
+                            if model_.config.snapToGrid && not landedInGroup then
                                 network |> Network.snapToGrid
 
-                             else
+                            else
                                 network
-                            )
-                                |> (if model_.config.avoidOverlapingNodes then
-                                        Network.resolveOverlapsExcept Network.Compact (Just id)
 
-                                    else
-                                        identity
-                                   )
-                    in
-                    n
-                        (applyGroupMembershipAfterDrag draggedIds
+                        -- Existing group members must stay put; if the
+                        -- dropped node still overlaps one, push only the
+                        -- dropped node outward.
+                        nn =
+                            if not model_.config.avoidOverlapingNodes then
+                                snapped
+
+                            else if landedInGroup then
+                                Network.resolveOverlapsOnly Network.Compact id snapped
+
+                            else
+                                Network.resolveOverlapsExcept Network.Compact (Just id) snapped
+
+                        afterMove =
                             { model_
                                 | network = nn
                                 , dragging = NoDragging
                             }
-                        )
+
+                        afterMembership =
+                            applyGroupMembershipAfterDrag draggedIds afterMove
+
+                        groupChanged =
+                            afterMembership.annotations /= afterMove.annotations
+                    in
+                    if groupChanged then
+                        -- A drop that changes group membership is an
+                        -- undoable action; snapshot the pre-membership
+                        -- state so the user can undo it.
+                        forcePushHistory afterMove
+                            |> Tuple.mapFirst (\m -> { m | annotations = afterMembership.annotations })
+
+                    else
+                        n afterMembership
 
         UserWheeledOnGraph x y z ->
             uc.size

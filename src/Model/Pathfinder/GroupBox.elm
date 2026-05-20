@@ -6,6 +6,7 @@ renderer (`View.Pathfinder.Network`) and the drag-to-(un)group logic
 -}
 
 import Animation exposing (Animation, Clock)
+import Config.Pathfinder
 import Dict exposing (Dict)
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
@@ -23,11 +24,16 @@ type alias Bounds =
 
 
 {-| Padding (px) added around the outermost member nodes of a group box.
-Accounts for the node radius plus the labels rendered below/around nodes.
+Must accommodate (1) the node body + the label rendered below, and (2) a
+full snap-to-grid step — so a node dropped right next to a member, after
+overlap-resolution pushes it outward by one grid step, still lands inside
+the box and is captured as a group member.
 -}
 padding : Float
 padding =
-    GraphComponents.addressNodeNodeFrame_details.width / 2 + 56
+    max
+        (GraphComponents.addressNodeNodeFrame_details.width / 2 + 56)
+        (Config.Pathfinder.nodeYOffset * unit + 20)
 
 
 {-| Height (px) of the group box's draggable header strip.
