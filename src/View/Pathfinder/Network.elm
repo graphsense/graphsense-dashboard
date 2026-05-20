@@ -1,5 +1,6 @@
 module View.Pathfinder.Network exposing (ClusterContext, addresses, groups, relations)
 
+import Animation
 import Api.Data
 import Basics.Extra exposing (uncurry)
 import Color
@@ -22,7 +23,7 @@ import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RemoteData exposing (WebData)
-import Set
+import Set exposing (Set)
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Keyed as Keyed
@@ -154,7 +155,7 @@ relations : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Hovered -> Se
 relations plugins vc gc showAggLabels hovered selection searchBox annotations txs agg conversions =
     case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
-            Svg.lazy6 aggRelations vc showAggLabels hovered selection searchBox agg
+            Svg.lazy7 aggRelations vc showAggLabels hovered selection searchBox txs agg
 
         Pathfinder.TransactionTracingMode ->
             Svg.lazy7 txRelations plugins vc gc searchBox annotations txs conversions
@@ -171,10 +172,14 @@ relations plugins vc gc showAggLabels hovered selection searchBox annotations tx
     These are passed as the raw model values (rather than a derived list) so
     that `Svg.lazy` memoization holds: they keep a stable reference between
     renders unless the hover/selection actually changes.
+  - `txs` — the transactions that exist in tx-mode. Each agg edge knows the
+    set of underlying txs (`edge.txs`); the y-centroid of their resting
+    positions is used as the preferred vertical position for the edge's label,
+    so toggling between tx and aggregate mode keeps the same visual layout.
 
 -}
-aggRelations : View.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Dict ( Id, Id ) AggEdge -> Svg Msg
-aggRelations vc showAggLabels hovered selection searchBox agg =
+aggRelations : View.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
+aggRelations vc showAggLabels hovered selection searchBox txs agg =
     let
         agg_ =
             Dict.values agg
@@ -251,10 +256,21 @@ aggRelations vc showAggLabels hovered selection searchBox agg =
                         Maybe.map2 (\a b -> ( edge, a, b )) edge.aAddress edge.bAddress
                     )
 
+        -- per-edge preferred label center y (in pixels) derived from the
+        -- resting positions of the underlying txs in tx-mode
+        hintsByEdge =
+            placedEdges
+                |> List.filterMap
+                    (\( edge, _, _ ) ->
+                        avgTxY txs edge.txs
+                            |> Maybe.map (\y -> ( ( edge.a, edge.b ), y * unit ))
+                    )
+                |> Dict.fromList
+
         -- per-edge vertical label offset that keeps labels from overlapping
         -- each other and the address nodes
         labelOffsets =
-            resolveLabelOffsets vc placedEdges
+            resolveLabelOffsets vc hintsByEdge placedEdges
 
         offsetFor edge =
             Dict.get ( edge.a, edge.b ) labelOffsets |> Maybe.withDefault 0
@@ -298,12 +314,12 @@ boxesOverlap a b =
 
 {-| Assign each aggregate-edge label a vertical pixel offset so that labels do
 not overlap each other or the address nodes. Greedy placement: edges are
-processed left-to-right, and each label takes the first candidate offset (0,
-then alternating up/down) that is collision-free against the nodes and the
-labels already placed.
+processed left-to-right, and each label takes the first collision-free
+candidate offset. The candidate ladder for each label starts with the
+tx-position hint (if available), then 0, then alternating up/down.
 -}
-resolveLabelOffsets : View.Config -> List ( AggEdge, Address, Address ) -> Dict ( Id, Id ) Float
-resolveLabelOffsets vc placedEdges =
+resolveLabelOffsets : View.Config -> Dict ( Id, Id ) Float -> List ( AggEdge, Address, Address ) -> Dict ( Id, Id ) Float
+resolveLabelOffsets vc hints placedEdges =
     let
         nodeBox address =
             let
@@ -323,23 +339,39 @@ resolveLabelOffsets vc placedEdges =
                         let
                             m =
                                 AggEdge.labelMetrics vc edge a b
+
+                            key =
+                                ( edge.a, edge.b )
+
+                            -- preferred *offset* from the default label y
+                            preferredOff =
+                                Dict.get key hints
+                                    |> Maybe.map (\hy -> hy - m.y)
                         in
-                        ( ( edge.a, edge.b ), Box m.x m.y m.width m.height )
+                        ( key, Box m.x m.y m.width m.height, preferredOff )
                     )
-                |> List.sortBy (Tuple.second >> .x)
+                |> List.sortBy (\( _, b, _ ) -> b.x)
 
         step =
             labels
                 |> List.head
-                |> Maybe.map (Tuple.second >> .h)
+                |> Maybe.map (\( _, b, _ ) -> b.h)
                 |> Maybe.withDefault 30
                 |> (*) 1.2
 
-        candidates =
+        defaultCandidates =
             0 :: List.concatMap (\i -> [ step * toFloat i, step * toFloat -i ]) (List.range 1 5)
 
-        place ( key, box ) ( obstacles, offsets ) =
+        place ( key, box, preferredOff ) ( obstacles, offsets ) =
             let
+                candidates =
+                    case preferredOff of
+                        Just p ->
+                            p :: defaultCandidates
+
+                        Nothing ->
+                            defaultCandidates
+
                 chosen =
                     candidates
                         |> List.Extra.find
@@ -353,6 +385,27 @@ resolveLabelOffsets vc placedEdges =
     labels
         |> List.foldl place ( nodeObstacles, Dict.empty )
         |> Tuple.second
+
+
+{-| Mean resting y-coordinate (in graph units) of the txs in `txIds` that are
+currently part of the visible graph. `Nothing` if none of them is present.
+Resting (not animated) y is used so that pan/zoom does not re-trigger work.
+-}
+avgTxY : Dict Id Tx -> Set Id -> Maybe Float
+avgTxY txs txIds =
+    let
+        ys =
+            txIds
+                |> Set.toList
+                |> List.filterMap (\id -> Dict.get id txs)
+                |> List.map (\tx -> Animation.getTo tx.y)
+    in
+    case ys of
+        [] ->
+            Nothing
+
+        _ ->
+            Just (List.sum ys / toFloat (List.length ys))
 
 
 txRelations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
