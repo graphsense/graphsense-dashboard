@@ -2618,6 +2618,13 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
+        UserSelectedAggEdgeFilter f ->
+            let
+                cfg =
+                    model.config
+            in
+            n { model | config = { cfg | aggEdgeFilter = f } }
+
         UserOpensContextMenu coordsNew cmtype ->
             case model.contextMenu of
                 Nothing ->

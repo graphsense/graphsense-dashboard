@@ -57,10 +57,49 @@ relations : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Hovered -> Se
 relations plugins vc gc showAggLabels hovered selection searchBox annotations txs agg conversions =
     case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
-            Svg.lazy7 aggRelations vc showAggLabels hovered selection searchBox txs agg
+            -- Svg.Styled.Lazy stops at lazy7, so the two scalar view-options
+            -- (label visibility + edge filter) are packed into a single Int
+            -- and unpacked inside aggRelations. Int args are value-compared
+            -- by lazy, so memoization holds.
+            Svg.lazy7 aggRelations vc (packAggViewOpts showAggLabels gc.aggEdgeFilter) hovered selection searchBox txs agg
 
         Pathfinder.TransactionTracingMode ->
             Svg.lazy7 txRelations plugins vc gc searchBox annotations txs conversions
+
+
+packAggViewOpts : Bool -> Pathfinder.AggEdgeFilter -> Int
+packAggViewOpts showLabels filter =
+    (if showLabels then
+        1
+
+     else
+        0
+    )
+        + (case filter of
+            Pathfinder.AllAggEdges ->
+                0
+
+            Pathfinder.OnlyTxBacked ->
+                2
+
+            Pathfinder.OnlyNew ->
+                4
+          )
+
+
+unpackAggViewOpts : Int -> { showLabels : Bool, filter : Pathfinder.AggEdgeFilter }
+unpackAggViewOpts key =
+    { showLabels = modBy 2 key == 1
+    , filter =
+        if key < 2 then
+            Pathfinder.AllAggEdges
+
+        else if key < 4 then
+            Pathfinder.OnlyTxBacked
+
+        else
+            Pathfinder.OnlyNew
+    }
 
 
 {-| Render aggregate-mode edges.
@@ -80,14 +119,33 @@ relations plugins vc gc showAggLabels hovered selection searchBox annotations tx
     so toggling between tx and aggregate mode keeps the same visual layout.
 
 -}
-aggRelations : View.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
-aggRelations vc showAggLabels hovered selection searchBox txs agg =
+aggRelations : View.Config -> Int -> Hovered -> Selection -> SearchBox.Model -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
+aggRelations vc viewOptsKey hovered selection searchBox txs agg =
     let
+        { showLabels, filter } =
+            unpackAggViewOpts viewOptsKey
+
+        showAggLabels =
+            showLabels
+
+        filterPasses edge =
+            case filter of
+                Pathfinder.AllAggEdges ->
+                    True
+
+                Pathfinder.OnlyTxBacked ->
+                    not (Set.isEmpty edge.txs)
+
+                Pathfinder.OnlyNew ->
+                    Set.isEmpty edge.txs
+
         agg_ =
             Dict.values agg
                 |> List.filter
                     (\edge ->
-                        RemoteData.isSuccess edge.a2b && RemoteData.isSuccess edge.b2a
+                        RemoteData.isSuccess edge.a2b
+                            && RemoteData.isSuccess edge.b2a
+                            && filterPasses edge
                     )
 
         -- hovered and/or selected addresses that drive the focus dimming

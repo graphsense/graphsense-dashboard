@@ -445,6 +445,10 @@ create new actor: Creare un nuovo attore
 Added tag: Tag aggiunto
 relationship-based: Basato sulle relazioni
 transaction-based: Basato sulle transazioni
+agg-edge-filter-all: Tutti
+agg-edge-filter-connected: Connessi
+agg-edge-filter-new: Nuovi
+agg-edge-filter-tooltip: Filtra gli archi aggregati mostrati sul canvas
 related by multi-input heuristic: Correlato tramite euristica multi-input
 related by public key: Correlato tramite chiave pubblica
 sub transfers: Sotto trasferimenti
