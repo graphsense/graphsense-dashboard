@@ -390,7 +390,6 @@ contextMenu plugins states vc model cm =
             ]
                 ++ contextMenuRule vc
                 ++ addBlockExplorerLinks address.address.currency address.address.address
-                ++ Plugin.addressContextMenu plugins states vc address
 
         ContextMenu.Entity entity ->
             [ UserClickedAnnotateEntity entity.id

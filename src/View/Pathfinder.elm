@@ -184,7 +184,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     pluginsList =
                         Dict.get id model.network.addresses
                             |> Maybe.map
-                                (Plugin.addressContextMenuNew plugins pluginStates vc
+                                (Plugin.addressContextMenu plugins pluginStates vc
                                     >> List.map (ContextMenuItem.view vc)
                                 )
                             |> Maybe.withDefault []

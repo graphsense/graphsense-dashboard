@@ -80,7 +80,7 @@ entityFlags plugins entityState vc =
         |> mapSecond (List.map (Svg.map Graph.PluginMsg))
 
 
-addressContextMenu : Plugins -> Plugin.Model.ModelState -> View.Config -> Address -> List (Html Graph.Msg)
+addressContextMenu : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (ContextMenuItem Pathfinder.Msg)
 addressContextMenu plugins states vc address =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
@@ -90,28 +90,6 @@ addressContextMenu plugins states vc address =
                         fun vc address
                     )
                     plugin.addressContextMenu
-                    states.{{name}}
-                    address.plugins.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
-    {{^last}}, {{/last}}{{/plugins}}
-    ]
-        |> List.filterMap identity
-        |> List.map ((++) (Util.View.contextMenuRule vc))
-        |> List.concat
-        |> List.map (Html.map Graph.PluginMsg)
-
-
-addressContextMenuNew : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (ContextMenuItem Pathfinder.Msg)
-addressContextMenuNew plugins states vc address =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map3
-                    (\fun ->
-                        fun vc address
-                    )
-                    plugin.addressContextMenuNew
                     states.{{name}}
                     address.plugins.{{name}}
                     |> Maybe.map (List.map (ContextMenuItem.map Plugin.Msg.{{package}}Msg))

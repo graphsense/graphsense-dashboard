@@ -19,11 +19,8 @@ type alias View modelState addressState entityState msg =
     -- entity flags
     , entityFlags : Maybe (View.Config -> entityState -> ( Float, List (Svg msg) ))
 
-    -- address context menu
-    , addressContextMenu : Maybe (View.Config -> Graph.Address -> modelState -> addressState -> List (Html msg))
-
-    -- address context menu item for new pathfinder
-    , addressContextMenuNew : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> List (ContextMenuItem msg))
+    -- address context menu item
+    , addressContextMenu : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> List (ContextMenuItem msg))
 
     -- additional properties shown in the address's property box
     , addressProperties : Maybe (View.Config -> Graph.Config -> modelState -> addressState -> List (Html msg))
@@ -94,7 +91,6 @@ init =
     { addressFlags = Nothing
     , entityFlags = Nothing
     , addressContextMenu = Nothing
-    , addressContextMenuNew = Nothing
     , addressProperties = Nothing
     , entityProperties = Nothing
     , browser = Nothing
