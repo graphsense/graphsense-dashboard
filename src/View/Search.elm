@@ -256,22 +256,144 @@ searchResult plugins vc sc model =
         text ""
 
 
+type alias Badge =
+    { title : String
+    , badge : List ( Int, ResultLine )
+    }
+
+
+{-| Group result lines (autocomplete choices or recent searches) into titled
+badges: one badge per currency (BTC, ETH, …) plus separate badges for actors
+and labels, depending on the search type.
+-}
+groupBadges : Config -> SearchType -> List ( Int, ResultLine ) -> List Badge
+groupBadges vc searchType choices =
+    let
+        filterChoices pred =
+            List.filter (Tuple.second >> pred) choices
+
+        labelBadge =
+            { title = Locale.string vc.locale "Labels"
+            , badge =
+                filterChoices
+                    (\rl ->
+                        case rl of
+                            Label _ ->
+                                True
+
+                            _ ->
+                                False
+                    )
+            }
+
+        actorBadge =
+            { title = Locale.string vc.locale "actors"
+            , badge =
+                filterChoices
+                    (\rl ->
+                        case rl of
+                            Actor _ ->
+                                True
+
+                            Custom _ ->
+                                True
+
+                            _ ->
+                                False
+                    )
+            }
+
+        currencyBadges =
+            choices
+                |> List.Extra.gatherEqualsBy (Tuple.second >> resultLineCurrency)
+                |> List.filterMap
+                    (\( fst, rest ) ->
+                        Tuple.second fst
+                            |> resultLineCurrency
+                            |> Maybe.map
+                                (\cur ->
+                                    { title = String.toUpper cur
+                                    , badge = fst :: rest
+                                    }
+                                )
+                    )
+    in
+    case searchType of
+        SearchTagsOnly ->
+            [ labelBadge ]
+
+        SearchActorsOnly ->
+            [ actorBadge ]
+
+        SearchAddressAndTx _ ->
+            currencyBadges
+
+        SearchAll _ ->
+            currencyBadges ++ [ actorBadge, labelBadge ]
+
+
+badgeToResult : Config -> SearchConfigWithMoreCss Msg -> (( Int, ResultLine ) -> Html Msg) -> Bool -> Badge -> Html Msg
+badgeToResult vc sc renderLine showTitle { title, badge } =
+    div
+        [ Css.resultGroup vc |> css
+        , css sc.resultGroup
+        ]
+        ((if showTitle then
+            [ div
+                [ Css.resultGroupTitle vc |> css
+                , css sc.resultGroupTitle
+                ]
+                [ text title
+                ]
+            ]
+
+          else
+            []
+         )
+            ++ [ badge
+                    |> List.map renderLine
+                    |> ol [ Css.resultGroupList vc |> css ]
+               ]
+        )
+
+
+{-| Render the non-empty badges as result groups. When only a single group
+remains, its title is omitted since the grouping then carries no information.
+-}
+renderBadges : Config -> SearchConfigWithMoreCss Msg -> (( Int, ResultLine ) -> Html Msg) -> List Badge -> List (Html Msg)
+renderBadges vc sc renderLine badges =
+    let
+        nonEmpty =
+            List.filter (.badge >> List.isEmpty >> not) badges
+    in
+    nonEmpty
+        |> List.map (badgeToResult vc sc renderLine (List.length nonEmpty > 1))
+
+
 recentList : Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
 recentList vc sc model =
     let
         recents =
             filteredRecents model.searchType model.recentSearches
+                |> List.indexedMap Tuple.pair
 
         lineEvents rl =
             [ preventDefaultOn "mousedown" (Json.Decode.succeed ( NoOp, True ))
             , onClick (UserClicksRecentResultLine rl)
             ]
+
+        renderLine ( _, rl ) =
+            resultLineToHtml vc "" sc Nothing (lineEvents rl) rl
+
+        groups =
+            groupBadges vc model.searchType recents
+                |> renderBadges vc sc renderLine
     in
     if List.isEmpty recents then
         []
 
     else
-        [ div
+        div
             [ Css.resultGroup vc |> css
             , css sc.resultGroup
             ]
@@ -281,19 +403,8 @@ recentList vc sc model =
                 ]
                 [ text (Locale.string vc.locale "Recent searches")
                 ]
-            , recents
-                |> List.map
-                    (\rl ->
-                        resultLineToHtml vc
-                            ""
-                            sc
-                            Nothing
-                            (lineEvents rl)
-                            rl
-                    )
-                |> ol [ Css.resultGroupList vc |> css ]
             ]
-        ]
+            :: groups
 
 
 resultList : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
@@ -306,55 +417,6 @@ resultList _ vc sc { autocomplete, searchType } =
         q =
             (Autocomplete.viewState autocomplete).query
 
-        labelBadge =
-            { title = Locale.string vc.locale "Labels"
-            , badge =
-                choices
-                    |> List.filter
-                        (\( _, rl ) ->
-                            case rl of
-                                Label _ ->
-                                    True
-
-                                _ ->
-                                    False
-                        )
-            }
-
-        actorBadge =
-            { title = Locale.string vc.locale "actors"
-            , badge =
-                choices
-                    |> List.filter
-                        (\( _, rl ) ->
-                            case rl of
-                                Actor _ ->
-                                    True
-
-                                Custom _ ->
-                                    True
-
-                                _ ->
-                                    False
-                        )
-            }
-
-        currencyBadges =
-            choices
-                |> List.Extra.groupWhile
-                    (\( _, a ) ( _, b ) -> resultLineCurrency a == resultLineCurrency b)
-                |> List.filterMap
-                    (\( fst, rest ) ->
-                        Tuple.second fst
-                            |> resultLineCurrency
-                            |> Maybe.map
-                                (\cur ->
-                                    { title = String.toUpper cur
-                                    , badge = fst :: rest
-                                    }
-                                )
-                    )
-
         { choiceEvents } =
             Autocomplete.events
                 { onSelect = UserClicksResultLine
@@ -364,53 +426,11 @@ resultList _ vc sc { autocomplete, searchType } =
         selectedValue =
             Autocomplete.selectedValue autocomplete
 
-        badgeToResult { title, badge } =
-            if List.isEmpty badge then
-                Nothing
-
-            else
-                div
-                    [ Css.resultGroup vc |> css
-                    , css sc.resultGroup
-                    ]
-                    [ div
-                        [ Css.resultGroupTitle vc |> css
-                        , css sc.resultGroupTitle
-                        ]
-                        [ text title
-                        ]
-                    , List.map
-                        (\( index, rl ) ->
-                            resultLineToHtml vc
-                                q
-                                sc
-                                selectedValue
-                                (choiceEvents index)
-                                rl
-                        )
-                        badge
-                        |> ol [ Css.resultGroupList vc |> css ]
-                    ]
-                    |> Just
+        renderLine ( index, rl ) =
+            resultLineToHtml vc q sc selectedValue (choiceEvents index) rl
     in
-    case searchType of
-        SearchTagsOnly ->
-            [ labelBadge ]
-                |> List.filterMap badgeToResult
-
-        SearchActorsOnly ->
-            [ actorBadge ]
-                |> List.filterMap badgeToResult
-
-        SearchAddressAndTx _ ->
-            currencyBadges |> List.filterMap badgeToResult
-
-        SearchAll _ ->
-            currencyBadges
-                ++ [ actorBadge
-                   , labelBadge
-                   ]
-                |> List.filterMap badgeToResult
+    groupBadges vc searchType choices
+        |> renderBadges vc sc renderLine
 
 
 
