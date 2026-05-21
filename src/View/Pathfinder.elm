@@ -479,6 +479,7 @@ aggEdgeFilterControl vc current =
                     , Css.property "gap" "6px"
                     , Css.cursor Css.pointer
                     , Css.fontSize (Css.px 12)
+                    , Css.property "color" Colors.brandBlack
                     ]
                 ]
                 [ input
@@ -510,8 +511,10 @@ aggEdgeFilterControl vc current =
             , Css.flexDirection Css.column
             , Css.property "gap" "4px"
             , Css.padding2 (Css.px 8) (Css.px 10)
-            , Css.backgroundColor (Css.rgba 255 255 255 0.92)
-            , Css.border3 (Css.px 1) Css.solid (Css.hex "ccc")
+
+            -- theme variables so the panel follows light/dark mode
+            , Css.property "background-color" Colors.white
+            , Css.property "border" ("1px solid " ++ Colors.greyBlue100)
             , Css.borderRadius (Css.px 6)
             , Css.boxShadow4 Css.zero (Css.px 1) (Css.px 3) (Css.rgba 0 0 0 0.1)
             , Css.pointerEvents Css.visible
@@ -637,8 +640,15 @@ annotationHovercardView vc ids annotation hc =
             annotation |> Maybe.andThen .groupId |> (/=) Nothing
 
         groupCheckbox =
-            Controls.checkboxWithLabel
-                { label = Locale.string vc.locale "Group"
+            Controls.checkboxWithLabelWithAttributes
+                -- marginLeft cancels the 5px transparent inset of the checkbox
+                -- component so its box lines up with the headers and swatches;
+                -- marginTop separates it from the color row. The label font is
+                -- forced to 12px to match the "Label"/"Color" headers.
+                { root = [ css [ Css.marginTop (Css.px 4), Css.marginLeft (Css.px -5) ] ]
+                , label = [ css [ Css.important (Css.fontSize (Css.px 12)) ] ]
+                }
+                { label = Locale.string vc.locale "Group on graph"
                 , checked = isGrouped
                 , disabled = False
                 , msg = UserTogglesAnnotationGroup ids
@@ -679,39 +689,67 @@ annotationHovercardView vc ids annotation hc =
                         )
                         { root = { selectionVisible = isSelected } }
 
+        -- The generated component renders only a label section and a color
+        -- section. To keep the popup a single card, the Group checkbox is
+        -- injected as a trailing row of the color section instance instead of
+        -- being placed in a separate wrapper next to the component.
+        colorSection =
+            div [ css Sc.annotationColorSection_details.styles ]
+                [ div [ css Sc.annotationColorHeader_details.styles ]
+                    [ Html.text (Locale.string vc.locale "color") ]
+                , div [ css Sc.annotationColorsRow_details.styles ]
+                    [ colorBtn selectedColor Nothing
+                    , colorBtn selectedColor (Just Colors.annotation1_color)
+                    , colorBtn selectedColor (Just Colors.annotation2_color)
+                    , colorBtn selectedColor (Just Colors.annotation3_color)
+                    , colorBtn selectedColor (Just Colors.annotation4_color)
+                    , colorBtn selectedColor (Just Colors.annotation5_color)
+                    , colorBtn selectedColor (Just Colors.annotation6_color)
+                    , colorBtn selectedColor (Just Colors.annotation7_color)
+                    , colorBtn selectedColor (Just Colors.annotation8_color)
+                    , colorBtn selectedColor (Just Colors.annotation9_color)
+                    , colorBtn selectedColor (Just Colors.annotation10_color)
+                    ]
+                , groupCheckbox
+                ]
+
         annotationComponent =
-            Sc.annotationWithAttributes
+            Sc.annotationWithInstances
                 (Sc.annotationAttributes
-                    -- Strip the component's own card chrome so it blends into
-                    -- the shared card that also holds the Group checkbox.
+                    -- Drop the component's own card chrome so the hovercard is
+                    -- the single enclosing card. !important is required: elm-css
+                    -- concatenates this class with the component's generated one
+                    -- and the cascade order between them is not stable.
                     |> Rs.s_root
                         [ css
-                            [ Css.property "background-color" "transparent"
-                            , Css.property "border" "none"
-                            , Css.property "box-shadow" "none"
-                            , Css.padding Css.zero
+                            [ Css.important (Css.property "background-color" "transparent")
+                            , Css.important (Css.property "border" "none")
+                            , Css.important (Css.property "box-shadow" "none")
                             ]
                         ]
                 )
+                (Sc.annotationInstances
+                    |> Rs.s_colorSection (Just colorSection)
+                )
                 { root = { colorText = Locale.string vc.locale "color", labelText = Locale.string vc.locale "Label" }
                 , labelField = { variant = inputField }
-                , noColor = { variant = colorBtn selectedColor Nothing }
-                , color1 = { variant = colorBtn selectedColor (Just Colors.annotation1_color) }
-                , color2 = { variant = colorBtn selectedColor (Just Colors.annotation2_color) }
-                , color3 = { variant = colorBtn selectedColor (Just Colors.annotation3_color) }
-                , color4 = { variant = colorBtn selectedColor (Just Colors.annotation4_color) }
-                , color5 = { variant = colorBtn selectedColor (Just Colors.annotation5_color) }
-                , color6 = { variant = colorBtn selectedColor (Just Colors.annotation6_color) }
-                , color7 = { variant = colorBtn selectedColor (Just Colors.annotation7_color) }
-                , color8 = { variant = colorBtn selectedColor (Just Colors.annotation8_color) }
-                , color9 = { variant = colorBtn selectedColor (Just Colors.annotation9_color) }
-                , color10 = { variant = colorBtn selectedColor (Just Colors.annotation10_color) }
+
+                -- Swatches are rendered by the colorSection instance above;
+                -- these unused variants only satisfy the property record.
+                , noColor = { variant = none }
+                , color1 = { variant = none }
+                , color2 = { variant = none }
+                , color3 = { variant = none }
+                , color4 = { variant = none }
+                , color5 = { variant = none }
+                , color6 = { variant = none }
+                , color7 = { variant = none }
+                , color8 = { variant = none }
+                , color9 = { variant = none }
+                , color10 = { variant = none }
                 }
     in
-    [ annotationComponent
-    , groupCheckbox
-    ]
-        |> div [ HA.css Sc.annotation_details.styles ]
+    annotationComponent
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc hc (Css.zIndexMainValue + 1)

@@ -113,11 +113,17 @@ groupBox draggedIds addresses_ txs group =
                         , width (String.fromFloat (b.maxX - b.minX))
                         , height (String.fromFloat (b.maxY - b.minY))
                         , rx "8"
-                        , stroke color
                         , strokeWidth "2"
-                        , fill color
                         , fillOpacity "0.08"
                         , pointerEvents "none"
+
+                        -- fill/stroke go through CSS, not the SVG presentation
+                        -- attribute: theme color vars only resolve in CSS, so
+                        -- this is what lets the box follow light/dark mode.
+                        , css
+                            [ Css.property "stroke" color
+                            , Css.property "fill" color
+                            ]
                         ]
                         []
                     , -- header strip: drag handle for the whole group
@@ -127,9 +133,8 @@ groupBox draggedIds addresses_ txs group =
                         , width (String.fromFloat (b.maxX - b.minX))
                         , height (String.fromFloat GroupBox.headerHeight)
                         , rx "8"
-                        , fill color
                         , fillOpacity "0.22"
-                        , css [ Css.cursor Css.pointer ]
+                        , css [ Css.cursor Css.pointer, Css.property "fill" color ]
                         , onDoubleClick (UserDoubleClickedGroup group.members)
                         , Util.Graph.mousedown (UserPushesLeftMouseButtonOnGroup group.members)
                         ]
@@ -141,8 +146,13 @@ groupBox draggedIds addresses_ txs group =
                         Svg.text_
                             [ x (String.fromFloat (b.minX + 8))
                             , y (String.fromFloat (b.minY + 15))
-                            , css GraphComponents.annotationLabel2Label_details.styles
-                            , fill color
+
+                            -- appended after the component styles so it
+                            -- overrides their hardcoded fill with the group color
+                            , css
+                                (GraphComponents.annotationLabel2Label_details.styles
+                                    ++ [ Css.property "fill" color ]
+                                )
                             , pointerEvents "none"
                             ]
                             [ text group.label ]
@@ -336,7 +346,7 @@ aggRelations vc viewOptsKey hovered selection searchBox txs agg =
     Svg.g []
         [ placedEdges
             |> List.map
-                (\( edge, a, b ) -> aggEdgeEdge vc (isDimmed edge) (offsetFor edge) edge a b)
+                (\( edge, a, b ) -> aggEdgeEdge vc (isDimmed edge) showAggLabels (offsetFor edge) edge a b)
             |> Keyed.node "g" []
         , if showAggLabels then
             placedEdges
@@ -600,12 +610,14 @@ aggEdgeNode vc dimmed offset edge aAddress bAddress =
     )
 
 
-aggEdgeEdge : View.Config -> Bool -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeEdge vc dimmed offset edge aAddress bAddress =
+aggEdgeEdge : View.Config -> Bool -> Bool -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeEdge vc dimmed labelShown offset edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "ee"
     , Svg.g
         (dimAttrs dimmed)
-        [ Svg.lazy6 AggEdge.edge vc offset edge aAddress bAddress False ]
+        -- When a label is shown the line is drawn with a gap behind it, so a
+        -- dimmed (translucent) label never reveals the line crossing it.
+        [ Svg.lazy7 AggEdge.edge vc offset edge aAddress bAddress False labelShown ]
     )
 
 

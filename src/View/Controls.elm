@@ -1,7 +1,7 @@
-module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, lightModeToggle, radio, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
+module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, checkboxWithLabelWithAttributes, lightModeToggle, radio, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
 
 import Css
-import Html.Styled exposing (Html, div)
+import Html.Styled exposing (Attribute, Html, div)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import RecordSetter as Rs
@@ -25,8 +25,17 @@ type Size
 
 
 checkboxWithLabel : { label : String, checked : Bool, disabled : Bool, msg : msg, size : Size } -> Html msg
-checkboxWithLabel { label, checked, disabled, size, msg } =
-    Sc.checkboxWithLabel
+checkboxWithLabel =
+    checkboxWithLabelWithAttributes { root = [], label = [] }
+
+
+checkboxWithLabelWithAttributes :
+    { root : List (Attribute msg), label : List (Attribute msg) }
+    -> { label : String, checked : Bool, disabled : Bool, msg : msg, size : Size }
+    -> Html msg
+checkboxWithLabelWithAttributes attributes { label, checked, disabled, size, msg } =
+    Sc.checkboxWithLabelWithAttributes
+        attributes
         { root = { label = label }
         , checkboxes =
             { variant =

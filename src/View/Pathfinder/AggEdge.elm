@@ -342,7 +342,7 @@ highlight vc offset ed aAddress bAddress =
                 , showHighlight = True
                 }
             }
-        , edge vc offset ed aAddress bAddress True
+        , edge vc offset ed aAddress bAddress True False
         , view vc offset ed aAddress bAddress
         ]
 
@@ -406,8 +406,8 @@ labelMetrics vc ed aAddress bAddress =
 -}
 
 
-edge : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Bool -> Svg Msg
-edge vc offset ed aAddress bAddress hl =
+edge : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Bool -> Bool -> Svg Msg
+edge vc offset ed aAddress bAddress hl labelGap =
     let
         { left, right, totalWidth, x, y } =
             calcDimensions vc offset ed aAddress bAddress
@@ -471,12 +471,35 @@ edge vc offset ed aAddress bAddress hl =
             diffr
                 |> max (negate maxDiff)
 
+        -- when the line is gapped for a label, the gap extends a little past
+        -- the label box so the arrow caps don't reveal a line sliver
+        -- (the label is slightly asymmetric, so left and right differ by 1px)
+        gapPadL =
+            if labelGap then
+                4
+
+            else
+                0
+
+        gapPadR =
+            if labelGap then
+                6
+
+            else
+                0
+
         pat =
             pathD
                 [ M ( ax, ay )
-                , C ( ax + (lx - ax) / 3 - diffl, y ) ( lx - difflCap, y ) ( lx, y )
-                , L ( rx, y )
-                , C ( rx - diffrCap, y ) ( rx + (bx - rx) / 3 * 2 - diffr, y ) ( bx, by )
+                , C ( ax + (lx - ax) / 3 - diffl, y ) ( lx - difflCap - gapPadL, y ) ( lx - gapPadL, y )
+                , -- a gap (move, not line) behind the label so a dimmed,
+                  -- translucent label never reveals the line crossing it
+                  if labelGap then
+                    M ( rx + gapPadR, y )
+
+                  else
+                    L ( rx, y )
+                , C ( rx - diffrCap + gapPadR, y ) ( rx + (bx - rx) / 3 * 2 - diffr, y ) ( bx, by )
                 ]
 
         id =
