@@ -93,15 +93,19 @@ const app = Elm.Main.init(
 
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
+const shortCutKeys = ['a','f','z','s']
+
 // Prevent default Ctrl+A behavior (select all text) since we handle it in Elm for Pathfinder
 // But allow default behavior when cursor is in an input field
-window.addEventListener('keydown', (evt) => {
-  if (evt.ctrlKey && evt.key === 'a') {
-    const activeElement = document.activeElement
-    const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
-    if (!isInputField) {
-      evt.preventDefault()
-    }
+window.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
+  if (!window.location.pathname.startsWith('/pathfinder')) return
+  const key = e.key.toLowerCase()
+  if (shortCutKeys.indexOf(key) === -1) return
+  const activeElement = document.activeElement
+  const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
+  if (!isInputField || key !== 'a') {
+    e.preventDefault()
   }
 })
 
@@ -611,3 +615,4 @@ app.ports.blur.subscribe(id => {
   if (typeof el.blur !== 'function') return
   el.blur()
 })
+

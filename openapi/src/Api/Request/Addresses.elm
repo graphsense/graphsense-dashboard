@@ -150,11 +150,11 @@ getAddress currency_path address_path includeActors_query =
 
 
 
-getAddressEntity : (String) -> (String) -> Maybe (Bool) -> Api.Request Api.Data.Cluster
-getAddressEntity currency_path address_path includeActors_query =
+getAddressCluster : (String) -> (String) -> Maybe (Bool) -> Api.Request Api.Data.Cluster
+getAddressCluster currency_path address_path includeActors_query =
     Api.request
         "GET"
-        "/{currency}/addresses/{address}/entity"
+        "/{currency}/addresses/{address}/cluster"
         [ ( "currency", identity currency_path ), ( "address", identity address_path ) ]
         [ ( "include_actors", Maybe.map ((\val -> if val then "true" else "false")) includeActors_query ) ]
         []

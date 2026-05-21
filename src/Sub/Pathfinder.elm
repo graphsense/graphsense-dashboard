@@ -64,6 +64,12 @@ toKeyDown keyValue =
         "ArrowRight" ->
             UserPressedArrowKey Outgoing |> onlyFireOutsideOfTextInput
 
+        "ArrowUp" ->
+            UserPressedArrowKeyUp |> onlyFireOutsideOfTextInput
+
+        "ArrowDown" ->
+            UserPressedArrowKeyDown |> onlyFireOutsideOfTextInput
+
         _ ->
             Decode.fail "not handled"
 
@@ -92,6 +98,15 @@ toKeyUp keyValue =
         "y" ->
             UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
+        "f" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
+
+        "s" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
+
+        "e" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
+
         "Backspace" ->
             UserReleasedDeleteKey |> onlyFireOutsideOfTextInput
 
@@ -116,6 +131,9 @@ subscriptions model =
         _ ->
             Browser.Events.onMouseUp (Decode.succeed UserReleasesMouseButton)
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
+
+    -- Keys with no browser default: handled directly via Elm subscriptions.
+    -- for keys with a browser default preventDefault() is called. See main.js.
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)

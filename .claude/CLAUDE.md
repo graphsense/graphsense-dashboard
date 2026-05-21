@@ -63,6 +63,10 @@ Single test files: not supported by elm-test-rs natively; tests live in `tests/`
 - `Api/` — Generated REST API client (from OpenAPI)
 - `PluginInterface/` — Plugin hook definitions
 
+### Elm Packages
+
+Elm packages are installed locally in `./elm_packages`
+
 ### Code Generation Pipeline
 
 Several directories are **generated** — do not edit directly:
@@ -119,6 +123,24 @@ Runs on commit: `make format`, `make lint`, `make test`. On push: `tools/set_ver
 ## InfiniteTable (Virtual Scrolling)
 
 `Components.InfiniteTable` provides virtual scrolling for large datasets. **It requires fixed/constant row heights.** The scroller estimates total content height as `rowHeight * itemCount` using a single sampled row. Variable-height rows cause spacer miscalculations, scrollbar jitter, and can prevent data loading at scroll boundaries. When converting a table to use `InfiniteTable`, always ensure rows have a fixed CSS height (no `height: auto`, no text wrapping that grows rows). If variable row content is needed, truncate with `text-overflow: ellipsis` and use tooltips for the full text.
+
+## Pathfinder Keyboard Shortcuts
+
+Current shortcuts (path: `/pathfinder` only):
+
+- **Ctrl/Cmd+F** — open on-graph search
+- **Ctrl/Cmd+S** — save graph (`.gs` file)
+- **Ctrl/Cmd+P** — open export dialog
+- **Ctrl/Cmd+Z** — undo
+- **Ctrl/Cmd+Y** — redo
+- **Ctrl/Cmd+A** — select all
+- **Arrow keys / Backspace / Delete / Escape** — navigation and deletion
+
+**Two dispatch mechanisms — pick based on whether the browser claims the shortcut:**
+
+1. **`Browser.Events.onKeyDown/Up` subscription** (`src/Sub/Pathfinder.elm`) — used for keys with no browser default to suppress (Z, Y, A, arrows, etc.). Cannot call `preventDefault`. Use `onlyFireOutsideOfTextInput` to avoid hijacking typing in inputs.
+
+2. **JS port with `preventDefault()`** (`src/main.js` keydown listener → `src/Ports.elm` ports → `Sub/Pathfinder.elm` subscriptions) — required when the browser has a default to override (F = find bar, S = save page, P = print). The listener is path-gated to `/pathfinder` and ignores Shift/Alt-modified combos. To add another browser-claimed shortcut: add a `case` in the JS switch, add a `port xHotkeyPressed : (() -> msg) -> Sub msg` to `Ports.elm`, and subscribe to it in `Sub/Pathfinder.elm`.
 
 ## Patched Dependencies
 
