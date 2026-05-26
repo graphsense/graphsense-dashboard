@@ -51,6 +51,12 @@ type Model d
     = Model (ModelInternal d)
 
 
+{-| Fetch data with pagination and sorting
+@param sortState A tuple of (columnName, isDescending) to determine sorting
+@param pageSize The number of items to fetch per page
+@param nextPageHandle handle for fetching the next page of data. If Nothing, no more pages are available
+@return An effectful operation that may return a string
+-}
 type alias Fetch eff =
     Maybe ( String, Bool ) -> Int -> Maybe String -> eff
 
