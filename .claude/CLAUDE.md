@@ -85,9 +85,10 @@ Key rules:
 - **Colors**: All colors live in the generated `Colors.elm` (light) and `ColorsDark.elm` (dark mode) under `generated/theme/Theme/`. Never introduce ad-hoc color values; always reuse colors from there.
 - **Icons**: SVG icons live in `Theme.Html.Icons` and `Theme.Svg.Icons` (under `generated/theme/Theme/Html/Icons.elm` and `Svg/Icons.elm`). Each icon has an html variant and an svg-only variant.
 - **Component variants**: Every generated Figma component has three variants:
-  - **Plain** — static, no customization
+  - **Plain** — static, only component properties customizable
   - **WithAttributes** — same interface but allows redefining attributes on specific nodes (e.g. adding dynamic hover effects)
   - **WithInstances** — same interface as WithAttributes but allows replacing entire sections/sub-components (for advanced styling and dynamic content)
+  - **root** field: On component properties, attributes and instances there is a root field which affects the component itself. Eg. to attach attributes to the component directly.
 
 ### Plugin System
 
