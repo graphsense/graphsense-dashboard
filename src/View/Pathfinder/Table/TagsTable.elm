@@ -122,9 +122,9 @@ cell vc c =
                 { infoIconInstance = actionIcon |> Maybe.withDefault none
                 , tagIconVisible = tagIcon /= Nothing
                 , infoIconVisible = actionIcon /= Nothing
-                , labelText = cc.label |> Util.View.truncate 60
+                , labelText = cc.label |> Util.View.truncate 52
                 , subLabelVisible = cc.subLabel /= Nothing
-                , subLabelText = cc.subLabel |> Maybe.withDefault "" |> Util.View.truncate 60
+                , subLabelText = cc.subLabel |> Maybe.withDefault "" |> Util.View.truncate 52
                 , tagIconInstance = none
                 }
             }

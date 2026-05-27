@@ -109,6 +109,14 @@ window.addEventListener('keydown', (e) => {
   }
 })
 
+// Reset modifier-key state in Elm when the window loses focus, so multi-select
+// doesn't get stuck if the user releases Ctrl/Cmd while another window has focus
+// (Alt+Tab, DevTools open, OS context menu, etc.). Browser.Events.onVisibilityChange
+// only covers tab visibility, not window-level focus loss.
+window.addEventListener('blur', () => {
+  if (app.ports.windowBlurred) app.ports.windowBlurred.send(null)
+})
+
 let isDirty = false
 
 window.onbeforeunload = (evt) => {
