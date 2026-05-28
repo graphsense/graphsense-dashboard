@@ -234,7 +234,11 @@ utxo plugins pluginStates vc model id viewState address =
                     none
 
                 else if hasClusterOnlyTags then
-                    HIcons.iconsTagLTypeIndirect {}
+                    HIcons.iconsTagLTypeIndirectWithAttributes
+                        (HIcons.iconsTagLTypeIndirectAttributes
+                            |> Rs.s_tagIcon Util.View.indirectTagFillAttr
+                        )
+                        {}
 
                 else
                     HIcons.iconsTagLTypeDirect {}
@@ -1057,7 +1061,11 @@ account plugins pluginStates vc model id viewState address =
                     none
 
                 else if hasClusterOnlyTags then
-                    HIcons.iconsTagLTypeIndirect {}
+                    HIcons.iconsTagLTypeIndirectWithAttributes
+                        (HIcons.iconsTagLTypeIndirectAttributes
+                            |> Rs.s_tagIcon Util.View.indirectTagFillAttr
+                        )
+                        {}
 
                 else
                     HIcons.iconsTagLTypeDirect {}

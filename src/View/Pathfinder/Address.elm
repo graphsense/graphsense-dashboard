@@ -173,7 +173,13 @@ view plugins vc pc searchHighlight address annotation =
 
         icons =
             [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
-            , ifTrue (not address.hasTags && address.hasClusterTagsOnly) [ Icons.iconsTagSwithoutPaddingTypeIndirect {} ]
+            , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
+                [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
+                    (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
+                        |> Rs.s_tagIcon Util.View.indirectTagFillAttr
+                    )
+                    {}
+                ]
             , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
             , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
             ]
