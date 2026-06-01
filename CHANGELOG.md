@@ -3,6 +3,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.05.1] - 2026-05-11
+
+### Fixed
+
+- Select address on right click (show correct context menu options)
+
+## [26.06.0] - 2026-06-01
+
+### Added
+
+- On-graph (local graph) search: find nodes and edges on the current graph, with 0x-agnostic hash matching, up/down keyboard navigation of results, dimming of swap and bridge conversion edges, and the current match preserved across recomputation
+- Keyboard shortcuts for undo, redo, save, and export/print on the graph
+- Lazy rendering of edges for better performance on large graphs
+
+### Changed
+
+- Recent searches are now grouped like normal searches
+- Right-click now selects the address and disables select mode; improved right-click behavior
+- Pan to a transaction that is already on the graph; removed pan-to-node on click
+- Truncate long tag labels to avoid overlap
+- Completed the entities → clusters rename
+
+### Fixed
+
+- Gray indirect tag icon turning white in dark mode
+- Missing aggregated edges after saving and reloading a `.gs` file
+- Stuck modifier key
+- Context menu casing
+- Panning during auto-expand
 
 ## [26.05.0] - 2026-05-07
 
