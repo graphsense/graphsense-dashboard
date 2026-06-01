@@ -6,6 +6,7 @@ module Components.InfiniteTable exposing
     , TableConfig
     , abort
     , appendData
+    , getCurrentData
     , getPage
     , getPageSize
     , getTable
@@ -726,6 +727,13 @@ isEmpty (Model model) =
     getIntDict model
         |> Tuple3.first
         |> IntDict.isEmpty
+
+
+getCurrentData : Model nextPage data -> List data
+getCurrentData (Model model) =
+    getIntDict model
+        |> Tuple3.first
+        |> IntDict.values
 
 
 getIntDict : ModelInternal nextPage data -> ( IntDict data, Maybe nextPage, Bool )
