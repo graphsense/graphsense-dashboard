@@ -10,7 +10,7 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
-import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset)
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -58,6 +58,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.SearchBox as OnGraphSearch
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
@@ -75,6 +76,7 @@ import Msg.Pathfinder
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
+import Msg.Pathfinder.SearchBox as OnGraphSearchMsg
 import Msg.Pathfinder.TxDetails as TxDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
@@ -102,6 +104,7 @@ import Update.Pathfinder.ConversionDetails as ConversionDetails
 import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestAggEdges, ingestTxs)
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.RelationDetails as RelationDetails
+import Update.Pathfinder.SearchBox as OnGraphSearchUpdate
 import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
@@ -159,6 +162,55 @@ dispatchEventualMessages model =
     )
 
 
+panToId : Update.Config -> Id -> Model -> ( Model, List Effect )
+panToId uc id model =
+    case matchCoords id model.network of
+        Just ( x, y ) ->
+            let
+                move =
+                    uc.size
+                        |> Maybe.map (\s -> Transform.politeMove { width = s.width, height = s.height })
+                        |> Maybe.withDefault Transform.move
+
+                transform =
+                    move
+                        { x = x * unit
+                        , y = y * unit
+                        , z = Transform.getCurrent model.transform |> .z
+                        }
+                        model.transform
+            in
+            n { model | transform = transform }
+
+        Nothing ->
+            n model
+
+
+panToCurrentMatch : Update.Config -> Maybe Id -> Model -> ( Model, List Effect )
+panToCurrentMatch uc previousMatch model =
+    case OnGraphSearch.currentMatch model.onGraphSearch of
+        Just id ->
+            if previousMatch == Just id then
+                n model
+
+            else
+                panToId uc id model
+
+        Nothing ->
+            n model
+
+
+matchCoords : Id -> Network -> Maybe ( Float, Float )
+matchCoords id network =
+    case Dict.get id network.addresses of
+        Just a ->
+            Just ( a.x + a.dx, A.getTo a.y + a.dy )
+
+        Nothing ->
+            Dict.get id network.txs
+                |> Maybe.map (\t -> ( t.x + t.dx, A.getTo t.y + t.dy ))
+
+
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
@@ -167,7 +219,52 @@ update plugins uc msg model =
         |> and syncUrl
         |> and (syncSidePanel uc)
         |> and dispatchEventualMessages
+        |> and refreshSearchMatches
+        |> and (closeSearchOnNodeClick msg)
         |> and (closeTooltip msg)
+
+
+refreshSearchMatches : Model -> ( Model, List Effect )
+refreshSearchMatches model =
+    n { model | onGraphSearch = OnGraphSearchUpdate.refreshMatches (searchContext model) model.onGraphSearch }
+
+
+searchContext : Model -> OnGraphSearchUpdate.Context
+searchContext model =
+    { network = model.network
+    , annotations = model.annotations
+    , tagSummaries = model.tagSummaries
+    }
+
+
+closeSearchOnNodeClick : Msg -> Model -> ( Model, List Effect )
+closeSearchOnNodeClick msg model =
+    let
+        isNodeClick =
+            case msg of
+                UserClickedAddress _ ->
+                    True
+
+                UserClickedTx _ ->
+                    True
+
+                UserClickedCrosschainAddress _ ->
+                    True
+
+                UserClickedAggEdge _ ->
+                    True
+
+                UserClickedConversionEdge _ _ ->
+                    True
+
+                _ ->
+                    False
+    in
+    if isNodeClick && model.onGraphSearch.visible then
+        n { model | onGraphSearch = OnGraphSearchUpdate.close }
+
+    else
+        n model
 
 
 closeTooltip : Msg -> Model -> ( Model, List Effect )
@@ -472,6 +569,22 @@ resultLineToRoute search =
             Route.Root
 
 
+{-| The graph-node id a search result refers to, if any. Only addresses and
+txs are nodes on the graph; blocks/labels/actors have no node to pan to.
+-}
+resultLineToId : Search.ResultLine -> Maybe Id
+resultLineToId search =
+    case search of
+        Search.Address net address ->
+            Just (Id.init net address)
+
+        Search.Tx net h ->
+            Just (Id.init net h)
+
+        _ ->
+            Nothing
+
+
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
@@ -606,6 +719,71 @@ updateByMsg plugins uc msg model =
         NoOp ->
             n model
 
+        UserPressedSearchHotkey ->
+            let
+                newSearch =
+                    OnGraphSearchUpdate.open (searchContext model) model.onGraphSearch
+
+                focusCmd =
+                    Dom.focus OnGraphSearch.inputId
+                        |> Task.attempt (\_ -> NoOp)
+                        |> CmdEffect
+            in
+            ( { model | onGraphSearch = newSearch }
+            , [ focusCmd ]
+            )
+                |> and (panToCurrentMatch uc Nothing)
+
+        OnGraphSearchMsg sbMsg ->
+            let
+                previousMatch =
+                    OnGraphSearch.currentMatch model.onGraphSearch
+
+                newSearch =
+                    OnGraphSearchUpdate.update sbMsg (searchContext model) model.onGraphSearch
+
+                shouldKeepFocus =
+                    case sbMsg of
+                        OnGraphSearchMsg.UserClickedClose ->
+                            False
+
+                        _ ->
+                            True
+
+                forcePan =
+                    case sbMsg of
+                        OnGraphSearchMsg.UserClickedNext ->
+                            True
+
+                        OnGraphSearchMsg.UserClickedPrev ->
+                            True
+
+                        OnGraphSearchMsg.UserPressedEnterInBox ->
+                            True
+
+                        _ ->
+                            False
+
+                prevForPan =
+                    if forcePan then
+                        Nothing
+
+                    else
+                        previousMatch
+
+                focusEff =
+                    if shouldKeepFocus then
+                        [ Dom.focus OnGraphSearch.inputId
+                            |> Task.attempt (\_ -> NoOp)
+                            |> CmdEffect
+                        ]
+
+                    else
+                        []
+            in
+            ( { model | onGraphSearch = newSearch }, focusEff )
+                |> and (panToCurrentMatch uc prevForPan)
+
         BrowserGotActor id data ->
             let
                 isMatchingActor ( aid, a ) =
@@ -639,7 +817,11 @@ updateByMsg plugins uc msg model =
             n { model | modPressed = False }
 
         UserReleasedEscape ->
-            unselect model |> Tuple.mapFirst (s_details Nothing)
+            if model.onGraphSearch.visible then
+                n { model | onGraphSearch = OnGraphSearchUpdate.close }
+
+            else
+                unselect model |> Tuple.mapFirst (s_details Nothing)
 
         UserReleasedDeleteKey ->
             deleteSelection model
@@ -662,10 +844,29 @@ updateByMsg plugins uc msg model =
                     n (multiSelect model allItems False)
 
                 ( True, "z" ) ->
-                    update plugins uc UserClickedUndo model
+                    ( model
+                    , [ InternalEffect UserClickedUndo ]
+                    )
 
                 ( True, "y" ) ->
-                    update plugins uc UserClickedRedo model
+                    ( model
+                    , [ InternalEffect UserClickedRedo ]
+                    )
+
+                ( True, "f" ) ->
+                    ( model
+                    , [ InternalEffect UserPressedSearchHotkey ]
+                    )
+
+                ( True, "s" ) ->
+                    ( model
+                    , [ InternalEffect (UserClickedSaveGraph Nothing) ]
+                    )
+
+                ( True, "e" ) ->
+                    ( model
+                    , [ InternalEffect (UserClickedExportGraph Nothing) ]
+                    )
 
                 _ ->
                     n model
@@ -946,12 +1147,21 @@ updateByMsg plugins uc msg model =
                     else
                         case selectedValue of
                             Just value ->
+                                -- Pan to the node only on an explicit search.
+                                -- panToId is a no-op unless the node is
+                                -- already on the graph (matchCoords).
+                                let
+                                    ( m3, panEff ) =
+                                        resultLineToId value
+                                            |> Maybe.map (\id -> panToId uc id m2)
+                                            |> Maybe.withDefault (n m2)
+                                in
                                 value
                                     |> resultLineToRoute
                                     |> NavPushRouteEffect
                                     |> flip (::)
-                                        (List.map Pathfinder.SearchEffect eff)
-                                    |> Tuple.pair m2
+                                        (List.map Pathfinder.SearchEffect eff ++ panEff)
+                                    |> Tuple.pair m3
 
                             Nothing ->
                                 ( m2, List.map Pathfinder.SearchEffect eff )
@@ -964,12 +1174,17 @@ updateByMsg plugins uc msg model =
 
                         m2 =
                             { model | search = search }
+
+                        ( m3, panEff ) =
+                            resultLineToId rl
+                                |> Maybe.map (\id -> panToId uc id m2)
+                                |> Maybe.withDefault (n m2)
                     in
                     rl
                         |> resultLineToRoute
                         |> NavPushRouteEffect
-                        |> flip (::) (List.map Pathfinder.SearchEffect eff)
-                        |> Tuple.pair m2
+                        |> flip (::) (List.map Pathfinder.SearchEffect eff ++ panEff)
+                        |> Tuple.pair m3
 
                 _ ->
                     Search.update m model.search
@@ -1735,6 +1950,22 @@ updateByMsg plugins uc msg model =
                                         update plugins uc (UserClickedAddressExpandHandle id direction) model
                             )
                         |> Maybe.withDefault (n model)
+
+                _ ->
+                    n model
+
+        UserPressedArrowKeyUp ->
+            case model.selection of
+                SelectedAddress id ->
+                    focusVerticalNeighborAddress uc id True model
+
+                _ ->
+                    n model
+
+        UserPressedArrowKeyDown ->
+            case model.selection of
+                SelectedAddress id ->
+                    focusVerticalNeighborAddress uc id False model
 
                 _ ->
                     n model
@@ -3433,7 +3664,10 @@ browserGotAddressData uc plugins providedId position data model =
                         |> Maybe.withDefault Transform.move
                     )
                         { x = newAddress.x * unit
-                        , y = A.getTo newAddress.y * unit
+
+                        -- Pan horizontally only: keep the current vertical
+                        -- position so auto-expand doesn't jump up/down.
+                        , y = Transform.getCurrent model.transform |> .y
                         , z = Transform.initZ
                         }
                         model.transform
@@ -4359,7 +4593,86 @@ focusNeighborAddress uc anchorId direction model =
                         |> Maybe.withDefault Transform.move
                     )
                         { x = neighbor.x * unit
-                        , y = A.getTo neighbor.y * unit
+
+                        -- Pan horizontally only: keep the current vertical
+                        -- position so left/right navigation doesn't jump
+                        -- up/down. Vertical navigation
+                        -- (focusVerticalNeighborAddress) does pan vertically.
+                        , y = Transform.getCurrent m1.transform |> .y
+                        , z = Transform.initZ
+                        }
+                        m1.transform
+            in
+            ( { m1 | transform = transform }, eff )
+
+        Nothing ->
+            n model
+
+
+focusVerticalNeighborAddress : Update.Config -> Id -> Bool -> Model -> ( Model, List Effect )
+focusVerticalNeighborAddress uc anchorId goingUp model =
+    let
+        minDy =
+            nodeYOffset / 2
+
+        xWeight =
+            2
+
+        neighbor =
+            Dict.get anchorId model.network.addresses
+                |> Maybe.andThen
+                    (\anchor ->
+                        let
+                            anchorY =
+                                A.getTo anchor.y
+                        in
+                        Dict.values model.network.addresses
+                            |> List.filterMap
+                                (\addr ->
+                                    if addr.id == anchorId then
+                                        Nothing
+
+                                    else
+                                        let
+                                            dy =
+                                                A.getTo addr.y - anchorY
+
+                                            isAbove =
+                                                dy <= -minDy
+
+                                            isBelow =
+                                                dy >= minDy
+                                        in
+                                        if (goingUp && isAbove) || (not goingUp && isBelow) then
+                                            Just ( addr, abs dy + xWeight * abs (addr.x - anchor.x) )
+
+                                        else
+                                            Nothing
+                                )
+                            |> List.sortBy Tuple.second
+                            |> List.head
+                            |> Maybe.map Tuple.first
+                    )
+    in
+    case neighbor of
+        Just n_ ->
+            let
+                ( m1, eff ) =
+                    selectAddress n_.id model
+
+                transform =
+                    (uc.size
+                        |> Maybe.map
+                            (\{ width, height } ->
+                                { width = width
+                                , height = height
+                                }
+                            )
+                        |> Maybe.map Transform.politeMove
+                        |> Maybe.withDefault Transform.move
+                    )
+                        { x = n_.x * unit
+                        , y = A.getTo n_.y * unit
                         , z = Transform.initZ
                         }
                         m1.transform
@@ -4889,7 +5202,10 @@ addTx plugins uc anchorAddressId direction addressId tx model =
                     |> Maybe.withDefault Transform.move
                 )
                     { x = newTx.x * unit
-                    , y = A.getTo newTx.y * unit
+
+                    -- Pan horizontally only: keep the current vertical
+                    -- position so auto-expand doesn't jump up/down.
+                    , y = Transform.getCurrent model.transform |> .y
                     , z = Transform.initZ
                     }
                     model.transform
@@ -5255,17 +5571,30 @@ fromDeserialized plugins deserialized model =
                             |> ApiEffect
                     )
 
+        -- Query every visible address pair, not just the saved aggEdges. The
+        -- file's aggEdges list can be stale or incomplete (e.g. connections
+        -- introduced after the save), so driving requests off the saved
+        -- partners misses agg edges that exist in the API now. Pairs are
+        -- ordered by id < nid so each pair is queried once; getRelations
+        -- short-circuits when there are no partners.
         relationRequests =
-            deserialized.aggEdges
-                |> List.Extra.gatherEqualsBy .a
+            let
+                addressIds =
+                    deserialized.addresses |> List.map .id
+            in
+            addressIds
                 |> List.concatMap
-                    (\( parent, children ) ->
+                    (\id ->
                         let
-                            onlyIds =
-                                parent.b :: List.map .b children
+                            others =
+                                addressIds
+                                    |> List.filter
+                                        (\nid ->
+                                            id < nid && Id.network nid == Id.network id
+                                        )
                         in
-                        getRelations parent.a Outgoing False onlyIds
-                            ++ getRelations parent.a Incoming False onlyIds
+                        getRelations id Outgoing False others
+                            ++ getRelations id Incoming False others
                     )
 
         ( newAndEmptyPathfinder, _ ) =

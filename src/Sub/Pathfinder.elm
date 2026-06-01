@@ -13,6 +13,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails
 import Msg.Pathfinder.RelationDetails
 import Msg.Pathfinder.TxDetails
+import Ports
 import RemoteData
 import Set
 import Sub.Graph.Transform as Transform
@@ -49,9 +50,6 @@ toKeyDown keyValue =
         "Meta" ->
             Decode.succeed UserPressedModKey
 
-        "Shift" ->
-            Decode.succeed UserPressedModKey
-
         "z" ->
             UserPressedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
@@ -63,6 +61,12 @@ toKeyDown keyValue =
 
         "ArrowRight" ->
             UserPressedArrowKey Outgoing |> onlyFireOutsideOfTextInput
+
+        "ArrowUp" ->
+            UserPressedArrowKeyUp |> onlyFireOutsideOfTextInput
+
+        "ArrowDown" ->
+            UserPressedArrowKeyDown |> onlyFireOutsideOfTextInput
 
         _ ->
             Decode.fail "not handled"
@@ -80,9 +84,6 @@ toKeyUp keyValue =
             UserReleasedModKey
                 |> Decode.succeed
 
-        "Shift" ->
-            UserReleasedModKey |> Decode.succeed
-
         "z" ->
             UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
@@ -91,6 +92,15 @@ toKeyUp keyValue =
 
         "y" ->
             UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
+
+        "f" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
+
+        "s" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
+
+        "e" ->
+            UserReleasedNormalKey keyValue |> Decode.succeed
 
         "Backspace" ->
             UserReleasedDeleteKey |> onlyFireOutsideOfTextInput
@@ -116,9 +126,13 @@ subscriptions model =
         _ ->
             Browser.Events.onMouseUp (Decode.succeed UserReleasesMouseButton)
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
+
+    -- Keys with no browser default: handled directly via Elm subscriptions.
+    -- for keys with a browser default preventDefault() is called. See main.js.
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)
+    , Ports.windowBlurred (\_ -> UserReleasedModKey)
 
     -- , Time.every 60000 Tick
     , if Set.isEmpty model.network.animatedAddresses && Set.isEmpty model.network.animatedTxs then

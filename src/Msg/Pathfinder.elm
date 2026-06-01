@@ -18,6 +18,7 @@ import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
+import Msg.Pathfinder.SearchBox as OnGraphSearch
 import Msg.Pathfinder.TxDetails as TxDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
@@ -75,6 +76,8 @@ type Msg
     | UserPressedNormalKey String
     | UserReleasedNormalKey String
     | UserPressedArrowKey Direction
+    | UserPressedArrowKeyUp
+    | UserPressedArrowKeyDown
     | AddressDetailsMsg Id AddressDetails.Msg
     | ConversionDetailsMsg ( Id, Id ) ConversionDetails.ConversionDetailsMsgs
     | TxDetailsMsg TxDetails.Msg
@@ -95,6 +98,8 @@ type Msg
     | UserClickedCrosschainAddress Id
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
+    | UserPressedSearchHotkey
+    | OnGraphSearchMsg OnGraphSearch.Msg
     | NoOp
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx AddingTxConfig Api.Data.Tx

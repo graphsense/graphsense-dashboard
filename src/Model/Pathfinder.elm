@@ -23,6 +23,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id, TxsFilterId)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
 import Model.Pathfinder.RelationDetails as RelationDetails
+import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -55,6 +56,7 @@ type alias Model =
     , selection : Selection
     , hovered : Hovered
     , search : Search.Model
+    , onGraphSearch : SearchBox.Model
     , transform : Transform.Model Id
     , history : History.Model Entry.Model
     , details : Maybe Details

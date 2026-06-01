@@ -84,12 +84,26 @@ const elmJson = JSON.parse(fs.readFileSync('./elm.json'))
 // remove all plugin src directories first
 elmJson['source-directories'] = elmJson['source-directories'].filter(s => !s.startsWith(path.join(pluginsFolder)))
 
-// add the installed plugin src directories 
+// add the installed plugin src directories from each plugin's elm.json
 plugins.forEach(plugin => {
-  const p = path.join(pluginsFolder, plugin.raw_name, 'src')
-  if(elmJson['source-directories'].indexOf(p) === -1) {
-    elmJson['source-directories'].push(p)
+  const pluginElmJsonPath = path.join(pluginsFolder, plugin.raw_name, 'elm.json')
+  let pluginSourceDirs = ['src'] // default to src if no elm.json or no source-directories
+  
+  try {
+    const pluginElmJson = JSON.parse(fs.readFileSync(pluginElmJsonPath, 'utf8'))
+    if (pluginElmJson['source-directories'] && Array.isArray(pluginElmJson['source-directories'])) {
+      pluginSourceDirs = pluginElmJson['source-directories']
+    }
+  } catch (e) {
+    // If plugin elm.json doesn't exist or can't be read, use default
   }
+  
+  pluginSourceDirs.forEach(dir => {
+    const p = path.join(pluginsFolder, plugin.raw_name, dir)
+    if(elmJson['source-directories'].indexOf(p) === -1) {
+      elmJson['source-directories'].push(p)
+    }
+  })
 })
 
 fs.writeFileSync('./elm.json', JSON.stringify(elmJson, null, 4))

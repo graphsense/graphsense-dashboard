@@ -14,6 +14,7 @@ import Model.Pathfinder exposing (Hovered(..), Model)
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Network as Network
+import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Search
@@ -35,6 +36,7 @@ init us =
       , selection = NoSelection
       , hovered = NoHover
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) us.recentSearches
+      , onGraphSearch = SearchBox.empty
       , dragging = NoDragging
       , transform = Transform.init
       , history = History.init

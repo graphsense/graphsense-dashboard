@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, onRightMousedownWithStop, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -15,13 +15,14 @@ import Html as BHtml
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title)
-import Html.Styled.Events exposing (custom, stopPropagationOn)
+import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import List.Extra
 import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Locale as Locale
 import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
 import Switch
+import Theme.Colors as Colors
 import Theme.Html.Fields as Fields
 import Theme.Html.GraphComponents
 import Tuple exposing (pair)
@@ -496,29 +497,6 @@ onClickWithStop msg =
         |> stopPropagationOn "click"
 
 
-onRightMousedownWithStop : Json.Decode.Decoder msg -> Attribute msg
-onRightMousedownWithStop decoder =
-    custom "mousedown"
-        (Json.Decode.field "button" Json.Decode.int
-            |> Json.Decode.andThen
-                (\button ->
-                    Json.Decode.andThen
-                        (\msg ->
-                            if button == 2 then
-                                Json.Decode.succeed
-                                    { message = msg
-                                    , stopPropagation = True
-                                    , preventDefault = True
-                                    }
-
-                            else
-                                Json.Decode.fail "no right click"
-                        )
-                        decoder
-                )
-        )
-
-
 pointer : Attribute msg
 pointer =
     css [ Css.cursor Css.pointer ]
@@ -548,6 +526,14 @@ fixFillRule =
     [ Css.property "fill-rule" "evenodd"
     ]
         |> css
+
+
+indirectTagFillAttr : List (Attribute msg)
+indirectTagFillAttr =
+    -- `--c-greyBlue500` resolves to a near-white in dark mode, turning the
+    -- "indirect tag" icon white. Force the literal light-mode gray so the
+    -- icon looks the same in both modes (matches View.Pathfinder.TagDetailsList).
+    [ css [ Css.important (Css.property "fill" Colors.greyBlue300_string) ] ]
 
 
 timeToCell : View.Config -> Int -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }

@@ -19,6 +19,7 @@ import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id
+import Model.Pathfinder.SearchBox exposing (Highlight(..), dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
@@ -36,8 +37,8 @@ import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLeng
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
-view plugins vc pc address annotation =
+view : Plugins -> View.Config -> Pathfinder.Config -> Highlight -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
+view plugins vc pc searchHighlight address annotation =
     let
         data =
             RemoteData.toMaybe address.data
@@ -52,10 +53,13 @@ view plugins vc pc address annotation =
             pc.highlightClusterFriends
                 && address.clusterSiblingHovered
 
+        isCurrentSearchMatch =
+            searchHighlight == CurrentMatch
+
         highlightVisible =
             pc.hideForExport
                 /= Exporting True
-                && address.selected
+                && (address.selected || isCurrentSearchMatch)
 
         clusterStroke =
             case ( clusterColorLight, pc.highlightClusterFriends ) of
@@ -169,7 +173,13 @@ view plugins vc pc address annotation =
 
         icons =
             [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
-            , ifTrue (not address.hasTags && address.hasClusterTagsOnly) [ Icons.iconsTagSwithoutPaddingTypeIndirect {} ]
+            , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
+                [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
+                    (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
+                        |> Rs.s_tagIcon Util.View.indirectTagFillAttr
+                    )
+                    {}
+                ]
             , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
             , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
             ]
@@ -195,15 +205,17 @@ view plugins vc pc address annotation =
                     )
     in
     g
-        [ translate
+        ([ translate
             ((address.x + address.dx) * unit - adjX)
             ((A.animate address.clock address.y + address.dy) * unit - adjY)
             |> transform
-        , address.selected
+         , address.selected
             |> Json.Encode.bool
             |> Json.Encode.encode 0
             |> Html.attribute "data-selected"
-        ]
+         ]
+            ++ dimmedOpacity searchHighlight
+        )
         (GraphComponents.addressNodeWithInstances
             (GraphComponents.addressNodeAttributes
                 |> Rs.s_root
@@ -301,7 +313,7 @@ view plugins vc pc address annotation =
                 }
             , iconsNodeMarker =
                 { variant =
-                    case ( address.selected, address.isStartingPoint ) of
+                    case ( address.selected || isCurrentSearchMatch, address.isStartingPoint ) of
                         ( True, _ ) ->
                             Icons.iconsNodeMarkerPurposeSelectedNode {}
 

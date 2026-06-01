@@ -93,16 +93,28 @@ const app = Elm.Main.init(
 
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
+const shortCutKeys = ['a','f','z','s']
+
 // Prevent default Ctrl+A behavior (select all text) since we handle it in Elm for Pathfinder
 // But allow default behavior when cursor is in an input field
-window.addEventListener('keydown', (evt) => {
-  if (evt.ctrlKey && evt.key === 'a') {
-    const activeElement = document.activeElement
-    const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
-    if (!isInputField) {
-      evt.preventDefault()
-    }
+window.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
+  if (!window.location.pathname.startsWith('/pathfinder')) return
+  const key = e.key.toLowerCase()
+  if (shortCutKeys.indexOf(key) === -1) return
+  const activeElement = document.activeElement
+  const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
+  if (!isInputField || key !== 'a') {
+    e.preventDefault()
   }
+})
+
+// Reset modifier-key state in Elm when the window loses focus, so multi-select
+// doesn't get stuck if the user releases Ctrl/Cmd while another window has focus
+// (Alt+Tab, DevTools open, OS context menu, etc.). Browser.Events.onVisibilityChange
+// only covers tab visibility, not window-level focus loss.
+window.addEventListener('blur', () => {
+  if (app.ports.windowBlurred) app.ports.windowBlurred.send(null)
 })
 
 let isDirty = false
@@ -611,3 +623,4 @@ app.ports.blur.subscribe(id => {
   if (typeof el.blur !== 'function') return
   el.blur()
 })
+

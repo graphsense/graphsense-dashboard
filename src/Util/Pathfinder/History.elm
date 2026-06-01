@@ -88,6 +88,12 @@ shallPushHistory plugins msg _ =
         UserPressedArrowKey _ ->
             False
 
+        UserPressedArrowKeyUp ->
+            False
+
+        UserPressedArrowKeyDown ->
+            False
+
         UserClickedShowLegend ->
             False
 
@@ -288,6 +294,12 @@ shallPushHistory plugins msg _ =
             True
 
         NoOp ->
+            False
+
+        UserPressedSearchHotkey ->
+            False
+
+        OnGraphSearchMsg _ ->
             False
 
         BrowserGotActor _ _ ->
