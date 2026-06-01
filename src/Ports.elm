@@ -1,4 +1,4 @@
-port module Ports exposing (blur, console, deserialize, deserialized, exportGraph, exportGraphResult, exportGraphics, getBBox, newTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError)
+port module Ports exposing (blur, console, deserialize, deserialized, exportGraph, exportGraphResult, exportGraphics, getBBox, newTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError, windowBlurred)
 
 import Json.Encode exposing (Value)
 import Model.Graph.Coords as Coords
@@ -62,3 +62,6 @@ port renderedImageForExport : (Bool -> msg) -> Sub msg
 
 
 port blur : String -> Cmd msg
+
+
+port windowBlurred : (() -> msg) -> Sub msg

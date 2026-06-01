@@ -71,7 +71,12 @@ legendView plugins vc closeMsg =
             , legendItem vc
                 IconItem
                 { description = "Attribution-tag-inferred"
-                , icon = Icons.iconsTagL { root = { type_ = Icons.IconsTagLTypeIndirect } }
+                , icon =
+                    Icons.iconsTagLTypeIndirectWithAttributes
+                        (Icons.iconsTagLTypeIndirectAttributes
+                            |> Rs.s_tagIcon Util.View.indirectTagFillAttr
+                        )
+                        {}
                 , label = "Indirect tag"
                 }
             ]

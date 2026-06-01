@@ -5571,17 +5571,30 @@ fromDeserialized plugins deserialized model =
                             |> ApiEffect
                     )
 
+        -- Query every visible address pair, not just the saved aggEdges. The
+        -- file's aggEdges list can be stale or incomplete (e.g. connections
+        -- introduced after the save), so driving requests off the saved
+        -- partners misses agg edges that exist in the API now. Pairs are
+        -- ordered by id < nid so each pair is queried once; getRelations
+        -- short-circuits when there are no partners.
         relationRequests =
-            deserialized.aggEdges
-                |> List.Extra.gatherEqualsBy .a
+            let
+                addressIds =
+                    deserialized.addresses |> List.map .id
+            in
+            addressIds
                 |> List.concatMap
-                    (\( parent, children ) ->
+                    (\id ->
                         let
-                            onlyIds =
-                                parent.b :: List.map .b children
+                            others =
+                                addressIds
+                                    |> List.filter
+                                        (\nid ->
+                                            id < nid && Id.network nid == Id.network id
+                                        )
                         in
-                        getRelations parent.a Outgoing False onlyIds
-                            ++ getRelations parent.a Incoming False onlyIds
+                        getRelations id Outgoing False others
+                            ++ getRelations id Incoming False others
                     )
 
         ( newAndEmptyPathfinder, _ ) =

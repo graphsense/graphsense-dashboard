@@ -13,6 +13,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails
 import Msg.Pathfinder.RelationDetails
 import Msg.Pathfinder.TxDetails
+import Ports
 import RemoteData
 import Set
 import Sub.Graph.Transform as Transform
@@ -49,9 +50,6 @@ toKeyDown keyValue =
         "Meta" ->
             Decode.succeed UserPressedModKey
 
-        "Shift" ->
-            Decode.succeed UserPressedModKey
-
         "z" ->
             UserPressedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
@@ -85,9 +83,6 @@ toKeyUp keyValue =
         "Meta" ->
             UserReleasedModKey
                 |> Decode.succeed
-
-        "Shift" ->
-            UserReleasedModKey |> Decode.succeed
 
         "z" ->
             UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
@@ -137,6 +132,7 @@ subscriptions model =
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)
+    , Ports.windowBlurred (\_ -> UserReleasedModKey)
 
     -- , Time.every 60000 Tick
     , if Set.isEmpty model.network.animatedAddresses && Set.isEmpty model.network.animatedTxs then

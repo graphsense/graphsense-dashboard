@@ -22,6 +22,7 @@ import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Locale as Locale
 import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
 import Switch
+import Theme.Colors as Colors
 import Theme.Html.Fields as Fields
 import Theme.Html.GraphComponents
 import Tuple exposing (pair)
@@ -548,6 +549,14 @@ fixFillRule =
     [ Css.property "fill-rule" "evenodd"
     ]
         |> css
+
+
+indirectTagFillAttr : List (Attribute msg)
+indirectTagFillAttr =
+    -- `--c-greyBlue500` resolves to a near-white in dark mode, turning the
+    -- "indirect tag" icon white. Force the literal light-mode gray so the
+    -- icon looks the same in both modes (matches View.Pathfinder.TagDetailsList).
+    [ css [ Css.important (Css.property "fill" Colors.greyBlue300_string) ] ]
 
 
 timeToCell : View.Config -> Int -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
