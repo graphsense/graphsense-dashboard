@@ -51,7 +51,7 @@ import View.Locale as Locale
 import Workflow
 
 
-neighborsTableConfigWithMsg : (Direction -> Maybe String -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config Effect
+neighborsTableConfigWithMsg : (Direction -> Maybe String -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config String Effect
 neighborsTableConfigWithMsg msg addressId dir =
     { fetch =
         \_ pagesize nextpage ->
@@ -75,17 +75,17 @@ neighborsTableConfigWithMsg msg addressId dir =
     }
 
 
-neighborsTableConfig : Id -> Direction -> InfiniteTable.Config Effect
+neighborsTableConfig : Id -> Direction -> InfiniteTable.Config String Effect
 neighborsTableConfig =
     neighborsTableConfigWithMsg GotNeighborsForAddressDetails
 
 
-transactionTableConfig : TransactionTable.Model -> Id -> InfiniteTable.Config Effect
+transactionTableConfig : TransactionTable.Model -> Id -> InfiniteTable.Config String Effect
 transactionTableConfig =
     transactionTableConfigWithMsg GotTxsForAddressDetails
 
 
-transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config Effect
+transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config String Effect
 transactionTableConfigWithMsg msg txs addressId =
     { fetch = fetchTransactions msg txs addressId
     , force = False
@@ -836,8 +836,8 @@ getNeighborsTableAndSetter :
     -> Direction
     ->
         Maybe
-            { table : InfiniteTable.Model Api.Data.NeighborAddress
-            , setTable : InfiniteTable.Model Api.Data.NeighborAddress -> Model -> Model
+            { table : InfiniteTable.Model String Api.Data.NeighborAddress
+            , setTable : InfiniteTable.Model String Api.Data.NeighborAddress -> Model -> Model
             , tableOpen : Bool
             , setTableOpen : Bool -> Model -> Model
             }

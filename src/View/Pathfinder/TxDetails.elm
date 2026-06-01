@@ -674,7 +674,7 @@ unsupportedConversionNotice vc conversions =
             Locale.interpolated vc.locale key [ address, network ]
 
 
-ioTableView : View.Config -> IoDirection -> Network -> ComponentsInfiniteTable.Model Api.Data.TxValue -> IoColumnConfig -> Html Pathfinder.Msg
+ioTableView : View.Config -> IoDirection -> Network -> ComponentsInfiniteTable.Model String Api.Data.TxValue -> IoColumnConfig -> Html Pathfinder.Msg
 ioTableView vc dir network table ioColumnConfig =
     let
         isCheckedFn =

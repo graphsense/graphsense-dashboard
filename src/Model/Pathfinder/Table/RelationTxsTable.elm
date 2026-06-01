@@ -9,7 +9,7 @@ import Components.TransactionFilter as TransactionFilter
 
 
 type alias Model =
-    { table : InfiniteTable.Model Api.Data.Link
+    { table : InfiniteTable.Model String Api.Data.Link
     , order : Maybe Api.Request.Addresses.Order_
     , isTxFilterViewOpen : Bool
     , filter : TransactionFilter.Model

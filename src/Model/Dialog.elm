@@ -78,12 +78,12 @@ type TagsTab
 type ClusterTagsState
     = ClusterTagsNotLoaded
     | ClusterTagsLoading
-    | ClusterTagsLoaded (InfiniteTable.Model Api.Data.AddressTag)
+    | ClusterTagsLoaded (InfiniteTable.Model String Api.Data.AddressTag)
 
 
 type alias TagListConfig msg =
     { id : Id
-    , addressTagsTable : InfiniteTable.Model Api.Data.AddressTag
+    , addressTagsTable : InfiniteTable.Model String Api.Data.AddressTag
     , clusterTagsState : ClusterTagsState
     , activeTab : TagsTab
     , showAddressTab : Bool

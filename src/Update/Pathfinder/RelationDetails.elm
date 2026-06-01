@@ -85,7 +85,7 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
         |> ApiEffect
 
 
-tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config Effect
+tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config String Effect
 tableConfig id isA2b txTable =
     { fetch = loadRelationTxs BrowserGotLinks id isA2b txTable
     , force = False
@@ -152,7 +152,7 @@ updateAggEdge _ edge model =
 update : Update.Config -> ( Id, Id ) -> RelationDetails.Msg -> Model -> ( Model, List Effect )
 update _ id msg model =
     case msg of
-        TooltipMsg tm ->
+        TooltipMsg _ ->
             n model
 
         UserClickedToggleTable isA2b ->

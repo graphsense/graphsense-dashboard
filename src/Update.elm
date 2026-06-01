@@ -3145,7 +3145,7 @@ clusterTagsFilter _ =
     }
 
 
-addressTagsInfiniteTableConfig : PathfinderId.Id -> InfiniteTable.Config (Effect.Api.Effect Msg)
+addressTagsInfiniteTableConfig : PathfinderId.Id -> InfiniteTable.Config String (Effect.Api.Effect Msg)
 addressTagsInfiniteTableConfig id =
     { fetch =
         \_ pagesize nextpage ->
@@ -3164,7 +3164,7 @@ addressTagsInfiniteTableConfig id =
     }
 
 
-clusterTagsInfiniteTableConfig : PathfinderId.Id -> Model.Pathfinder.Model -> InfiniteTable.Config (Effect.Api.Effect Msg)
+clusterTagsInfiniteTableConfig : PathfinderId.Id -> Model.Pathfinder.Model -> InfiniteTable.Config String (Effect.Api.Effect Msg)
 clusterTagsInfiniteTableConfig id pathfinderModel =
     let
         entity =

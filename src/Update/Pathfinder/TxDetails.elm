@@ -21,7 +21,7 @@ import Util exposing (and, n)
 import Util.Data as Data
 
 
-transactionTableConfig : Model -> InfiniteTable.Config Effect
+transactionTableConfig : Model -> InfiniteTable.Config String Effect
 transactionTableConfig m =
     let
         baseTxHash =
@@ -308,8 +308,8 @@ gettersAndSetters :
     ->
         { openGet : Model -> Bool
         , openSet : Bool -> Model -> Model
-        , tableGet : Model -> InfiniteTable.Model Api.Data.TxValue
-        , tableSet : InfiniteTable.Model Api.Data.TxValue -> Model -> Model
+        , tableGet : Model -> InfiniteTable.Model String Api.Data.TxValue
+        , tableSet : InfiniteTable.Model String Api.Data.TxValue -> Model -> Model
         , refsGet : Model -> IntDict TxValueRefsData
         , refsSet : IntDict TxValueRefsData -> Model -> Model
         }

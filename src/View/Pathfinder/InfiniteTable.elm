@@ -26,7 +26,7 @@ tableHint vc msg =
         ]
 
 
-view : View.Config -> List (Attribute msg) -> InfiniteTable.TableConfig data msg -> InfiniteTable.Model data -> Html msg
+view : View.Config -> List (Attribute msg) -> InfiniteTable.TableConfig data msg -> InfiniteTable.Model String data -> Html msg
 view vc attributes config tblInfinite =
     div
         (css

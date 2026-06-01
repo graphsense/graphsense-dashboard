@@ -18,6 +18,7 @@ module Components.InfiniteTable exposing
     , removeItem
     , reset
     , resetCurrent
+    , setCountable
     , setData
     , sortBy
     , update
@@ -47,8 +48,8 @@ import Tuple3 exposing (mapThird)
 import Util exposing (and)
 
 
-type Model d
-    = Model (ModelInternal d)
+type Model nextPage d
+    = Model (ModelInternal nextPage d)
 
 
 {-| Fetch data with pagination and sorting
@@ -57,11 +58,11 @@ type Model d
 @param nextPageHandle handle for fetching the next page of data. If Nothing, no more pages are available
 @return An effectful operation that may return a string
 -}
-type alias Fetch eff =
-    Maybe ( String, Bool ) -> Int -> Maybe String -> eff
+type alias Fetch nextPage eff =
+    Maybe ( String, Bool ) -> Int -> Maybe nextPage -> eff
 
 
-type alias ModelInternal d =
+type alias ModelInternal nextPage d =
     { tableId : String
     , table : Table d
     , pagesize : Int
@@ -76,17 +77,18 @@ type alias ModelInternal d =
     , data :
         Dict
             String
-            { asc : ( IntDict d, Maybe String, Bool )
-            , desc : ( IntDict d, Maybe String, Bool )
+            { asc : ( IntDict d, Maybe nextPage, Bool )
+            , desc : ( IntDict d, Maybe nextPage, Bool )
             }
     , bounce : Bounce
     , direction : Direction
     , tracker : Maybe String
+    , countable : Bool
     }
 
 
-type alias Config eff =
-    { fetch : Fetch eff
+type alias Config nextPage eff =
+    { fetch : Fetch nextPage eff
     , force : Bool
     , effectToTracker : eff -> Maybe String
     , abort : String -> eff
@@ -127,7 +129,7 @@ type Direction
     | Bottom
 
 
-init : String -> Int -> Model d
+init : String -> Int -> Model nextPage d
 init tableId pagesize =
     Model
         { table = Table.initUnsorted
@@ -143,10 +145,16 @@ init tableId pagesize =
         , hackyFlag = False
         , direction = Bottom
         , tracker = Nothing
+        , countable = False
         }
 
 
-setData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, List eff )
+setCountable : Bool -> Model nextPage d -> Model nextPage d
+setCountable bool (Model m) =
+    Model { m | countable = bool }
+
+
+setData : Config nextPage eff -> Table.Filter d -> Maybe nextPage -> List d -> Model nextPage d -> ( Model nextPage d, Cmd Msg, List eff )
 setData config filt nextpage data model =
     let
         ( m2, eff ) =
@@ -156,7 +164,7 @@ setData config filt nextpage data model =
         |> mapThird ((++) eff)
 
 
-appendData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Cmd Msg, List eff )
+appendData : Config nextPage eff -> Table.Filter d -> Maybe nextPage -> List d -> Model nextPage d -> ( Model nextPage d, Cmd Msg, List eff )
 appendData config filt nextpage data (Model model) =
     let
         dict =
@@ -172,6 +180,13 @@ appendData config filt nextpage data (Model model) =
                 |> List.indexedMap pair
                 |> List.map (mapFirst ((+) offset))
                 |> List.foldl (uncurry IntDict.insert) dict
+
+        nextpageNew =
+            if model.countable && List.length data < model.pagesize then
+                Nothing
+
+            else
+                nextpage
     in
     { model
         | table =
@@ -179,14 +194,14 @@ appendData config filt nextpage data (Model model) =
                 |> s_loading False
         , iterations = model.iterations + 1
     }
-        |> setIntDict nextpage True newDict
+        |> setIntDict nextpageNew True newDict
         |> loadMore config
         |> getRowHeight
 
 
 {-| Resets both sorting's tables
 -}
-reset : Config eff -> Model d -> ( Model d, List eff )
+reset : Config nextPage eff -> Model nextPage d -> ( Model nextPage d, List eff )
 reset config (Model model) =
     let
         ( col, _ ) =
@@ -203,7 +218,7 @@ reset config (Model model) =
 
 {-| Resets only the current's sorting table
 -}
-resetCurrent : Config eff -> Model d -> ( Model d, List eff )
+resetCurrent : Config nextPage eff -> Model nextPage d -> ( Model nextPage d, List eff )
 resetCurrent config (Model model) =
     { model
         | iterations = 1
@@ -215,14 +230,14 @@ resetCurrent config (Model model) =
         |> abort config
 
 
-initData : { asc : ( IntDict d, Maybe String, Bool ), desc : ( IntDict d, Maybe String, Bool ) }
+initData : { asc : ( IntDict d, Maybe nextPage, Bool ), desc : ( IntDict d, Maybe nextPage, Bool ) }
 initData =
     { asc = ( IntDict.empty, Nothing, False )
     , desc = ( IntDict.empty, Nothing, False )
     }
 
 
-setIntDict : Maybe String -> Bool -> IntDict d -> ModelInternal d -> ModelInternal d
+setIntDict : Maybe nextPage -> Bool -> IntDict d -> ModelInternal nextPage d -> ModelInternal nextPage d
 setIntDict nextpage loaded dict model =
     let
         ( col, isReversed ) =
@@ -242,7 +257,7 @@ setIntDict nextpage loaded dict model =
         |> flip s_data model
 
 
-getRowHeight : ( Model d, List eff ) -> ( Model d, Cmd Msg, List eff )
+getRowHeight : ( Model nextPage d, List eff ) -> ( Model nextPage d, Cmd Msg, List eff )
 getRowHeight ( Model model, listEff ) =
     ( Model model
     , [ Dom.getElement model.tableId
@@ -255,7 +270,7 @@ getRowHeight ( Model model, listEff ) =
     )
 
 
-loadMore : Config eff -> ModelInternal d -> ( Model d, List eff )
+loadMore : Config nextPage eff -> ModelInternal nextPage d -> ( Model nextPage d, List eff )
 loadMore config model =
     let
         ( len, np, loaded ) =
@@ -295,12 +310,12 @@ loadMore config model =
             )
 
 
-getTable : Model d -> Table d
+getTable : Model nextPage d -> Table d
 getTable (Model model) =
     model.table
 
 
-removeItem : (d -> Bool) -> Model d -> Model d
+removeItem : (d -> Bool) -> Model nextPage d -> Model nextPage d
 removeItem predicate (Model model) =
     { model
         | table = Table.filterTable (predicate >> not) model.table
@@ -308,7 +323,7 @@ removeItem predicate (Model model) =
         |> Model
 
 
-update : Config eff -> Msg -> Model d -> ( Model d, Cmd Msg, List eff )
+update : Config nextPage eff -> Msg -> Model nextPage d -> ( Model nextPage d, Cmd Msg, List eff )
 update config msg (Model model) =
     case msg of
         Scroll pos ->
@@ -393,23 +408,23 @@ update config msg (Model model) =
             ( m, Cmd.none, eff )
 
 
-n : ModelInternal d -> ( Model d, Cmd Msg, List eff )
+n : ModelInternal nextPage d -> ( Model nextPage d, Cmd Msg, List eff )
 n model =
     ( Model model, Cmd.none, [] )
 
 
-updateTable : (Table d -> Table d) -> Model d -> Model d
+updateTable : (Table d -> Table d) -> Model nextPage d -> Model nextPage d
 updateTable upd (Model model) =
     { model | table = upd model.table }
         |> Model
 
 
-getPageSize : Model d -> Int
+getPageSize : Model nextPage d -> Int
 getPageSize (Model model) =
     model.pagesize
 
 
-getPage : Model d -> List d
+getPage : Model nextPage d -> List d
 getPage (Model model) =
     let
         start =
@@ -421,20 +436,20 @@ getPage (Model model) =
     getRange start end model
 
 
-getNumVisibleItems : ModelInternal d -> Int
+getNumVisibleItems : ModelInternal nextPage d -> Int
 getNumVisibleItems model =
     round model.containerHeight
         // round model.rowHeight
         + 1
 
 
-loadFirstPage : Config eff -> Model d -> ( Model d, List eff )
+loadFirstPage : Config nextPage eff -> Model nextPage d -> ( Model nextPage d, List eff )
 loadFirstPage config =
     reset config
         >> and (gotoFirstPage config)
 
 
-gotoFirstPage : Config eff -> Model d -> ( Model d, List eff )
+gotoFirstPage : Config nextPage eff -> Model nextPage d -> ( Model nextPage d, List eff )
 gotoFirstPage config (Model model) =
     scrollUpdate config
         { scrollTop = 0
@@ -484,7 +499,7 @@ false triggers when the content is shorter than the container (nothing to
 scroll, so `scrollTop` is 0 and the condition would trivially be true).
 
 -}
-shouldLoadMore : Config eff -> ModelInternal d -> ScrollPos -> Bool
+shouldLoadMore : Config nextPage eff -> ModelInternal nextPage d -> ScrollPos -> Bool
 shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
     if model.table.loading then
         False
@@ -508,7 +523,7 @@ shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
         nearComputedBottom || nearActualBottom
 
 
-scrollUpdate : Config eff -> ScrollPos -> ModelInternal d -> ( Model d, List eff )
+scrollUpdate : Config nextPage eff -> ScrollPos -> ModelInternal nextPage d -> ( Model nextPage d, List eff )
 scrollUpdate config pos model =
     let
         newModel =
@@ -560,20 +575,20 @@ infiniteScroll mapper =
         stopPropagationOn "scroll" (Json.Decode.map (\pos -> ( Scroll pos, True )) decodeScrollPos)
 
 
-sortBy : String -> Bool -> Model d -> Model d
+sortBy : String -> Bool -> Model nextPage d -> Model nextPage d
 sortBy col asc (Model model) =
     Table.sortBy col asc model.table
         |> flip s_table model
         |> Model
 
 
-getStart : ModelInternal data -> Int
+getStart : ModelInternal nextPage data -> Int
 getStart model =
     round model.scrollTop
         // round model.rowHeight
 
 
-getRange : Int -> Int -> ModelInternal data -> List data
+getRange : Int -> Int -> ModelInternal nextPage data -> List data
 getRange start end =
     getIntDict
         >> Tuple3.first
@@ -584,7 +599,7 @@ getRange start end =
 view :
     TableConfig data msg
     -> List (Attribute msg)
-    -> Model data
+    -> Model nextPage data
     -> Html msg
 view config attributes (Model model) =
     let
@@ -700,20 +715,20 @@ view config attributes (Model model) =
         ]
 
 
-isLoading : Model data -> Bool
+isLoading : Model nextPage data -> Bool
 isLoading =
     getTable
         >> .loading
 
 
-isEmpty : Model data -> Bool
+isEmpty : Model nextPage data -> Bool
 isEmpty (Model model) =
     getIntDict model
         |> Tuple3.first
         |> IntDict.isEmpty
 
 
-getIntDict : ModelInternal data -> ( IntDict data, Maybe String, Bool )
+getIntDict : ModelInternal nextPage data -> ( IntDict data, Maybe nextPage, Bool )
 getIntDict model =
     let
         ( col, isReversed ) =
@@ -730,7 +745,7 @@ getIntDict model =
         |> Maybe.withDefault ( IntDict.empty, Nothing, False )
 
 
-abort : Config eff -> Model data -> ( Model data, List eff )
+abort : Config nextPage eff -> Model nextPage data -> ( Model nextPage data, List eff )
 abort conf (Model model) =
     ( Model
         { model

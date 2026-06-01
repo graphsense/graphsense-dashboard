@@ -14,7 +14,7 @@ import Set
 import Tuple exposing (mapFirst, mapSecond)
 
 
-tableConfig : Model -> InfiniteTable.Config Effect
+tableConfig : Model -> InfiniteTable.Config String Effect
 tableConfig rm =
     { fetch = loadData rm
     , force = False
@@ -40,7 +40,7 @@ init addressId entity =
     }
 
 
-gotoFirstPage : InfiniteTable.Config Effect -> Model -> ( Model, List Effect )
+gotoFirstPage : InfiniteTable.Config String Effect -> Model -> ( Model, List Effect )
 gotoFirstPage config model =
     let
         force =
@@ -50,7 +50,7 @@ gotoFirstPage config model =
         |> mapFirst (flip s_table model)
 
 
-abort : InfiniteTable.Config Effect -> Model -> ( Model, List Effect )
+abort : InfiniteTable.Config String Effect -> Model -> ( Model, List Effect )
 abort config model =
     InfiniteTable.abort config model.table
         |> mapFirst (flip s_table model)
@@ -140,7 +140,7 @@ appendAddresses mapCmd nextpage force addresses ra =
             )
 
 
-updateTable : (InfiniteTable.Msg -> Pathfinder.Msg) -> (InfiniteTable.Model Api.Data.Address -> ( InfiniteTable.Model Api.Data.Address, Cmd InfiniteTable.Msg, List Effect )) -> Model -> ( Model, List Effect )
+updateTable : (InfiniteTable.Msg -> Pathfinder.Msg) -> (InfiniteTable.Model String Api.Data.Address -> ( InfiniteTable.Model String Api.Data.Address, Cmd InfiniteTable.Msg, List Effect )) -> Model -> ( Model, List Effect )
 updateTable mapCmd updTable model =
     let
         ( m, cmd, eff ) =
