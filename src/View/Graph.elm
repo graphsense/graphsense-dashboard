@@ -349,7 +349,7 @@ arrowMarkers vc gc =
 
 
 contextMenu : Plugins -> ModelState -> Config -> Model -> ContextMenu.Model -> Html Msg
-contextMenu plugins states vc model cm =
+contextMenu _ _ vc model cm =
     let
         option title msg =
             ContextMenu.option vc (Locale.string vc.locale title) msg
