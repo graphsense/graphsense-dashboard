@@ -130,6 +130,7 @@ Current shortcuts (path: `/pathfinder` only):
 
 - **Ctrl/Cmd+F** — open on-graph search
 - **Ctrl/Cmd+S** — save graph (`.gs` file)
+- **Ctrl/Cmd+O** — open graph (`.gs` file). **Firefox caveat:** opening the native file picker needs *transient user activation*, which Firefox does not grant for a Ctrl/Cmd-modified keydown on a freshly loaded page. So a cold Ctrl/Cmd+O does nothing in Firefox until the user has clicked/interacted once (after that it works); Chrome always works, as does the toolbar open button (a real click). Not fixable in code — withheld activation cannot be synthesized.
 - **Ctrl/Cmd+P** — open export dialog
 - **Ctrl/Cmd+Z** — undo
 - **Ctrl/Cmd+Y** — redo
@@ -141,6 +142,8 @@ Current shortcuts (path: `/pathfinder` only):
 1. **`Browser.Events.onKeyDown/Up` subscription** (`src/Sub/Pathfinder.elm`) — used for keys with no browser default to suppress (Z, Y, A, arrows, etc.). Cannot call `preventDefault`. Use `onlyFireOutsideOfTextInput` to avoid hijacking typing in inputs.
 
 2. **JS port with `preventDefault()`** (`src/main.js` keydown listener → `src/Ports.elm` ports → `Sub/Pathfinder.elm` subscriptions) — required when the browser has a default to override (F = find bar, S = save page, P = print). The listener is path-gated to `/pathfinder` and ignores Shift/Alt-modified combos. To add another browser-claimed shortcut: add a `case` in the JS switch, add a `port xHotkeyPressed : (() -> msg) -> Sub msg` to `Ports.elm`, and subscribe to it in `Sub/Pathfinder.elm`.
+
+**User-activation gotcha (file pickers):** anything that opens the native file picker (e.g. Ctrl/Cmd+O → open `.gs`) must be triggered **synchronously from a trusted `keydown`** event, because the picker requires a transient user-activation and only `keydown`/pointer events grant it — `keyup` does not. These shortcuts are therefore handled directly in the `main.js` keydown listener (calling `openGsFile()`), **not** via the Elm `keyup` subscription used for the other shortcuts. (Downloads like Ctrl+S are looser and work fine from `keyup`.)
 
 ## Patched Dependencies
 

@@ -4594,11 +4594,13 @@ focusNeighborAddress uc anchorId direction model =
                     )
                         { x = neighbor.x * unit
 
-                        -- Pan horizontally only: keep the current vertical
-                        -- position so left/right navigation doesn't jump
-                        -- up/down. Vertical navigation
-                        -- (focusVerticalNeighborAddress) does pan vertically.
-                        , y = Transform.getCurrent m1.transform |> .y
+                        -- Pan vertically as well: navigating to an existing
+                        -- neighbor must keep the selection in view, otherwise
+                        -- on tall graphs the selection jumps off-screen.
+                        -- (Auto-expand into a *new* node keeps the current
+                        -- vertical position, since the new node is placed at
+                        -- the current level.)
+                        , y = A.getTo neighbor.y * unit
                         , z = Transform.initZ
                         }
                         m1.transform

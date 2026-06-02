@@ -3,11 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [26.05.1] - 2026-05-11
+## [26.06.1] - 2026-06-02
+
+### Added
+
+- Keyboard shortcut (Ctrl/Cmd+O) to open a `.gs` file, with the file picker pre-filtered to `.gs` files
 
 ### Fixed
 
-- Select address on right click (show correct context menu options)
+- Restored vertical panning when navigating with the keyboard, so the selection no longer jumps out of view on tall graphs
+
 
 ## [26.06.0] - 2026-06-01
 
@@ -32,6 +37,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Stuck modifier key
 - Context menu casing
 - Panning during auto-expand
+
+## [26.05.1] - 2026-05-11
+
+### Fixed
+
+- Select address on right click (show correct context menu options)
 
 ## [26.05.0] - 2026-05-07
 

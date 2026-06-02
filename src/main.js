@@ -93,7 +93,7 @@ const app = Elm.Main.init(
 
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
-const shortCutKeys = ['a','f','z','s']
+const shortCutKeys = ['a','f','z','s','o']
 
 // Prevent default Ctrl+A behavior (select all text) since we handle it in Elm for Pathfinder
 // But allow default behavior when cursor is in an input field
@@ -106,6 +106,13 @@ window.addEventListener('keydown', (e) => {
   const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
   if (!isInputField || key !== 'a') {
     e.preventDefault()
+  }
+  // Ctrl/Cmd+O: open a .gs file. Handled here (in JS, off the keydown) rather
+  // than via an Elm keyup subscription, because the native file picker needs a
+  // transient user-activation that keyup does not grant. See openGsFile for the
+  // Firefox cold-load caveat.
+  if (key === 'o') {
+    openGsFile()
   }
 })
 
@@ -480,11 +487,21 @@ const reportImportFileError = (error, fileName = '') => {
 }
 
 
-app.ports.deserialize.subscribe(async () => {
+// Opens the native file picker and loads the selected .gs file. Used by both
+// the toolbar open button (deserialize port) and the Ctrl/Cmd+O shortcut.
+//
+// Firefox caveat: opening the picker needs *transient user activation*, which
+// Firefox does NOT grant for a Ctrl/Cmd-modified keydown on a freshly loaded
+// page (no prior interaction). So a cold Ctrl/Cmd+O does nothing in Firefox
+// until the user has clicked/interacted once; after that the shortcut works.
+// Chrome grants the activation from the keydown, so it always works there. The
+// toolbar button (a real click) always works in both. This cannot be worked
+// around in code — activation the browser withholds cannot be synthesized.
+async function openGsFile () {
   const { fileDialog } = await import('file-select-dialog')
   let file
   try {
-    file = await fileDialog({ strict: true })
+    file = await fileDialog({ accept: '.gs', strict: true })
   } catch (_) {
     return
   }
@@ -514,7 +531,10 @@ app.ports.deserialize.subscribe(async () => {
   }
   reader.onerror = () => reportImportFileError(new Error('file-read-error'), file.name)
   reader.readAsArrayBuffer(file)
-})
+}
+
+// Toolbar "open graph" button -> open the file picker.
+app.ports.deserialize.subscribe(openGsFile)
 
 app.ports.serialize.subscribe(async ([filename, body]) => {
   await download(filename, await compress(body))
