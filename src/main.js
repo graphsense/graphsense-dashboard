@@ -545,7 +545,14 @@ async function importByApiDownloadId (id) {
     reportImportFileError(new Error('invalid-api-download-id'), id)
     return
   }
-  const restUrl = import.meta.env.VITE_GS_REST_URL || ''
+  // Use the same VITE_GS_REST_URL placeholder as the Elm API client
+  // (openapi/src/Api.elm), replaced at build time by the envReplacePlugin in
+  // vite.config.mjs. This reads the value via Vite's loadEnv(), which (unlike
+  // import.meta.env) also picks up the var from the shell environment, so the
+  // import endpoint always matches the REST host the Elm app talks to. The
+  // trailing replace strips the placeholder if the env var was never set,
+  // falling back to a relative URL rather than a literal "{{...}}".
+  const restUrl = '{{VITE_GS_REST_URL}}'.replace(/^\{\{.*\}\}$/, '')
   const url = restUrl.replace(/\/?$/, '/') + 'download/' + encodeURIComponent(id)
   const displayName = id + '.gs'
   try {
