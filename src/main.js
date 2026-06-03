@@ -536,6 +536,37 @@ async function openGsFile () {
 // Toolbar "open graph" button -> open the file picker.
 app.ports.deserialize.subscribe(openGsFile)
 
+// Download a .gs graph by its API download id and load it through the same path
+// as the file picker. Used by the ?import=<id> deep link. We take an opaque id
+// (not a full URL) so a link can only ever fetch from the fixed REST download
+// endpoint. Note: the REST host must serve CORS headers for this origin.
+async function importByApiDownloadId (id) {
+  if (!/^[A-Za-z0-9._-]+$/.test(id)) {
+    reportImportFileError(new Error('invalid-api-download-id'), id)
+    return
+  }
+  const restUrl = import.meta.env.VITE_GS_REST_URL || ''
+  const url = restUrl.replace(/\/?$/, '/') + 'download/' + encodeURIComponent(id)
+  const displayName = id + '.gs'
+  try {
+    const resp = await fetch(url)
+    if (!resp.ok) throw new Error('http-' + resp.status)
+    const data = await decompress(await resp.arrayBuffer())
+    if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'string') {
+      throw new Error('invalid-import-payload')
+    }
+    // Same format-tag normalization as openGsFile.
+    data[0] = data[0].split(' ')[0].split('-')[0]
+    app.ports.deserialized.send([displayName, data])
+  } catch (error) {
+    reportImportFileError(error, displayName)
+  }
+}
+
+// Deep link: <app>/pathfinder?import=<id> downloads and opens that graph on load.
+const apiDownloadId = new URLSearchParams(window.location.search).get('import')
+if (apiDownloadId) importByApiDownloadId(apiDownloadId)
+
 app.ports.serialize.subscribe(async ([filename, body]) => {
   await download(filename, await compress(body))
 })
