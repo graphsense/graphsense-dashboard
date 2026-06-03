@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.07.0] - Unreleased
+
+### Added
+
+- Deep link to open a graph by API download id: `?import=<id>` downloads the `.gs` file from the REST `/download/<id>` endpoint and opens it on load
+
 ## [26.06.1] - 2026-06-02
 
 ### Added
