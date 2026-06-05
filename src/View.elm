@@ -319,7 +319,6 @@ sidebar plugins vc model =
             , statisticsLabel = ""
             }
         , statisticsItrem = { variant = statisticsLink }
-        , helpItrem = { variant = Util.View.none }
         , iconsSettingsLarge = { variant = settingsLink }
         }
 
