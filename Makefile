@@ -18,7 +18,7 @@ CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
 PLUGINS_DIR=./plugins
 
 PLUGINS=$(shell grep -v '\-\-' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
-SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm)
+SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm -not -path '*/node_modules/*')
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
 GENERATED_PLUGINS=$(GENERATED)/$(PLUGINS_DIR)
