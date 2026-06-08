@@ -1,7 +1,6 @@
 module PluginInterface.Update exposing (Return, Update, andThen, init)
 
 import Config.Update as Update
-import Model.Graph.Id as Id
 import PluginInterface.Msg exposing (InMsg, OutMsg)
 import Set exposing (Set)
 
@@ -25,9 +24,6 @@ type alias Update flags modelState addressState entityState msg addressMsg entit
 
     -- update by change of URL
     , updateByUrl : Maybe (Update.Config -> String -> modelState -> Return modelState msg addressMsg entityMsg)
-
-    -- update by change of URL below /graph
-    , updateGraphByUrl : Maybe (String -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- when user inputs an API key, process the sha256 hash of the key
     , updateApiKeyHash : Maybe (String -> modelState -> Return modelState msg addressMsg entityMsg)
@@ -65,7 +61,6 @@ init =
     , updateAddress = Nothing
     , updateEntity = Nothing
     , updateByUrl = Nothing
-    , updateGraphByUrl = Nothing
     , updateApiKeyHash = Nothing
     , updateApiKey = Nothing
     , init = Nothing

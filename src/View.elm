@@ -77,7 +77,7 @@ body plugins vc model =
             vc
             { search = model.search
             , user = model.user
-            , hideSearch = model.page /= Graph
+            , hideSearch = True
             }
          , section
             [ Css.View.sectionBelowHeader vc |> css

@@ -1,7 +1,14 @@
-module Update.Graph.Coords exposing (addMargin, mergeBoundingBoxes)
+module Update.Graph.Coords exposing (addMargin, draggingToClick, mergeBoundingBoxes)
 
 import Config.Graph exposing (entityOneAddressHeight, entityTotalWidth)
-import Model.Graph.Coords exposing (BBox)
+import Model.Graph.Coords as Coords exposing (BBox, Coords)
+
+
+{-| A drag that moved less than 2px is treated as a click rather than a drag.
+-}
+draggingToClick : Coords -> Coords -> Bool
+draggingToClick start current =
+    Coords.betrag start current < 2
 
 
 addMargin : BBox -> BBox

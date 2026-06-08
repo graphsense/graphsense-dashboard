@@ -4,7 +4,6 @@ import Api.Data
 import Api.Request.Clusters
 import Dict
 import Effect.Api as Api
-import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
@@ -102,36 +101,6 @@ messageFromEffect model effect =
         Model.ApiEffect eff ->
             messageFromApiEffect model eff
 
-        Model.GraphEffect (Graph.ApiEffect eff) ->
-            messageFromApiEffect model eff
-
-        Model.GraphEffect (Graph.NavPushRouteEffect _) ->
-            Nothing
-
-        Model.GraphEffect Graph.GetBrowserElementEffect ->
-            Nothing
-
-        Model.GraphEffect (Graph.PluginEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.InternalGraphAddedAddressesEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.InternalGraphAddedEntitiesEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.InternalGraphSelectedAddressEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.TagSearchEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.CmdEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.DownloadCSVEffect _) ->
-            Nothing
-
         Model.PathfinderEffect (Pathfinder.ApiEffect eff) ->
             messageFromApiEffect model eff
 
@@ -225,9 +194,6 @@ retryTokenFromEffect : Model.Effect -> Maybe String
 retryTokenFromEffect effect =
     case effect of
         Model.ApiEffect eff ->
-            Api.retryToken eff
-
-        Model.GraphEffect (Graph.ApiEffect eff) ->
             Api.retryToken eff
 
         Model.PathfinderEffect (Pathfinder.ApiEffect eff) ->

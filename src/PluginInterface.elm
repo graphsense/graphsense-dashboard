@@ -10,7 +10,7 @@ type alias PID =
 
 
 type alias Plugin flags modelState addressState entityState msg addressMsg entityMsg =
-    { view : PluginInterface.View.View modelState addressState entityState msg
+    { view : PluginInterface.View.View modelState addressState msg
     , update : PluginInterface.Update.Update flags modelState addressState entityState msg addressMsg entityMsg
     , effects : PluginInterface.Effects.Effects msg
     }

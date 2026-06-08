@@ -7,14 +7,12 @@ import Browser.Navigation as Nav
 import Config
 import Config.UserSettings
 import Effect.Api
-import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Model, Msg(..))
 import Model.Notification
-import Msg.Graph as Graph
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
 import Plugin.Effects as Plugin exposing (Plugins)
@@ -102,53 +100,6 @@ perform plugins model statusbarToken apiKey effect =
                 _ ->
                     Pathfinder.perform eff
                         |> Cmd.map PathfinderMsg
-
-        GraphEffect eff ->
-            case eff of
-                Graph.ApiEffect apiEff ->
-                    Effect.Api.map GraphMsg apiEff
-                        |> Effect.Api.perform apiKey
-                            (BrowserGotResponseWithHeaders statusbarToken)
-                            BrowserCancelledRequest
-
-                Graph.NavPushRouteEffect route ->
-                    Route.graphRoute route
-                        |> Route.toUrl
-                        |> Nav.pushUrl model.key
-
-                Graph.GetBrowserElementEffect ->
-                    Graph.perform eff
-                        |> Cmd.map GraphMsg
-
-                Graph.InternalGraphAddedAddressesEffect ids ->
-                    Task.succeed ids
-                        |> Task.perform (Graph.InternalGraphAddedAddresses >> GraphMsg)
-
-                Graph.InternalGraphAddedEntitiesEffect ids ->
-                    Task.succeed ids
-                        |> Task.perform (Graph.InternalGraphAddedEntities >> GraphMsg)
-
-                Graph.InternalGraphSelectedAddressEffect id ->
-                    Task.succeed id
-                        |> Task.perform (Graph.InternalGraphSelectedAddress >> GraphMsg)
-
-                Graph.PluginEffect _ ->
-                    Graph.perform eff
-                        |> Cmd.map GraphMsg
-
-                Graph.TagSearchEffect e ->
-                    handleSearchEffect apiKey
-                        Nothing
-                        (Graph.TagSearchMsg >> GraphMsg)
-                        e
-
-                Graph.CmdEffect cmd ->
-                    cmd
-                        |> Cmd.map GraphMsg
-
-                Graph.DownloadCSVEffect _ ->
-                    Graph.perform eff
-                        |> Cmd.map GraphMsg
 
         SearchEffect msgMap e ->
             handleSearchEffect apiKey (Just plugins) msgMap e

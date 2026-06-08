@@ -7,7 +7,6 @@ import Html.Styled.Attributes exposing (..)
 import Model exposing (Model, Msg(..), Page(..))
 import Plugin.View as Plugin exposing (Plugins)
 import Util.View
-import View.Graph as Graph
 import View.Landingpage as Landingpage
 import View.Pathfinder as Pathfinder
 import View.Settings as Settings
@@ -32,15 +31,6 @@ view plugins vc model =
 
         Settings ->
             Settings.view plugins vc model
-
-        Graph ->
-            Graph.view plugins model.plugins vc model.graph
-                |> (\{ navbar, contents } ->
-                        { navbar = List.map (Html.Styled.map GraphMsg) navbar
-                        , contents = List.map (Html.Styled.map GraphMsg) contents
-                        }
-                   )
-                |> main_ vc
 
         Pathfinder ->
             Pathfinder.view plugins model.plugins vc model.pathfinder

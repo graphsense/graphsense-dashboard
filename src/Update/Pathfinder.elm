@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, multiSearch, removeAddress, removeAggEdge, resultLineToRoute, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -94,7 +94,7 @@ import Task
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
-import Update.Graph exposing (draggingToClick)
+import Update.Graph.Coords exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.Address as PathfinderAddress

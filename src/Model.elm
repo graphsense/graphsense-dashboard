@@ -8,7 +8,6 @@ import Config.UserSettings exposing (UserSettings)
 import Config.View
 import Dict exposing (Dict)
 import Effect.Api
-import Effect.Graph
 import Effect.Locale
 import Effect.Pathfinder
 import Effect.Search
@@ -16,14 +15,12 @@ import Hovercard
 import Http
 import Json.Encode
 import Model.Dialog
-import Model.Graph
 import Model.Notification
 import Model.Pathfinder
 import Model.Pathfinder.Id exposing (Id)
 import Model.Search
 import Model.Statusbar
 import Msg.ExportDialog
-import Msg.Graph
 import Msg.Locale
 import Msg.Pathfinder
 import Msg.Search
@@ -53,7 +50,6 @@ type alias Model navigationKey =
     , config : Config.View.Config
     , page : Page
     , search : Model.Search.Model
-    , graph : Model.Graph.Model
     , pathfinder : Model.Pathfinder.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
@@ -84,7 +80,6 @@ type Page
     = Home
     | Stats
     | Settings
-    | Graph
     | Pathfinder
     | Plugin Plugin.PluginType
 
@@ -122,7 +117,6 @@ type Msg
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | AddTagDialog AddTagDialogMsgs
-    | GraphMsg Msg.Graph.Msg
     | PathfinderMsg Msg.Pathfinder.Msg
     | PluginMsg Plugin.Msg
     | UserClickedExampleSearch String
@@ -138,6 +132,7 @@ type Msg
     | UserToggledNavbarSubMenu NavbarSubMenuType
     | UserClosesNavbarSubMenu
     | BrowserGotUncaughtError Json.Encode.Value
+    | BrowserGotDeserializedGS ( String, Json.Encode.Value )
     | DebouncePluginOutMsg Plugin.OutMsg
     | BrowserCancelledRequest String
     | BrowserRetryApiEffect String (Effect.Api.Effect Msg) Int
@@ -216,7 +211,6 @@ type Effect
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect (Msg.Search.Msg -> Msg) Effect.Search.Effect
-    | GraphEffect Effect.Graph.Effect
     | PathfinderEffect Effect.Pathfinder.Effect
     | ApiEffect (Effect.Api.Effect Msg)
     | PluginEffect (Cmd Plugin.Msg)
@@ -239,12 +233,12 @@ userSettingsFromMainModel model =
     , valueDetail = Just model.config.locale.valueDetail
     , preferredFiatCurrency = Just model.config.preferredFiatCurrency
     , showValuesInFiat = Just model.config.showValuesInFiat
-    , addressLabel = Just model.graph.config.addressLabelType
-    , edgeLabel = Just model.graph.config.txLabelType
-    , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks
-    , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
+    , addressLabel = Nothing
+    , edgeLabel = Nothing
+    , showAddressShadowLinks = Nothing
+    , showClusterShadowLinks = Nothing
     , showDatesInUserLocale = Just model.config.showDatesInUserLocale
-    , showZeroValueTxs = Just model.graph.config.showZeroTransactions
+    , showZeroValueTxs = Nothing
     , showTimeZoneOffset = Just model.config.showTimeZoneOffset
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
     , highlightClusterFriends = Just model.pathfinder.config.highlightClusterFriends
