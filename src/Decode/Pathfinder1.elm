@@ -6,6 +6,7 @@ import Json.Decode exposing (Decoder, bool, float, index, int, list, map, map2, 
 import Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedAggEdge, DeserializedAnnotation, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Set
+import Util.Data exposing (normalizeIdCasing)
 
 
 decoder : Decoder Deserialized
@@ -65,7 +66,9 @@ thingDecoder =
 
 idDecoder : Decoder Id
 idDecoder =
-    map2 Id.init
+    -- normalize casing so ids from files saved with non-canonical
+    -- casing (e.g. checksummed eth addresses) match api responses
+    map2 (\network identifier -> Id.init network (normalizeIdCasing network identifier))
         (index 0 string)
         (index 1 string)
 
