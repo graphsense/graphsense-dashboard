@@ -17,6 +17,10 @@ type alias AggEdge =
     , txs : Set Id
     , selected : Bool
     , hovered : Bool
+
+    -- User-set offset (in graph pixels) for the mid-edge value label.
+    -- `Nothing` => auto-placed; `Just { x, y }` => pinned by the user (drag).
+    , labelOffset : Maybe { x : Float, y : Float }
     }
 
 

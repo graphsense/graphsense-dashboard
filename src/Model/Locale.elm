@@ -13,6 +13,7 @@ locales =
     , ( "en", "English" )
     , ( "it", "Italiano" )
     , ( "es", "Español" )
+    , ( "ro", "Română" )
     ]
 
 

@@ -1614,14 +1614,20 @@ updateByMsg plugins uc msg model =
                     n model
 
         UserReleasesMouseButton ->
-            case model.dragging of
+            -- End any active mid-edge label drag in addition to the normal
+            -- node/graph drag flow.
+            let
+                model_ =
+                    { model | draggingAggEdgeLabel = Nothing }
+            in
+            case model_.dragging of
                 NoDragging ->
-                    n model
+                    n model_
 
                 Dragging _ _ _ ->
-                    case model.pointerTool of
+                    case model_.pointerTool of
                         Select ->
-                            ( model
+                            ( model_
                             , Process.sleep 0
                                 |> Task.perform (\_ -> BrowserWaitedAfterReleasingMouseButton)
                                 |> CmdEffect
@@ -1630,7 +1636,7 @@ updateByMsg plugins uc msg model =
 
                         Drag ->
                             n
-                                { model
+                                { model_
                                     | dragging = NoDragging
                                 }
 
@@ -1650,21 +1656,21 @@ updateByMsg plugins uc msg model =
                                     moveNode tid net
 
                         network =
-                            case model.selection of
+                            case model_.selection of
                                 MultiSelect sel ->
-                                    List.foldl moveSelectedNode model.network sel
+                                    List.foldl moveSelectedNode model_.network sel
 
                                 _ ->
-                                    moveNode id model.network
+                                    moveNode id model_.network
 
                         nn =
-                            (if model.config.snapToGrid then
+                            (if model_.config.snapToGrid then
                                 network |> Network.snapToGrid
 
                              else
                                 network
                             )
-                                |> (if model.config.avoidOverlapingNodes then
+                                |> (if model_.config.avoidOverlapingNodes then
                                         Network.resolveOverlapsExcept Network.Compact (Just id)
 
                                     else
@@ -1672,7 +1678,7 @@ updateByMsg plugins uc msg model =
                                    )
                     in
                     n
-                        { model
+                        { model_
                             | network = nn
                             , dragging = NoDragging
                         }
@@ -1802,62 +1808,83 @@ updateByMsg plugins uc msg model =
             )
 
         UserMovesMouseOnGraph coords ->
-            case model.dragging of
-                NoDragging ->
-                    ( model, [] )
-
-                Dragging transform start _ ->
-                    (case model.pointerTool of
-                        Drag ->
-                            { model
-                                | transform = Transform.update start (relativeToGraphZero uc.size coords) transform
-                                , dragging = Dragging transform start (relativeToGraphZero uc.size coords)
-                            }
-
-                        Select ->
-                            { model
-                                | dragging = Dragging transform start (relativeToGraphZero uc.size coords)
-                            }
-                    )
-                        |> n
-
-                DraggingNode id start _ ->
+            case model.draggingAggEdgeLabel of
+                Just labelDrag ->
                     let
                         vector =
-                            Transform.vector start coords model.transform
+                            Transform.vector labelDrag.start coords model.transform
 
-                        vectorRel =
-                            { x = vector.x / unit
-                            , y = vector.y / unit
+                        newOffset =
+                            { x = labelDrag.baseOffset.x + vector.x
+                            , y = labelDrag.baseOffset.y + vector.y
                             }
-
-                        moveNode txOrAdrId net =
-                            Network.updateAddress txOrAdrId (Node.move vectorRel) net
-                                |> Network.updateTx txOrAdrId
-                                    (Node.move vectorRel)
-
-                        moveSelectedNode sel net =
-                            case sel of
-                                MSelectedAddress aid ->
-                                    moveNode aid net
-
-                                MSelectedTx tid ->
-                                    moveNode tid net
-
-                        network =
-                            case model.selection of
-                                MultiSelect sel ->
-                                    List.foldl moveSelectedNode model.network sel
-
-                                _ ->
-                                    moveNode id model.network
                     in
                     ( { model
-                        | network = network
-                        , dragging = DraggingNode id start coords
+                        | network =
+                            Network.updateAggEdge labelDrag.key
+                                (\edge -> { edge | labelOffset = Just newOffset })
+                                model.network
                       }
-                    , [ RepositionTooltipEffect ]
+                    , []
                     )
+
+                Nothing ->
+                    case model.dragging of
+                        NoDragging ->
+                            ( model, [] )
+
+                        Dragging transform start _ ->
+                            (case model.pointerTool of
+                                Drag ->
+                                    { model
+                                        | transform = Transform.update start (relativeToGraphZero uc.size coords) transform
+                                        , dragging = Dragging transform start (relativeToGraphZero uc.size coords)
+                                    }
+
+                                Select ->
+                                    { model
+                                        | dragging = Dragging transform start (relativeToGraphZero uc.size coords)
+                                    }
+                            )
+                                |> n
+
+                        DraggingNode id start _ ->
+                            let
+                                vector =
+                                    Transform.vector start coords model.transform
+
+                                vectorRel =
+                                    { x = vector.x / unit
+                                    , y = vector.y / unit
+                                    }
+
+                                moveNode txOrAdrId net =
+                                    Network.updateAddress txOrAdrId (Node.move vectorRel) net
+                                        |> Network.updateTx txOrAdrId
+                                            (Node.move vectorRel)
+
+                                moveSelectedNode sel net =
+                                    case sel of
+                                        MSelectedAddress aid ->
+                                            moveNode aid net
+
+                                        MSelectedTx tid ->
+                                            moveNode tid net
+
+                                network =
+                                    case model.selection of
+                                        MultiSelect sel ->
+                                            List.foldl moveSelectedNode model.network sel
+
+                                        _ ->
+                                            moveNode id model.network
+                            in
+                            ( { model
+                                | network = network
+                                , dragging = DraggingNode id start coords
+                              }
+                            , [ RepositionTooltipEffect ]
+                            )
 
         AnimationFrameDeltaForTransform delta ->
             ( { model
@@ -2570,6 +2597,33 @@ updateByMsg plugins uc msg model =
 
         UserSelectsAnnotationColor ids clr ->
             n { model | annotations = List.foldl (\id ann -> Annotations.setColor id clr ann) model.annotations ids }
+
+        UserPushesLeftMouseButtonOnAggEdgeLabel key currentOffset coords ->
+            -- Start dragging the mid-edge value label. The baseline is the
+            -- offset the label is *currently rendered at* (so the label
+            -- stays under the cursor even if it was auto-placed away from
+            -- the geometric midpoint).
+            case ( model.dragging, model.transform.state ) of
+                ( NoDragging, Transform.Settled _ ) ->
+                    n
+                        { model
+                            | draggingAggEdgeLabel =
+                                Just
+                                    { key = key
+                                    , start = coords
+                                    , baseOffset = currentOffset
+                                    }
+                        }
+
+                _ ->
+                    n model
+
+        UserSelectedAggEdgeFilter f ->
+            let
+                cfg =
+                    model.config
+            in
+            n { model | config = { cfg | aggEdgeFilter = f } }
 
         UserOpensContextMenu coordsNew cmtype ->
             case model.contextMenu of
@@ -4594,11 +4648,13 @@ focusNeighborAddress uc anchorId direction model =
                     )
                         { x = neighbor.x * unit
 
-                        -- Pan horizontally only: keep the current vertical
-                        -- position so left/right navigation doesn't jump
-                        -- up/down. Vertical navigation
-                        -- (focusVerticalNeighborAddress) does pan vertically.
-                        , y = Transform.getCurrent m1.transform |> .y
+                        -- Pan vertically as well: navigating to an existing
+                        -- neighbor must keep the selection in view, otherwise
+                        -- on tall graphs the selection jumps off-screen.
+                        -- (Auto-expand into a *new* node keeps the current
+                        -- vertical position, since the new node is placed at
+                        -- the current level.)
+                        , y = A.getTo neighbor.y * unit
                         , z = Transform.initZ
                         }
                         m1.transform

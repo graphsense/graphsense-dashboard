@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -10,7 +10,7 @@ import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
 import Model.Dialog as Dialog
 import Model.Graph exposing (Dragging)
-import Model.Graph.Coords exposing (isInBBox)
+import Model.Graph.Coords exposing (Coords, isInBBox)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Pathfinder.Address exposing (Address)
@@ -53,6 +53,7 @@ type alias Model =
     , colors : ScopedColorAssignment
     , annotations : AnnotationModel
     , dragging : Dragging Id
+    , draggingAggEdgeLabel : Maybe DraggingAggEdgeLabel
     , selection : Selection
     , hovered : Hovered
     , search : Search.Model
@@ -75,6 +76,18 @@ type alias Model =
     , exportImage : Maybe ExportImage
     , txsFilters : AssocList.Dict TxsFilterId TransactionFilter.Settings
     , tooltip : Tooltip.Model TooltipType
+    }
+
+
+{-| In-progress drag of an aggregate-edge value label. The user grabbed the
+label at `start` (screen coords) when its offset was `baseOffset`; subsequent
+mouse-move events update the edge's `labelOffset` to `baseOffset + Δ`, where
+Δ is the transform-corrected mouse vector.
+-}
+type alias DraggingAggEdgeLabel =
+    { key : ( Id, Id )
+    , start : Coords
+    , baseOffset : { x : Float, y : Float }
     }
 
 

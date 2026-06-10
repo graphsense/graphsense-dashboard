@@ -6,6 +6,7 @@ import Json.Decode exposing (Decoder, bool, float, index, int, list, map, map2, 
 import Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedAggEdge, DeserializedAnnotation, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
 import Set
+import Util.Data exposing (normalizeIdCasing)
 
 
 decoder : Decoder Deserialized
@@ -20,10 +21,29 @@ decoder =
 
 aggEdgeDecoder : Decoder DeserializedAggEdge
 aggEdgeDecoder =
-    map3 DeserializedAggEdge
+    map4 DeserializedAggEdge
         (index 0 idDecoder)
         (index 1 idDecoder)
         (index 2 (list idDecoder |> map Set.fromList))
+        -- Optional: missing in pre-`labelOffset` save files.
+        -- Also tolerates the brief intermediate vertical-only encoding
+        -- where it was a single number instead of [x, y].
+        (oneOf
+            [ index 3 labelOffsetDecoder
+            , succeed Nothing
+            ]
+        )
+
+
+labelOffsetDecoder : Decoder (Maybe { x : Float, y : Float })
+labelOffsetDecoder =
+    oneOf
+        [ map2 (\x y -> Just { x = x, y = y })
+            (index 0 float)
+            (index 1 float)
+        , map (\y -> Just { x = 0, y = y }) float
+        , succeed Nothing
+        ]
 
 
 annotationDecoder : Decoder DeserializedAnnotation
@@ -46,7 +66,9 @@ thingDecoder =
 
 idDecoder : Decoder Id
 idDecoder =
-    map2 Id.init
+    -- normalize casing so ids from files saved with non-canonical
+    -- casing (e.g. checksummed eth addresses) match api responses
+    map2 (\network identifier -> Id.init network (normalizeIdCasing network identifier))
         (index 0 string)
         (index 1 string)
 

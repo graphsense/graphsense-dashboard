@@ -465,6 +465,10 @@ Added tag: Added Tag
 num-more-assets: '{0} more assets'
 relationship-based: Relationship-based
 transaction-based: Transaction-based
+agg-edge-filter-all: All
+agg-edge-filter-connected: Connected
+agg-edge-filter-new: New
+agg-edge-filter-tooltip: Filter aggregate edges shown on the canvas
 annotate transaction: Annotate transaction
 statusbar-loading-swap-bridge-events: 'loading Swaps and Briding events for Tx {0}:
   {1}'

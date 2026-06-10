@@ -16,7 +16,7 @@ import Html.Styled.Events exposing (onClick, onInput, stopPropagationOn)
 import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (Coords)
-import Model.Graph.Transform exposing (Transition(..))
+import Model.Graph.Transform exposing (Transition(..), getZ)
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
@@ -787,6 +787,11 @@ detailsView plugin pluginStates vc model =
 graphSvg : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> { a | width : Float, height : Float } -> Svg Msg
 graphSvg plugins vc gc model dim =
     let
+        -- hide always-on aggregate-edge labels when zoomed out far enough
+        -- (larger z = more zoomed out); they reappear when zoomed in
+        showAggLabels =
+            getZ model.transform <= 2.5
+
         pointer =
             case ( model.dragging, model.pointerTool ) of
                 ( Dragging _ _ _, Drag ) ->
@@ -883,7 +888,7 @@ graphSvg plugins vc gc model dim =
             |> Svg.preventDefaultOn "contextmenu"
          , Util.View.noTextSelection
          ]
-            ++ (if model.dragging /= NoDragging then
+            ++ (if model.dragging /= NoDragging || model.draggingAggEdgeLabel /= Nothing then
                     Svg.preventDefaultOn "mousemove"
                         (Util.Graph.decodeCoords Coords
                             |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
@@ -929,7 +934,7 @@ graphSvg plugins vc gc model dim =
                     )
                 ]
                 dim
-        , Network.relations plugins vc gc model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
+        , Network.relations plugins vc gc showAggLabels model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
         , Svg.lazy6 Network.addresses plugins vc gc model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model
 
