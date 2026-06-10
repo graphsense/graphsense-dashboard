@@ -1,4 +1,4 @@
-module View.Pathfinder.AggEdge exposing (edge, highlight, view)
+module View.Pathfinder.AggEdge exposing (edge, highlight, labelMetrics, view)
 
 import Components.Tooltip as Tooltip
 import Config.View as View
@@ -23,7 +23,7 @@ import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.GraphComponentsAggregatedTracing as Theme
 import Tuple exposing (mapFirst)
-import Util.Graph exposing (translate)
+import Util.Graph exposing (mousedown, translate)
 import Util.TextDimensions as TextDimensions
 import Util.Tooltip
 import Util.TooltipType as TooltipType exposing (TooltipType)
@@ -47,8 +47,8 @@ type alias Dimensions =
     }
 
 
-calcDimensions : View.Config -> AggEdge -> Address -> Address -> Dimensions
-calcDimensions vc ed aAddress bAddress =
+calcDimensions : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Dimensions
+calcDimensions vc offset ed aAddress bAddress =
     let
         padding =
             15
@@ -143,8 +143,8 @@ calcDimensions vc ed aAddress bAddress =
                 + leftLabelWidth
                 + rightLabelWidth
     in
-    { x = x * unit
-    , y = y * unit
+    { x = x * unit + offset.x
+    , y = y * unit + offset.y
     , totalWidth = totalWidth
     , leftLabelWidth = leftLabelWidth
     , rightLabelWidth = rightLabelWidth
@@ -157,8 +157,8 @@ calcDimensions vc ed aAddress bAddress =
     }
 
 
-view : View.Config -> AggEdge -> Address -> Address -> Svg Msg
-view vc ed aAddress bAddress =
+view : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Svg Msg
+view vc offset ed aAddress bAddress =
     let
         originalWidth =
             Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
@@ -167,7 +167,7 @@ view vc ed aAddress bAddress =
             originalWidth / 2
 
         { leftLabelWidth, rightLabelWidth, x, y, leftLabel, rightLabel, leftVisible, rightVisible, totalWidth } =
-            calcDimensions vc ed aAddress bAddress
+            calcDimensions vc offset ed aAddress bAddress
 
         rectangleWidth =
             leftLabelWidth + rightLabelWidth
@@ -193,6 +193,7 @@ view vc ed aAddress bAddress =
                     , id
                         |> UserMovesMouseOverAggEdge
                         |> onMouseOver
+                    , mousedown (UserPushesLeftMouseButtonOnAggEdgeLabel id offset)
                     , pointer
                     ]
                 |> s_rectangleOfAggregatedLabel
@@ -278,14 +279,14 @@ view vc ed aAddress bAddress =
         ]
 
 
-highlight : View.Config -> AggEdge -> Address -> Address -> Svg Msg
-highlight vc ed aAddress bAddress =
+highlight : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Svg Msg
+highlight vc offset ed aAddress bAddress =
     let
         originalWidth =
             Theme.aggregatedLabelRectangleOfAggregatedLabel_details.width
 
         { leftLabelWidth, rightLabelWidth, x, y, totalWidth } =
-            calcDimensions vc ed aAddress bAddress
+            calcDimensions vc offset ed aAddress bAddress
 
         rectangleWidth =
             leftLabelWidth + rightLabelWidth
@@ -341,16 +342,75 @@ highlight vc ed aAddress bAddress =
                 , showHighlight = True
                 }
             }
-        , edge vc ed aAddress bAddress True
-        , view vc ed aAddress bAddress
+        , edge vc offset ed aAddress bAddress True
+        , view vc offset ed aAddress bAddress
         ]
 
 
-edge : View.Config -> AggEdge -> Address -> Address -> Bool -> Svg Msg
-edge vc ed aAddress bAddress hl =
+{-| The bounding box of an edge's value label, used by the placement pass to
+keep labels from overlapping each other and the address nodes. Coordinates are
+in pixels and `x`/`y` is the box center.
+-}
+labelMetrics : View.Config -> AggEdge -> Address -> Address -> { x : Float, y : Float, width : Float, height : Float }
+labelMetrics vc ed aAddress bAddress =
+    let
+        d =
+            calcDimensions vc { x = 0, y = 0 } ed aAddress bAddress
+    in
+    { x = d.x
+    , y = d.y
+    , width = d.totalWidth
+    , height = Theme.aggregatedLabel_details.height
+    }
+
+
+
+{- Edge weighting disabled — it gave little visual benefit. Kept here in case
+   we want to revisit it. To re-enable: uncomment this, restore the
+   `import Model.Locale exposing (getFiatValue)` import, and use
+   `mainStrokeWidth vc ed` for the main line's stroke-width in `edge`.
+
+   mainStrokeWidth : View.Config -> AggEdge -> Float
+   mainStrokeWidth vc ed =
+       let
+           fiatCode =
+               String.toLower vc.preferredFiatCurrency
+
+           fiat values =
+               getFiatValue fiatCode values |> Maybe.withDefault 0
+
+           relationFiat relation =
+               relation
+                   |> RemoteData.toMaybe
+                   |> Maybe.Extra.join
+                   |> Maybe.map
+                       (\data ->
+                           fiat data.value
+                               + (data.tokenValues
+                                   |> Maybe.map (Dict.values >> List.map fiat >> List.sum)
+                                   |> Maybe.withDefault 0
+                                 )
+                       )
+                   |> Maybe.withDefault 0
+
+           total =
+               relationFiat ed.a2b + relationFiat ed.b2a
+
+           base =
+               Theme.aggregatedLinkMainLine_details.strokeWidth
+       in
+       base
+           + 0.65
+           * logBase 10 (1 + total)
+           |> clamp base 8
+-}
+
+
+edge : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> Bool -> Svg Msg
+edge vc offset ed aAddress bAddress hl =
     let
         { left, right, totalWidth, x, y } =
-            calcDimensions vc ed aAddress bAddress
+            calcDimensions vc offset ed aAddress bAddress
 
         fd =
             GraphComponents.addressNodeNodeFrame_details

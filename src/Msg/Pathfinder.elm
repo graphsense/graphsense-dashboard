@@ -4,6 +4,7 @@ import Api.Data
 import Color exposing (Color)
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
+import Config.Pathfinder
 import Hovercard
 import Model.Dialog as Dialog
 import Model.Direction exposing (Direction)
@@ -120,6 +121,8 @@ type Msg
     | UserMovesMouseOutAddress Id
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
+    | UserPushesLeftMouseButtonOnAggEdgeLabel ( Id, Id ) { x : Float, y : Float } Coords
+    | UserSelectedAggEdgeFilter Config.Pathfinder.AggEdgeFilter
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraph (Maybe Time.Posix)
     | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool (List ( Id, Api.Data.TagSummary ))

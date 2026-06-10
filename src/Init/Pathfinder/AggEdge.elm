@@ -22,6 +22,7 @@ init a b =
     , txs = Set.empty
     , selected = False
     , hovered = False
+    , labelOffset = Nothing
     }
 
 
