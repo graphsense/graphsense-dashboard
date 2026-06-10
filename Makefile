@@ -54,6 +54,10 @@ build: prepare gen
 compile: prepare gen
 	npm run compile
 
+compile-quiet:
+	@make prepare gen >/dev/null
+	@ELM_HOME=$(ELM_HOME) elm make src/Main.elm --output=/dev/null 2>&1 | grep -v "^Compiling" | grep -v "^Success" | grep -v "^$$"
+
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \
 		if [ ! -e "$$i" ] && [ ! -L "$$i" ]; then \
@@ -260,4 +264,4 @@ tag-version:
 	git tag $(VERSION)
 	@echo "Created version $(VERSION)"
 
-.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version
+.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet
