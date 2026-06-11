@@ -1,5 +1,6 @@
 module View.Locale exposing
-    ( coin
+    ( capitalized
+    , coin
     , coinWithoutCode
     , currency
     , currencyAsFloat
@@ -28,6 +29,7 @@ module View.Locale exposing
     , timestampNormal
     , timestampTimeUniform
     , timestampWithFormat
+    , title
     , titleCase
     , tokenCurrencies
     , valuesToFloat
@@ -116,6 +118,23 @@ string model key =
 interpolated : Model -> String -> List String -> String
 interpolated model key =
     String.Interpolate.interpolate (string model key)
+
+
+capitalized : Model -> String -> String
+capitalized model key =
+    let
+        translated =
+            string model key
+    in
+    String.left 1 translated
+        |> String.toUpper
+        |> flip (++) (String.dropLeft 1 translated)
+
+
+title : Model -> String -> String
+title model key =
+    string model key
+        |> titleCase model
 
 
 mix : String -> String -> Float -> String
