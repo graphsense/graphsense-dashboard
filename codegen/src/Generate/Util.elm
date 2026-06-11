@@ -43,11 +43,16 @@ mm2 fun a_ b =
         |> Maybe.withDefault []
         |> (++)
 
+mm3 : (a -> b -> c -> List Elm.Expression) -> Maybe a -> Maybe b -> Maybe c -> List Elm.Expression -> List Elm.Expression
+mm3 fun a_ b c =
+    Maybe.map3 fun a_ b c
+        |> Maybe.withDefault []
+        |> (++)
+
 
 aa : (a -> Maybe (List Elm.Expression)) -> Maybe a -> List Elm.Expression -> List Elm.Expression
 aa fun =
     Maybe.andThen fun >> Maybe.withDefault [] >> (++)
-
 
 a2 : (a -> b -> Maybe Elm.Expression) -> Maybe a -> Maybe b -> List Elm.Expression -> List Elm.Expression
 a2 fun a_ b =
@@ -63,7 +68,6 @@ a3 fun a_ b c =
         |> Maybe.map List.singleton
         |> Maybe.withDefault []
         |> (++)
-
 
 i : Elm.Expression -> Bool -> List Elm.Expression -> List Elm.Expression
 i expression condition =
