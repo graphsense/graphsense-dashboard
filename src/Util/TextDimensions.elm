@@ -1,9 +1,21 @@
-module Util.TextDimensions exposing (estimateTextWidth)
+module Util.TextDimensions exposing (estimateTextWidth, estimateTextWidthAt, truncateToWidth)
 
 import Dict exposing (Dict)
 
 
-{-| Estimate the width of text using character dimensions from config with fallback values
+{-| Font size (px) at which the character dimensions in config are measured
+(see `measureCharacterDimensions` in src/main.js).
+-}
+referenceFontSize : Float
+referenceFontSize =
+    12
+
+
+{-| Estimate the width of text using character dimensions from config with fallback values.
+
+Widths are reported for `referenceFontSize` px. Use `estimateTextWidthAt` to account
+for a different rendered font size and letter spacing.
+
 -}
 estimateTextWidth : Dict String { width : Float, height : Float } -> String -> Float
 estimateTextWidth characterDimensions text =
@@ -15,6 +27,62 @@ estimateTextWidth characterDimensions text =
             |> String.toList
             |> List.map (getCharWidth characterDimensions)
             |> List.sum
+
+
+{-| Estimate the rendered width (px) of text drawn at a given font size and letter spacing.
+
+The character dimensions are measured at `referenceFontSize`, so the base widths are
+scaled by `fontSize / referenceFontSize`. Letter spacing is added once per character.
+
+-}
+estimateTextWidthAt : Dict String { width : Float, height : Float } -> { fontSize : Float, letterSpacing : Float } -> String -> Float
+estimateTextWidthAt characterDimensions { fontSize, letterSpacing } text =
+    estimateTextWidth characterDimensions text
+        * (fontSize / referenceFontSize)
+        + letterSpacing
+        * toFloat (String.length text)
+
+
+{-| Truncate `text` with a trailing ellipsis so that its estimated rendered width does
+not exceed `maxWidth` px when drawn at the given font size and letter spacing.
+
+Unlike a fixed character-count truncation, this accounts for per-character widths, so
+strings full of wide glyphs (e.g. uppercase, "W", "M") are cut earlier than narrow ones.
+
+-}
+truncateToWidth : Dict String { width : Float, height : Float } -> { fontSize : Float, letterSpacing : Float, maxWidth : Float } -> String -> String
+truncateToWidth characterDimensions { fontSize, letterSpacing, maxWidth } text =
+    if estimateTextWidthAt characterDimensions { fontSize = fontSize, letterSpacing = letterSpacing } text <= maxWidth then
+        text
+
+    else
+        let
+            scale =
+                fontSize / referenceFontSize
+
+            ellipsisWidth =
+                estimateTextWidthAt characterDimensions { fontSize = fontSize, letterSpacing = letterSpacing } "…"
+
+            budget =
+                maxWidth - ellipsisWidth
+
+            takeChars chars acc accWidth =
+                case chars of
+                    [] ->
+                        List.reverse acc
+
+                    c :: rest ->
+                        let
+                            w =
+                                getCharWidth characterDimensions c * scale + letterSpacing
+                        in
+                        if accWidth + w > budget then
+                            List.reverse acc
+
+                        else
+                            takeChars rest (c :: acc) (accWidth + w)
+        in
+        (takeChars (String.toList text) [] 0 |> String.fromList) ++ "…"
 
 
 {-| Get character width from config with fallback to hardcoded values
@@ -288,6 +356,57 @@ getCharWidthFallback char =
 
         '\\' ->
             4.9
+
+        '&' ->
+            8.0
+
+        '%' ->
+            10.0
+
+        '@' ->
+            11.4
+
+        '#' ->
+            6.9
+
+        '*' ->
+            4.8
+
+        '_' ->
+            5.5
+
+        '"' ->
+            4.3
+
+        '\'' ->
+            2.3
+
+        '`' ->
+            4.0
+
+        '~' ->
+            6.9
+
+        '^' ->
+            5.6
+
+        '<' ->
+            6.6
+
+        '>' ->
+            6.6
+
+        '°' ->
+            4.5
+
+        '®' ->
+            9.3
+
+        '©' ->
+            9.3
+
+        '™' ->
+            9.0
 
         -- Currency symbols
         '$' ->

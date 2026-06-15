@@ -124,7 +124,7 @@ utxo plugins pluginStates vc model id viewState address =
         pluginTagsVisible =
             List.length pluginTagsList > 0
 
-        { sidePanelData, categoriesList, hasClusterOnlyTags } =
+        { sidePanelData, categoriesList } =
             makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         pluginList =
@@ -230,10 +230,15 @@ utxo plugins pluginStates vc model id viewState address =
         { root = sidePanelData
         , iconsTagL =
             { variant =
-                if List.isEmpty categoriesList then
-                    none
+                -- Drive the tag icon from the same flags as the graph node
+                -- (see View.Pathfinder.Address) so the details icon, the graph icon
+                -- and the tags list stay consistent. `categoriesList` is not a reliable
+                -- signal: it always contains the "learn more" button, so it is non-empty
+                -- even for addresses with no tags.
+                if address.hasTags then
+                    HIcons.iconsTagLTypeDirect {}
 
-                else if hasClusterOnlyTags then
+                else if address.hasClusterTagsOnly then
                     HIcons.iconsTagLTypeIndirectWithAttributes
                         (HIcons.iconsTagLTypeIndirectAttributes
                             |> Rs.s_tagIcon Util.View.indirectTagFillAttr
@@ -241,7 +246,7 @@ utxo plugins pluginStates vc model id viewState address =
                         {}
 
                 else
-                    HIcons.iconsTagLTypeDirect {}
+                    none
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -920,7 +925,7 @@ account plugins pluginStates vc model id viewState address =
         pluginTagsVisible =
             List.length pluginTagsList > 0
 
-        { sidePanelData, categoriesList, hasClusterOnlyTags } =
+        { sidePanelData, categoriesList } =
             makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         sidePanelAddressHeader =
@@ -1057,10 +1062,15 @@ account plugins pluginStates vc model id viewState address =
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
         , iconsTagL =
             { variant =
-                if List.isEmpty categoriesList then
-                    none
+                -- Drive the tag icon from the same flags as the graph node
+                -- (see View.Pathfinder.Address) so the details icon, the graph icon
+                -- and the tags list stay consistent. `categoriesList` is not a reliable
+                -- signal: it always contains the "learn more" button, so it is non-empty
+                -- even for addresses with no tags.
+                if address.hasTags then
+                    HIcons.iconsTagLTypeDirect {}
 
-                else if hasClusterOnlyTags then
+                else if address.hasClusterTagsOnly then
                     HIcons.iconsTagLTypeIndirectWithAttributes
                         (HIcons.iconsTagLTypeIndirectAttributes
                             |> Rs.s_tagIcon Util.View.indirectTagFillAttr
@@ -1068,7 +1078,7 @@ account plugins pluginStates vc model id viewState address =
                         {}
 
                 else
-                    HIcons.iconsTagLTypeDirect {}
+                    none
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -1158,19 +1168,22 @@ tagsList vc model id =
             |> tagsTruncated showTag
 
     else
-        let
-            concepts =
-                ts
-                    |> Maybe.map getSortedConceptsByWeight
-                    |> Maybe.withDefault []
-        in
-        (concepts
-            |> tagsTruncated
-                (Tag.conceptItem vc id AddressDetails.TooltipMsg
-                    >> Html.map (Pathfinder.AddressDetailsMsg id)
+        case ts of
+            -- No tag summary at all: show nothing. Without this guard the
+            -- `learnMoreButton` below is always appended, so the list is never
+            -- empty and a phantom tag affordance leaks into the tag section
+            -- whenever it is forced visible (e.g. by the pubkey/crosschain section).
+            Nothing ->
+                []
+
+            Just summary ->
+                (getSortedConceptsByWeight summary
+                    |> tagsTruncated
+                        (Tag.conceptItem vc id AddressDetails.TooltipMsg
+                            >> Html.map (Pathfinder.AddressDetailsMsg id)
+                        )
                 )
-        )
-            ++ [ learnMoreButton vc id ]
+                    ++ [ learnMoreButton vc id ]
 
 
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg

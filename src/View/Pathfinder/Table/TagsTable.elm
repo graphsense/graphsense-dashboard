@@ -24,6 +24,7 @@ import Url
 import Util.Data as Data
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary exposing (exchangeCategory)
+import Util.TextDimensions
 import Util.Tooltip as Util
 import Util.TooltipType
 import Util.View exposing (none)
@@ -80,6 +81,37 @@ linkCellStyle =
     TagsComponents.tagRowCellLabel_details.styles ++ [ Css.property "color" Colors.blue400, Css.textDecoration Css.none ]
 
 
+{-| Max width (px) of the label/source cells, matching the `maxWidth` set in `cellWWidth`.
+-}
+cellMaxWidth : Float
+cellMaxWidth =
+    300
+
+
+{-| Pixel budget available for text inside a label/source cell.
+Slightly less than `cellMaxWidth` to leave room for the cell border/spacing.
+-}
+cellTextMaxWidth : Float
+cellTextMaxWidth =
+    cellMaxWidth - 12
+
+
+{-| Rendered text metrics of the main label (Roboto 14px, no letter spacing),
+mirroring `TagsComponents.tagRowCellLabel_details`.
+-}
+labelTextStyle : { fontSize : Float, letterSpacing : Float, maxWidth : Float }
+labelTextStyle =
+    { fontSize = 14, letterSpacing = 0, maxWidth = cellTextMaxWidth }
+
+
+{-| Rendered text metrics of the sub-label/category (Roboto 12px, 0.4px letter spacing),
+mirroring `TagsComponents.tagRowCellCategory_details`.
+-}
+categoryTextStyle : { fontSize : Float, letterSpacing : Float, maxWidth : Float }
+categoryTextStyle =
+    { fontSize = 12, letterSpacing = 0.4, maxWidth = cellTextMaxWidth }
+
+
 cell : View.Config -> Cell -> Table.HtmlDetails Msg
 cell vc c =
     let
@@ -91,7 +123,7 @@ cell vc c =
             cellBase ++ [ Css.minWidth (Css.px 150) ]
 
         cellWWidth =
-            [ Css.marginRight (Css.px 15), Css.maxWidth (Css.px 300) |> Css.important ] ++ cellWMinWidth
+            [ Css.marginRight (Css.px 15), Css.maxWidth (Css.px cellMaxWidth) |> Css.important ] ++ cellWMinWidth
 
         attrs showTooltip cc =
             TagsComponents.tagRowCellAttributes
@@ -122,9 +154,9 @@ cell vc c =
                 { infoIconInstance = actionIcon |> Maybe.withDefault none
                 , tagIconVisible = tagIcon /= Nothing
                 , infoIconVisible = actionIcon /= Nothing
-                , labelText = cc.label |> Util.View.truncate 52
+                , labelText = cc.label |> Util.TextDimensions.truncateToWidth vc.characterDimensions labelTextStyle
                 , subLabelVisible = cc.subLabel /= Nothing
-                , subLabelText = cc.subLabel |> Maybe.withDefault "" |> Util.View.truncate 52
+                , subLabelText = cc.subLabel |> Maybe.withDefault "" |> Util.TextDimensions.truncateToWidth vc.characterDimensions categoryTextStyle
                 , tagIconInstance = none
                 }
             }
@@ -179,11 +211,21 @@ cell vc c =
 
         SourceCell cc ->
             let
-                getLink url body =
-                    a [ href url, target "blank", linkCellStyle |> css ] (body |> List.singleton)
+                getLink url extraAttrs body =
+                    a ([ href url, target "blank", linkCellStyle |> css ] ++ extraAttrs) (body |> List.singleton)
+
+                truncatedLabel =
+                    cc.label |> Util.TextDimensions.truncateToWidth vc.characterDimensions labelTextStyle
+
+                labelTitle =
+                    if truncatedLabel /= cc.label then
+                        [ title cc.label ]
+
+                    else
+                        []
 
                 linkBody =
-                    cc.link |> Maybe.map (\x -> getLink x (text cc.label))
+                    cc.link |> Maybe.map (\x -> getLink x labelTitle (text truncatedLabel))
 
                 linkIcon =
                     Icons.iconsGoToSnoPaddingWithAttributes
@@ -193,17 +235,20 @@ cell vc c =
                         {}
 
                 linkBodyIcon =
-                    cc.link |> Maybe.map (\x -> getLink x linkIcon)
+                    cc.link |> Maybe.map (\x -> getLink x [] linkIcon)
 
                 subText =
                     cc.subLabel |> Maybe.withDefault ""
+
+                truncatedSubText =
+                    subText |> Util.TextDimensions.truncateToWidth vc.characterDimensions categoryTextStyle
 
                 sub =
                     span
                         [ [ Css.property "color" Colors.blue400 |> Css.important ] |> css
                         , title subText
                         ]
-                        [ text subText ]
+                        [ text truncatedSubText ]
             in
             TagsComponents.tagRowCellWithInstances
                 (attrs False cc |> Rs.s_root (cellWWidth |> css |> List.singleton))
@@ -462,7 +507,7 @@ sourceColumn vc =
                             _ ->
                                 Nothing
                 in
-                cell vc (SourceCell { label = truncatedSource, link = link, subLabel = Just (Util.View.truncate 30 data.tagpackCreator) })
+                cell vc (SourceCell { label = truncatedSource, link = link, subLabel = Just data.tagpackCreator })
         , sorter = Table.unsortable
         }
 

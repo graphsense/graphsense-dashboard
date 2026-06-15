@@ -9,6 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Deep link to open a graph by API download id: `?import=<id>` downloads the `.gs` file from the REST `/download/<id>` endpoint and opens it on load
 
+### Changed
+
+- Tags table label and source columns now truncate to the exact pixel width of the column (using per-character widths, scaled for font size and letter spacing) instead of a fixed character count, so labels full of wide glyphs no longer overflow
+
+### Fixed
+
+- Tags table: the source link now shows the full value in a tooltip when it is shortened
+- Address details no longer shows a tag icon or tag section for addresses that have no tags (previously this could leak in via the pubkey/cross-chain related-addresses section), keeping the details panel consistent with the graph node and the tags list
+
 ## [26.06.1] - 2026-06-02
 
 ### Added
