@@ -55,8 +55,7 @@ compile: prepare gen
 	npm run compile
 
 compile-quiet:
-	@make prepare gen >/dev/null
-	@ELM_HOME=$(ELM_HOME) elm make src/Main.elm --output=/dev/null 2>&1 | grep -v "^Compiling" | grep -v "^Success" | grep -v "^$$"
+	@elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling" 
 
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \

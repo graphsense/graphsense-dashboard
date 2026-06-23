@@ -68,6 +68,10 @@ Single test files: not supported by elm-test-rs natively; tests live in `tests/`
 
 Elm packages are installed locally in `./elm_packages`
 
+### Elm stuff
+
+In `./elm-stuff`, there only are compilation artifacts. Always ignore files from this directory.
+
 ### Code Generation Pipeline
 
 Several directories are **generated** — do not edit directly:
