@@ -216,7 +216,7 @@ view plugins vc pc searchHighlight address annotation =
          ]
             ++ dimmedOpacity searchHighlight
         )
-        (GraphComponents.addressNodeWithInstances
+        (GraphComponents.addressNodeWithAttributes
             (GraphComponents.addressNodeAttributes
                 |> Rs.s_root
                     ([ A.animate address.clock address.opacity
@@ -242,9 +242,7 @@ view plugins vc pc searchHighlight address annotation =
                     ]
                 |> Rs.s_nodeFrame annAttr
                 |> Rs.s_clusterColor clusterStroke
-             -- |> s_iconsStartingPoint [onMouseOver NoOp, onMouseLeave NoOp]
             )
-            GraphComponents.addressNodeInstances
             { root =
                 { addressId =
                     address.id
