@@ -25,7 +25,7 @@ toExpressions config componentName node =
             [ toStrokePaths config node
             , toFillPaths config node
             ]
-            |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+            |> withVisibilitySvg componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> List.singleton
 
 

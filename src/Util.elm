@@ -1,4 +1,4 @@
-module Util exposing (allAndNotEmpty, and, n, removeLeading0x)
+module Util exposing (allAndNotEmpty, and, andWithCmd, n, removeLeading0x)
 
 
 removeLeading0x : String -> String
@@ -24,6 +24,15 @@ and update ( m, eff ) =
     ( m2
     , eff ++ eff2
     )
+
+
+andWithCmd : (m -> ( m, Cmd msg )) -> ( m, Cmd msg ) -> ( m, Cmd msg )
+andWithCmd fun ( m, cmd ) =
+    let
+        ( m2, cmd2 ) =
+            fun m
+    in
+    ( m2, Cmd.batch [ cmd, cmd2 ] )
 
 
 allAndNotEmpty : (a -> Bool) -> List a -> Bool

@@ -21,7 +21,7 @@ import Generate.Svg.EllipseNode
 import Generate.Svg.LineNode
 import Generate.Svg.RectangleNode
 import Generate.Svg.VectorNode
-import Generate.Util exposing (callStyles, getElementAttributes, sanitize, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, sanitize, withVisibilityHtml)
 import Maybe.Extra
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Styles)
@@ -200,7 +200,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                     (frameTraitsToExpression config componentNameForChildren node)
     in
     frame
-        |> withVisibility componentName config.propertyExpressions node.isLayerTrait.componentPropertyReferences
+        |> withVisibilityHtml componentName config.propertyExpressions node.isLayerTrait.componentPropertyReferences
 
 
 cssDimensionsIfAbsolute : FrameTraits -> List Elm.Expression
@@ -250,7 +250,7 @@ instanceNodeToExpressions config parentName node =
                             (withFrameTraitsNodeToExpression config name subNameId node.frameTraits)
                 )
         )
-            |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+            |> withVisibilityHtml parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
             |> List.singleton
 
 

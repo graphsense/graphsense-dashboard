@@ -10,7 +10,7 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Html.TypeStyle as TypeStyle
-import Generate.Util exposing (callStyles, getElementAttributes, getTextProperty, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, getTextProperty, withVisibilityHtml)
 import Types exposing (ColorMap, Config)
 
 
@@ -43,7 +43,7 @@ toExpressions config componentName node =
                         |> Elm.list
                     )
                 )
-            |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+            |> withVisibilityHtml componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> List.singleton
 
 
