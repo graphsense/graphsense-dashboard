@@ -140,9 +140,9 @@ view vc model =
                 else
                     "Export-dialog-button"
     in
-    Dialogs.dialogGenericWithAttributes
-        (Dialogs.dialogGenericAttributes
-            |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick model.closeMsg ]
+    Dialogs.dialogGenericDevWithAttributes
+        (Dialogs.dialogGenericDevAttributes
+            |> Rs.s_iconsCloseNoPadding [ Util.View.pointer, onClick model.closeMsg ]
         )
         { inputList =
             [ formatSelect
@@ -169,8 +169,11 @@ view vc model =
                 )
                     |> Button.primaryButton vc
             }
-        , root =
-            { header = Locale.string vc.locale "Export-dialog-title" |> Locale.titleCase vc.locale
+        , root = {}
+        , dialogHeader =
+            { showIconsFrame = False
+            , header = Locale.string vc.locale "Export-dialog-title" |> Locale.titleCase vc.locale
             , description = Locale.string vc.locale "Export-dialog-description"
+            , icon = Util.View.none
             }
         }
