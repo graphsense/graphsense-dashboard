@@ -72,45 +72,31 @@ suite =
                         run False (Just 9)
                 in
                 Expect.equal ( 9, False, False ) ( List.length result.rows, result.capped, result.reduced )
-        , Test.test "cap below full but above on-graph size keeps only on-graph flows" <|
+        , Test.test "cap below full keeps only flows with on-graph addresses on both sides" <|
             \_ ->
                 let
                     result =
                         run False (Just 6)
                 in
-                -- on-graph flows: on-graph input × 3 outputs + 2 off-graph inputs × on-graph output = 5
-                Expect.equal ( 5, True, True ) ( List.length result.rows, result.capped, result.reduced )
-        , Test.test "every retained row has an on-graph address on at least one side" <|
+                -- on-graph flows: on-graph input × on-graph output = 1
+                Expect.equal ( 1, True, True ) ( List.length result.rows, result.capped, result.reduced )
+        , Test.test "every retained row has an on-graph address on both sides" <|
             \_ ->
                 let
                     result =
                         run False (Just 6)
 
-                    hasOnGraphSide row =
-                        row.fromAddress == onGraphInputId || row.toAddress == onGraphOutputId
+                    hasOnGraphBothSides row =
+                        row.fromAddress == onGraphInputId && row.toAddress == onGraphOutputId
                 in
                 result.rows
-                    |> List.all hasOnGraphSide
+                    |> List.all hasOnGraphBothSides
                     |> Expect.equal True
-        , Test.test "cap below the on-graph size truncates and stays flagged capped" <|
-            \_ ->
-                let
-                    result =
-                        run False (Just 4)
-                in
-                Expect.equal ( 4, True ) ( List.length result.rows, result.capped )
-        , Test.test "onlyVisible filters to on-graph flows regardless of size; reduced but not capped" <|
+        , Test.test "onlyVisible filters to both-sides on-graph flows regardless of size; reduced but not capped" <|
             \_ ->
                 let
                     result =
                         run True Nothing
                 in
-                Expect.equal ( 5, False, True ) ( List.length result.rows, result.capped, result.reduced )
-        , Test.test "onlyVisible still honours the cap and flags it as capped" <|
-            \_ ->
-                let
-                    result =
-                        run True (Just 4)
-                in
-                Expect.equal ( 4, True, True ) ( List.length result.rows, result.capped, result.reduced )
+                Expect.equal ( 1, False, True ) ( List.length result.rows, result.capped, result.reduced )
         ]

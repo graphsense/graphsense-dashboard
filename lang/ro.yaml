@@ -574,5 +574,6 @@ tooltip-opens-pubkey-related-addresses-table: Adrese în alte criptomonede legat
 csv-export-capped-title: Export CSV limitat
 csv-export-capped-message: "{0} tranzacție(i) mari au fost reduse în exportul CSV pentru a menține dimensiunea fișierului gestionabilă; pentru acestea sunt incluse doar fluxurile cu o adresă în grafic."
 export-dialog-only-visible-inoutputs: "exportă doar intrările/ieșirile vizibile"
+export-dialog-only-visible-inoutputs-help: "Când este activat, CSV-ul conține doar fluxurile dintre intrările și ieșirile vizibile în graf. Dezactivează pentru a exporta întreaga matrice de intrări/ieșiri — pentru tranzacții cu multe intrări și ieșiri aceasta poate genera un fișier foarte mare."
 csv-note-capped: "Tranzacție prea mare – au fost exportate doar fluxurile cu o adresă vizibilă, trunchiate la limita de export."
 csv-note-visible-only: "Au fost exportate doar fluxurile cu o adresă vizibilă."

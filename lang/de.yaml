@@ -586,5 +586,6 @@ tooltip-opens-pubkey-related-addresses-table: Adressen in anderen Crytpo-Währun
 csv-export-capped-title: CSV-Export gekürzt
 csv-export-capped-message: "{0} große Transaktion(en) wurden im CSV-Export gekürzt, um die Dateigröße überschaubar zu halten; für sie sind nur Flüsse mit einer Adresse im Graphen enthalten."
 export-dialog-only-visible-inoutputs: "nur sichtbare Ein-/Ausgänge exportieren"
+export-dialog-only-visible-inoutputs-help: "Wenn aktiviert, enthält die CSV nur Flüsse zwischen Ein- und Ausgängen, die im Graphen sichtbar sind. Deaktivieren, um die vollständige Ein-/Ausgangs-Matrix zu exportieren — bei Transaktionen mit vielen Ein- und Ausgängen kann dies eine sehr große Datei erzeugen."
 csv-note-capped: "Transaktion zu groß – nur Flüsse mit einer sichtbaren Adresse wurden exportiert, auf das Exportlimit gekürzt."
 csv-note-visible-only: "Nur Flüsse mit einer sichtbaren Adresse wurden exportiert."

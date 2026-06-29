@@ -530,8 +530,8 @@ outputs this explodes (e.g. 350×350 ≈ 120k rows for a single tx).
 `options` controls the reduction:
 
   - `onlyVisibleIos`: when `True`, only flows that have an on-graph (visible)
-    address on at least one side are emitted, regardless of size. This is a
-    user-requested filter, not a forced cap.
+    address on _both_ sides are emitted, regardless of size, and the per-input
+    fee rows are dropped. This is a user-requested filter, not a forced cap.
   - `rowCap`: `Just maxRows` bounds the number of rows. When the output would
     exceed it, the result falls back to the on-graph-only flows and, if that is
     still too many, is truncated to `maxRows`.
@@ -660,19 +660,19 @@ utxoTxToAccountTxs options locale utxoTx =
         onGraph ( _, io ) =
             io.address /= Nothing
 
-        -- Flows with an on-graph address on at least one side: on-graph inputs
-        -- paired with all outputs, plus off-graph inputs paired only with
-        -- on-graph outputs (partitioned by input, so no pair is emitted twice).
+        -- Flows with an on-graph (visible) address on *both* sides: on-graph
+        -- inputs paired only with on-graph outputs. The per-input fee row is
+        -- dropped here, since the fee is not a flow between two graph
+        -- addresses.
         buildOnGraphOnly () =
             let
-                ( onGraphInputs, offGraphInputs ) =
-                    List.partition onGraph allInputs
+                onGraphInputs =
+                    List.filter onGraph allInputs
 
                 onGraphOutputs =
                     List.filter onGraph allOutputs
             in
-            (onGraphInputs |> List.concatMap (rowsForInput True allOutputs))
-                ++ (offGraphInputs |> List.concatMap (rowsForInput False onGraphOutputs))
+            onGraphInputs |> List.concatMap (rowsForInput False onGraphOutputs)
 
         reducedFull rows =
             List.length rows < fullRowCount
