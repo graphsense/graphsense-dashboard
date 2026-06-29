@@ -10,7 +10,7 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
-import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset)
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), autoLinkContractAddresses, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -1057,12 +1057,26 @@ updateByMsg plugins uc msg model =
                                     Dict.get (AggEdge.initId id addressId) newModel2.network.aggEdges
                                         |> Maybe.map .txs
                                         |> Maybe.withDefault Set.empty
+
+                                -- Skip auto-linking when either endpoint is a smart
+                                -- contract: contract calls add noise to traces.
+                                -- Override with Config.Pathfinder.autoLinkContractAddresses.
+                                isContractInvolved =
+                                    (nbrData.isContract == Just True)
+                                        || (aData
+                                                |> Maybe.andThen .isContract
+                                                |> Maybe.withDefault False
+                                           )
+
+                                autoLink =
+                                    autoLinkInTraceMode
+                                        && (autoLinkContractAddresses || not isContractInvolved)
                             in
                             if model.config.tracingMode == TransactionTracingMode && Set.isEmpty txs then
                                 getNextTxEffects newModel2.network
                                     addressId
                                     (Direction.flip dir)
-                                    { addBetweenLinks = autoLinkInTraceMode && loadBetweenLinks, addAnyLinks = autoLinkInTraceMode }
+                                    { addBetweenLinks = autoLink && loadBetweenLinks, addAnyLinks = autoLink }
                                     (Just id)
 
                             else
