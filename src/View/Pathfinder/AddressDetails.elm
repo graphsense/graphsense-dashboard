@@ -1347,7 +1347,10 @@ labelOfActor vc model id =
 
                     tooltipAttributes =
                         Util.TooltipType.ActorDetails aid
-                            |> Tooltip.attributes domId (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
+                            |> Tooltip.attributes domId
+                                (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg
+                                    |> Tooltip.withKeepOpenOnHover
+                                )
                 in
                 Html.div
                     [ HA.css
