@@ -79,6 +79,13 @@ view vc model =
                         , size = Controls.Small
                         , msg = UserClickedTransparentBackground
                         }
+                    , Controls.checkboxWithLabel
+                        { label = Locale.string vc.locale "Export-dialog-only-visible-inoutputs"
+                        , checked = model.onlyVisibleIos
+                        , disabled = model.fileFormat /= ExportFormatCSV
+                        , size = Controls.Small
+                        , msg = UserClickedOnlyVisibleInOutputs
+                        }
                     ]
                 }
                 { root = { title = Locale.string vc.locale "Export-dialog-display-title" |> Locale.titleCase vc.locale }

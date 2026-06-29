@@ -113,6 +113,7 @@ type alias ExportConfig msg =
     , time : Time.Posix
     , exporting : Bool
     , transparentBackground : Bool
+    , onlyVisibleIos : Bool
     }
 
 
@@ -220,5 +221,6 @@ initExportConfig uc { selection, filenameBase, closeMsg, time } =
     , time = time
     , exporting = False
     , transparentBackground = False
+    , onlyVisibleIos = False
     , hasSelections = selection /= NoSelection
     }

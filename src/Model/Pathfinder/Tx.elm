@@ -521,8 +521,29 @@ isZeroValueTx tx =
             False
 
 
-utxoTxToAccountTxs : Maybe Locale.Model -> UtxoTx -> List Api.Data.TxAccount
-utxoTxToAccountTxs locale utxoTx =
+{-| Convert a UTXO transaction into per-flow account-style rows.
+
+By default every input is paired with every output (plus a fee row per input),
+i.e. the full N×M cartesian product. For transactions with many inputs and
+outputs this explodes (e.g. 350×350 ≈ 120k rows for a single tx).
+
+`options` controls the reduction:
+
+  - `onlyVisibleIos`: when `True`, only flows that have an on-graph (visible)
+    address on at least one side are emitted, regardless of size. This is a
+    user-requested filter, not a forced cap.
+  - `rowCap`: `Just maxRows` bounds the number of rows. When the output would
+    exceed it, the result falls back to the on-graph-only flows and, if that is
+    still too many, is truncated to `maxRows`.
+
+The result reports two flags: `capped` is `True` when the **forced** row cap
+truncated the output (this is the surprising case worth surfacing to the user),
+and `reduced` is `True` whenever fewer rows than the full product were emitted
+(forced cap and/or the visible-only filter) — used to annotate the CSV.
+
+-}
+utxoTxToAccountTxs : { onlyVisibleIos : Bool, rowCap : Maybe Int } -> Maybe Locale.Model -> UtxoTx -> { rows : List Api.Data.TxAccount, capped : Bool, reduced : Bool }
+utxoTxToAccountTxs options locale utxoTx =
     let
         raw =
             utxoTx.raw
@@ -545,65 +566,143 @@ utxoTxToAccountTxs locale utxoTx =
 
         fee =
             Data.subValues sumInputs sumOutputs
+
+        hasFeeRow =
+            case locale of
+                Just _ ->
+                    fee.value /= 0
+
+                Nothing ->
+                    False
+
+        -- Rows for a single input paired with the given outputs. `includeFee`
+        -- adds the per-input fee row (only meaningful when the input side is
+        -- itself part of the export, i.e. on-graph or unfiltered).
+        rowsForInput includeFee outs ( inputId, inputIo ) =
+            let
+                inputPortion =
+                    if sumInputs.value > 0 then
+                        toFloat inputIo.values.value / toFloat sumInputs.value
+
+                    else
+                        0
+
+                outputRows =
+                    outs
+                        |> List.map
+                            (\( outputId, outputIo ) ->
+                                { contractCreation = Nothing
+                                , currency = raw.currency
+                                , fromAddress = Id.id inputId
+                                , height = raw.height
+                                , identifier = ""
+                                , isExternal = Nothing
+                                , network = raw.currency
+                                , timestamp = raw.timestamp
+                                , toAddress = Id.id outputId
+                                , tokenTxId = Nothing
+                                , txHash = raw.txHash
+                                , txType = "utxo"
+                                , value = Data.mulValues inputPortion outputIo.values
+                                , fee = Nothing
+                                }
+                            )
+
+                feeRows =
+                    case locale of
+                        Just loc ->
+                            if includeFee && hasFeeRow then
+                                [ { contractCreation = Nothing
+                                  , currency = raw.currency
+                                  , fromAddress = Id.id inputId
+                                  , height = raw.height
+                                  , identifier = ""
+                                  , isExternal = Nothing
+                                  , network = raw.currency
+                                  , timestamp = raw.timestamp
+                                  , toAddress = Locale.string loc "fee"
+                                  , tokenTxId = Nothing
+                                  , txHash = raw.txHash
+                                  , txType = "utxo"
+                                  , value = Data.mulValues inputPortion (Data.negateValues fee)
+                                  , fee = Nothing
+                                  }
+                                ]
+
+                            else
+                                []
+
+                        Nothing ->
+                            []
+            in
+            outputRows ++ feeRows
+
+        allInputs =
+            Dict.toList inputs
+
+        allOutputs =
+            Dict.toList outputs
+
+        -- Number of rows the full cartesian product would produce, computed
+        -- arithmetically so we never materialize the explosion just to size it.
+        fullRowCount =
+            (List.length allInputs * List.length allOutputs)
+                + (if hasFeeRow then
+                    List.length allInputs
+
+                   else
+                    0
+                  )
+
+        buildFull () =
+            allInputs |> List.concatMap (rowsForInput True allOutputs)
+
+        onGraph ( _, io ) =
+            io.address /= Nothing
+
+        -- Flows with an on-graph address on at least one side: on-graph inputs
+        -- paired with all outputs, plus off-graph inputs paired only with
+        -- on-graph outputs (partitioned by input, so no pair is emitted twice).
+        buildOnGraphOnly () =
+            let
+                ( onGraphInputs, offGraphInputs ) =
+                    List.partition onGraph allInputs
+
+                onGraphOutputs =
+                    List.filter onGraph allOutputs
+            in
+            (onGraphInputs |> List.concatMap (rowsForInput True allOutputs))
+                ++ (offGraphInputs |> List.concatMap (rowsForInput False onGraphOutputs))
+
+        reducedFull rows =
+            List.length rows < fullRowCount
     in
-    Dict.toList inputs
-        |> List.concatMap
-            (\( inputId, inputIo ) ->
+    case options.rowCap of
+        Just maxRows ->
+            if options.onlyVisibleIos then
                 let
-                    inputPortion =
-                        if sumInputs.value > 0 then
-                            toFloat inputIo.values.value / toFloat sumInputs.value
-
-                        else
-                            0
-
-                    outputRows =
-                        Dict.toList outputs
-                            |> List.map
-                                (\( outputId, outputIo ) ->
-                                    { contractCreation = Nothing
-                                    , currency = raw.currency
-                                    , fromAddress = Id.id inputId
-                                    , height = raw.height
-                                    , identifier = ""
-                                    , isExternal = Nothing
-                                    , network = raw.currency
-                                    , timestamp = raw.timestamp
-                                    , toAddress = Id.id outputId
-                                    , tokenTxId = Nothing
-                                    , txHash = raw.txHash
-                                    , txType = "utxo"
-                                    , value = Data.mulValues inputPortion outputIo.values
-                                    , fee = Nothing
-                                    }
-                                )
-
-                    feeRows =
-                        locale
-                            |> Maybe.map
-                                (\loc ->
-                                    if fee.value /= 0 then
-                                        [ { contractCreation = Nothing
-                                          , currency = raw.currency
-                                          , fromAddress = Id.id inputId
-                                          , height = raw.height
-                                          , identifier = ""
-                                          , isExternal = Nothing
-                                          , network = raw.currency
-                                          , timestamp = raw.timestamp
-                                          , toAddress = Locale.string loc "fee"
-                                          , tokenTxId = Nothing
-                                          , txHash = raw.txHash
-                                          , txType = "utxo"
-                                          , value = Data.mulValues inputPortion (Data.negateValues fee)
-                                          , fee = Nothing
-                                          }
-                                        ]
-
-                                    else
-                                        []
-                                )
-                            |> Maybe.withDefault []
+                    visible =
+                        buildOnGraphOnly ()
                 in
-                outputRows ++ feeRows
-            )
+                if List.length visible > maxRows then
+                    { rows = List.take maxRows visible, capped = True, reduced = True }
+
+                else
+                    { rows = visible, capped = False, reduced = reducedFull visible }
+
+            else if fullRowCount > maxRows then
+                { rows = buildOnGraphOnly () |> List.take maxRows, capped = True, reduced = True }
+
+            else
+                { rows = buildFull (), capped = False, reduced = False }
+
+        Nothing ->
+            if options.onlyVisibleIos then
+                let
+                    visible =
+                        buildOnGraphOnly ()
+                in
+                { rows = visible, capped = False, reduced = reducedFull visible }
+
+            else
+                { rows = buildFull (), capped = False, reduced = False }

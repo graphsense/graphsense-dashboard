@@ -15,3 +15,4 @@ type Msg
     | UserInputsFilename String
     | UserLeavesFilename
     | UserClickedTransparentBackground
+    | UserClickedOnlyVisibleInOutputs

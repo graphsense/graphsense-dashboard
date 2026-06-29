@@ -571,3 +571,8 @@ transaction-tracing-across-change: Urmărirea tranzacției prin rest
 hint-auto-trace-title: Urmărește automat fondurile
 hint-auto-trace-description: Urmăriți banii găsind automat următoarea tranzacție (la nivel UTXO dacă este acceptat de registru)
 tooltip-opens-pubkey-related-addresses-table: Adrese în alte criptomonede legate prin aceeași cheie publică. Faceți clic pentru a deschide tabelul corespunzător de mai jos.
+csv-export-capped-title: Export CSV limitat
+csv-export-capped-message: "{0} tranzacție(i) mari au fost reduse în exportul CSV pentru a menține dimensiunea fișierului gestionabilă; pentru acestea sunt incluse doar fluxurile cu o adresă în grafic."
+export-dialog-only-visible-inoutputs: "exportă doar intrările/ieșirile vizibile"
+csv-note-capped: "Tranzacție prea mare – au fost exportate doar fluxurile cu o adresă vizibilă, trunchiate la limita de export."
+csv-note-visible-only: "Au fost exportate doar fluxurile cu o adresă vizibilă."
