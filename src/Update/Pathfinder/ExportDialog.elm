@@ -32,6 +32,9 @@ update uc msg model =
         UserClickedTransparentBackground ->
             n { model | transparentBackground = not model.transparentBackground }
 
+        UserClickedOnlyVisibleInOutputs ->
+            n { model | onlyVisibleIos = not model.onlyVisibleIos }
+
         BrowserSentBBox _ ->
             -- handled in Update/Pathfinder.elm
             n model

@@ -566,3 +566,9 @@ transaction-tracing-across-change: Transaction tracing across change
 hint-auto-trace-title: Auto trace funds
 hint-auto-trace-description: Follow the money by automatically finding the next transaction (on UTXO-level if supported by ledger)
 tooltip-opens-pubkey-related-addresses-table: Addresses in other cryptocurrencies linked by the same public key. Click to open the corresponding table below.
+csv-export-capped-title: CSV export capped
+csv-export-capped-message: "{0} large transaction(s) were trimmed in the CSV export to keep the file size manageable; only flows with an address on the graph are included for them."
+export-dialog-only-visible-inoutputs: "only export visible inputs/outputs"
+export-dialog-only-visible-inoutputs-help: "When enabled, the CSV only contains flows between inputs and outputs that are visible on the graph. Disable to export the full input/output matrix — for transactions with many inputs and outputs this can produce a very large file."
+csv-note-capped: "Transaction too large — only flows touching a visible address were exported, truncated to the export size limit."
+csv-note-visible-only: "Only flows touching a visible address were exported."

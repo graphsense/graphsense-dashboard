@@ -113,6 +113,11 @@ type alias ExportConfig msg =
     , time : Time.Posix
     , exporting : Bool
     , transparentBackground : Bool
+
+    -- CSV export only: when True, only the inputs/outputs currently visible on
+    -- the graph are exported. Defaults to True to avoid exploding the CSV for
+    -- large transactions (see initExportConfig). Ignored for non-CSV formats.
+    , onlyVisibleIos : Bool
     }
 
 
@@ -220,5 +225,9 @@ initExportConfig uc { selection, filenameBase, closeMsg, time } =
     , time = time
     , exporting = False
     , transparentBackground = False
+
+    -- Default to exporting only visible inputs/outputs so large transactions
+    -- don't blow up the CSV.
+    , onlyVisibleIos = True
     , hasSelections = selection /= NoSelection
     }
