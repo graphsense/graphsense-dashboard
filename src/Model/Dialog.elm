@@ -221,6 +221,6 @@ initExportConfig uc { selection, filenameBase, closeMsg, time } =
     , time = time
     , exporting = False
     , transparentBackground = False
-    , onlyVisibleIos = False
+    , onlyVisibleIos = True
     , hasSelections = selection /= NoSelection
     }
