@@ -274,9 +274,32 @@ closeTooltip msg model =
             n model
 
         _ ->
-            Tooltip.close model.tooltip
-                |> mapFirst (flip s_tooltip model)
-                |> mapSecond (List.map TooltipEffect)
+            if isTableScrollMsg msg then
+                -- Virtual scrolling can detach a tooltip's trigger row before
+                -- its mouseleave fires, leaving the tooltip stuck open. Force a
+                -- real close when an in-table scroll happens.
+                handleTooltipMsg Tooltip.CloseTooltip model
+
+            else
+                Tooltip.close model.tooltip
+                    |> mapFirst (flip s_tooltip model)
+                    |> mapSecond (List.map TooltipEffect)
+
+
+isTableScrollMsg : Msg -> Bool
+isTableScrollMsg msg =
+    case msg of
+        AddressDetailsMsg _ (AddressDetails.TransactionsTableSubTableMsg im) ->
+            InfiniteTable.isScrolling im
+
+        AddressDetailsMsg _ (AddressDetails.NeighborsTableSubTableMsg _ im) ->
+            InfiniteTable.isScrolling im
+
+        AddressDetailsMsg _ (AddressDetails.RelatedAddressesTableSubTableMsg im) ->
+            InfiniteTable.isScrolling im
+
+        _ ->
+            False
 
 
 syncUrl : Model -> ( Model, List Effect )

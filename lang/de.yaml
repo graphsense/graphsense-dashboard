@@ -341,6 +341,7 @@ popup-address-not-found-no-txs: Sie hat bis jetzt noch keine Transaktionen erhal
 popup-address-not-found-typos: Es gibt Tippfehler
 token-transactions-of: Token-Transaktionen von {0} ({1})
 actor: Akteur
+actor / Category: Akteur / Kategorie
 actors: Akteure
 Recent searches: Letzte Sucheingaben
 other Links: Links

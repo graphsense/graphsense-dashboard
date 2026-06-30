@@ -320,6 +320,7 @@ popup-addresses-not-found-no-txs: non esistono transazioni associate con questi 
 popup-address-not-found-typos: ci sono errori di battitura
 token-transactions-of: transazioni con token di {0} ({1})
 actor: attore
+actor / Category: Attore / Categoria
 actors: attori
 Recent searches: Ricerche recenti
 other Links: altri collegamenti

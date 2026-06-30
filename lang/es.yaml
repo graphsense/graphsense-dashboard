@@ -346,6 +346,7 @@ popup-address-not-found-no-txs: no hay transacciones asociadas a esta dirección
 popup-address-not-found-typos: hay errores tipográficos
 token-transactions-of: transacciones de tokens de {0} ({1})
 actor: Actor
+actor / Category: Actor / Categoría
 actors: Actores
 Recent searches: Búsquedas recientes
 other Links: Otros enlaces

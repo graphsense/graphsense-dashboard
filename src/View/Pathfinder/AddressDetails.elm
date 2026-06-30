@@ -312,6 +312,7 @@ neighborsDataTab vc model id viewState direction =
                             { anchorId = id
                             , isChecked = flip Network.hasAggEdge model.network
                             , hasTags = getHavingTags model
+                            , actorLabel = \aid -> Dict.get aid model.actors |> Maybe.map .label
                             , coinCode = assetFromBase <| Id.network viewState.address.id
                             , direction = direction
                             }
@@ -472,6 +473,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                             ratc =
                                                 { isChecked = flip Network.hasAddress model.network
                                                 , hasTags = getHavingTags model
+                                                , actorLabel = \aid -> Dict.get aid model.actors |> Maybe.map .label
                                                 , coinCode = assetFromBase <| Id.network viewState.address.id
                                                 }
                                         in

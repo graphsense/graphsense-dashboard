@@ -335,6 +335,7 @@ popup-address-not-found-no-txs: nu există tranzacții asociate acestei adrese �
 popup-address-not-found-typos: există greșeli de scriere
 token-transactions-of: tranzacții cu token-uri ale {0} ({1})
 actor: Actor
+actor / Category: Actor / Categorie
 actors: Actori
 Recent searches: Căutări recente
 other Links: Alte linkuri

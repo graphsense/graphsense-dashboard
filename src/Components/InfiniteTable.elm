@@ -14,6 +14,7 @@ module Components.InfiniteTable exposing
     , init
     , isEmpty
     , isLoading
+    , isScrolling
     , loadFirstPage
     , removeItem
     , reset
@@ -704,6 +705,23 @@ isLoading : Model data -> Bool
 isLoading =
     getTable
         >> .loading
+
+
+{-| True for messages emitted while the user is scrolling the table.
+Useful for closing transient UI (e.g. tooltips) whose trigger row may be
+detached by virtual scrolling before its mouseleave can fire.
+-}
+isScrolling : Msg -> Bool
+isScrolling msg =
+    case msg of
+        Scroll _ ->
+            True
+
+        Debounce _ ->
+            True
+
+        _ ->
+            False
 
 
 isEmpty : Model data -> Bool
