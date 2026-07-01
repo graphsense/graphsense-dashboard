@@ -43,8 +43,10 @@ width minW grow sizing r =
                 []
 
         LayoutSizingHorizontalFILL ->
-            [ Css.property "flex-grow" "1"
-            , Css.property "align-self" "stretch"
+            [ Css.property "align-self" "stretch"
+
+            --, Css.property "flex-grow" "1" -- does not work in all cases
+            , Css.width (Css.pct 100)
             ]
 
         _ ->
