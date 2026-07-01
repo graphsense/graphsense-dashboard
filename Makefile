@@ -55,6 +55,7 @@ compile: prepare gen
 	npm run compile
 
 compile-quiet:
+	@make prepare gen > /dev/null
 	@elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling" 
 
 check-plugin-folders:
@@ -224,7 +225,7 @@ elm.json: elm.json.base
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
 $(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
-	node $(GENERATE_JS) $(PLUGINS)
+	node $(GENERATE_JS) $(PLUGINS) || rm -f $(GENERATED_PLUGIN_ELM) && exit 1
 
 copy-public: 
 	cp -r $(PUBLIC_DIR) $(GENERATED_PUBLIC)
