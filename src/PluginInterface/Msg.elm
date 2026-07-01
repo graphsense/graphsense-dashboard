@@ -36,6 +36,8 @@ type OutMsg msg addressMsg entityMsg
     | UpdateEntitiesByRootAddress Address entityMsg
       -- push url to the browser history (updates the URL in the browser address bar)
     | PushUrl String
+      -- trigger a browser history step back
+    | Back Int
       -- retrieve entities for the given list of addresses
     | GetEntitiesForAddresses (List Address) (List ( Address, Api.Data.Cluster ) -> msg)
       -- retrieve entities for the given list of entities
@@ -124,6 +126,9 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         PushUrl u ->
             PushUrl u
+
+        Back steps ->
+            Back steps
 
         GetEntitiesForAddresses a b ->
             (b >> mapMsg)

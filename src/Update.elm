@@ -760,7 +760,7 @@ update plugins uc msg model =
                 |> updateByPluginOutMsg plugins uc outMsg
 
         UserClickedNavBack ->
-            ( model, NavBackEffect |> List.singleton )
+            ( model, NavBackEffect 1 |> List.singleton )
 
         UserClickedNavHome ->
             ( model, NavPushUrlEffect "/" |> List.singleton )
@@ -2340,6 +2340,13 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                         ( model
                         , url
                             |> NavPushUrlEffect
+                            |> List.singleton
+                            |> (++) eff
+                        )
+
+                    PluginInterface.Back steps ->
+                        ( model
+                        , NavBackEffect steps
                             |> List.singleton
                             |> (++) eff
                         )
