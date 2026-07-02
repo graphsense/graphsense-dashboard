@@ -1,8 +1,8 @@
-module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, lightModeToggle, radio, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
+module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, checkboxWithLabelAndTitle, lightModeToggle, radio, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html, div)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled.Attributes exposing (css, title)
 import Html.Styled.Events exposing (onClick)
 import RecordSetter as Rs
 import Theme.Html.SelectionControls as Sc
@@ -25,8 +25,31 @@ type Size
 
 
 checkboxWithLabel : { label : String, checked : Bool, disabled : Bool, msg : msg, size : Size } -> Html msg
-checkboxWithLabel { label, checked, disabled, size, msg } =
-    Sc.checkboxWithLabel
+checkboxWithLabel config =
+    checkboxWithLabelWithAttributes [] config
+
+
+{-| Like `checkboxWithLabel`, but attaches an HTML `title` tooltip (a longer
+description of what the option does) to the whole control.
+-}
+checkboxWithLabelAndTitle : { label : String, title : String, checked : Bool, disabled : Bool, msg : msg, size : Size } -> Html msg
+checkboxWithLabelAndTitle config =
+    checkboxWithLabelWithAttributes
+        [ title config.title ]
+        { label = config.label
+        , checked = config.checked
+        , disabled = config.disabled
+        , msg = config.msg
+        , size = config.size
+        }
+
+
+checkboxWithLabelWithAttributes : List (Html.Styled.Attribute msg) -> { label : String, checked : Bool, disabled : Bool, msg : msg, size : Size } -> Html msg
+checkboxWithLabelWithAttributes rootAttributes { label, checked, disabled, size, msg } =
+    Sc.checkboxWithLabelWithAttributes
+        { root = rootAttributes
+        , label = []
+        }
         { root = { label = label }
         , checkboxes =
             { variant =
