@@ -23,6 +23,7 @@ module Components.InfiniteTable exposing
     , setData
     , sortBy
     , update
+    , updateItem
     , updateTable
     , view
     )
@@ -40,7 +41,7 @@ import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
 import Maybe.Extra
-import RecordSetter exposing (s_asc, s_caption, s_data, s_desc, s_loading, s_rowAttrs, s_state, s_table, s_tfoot)
+import RecordSetter exposing (s_asc, s_caption, s_data, s_desc, s_filtered, s_loading, s_rowAttrs, s_state, s_table, s_tfoot)
 import Result.Extra
 import Table as T
 import Task
@@ -318,8 +319,59 @@ getTable (Model model) =
 
 removeItem : (d -> Bool) -> Model nextPage d -> Model nextPage d
 removeItem predicate (Model model) =
+    let
+        filterDict =
+            Tuple3.mapFirst (IntDict.filter (\_ value -> not (predicate value)))
+
+        updatedData =
+            Dict.map
+                (\_ colData ->
+                    { asc = filterDict colData.asc
+                    , desc = filterDict colData.desc
+                    }
+                )
+                model.data
+    in
     { model
         | table = Table.filterTable (predicate >> not) model.table
+        , data = updatedData
+    }
+        |> Model
+
+
+updateItem : (d -> Bool) -> (d -> d) -> Model nextPage d -> Model nextPage d
+updateItem predicate updateFunction (Model model) =
+    let
+        upd value =
+            if predicate value then
+                updateFunction value
+
+            else
+                value
+
+        mapDict =
+            Tuple3.mapFirst
+                (IntDict.map
+                    (\_ value ->
+                        upd value
+                    )
+                )
+
+        updatedData =
+            Dict.map
+                (\_ colData ->
+                    { asc = mapDict colData.asc
+                    , desc = mapDict colData.desc
+                    }
+                )
+                model.data
+    in
+    { model
+        | table =
+            model.table.filtered
+                |> List.map upd
+                |> flip s_filtered model.table
+        , data = updatedData
     }
         |> Model
 
