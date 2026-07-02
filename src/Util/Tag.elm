@@ -38,6 +38,7 @@ actorItem vc id tag actorId label =
             (SidePanelComponents.sidePanelEthAddressActor_details.styles
                 ++ [ Css.cursor Css.default
                    , Css.property "gap" "2px"
+                   , Css.justifyContent Css.center
                    ]
             )
             :: (if String.length label > maxLblLength then
