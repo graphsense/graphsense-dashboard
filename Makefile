@@ -225,7 +225,7 @@ elm.json: elm.json.base
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
 $(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
-	node $(GENERATE_JS) $(PLUGINS) || rm -f $(GENERATED_PLUGIN_ELM) && exit 1
+	node $(GENERATE_JS) $(PLUGINS) 
 
 copy-public: 
 	cp -r $(PUBLIC_DIR) $(GENERATED_PUBLIC)
