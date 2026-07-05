@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addValues, addressCluster, averageFiatValue, isAccountLike, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -29,6 +29,15 @@ averageFiatValue { fiatValues } =
         |> List.sum
     )
         / (toFloat <| List.length fiatValues)
+
+
+{-| The cluster an address belongs to. Prefers the fresh (incrementally
+maintained) cluster id served by REST instances with fresh clustering
+enabled; falls back to the legacy transform's cluster id otherwise.
+-}
+addressCluster : Api.Data.Address -> Int
+addressCluster address =
+    address.freshClusterId |> Maybe.withDefault address.cluster
 
 
 isAccountLike : String -> Bool

@@ -76,6 +76,7 @@ import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import Util exposing (n)
+import Util.Data
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale exposing (makeTimestampFilename)
@@ -1380,7 +1381,7 @@ update plugins uc msg model =
                     pathfinder.network.addresses
                         |> Dict.get id
                         |> Maybe.andThen (.data >> RD.toMaybe)
-                        |> Maybe.map (\addr -> Id.initClusterId addr.currency addr.cluster)
+                        |> Maybe.map (\addr -> Id.initClusterId addr.currency (Util.Data.addressCluster addr))
                         |> Maybe.andThen (\cid -> Dict.get cid pathfinder.clusters)
                         |> Maybe.andThen RD.toMaybe
                         |> Maybe.map .noAddresses
@@ -3120,7 +3121,7 @@ fetchClusterTagsEffect id pathfinderModel =
             (\addr ->
                 Effect.Api.GetEntityAddressTagsEffect
                     { currency = PathfinderId.network id
-                    , entity = addr.cluster
+                    , entity = Util.Data.addressCluster addr
                     , pagesize = TagsTable.pagesize
                     , nextpage = Nothing
                     }
@@ -3171,7 +3172,7 @@ clusterTagsInfiniteTableConfig id pathfinderModel =
             pathfinderModel.network.addresses
                 |> Dict.get id
                 |> Maybe.andThen (.data >> RD.toMaybe)
-                |> Maybe.map .cluster
+                |> Maybe.map Util.Data.addressCluster
                 |> Maybe.withDefault 0
     in
     { fetch =

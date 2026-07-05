@@ -970,7 +970,7 @@ updateByMsg plugins uc msg model =
                     (\n -> Util.Graph.filterTxValue model.config n.address.currency n.value n.tokenValues)
                 |> List.foldl
                     (\neighbor acc ->
-                        Dict.update ( neighbor.address.currency, neighbor.address.cluster )
+                        Dict.update ( neighbor.address.currency, Data.addressCluster neighbor.address )
                             (Maybe.map ((::) neighbor)
                                 >> Maybe.withDefault [ neighbor ]
                                 >> Just
@@ -1441,7 +1441,7 @@ updateByMsg plugins uc msg model =
                                                     Id.layer addressId
                                                         |> layerDelta isOutgoing
                                                 , id =
-                                                    neighbor.address.cluster
+                                                    Data.addressCluster neighbor.address
                                                 }
 
                                         added =
@@ -1463,7 +1463,7 @@ updateByMsg plugins uc msg model =
                                                     , neighbors = [ neighbor ]
                                                     }
                                                     |> GetEntityEffect
-                                                        { entity = neighbor.address.cluster
+                                                        { entity = Data.addressCluster neighbor.address
                                                         , currency = Id.currency addressId
                                                         }
                                                     |> ApiEffect

@@ -1539,7 +1539,7 @@ showAddressTags id data model =
                         |> Maybe.map
                             (Tag.userTagToApiTag
                                 { address = a.address.address
-                                , cluster = a.address.cluster
+                                , cluster = Data.addressCluster a.address
                                 , currency = a.address.currency
                                 }
                                 False

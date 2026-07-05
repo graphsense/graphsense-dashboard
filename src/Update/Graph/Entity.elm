@@ -28,6 +28,7 @@ import Plugin.Update exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Update.Graph.Address as Address
+import Util.Data
 
 
 type alias Acc =
@@ -41,7 +42,7 @@ addAddress : Plugins -> Update.Config -> Int -> Api.Data.Address -> Acc -> Acc
 addAddress plugins uc layerId address acc =
     let
         entityId =
-            Id.initEntityId { layer = layerId, currency = address.currency, id = address.cluster }
+            Id.initEntityId { layer = layerId, currency = address.currency, id = Util.Data.addressCluster address }
     in
     Dict.get entityId acc.entities
         |> Maybe.andThen (addAddressToEntity plugins uc address)

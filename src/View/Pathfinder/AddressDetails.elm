@@ -137,7 +137,7 @@ utxo plugins pluginStates vc model id viewState address =
             viewState.address.data
                 |> RemoteData.toMaybe
                 |> Maybe.map
-                    (\data -> Id.initClusterId data.currency data.cluster)
+                    (\data -> Id.initClusterId data.currency (Data.addressCluster data))
                 |> Maybe.andThen (flip Dict.get model.clusters)
 
         relatedAddressesTab =

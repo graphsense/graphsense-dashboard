@@ -3697,7 +3697,7 @@ browserGotAddressData uc plugins providedId position data model =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
         clusterId =
-            Id.initClusterId data.currency data.cluster
+            Id.initClusterId data.currency (Data.addressCluster data)
 
         isSecondAddressFromSameCluster =
             Network.isClusterFriendAlreadyOnGraph clusterId
@@ -3729,7 +3729,7 @@ browserGotAddressData uc plugins providedId position data model =
                 , [ BrowserGotClusterData id
                         |> Api.GetEntityEffectWithDetails
                             { currency = Id.network id
-                            , entity = data.cluster
+                            , entity = Data.addressCluster data
                             , includeActors = False
                             , includeBestTag = False
                             }
@@ -5129,7 +5129,7 @@ addTagSummaryToModel includesBestClusterTag id data m =
                             |> Dict.get id
                             |> Maybe.andThen (.data >> RemoteData.toMaybe)
                             |> Maybe.map
-                                (.cluster
+                                (Data.addressCluster
                                     >> (\entityId ->
                                             Api.GetEntityAddressTagsEffect
                                                 { currency = Id.network id
