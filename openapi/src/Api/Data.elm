@@ -237,6 +237,7 @@ type alias Address =
     , balance : Values
     , currency : String
     , cluster : Int
+    , freshClusterId : Maybe Int
     , firstTx : TxSummary
     , inDegree : Int
     , isContract : Maybe Bool
@@ -949,6 +950,7 @@ encodeAddressPairs model =
             , encode "balance" encodeValues model.balance
             , encode "currency" Json.Encode.string model.currency
             , encode "cluster" Json.Encode.int model.cluster
+            , maybeEncode "fresh_cluster_id" Json.Encode.int model.freshClusterId
             , encode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
             , maybeEncode "is_contract" Json.Encode.bool model.isContract
@@ -2671,6 +2673,7 @@ addressDecoder =
         |> decode "balance" valuesDecoder 
         |> decode "currency" Json.Decode.string
         |> decode "cluster" Json.Decode.int
+        |> maybeDecode "fresh_cluster_id" Json.Decode.int Nothing
         |> decode "first_tx" txSummaryDecoder
         |> decode "in_degree" Json.Decode.int
         |> maybeDecode "is_contract" Json.Decode.bool Nothing
