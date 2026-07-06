@@ -9,19 +9,17 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table.RelatedAddressesTable exposing (Model, filter, getTable, setTable)
 import Msg.Pathfinder as Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
-import RecordSetter as Rs exposing (s_force, s_table)
+import RecordSetter as Rs exposing (s_table)
 import Set
 import Tuple exposing (mapFirst, mapSecond)
 
 
 tableConfig : Model -> InfiniteTable.Config String Effect
 tableConfig rm =
-    { fetch = loadData rm
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = effectToTracker
-    , abort = Api.CancelEffect >> ApiEffect
-    }
+    InfiniteTable.config
+        |> InfiniteTable.withFetch (loadData rm)
+        |> InfiniteTable.withAbort (Api.CancelEffect >> ApiEffect) effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
 
 
 pagesize : Int
@@ -46,7 +44,7 @@ gotoFirstPage config model =
         force =
             model.allTaggedAddressesFetched
     in
-    InfiniteTable.gotoFirstPage { config | force = force } model.table
+    InfiniteTable.gotoFirstPage (InfiniteTable.setForce force config) model.table
         |> mapFirst (flip s_table model)
 
 
@@ -123,7 +121,7 @@ appendAddresses mapCmd nextpage force addresses ra =
     let
         ( table, cmd, eff ) =
             InfiniteTable.appendData
-                (tableConfig ra |> s_force force)
+                (tableConfig ra |> InfiniteTable.setForce force)
                 (filter ra)
                 nextpage
                 addresses

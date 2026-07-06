@@ -6,6 +6,7 @@ module Components.InfiniteTable exposing
     , TableConfig
     , abort
     , appendData
+    , config
     , getCurrentData
     , getPage
     , getPageSize
@@ -22,11 +23,15 @@ module Components.InfiniteTable exposing
     , resetCurrent
     , setCountable
     , setData
+    , setForce
+    , setTriggerOffset
     , sortBy
     , update
     , updateItem
     , updateTable
     , view
+    , withAbort
+    , withFetch
     )
 
 import Basics.Extra exposing (flip, uncurry)
@@ -41,7 +46,6 @@ import Html.Styled.Events exposing (on, stopPropagationOn)
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
-import Maybe.Extra
 import RecordSetter exposing (s_asc, s_caption, s_data, s_desc, s_filtered, s_loading, s_rowAttrs, s_state, s_table, s_tfoot)
 import Result.Extra
 import Table as T
@@ -90,13 +94,63 @@ type alias ModelInternal nextPage d =
     }
 
 
-type alias Config nextPage eff =
-    { fetch : Fetch nextPage eff
-    , force : Bool
-    , effectToTracker : eff -> Maybe String
-    , abort : String -> eff
-    , triggerOffset : Float
-    }
+type Config nextPage eff
+    = Config
+        { fetch : Maybe (Fetch nextPage eff)
+        , force : Bool
+        , effectToTracker : Maybe (eff -> Maybe String)
+        , abort : Maybe (String -> eff)
+        , triggerOffset : Float
+        }
+
+
+{-| Create a default Config for the InfiniteTable.
+-}
+config : Config nextPage eff
+config =
+    Config
+        { fetch = Nothing
+        , force = False
+        , effectToTracker = Nothing
+        , abort = Nothing
+        , triggerOffset = 100
+        }
+
+
+{-| Set the fetch function in a Config.
+-}
+withFetch : Fetch nextPage eff -> Config nextPage eff -> Config nextPage eff
+withFetch fetch (Config cfg) =
+    Config { cfg | fetch = Just fetch }
+
+
+{-| Set the force flag in a Config.
+-}
+setForce : Bool -> Config nextPage eff -> Config nextPage eff
+setForce force (Config cfg) =
+    Config { cfg | force = force }
+
+
+{-| Set the abort and effectToTracker functions in a Config.
+
+@param abortFn Function to abort a running fetch
+@param effectToTracker Function to convert an effect to a tracker string
+
+-}
+withAbort : (String -> eff) -> (eff -> Maybe String) -> Config nextPage eff -> Config nextPage eff
+withAbort abortFn effectToTracker (Config cfg) =
+    Config
+        { cfg
+            | abort = Just abortFn
+            , effectToTracker = Just effectToTracker
+        }
+
+
+{-| Set the triggerOffset in a Config.
+-}
+setTriggerOffset : Float -> Config nextPage eff -> Config nextPage eff
+setTriggerOffset triggerOffset (Config cfg) =
+    Config { cfg | triggerOffset = triggerOffset }
 
 
 type alias TableConfig data msg =
@@ -158,17 +212,17 @@ setCountable bool (Model m) =
 
 
 setData : Config nextPage eff -> Table.Filter d -> Maybe nextPage -> List d -> Model nextPage d -> ( Model nextPage d, Cmd Msg, List eff )
-setData config filt nextpage data model =
+setData cfg filt nextpage data model =
     let
         ( m2, eff ) =
-            resetCurrent config model
+            resetCurrent cfg model
     in
-    appendData config filt nextpage data m2
+    appendData cfg filt nextpage data m2
         |> mapThird ((++) eff)
 
 
 appendData : Config nextPage eff -> Table.Filter d -> Maybe nextPage -> List d -> Model nextPage d -> ( Model nextPage d, Cmd Msg, List eff )
-appendData config filt nextpage data (Model model) =
+appendData cfg filt nextpage data (Model model) =
     let
         dict =
             getIntDict model
@@ -198,14 +252,14 @@ appendData config filt nextpage data (Model model) =
         , iterations = model.iterations + 1
     }
         |> setIntDict nextpageNew True newDict
-        |> loadMore config
+        |> loadMore cfg
         |> getRowHeight
 
 
 {-| Resets both sorting's tables
 -}
 reset : Config nextPage eff -> Model nextPage d -> ( Model nextPage d, List eff )
-reset config (Model model) =
+reset cfg (Model model) =
     let
         ( col, _ ) =
             T.getSortState model.table.state
@@ -216,13 +270,13 @@ reset config (Model model) =
             , scrollTop = 0
             , data = Dict.insert col initData model.data
         }
-        |> abort config
+        |> abort cfg
 
 
 {-| Resets only the current's sorting table
 -}
 resetCurrent : Config nextPage eff -> Model nextPage d -> ( Model nextPage d, List eff )
-resetCurrent config (Model model) =
+resetCurrent cfg (Model model) =
     { model
         | iterations = 1
         , scrollTop = 0
@@ -230,7 +284,7 @@ resetCurrent config (Model model) =
     }
         |> setIntDict Nothing False IntDict.empty
         |> Model
-        |> abort config
+        |> abort cfg
 
 
 initData : { asc : ( IntDict d, Maybe nextPage, Bool ), desc : ( IntDict d, Maybe nextPage, Bool ) }
@@ -274,13 +328,13 @@ getRowHeight ( Model model, listEff ) =
 
 
 loadMore : Config nextPage eff -> ModelInternal nextPage d -> ( Model nextPage d, List eff )
-loadMore config model =
+loadMore (Config cfg) model =
     let
         ( len, np, loaded ) =
             getIntDict model
                 |> Tuple3.mapFirst IntDict.size
     in
-    if not config.force && loaded && np == Nothing then
+    if not cfg.force && loaded && np == Nothing then
         ( Model model, [] )
 
     else
@@ -289,28 +343,33 @@ loadMore config model =
                 model.rowHeight * toFloat len
 
             needsMore =
-                shouldLoadMore config
+                shouldLoadMore (Config cfg)
                     model
                     { scrollTop = model.scrollTop
                     , containerHeight = model.containerHeight
                     , contentHeight = computedContentHeight
                     }
         in
-        if not config.force && not needsMore then
+        if not cfg.force && not needsMore then
             ( Model model, [] )
 
         else
-            let
-                eff =
-                    config.fetch (Just (T.getSortState model.table.state)) model.pagesize np
-            in
-            ( Model
-                { model
-                    | table = s_loading True model.table
-                    , tracker = config.effectToTracker eff
-                }
-            , [ eff ]
-            )
+            case cfg.fetch of
+                Just fetchFn ->
+                    let
+                        eff =
+                            fetchFn (Just (T.getSortState model.table.state)) model.pagesize np
+                    in
+                    ( Model
+                        { model
+                            | table = s_loading True model.table
+                            , tracker = Maybe.withDefault (\_ -> Nothing) cfg.effectToTracker eff
+                        }
+                    , [ eff ]
+                    )
+
+                _ ->
+                    ( Model model, [] )
 
 
 getTable : Model nextPage d -> Table d
@@ -378,12 +437,12 @@ updateItem predicate updateFunction (Model model) =
 
 
 update : Config nextPage eff -> Msg -> Model nextPage d -> ( Model nextPage d, Cmd Msg, List eff )
-update config msg (Model model) =
+update cfg msg (Model model) =
     case msg of
         Scroll pos ->
             Model { model | bounce = Bounce.push model.bounce }
                 -- don't debounce at all for now
-                |> update config (Debounce pos)
+                |> update cfg (Debounce pos)
 
         Debounce pos ->
             let
@@ -395,7 +454,7 @@ update config msg (Model model) =
 
                 ( nnewModel, eff ) =
                     if Bounce.steady bounce then
-                        scrollUpdate config pos newModel
+                        scrollUpdate cfg pos newModel
 
                     else
                         ( Model newModel, [] )
@@ -408,7 +467,7 @@ update config msg (Model model) =
 
             else
                 Model model
-                    |> abort config
+                    |> abort cfg
                     |> (\( m, eff ) ->
                             ( m
                             , Dom.setViewportOf model.tableId 0 0
@@ -449,7 +508,7 @@ update config msg (Model model) =
                                 s_state tm model.table
                                     |> flip s_table model
                                     |> Model
-                                    |> gotoFirstPage config
+                                    |> gotoFirstPage cfg
                         in
                         ( newModel, Cmd.none, eff )
                     )
@@ -457,7 +516,7 @@ update config msg (Model model) =
         ContainerLoaded ->
             let
                 ( m, eff ) =
-                    gotoFirstPage config (Model model)
+                    gotoFirstPage cfg (Model model)
             in
             ( m, Cmd.none, eff )
 
@@ -498,14 +557,14 @@ getNumVisibleItems model =
 
 
 loadFirstPage : Config nextPage eff -> Model nextPage d -> ( Model nextPage d, List eff )
-loadFirstPage config =
-    reset config
-        >> and (gotoFirstPage config)
+loadFirstPage cfg =
+    reset cfg
+        >> and (gotoFirstPage cfg)
 
 
 gotoFirstPage : Config nextPage eff -> Model nextPage d -> ( Model nextPage d, List eff )
-gotoFirstPage config (Model model) =
-    scrollUpdate config
+gotoFirstPage cfg (Model model) =
+    scrollUpdate cfg
         { scrollTop = 0
         , containerHeight = model.containerHeight
         , contentHeight = model.contentHeight
@@ -554,7 +613,7 @@ scroll, so `scrollTop` is 0 and the condition would trivially be true).
 
 -}
 shouldLoadMore : Config nextPage eff -> ModelInternal nextPage d -> ScrollPos -> Bool
-shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
+shouldLoadMore (Config cfg) model { scrollTop, contentHeight, containerHeight } =
     if model.table.loading then
         False
 
@@ -564,7 +623,7 @@ shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
                 contentHeight - containerHeight
 
             nearComputedBottom =
-                scrollTop >= (excessHeight - config.triggerOffset)
+                scrollTop >= (excessHeight - cfg.triggerOffset)
 
             nearActualBottom =
                 model.contentHeight
@@ -572,13 +631,13 @@ shouldLoadMore config model { scrollTop, contentHeight, containerHeight } =
                     && scrollTop
                     + containerHeight
                     >= model.contentHeight
-                    - config.triggerOffset
+                    - cfg.triggerOffset
         in
         nearComputedBottom || nearActualBottom
 
 
 scrollUpdate : Config nextPage eff -> ScrollPos -> ModelInternal nextPage d -> ( Model nextPage d, List eff )
-scrollUpdate config pos model =
+scrollUpdate (Config cfg) pos model =
     let
         newModel =
             { model
@@ -588,7 +647,7 @@ scrollUpdate config pos model =
                 , hackyFlag = not model.hackyFlag
             }
     in
-    loadMore config newModel
+    loadMore (Config cfg) newModel
 
 
 decodeScrollPos : Json.Decode.Decoder ScrollPos
@@ -655,7 +714,7 @@ view :
     -> List (Attribute msg)
     -> Model nextPage data
     -> Html msg
-view config attributes (Model model) =
+view tableConfig attributes (Model model) =
     let
         dict =
             getIntDict model
@@ -694,10 +753,10 @@ view config attributes (Model model) =
                 ldngHtml =
                     case dir of
                         Top ->
-                            config.loadingPlaceholderAbove
+                            tableConfig.loadingPlaceholderAbove
 
                         Bottom ->
-                            config.loadingPlaceholderBelow
+                            tableConfig.loadingPlaceholderBelow
             in
             if model.table.loading && model.direction == dir then
                 ldngHtml
@@ -725,16 +784,16 @@ view config attributes (Model model) =
 
         c =
             T.customConfig
-                { toId = config.toId
-                , toMsg = TableMsg >> config.tag
-                , columns = config.columns
+                { toId = tableConfig.toId
+                , toMsg = TableMsg >> tableConfig.tag
+                , columns = tableConfig.columns
                 , customizations =
-                    config.customizations
+                    tableConfig.customizations
                         |> s_caption (placeholder Top prefix)
                         |> s_tfoot (placeholder Bottom suffix)
                         |> s_rowAttrs
                             (\d ->
-                                config.customizations.rowAttrs d
+                                tableConfig.customizations.rowAttrs d
                                     ++ [ model.tableId ++ "_row" |> id ]
                             )
                 }
@@ -748,11 +807,11 @@ view config attributes (Model model) =
             ]
             :: id model.tableId
             :: attributes
-            ++ [ infiniteScroll config.tag ]
+            ++ [ infiniteScroll tableConfig.tag ]
         )
         [ iframe
             -- here to trigger a load event when the table is rendered the first time
-            [ Json.Decode.succeed (config.tag ContainerLoaded)
+            [ Json.Decode.succeed (tableConfig.tag ContainerLoaded)
                 |> on "load"
             , height 0
             ]
@@ -824,12 +883,16 @@ getIntDict model =
 
 
 abort : Config nextPage eff -> Model nextPage data -> ( Model nextPage data, List eff )
-abort conf (Model model) =
+abort (Config cfg) (Model model) =
     ( Model
         { model
             | tracker = Nothing
             , table = model.table |> s_loading False
         }
-    , Maybe.map conf.abort model.tracker
-        |> Maybe.Extra.toList
+    , case ( cfg.abort, model.tracker ) of
+        ( Just abortFn, Just tracker ) ->
+            [ abortFn tracker ]
+
+        _ ->
+            []
     )

@@ -32,27 +32,27 @@ transactionTableConfig m =
 
         settings =
             TransactionFilter.getSettings m.subTxsTableFilter
+
+        fetchFn =
+            \_ pagesize nextpage ->
+                (BrowserGotTxFlows nextpage >> Pathfinder.TxDetailsMsg)
+                    |> Api.ListTxFlowsEffect
+                        { currency = currency
+                        , txHash = baseTxHash
+                        , includeZeroValueSubTxs =
+                            settings
+                                |> TransactionFilter.getIncludeZeroValueTxs
+                                |> Maybe.withDefault False
+                        , pagesize = Just pagesize
+                        , token_currency = TransactionFilter.getSelectedAsset settings
+                        , nextpage = nextpage
+                        }
+                    |> ApiEffect
     in
-    { fetch =
-        \_ pagesize nextpage ->
-            (BrowserGotTxFlows nextpage >> Pathfinder.TxDetailsMsg)
-                |> Api.ListTxFlowsEffect
-                    { currency = currency
-                    , txHash = baseTxHash
-                    , includeZeroValueSubTxs =
-                        settings
-                            |> TransactionFilter.getIncludeZeroValueTxs
-                            |> Maybe.withDefault False
-                    , pagesize = Just pagesize
-                    , token_currency = TransactionFilter.getSelectedAsset settings
-                    , nextpage = nextpage
-                    }
-                |> ApiEffect
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = effectToTracker
-    , abort = Api.CancelEffect >> ApiEffect
-    }
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort (Api.CancelEffect >> ApiEffect) effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
 
 
 transactionTableFilter : Table.Filter Api.Data.TxAccount

@@ -53,26 +53,27 @@ import Workflow
 
 neighborsTableConfigWithMsg : (Direction -> Maybe String -> Api.Data.NeighborAddresses -> Msg) -> Id -> Direction -> InfiniteTable.Config String Effect
 neighborsTableConfigWithMsg msg addressId dir =
-    { fetch =
-        \_ pagesize nextpage ->
-            msg dir nextpage
-                >> Pathfinder.AddressDetailsMsg addressId
-                |> Api.GetAddressNeighborsEffect
-                    { currency = Id.network addressId
-                    , address = Id.id addressId
-                    , includeLabels = True
-                    , onlyIds = Nothing
-                    , isOutgoing = dir == Outgoing
-                    , pagesize = pagesize
-                    , nextpage = nextpage
-                    , includeActors = False
-                    }
-                |> ApiEffect
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = effectToTracker
-    , abort = Api.CancelEffect >> ApiEffect
-    }
+    let
+        fetchFn =
+            \_ pagesize nextpage ->
+                msg dir nextpage
+                    >> Pathfinder.AddressDetailsMsg addressId
+                    |> Api.GetAddressNeighborsEffect
+                        { currency = Id.network addressId
+                        , address = Id.id addressId
+                        , includeLabels = True
+                        , onlyIds = Nothing
+                        , isOutgoing = dir == Outgoing
+                        , pagesize = pagesize
+                        , nextpage = nextpage
+                        , includeActors = False
+                        }
+                    |> ApiEffect
+    in
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort (Api.CancelEffect >> ApiEffect) effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
 
 
 neighborsTableConfig : Id -> Direction -> InfiniteTable.Config String Effect
@@ -87,12 +88,10 @@ transactionTableConfig =
 
 transactionTableConfigWithMsg : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> InfiniteTable.Config String Effect
 transactionTableConfigWithMsg msg txs addressId =
-    { fetch = fetchTransactions msg txs addressId
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = effectToTracker
-    , abort = Api.CancelEffect >> ApiEffect
-    }
+    InfiniteTable.config
+        |> InfiniteTable.withFetch (fetchTransactions msg txs addressId)
+        |> InfiniteTable.withAbort (Api.CancelEffect >> ApiEffect) effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
 
 
 fetchTransactions : (Maybe String -> Api.Data.AddressTxs -> Msg) -> TransactionTable.Model -> Id -> Maybe ( String, Bool ) -> Int -> Maybe String -> Effect

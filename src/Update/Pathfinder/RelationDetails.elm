@@ -87,12 +87,10 @@ loadRelationTxs msg id isA2b txTable sorting nrItems nextpage =
 
 tableConfig : ( Id, Id ) -> Bool -> RelationTxsTable.Model -> InfiniteTable.Config String Effect
 tableConfig id isA2b txTable =
-    { fetch = loadRelationTxs BrowserGotLinks id isA2b txTable
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = effectToTracker
-    , abort = Api.CancelEffect >> ApiEffect
-    }
+    InfiniteTable.config
+        |> InfiniteTable.withFetch (loadRelationTxs BrowserGotLinks id isA2b txTable)
+        |> InfiniteTable.withAbort (Api.CancelEffect >> ApiEffect) effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
 
 
 gettersAndSetters :
