@@ -195,3 +195,5 @@ Current shortcuts (path: `/pathfinder` only):
 ## Patched Dependencies
 
 The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.
+
+Additionally, `vite.config.mjs` rewrites one line of the compiled Elm kernel at bundle time (`elmStepperGuardPlugin`): it guards `sendToApp` against re-entrancy during the initial synchronous render ("TypeError: stepper is not a function" on hard reloads when an iframe `load` or custom-element event dispatches into the app before `stepper` is assigned). The plugin warns at build time if the kernel pattern is no longer found (e.g. after an elm/core upgrade).

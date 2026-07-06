@@ -30,6 +30,41 @@ function replacePlaceholders(code) {
   })
 }
 
+// Elm's `_Platform_initialize` renders the first frame synchronously inside
+// `var stepper = stepperBuilder(sendToApp, model);`. If that first render
+// synchronously dispatches a DOM event back into the app (e.g. an iframe
+// firing `load` on append, or a custom element dispatching from its
+// `connectedCallback`), `sendToApp` runs before `stepper` is assigned and
+// crashes with "TypeError: stepper is not a function", aborting the render
+// mid-patch. This surfaced on hard reloads of the case-connect UI.
+// Rewriting the compiled bundle here (instead of patching elm/core in
+// ELM_HOME) survives package re-downloads and needs no artifacts.dat
+// cache-busting; the message is processed normally and the view step is
+// deferred to a microtask, by which time `stepper` exists.
+function elmStepperGuardPlugin() {
+  const needle = 'stepper(model = pair.a, viewMetadata);'
+  const guard =
+    'model = pair.a;\n' +
+    '\t\t// GS_STEPPER_GUARD (injected by vite, see vite.config.mjs)\n' +
+    '\t\tif (stepper) { stepper(model, viewMetadata); }\n' +
+    '\t\telse { Promise.resolve().then(function () { stepper(model, viewMetadata); }); }'
+  const filter = createFilter(/\.elm$/)
+
+  return {
+    name: 'vite-plugin-elm-stepper-guard',
+    transform(code, id) {
+      if (!filter(id)) return
+      if (!code.includes(needle)) {
+        if (code.includes('_Platform_initialize')) {
+          this.warn('elm-stepper-guard: kernel pattern not found — the stepper race is NOT patched (elm/core kernel changed?)')
+        }
+        return
+      }
+      return { code: code.replaceAll(needle, guard), map: null }
+    }
+  }
+}
+
 /** @type {import('vite').Plugin} */
 const base64Loader = {
   name: 'base64-loader',
@@ -46,7 +81,7 @@ const base64Loader = {
 };
 
 export default defineConfig({
-  plugins: [elmPlugin(), base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
+  plugins: [elmPlugin(), elmStepperGuardPlugin(), base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
   server: { 
     host: '0.0.0.0',
     port: 3000,
