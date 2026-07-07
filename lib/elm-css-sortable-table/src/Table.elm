@@ -583,25 +583,35 @@ applySorter isReversed sorter data =
         None ->
             data
 
-        Increasing srt ->
-            srt data
+        Increasing cmp ->
+            List.sortWith cmp data
 
-        Decreasing srt ->
-            List.reverse (srt data)
+        Decreasing cmp ->
+            List.sortWith (descending cmp) data
 
-        IncOrDec srt ->
+        IncOrDec cmp ->
             if isReversed then
-                List.reverse (srt data)
+                List.sortWith (descending cmp) data
 
             else
-                srt data
+                List.sortWith cmp data
 
-        DecOrInc srt ->
+        DecOrInc cmp ->
             if isReversed then
-                srt data
+                List.sortWith cmp data
 
             else
-                List.reverse (srt data)
+                List.sortWith (descending cmp) data
+
+
+{-| Flip a comparator while keeping ties `EQ`, so a stable sort preserves
+the original relative order of equal elements. Descending order must NOT be
+implemented as `List.reverse << sort`: reversing also reverses each group of
+equal elements, so every application flips tied rows back and forth.
+-}
+descending : (data -> data -> Order) -> data -> data -> Order
+descending cmp a b =
+    cmp b a
 
 
 isSortOrderIncreasing : Bool -> Sorter data -> Maybe Bool
@@ -660,10 +670,15 @@ getSortedData (Config { toId, toMsg, columns, customizations }) state data =
 -}
 type Sorter data
     = None
-    | Increasing (List data -> List data)
-    | Decreasing (List data -> List data)
-    | IncOrDec (List data -> List data)
-    | DecOrInc (List data -> List data)
+    | Increasing (data -> data -> Order)
+    | Decreasing (data -> data -> Order)
+    | IncOrDec (data -> data -> Order)
+    | DecOrInc (data -> data -> Order)
+
+
+comparing : (data -> comparable) -> data -> data -> Order
+comparing toComparable a b =
+    compare (toComparable a) (toComparable b)
 
 
 {-| A sorter for columns that are unsortable. Maybe you have a column in your
@@ -685,7 +700,7 @@ want a table of people, sorted alphabetically by name, we would say this:
 -}
 increasingBy : (data -> comparable) -> Sorter data
 increasingBy toComparable =
-    Increasing (List.sortBy toComparable)
+    Increasing (comparing toComparable)
 
 
 {-| Create a sorter that can only display the data in decreasing order. If we
@@ -699,7 +714,7 @@ would say this:
 -}
 decreasingBy : (data -> comparable) -> Sorter data
 decreasingBy toComparable =
-    Decreasing (List.sortBy toComparable)
+    Decreasing (comparing toComparable)
 
 
 {-| Sometimes you want to be able to sort data in increasing _or_ decreasing
@@ -714,7 +729,7 @@ This function lets you see both, starting with decreasing order.
 -}
 decreasingOrIncreasingBy : (data -> comparable) -> Sorter data
 decreasingOrIncreasingBy toComparable =
-    DecOrInc (List.sortBy toComparable)
+    DecOrInc (comparing toComparable)
 
 
 {-| Sometimes you want to be able to sort data in increasing _or_ decreasing
@@ -728,4 +743,4 @@ sort by best time by default, but also see the other order.
 -}
 increasingOrDecreasingBy : (data -> comparable) -> Sorter data
 increasingOrDecreasingBy toComparable =
-    IncOrDec (List.sortBy toComparable)
+    IncOrDec (comparing toComparable)

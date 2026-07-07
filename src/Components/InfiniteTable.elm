@@ -800,9 +800,6 @@ view tableConfig attributes (Model model) =
 
         data =
             getRange start end model
-                -- ATTENTION: sort here is needed to fix sorting bug of Table.applySorter
-                -- which re-sort already sorted data within a group of items with same sort predicate
-                |> T.getSortedData c model.table.state
     in
     div
         (css
