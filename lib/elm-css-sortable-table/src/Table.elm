@@ -9,6 +9,7 @@ module Table exposing
     , increasingOrDecreasingBy, decreasingOrIncreasingBy
     , Config, customConfig, Customizations, HtmlDetails, Status(..)
     , defaultCustomizations
+    , applySorter, isSortOrderIncreasing
     )
 
 {-| This library helps you create sortable tables. The crucial feature is that it
@@ -601,6 +602,33 @@ applySorter isReversed sorter data =
 
             else
                 List.reverse (srt data)
+
+
+isSortOrderIncreasing : Bool -> Sorter data -> Maybe Bool
+isSortOrderIncreasing isReversed sorter =
+    case sorter of
+        None ->
+            Nothing
+
+        Increasing _ ->
+            Just True
+
+        Decreasing _ ->
+            Just False
+
+        IncOrDec _ ->
+            if isReversed then
+                Just False
+
+            else
+                Just True
+
+        DecOrInc _ ->
+            if isReversed then
+                Just True
+
+            else
+                Just False
 
 
 findSorter : String -> List (ColumnData data msg) -> Maybe (Sorter data)

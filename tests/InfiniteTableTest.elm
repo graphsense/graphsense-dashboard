@@ -11,12 +11,8 @@ import Test.Html.Selector as Selector
 
 config : InfiniteTable.Config () ()
 config =
-    { fetch = \_ _ _ -> ()
-    , force = False
-    , effectToTracker = \_ -> Nothing
-    , abort = \_ -> ()
-    , triggerOffset = 100
-    }
+    InfiniteTable.config
+        |> InfiniteTable.withFetch (\_ _ _ -> ())
 
 
 tableConfig : InfiniteTable.TableConfig String InfiniteTable.Msg
