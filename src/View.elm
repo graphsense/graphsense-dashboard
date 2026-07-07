@@ -56,6 +56,23 @@ view plugins vc model =
            input { border: 0; }
            """ ] |> toUnstyled
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
+        , node "style" [] [ text """
+           .gs-markdown { overflow-wrap: break-word; }
+           .gs-markdown h1,
+           .gs-markdown h2,
+           .gs-markdown h3,
+           .gs-markdown h4,
+           .gs-markdown h5,
+           .gs-markdown h6 { display: inline; font-weight: bold; }
+           .gs-markdown p { margin: 0 0 1em 0; }
+           .gs-markdown ul,
+           .gs-markdown ol { margin: 0 0 1em 0; padding-left: 2em; }
+           .gs-markdown li { margin: 0.5em 0; }
+           .gs-markdown strong,
+           .gs-markdown b { font-weight: bold; }
+           .gs-markdown em,
+           .gs-markdown i { font-style: italic; }
+           """ ] |> toUnstyled
         , body plugins vc model |> toUnstyled
         ]
     }
