@@ -339,10 +339,10 @@ hovercards plugins vc model =
 overlay : Plugins -> Config -> Model key -> List (Html Msg)
 overlay plugins vc model =
     let
-        ov onClickOutside =
+        ov placement onClickOutside =
             List.singleton
                 >> div
-                    [ Css.View.overlay vc |> css
+                    [ Css.View.overlay placement vc |> css
                     , onClick (UserClickedOutsideDialog onClickOutside)
                     ]
                 >> List.singleton
@@ -356,14 +356,14 @@ overlay plugins vc model =
                             |> List.map Html.Styled.toUnstyled
                             |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
                     )
-                |> Maybe.map (ov NoOp)
+                |> Maybe.map (ov Dialog.Centered NoOp)
                 |> Maybe.withDefault []
 
         _ ->
             case model.dialog of
                 Just dialog ->
                     Dialog.view plugins model.plugins vc dialog
-                        |> ov (Dialog.defaultMsg dialog)
+                        |> ov (Dialog.placement dialog) (Dialog.defaultMsg dialog)
 
                 Nothing ->
                     []
