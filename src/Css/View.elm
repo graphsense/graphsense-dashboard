@@ -2,6 +2,7 @@ module Css.View exposing (body, box, buttonsRow, contents, copyIcon, disabled, f
 
 import Config.View exposing (Config)
 import Css exposing (..)
+import Model.Dialog exposing (Placement(..))
 import Theme.Colors as Colors
 import Util.Css
 
@@ -144,16 +145,28 @@ iconLink vc =
         :: vc.theme.iconLink vc.lightmode
 
 
-overlay : Config -> List Style
-overlay vc =
+overlay : Placement -> Config -> List Style
+overlay placement vc =
+    let
+        placementStyles =
+            case placement of
+                Centered ->
+                    [ alignItems center ]
+
+                PinnedToTop ->
+                    [ alignItems flexStart
+                    , paddingTop (vh 10)
+                    , boxSizing borderBox
+                    ]
+    in
     position absolute
         :: height (vh 100)
         :: width (vw 100)
         :: displayFlex
         :: justifyContent center
-        :: alignItems center
         :: zIndex (int 500)
-        :: vc.theme.overlay
+        :: placementStyles
+        ++ vc.theme.overlay
 
 
 popup : Config -> List Style
