@@ -44,6 +44,7 @@
             "elm-community/maybe-extra": "5.3.0",
             "elm-community/result-extra": "2.4.0",
             "elm-community/string-extra": "4.0.1",
+            "elm-explorations/markdown": "1.0.0",
             "elm-explorations/test": "2.2.1",
             "gregziegan/elm-font-awesome-5": "1.0.1",
             "grotsev/elm-debouncer": "1.0.0",
