@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Sorting of infinitely scrolling tables: fixed a sorting bug and made sorting stable, so rows with equal values no longer jump around
+- Opening `.gs` files containing addresses with mixed casing: addresses are now normalized on load, so nodes and edges match up again
+- Startup crash on hard reloads ("TypeError: stepper is not a function") when a browser extension or embedded iframe dispatched an event into the app during the initial render
 - Actor hover in the address details panel
 - Tags table: the source link now shows the full value in a tooltip when it is shortened
 - Address details no longer shows a tag icon or tag section for addresses that have no tags (previously this could leak in via the pubkey/cross-chain related-addresses section), keeping the details panel consistent with the graph node and the tags list
