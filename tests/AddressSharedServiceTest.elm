@@ -53,12 +53,12 @@ suite =
                 isSharedService
                     { address1 | data = RemoteData.Success (apiAddress (Just False)) }
                     |> Expect.equal False
-        , test "known service (e.g. swap service with actor) is a shared service" <|
+        , test "known service type alone is not a shared service" <|
             \_ ->
                 isSharedService { address1 | addressServiceType = KnownService }
-                    |> Expect.equal True
-        , test "likely unknown service (high-traffic heuristic) is a shared service" <|
+                    |> Expect.equal False
+        , test "likely unknown service (high-traffic heuristic) is not a shared service" <|
             \_ ->
                 isSharedService { address1 | addressServiceType = LikelyUnknownService }
-                    |> Expect.equal True
+                    |> Expect.equal False
         ]
