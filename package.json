@@ -12,7 +12,7 @@
     "compile": "elm make src/Main.elm --output=/dev/null"
   },
   "devDependencies": {
-    "elm": "^0.19.1-6",
+    "elm": "^0.19.2-0",
     "elm-codegen": "^0.6.3",
     "elm-format": "^0.8.8",
     "elm-review": "^2.13.5",
