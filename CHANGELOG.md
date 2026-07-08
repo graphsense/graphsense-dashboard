@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Tags table label and source columns now truncate to the exact pixel width of the column (using per-character widths, scaled for font size and letter spacing) instead of a fixed character count, so labels full of wide glyphs no longer overflow
+- Upgrade to Elm Compiler 0.19.2
+- Removed addressContextMenu plugin hook for Graph
 
 ### Fixed
 
