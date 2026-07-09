@@ -652,7 +652,35 @@ class WithHint extends HTMLElement {
 }
 
 if(!customElements.get('with-hint')) {
-  customElements.define('with-hint', WithHint) 
+  customElements.define('with-hint', WithHint)
+}
+
+// Invisible sensor that reports size changes of its parent element as
+// 'sensor-resize' CustomEvents. Used by Components.InfiniteTable to keep its
+// measured container height fresh (scroll containers resize with the window
+// or layout changes, which Elm cannot observe by itself).
+class ResizeSensor extends HTMLElement {
+  connectedCallback () {
+    if (!this.parentElement) return
+    this._observer = new ResizeObserver(entries => {
+      const rect = entries[entries.length - 1].contentRect
+      this.dispatchEvent(new CustomEvent('sensor-resize', {
+        detail: { width: rect.width, height: rect.height }
+      }))
+    })
+    this._observer.observe(this.parentElement)
+  }
+
+  disconnectedCallback () {
+    if (this._observer) {
+      this._observer.disconnect()
+      this._observer = undefined
+    }
+  }
+}
+
+if(!customElements.get('resize-sensor')) {
+  customElements.define('resize-sensor', ResizeSensor)
 }
 
 app.ports.newTab.subscribe( url => window.open(url, '_blank'));
