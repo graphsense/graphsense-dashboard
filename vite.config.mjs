@@ -80,8 +80,13 @@ const base64Loader = {
   }
 };
 
-export default defineConfig({
-  plugins: [elmPlugin(), elmStepperGuardPlugin(), base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
+export default defineConfig(({ command }) => ({
+  // The Elm time-travel debugger (dev only, never in builds) crashes on large
+  // models: its Expando walks the whole model on every update and overflows
+  // the stack in Firefox ("InternalError: too much recursion",
+  // https://github.com/elm/virtual-dom/issues/80), freezing the app. If that
+  // bites you, disable it with ELM_DEBUGGER=false.
+  plugins: [elmPlugin({ debug: command === 'serve' && process.env.ELM_DEBUGGER !== 'false' }), elmStepperGuardPlugin(), base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
   server: { 
     host: '0.0.0.0',
     port: 3000,
@@ -89,11 +94,11 @@ export default defineConfig({
   },
   worker: { format: 'es' },
   publicDir: "generated/public",
-  build: { 
+  build: {
     manifest: true,
-    outDir: 'dist', 
+    outDir: 'dist',
     minify: 'terser',
     sourcemap: false
   },
 
-});
+}));

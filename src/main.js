@@ -671,9 +671,11 @@ app.ports.saveToLocalStorage.subscribe(data => {
   }
 });
 
-window.onerror = (message) => {
+window.onerror = (message, source, lineno, colno, error) => {
   app.ports.uncaughtError.send({message: message + 'win'})
-  console.error(message)
+  // log the full error so the stack trace of crashes in compiled Elm code is
+  // not swallowed (message alone gives no hint where a crash originated)
+  console.error(error || message)
   return true
 }
 
