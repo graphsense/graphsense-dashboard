@@ -16,6 +16,7 @@ apiAddress isContract =
     , balance = Data.Api.values
     , currency = "btc"
     , cluster = 1
+    , freshClusterId = Nothing
     , firstTx = { height = 1, timestamp = 0, txHash = "h" }
     , inDegree = 1
     , isContract = isContract
