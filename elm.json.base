@@ -11,7 +11,7 @@
         "lib/elm-autocomplete/src",
         "lib/elm-css-sortable-table/src"
     ],
-    "elm-version": "0.19.1",
+    "elm-version": "0.19.2",
     "dependencies": {
         "direct": {
             "BrianHicks/elm-csv": "3.0.3",
