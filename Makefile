@@ -41,7 +41,16 @@ PUBLIC_FILES=$(shell find $(PUBLIC_DIR) -type f)
 SETEM=npx setem --output $(GENERATED_UTILS) && touch $(RECORDSETTER_ELM)
 
 export ELM_HOME=$(PWD)/elm_packages
-ELM_PACKAGES_DIR=$(ELM_HOME)/0.19.1/packages
+# The compiler keeps its packages in $(ELM_HOME)/<compiler version>/packages.
+# Derive the version from the installed binary: a hardcoded path silently drops
+# the patched packages of virtual-dom-fix on every compiler upgrade.
+ELM_VERSION=$(shell npx elm --version)
+ELM_PACKAGES_DIR=$(ELM_HOME)/$(ELM_VERSION)/packages
+
+# A function only elm-safe-virtual-dom defines. Its absence from the kernel the
+# compiler actually reads means the app is running unpatched (see virtual-dom-fix).
+SAFE_VDOM_MARKER=_VirtualDom_createTNode
+SAFE_VDOM_KERNEL=$(ELM_PACKAGES_DIR)/elm/virtual-dom/1.0.5/src/Elm/Kernel/VirtualDom.js
 
 export NODE_OPTIONS=--max-old-space-size=8192
 
@@ -234,20 +243,44 @@ copy-public:
 print-plugins:
 	@echo $(PLUGINS)
 
+# Clones a patched package into the elm package cache, replacing whatever is
+# there unless it already is the pinned commit. Anything else is either a
+# package elm downloaded from the registry (the unpatched one) or an outdated
+# clone. elm-stuff caches compiled dependencies by package version, not by
+# content, so it has to go too or the build keeps the unpatched kernel.
 define clone-repo
-	test -d $(4) || \
+	if [ "$$(git -C $(4) rev-parse HEAD 2>/dev/null)" != "$(3)" ]; then \
+		rm -rf $(4) elm-stuff; \
 		git clone --depth=1 --branch=$(2) https://github.com/$(1) $(4) && \
 		cd $(4) && \
 		git reset --hard $(3) && \
-		git clean -df
+		git clean -df; \
+	fi
 endef
 
 virtual-dom-fix:
-	mkdir -p $(ELM_PACKAGES_DIR) 
+	mkdir -p $(ELM_PACKAGES_DIR)
 	$(call clone-repo,omnibs/elm-css,safe,e54998ce73b64c374b1457d5734c85d3f5b909fb,$(ELM_PACKAGES_DIR)/rtfeldman/elm-css/18.0.0)
 	$(call clone-repo,lydell/html,safe,b35c476a69f0ba9bf8282d8c15df65e63aefea8f,$(ELM_PACKAGES_DIR)/elm/html/1.0.1)
 	$(call clone-repo,lydell/virtual-dom,safe,e1fae6aabd65539db2c94a98220a45cfc624b633,$(ELM_PACKAGES_DIR)/elm/virtual-dom/1.0.5)
 	$(call clone-repo,lydell/browser,safe,f5de544c8033d934285501f78f09e2eaf0171d55,$(ELM_PACKAGES_DIR)/elm/browser/1.0.2)
+	@$(MAKE) --no-print-directory check-virtual-dom-fix
+
+# Fails the build when the compiler would read an unpatched virtual-dom. That is
+# what happens when the clones above land in a package directory of a different
+# elm version, or when elm re-downloads the registry package over them.
+check-virtual-dom-fix:
+	@grep -q '$(SAFE_VDOM_MARKER)' '$(SAFE_VDOM_KERNEL)' 2>/dev/null || { \
+		echo ''; \
+		echo 'ERROR: elm-safe-virtual-dom is missing from the packages of elm $(ELM_VERSION).'; \
+		echo '       Expected the patched kernel in:'; \
+		echo '         $(SAFE_VDOM_KERNEL)'; \
+		echo '       Without it the app crashes whenever a browser extension (or anything'; \
+		echo '       else) touches the DOM: "Node.removeChild: Argument 1 is not an object".'; \
+		echo '       Remove that package directory and re-run `make virtual-dom-fix`.'; \
+		echo ''; \
+		exit 1; \
+	}
 
 # Target to create a version tag and commit
 # Usage: make tag-version VERSION=v1.0.0

@@ -65,6 +65,27 @@ function elmStepperGuardPlugin() {
   }
 }
 
+// The Makefile (`virtual-dom-fix`) clones elm-safe-virtual-dom over elm's
+// virtual-dom/html/browser/elm-css, so the app survives DOM changes made by
+// browser extensions. Nothing else notices when those clones do not reach the
+// compiler — an elm upgrade moves the package cache to a new directory, a
+// stale elm-stuff keeps the old artifacts — and the app is then one extension
+// away from "Node.removeChild: Argument 1 is not an object". So: check.
+function elmSafeVirtualDomCheckPlugin() {
+  const marker = '_VirtualDom_createTNode'
+  const filter = createFilter(/\.elm$/)
+
+  return {
+    name: 'vite-plugin-elm-safe-virtual-dom-check',
+    transform(code, id) {
+      if (!filter(id)) return
+      if (!code.includes(marker)) {
+        this.warn('elm-safe-virtual-dom is NOT in this build — run `make virtual-dom-fix` (it may be cloned into the package directory of an older elm version, or elm-stuff may be stale)')
+      }
+    }
+  }
+}
+
 /** @type {import('vite').Plugin} */
 const base64Loader = {
   name: 'base64-loader',
@@ -86,7 +107,7 @@ export default defineConfig(({ command }) => ({
   // the stack in Firefox ("InternalError: too much recursion",
   // https://github.com/elm/virtual-dom/issues/80), freezing the app. If that
   // bites you, disable it with ELM_DEBUGGER=false.
-  plugins: [elmPlugin({ debug: command === 'serve' && process.env.ELM_DEBUGGER !== 'false' }), elmStepperGuardPlugin(), base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
+  plugins: [elmPlugin({ debug: command === 'serve' && process.env.ELM_DEBUGGER !== 'false' }), elmStepperGuardPlugin(), elmSafeVirtualDomCheckPlugin(), base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
   server: { 
     host: '0.0.0.0',
     port: 3000,

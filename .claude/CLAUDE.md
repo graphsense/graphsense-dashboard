@@ -194,6 +194,19 @@ Current shortcuts (path: `/pathfinder` only):
 
 ## Patched Dependencies
 
-The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.
+The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches (elm-safe-virtual-dom) prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.
+
+Three ways they used to fall out of the build silently — all three bit us in the elm 0.19.2 upgrade, and all three are now caught:
+
+- **The package cache is per compiler version** (`elm_packages/<elm version>/packages`). `ELM_PACKAGES_DIR` derives that version from `npx elm --version`; never hardcode it, or an elm upgrade makes the compiler resolve the *unpatched* registry packages from a fresh directory while the clones sit unused in the old one.
+- **`elm-stuff` caches compiled dependencies by package version, not content.** Swapping a package's source in place does not invalidate it, so the next build keeps the old kernel. `clone-repo` deletes `elm-stuff` whenever it clones.
+- **A clone of the wrong commit is still a clone.** `clone-repo` compares `git rev-parse HEAD` against the pinned hash, so bumping a pin actually re-clones.
+
+Two guards, both loud:
+
+- `make check-virtual-dom-fix` (run automatically by `virtual-dom-fix`, hence by `prepare`) **fails the build** if the kernel the compiler reads lacks `_VirtualDom_createTNode`, a function only the fork defines.
+- `elmSafeVirtualDomCheckPlugin` in `vite.config.mjs` warns if that marker is missing from the *compiled* Elm — the last word on what actually ships.
+
+Symptom of a build without the patches: `TypeError: Node.removeChild: Argument 1 is not an object` from `_VirtualDom_applyPatch`. `_VirtualDom_applyPatchesHelp` in a stack trace is itself the tell — the fork does not have that function.
 
 Additionally, `vite.config.mjs` rewrites one line of the compiled Elm kernel at bundle time (`elmStepperGuardPlugin`): it guards `sendToApp` against re-entrancy during the initial synchronous render ("TypeError: stepper is not a function" on hard reloads when an iframe `load` or custom-element event dispatches into the app before `stepper` is assigned). The plugin warns at build time if the kernel pattern is no longer found (e.g. after an elm/core upgrade).
