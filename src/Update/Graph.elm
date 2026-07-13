@@ -1841,7 +1841,7 @@ updateByMsg plugins uc msg model =
                                         Nothing
                             )
                      )
-                        ++ List.map .cluster addresses
+                        ++ List.map Data.addressCluster addresses
                     )
                         |> List.foldl Set.insert Set.empty
                         |> Set.toList

@@ -1381,7 +1381,7 @@ update plugins uc msg model =
                     pathfinder.network.addresses
                         |> Dict.get id
                         |> Maybe.andThen (.data >> RD.toMaybe)
-                        |> Maybe.map (\addr -> Id.initClusterId addr.currency (Util.Data.addressCluster addr))
+                        |> Maybe.map Id.initClusterIdFromAddress
                         |> Maybe.andThen (\cid -> Dict.get cid pathfinder.clusters)
                         |> Maybe.andThen RD.toMaybe
                         |> Maybe.map .noAddresses
@@ -2365,7 +2365,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                                                         |> Maybe.andThen (.data >> RD.toMaybe)
                                                         |> Maybe.andThen
                                                             (\a ->
-                                                                Dict.get (Id.initClusterId a.currency a.cluster) model.pathfinder.clusters
+                                                                Dict.get (Id.initClusterIdFromAddress a) model.pathfinder.clusters
                                                             )
                                             in
                                             case addr of

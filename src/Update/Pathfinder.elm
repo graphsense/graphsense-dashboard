@@ -1107,11 +1107,8 @@ updateByMsg plugins uc msg model =
                         )
                     |> pair newModel2
 
-        BrowserGotClusterData _ data ->
+        BrowserGotClusterData clusterId data ->
             let
-                clusterId =
-                    Id.initClusterId data.currency data.cluster
-
                 setServiceType addr =
                     Just data
                         |> getAddressType addr
@@ -3697,7 +3694,7 @@ browserGotAddressData uc plugins providedId position data model =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
         clusterId =
-            Id.initClusterId data.currency (Data.addressCluster data)
+            Id.initClusterIdFromAddress data
 
         isSecondAddressFromSameCluster =
             Network.isClusterFriendAlreadyOnGraph clusterId
@@ -3726,7 +3723,13 @@ browserGotAddressData uc plugins providedId position data model =
 
             else
                 ( Dict.insert clusterId RemoteData.Loading model.clusters
-                , [ BrowserGotClusterData id
+                  -- Api.Data.Cluster has no freshClusterId field, so normalize the
+                  -- response's .cluster to the id the request was made with
+                  -- (the fresh-aware Data.addressCluster). This keeps the clusters
+                  -- dict key, plugin messages, the cluster info panel and follow-up
+                  -- entity requests in the same id space, regardless of which id
+                  -- the backend echoes back.
+                , [ (\cluster -> { cluster | cluster = Data.addressCluster data } |> BrowserGotClusterData clusterId)
                         |> Api.GetEntityEffectWithDetails
                             { currency = Id.network id
                             , entity = Data.addressCluster data
@@ -4445,13 +4448,21 @@ updateByPluginOutMsg plugins uc outMsgs model =
 
                     PluginInterface.UpdateAddressesByRootAddress { currency, address } pmsg ->
                         model.clusters
-                            |> Dict.values
-                            |> List.filterMap RemoteData.toMaybe
+                            |> Dict.toList
+                            |> List.filterMap
+                                (\( cid, cluster ) ->
+                                    cluster
+                                        |> RemoteData.toMaybe
+                                        |> Maybe.map (pair cid)
+                                )
                             |> List.Extra.find
-                                (\e ->
+                                (\( _, e ) ->
                                     e.currency == currency && e.rootAddress == address
                                 )
-                            |> Maybe.map Id.initClusterIdFromRecord
+                            -- use the dict key (the fresh-aware id the cluster
+                            -- was requested with) rather than re-deriving from
+                            -- the record
+                            |> Maybe.map first
                             |> Maybe.map
                                 (\pId ->
                                     ( { mo
