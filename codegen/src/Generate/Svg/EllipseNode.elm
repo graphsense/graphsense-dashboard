@@ -7,7 +7,7 @@ import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (cx, cy, rx, ry)
 import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
-import Generate.Util exposing (callStyles, getElementAttributes, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, withVisibilitySvg)
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config)
 
@@ -29,7 +29,7 @@ toExpressions config componentName node =
                 )
         )
         (Elm.list [])
-        |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibilitySvg componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

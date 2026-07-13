@@ -2,7 +2,7 @@ the search: căutare
 entity: cluster
 entities: clustere
 uncaught-error-message: A apărut o eroare neașteptată.
-Root Address: rădăcina clusterului
+Root Address: adresa de bază
 currency: criptoactiv
 change currency: denumirea valorii
 for entities: pentru clustere
@@ -13,72 +13,72 @@ list entity transactions: listează tranzacțiile clusterului
 Exact: Exact
 Magnitude: Magnitudine
 Value format: Format valoare
-mentionTagDescriptionId: O etichetă de mențiune exprimă faptul că această adresă a fost
-  menționată, de ex. pe un site web. Poate fi relevantă, dar depinde de context.
+mentionTagDescriptionId: O etichetă de menționare indică faptul că această adresă a fost menționată,
+  de ex. pe un site web. Poate fi relevantă, dar depinde de context.
 actorTagDescriptionId: O etichetă de actor este o afirmație despre partea care controlează
   adresa.
-eventTagDescriptionId: O etichetă de eveniment este o afirmație despre un eveniment
-  legat de această adresă, de ex. dacă adresa a făcut parte dintr-un hack.
-attributeTagDescriptionId: O etichetă de atribut descrie o proprietate a adresei, de
-  ex. dacă se știe că este folosită într-un scop specific.
+eventTagDescriptionId: O etichetă de eveniment este o afirmație despre un eveniment legat
+  de această adresă, de ex. dacă adresa a făcut parte dintr-un hack.
+attributeTagDescriptionId: O etichetă de atribuire descrie o anumită proprietate a adresei,
+  de ex. dacă se știe că este folosită într-un anumit scop.
 this table is empty: Nu s-au găsit înregistrări.
 Tag Import: Import etichete
 tag-import-feedback: Doar {0} din {1} etichete au fost importate. {2} etichete nu au putut
   fi aplicate deoarece adresele lor nu sunt prezente în pathfinder.
 Add_Tag_description: Ajutați la îmbunătățirea datelor noastre raportând o entitate legată
-  de această adresă - va fi examinată și eventual publicată.
+  de această adresă - aceasta va fi analizată și, eventual, publicată.
 Multi Input Cluster Help: Adresele au fost folosite în aceeași tranzacție (adică probabil
-  de același proprietar).
-Pubkey Cluster Help: Adresele au fost create din aceeași cheie (adică de același proprietar).
-pf1_deprecation_notice: 'Pathfinder 1.0 este învechit și va fi eliminat
-  în curând. Vă rugăm să treceți la noul Pathfinder disponibil din bara laterală. Aveți
-  probleme cu retragerea vechiului pathfinder? Contactați asistența prin e-mail la contact@ikna.io.'
-tx-tracing-mode-help-text: În modul tranzacție, puteți urmări fluxul fondurilor prin
-  tranzacții individuale. Acest mod este util pentru a urmări tranzacții specifice și
-  a înțelege traseele lor.
-tx-relationship-mode-help-text: În modul relație, puteți explora relațiile dintre diferite
-  entități pe baza datelor de tranzacții agregate. Acest mod ajută la identificarea tiparelor
-  și conexiunilor dintre entități pe parcursul mai multor tranzacții.
+  de același deținător).
+Pubkey Cluster Help: Adresele au fost create din aceeași cheie (adică de același deținător).
+pf1_deprecation_notice: Pathfinder 1.0 este învechit și va fi eliminat în curând. Vă rugăm
+  să treceți la noul Pathfinder disponibil în bara laterală. Întâmpinați probleme cu eliminarea
+  versiunii anterioare a pathfinder? Contactați asistența prin e-mail la contact@ikna.io.
+tx-tracing-mode-help-text: În modul tranzacții, puteți urmări fluxul fondurilor prin tranzacții
+  individuale. Acest mod este util pentru a urmări tranzacții specifice și a înțelege traseele
+  lor.
+tx-relationship-mode-help-text: În modul relații, puteți explora relațiile dintre diferite
+  clustere pe baza datelor agregate de tranzacții. Acest mod ajută la identificarea tiparelor
+  și conexiunilor dintre clustere pe parcursul mai multor tranzacții.
 cluster-details-info-help-text: Informațiile despre cluster oferă statistici pentru toate
-  adresele din cluster, inclusiv solduri agregate și numărul de tranzacții. Clusterele
-  se bazează doar pe euristica intrărilor multiple.
-tx_hash: Hash-ul tranzacției
+  adresele din cluster, inclusiv solduri agregate și numărul de tranzacții. Clusterele se
+  bazează doar pe euristica intrărilor multiple.
+tx_hash: Hash tranzacție
 token_tx_id: ID sub-tranzacție
 value_raw: Sumă (brută)
 value_in_base_currency: Sumă
 height: Nr. bloc
 value_eur: EUR
 value_usd: USD
-timestamp_utc: Dată/oră (UTC)
+timestamp_utc: Dată/Oră (UTC)
 receiving_address: Către
 sending_address: De la
 inputs: Intrări
 outputs: Ieșiri
-total_input: Suma totală a intrărilor
-total_output: Suma totală a ieșirilor
-success_download_csv: S-au descărcat {0} rânduri de date în format CSV
+total_input: Valoarea totală a intrărilor
+total_output: Valoarea totală a ieșirilor
+success_download_csv: S-au descărcat {0} rânduri de date ca CSV
 outgoing relations: relații de ieșire
 incoming relations: relații de intrare
 asset transfers between: transferuri de active între
-tags_release_warnings: Etichetele pe care le adăugați vor fi vizibile tuturor utilizatorilor.
+tags_release_warnings: Etichetele pe care le adăugați vor fi vizibile pentru toți utilizatorii.
   Vă rugăm să vă asigurați că etichetele dvs. nu includ materiale care încalcă drepturile
-  de autor, cum ar fi etichete sau conținut de la alți furnizori de instrumente. În plus,
-  nu divulgați public informații specifice cazului sau sensibile.
+  de autor, cum ar fi etichete sau conținut de la alți furnizori de analiză blockchain. În
+  plus, nu divulgați public informații specifice cazului sau sensibile.
 sending_address_label: De la actor
 receiving_address_label: Către actor
 address: adresă
 addresses: adrese
 transaction: tranzacție
 transactions: tranzacții
-label: etichetă
-labels: etichete
+label: denumire
+labels: denumiri
 tag: etichetă
 tags: etichete
-address tags: Etichete de adresă
-entity tags: etichete de entitate
+address tags: etichete adresă
+entity tags: etichete cluster
 block: bloc
 blocks: blocuri
-supported currencies: valute acceptate
+supported currencies: criptoactive acceptate
 ledger statistics: statistici registru
 last update: ultima actualizare
 latest block: ultimul bloc
@@ -86,10 +86,10 @@ transfers: transferuri
 withdrawals: retrageri
 deposits: depuneri
 neighbors: vecini
-receiving entities: entități destinatare
-sending entities: entități expeditoare
-receiving entity: entitate destinatară
-sending entity: entitate expeditoare
+receiving entities: clustere destinatare
+sending entities: clustere expeditoare
+receiving entity: clusterul destinatar
+sending entity: clusterul expeditor
 receiving addresses: adrese destinatare
 receiving address: adresă destinatară
 sending addresses: adrese expeditoare
@@ -100,11 +100,11 @@ activity period: perioadă de activitate
 total received: total primit
 total sent: total trimis
 total received assets: total active primite
-final balance assets: active sold final
+final balance assets: sold final active
 balance: sold
-entity balance: sold entitate
+entity balance: sold cluster
 address balance: sold adresă
-entity received: primit de entitate
+entity received: primit de cluster
 address received: primit de adresă
 all assets: toate activele
 category: categorie
@@ -136,28 +136,28 @@ value: valoare
 timestamp: marcaj temporal
 outgoing address: adresă de ieșire
 incoming address: adresă de intrare
-outgoing entity: entitate de ieșire
-incoming entity: entitate de intrare
+outgoing entity: cluster de ieșire
+incoming entity: cluster de intrare
 outgoing addresses: adrese de ieșire
 incoming addresses: adrese de intrare
-outgoing entities: entități de ieșire
-incoming entities: entități de intrare
+outgoing entities: clustere de ieșire
+incoming entities: clustere de intrare
 output address: adresă de ieșire
 input address: adresă de intrare
-download table as csv: descarcă tabelul ca CSV
+download table as csv: descarcă tabelul ca csv
 add all to graph: adaugă toate în grafic
-tagpack: tagpack
+tagpack: pachet de etichete
 last modified: ultima modificare
 active: activ
-download tags as json: descarcă etichetele ca JSON
+download tags as json: descarcă etichetele ca json
 included in block: inclus în blocul
 export: exportă
 full data: date complete
 notes only: doar note
 rest calls: apeluri REST
 audit log: jurnal de audit
-address label: etichetă adresă
-transaction label: etichetă tranzacție
+address label: denumire adresă
+transaction label: denumire tranzacție
 language: limbă
 english: engleză
 german: germană
@@ -168,7 +168,7 @@ depth: adâncime
 by category: după categorie
 for contained addresses: pentru adresele conținute
 for final balance: pentru soldul final
-for total received: pentru totalul primit
+for total received: pentru total primit
 breadth: lățime
 search: caută
 save: salvează
@@ -187,42 +187,42 @@ legend: legendă
 username: nume utilizator
 password: parolă
 sign in: autentificare
-signing in: se autentifică
+signing in: autentificare în curs
 annotate: adnotează
-annotate entity: adnotează entitatea
+annotate entity: adnotează clusterul
 annotate address: adnotează adresa
 remove from graph: elimină din grafic
 remove: elimină
 remove link: elimină legătura
 expand: extinde
 collapse: restrânge
-show address table: arată tabelul de adrese
+show address table: afișează tabelul de adrese
 sort addresses by: sortează adresele după
 incoming: intrare
 outgoing: ieșire
-user-defined labels: etichete definite de utilizator
+user-defined labels: denumiri definite de utilizator
 hide logs: ascunde jurnalele
-show logs: arată jurnalele
+show logs: afișează jurnalele
 notes: note
 add tag: adaugă etichetă
 search incoming neighbors: caută vecini de intrare
 search outgoing neighbors: caută vecini de ieșire
 nothing to display yet: nimic de afișat încă
-category {0}: categoria {0}
-searching outgoing: se caută ieșiri
-searching incoming: se caută intrări
-for outgoing neighbors: pentru vecinii de ieșire
-for incoming neighbors: pentru vecinii de intrare
+category {0}: categorie {0}
+searching outgoing: căutare ieșire
+searching incoming: căutare intrare
+for outgoing neighbors: pentru vecini de ieșire
+for incoming neighbors: pentru vecini de intrare
 errors only: doar erori
-show more: arată mai mult
-loading msg outgoing: se încarcă ieșirile
-loading msg incoming: se încarcă intrările
-saving to file: se salvează în fișier
-go to dashboard: mergi la tabloul de bord
+show more: afișează mai mult
+loading msg outgoing: se încarcă ieșire
+loading msg incoming: se încarcă intrare
+saving to file: salvare în fișier
+go to dashboard: accesează tabloul de bord
 remove tag: elimină eticheta
 estimated value: valoare estimată
 estimated value {0}: valoare estimată {0}
-estimated total transferred: total transferat estimat
+estimated total transferred: estimat transfer total
 total transferred: total transferat
 reorder to prioritize: reordonează pentru a prioritiza
 tag coherence: coerența etichetelor
@@ -231,35 +231,35 @@ api-rate-limit-exceeded: Limita de rată a API-ului a fost depășită. Vă rug�
   din nou mai târziu.
 legend empty: legendă goală
 from: de la
-to: la
+to: către
 pick a color: alegeți o culoare
-api request limit: limita de cereri API
+api request limit: limită cereri api
 from address: de la adresa
-to address: la adresa
+to address: către adresa
 tagged addresses: adrese etichetate
 invalid key: cheie invalidă
 unlimited: nelimitat
-root address: adresă rădăcină
+root address: adresă de bază
 direction: direcție
 both: ambele
 search neighbors: caută vecini
-bad status: stare incorectă
-bad URL: URL incorect
-request timeout: timp de așteptare cerere depășit
-request error: eroare la cerere
+bad status: stare nevalidă
+bad URL: URL nevalid
+request timeout: expirarea cererii
+request error: eroare cerere
 network error: eroare de rețea
 server error: eroare de server
-not found: nu a fost găsit
+not found: negăsit
 data error: eroare de date
 service not reachable: serviciul nu este accesibil.
 unexpected data format: format de date neașteptat.
-unsupported-gs-file-format: Format de fișier neacceptat. Vă rugăm să importați un fișier
-  GraphSense .gs valid.
+unsupported-gs-file-format: Format de fișier neacceptat. Vă rugăm să importați un fișier GraphSense
+  .gs valid.
 unexpected status code: cod de stare neașteptat.
 service does not respond in time: serviciul nu răspunde la timp.
-user address tags: etichete de adresă ale utilizatorului
-true: adevărat
-false: fals
+user address tags: etichete adresă utilizator
+true: da
+false: nu
 Transactions: Tranzacții
 Save: Salvează
 Display Settings: Setări de afișare
@@ -272,11 +272,11 @@ all cluster addresses: toate adresele clusterului
 type: tip
 Institution: Instituție
 fee: comision
-statusbar-loading-concepts: se încarcă conceptele pentru taxonomia {0}
-info-more-rows-for-csv-download: Descărcarea datelor CSV este limitată la aproximativ
-  {0} rânduri.
-info-more-rows-for-csv-download-hint: Vă rugăm să folosiți opțiunile de filtrare pentru
-  a restrânge și mai mult setul de date.
+statusbar-loading-concepts: se încarcă concepte pentru taxonomia {0}
+info-more-rows-for-csv-download: Descărcarea datelor CSV este limitată la aproximativ {0}
+  rânduri.
+info-more-rows-for-csv-download-hint: Vă rugăm să folosiți opțiunile de filtrare pentru a
+  restrânge și mai mult setul de date.
 one-address: '{0} adresă'
 number-of-inputs: nr. intrări
 number-of-outputs: nr. ieșiri
@@ -285,57 +285,58 @@ graphics-svg: grafic (.svg)
 max-addresses: max. adrese
 input-api-key: vă rugăm să furnizați o cheie API
 start-from-scratch: Doriți să începeți de la zero?
-statusbar-loading-actor: 'Se încarcă actorul {0}'
-statusbar-loading-tags-of-actor: 'Se încarcă etichetele actorului {0}'
+statusbar-loading-actor: Se încarcă actorul {0}
+statusbar-loading-tags-of-actor: Se încarcă etichetele actorului {0}
 statusbar-loading-address: '{1}: se încarcă adresa {0}'
 statusbar-loading-block: '{1}: se încarcă blocul {0}'
-statusbar-loading-entity: '{1}: se încarcă entitatea {0}'
+statusbar-loading-entity: '{1}: se încarcă clusterul {0}'
 statusbar-loading-transaction: '{1}: se încarcă tranzacția {0}'
-statusbar-loading-entity-for-address: '{1}: se încarcă entitatea pentru adresa {0}'
+statusbar-loading-entity-for-address: '{1}: se încarcă clusterul pentru adresa {0}'
 statusbar-loading-addresses: '{1}: se încarcă {0} adrese'
-statusbar-loading-entities: '{1}: se încarcă {0} entități'
-statusbar-loading-entities-of-addresses: '{1}: se încarcă entitățile a {0} adrese'
+statusbar-loading-entities: '{1}: se încarcă {0} clustere'
+statusbar-loading-entities-of-addresses: '{1}: se încarcă clusterele a {0} adrese'
 statusbar-loading-tags-of-address: '{1}: se încarcă etichetele adresei {0}'
-statusbar-loading-address-tags-of-entity: '{1}: se încarcă etichetele de adresă ale entității {0}'
+statusbar-loading-address-tags-of-entity: '{1}: se încarcă etichetele de adresă ale clusterului
+  {0}'
 statusbar-loading-txs-of-address {0}': '{1}: se încarcă tranzacțiile adresei {0}'
 statusbar-loading-txs-of-block: '{1}: se încarcă tranzacțiile blocului {0}'
-statusbar-loading-addresses-of-entity: '{1}: se încarcă adresele entității {0}'
-statusbar-loading-txs-between-addresses: '{2}: se încarcă tranzacțiile legăturii dintre
-  adresele {0} și {1}'
-statusbar-loading-txs-between-entities: '{2}: se încarcă tranzacțiile legăturii dintre
-  entitățile {0} și {1}'
+statusbar-loading-addresses-of-entity: '{1}: se încarcă adresele clusterului {0}'
+statusbar-loading-txs-between-addresses: '{2}: se încarcă tranzacțiile de legătură între adresele
+  {0} și {1}'
+statusbar-loading-txs-between-entities: '{2}: se încarcă tranzacțiile de legătură între clusterele
+  {0} și {1}'
 address-statistics-not-computed: statisticile adresei nu au fost încă calculate
 timezone: Fus orar
 user: Utilizator
 address-transactions-of: tranzacțiile adresei {0} ({1})
 incoming-neighbors-of-address: vecinii de intrare ai adresei {0} ({1})
 outgoing-neighbors-of-address: vecinii de ieșire ai adresei {0} ({1})
-incoming-neighbors-of-entity: vecinii de intrare ai entității {0} ({1})
-outgoing-neighbors-of-entity: vecinii de ieșire ai entității {0} ({1})
-addresses-of-entity: adresele entității {0} ({1})
-total-received-assets-of-address: total active primite de adresa {0} ({1})
-final-balance-assets-of-address: active sold final ale adresei {0} ({1})
+incoming-neighbors-of-entity: vecinii de intrare ai clusterului {0} ({1})
+outgoing-neighbors-of-entity: vecinii de ieșire ai clusterului {0} ({1})
+addresses-of-entity: adresele clusterului {0} ({1})
+total-received-assets-of-address: totalul activelor primite ale adresei {0} ({1})
+final-balance-assets-of-address: activele soldului final ale adresei {0} ({1})
 transactions-of-block: tranzacțiile blocului {0} ({1})
-transactions-between-entities: tranzacții între entitățile {0} și {1} ({2})
-incoming-values-of-transaction: Valorile de intrare ale tranzacției {0} ({1})
-outgoing-values-of-transaction: Valorile de ieșire ale tranzacției {0} ({1})
-statusbar-search-parameters: '{6}: se caută {0} din {1} cu {2} (adâncime: {3}, lățime:
-  {4}, omite dacă sunt mai mult de {5} adrese)'
-statusbar-not-found-info: Adresa nu a fost găsită. Posibil să nu fie încă în baza noastră
-  de date (sincronizată până la blocul {0}) sau să nu fi primit nicio tranzacție și,
-  prin urmare, nu este stocată în blockchain.
+transactions-between-entities: tranzacții între clusterele {0} și {1} ({2})
+incoming-values-of-transaction: valorile de intrare ale tranzacției {0} ({1})
+outgoing-values-of-transaction: valorile de ieșire ale tranzacției {0} ({1})
+statusbar-search-parameters: '{6}: se caută {0} din {1} cu {2} (adâncime: {3}, lățime: {4},
+  omite dacă sunt mai mult de {5} adrese)'
+statusbar-not-found-info: Adresa nu a fost găsită. Este posibil să nu fie încă în baza noastră
+  de date (sincronizată până la blocul {0}) sau nu a primit nicio tranzacție și, prin urmare,
+  nu este stocată în blockchain.
 and-more: '... și încă {0}'
-popup-address-not-found-various-reasons: pot exista diverse motive
-popup-addresses-not-found-not-in-database: posibil să nu fie încă în baza noastră de date
-popup-address-not-found-not-in-database: posibil să nu fie încă în baza noastră de date
-popup-addresses-not-found-no-txs: nu există tranzacții asociate acestor adrese și, prin
+popup-address-not-found-various-reasons: ar putea exista diverse motive
+popup-addresses-not-found-not-in-database: este posibil să nu fie încă în baza noastră de
+  date
+popup-address-not-found-not-in-database: este posibil să nu fie încă în baza noastră de date
+popup-addresses-not-found-no-txs: nu există tranzacții asociate cu aceste adrese și, prin
   urmare, nu sunt găsite în blockchain
-popup-address-not-found-no-txs: nu există tranzacții asociate acestei adrese și, prin
-  urmare, nu este găsită în blockchain
-popup-address-not-found-typos: există greșeli de scriere
+popup-address-not-found-no-txs: nu există tranzacții asociate cu această adresă și, prin urmare,
+  nu este găsită în blockchain
+popup-address-not-found-typos: există greșeli de tastare
 token-transactions-of: tranzacții cu token-uri ale {0} ({1})
 actor: Actor
-actor / Category: Actor / Categorie
 actors: Actori
 Recent searches: Căutări recente
 other Links: Alte linkuri
@@ -344,15 +345,15 @@ jurisdictions: Jurisdicții
 any category: Orice categorie
 graph: Grafic
 statistics: Statistici
-landingpage-start-new: Începeți o nouă investigație
-landingpage-load-file: Încarcă graficul din fișier .gs
+landingpage-start-new: Începeți o investigație nouă
+landingpage-load-file: Încărcați graficul dintr-un fișier .gs
 landingpage-try-example: încercați un exemplu
 table-no-rows-match-filter: niciun rând nu corespunde criteriilor de filtrare
 highlight-pick-color-hint: alegeți o culoare pentru a evidenția elemente
 settings: Setări
 number-of-addresses: Număr de adrese
 cluster-info: Informații cluster
-show timestamp: Arată marcajul temporal
+show timestamp: Afișează marcajul temporal
 selection Tool: Instrument de selecție
 more-hint: mai mult...
 display: Afișare
@@ -364,26 +365,26 @@ sources: Surse
 mention: mențiune
 mentions: mențiuni
 center graph: Centrează graficul
-show-more-hint: arată mai mult...
-show-less-hint: arată mai puțin...
+show-more-hint: afișează mai mult...
+show-less-hint: afișează mai puțin...
 less-hint: mai puțin...
 no records found: Nu s-au găsit înregistrări
 sender: Expeditor
 receiver: Destinatar
-highlight on graph: Evidențiază pe grafic
-request limit: Limita de cereri
+highlight on graph: Evidențiază în grafic
+request limit: Limită de cereri
 next: Următorul
 previous: Anteriorul
-page: Pagina
+page: Pagină
 snap to grid: Aliniază la grilă
 avoid overlapping nodes: Evită suprapunerea nodurilor
-confirm-clear-dashboard: Ștergeți tabloul de bord?
+confirm-clear-dashboard: Goliți tabloul de bord?
 note-not-recoverable: Nu îl veți putea recupera.
 confirm-delete: Da, șterge tot
 please-select: Vă rugăm să selectați...
-please-choose-ledger: Vă rugăm să alegeți un registru cripto
+please-choose-ledger: Vă rugăm să alegeți un registru de criptoactive
 preferred fiat currency: Monedă fiat preferată
-show exact values: Arată valorile exacte
+show exact values: Afișează valori exacte
 amount in Fiat: Sumă în fiat
 plan Details: Detalii plan
 never: Niciodată
@@ -392,16 +393,16 @@ usage limit: Limită de utilizare
 color: Culoare
 screenshot: Captură de ecran
 open: Deschide
-infobox-auto-tracing-stops-at-service: Urmărirea automată se oprește la adresele de servicii,
-  deoarece fluxurile de active de obicei nu pot fi urmărite prin aceste servicii. Această
-  limitare apare deoarece serviciile acționează adesea ca cutii negre, amestecând fondurile
-  utilizatorilor. Puteți totuși să urmăriți manual tranzacțiile de ieșire folosind opțiunile
-  de urmărire disponibile în panoul lateral.
+infobox-auto-tracing-stops-at-service: Urmărirea automată se oprește la adresele de tip serviciu,
+  deoarece fluxurile de active nu pot fi de obicei urmărite prin aceste servicii. Această
+  limitare apare deoarece serviciile acționează adesea ca niște cutii negre, amestecând fondurile
+  utilizatorilor. Puteți totuși urmări manual tranzacțiile de ieșire folosind opțiunile de
+  urmărire disponibile în panoul lateral.
 copy address ID: Copiază ID-ul adresei
 copy transaction ID: Copiază ID-ul tranzacției
-auto trace limit: Limita urmăririi automate
+auto trace limit: Limită urmărire automată
 infobox-no-suitable-adjacent-transaction: Nu s-a putut găsi o tranzacție adiacentă potrivită
-  pentru adresa {0}. Acest lucru se întâmplă probabil deoarece fondurile nu au fost încă
+  pentru adresa {0}. Acest lucru se datorează probabil faptului că fondurile nu au fost încă
   cheltuite.
 save file: Salvează fișierul
 export graph: Exportă graficul
@@ -412,52 +413,52 @@ learn more: Aflați mai multe
 low confidence: Încredere scăzută
 medium confidence: Încredere medie
 high confidence: Încredere ridicată
-mixing type: Tip de amestecare
+mixing type: Tip de mixare
 more: mai mult
 x-per-y: '{0} pe {1}'
-request limit exceeded: Limita de cereri depășită
-info-request-limit-exceeded-with-details: Limita de cereri a cheii dvs. API de {0}
-  per {1} a fost depășită.
+request limit exceeded: Limita de cereri a fost depășită
+info-request-limit-exceeded-with-details: Limita de cereri a cheii dvs. API de {0} pe {1}
+  a fost depășită.
 info-request-limit-exceeded: Limita de cereri a cheii dvs. API a fost depășită.
 removed-transactions: S-au eliminat {0} tranzacții
 added-transactions: S-au adăugat {0} tranzacții
 asset flows: Fluxuri de active
 attribution-tag-on-address: Etichetă de atribuire pe această adresă.
 direct tag: Etichetă directă
-attribution-tag-inferred: Etichetă de atribuire dedusă prin clustering.
+attribution-tag-inferred: Etichetă de atribuire dedusă prin clusterizare.
 indirect tag: Etichetă indirectă
 hint-first-thing-added: Prima adresă sau tranzacție adăugată în grafic.
 hint-starting-point: Punct de pornire
 hint-thing-selected: Adresa sau tranzacția selectată în prezent.
-you are here: Vă aflați aici
+you are here: Sunteți aici
 no known identity: Nicio identitate cunoscută.
 unlabeled address: Adresă neetichetată
 unlabeled transaction: Tranzacție neetichetată
 hint-direct-transfer-of-asset: Un transfer direct al unui activ de la un portofel la altul.
-hint-simplified-address: O cale simplificată care combină toate transferurile subiacente
+hint-simplified-address: Un traseu simplificat care combină toate transferurile subiacente
   ale unui swap.
-hint-swap-bridge: Tranzacție swap/bridge
-mixing transaction: Tranzacție de amestecare
-hint-mixing-transaction: O tranzacție detectată ca tranzacție de amestecare CoinJoin.
+hint-swap-bridge: Tranzacție Swap/Bridge
+mixing transaction: Tranzacție de mixare
+hint-mixing-transaction: O tranzacție detectată ca tranzacție de mixare CoinJoin.
 crosschain tag: Etichetă crosschain
-hint-crosschain-tag: Aceeași adresă pe o altă rețea (aceeași cheie publică).
-known-exchange: Schimb de criptoactive cunoscut.
-exchange: Schimb
+hint-crosschain-tag: Aceeași adresă pe altă rețea (aceeași cheie publică).
+known-exchange: Exchange de criptoactive cunoscut.
+exchange: Exchange
 hint-possible-service: Ar putea fi un serviciu (de ex. activitate ridicată), dar neconfirmat.
-possible service: Posibil serviciu
+possible service: Serviciu posibil
 hint-known-entity: Entitate cunoscută, cum ar fi o afacere sau o instituție.
 hint-smart-contract: Adresă programată pentru tranzacții automate.
 smart contract: Contract inteligent
 symbol guide: Ghid de simboluri
-graph nodes: Noduri ale graficului
+graph nodes: Noduri grafic
 additional icons: Pictograme suplimentare
-transaction filter: Filtru de tranzacții
+transaction filter: Filtru tranzacții
 date range: Interval de date
 select date range: Selectați intervalul de date
 transaction direction: Direcția tranzacției
 all transactions: Toate tranzacțiile
-incoming only: Doar de intrare
-outgoing only: Doar de ieșire
+incoming only: Doar intrare
+outgoing only: Doar ieșire
 done: Gata
 asset type: Tip de activ
 tag-dialog-start-typing-search-labels: Începeți să tastați pentru a căuta etichete existente.
@@ -465,49 +466,49 @@ tag-dialog-add-context: Adăugați context, note sau linkuri către dovezi justi
 tag-dialog-additional-info: Informații suplimentare (opțional)
 tag-dialog-additional-info-example: de ex. Legat de un raport de înșelătorie pe xyz.com
 report a tag: Raportați o etichetă
-report tag: Raportați eticheta
-create new actor: Creați un actor nou
+report tag: Raportează eticheta
+create new actor: Creează un actor nou
 Added tag: Etichetă adăugată
-num-more-assets: '{0} active în plus'
+num-more-assets: încă {0} active
 relationship-based: Bazat pe relații
 transaction-based: Bazat pe tranzacții
 agg-edge-filter-all: Toate
 agg-edge-filter-connected: Conectate
 agg-edge-filter-new: Noi
-agg-edge-filter-tooltip: Filtrează muchiile agregate afișate pe pânză
+agg-edge-filter-tooltip: Filtrează conexiunile agregate afișate pe canvas
 annotate transaction: Adnotează tranzacția
-statusbar-loading-swap-bridge-events: 'se încarcă evenimentele de swap și bridge pentru Tx {0}:
+statusbar-loading-swap-bridge-events: 'se încarcă evenimentele Swap și Bridge pentru Tx {0}:
   {1}'
 related by multi-input heuristic: Asociate prin euristica intrărilor multiple
 related by public key: Asociate prin cheie publică
-sub transfers: Sub-transferuri
+sub transfers: Subtransferuri
 filter-label-exclude-zero-values: Exclude transferurile cu valoare zero
 filter-no-zero-value: fără valoare zero
-bridge transaction: Tranzacție bridge
-swap transaction: Tranzacție swap
-swap transactions: Tranzacții swap
-Bridge transactions: Tranzacții bridge
-hint-minimum-input: Vă rugăm să furnizați cel puțin {0} caractere
+bridge transaction: Tranzacție Bridge
+swap transaction: Tranzacție Swap
+swap transactions: Tranzacții Swap
+Bridge transactions: Tranzacții Bridge
+hint-minimum-input: Vă rugăm să introduceți cel puțin {0} caractere
 no-results-found: Nu s-au găsit rezultate.
-deprecation notice: Notă de învechire
-show transaction hash: Arată hash-ul tranzacției
-hint-multiple-search-terms: S-au detectat mai mulți termeni de căutare ({0}). Vă rugăm
-  să apăsați Enter pentru a adăuga.
+deprecation notice: Notificare de învechire
+show transaction hash: Afișează hash-ul tranzacției
+hint-multiple-search-terms: S-au detectat mai mulți termeni de căutare ({0}). Apăsați enter
+  pentru a adăuga.
 transactions-from-to: Tranzacții de la {0} la {1} ({2})
 watch tutorials: urmăriți tutoriale
-supported tokens: token-uri acceptate
-statusbar-loading-token-currencies: 'se încarcă token-urile acceptate pentru {0}'
+supported tokens: tokenuri acceptate
+statusbar-loading-token-currencies: se încarcă monedele token acceptate pentru {0}
 back: înapoi
 mode: mod
 all our services: toate serviciile noastre
 logout: deconectare
-with zone code: arată diferența de timp
+with zone code: afișează diferența de fus orar
 in UTC: fus orar UTC
 e.g.: de ex. {0}
-actor label: etichetă actor
-date-time-format: 'dd.MM.yyyy HH:mm'
-time-format: "HH:mm"
-date-format: "dd.MM.yy"
+actor label: denumire actor
+date-time-format: dd.MM.yyyy HH:mm
+time-format: HH:mm
+date-format: dd.MM.yy
 open in new tab: deschide într-o filă nouă
 align vertically: Aliniază vertical
 align horizontally: Aliniază orizontal
@@ -517,7 +518,7 @@ generating png: Se generează imaginea graficului...
 generating pdf success: PDF generat cu succes.
 generating png success: Imagine generată cu succes.
 check download folder: Vă rugăm să verificați folderul de descărcări
-show both on tx: Arată fiat și cripto
+show both on tx: Afișează fiat și criptoactive
 time: oră
 assets: active
 export all graph transactions as csv: Exportă toate tranzacțiile graficului ca CSV
@@ -527,27 +528,31 @@ addresses not found: adresele nu au fost găsite
 transaction not found: tranzacția nu a fost găsită
 transactions not found: tranzacțiile nu au fost găsite
 session expired: sesiune expirată
-popup-session-expired-info: Sesiunea dvs. a expirat. Vă rugăm să vă salvați munca și să reîmprospătați pagina.
-export-dialog-area-visible: "zona vizibilă"
-export-dialog-area-selected: "noduri selectate"
-export-dialog-area-whole: "întregul grafic"
-export-dialog-area-title: "zonă de exportat"
-export-dialog-display-keephighlight: "păstrează evidențierea selecției"
-export-dialog-display-title: "opțiuni de afișare"
-export-dialog-format-title: "format"
-export-dialog-filename-help: "introduceți un nume pentru fișierul exportat"
-export-dialog-filename-label: "nume fișier"
-export-dialog-filename-placeholder: "introduceți numele fișierului aici"
-export-dialog-button-loading: "se exportă..."
-export-dialog-button: "exportă"
-export-dialog-title: "exportă"
-export-dialog-description: "exportați graficul curent în diverse formate"
-export-dialog-transparent-background: "fundal transparent"
-unsupported-swap-notice: "Notă: S-a detectat o tranzacție swap neacceptată, țintă {0} ({1})"
-unsupported-bridge-notice: "Notă: S-a detectat o tranzacție bridge neacceptată, țintă {0} ({1})"
+popup-session-expired-info: Sesiunea dvs. a expirat. Vă rugăm să salvați modificările și să
+  reîmprospătați pagina.
+export-dialog-area-visible: zonă vizibilă
+export-dialog-area-selected: noduri selectate
+export-dialog-area-whole: întregul grafic
+export-dialog-area-title: zonă de exportat
+export-dialog-display-keephighlight: păstrează evidențierea selecției
+export-dialog-display-title: opțiuni de afișare
+export-dialog-format-title: format
+export-dialog-filename-help: introduceți un nume pentru fișierul exportat
+export-dialog-filename-label: nume fișier
+export-dialog-filename-placeholder: introduceți numele fișierului aici
+export-dialog-button-loading: se exportă...
+export-dialog-button: exportă
+export-dialog-title: exportă
+export-dialog-description: exportă graficul curent în diverse formate
+export-dialog-transparent-background: fundal transparent
+unsupported-swap-notice: 'Notă: S-a detectat o tranzacție swap neacceptată, țintă {0} ({1})'
+unsupported-bridge-notice: 'Notă: S-a detectat o tranzacție bridge neacceptată, țintă {0}
+  ({1})'
 cluster tags: Etichete derivate din cluster
 cluster tags list: Listă de etichete derivate din cluster
-cluster tags disclaimer: "Aceste etichete nu sunt atribuite direct acestei adrese, ci sunt deduse din clusterul căruia îi aparține. Clusteringul poate conține erori, așa că aceste etichete trebuie folosite cu prudență."
+cluster tags disclaimer: Aceste etichete nu sunt atribuite direct acestei adrese, ci sunt
+  deduse din clusterul căruia îi aparține. Clusteringul poate conține erori, așa că aceste
+  etichete trebuie folosite cu prudență.
 datefilter-starting: de la
 datefilter-until: până la
 datefilter-starting-tx: ulterior
@@ -555,26 +560,77 @@ datefilter-until-tx: anterior
 filter-quick-filter: filtru rapid per tranzacție
 filter-custom-filter: filtru personalizat
 filter-follow-utxo: urmărește UTXO
-filter-none-selected: niciunul selectat
+filter-none-selected: 'niciunul selectat '
 filter-utxo-only: doar UTXO
-tx-filter-utxo-only-tooltip: Listează doar tranzacțiile care fac referire la tranzacția selectată la nivel UTXO
-tx-filter-quickfilter-tooltip: Filtrează automat după nodurile de tranzacții din grafic
+tx-filter-utxo-only-tooltip: Listează doar tranzacțiile care fac referire la tranzacția selectată
+  la nivel UTXO
+tx-filter-quickfilter-tooltip: Filtrează automat după nodurile de tranzacție din grafic
 retrying {0}/{1}: se reîncearcă {0}/{1}
-about to retry: pe cale de a reîncerca
+about to retry: se încearcă din nou
 transaction-table-trace-further-button: Continuă căutarea
-transaction-table-trace-further-title: Nu s-a găsit încă nicio tranzacție
-transaction-table-trace-further: Nu s-a găsit nicio tranzacție legată prin UTXO care să aibă alte intrări decât adresa selectată, urmărind {0} salturi. Doriți să căutați mai departe?
+transaction-table-trace-further-title: Nicio tranzacție găsită încă
+transaction-table-trace-further: Nu s-a găsit nicio tranzacție legată prin UTXO care să aibă
+  alte intrări decât adresa selectată, urmărind peste {0} salturi. Doriți să căutați mai departe?
 transaction-tracing-not-possible: Urmărirea tranzacției nu este posibilă
-no-adjacent-tx-between-addresses: Nu s-a putut găsi o tranzacție adiacentă potrivită între adresa {0} și {1}.
-could-not-link-neighbor-address: Nu s-a putut lega adresa vecină
-max-change-hops-reached: Nu s-a putut găsi o tranzacție adiacentă pentru adresa {0} care să nu fie doar rest, în {1} salturi. Vă rugăm să încercați din nou să căutați mai departe.
+no-adjacent-tx-between-addresses: Nu s-a putut găsi o tranzacție adiacentă potrivită între
+  adresa {0} și {1}.
+could-not-link-neighbor-address: Nu s-a putut conecta adresa vecină
+max-change-hops-reached: Nu s-a putut găsi o tranzacție adiacentă pentru adresa {0} care să
+  nu fie doar rest pentru {1} salturi. Vă rugăm să încercați din nou pentru a căuta mai departe.
 transaction-tracing-across-change: Urmărirea tranzacției prin rest
-hint-auto-trace-title: Urmărește automat fondurile
-hint-auto-trace-description: Urmăriți banii găsind automat următoarea tranzacție (la nivel UTXO dacă este acceptat de registru)
-tooltip-opens-pubkey-related-addresses-table: Adrese în alte criptomonede legate prin aceeași cheie publică. Faceți clic pentru a deschide tabelul corespunzător de mai jos.
+hint-auto-trace-title: Urmărire automată a fondurilor
+hint-auto-trace-description: Urmăriți banii găsind automat următoarea tranzacție (la nivel
+  UTXO dacă registrul acceptă)
+tooltip-opens-pubkey-related-addresses-table: Adrese din alte criptoactive legate prin aceeași
+  cheie publică. Faceți clic pentru a deschide tabelul corespunzător de mai jos.
+Add label: Adaugă denumire
+Address transactions of entity {0} ({1}): Tranzacțiile adresei clusterului {0} ({1})
+Bridge TX: TX Bridge
+Cluster: Cluster
+Clusters: Clustere
+Coin: Monedă
+Delete: Șterge
+Download table as CSV: Descarcă tabelul ca CSV
+Export-dialog-unknown-filename: necunoscut
+Filter table: Filtrează tabelul
+Input Value: Valoare intrare
+Loading references: Se încarcă referințele
+Loading tags: Se încarcă etichetele
+No matches: Nicio potrivire
+Optional: Opțional
+Output Value: Valoare ieșire
+Please log-in: Vă rugăm să vă autentificați
+Please try again with a lower depth/breadth setting.: Vă rugăm să încercați din nou cu o setare
+  mai mică de adâncime/lățime.
+Search on graph: Caută în grafic
+Showing {0} of {1} items: Se afișează {0} din {1} elemente
+Swap: Swap
+Tag is invalid: Eticheta este invalidă
+Tag locked: Etichetă blocată
+Tx hash: Hash tranzacție
+Url: URL
+Warning: Avertisment
+change: rest
+contract creation: creare contract
+for addresses: pentru adrese
+has tags: are etichete
+is an exchange: este un exchange
+more actions: mai multe acțiuni
+or: sau
+proprietary tag: etichetă proprietară
+reset in {0}s: resetare în {0}s
+'{0} items': '{0} elemente'
+'{0}/{1}': '{0}/{1}'
+actor / Category: Actor / Categorie
 csv-export-capped-title: Export CSV limitat
-csv-export-capped-message: "{0} tranzacție(i) mari au fost reduse în exportul CSV pentru a menține dimensiunea fișierului gestionabilă; pentru acestea sunt incluse doar fluxurile cu o adresă în grafic."
-export-dialog-only-visible-inoutputs: "exportă doar intrările/ieșirile vizibile"
-export-dialog-only-visible-inoutputs-help: "Când este activat, CSV-ul conține doar fluxurile dintre intrările și ieșirile vizibile în graf. Dezactivează pentru a exporta întreaga matrice de intrări/ieșiri — pentru tranzacții cu multe intrări și ieșiri aceasta poate genera un fișier foarte mare."
-csv-note-capped: "Tranzacție prea mare – au fost exportate doar fluxurile cu o adresă vizibilă, trunchiate la limita de export."
-csv-note-visible-only: "Au fost exportate doar fluxurile cu o adresă vizibilă."
+csv-export-capped-message: '{0} tranzacție(i) mari au fost reduse în exportul CSV pentru a
+  menține dimensiunea fișierului gestionabilă; pentru acestea sunt incluse doar fluxurile
+  cu o adresă în grafic.'
+export-dialog-only-visible-inoutputs: exportă doar intrările/ieșirile vizibile
+export-dialog-only-visible-inoutputs-help: Când este activat, CSV-ul conține doar fluxurile
+  dintre intrările și ieșirile vizibile în graf. Dezactivează pentru a exporta întreaga matrice
+  de intrări/ieșiri — pentru tranzacții cu multe intrări și ieșiri aceasta poate genera un
+  fișier foarte mare.
+csv-note-capped: Tranzacție prea mare – au fost exportate doar fluxurile cu o adresă vizibilă,
+  trunchiate la limita de export.
+csv-note-visible-only: Au fost exportate doar fluxurile cu o adresă vizibilă.

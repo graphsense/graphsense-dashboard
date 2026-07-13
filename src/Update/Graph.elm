@@ -3199,6 +3199,9 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.PushUrl _ ->
                         ( mo, [] )
 
+                    PluginInterface.Back _ ->
+                        ( mo, [] )
+
                     PluginInterface.GetSerialized _ ->
                         ( mo, [] )
 

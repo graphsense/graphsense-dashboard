@@ -9,6 +9,6 @@ pagesize =
     100
 
 
-init : String -> InfiniteTable.Model Api.Data.AddressTag
+init : String -> InfiniteTable.Model String Api.Data.AddressTag
 init tableId =
     InfiniteTable.init tableId pagesize

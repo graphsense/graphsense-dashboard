@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, conditionalHide, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -692,3 +692,12 @@ makeValuesList vc network right left =
         |> Dict.values
         |> List.sortBy sort
         |> List.reverse
+
+
+conditionalHide : Bool -> List (Html.Styled.Attribute msg)
+conditionalHide arg1 =
+    if arg1 then
+        [ css [ Css.display Css.none ] ]
+
+    else
+        []

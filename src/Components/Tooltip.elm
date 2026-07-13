@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg(..), Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withKeepOpenOnHover, withMinWidth, withOpenDelay, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg(..), Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withKeepOpenOnHover, withMaxHeight, withMinWidth, withOpenDelay, withViewport, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
@@ -30,6 +30,7 @@ type alias ModelInternal a =
     , closeDelay : Float
     , keepOpenOnHover : Bool
     , minWidth : Int
+    , maxHeight : Maybe Int
     }
 
 
@@ -59,6 +60,7 @@ type alias ConfigInternal a msg =
     , closeDelay : Float
     , keepOpenOnHover : Bool
     , minWidth : Int
+    , maxHeight : Maybe Int
     }
 
 
@@ -80,6 +82,7 @@ defaultConfig tag =
         , closeDelay = 0
         , keepOpenOnHover = False
         , minWidth = 230
+        , maxHeight = Nothing
         }
 
 
@@ -153,8 +156,13 @@ withMinWidth minWidth (Config c) =
     Config { c | minWidth = minWidth }
 
 
+withMaxHeight : Int -> Config a msg -> Config a msg
+withMaxHeight maxHeight (Config c) =
+    Config { c | maxHeight = Just maxHeight }
+
+
 type Msg a
-    = OpenTooltip String a Float Float Bool Int
+    = OpenTooltip String a Float Float Bool Int (Maybe Int)
     | CloseTooltip
     | HovercardMsg Hovercard.Msg
     | DelayPassed
@@ -197,8 +205,8 @@ attributes id config content =
 
 -}
 eventHandlers : String -> Config a msg -> a -> List (Attribute msg)
-eventHandlers id (Config { tag, openDelay, closeDelay, keepOpenOnHover, minWidth }) content =
-    [ OpenTooltip id content openDelay closeDelay keepOpenOnHover minWidth |> tag |> onMouseOver
+eventHandlers id (Config { tag, openDelay, closeDelay, keepOpenOnHover, minWidth, maxHeight }) content =
+    [ OpenTooltip id content openDelay closeDelay keepOpenOnHover minWidth maxHeight |> tag |> onMouseOver
     , CloseTooltip |> tag |> onMouseLeave
     ]
 
@@ -206,7 +214,7 @@ eventHandlers id (Config { tag, openDelay, closeDelay, keepOpenOnHover, minWidth
 update : Msg a -> Model a -> ( Model a, List Effect )
 update msg (Model model) =
     case msg of
-        OpenTooltip id content openDelay closeDelay keepOpenOnHover minWidth ->
+        OpenTooltip id content openDelay closeDelay keepOpenOnHover minWidth maxHeight ->
             model
                 |> Maybe.map
                     (\mo ->
@@ -228,6 +236,7 @@ update msg (Model model) =
                                         , hovercard = Nothing
                                         , id = id
                                         , minWidth = minWidth
+                                        , maxHeight = maxHeight
                                     }
                                         |> Just
                                         |> Model
@@ -244,6 +253,7 @@ update msg (Model model) =
                      , closeDelay = closeDelay
                      , keepOpenOnHover = keepOpenOnHover
                      , minWidth = minWidth
+                     , maxHeight = maxHeight
                      }
                         |> Just
                         |> Model
@@ -355,7 +365,13 @@ view (Config config) (Model model) view_ =
                                 |> div
                                     ([ css
                                         (GraphComponents.tooltipDown_details.styles
-                                            ++ [ Css.minWidth (Css.px (toFloat mo.minWidth)) ]
+                                            ++ [ Css.minWidth (Css.px (toFloat mo.minWidth))
+                                               , Css.overflow Css.auto
+                                               ]
+                                            ++ (mo.maxHeight
+                                                    |> Maybe.map (\h -> [ Css.maxHeight (Css.px (toFloat h)) ])
+                                                    |> Maybe.withDefault []
+                                               )
                                         )
                                      , ClickTooltip |> config.tag |> onClick
                                      , CloseTooltip |> config.tag |> onMouseLeave

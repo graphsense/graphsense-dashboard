@@ -21,7 +21,7 @@ type alias MaxChangeHopsLimitData =
 
 
 type alias Model =
-    { table : InfiniteTable.Model Api.Data.AddressTx
+    { table : InfiniteTable.Model String Api.Data.AddressTx
     , order : Maybe Api.Request.Addresses.Order_
     , filter : TransactionFilter.Model
     , maxChangeHopsLimit : Maybe MaxChangeHopsLimitData

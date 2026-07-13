@@ -169,5 +169,6 @@ mapMsg map model =
 
         Plugin conf ->
             { defaultMsg = map conf.defaultMsg
+            , placement = conf.placement
             }
                 |> Plugin

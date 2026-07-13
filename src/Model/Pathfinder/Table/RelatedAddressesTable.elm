@@ -11,7 +11,7 @@ import Set exposing (Set)
 
 
 type alias Model =
-    { table : InfiniteTable.Model Api.Data.Address
+    { table : InfiniteTable.Model String Api.Data.Address
     , entity : Entity
     , addressId : Pathfinder.Id
     , existingTaggedAddresses : Set String
@@ -33,11 +33,11 @@ filter { addressId } =
     }
 
 
-setTable : Model -> InfiniteTable.Model Api.Data.Address -> Model
+setTable : Model -> InfiniteTable.Model String Api.Data.Address -> Model
 setTable ra table =
     Rs.s_table table ra
 
 
-getTable : Model -> InfiniteTable.Model Api.Data.Address
+getTable : Model -> InfiniteTable.Model String Api.Data.Address
 getTable ra =
     ra.table

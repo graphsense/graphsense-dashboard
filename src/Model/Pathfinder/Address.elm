@@ -15,6 +15,7 @@ module Model.Pathfinder.Address exposing
     , getTotalReceived
     , getTotalSpent
     , getTxs
+    , isSharedService
     , isSmartContract
     , txsGetSet
     , txsSetter
@@ -172,6 +173,18 @@ txsSetter direction =
 
         Outgoing ->
             s_outgoingTxs
+
+
+{-| Whether the address belongs to a shared service — infrastructure used by
+many unrelated parties (exchange or smart contract), so tags or case
+connections on it are weak evidence of linkage. The `addressServiceType`
+heuristics are deliberately not considered here: they would flag ordinary
+addresses (e.g. any UTXO address in a larger cluster).
+-}
+isSharedService : Address -> Bool
+isSharedService address =
+    (address.exchange /= Nothing)
+        || isSmartContract address
 
 
 expandAllowed : Address -> Bool

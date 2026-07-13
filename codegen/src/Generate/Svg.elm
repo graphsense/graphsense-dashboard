@@ -16,7 +16,7 @@ import Generate.Svg.LineNode as LineNode
 import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
 import Generate.Svg.VectorNode as VectorNode
-import Generate.Util exposing (getElementAttributes, sanitize, toTranslate, withVisibility)
+import Generate.Util exposing (getElementAttributes, sanitize, toTranslate, withVisibilitySvg)
 import Maybe.Extra
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Styles)
@@ -531,7 +531,7 @@ withFrameTraitsNodeToExpressions config componentName node =
         (frameTraitsToExpressions config componentName node.frameTraits
             |> Elm.list
         )
-        |> withVisibility componentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibilitySvg componentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 
@@ -588,5 +588,5 @@ instanceNodeToExpressions config parentName node =
                             )
                 )
         )
-            |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+            |> withVisibilitySvg parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
             |> List.singleton
