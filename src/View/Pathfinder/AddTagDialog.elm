@@ -12,6 +12,7 @@ import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.Dialogs as Dialogs
 import Theme.Html.Fields as F
+import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as Sc
 import Tuple exposing (second)
 import Util.Css exposing (alignItemsStretch)
@@ -160,9 +161,9 @@ view plugins vc model =
                     }
                 }
     in
-    Dialogs.dialogGenericWithAttributes
-        (Dialogs.dialogGenericAttributes
-            |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick model.closeMsg ]
+    Dialogs.dialogGenericDevWithAttributes
+        (Dialogs.dialogGenericDevAttributes
+            |> Rs.s_iconsCloseNoPadding [ Util.View.pointer, onClick model.closeMsg ]
         )
         { inputList =
             [ actorText
@@ -193,8 +194,11 @@ view plugins vc model =
                 )
                     |> Button.primaryButton vc
             }
-        , root =
+        , root = {}
+        , dialogHeader =
             { header = Locale.string vc.locale "Report a tag" |> Locale.titleCase vc.locale
             , description = Locale.string vc.locale "Add_Tag_description"
+            , icon = Icons.iconsTagL { root = { type_ = Icons.IconsTagLTypeDirect } }
+            , showIconsFrame = True
             }
         }

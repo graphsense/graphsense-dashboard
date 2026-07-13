@@ -1,8 +1,9 @@
-module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, addressRouteWithFilter, aggEdgeRoute, parser, pathRoute, toUrl, txRoute)
+module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, addressRouteWithFilter, aggEdgeRoute, parser, pathRoute, pluginRoute, toUrl, txRoute)
 
 import Iso8601
 import List.Extra
 import Model.DateFilter as DateFilter exposing (DateFilterRaw)
+import Plugin.Model
 import Url.Builder exposing (QueryParameter, absolute, string)
 import Util.Url.Parser as P exposing (Parser, map, oneOf, s)
 import Util.Url.Parser.Query as Q
@@ -19,6 +20,7 @@ type Route
     | Label String
     | Network String Thing
     | Path String (List PathHopType)
+    | Plugin ( Plugin.Model.PluginType, String )
 
 
 type PathHopType
@@ -99,6 +101,9 @@ toUrl r =
                 , String.join pathSeparator (steps |> List.map hopToString)
                 ]
                 []
+
+        Plugin ( ns, p ) ->
+            "/" ++ Plugin.Model.pluginTypeToNamespace ns ++ "/" ++ p
 
 
 thingToUrl : Thing -> ( List String, List QueryParameter )
@@ -226,3 +231,21 @@ aggEdgeRoute : { network : String, a : String, b : String } -> Route
 aggEdgeRoute { network, a, b } =
     Relation a b
         |> Network network
+
+
+pluginRoute : ( String, String ) -> Route
+pluginRoute ( ns, url ) =
+    ns
+        |> Plugin.Model.namespaceToPluginType
+        |> Maybe.map
+            (\type_ ->
+                ( type_
+                , if String.startsWith "/" url then
+                    String.dropLeft 1 url
+
+                  else
+                    url
+                )
+                    |> Plugin
+            )
+        |> Maybe.withDefault Root

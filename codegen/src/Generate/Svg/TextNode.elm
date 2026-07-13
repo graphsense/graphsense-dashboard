@@ -6,11 +6,11 @@ import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common.TextNode exposing (getName)
+import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.TypeStyle as TypeStyle
-import Generate.Util exposing (callStyles, getElementAttributes, getTextProperty, m, mm, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, getTextProperty, m, mm, withVisibilitySvg)
 import Types exposing (ColorMap, Config, Details)
-import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 
 
 toExpressions : Config -> String -> TextNode -> List Elm.Expression
@@ -31,7 +31,7 @@ toExpressions config componentName node =
         (getTextProperty componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> Maybe.map Gen.Svg.Styled.call_.text
             |> Maybe.withDefault (Gen.Svg.Styled.text node.characters)
-            |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+            |> withVisibilitySvg componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> List.singleton
             |> Elm.list
         )

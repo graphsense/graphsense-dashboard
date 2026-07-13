@@ -9,11 +9,11 @@ import Gen.Svg.Styled.Attributes exposing (height, width, x, y)
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.RectangleNode exposing (getName)
 import Generate.Svg.CornerTrait as CornerTrait
+import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Svg.HasGeometryTrait as HasGeometryTrait
-import Generate.Util exposing (callStyles, getElementAttributes, withVisibility)
+import Generate.Util exposing (callStyles, getElementAttributes, withVisibilitySvg)
 import RecordSetter exposing (..)
 import Types exposing (ColorMap, Config, Details, OriginAdjust)
-import Generate.Svg.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 
 
 toExpressions : Config -> String -> RectangleNode -> List Elm.Expression
@@ -34,7 +34,7 @@ toExpressions config componentName node =
                 )
         )
         (Elm.list [])
-        |> withVisibility componentName config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibilitySvg componentName config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

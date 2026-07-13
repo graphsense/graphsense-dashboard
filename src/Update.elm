@@ -761,7 +761,7 @@ update plugins uc msg model =
                 |> updateByPluginOutMsg plugins uc outMsg
 
         UserClickedNavBack ->
-            ( model, NavBackEffect |> List.singleton )
+            ( model, NavBackEffect 1 |> List.singleton )
 
         UserClickedNavHome ->
             ( model, NavPushUrlEffect "/" |> List.singleton )
@@ -2345,6 +2345,13 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                             |> (++) eff
                         )
 
+                    PluginInterface.Back steps ->
+                        ( model
+                        , NavBackEffect steps
+                            |> List.singleton
+                            |> (++) eff
+                        )
+
                     PluginInterface.GetEntitiesForAddresses addresses toMsg ->
                         let
                             -- separate loaded clusters from loading ones
@@ -3146,26 +3153,27 @@ clusterTagsFilter _ =
     }
 
 
-addressTagsInfiniteTableConfig : PathfinderId.Id -> InfiniteTable.Config (Effect.Api.Effect Msg)
+addressTagsInfiniteTableConfig : PathfinderId.Id -> InfiniteTable.Config String (Effect.Api.Effect Msg)
 addressTagsInfiniteTableConfig id =
-    { fetch =
-        \_ pagesize nextpage ->
-            Effect.Api.GetAddressTagsEffect
-                { currency = PathfinderId.network id
-                , address = PathfinderId.id id
-                , pagesize = pagesize
-                , nextpage = nextpage
-                , includeBestClusterTag = True
-                }
-                (\tags -> PathfinderMsg (Pathfinder.UserGotMoreAddressTagsForDialog id tags))
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = Effect.Api.effectToTracker
-    , abort = Effect.Api.CancelEffect
-    }
+    let
+        fetchFn =
+            \_ pagesize nextpage ->
+                Effect.Api.GetAddressTagsEffect
+                    { currency = PathfinderId.network id
+                    , address = PathfinderId.id id
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    , includeBestClusterTag = True
+                    }
+                    (\tags -> PathfinderMsg (Pathfinder.UserGotMoreAddressTagsForDialog id tags))
+    in
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort Effect.Api.CancelEffect Effect.Api.effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
 
 
-clusterTagsInfiniteTableConfig : PathfinderId.Id -> Model.Pathfinder.Model -> InfiniteTable.Config (Effect.Api.Effect Msg)
+clusterTagsInfiniteTableConfig : PathfinderId.Id -> Model.Pathfinder.Model -> InfiniteTable.Config String (Effect.Api.Effect Msg)
 clusterTagsInfiniteTableConfig id pathfinderModel =
     let
         entity =
@@ -3174,18 +3182,18 @@ clusterTagsInfiniteTableConfig id pathfinderModel =
                 |> Maybe.andThen (.data >> RD.toMaybe)
                 |> Maybe.map Util.Data.addressCluster
                 |> Maybe.withDefault 0
+
+        fetchFn =
+            \_ pagesize nextpage ->
+                Effect.Api.GetEntityAddressTagsEffect
+                    { currency = PathfinderId.network id
+                    , entity = entity
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    }
+                    (\tags -> PathfinderMsg (Pathfinder.UserGotMoreClusterTagsForDialog id tags))
     in
-    { fetch =
-        \_ pagesize nextpage ->
-            Effect.Api.GetEntityAddressTagsEffect
-                { currency = PathfinderId.network id
-                , entity = entity
-                , pagesize = pagesize
-                , nextpage = nextpage
-                }
-                (\tags -> PathfinderMsg (Pathfinder.UserGotMoreClusterTagsForDialog id tags))
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = Effect.Api.effectToTracker
-    , abort = Effect.Api.CancelEffect
-    }
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort Effect.Api.CancelEffect Effect.Api.effectToTracker
+        |> InfiniteTable.setTriggerOffset 100

@@ -4,7 +4,7 @@ import Api.Data
 import Components.InfiniteTable as InfiniteTable
 
 
-init : Bool -> Int -> InfiniteTable.Model Api.Data.NeighborAddress
+init : Bool -> Int -> InfiniteTable.Model String Api.Data.NeighborAddress
 init isOutgoing _ =
     let
         dir =

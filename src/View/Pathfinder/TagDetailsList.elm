@@ -207,7 +207,7 @@ view vc conf =
         ]
 
 
-tagsInfiniteTable : View.Config -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.Model Api.Data.AddressTag -> Html Msg
+tagsInfiniteTable : View.Config -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.Model String Api.Data.AddressTag -> Html Msg
 tagsInfiniteTable vc tag tbl =
     if InfiniteTable.isEmpty tbl then
         if InfiniteTable.isLoading tbl then

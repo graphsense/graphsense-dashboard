@@ -21,7 +21,7 @@ import Util exposing (and, n)
 import Util.Data as Data
 
 
-transactionTableConfig : Model -> InfiniteTable.Config Effect
+transactionTableConfig : Model -> InfiniteTable.Config String Effect
 transactionTableConfig m =
     let
         baseTxHash =
@@ -32,27 +32,27 @@ transactionTableConfig m =
 
         settings =
             TransactionFilter.getSettings m.subTxsTableFilter
+
+        fetchFn =
+            \_ pagesize nextpage ->
+                (BrowserGotTxFlows nextpage >> Pathfinder.TxDetailsMsg)
+                    |> Api.ListTxFlowsEffect
+                        { currency = currency
+                        , txHash = baseTxHash
+                        , includeZeroValueSubTxs =
+                            settings
+                                |> TransactionFilter.getIncludeZeroValueTxs
+                                |> Maybe.withDefault False
+                        , pagesize = Just pagesize
+                        , token_currency = TransactionFilter.getSelectedAsset settings
+                        , nextpage = nextpage
+                        }
+                    |> ApiEffect
     in
-    { fetch =
-        \_ pagesize nextpage ->
-            (BrowserGotTxFlows nextpage >> Pathfinder.TxDetailsMsg)
-                |> Api.ListTxFlowsEffect
-                    { currency = currency
-                    , txHash = baseTxHash
-                    , includeZeroValueSubTxs =
-                        settings
-                            |> TransactionFilter.getIncludeZeroValueTxs
-                            |> Maybe.withDefault False
-                    , pagesize = Just pagesize
-                    , token_currency = TransactionFilter.getSelectedAsset settings
-                    , nextpage = nextpage
-                    }
-                |> ApiEffect
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = effectToTracker
-    , abort = Api.CancelEffect >> ApiEffect
-    }
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort (Api.CancelEffect >> ApiEffect) effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
 
 
 transactionTableFilter : Table.Filter Api.Data.TxAccount
@@ -308,8 +308,8 @@ gettersAndSetters :
     ->
         { openGet : Model -> Bool
         , openSet : Bool -> Model -> Model
-        , tableGet : Model -> InfiniteTable.Model Api.Data.TxValue
-        , tableSet : InfiniteTable.Model Api.Data.TxValue -> Model -> Model
+        , tableGet : Model -> InfiniteTable.Model String Api.Data.TxValue
+        , tableSet : InfiniteTable.Model String Api.Data.TxValue -> Model -> Model
         , refsGet : Model -> IntDict TxValueRefsData
         , refsSet : IntDict TxValueRefsData -> Model -> Model
         }

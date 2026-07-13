@@ -1,5 +1,6 @@
 module View.Locale exposing
-    ( coin
+    ( capitalized
+    , coin
     , coinWithoutCode
     , currency
     , currencyAsFloat
@@ -15,9 +16,11 @@ module View.Locale exposing
     , intWithFormat
     , intWithoutValueDetailFormatting
     , interpolated
+    , interpolatedMarkdown
     , isFirstSecondOfTheDay
     , isLastSecondOfTheDay
     , makeTimestampFilename
+    , markdown
     , percentage
     , string
     , text
@@ -28,6 +31,7 @@ module View.Locale exposing
     , timestampNormal
     , timestampTimeUniform
     , timestampWithFormat
+    , title
     , titleCase
     , tokenCurrencies
     , valuesToFloat
@@ -40,11 +44,13 @@ import Css.Transitions as T exposing (transition)
 import DateFormat
 import Dict exposing (Dict)
 import Ease
+import Html.Attributes exposing (class)
 import Html.Styled exposing (Html, span)
 import Html.Styled.Attributes exposing (css)
 import Http
 import List.Extra exposing (find)
 import Locale.Durations
+import Markdown
 import Model.Currency exposing (..)
 import Model.Locale exposing (..)
 import String.Extra
@@ -118,6 +124,23 @@ interpolated model key =
     String.Interpolate.interpolate (string model key)
 
 
+capitalized : Model -> String -> String
+capitalized model key =
+    let
+        translated =
+            string model key
+    in
+    String.left 1 translated
+        |> String.toUpper
+        |> flip (++) (String.dropLeft 1 translated)
+
+
+title : Model -> String -> String
+title model key =
+    string model key
+        |> titleCase model
+
+
 mix : String -> String -> Float -> String
 mix start end progress =
     let
@@ -156,6 +179,20 @@ text model key =
         [ string model key
             |> Html.Styled.text
         ]
+
+
+markdown : Model -> String -> Html msg
+markdown model key =
+    string model key
+        |> Markdown.toHtml [ class "gs-markdown" ]
+        |> Html.Styled.fromUnstyled
+
+
+interpolatedMarkdown : Model -> String -> List String -> Html msg
+interpolatedMarkdown model key interpolations =
+    String.Interpolate.interpolate (string model key) interpolations
+        |> Markdown.toHtml [ class "gs-markdown" ]
+        |> Html.Styled.fromUnstyled
 
 
 formatWithValueDetail : Model -> String -> String

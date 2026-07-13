@@ -56,6 +56,23 @@ view plugins vc model =
            input { border: 0; }
            """ ] |> toUnstyled
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
+        , node "style" [] [ text """
+           .gs-markdown { overflow-wrap: break-word; }
+           .gs-markdown h1,
+           .gs-markdown h2,
+           .gs-markdown h3,
+           .gs-markdown h4,
+           .gs-markdown h5,
+           .gs-markdown h6 { display: inline; font-weight: bold; }
+           .gs-markdown p { margin: 0 0 1em 0; }
+           .gs-markdown ul,
+           .gs-markdown ol { margin: 0 0 1em 0; padding-left: 2em; }
+           .gs-markdown li { margin: 0.5em 0; }
+           .gs-markdown strong,
+           .gs-markdown b { font-weight: bold; }
+           .gs-markdown em,
+           .gs-markdown i { font-style: italic; }
+           """ ] |> toUnstyled
         , body plugins vc model |> toUnstyled
         ]
     }
@@ -339,10 +356,10 @@ hovercards plugins vc model =
 overlay : Plugins -> Config -> Model key -> List (Html Msg)
 overlay plugins vc model =
     let
-        ov onClickOutside =
+        ov placement onClickOutside =
             List.singleton
                 >> div
-                    [ Css.View.overlay vc |> css
+                    [ Css.View.overlay placement vc |> css
                     , onClick (UserClickedOutsideDialog onClickOutside)
                     ]
                 >> List.singleton
@@ -356,14 +373,14 @@ overlay plugins vc model =
                             |> List.map Html.Styled.toUnstyled
                             |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
                     )
-                |> Maybe.map (ov NoOp)
+                |> Maybe.map (ov Dialog.Centered NoOp)
                 |> Maybe.withDefault []
 
         _ ->
             case model.dialog of
                 Just dialog ->
                     Dialog.view plugins model.plugins vc dialog
-                        |> ov (Dialog.defaultMsg dialog)
+                        |> ov (Dialog.placement dialog) (Dialog.defaultMsg dialog)
 
                 Nothing ->
                     []

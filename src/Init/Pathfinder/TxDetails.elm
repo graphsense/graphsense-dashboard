@@ -4,7 +4,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Components.TransactionFilter as TransactionFilter
-import Effect.Pathfinder exposing (Effect(..))
+import Effect.Pathfinder exposing (Effect)
 import IntDict
 import Model.Pathfinder.Table.IoTable as IoTable exposing (titleValue)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -16,12 +16,12 @@ import Tuple3
 import Util.Data exposing (negateTxValue)
 
 
-initSubTxTable : InfiniteTable.Model Api.Data.TxAccount
+initSubTxTable : InfiniteTable.Model String Api.Data.TxAccount
 initSubTxTable =
     InfiniteTable.init "subTxTable" 6
 
 
-initIoTable : String -> IoDirection -> List Api.Data.TxValue -> InfiniteTable.Model Api.Data.TxValue
+initIoTable : String -> IoDirection -> List Api.Data.TxValue -> InfiniteTable.Model String Api.Data.TxValue
 initIoTable tableId ioDirection data =
     let
         dataAsc =
@@ -49,14 +49,9 @@ initIoTable tableId ioDirection data =
 -- Dummy config for initializing IoTable - fetch and abort won't be used during init
 
 
-dummyIoTableConfig : InfiniteTable.Config Effect
+dummyIoTableConfig : InfiniteTable.Config String Effect
 dummyIoTableConfig =
-    { fetch = \_ _ _ -> BatchEffect []
-    , force = False
-    , effectToTracker = \_ -> Nothing
-    , abort = \_ -> BatchEffect []
-    , triggerOffset = 100
-    }
+    InfiniteTable.config
 
 
 init : Maybe TransactionFilter.Settings -> List String -> Tx -> TxDetails.Model
