@@ -6,7 +6,7 @@
         "generated",
         "config"
     ],
-    "elm-version": "0.19.2",
+    "elm-version": "0.19.1",
     "dependencies": {
         "direct": {
             "avh4/elm-color": "1.0.0",
