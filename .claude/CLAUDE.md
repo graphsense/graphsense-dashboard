@@ -209,4 +209,6 @@ Two guards, both loud:
 
 Symptom of a build without the patches: `TypeError: Node.removeChild: Argument 1 is not an object` from `_VirtualDom_applyPatch`. `_VirtualDom_applyPatchesHelp` in a stack trace is itself the tell — the fork does not have that function.
 
+The first place this surfaces is the Pathfinder tracing-mode toggle (`relations` in `src/View/Pathfinder/Network.elm`), because its two branches render a different number of keyed children at the same position — see the comment there.
+
 Additionally, `vite.config.mjs` rewrites one line of the compiled Elm kernel at bundle time (`elmStepperGuardPlugin`): it guards `sendToApp` against re-entrancy during the initial synchronous render ("TypeError: stepper is not a function" on hard reloads when an iframe `load` or custom-element event dispatches into the app before `stepper` is assigned). The plugin warns at build time if the kernel pattern is no longer found (e.g. after an elm/core upgrade).
