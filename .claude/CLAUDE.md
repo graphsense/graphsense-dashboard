@@ -196,11 +196,12 @@ The browser default for a claimed chord (F = find bar, S = save page, E = focus 
 
 The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches (elm-safe-virtual-dom) prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.
 
-Three ways they used to fall out of the build silently — all three bit us in the elm 0.19.2 upgrade, and all three are now caught:
+Four ways they used to fall out of the build silently — and all four are now caught:
 
 - **The package cache is per compiler version** (`elm_packages/<elm version>/packages`). `ELM_PACKAGES_DIR` derives that version from `npx elm --version`; never hardcode it, or an elm upgrade makes the compiler resolve the *unpatched* registry packages from a fresh directory while the clones sit unused in the old one.
 - **`elm-stuff` caches compiled dependencies by package version, not content.** Swapping a package's source in place does not invalidate it, so the next build keeps the old kernel. `clone-repo` deletes `elm-stuff` whenever it clones.
 - **A clone of the wrong commit is still a clone.** `clone-repo` compares `git rev-parse HEAD` against the pinned hash, so bumping a pin actually re-clones.
+- **Only the Makefile exports `ELM_HOME`.** Starting the dev server directly (`npm run dev`, `npx vite`) instead of via `make serve` left the elm compiler resolving the *unpatched* registry packages from `~/.elm`, while `make check-virtual-dom-fix` still passed — it checks the clones, which were fine. `vite.config.mjs` now defaults `process.env.ELM_HOME` to `./elm_packages`, so the entry point no longer matters.
 
 Two guards, both loud:
 

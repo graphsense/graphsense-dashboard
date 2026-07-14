@@ -1,7 +1,16 @@
 import { defineConfig, loadEnv } from "vite";
 import elmPlugin from "vite-plugin-elm";
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createFilter } from 'vite'
+
+// The elm compiler that vite-plugin-elm spawns reads its packages from
+// ELM_HOME. The Makefile exports it, so `make serve` gets the patched
+// elm-safe-virtual-dom clones — but `npm run dev`/`npx vite` does not, and elm
+// then silently resolves the unpatched registry packages from ~/.elm. Pin it
+// here so the entry point stops mattering.
+process.env.ELM_HOME ??= path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'elm_packages')
 
 function envReplacePlugin(options = {}) {
   const filter = createFilter(options.include || /\.(js|ts)$/, options.exclude)
