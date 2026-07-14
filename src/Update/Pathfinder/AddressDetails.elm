@@ -895,7 +895,7 @@ syncByAddress uc network clusters dateFilterPreset model address =
                                 )
 
                     cluster =
-                        Id.initClusterId data.currency data.cluster
+                        Id.initClusterIdFromAddress data
                             |> flip Dict.get clusters
 
                     related =

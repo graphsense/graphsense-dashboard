@@ -37,6 +37,7 @@ module Components.InfiniteTable exposing
 import Basics.Extra exposing (flip, uncurry)
 import Bounce exposing (Bounce)
 import Browser.Dom as Dom
+import Components.ResizeSensor as ResizeSensor
 import Components.Table as Table exposing (Table)
 import Css
 import Dict exposing (Dict)
@@ -179,6 +180,7 @@ type Msg
     | NoOp
     | ScrolledToTop T.State (Result Dom.Error ())
     | ContainerLoaded
+    | ContainerResized Float
 
 
 type Direction
@@ -520,6 +522,22 @@ update cfg msg (Model model) =
             in
             ( m, Cmd.none, eff )
 
+        ContainerResized height ->
+            -- The container height drives how many rows are rendered and the
+            -- load-more trigger; without this it is only refreshed by scroll
+            -- events, so a resized (e.g. maximized) window left blank rows
+            -- and stopped loading until the user scrolled. Zero height means
+            -- the table is hidden — keep the last real measurement.
+            if height <= 0 || round height == round model.containerHeight then
+                n model
+
+            else
+                let
+                    ( m, eff ) =
+                        loadMore cfg { model | containerHeight = height }
+                in
+                ( m, Cmd.none, eff )
+
 
 n : ModelInternal nextPage d -> ( Model nextPage d, Cmd Msg, List eff )
 n model =
@@ -816,6 +834,9 @@ view tableConfig attributes (Model model) =
             , height 0
             ]
             []
+        , -- keeps the measured container height fresh across window resizes
+          -- and layout changes
+          ResizeSensor.view (.height >> ContainerResized >> tableConfig.tag)
         , -- this is needed to force rerendering of the whole table
           -- otherwise a scroll event would be triggered by dom changes
           if model.hackyFlag then

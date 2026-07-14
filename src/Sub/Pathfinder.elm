@@ -19,9 +19,26 @@ import Set
 import Sub.Graph.Transform as Transform
 
 
-keyDecoder : (String -> Decode.Decoder Msg) -> Decode.Decoder Msg
+type alias KeyEvent =
+    { key : String
+
+    -- Ctrl or Cmd held down *according to this very event*, rather than tracked
+    -- across separate keydown/keyup messages. See toKeyDown.
+    , modHeld : Bool
+    , repeat : Bool
+    }
+
+
+keyDecoder : (KeyEvent -> Decode.Decoder Msg) -> Decode.Decoder Msg
 keyDecoder kMap =
-    Decode.andThen kMap (Decode.field "key" Decode.string)
+    Decode.map3 KeyEvent
+        (Decode.field "key" Decode.string)
+        (Decode.map2 (||)
+            (Decode.field "ctrlKey" Decode.bool)
+            (Decode.field "metaKey" Decode.bool)
+        )
+        (Decode.field "repeat" Decode.bool)
+        |> Decode.andThen kMap
 
 
 onlyFireOutsideOfTextInput : Msg -> Decode.Decoder Msg
@@ -40,21 +57,28 @@ onlyFireOutsideOfTextInput msg =
             )
 
 
-toKeyDown : String -> Decode.Decoder Msg
-toKeyDown keyValue =
-    case keyValue of
+{-| Mod-key chords (Ctrl/Cmd + key) fire on **keydown**, and read the modifier
+straight off the event via `modHeld`.
+
+Do not go back to firing them on keyup and gating them on a `modPressed` flag
+kept in the model: that made the chord depend on the release order, so lifting
+Ctrl a few milliseconds before the letter silently swallowed the shortcut. It
+also never worked reliably on macOS, where browsers do not deliver keyup for
+character keys while Cmd is held.
+
+Keydown repeats are dropped so that holding a chord down does not, say, fire a
+save per repeat.
+
+-}
+toKeyDown : KeyEvent -> Decode.Decoder Msg
+toKeyDown { key, modHeld, repeat } =
+    case key of
         -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
         "Control" ->
             Decode.succeed UserPressedModKey
 
         "Meta" ->
             Decode.succeed UserPressedModKey
-
-        "z" ->
-            UserPressedNormalKey keyValue |> onlyFireOutsideOfTextInput
-
-        "y" ->
-            UserPressedNormalKey keyValue |> onlyFireOutsideOfTextInput
 
         "ArrowLeft" ->
             UserPressedArrowKey Incoming |> onlyFireOutsideOfTextInput
@@ -69,12 +93,38 @@ toKeyDown keyValue =
             UserPressedArrowKeyDown |> onlyFireOutsideOfTextInput
 
         _ ->
-            Decode.fail "not handled"
+            if not modHeld || repeat then
+                Decode.fail "not handled"
+
+            else
+                case key of
+                    -- these have a meaning of their own inside a text input
+                    -- (select all, undo, redo), so leave them to the browser there
+                    "a" ->
+                        UserPressedHotkey key |> onlyFireOutsideOfTextInput
+
+                    "z" ->
+                        UserPressedHotkey key |> onlyFireOutsideOfTextInput
+
+                    "y" ->
+                        UserPressedHotkey key |> onlyFireOutsideOfTextInput
+
+                    "f" ->
+                        UserPressedHotkey key |> Decode.succeed
+
+                    "s" ->
+                        UserPressedHotkey key |> Decode.succeed
+
+                    "e" ->
+                        UserPressedHotkey key |> Decode.succeed
+
+                    _ ->
+                        Decode.fail "not handled"
 
 
-toKeyUp : String -> Decode.Decoder Msg
-toKeyUp keyValue =
-    case keyValue of
+toKeyUp : KeyEvent -> Decode.Decoder Msg
+toKeyUp { key } =
+    case key of
         -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
         "Control" ->
             UserReleasedModKey
@@ -83,24 +133,6 @@ toKeyUp keyValue =
         "Meta" ->
             UserReleasedModKey
                 |> Decode.succeed
-
-        "z" ->
-            UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
-
-        "a" ->
-            UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
-
-        "y" ->
-            UserReleasedNormalKey keyValue |> onlyFireOutsideOfTextInput
-
-        "f" ->
-            UserReleasedNormalKey keyValue |> Decode.succeed
-
-        "s" ->
-            UserReleasedNormalKey keyValue |> Decode.succeed
-
-        "e" ->
-            UserReleasedNormalKey keyValue |> Decode.succeed
 
         "Backspace" ->
             UserReleasedDeleteKey |> onlyFireOutsideOfTextInput
@@ -127,8 +159,8 @@ subscriptions model =
             Browser.Events.onMouseUp (Decode.succeed UserReleasesMouseButton)
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
 
-    -- Keys with no browser default: handled directly via Elm subscriptions.
-    -- for keys with a browser default preventDefault() is called. See main.js.
+    -- All shortcuts are handled here; for those with a browser default (Ctrl+F,
+    -- Ctrl+S, ...) preventDefault() is called on the same keydown in main.js.
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)

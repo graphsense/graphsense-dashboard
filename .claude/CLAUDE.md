@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GraphSense Dashboard — a web GUI for interactive cryptocurrency analysis, written in **Elm 0.19.1** and built with **Vite**. Uses The Elm Architecture (TEA) pattern: Model → Msg → Update → Effect.
+GraphSense Dashboard — a web GUI for interactive cryptocurrency analysis, written in **Elm 0.19.2** and built with **Vite**. Uses The Elm Architecture (TEA) pattern: Model → Msg → Update → Effect.
 
 ## Common Commands
 
@@ -178,22 +178,37 @@ Current shortcuts (path: `/pathfinder` only):
 - **Ctrl/Cmd+F** — open on-graph search
 - **Ctrl/Cmd+S** — save graph (`.gs` file)
 - **Ctrl/Cmd+O** — open graph (`.gs` file). **Firefox caveat:** opening the native file picker needs *transient user activation*, which Firefox does not grant for a Ctrl/Cmd-modified keydown on a freshly loaded page. So a cold Ctrl/Cmd+O does nothing in Firefox until the user has clicked/interacted once (after that it works); Chrome always works, as does the toolbar open button (a real click). Not fixable in code — withheld activation cannot be synthesized.
-- **Ctrl/Cmd+P** — open export dialog
+- **Ctrl/Cmd+E** — open export dialog
 - **Ctrl/Cmd+Z** — undo
 - **Ctrl/Cmd+Y** — redo
 - **Ctrl/Cmd+A** — select all
 - **Arrow keys / Backspace / Delete / Escape** — navigation and deletion
 
-**Two dispatch mechanisms — pick based on whether the browser claims the shortcut:**
+**Dispatch:** all shortcuts fire from a single `Browser.Events.onKeyDown` subscription in `src/Sub/Pathfinder.elm`. The chord is read off the keydown event itself (`ctrlKey`/`metaKey`), which is what `UserPressedHotkey` carries. Auto-repeat keydowns are dropped, and `onlyFireOutsideOfTextInput` keeps A/Z/Y from hijacking select-all/undo/redo while the user is typing.
 
-1. **`Browser.Events.onKeyDown/Up` subscription** (`src/Sub/Pathfinder.elm`) — used for keys with no browser default to suppress (Z, Y, A, arrows, etc.). Cannot call `preventDefault`. Use `onlyFireOutsideOfTextInput` to avoid hijacking typing in inputs.
+Do **not** move a chord back onto keyup gated by the `model.modPressed` flag (as it was until 2026-07): that made the shortcut depend on the *release order* — lifting Ctrl a few milliseconds before the letter cleared `modPressed` and silently swallowed the chord — and it never worked reliably on macOS, where browsers withhold keyup for character keys while Cmd is held. `modPressed` still exists, but only for Ctrl+click multi-select.
 
-2. **JS port with `preventDefault()`** (`src/main.js` keydown listener → `src/Ports.elm` ports → `Sub/Pathfinder.elm` subscriptions) — required when the browser has a default to override (F = find bar, S = save page, P = print). The listener is path-gated to `/pathfinder` and ignores Shift/Alt-modified combos. To add another browser-claimed shortcut: add a `case` in the JS switch, add a `port xHotkeyPressed : (() -> msg) -> Sub msg` to `Ports.elm`, and subscribe to it in `Sub/Pathfinder.elm`.
+The browser default for a claimed chord (F = find bar, S = save page, E = focus search bar, O = open file) is suppressed by the `keydown` listener in `src/main.js`, which is path-gated to `/pathfinder` and ignores Shift/Alt-modified combos. To add a browser-claimed shortcut: add the key to `shortCutKeys` there (or `shortCutKeysOutsideTextInput` if the browser default is worth keeping inside inputs) and add a `case` to `toKeyDown` in `Sub/Pathfinder.elm`.
 
-**User-activation gotcha (file pickers):** anything that opens the native file picker (e.g. Ctrl/Cmd+O → open `.gs`) must be triggered **synchronously from a trusted `keydown`** event, because the picker requires a transient user-activation and only `keydown`/pointer events grant it — `keyup` does not. These shortcuts are therefore handled directly in the `main.js` keydown listener (calling `openGsFile()`), **not** via the Elm `keyup` subscription used for the other shortcuts. (Downloads like Ctrl+S are looser and work fine from `keyup`.)
+**User-activation gotcha (file pickers):** anything that opens the native file picker (e.g. Ctrl/Cmd+O → open `.gs`) must be triggered **synchronously from a trusted `keydown`** event, because the picker requires a transient user-activation and only `keydown`/pointer events grant it. That is why Ctrl/Cmd+O calls `openGsFile()` straight from the `main.js` listener instead of routing through Elm, which would break the activation chain.
 
 ## Patched Dependencies
 
-The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.
+The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches (elm-safe-virtual-dom) prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.
+
+Three ways they used to fall out of the build silently — all three bit us in the elm 0.19.2 upgrade, and all three are now caught:
+
+- **The package cache is per compiler version** (`elm_packages/<elm version>/packages`). `ELM_PACKAGES_DIR` derives that version from `npx elm --version`; never hardcode it, or an elm upgrade makes the compiler resolve the *unpatched* registry packages from a fresh directory while the clones sit unused in the old one.
+- **`elm-stuff` caches compiled dependencies by package version, not content.** Swapping a package's source in place does not invalidate it, so the next build keeps the old kernel. `clone-repo` deletes `elm-stuff` whenever it clones.
+- **A clone of the wrong commit is still a clone.** `clone-repo` compares `git rev-parse HEAD` against the pinned hash, so bumping a pin actually re-clones.
+
+Two guards, both loud:
+
+- `make check-virtual-dom-fix` (run automatically by `virtual-dom-fix`, hence by `prepare`) **fails the build** if the kernel the compiler reads lacks `_VirtualDom_createTNode`, a function only the fork defines.
+- `elmSafeVirtualDomCheckPlugin` in `vite.config.mjs` warns if that marker is missing from the *compiled* Elm — the last word on what actually ships.
+
+Symptom of a build without the patches: `TypeError: Node.removeChild: Argument 1 is not an object` from `_VirtualDom_applyPatch`. `_VirtualDom_applyPatchesHelp` in a stack trace is itself the tell — the fork does not have that function.
+
+The first place this surfaces is the Pathfinder tracing-mode toggle (`relations` in `src/View/Pathfinder/Network.elm`), because its two branches render a different number of keyed children at the same position — see the comment there.
 
 Additionally, `vite.config.mjs` rewrites one line of the compiled Elm kernel at bundle time (`elmStepperGuardPlugin`): it guards `sendToApp` against re-entrancy during the initial synchronous render ("TypeError: stepper is not a function" on hard reloads when an iframe `load` or custom-element event dispatches into the app before `stepper` is assigned). The plugin warns at build time if the kernel pattern is no longer found (e.g. after an elm/core upgrade).

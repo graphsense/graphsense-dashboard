@@ -3,6 +3,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.07.2] - 2026-07-14
+
+### Added
+
+- Support for the new backend fresh clustering: addresses now use the fresh cluster id (falling back to the legacy one), so cluster highlighting, sibling hover and cluster lookups work on instances with fresh clustering enabled
+
+### Changed
+
+- Improved Romanian translation based on feedback from Romanian speakers
+- Upgrade to Elm Compiler 0.19.2 (re-applied after the revert in 26.07.1), now guarded so that a build without the patched `elm-safe-virtual-dom` packages fails loudly instead of shipping runtime DOM crashes
+
+### Fixed
+
+- Pathfinder keyboard shortcuts (Ctrl/Cmd + F, S, E, Z, Y, A) sometimes did nothing: they only triggered if the modifier key was still held when the letter was *released*, so lifting Ctrl/Cmd slightly first swallowed the shortcut, and on macOS they rarely fired at all. They now trigger on key press.
+- Infinitely scrolling tables now react to container resizes (e.g. resizing the browser window or side panel), so the visible rows and the loading of further rows stay in sync with the actual table height
+- Stale assets in the build pipeline: generated theme, plugin and public files are now regenerated when their sources change, so builds no longer ship outdated artifacts
+
+## [26.07.1] - 2026-07-13
+
+### Changed
+
+- Reverted the Elm 0.19.2 compiler upgrade of 26.07.0, which caused runtime errors
+
 ## [26.07.0] - 2026-07-08
 
 ### Added

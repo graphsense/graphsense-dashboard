@@ -136,8 +136,7 @@ utxo plugins pluginStates vc model id viewState address =
         cluster =
             viewState.address.data
                 |> RemoteData.toMaybe
-                |> Maybe.map
-                    (\data -> Id.initClusterId data.currency data.cluster)
+                |> Maybe.map Id.initClusterIdFromAddress
                 |> Maybe.andThen (flip Dict.get model.clusters)
 
         relatedAddressesTab =
@@ -545,7 +544,9 @@ clusterInfoView vc open colors clstr =
     else
         let
             clstrid =
-                Id.initClusterId clstr.currency clstr.cluster
+                -- clstr.cluster is normalized to the fresh-aware requested id
+                -- when the entity response arrives (see browserGotAddressData)
+                Id.initClusterIdFromRecord clstr
 
             clusterColor =
                 Colors.getAssignedColor Colors.Clusters clstrid colors

@@ -196,8 +196,7 @@ getClusterId : Address -> Maybe Id
 getClusterId { data } =
     data
         |> RemoteData.toMaybe
-        |> Maybe.map
-            (\{ cluster, currency } -> Id.initClusterId currency cluster)
+        |> Maybe.map Id.initClusterIdFromAddress
 
 
 getAddressType : Address -> Maybe Api.Data.Cluster -> AddressServiceType
