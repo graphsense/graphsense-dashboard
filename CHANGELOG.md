@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- Pathfinder keyboard shortcuts (Ctrl/Cmd + F, S, E, Z, Y, A) sometimes did nothing: they only triggered if the modifier key was still held when the letter was *released*, so lifting Ctrl/Cmd slightly first swallowed the shortcut, and on macOS they rarely fired at all. They now trigger on key press.
+
 ## [26.07.0] - 2026-07-08
 
 ### Added

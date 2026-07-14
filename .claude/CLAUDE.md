@@ -178,19 +178,19 @@ Current shortcuts (path: `/pathfinder` only):
 - **Ctrl/Cmd+F** — open on-graph search
 - **Ctrl/Cmd+S** — save graph (`.gs` file)
 - **Ctrl/Cmd+O** — open graph (`.gs` file). **Firefox caveat:** opening the native file picker needs *transient user activation*, which Firefox does not grant for a Ctrl/Cmd-modified keydown on a freshly loaded page. So a cold Ctrl/Cmd+O does nothing in Firefox until the user has clicked/interacted once (after that it works); Chrome always works, as does the toolbar open button (a real click). Not fixable in code — withheld activation cannot be synthesized.
-- **Ctrl/Cmd+P** — open export dialog
+- **Ctrl/Cmd+E** — open export dialog
 - **Ctrl/Cmd+Z** — undo
 - **Ctrl/Cmd+Y** — redo
 - **Ctrl/Cmd+A** — select all
 - **Arrow keys / Backspace / Delete / Escape** — navigation and deletion
 
-**Two dispatch mechanisms — pick based on whether the browser claims the shortcut:**
+**Dispatch:** all shortcuts fire from a single `Browser.Events.onKeyDown` subscription in `src/Sub/Pathfinder.elm`. The chord is read off the keydown event itself (`ctrlKey`/`metaKey`), which is what `UserPressedHotkey` carries. Auto-repeat keydowns are dropped, and `onlyFireOutsideOfTextInput` keeps A/Z/Y from hijacking select-all/undo/redo while the user is typing.
 
-1. **`Browser.Events.onKeyDown/Up` subscription** (`src/Sub/Pathfinder.elm`) — used for keys with no browser default to suppress (Z, Y, A, arrows, etc.). Cannot call `preventDefault`. Use `onlyFireOutsideOfTextInput` to avoid hijacking typing in inputs.
+Do **not** move a chord back onto keyup gated by the `model.modPressed` flag (as it was until 2026-07): that made the shortcut depend on the *release order* — lifting Ctrl a few milliseconds before the letter cleared `modPressed` and silently swallowed the chord — and it never worked reliably on macOS, where browsers withhold keyup for character keys while Cmd is held. `modPressed` still exists, but only for Ctrl+click multi-select.
 
-2. **JS port with `preventDefault()`** (`src/main.js` keydown listener → `src/Ports.elm` ports → `Sub/Pathfinder.elm` subscriptions) — required when the browser has a default to override (F = find bar, S = save page, P = print). The listener is path-gated to `/pathfinder` and ignores Shift/Alt-modified combos. To add another browser-claimed shortcut: add a `case` in the JS switch, add a `port xHotkeyPressed : (() -> msg) -> Sub msg` to `Ports.elm`, and subscribe to it in `Sub/Pathfinder.elm`.
+The browser default for a claimed chord (F = find bar, S = save page, E = focus search bar, O = open file) is suppressed by the `keydown` listener in `src/main.js`, which is path-gated to `/pathfinder` and ignores Shift/Alt-modified combos. To add a browser-claimed shortcut: add the key to `shortCutKeys` there (or `shortCutKeysOutsideTextInput` if the browser default is worth keeping inside inputs) and add a `case` to `toKeyDown` in `Sub/Pathfinder.elm`.
 
-**User-activation gotcha (file pickers):** anything that opens the native file picker (e.g. Ctrl/Cmd+O → open `.gs`) must be triggered **synchronously from a trusted `keydown`** event, because the picker requires a transient user-activation and only `keydown`/pointer events grant it — `keyup` does not. These shortcuts are therefore handled directly in the `main.js` keydown listener (calling `openGsFile()`), **not** via the Elm `keyup` subscription used for the other shortcuts. (Downloads like Ctrl+S are looser and work fine from `keyup`.)
+**User-activation gotcha (file pickers):** anything that opens the native file picker (e.g. Ctrl/Cmd+O → open `.gs`) must be triggered **synchronously from a trusted `keydown`** event, because the picker requires a transient user-activation and only `keydown`/pointer events grant it. That is why Ctrl/Cmd+O calls `openGsFile()` straight from the `main.js` listener instead of routing through Elm, which would break the activation chain.
 
 ## Patched Dependencies
 

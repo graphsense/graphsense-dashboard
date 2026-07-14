@@ -849,9 +849,9 @@ updateByMsg plugins uc msg model =
         UserReleasedDeleteKey ->
             deleteSelection model
 
-        UserReleasedNormalKey key ->
-            case ( model.modPressed, key ) of
-                ( True, "a" ) ->
+        UserPressedHotkey key ->
+            case key of
+                "a" ->
                     let
                         allAddresses =
                             Dict.keys model.network.addresses
@@ -866,36 +866,33 @@ updateByMsg plugins uc msg model =
                     in
                     n (multiSelect model allItems False)
 
-                ( True, "z" ) ->
+                "z" ->
                     ( model
                     , [ InternalEffect UserClickedUndo ]
                     )
 
-                ( True, "y" ) ->
+                "y" ->
                     ( model
                     , [ InternalEffect UserClickedRedo ]
                     )
 
-                ( True, "f" ) ->
+                "f" ->
                     ( model
                     , [ InternalEffect UserPressedSearchHotkey ]
                     )
 
-                ( True, "s" ) ->
+                "s" ->
                     ( model
                     , [ InternalEffect (UserClickedSaveGraph Nothing) ]
                     )
 
-                ( True, "e" ) ->
+                "e" ->
                     ( model
                     , [ InternalEffect (UserClickedExportGraph Nothing) ]
                     )
 
                 _ ->
                     n model
-
-        UserPressedNormalKey _ ->
-            n model
 
         BrowserGotAddressDataToRefresh data ->
             let

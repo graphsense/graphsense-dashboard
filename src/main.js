@@ -95,24 +95,30 @@ const app = Elm.Main.init(
 
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
-const shortCutKeys = ['a','f','z','s','o']
+// Pathfinder mod-key chords the browser would otherwise claim (find bar, save
+// page, focus search bar, open file). The shortcuts themselves are handled in
+// Elm (Sub/Pathfinder.elm), on the same keydown — here we only suppress the
+// browser default.
+const shortCutKeys = ['f', 's', 'e', 'o']
 
-// Prevent default Ctrl+A behavior (select all text) since we handle it in Elm for Pathfinder
-// But allow default behavior when cursor is in an input field
+// Same, but these have a meaning of their own inside a text input (select all,
+// undo, redo), so there we leave them to the browser. Elm skips them in inputs too.
+const shortCutKeysOutsideTextInput = ['a', 'z', 'y']
+
 window.addEventListener('keydown', (e) => {
   if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
   if (!window.location.pathname.startsWith('/pathfinder')) return
   const key = e.key.toLowerCase()
-  if (shortCutKeys.indexOf(key) === -1) return
   const activeElement = document.activeElement
-  const isInputField = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA'
-  if (!isInputField || key !== 'a') {
-    e.preventDefault()
-  }
-  // Ctrl/Cmd+O: open a .gs file. Handled here (in JS, off the keydown) rather
-  // than via an Elm keyup subscription, because the native file picker needs a
-  // transient user-activation that keyup does not grant. See openGsFile for the
-  // Firefox cold-load caveat.
+  const isInputField = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')
+  const isShortCut =
+    shortCutKeys.indexOf(key) !== -1 ||
+    (!isInputField && shortCutKeysOutsideTextInput.indexOf(key) !== -1)
+  if (!isShortCut) return
+  e.preventDefault()
+  // Ctrl/Cmd+O: open a .gs file. Handled here (in JS) rather than in Elm,
+  // because the native file picker needs a transient user-activation, which only
+  // a trusted keydown grants. See openGsFile for the Firefox cold-load caveat.
   if (key === 'o') {
     openGsFile()
   }
