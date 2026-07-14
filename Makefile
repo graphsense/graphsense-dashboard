@@ -17,7 +17,10 @@ CODEGEN_SRC=$(shell find codegen/src -name *.elm -type f)
 
 PLUGINS_DIR=./plugins
 
-PLUGINS=$(shell grep -v '\-\-' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
+# `--` is the elm comment marker: skip commented-out plugin registrations. Pass it
+# after `--` instead of escaping it; `\-` is not a valid escape and makes every
+# single make invocation print "grep: warning: stray \ before -".
+PLUGINS=$(shell grep -v -e '--' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
 SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm -not -path '*/node_modules/*')
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
@@ -63,9 +66,14 @@ build: prepare gen
 compile: prepare gen
 	npm run compile
 
+# Filters elm's progress chatter (stdout) while letting its error report (stderr)
+# through untouched. The status of a pipeline is the status of its *last* command,
+# so without PIPESTATUS this reports grep's: 1 whenever the filter leaves nothing
+# to print, i.e. it failed on a successful compile. Needs bash for PIPESTATUS.
+compile-quiet: SHELL := /bin/bash
 compile-quiet:
-	@make prepare gen > /dev/null
-	@elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling" 
+	@$(MAKE) prepare gen > /dev/null
+	@elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
 
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \
@@ -215,12 +223,22 @@ $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(GENERATED_THEME_COLORMAP
 
 plugin-themes: $(PLUGINS:%=$(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER)) setem
 
-$(GENERATED_PLUGINS)/%/$(PLUGIN_INSTALLED_MARKER): 
+# `elm install` adds the plugin's dependencies to elm.json in place, so this
+# marker has to be invalidated by everything that can drop them again:
+#   - the elm.json target, which copies elm.json.base over elm.json and resets it
+#     to a state without any plugin dependency. It deletes these markers itself,
+#     right where it does the copy: keying the invalidation off elm.json.base's
+#     mtime instead would miss every other reason elm.json gets regenerated.
+#   - the plugin's own elm.json: its dependency list is what gets installed here.
+# Do NOT depend on the generated elm.json: each plugin's install rewrites it,
+# which would invalidate the markers of the plugins installed before it and
+# reinstall everything on every build. It is an order-only prerequisite, so the
+# copy is guaranteed to happen before the install even under `make -j`.
+$(GENERATED_PLUGINS)/%/$(PLUGIN_INSTALLED_MARKER): $(PLUGINS_DIR)/%/elm.json | elm.json
 	jq -r '.dependencies | keys[]' $(PLUGINS_DIR)/$*/elm.json \
 		| while read dep; do \
 			yes | npx elm install $$dep || exit 1; \
-		done;
-		exit $?
+		done
 	cd $(PLUGINS_DIR)/$*; test -f package.json && npm install || true
 	mkdir -p $(GENERATED_PLUGINS)/$*
 	touch $@
@@ -229,6 +247,9 @@ plugins-install: $(PLUGINS:%=$(GENERATED_PLUGINS)/%/$(PLUGIN_INSTALLED_MARKER))
 
 elm.json: elm.json.base
 	cp elm.json.base elm.json
+	# The copy wipes the plugin dependencies that plugins-install added to elm.json
+	# with `elm install`; drop the markers so that it re-adds them.
+	rm -f $(GENERATED_PLUGINS)/*/$(PLUGIN_INSTALLED_MARKER)
 	mkdir -p $(GENERATED_THEME) $(GENERATED_UTILS) $(GENERATED_PLUGINS)
 
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
@@ -236,9 +257,24 @@ gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 $(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
 	node $(GENERATE_JS) $(PLUGINS) 
 
-copy-public: 
-	cp -r $(PUBLIC_DIR) $(GENERATED_PUBLIC)
-	for p in $(PLUGINS); do rsync -r $(PLUGINS_DIR)/$$p/$(PUBLIC_DIR)/ $(GENERATED_PUBLIC)/; done
+# Mirror ./public and every plugin's public/ into generated/public. A `cp -r` into
+# the already existing target nested the whole tree a second time as
+# generated/public/public, and neither cp nor a plain rsync ever removed anything:
+# an asset deleted on another branch survived in generated/public and shipped.
+# One rsync over all sources at once, so --delete only removes what no source
+# provides (a --delete per source would delete the files of the other sources).
+# lang/ is excluded because generate.js owns it: it writes the core translations
+# merged with the plugin ones there, and it does not run on every `make gen`.
+copy-public:
+	@mkdir -p $(GENERATED_PUBLIC)
+	@srcs="$(PUBLIC_DIR)/"; \
+	for p in $(PLUGINS); do \
+		if [ -d $(PLUGINS_DIR)/$$p/$(PUBLIC_DIR) ]; then \
+			srcs="$$srcs $(PLUGINS_DIR)/$$p/$(PUBLIC_DIR)/"; \
+		fi; \
+	done; \
+	echo rsync -rlt --delete --exclude=/lang/ $$srcs $(GENERATED_PUBLIC)/; \
+	rsync -rlt --delete --exclude=/lang/ $$srcs $(GENERATED_PUBLIC)/
 
 print-plugins:
 	@echo $(PLUGINS)
