@@ -766,6 +766,17 @@ update plugins uc msg model =
         UserClickedNavHome ->
             ( model, NavPushUrlEffect "/" |> List.singleton )
 
+        UserMiddleClickedNavHome ->
+            ( model, Ports.newTab "/" |> CmdEffect |> List.singleton )
+
+        UserDroppedFileOnLoadBox file ->
+            ( { model | fileDragOver = False }
+            , Ports.deserializeFile file |> CmdEffect |> List.singleton
+            )
+
+        UserDraggedFileOverLoadBox dragOver ->
+            ( { model | fileDragOver = dragOver }, [] )
+
         TimeUpdateReset _ ->
             { model
                 | user =

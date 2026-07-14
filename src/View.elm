@@ -20,7 +20,7 @@ import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
 import Util.Css
-import Util.View exposing (fixFillRule, hovercard, onClickWithStop)
+import Util.View exposing (fixFillRule, hovercard, onClickWithStop, onMiddleClick)
 import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
@@ -321,6 +321,7 @@ sidebar plugins vc model =
                   ]
                     |> css
                 , onClick UserClickedNavHome
+                , onMiddleClick UserMiddleClickedNavHome
                 ]
         )
         (Nb.navbarMenuNewInstances
