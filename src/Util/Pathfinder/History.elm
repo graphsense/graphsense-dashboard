@@ -79,10 +79,7 @@ shallPushHistory plugins msg _ =
         UserReleasedEscape ->
             False
 
-        UserPressedNormalKey _ ->
-            False
-
-        UserReleasedNormalKey _ ->
+        UserPressedHotkey _ ->
             False
 
         UserPressedArrowKey _ ->

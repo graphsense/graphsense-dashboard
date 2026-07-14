@@ -74,8 +74,7 @@ type Msg
     | UserPressedModKey
     | UserReleasedModKey
     | UserReleasedEscape
-    | UserPressedNormalKey String
-    | UserReleasedNormalKey String
+    | UserPressedHotkey String
     | UserPressedArrowKey Direction
     | UserPressedArrowKeyUp
     | UserPressedArrowKeyDown
