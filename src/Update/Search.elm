@@ -12,7 +12,7 @@ import Msg.Search exposing (Msg(..))
 import Ports
 import RecordSetter as Rs
 import Tuple exposing (pair)
-import Util exposing (n, removeLeading0x)
+import Util exposing (foldLigatures, n, removeLeading0x)
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
@@ -245,11 +245,20 @@ update msg model =
 
         AutocompleteMsg ms ->
             let
-                ( ac, doFetch, cmd ) =
+                ( acRaw, doFetch, cmd ) =
                     Autocomplete.update ms model.autocomplete
 
+                -- normalize once at input time so the request, the prefix
+                -- filter and the highlighting all see the same string
                 query =
-                    Autocomplete.query ac
+                    Autocomplete.query acRaw |> foldLigatures
+
+                ac =
+                    if query /= Autocomplete.query acRaw then
+                        Autocomplete.setQuery query acRaw
+
+                    else
+                        acRaw
 
                 blockResults =
                     case model.searchType of
