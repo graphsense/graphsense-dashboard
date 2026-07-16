@@ -72,6 +72,7 @@ textAutoResize arg1 =
         TypeStyleTextAutoResizeHEIGHT ->
             [ Css.property "white-space" "wrap"
             , Css.property "word-break" "break-word"
+            , Css.width <| Css.pct 100
             ]
 
         _ ->
