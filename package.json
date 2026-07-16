@@ -17,7 +17,7 @@
     "elm-format": "^0.8.8",
     "elm-review": "^2.13.5",
     "elm-test": "^0.19.2-0",
-    "elm-test-rs": "^3.1.0-0",
+    "elm-test-rs": "^3.2.0-0",
     "fs-extra": "^11.3.5",
     "level": "^8.0.0",
     "mustache": "^4.2.0",
