@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.07.3] - Unreleased
+
+### Changed
+
+- upgrade elm-test-rs
+- remove "Dev" suffix for new figma components
+- add "width:100%" for text nodes
+
 ## [26.07.2] - 2026-07-14
 
 ### Added
