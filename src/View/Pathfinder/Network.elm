@@ -53,6 +53,22 @@ addresses plugins vc pc searchBox annotations =
         >> Keyed.node "g" []
 
 
+{-| The graph edges, in whichever tracing mode is active.
+
+The two branches render a different number of keyed `g` children at the same
+position in the tree, so switching mode makes elm diff them into a "remove the
+last n children" patch. On the stock elm kernel that patch assumes the DOM
+still looks exactly like the previous virtual DOM, and it throws
+"Node.removeChild: Argument 1 is not an object" when it does not — which is
+what a browser extension, or anything else reaching into the page, makes
+happen. We rely on elm-safe-virtual-dom (see `virtual-dom-fix` in the Makefile)
+to tolerate that; a build without it crashes on the tx -> relationship switch.
+
+So if edges ever go stale, duplicate or fail to disappear on a mode switch,
+suspect this swap before suspecting the model: the keyed children below are the
+part of the view whose structure changes underneath elm.
+
+-}
 relations : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
 relations plugins vc gc showAggLabels hovered selection searchBox annotations txs agg conversions =
     case gc.tracingMode of

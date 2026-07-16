@@ -69,6 +69,7 @@ import Tuple exposing (..)
 import Tuple3
 import Update.Graph.Address as Address
 import Update.Graph.Entity as Entity
+import Util.Data
 
 
 type alias Position =
@@ -1089,8 +1090,8 @@ deserialize plugins uc { deserialized, addresses, entities } =
         entityByAddress =
             addresses
                 |> List.foldl
-                    (\{ currency, address, cluster } ->
-                        Dict.insert ( currency, address ) cluster
+                    (\address ->
+                        Dict.insert ( address.currency, address.address ) (Util.Data.addressCluster address)
                     )
                     Dict.empty
 

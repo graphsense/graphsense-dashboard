@@ -849,9 +849,9 @@ updateByMsg plugins uc msg model =
         UserReleasedDeleteKey ->
             deleteSelection model
 
-        UserReleasedNormalKey key ->
-            case ( model.modPressed, key ) of
-                ( True, "a" ) ->
+        UserPressedHotkey key ->
+            case key of
+                "a" ->
                     let
                         allAddresses =
                             Dict.keys model.network.addresses
@@ -866,36 +866,33 @@ updateByMsg plugins uc msg model =
                     in
                     n (multiSelect model allItems False)
 
-                ( True, "z" ) ->
+                "z" ->
                     ( model
                     , [ InternalEffect UserClickedUndo ]
                     )
 
-                ( True, "y" ) ->
+                "y" ->
                     ( model
                     , [ InternalEffect UserClickedRedo ]
                     )
 
-                ( True, "f" ) ->
+                "f" ->
                     ( model
                     , [ InternalEffect UserPressedSearchHotkey ]
                     )
 
-                ( True, "s" ) ->
+                "s" ->
                     ( model
                     , [ InternalEffect (UserClickedSaveGraph Nothing) ]
                     )
 
-                ( True, "e" ) ->
+                "e" ->
                     ( model
                     , [ InternalEffect (UserClickedExportGraph Nothing) ]
                     )
 
                 _ ->
                     n model
-
-        UserPressedNormalKey _ ->
-            n model
 
         BrowserGotAddressDataToRefresh data ->
             let
@@ -1107,11 +1104,8 @@ updateByMsg plugins uc msg model =
                         )
                     |> pair newModel2
 
-        BrowserGotClusterData _ data ->
+        BrowserGotClusterData clusterId data ->
             let
-                clusterId =
-                    Id.initClusterId data.currency data.cluster
-
                 setServiceType addr =
                     Just data
                         |> getAddressType addr
@@ -3697,7 +3691,7 @@ browserGotAddressData uc plugins providedId position data model =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
         clusterId =
-            Id.initClusterId data.currency data.cluster
+            Id.initClusterIdFromAddress data
 
         isSecondAddressFromSameCluster =
             Network.isClusterFriendAlreadyOnGraph clusterId
@@ -3726,10 +3720,16 @@ browserGotAddressData uc plugins providedId position data model =
 
             else
                 ( Dict.insert clusterId RemoteData.Loading model.clusters
-                , [ BrowserGotClusterData id
+                  -- Api.Data.Cluster has no freshClusterId field, so normalize the
+                  -- response's .cluster to the id the request was made with
+                  -- (the fresh-aware Data.addressCluster). This keeps the clusters
+                  -- dict key, plugin messages, the cluster info panel and follow-up
+                  -- entity requests in the same id space, regardless of which id
+                  -- the backend echoes back.
+                , [ (\cluster -> { cluster | cluster = Data.addressCluster data } |> BrowserGotClusterData clusterId)
                         |> Api.GetEntityEffectWithDetails
                             { currency = Id.network id
-                            , entity = data.cluster
+                            , entity = Data.addressCluster data
                             , includeActors = False
                             , includeBestTag = False
                             }
@@ -4445,13 +4445,21 @@ updateByPluginOutMsg plugins uc outMsgs model =
 
                     PluginInterface.UpdateAddressesByRootAddress { currency, address } pmsg ->
                         model.clusters
-                            |> Dict.values
-                            |> List.filterMap RemoteData.toMaybe
+                            |> Dict.toList
+                            |> List.filterMap
+                                (\( cid, cluster ) ->
+                                    cluster
+                                        |> RemoteData.toMaybe
+                                        |> Maybe.map (pair cid)
+                                )
                             |> List.Extra.find
-                                (\e ->
+                                (\( _, e ) ->
                                     e.currency == currency && e.rootAddress == address
                                 )
-                            |> Maybe.map Id.initClusterIdFromRecord
+                            -- use the dict key (the fresh-aware id the cluster
+                            -- was requested with) rather than re-deriving from
+                            -- the record
+                            |> Maybe.map first
                             |> Maybe.map
                                 (\pId ->
                                     ( { mo
@@ -5132,7 +5140,7 @@ addTagSummaryToModel includesBestClusterTag id data m =
                             |> Dict.get id
                             |> Maybe.andThen (.data >> RemoteData.toMaybe)
                             |> Maybe.map
-                                (.cluster
+                                (Data.addressCluster
                                     >> (\entityId ->
                                             Api.GetEntityAddressTagsEffect
                                                 { currency = Id.network id
