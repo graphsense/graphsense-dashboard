@@ -825,10 +825,10 @@ txFilterDialogView vc net config (Internal model) =
         showQuickFilter =
             model.quickFilterSelect /= Nothing
     in
-    SidePanelComponents.filterTransactionsPopupDevWithAttributes
-        (SidePanelComponents.filterTransactionsPopupDevAttributes
+    SidePanelComponents.filterTransactionsPopupWithAttributes
+        (SidePanelComponents.filterTransactionsPopupAttributes
             |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick (config.tag ToggleDialog) ]
-            |> Rs.s_iconsInfoSnoPaddingDev
+            |> Rs.s_iconsInfoSnoPadding
                 (Util.TooltipType.Text "tx-filter-utxo-only-tooltip"
                     |> Tooltip.attributes "tx-filter-tooltip" config.tooltipConfig
                 )

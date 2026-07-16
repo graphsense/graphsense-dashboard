@@ -299,8 +299,8 @@ cell vc c =
                         |> Tooltip.withFixed
 
                 icon =
-                    Icons.iconsInfoSnoPaddingDevWithAttributes
-                        (Icons.iconsInfoSnoPaddingDevAttributes
+                    Icons.iconsInfoSnoPaddingWithAttributes
+                        (Icons.iconsInfoSnoPaddingAttributes
                             |> Rs.s_root
                                 (Util.TooltipType.Text cc.titletext
                                     |> Tooltip.attributes cc.cellid tooltipConfig

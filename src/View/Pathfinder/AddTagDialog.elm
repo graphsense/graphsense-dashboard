@@ -161,8 +161,8 @@ view plugins vc model =
                     }
                 }
     in
-    Dialogs.dialogGenericDevWithAttributes
-        (Dialogs.dialogGenericDevAttributes
+    Dialogs.dialogGenericWithAttributes
+        (Dialogs.dialogGenericAttributes
             |> Rs.s_iconsCloseNoPadding [ Util.View.pointer, onClick model.closeMsg ]
         )
         { inputList =
