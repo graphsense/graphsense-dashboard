@@ -135,8 +135,8 @@ view vc conf =
                 , onClickWithStop (UserClickedTagsDialogTab Dialog.ClusterTagsTab)
                 ]
                 [ Html.Styled.text (Locale.string vc.locale "cluster tags")
-                , Icons.iconsInfoSnoPaddingDevWithAttributes
-                    (Icons.iconsInfoSnoPaddingDevAttributes
+                , Icons.iconsInfoSnoPaddingWithAttributes
+                    (Icons.iconsInfoSnoPaddingAttributes
                         |> Rs.s_root
                             (css [ Css.width (Css.px 16), Css.height (Css.px 16) ]
                                 :: (Util.TooltipType.Text "cluster tags disclaimer"

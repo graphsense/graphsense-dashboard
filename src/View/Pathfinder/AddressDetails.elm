@@ -449,8 +449,8 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                     relatedAddressesVisibleTable
                                     |> Html.map AddressDetails.RelatedAddressesVisibleTableSelectBoxMsg
                                 ]
-                            , HIcons.iconsInfoSnoPaddingDevWithAttributes
-                                (HIcons.iconsInfoSnoPaddingDevAttributes
+                            , HIcons.iconsInfoSnoPaddingWithAttributes
+                                (HIcons.iconsInfoSnoPaddingAttributes
                                     |> Rs.s_root
                                         (Util.TooltipType.Text helpText |> Tooltip.attributes "related-addresses-tooltip" tooltipConfig)
                                 )
@@ -530,8 +530,8 @@ clusterInfoView vc open colors clstr =
 
         helpIcon =
             Just <|
-                HIcons.iconsInfoSnoPaddingDevWithAttributes
-                    (HIcons.iconsInfoSnoPaddingDevAttributes
+                HIcons.iconsInfoSnoPaddingWithAttributes
+                    (HIcons.iconsInfoSnoPaddingAttributes
                         |> Rs.s_root
                             (Util.TooltipType.Text "cluster-details-info-help-text"
                                 |> Tooltip.attributes "address-details-text-tooltip" tooltipConfig
