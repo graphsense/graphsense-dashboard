@@ -142,6 +142,8 @@ Plugins live in `plugins/` (often symlinks to external repos). Each plugin can h
 
 Plugins hook into the app through `src/PluginInterface/` interfaces (View, Update, Effects, Routes).
 
+Plugin folders have their own Git repositories.
+
 ### API Layer
 
 - OpenAPI-generated client in `openapi/src/Api.elm` (regenerate with `make openapi`)
