@@ -30,6 +30,8 @@ apiAddress isContract =
     , totalSpent = Data.Api.values
     , totalTokensReceived = Nothing
     , totalTokensSpent = Nothing
+    , aggregatesTruncated = Nothing
+    , cutoffFloorFields = Nothing
     }
 
 

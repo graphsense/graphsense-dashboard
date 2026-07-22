@@ -251,6 +251,11 @@ type alias Address =
     , totalSpent : Values
     , totalTokensReceived : Maybe (Dict.Dict String (Values))
     , totalTokensSpent : Maybe (Dict.Dict String (Values))
+    -- iknaio-rest degradation contract: set on budget-truncated bodies, where
+    -- cutoffFloorFields names the count/degree/sum fields that are LOWER BOUNDS
+    -- of the true value (render as "N+")
+    , aggregatesTruncated : Maybe Bool
+    , cutoffFloorFields : Maybe (List String)
     }
 
 
@@ -2683,10 +2688,12 @@ addressDecoder =
         |> decode "out_degree" Json.Decode.int 
         |> decode "status" addressStatusDecoder 
         |> maybeDecode "token_balances" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
-        |> decode "total_received" valuesDecoder 
-        |> decode "total_spent" valuesDecoder 
+        |> decode "total_received" valuesDecoder
+        |> decode "total_spent" valuesDecoder
         |> maybeDecode "total_tokens_received" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
         |> maybeDecode "total_tokens_spent" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
+        |> maybeDecode "aggregates_truncated" Json.Decode.bool Nothing
+        |> maybeDecode "cutoff" (Json.Decode.field "floor_fields" (Json.Decode.list Json.Decode.string)) Nothing
 
 
 addressStatusDecoder : Json.Decode.Decoder AddressStatus

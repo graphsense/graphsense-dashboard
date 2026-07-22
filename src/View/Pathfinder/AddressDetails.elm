@@ -265,14 +265,32 @@ utxo plugins pluginStates vc model id viewState address =
         }
 
 
+{-| "+" when the serving backend flags the field as a budget-cutoff LOWER BOUND
+(iknaio-rest degradation contract): "63,037" would present a floor as exact,
+"63,037+" says at least that many.
+-}
+floorQualifier : String -> Api.Data.Address -> String
+floorQualifier field data =
+    if
+        data.cutoffFloorFields
+            |> Maybe.map (List.member field)
+            |> Maybe.withDefault False
+    then
+        "+"
+
+    else
+        ""
+
+
 neighborsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Direction -> Html AddressDetails.Msg
 neighborsDataTab vc model id viewState direction =
     let
-        { lbl, getNoAddresses, getTableOpen, getTable } =
+        { lbl, getNoAddresses, floorField, getTableOpen, getTable } =
             case direction of
                 Outgoing ->
                     { lbl = "Outgoing relations"
                     , getNoAddresses = .outDegree
+                    , floorField = "out_degree"
                     , getTableOpen = .outgoingNeighborsTableOpen
                     , getTable = .neighborsOutgoing
                     }
@@ -280,6 +298,7 @@ neighborsDataTab vc model id viewState direction =
                 Incoming ->
                     { lbl = "Incoming relations"
                     , getNoAddresses = .inDegree
+                    , floorField = "in_degree"
                     , getTableOpen = .incomingNeighborsTableOpen
                     , getTable = .neighborsIncoming
                     }
@@ -298,7 +317,11 @@ neighborsDataTab vc model id viewState direction =
                     { label = label
                     , number =
                         viewState.address.data
-                            |> RemoteData.map (getNoAddresses >> Locale.int vc.locale)
+                            |> RemoteData.map
+                                (\a ->
+                                    Locale.int vc.locale (getNoAddresses a)
+                                        ++ floorQualifier floorField a
+                                )
                             |> RemoteData.withDefault ""
                     }
                 }
@@ -716,6 +739,19 @@ transactionsDataTab vc model id viewState =
 
         totalNumber =
             noIncomingTxs + noOutgoingTxs
+
+        -- a sum with a floored operand is itself a floor
+        totalQualifier =
+            viewState.address.data
+                |> RemoteData.map
+                    (\a ->
+                        if floorQualifier "no_incoming_txs" a ++ floorQualifier "no_outgoing_txs" a == "" then
+                            ""
+
+                        else
+                            "+"
+                    )
+                |> RemoteData.withDefault ""
     in
     dataTab
         { title =
@@ -725,15 +761,17 @@ transactionsDataTab vc model id viewState =
                 )
                 { root =
                     { totalNumber =
-                        totalNumber
-                            |> Locale.int vc.locale
+                        Locale.int vc.locale totalNumber
+                            ++ totalQualifier
                     , incomingNumber =
                         viewState.address.data
-                            |> RemoteData.map (.noIncomingTxs >> Locale.int vc.locale)
+                            |> RemoteData.map
+                                (\a -> Locale.int vc.locale a.noIncomingTxs ++ floorQualifier "no_incoming_txs" a)
                             |> RemoteData.withDefault ""
                     , outgoingNumber =
                         viewState.address.data
-                            |> RemoteData.map (.noOutgoingTxs >> Locale.int vc.locale)
+                            |> RemoteData.map
+                                (\a -> Locale.int vc.locale a.noOutgoingTxs ++ floorQualifier "no_outgoing_txs" a)
                             |> RemoteData.withDefault ""
                     , title = Locale.string vc.locale "Transactions"
                     }
