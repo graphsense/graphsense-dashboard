@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - remove "Dev" suffix for new figma components
 - add "width:100%" for text nodes
 
+### Fixed
+
+- Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
+
 ## [26.07.2] - 2026-07-14
 
 ### Added

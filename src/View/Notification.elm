@@ -63,6 +63,11 @@ view vc model =
         contentAttr =
             [ css [ Css.width Css.auto, Css.maxWidth (Css.px Msg.messageText_details.renderedWidth) ] ]
 
+        -- notifications without an explicit title render the whole message
+        -- as the header title, whose generated style is white-space: nowrap
+        titleAttr =
+            [ css [ Css.whiteSpace Css.normal, Css.property "word-break" "break-word" ] ]
+
         notificationViewConfig { title, message, moreInfo, variables, showClose } =
             let
                 -- showHeader =
@@ -127,6 +132,7 @@ view vc model =
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
+                    |> Rs.s_infoboxTitle titleAttr
                 )
                 { header =
                     { iconInstance = icon
@@ -152,6 +158,7 @@ view vc model =
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
+                    |> Rs.s_infoboxTitle titleAttr
                 )
                 { header =
                     { iconInstance = icon
@@ -181,6 +188,7 @@ view vc model =
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
+                    |> Rs.s_infoboxTitle titleAttr
                 )
                 { header =
                     { iconInstance = icon
