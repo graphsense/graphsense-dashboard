@@ -2421,20 +2421,11 @@ deserialize plugins _ filename data model =
             )
         |> Result.Extra.unpack
             (\err ->
-                let
-                    -- legacy pf1 .gs files are objects with a "version"
-                    -- field, unlike pathfinder's ["pathfinder", "1", ...]
-                    isLegacyPf1File =
-                        Json.Decode.decodeValue
-                            (Json.Decode.field "version" Json.Decode.string)
-                            data
-                            |> Result.Extra.isOk
-                in
-                if isLegacyPf1File then
+                if Pathfinder.isLegacyPf1GsFile data then
                     let
                         ( notifications, notificationEffects ) =
                             Notification.add
-                                (Notification.infoDefault "pf1_retired_notice"
+                                (Notification.infoDefault "pf1_gs_file_not_supported"
                                     |> Notification.map (s_title (Just "pf1_retired_title"))
                                 )
                                 model.notifications

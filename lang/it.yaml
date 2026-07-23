@@ -232,6 +232,10 @@ Multi Input Cluster Help: 'Raggruppa gli indirizzi per transazione: gli indirizz
 Pubkey Cluster Help: 'Raggruppa gli indirizzi per chiave pubblica: indirizzi della
   stessa chiave (stesso proprietario).'
 pf1_retired_title: Pathfinder 1.0 è stato ritirato
+pf1_gs_file_not_supported: Questo file .gs è stato creato con il vecchio Pathfinder
+  1.0, che è stato ritirato. I vecchi file di grafi non sono più supportati. Hai
+  problemi con il ritiro del vecchio Pathfinder? Contatta il supporto via email
+  all'indirizzo contact@iknaio.com.
 pf1_retired_notice: Pathfinder 1.0 è stato ritirato e non è più disponibile. Si
   prega di utilizzare il nuovo Pathfinder. Hai problemi con il ritiro del vecchio
   Pathfinder? Contatta il supporto via email all'indirizzo contact@iknaio.com.

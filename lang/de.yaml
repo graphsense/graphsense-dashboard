@@ -242,6 +242,10 @@ Multi Input Cluster Help: Adressen wurden zusammen in Transaktionen verwendet (d
 Pubkey Cluster Help: Adressen wurden durch denselben Schlüssel erzeugt (dh. durch
   derselben Besitzer).
 pf1_retired_title: Pathfinder 1.0 wurde eingestellt
+pf1_gs_file_not_supported: Diese .gs-Datei wurde mit dem alten Pathfinder 1.0
+  erstellt, der eingestellt wurde. Alte Graph-Dateien werden nicht mehr unterstützt.
+  Haben Sie Probleme mit der Einstellung des alten Pathfinders? Kontaktieren Sie
+  den Support per E-Mail unter contact@iknaio.com.
 pf1_retired_notice: Pathfinder 1.0 wurde eingestellt und ist nicht mehr verfügbar.
   Bitte verwenden Sie stattdessen den neuen Pathfinder. Haben Sie Probleme mit der
   Einstellung des alten Pathfinders? Kontaktieren Sie den Support per E-Mail unter

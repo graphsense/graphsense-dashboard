@@ -31,6 +31,10 @@ Multi Input Cluster Help: Addresses have been used in the same transaction (ie. 
   by same owner).
 Pubkey Cluster Help: Addresses have been created from the same key (ie. by same owner).
 pf1_retired_title: Pathfinder 1.0 has been retired
+pf1_gs_file_not_supported: This .gs file was created with the old Pathfinder 1.0,
+  which has been retired. Old graph files are not supported anymore. Do you have
+  issues with the retirement of the old pathfinder? Contact support by email at
+  contact@iknaio.com.
 pf1_retired_notice: Pathfinder 1.0 has been retired and is no longer available.
   Please use the new Pathfinder instead. Do you have issues with the retirement
   of the old pathfinder? Contact support by email at contact@iknaio.com.

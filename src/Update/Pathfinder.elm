@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, multiSearch, removeAddress, removeAggEdge, resultLineToRoute, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, multiSearch, removeAddress, removeAggEdge, resultLineToRoute, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -5611,6 +5611,23 @@ deserializeByVersion version =
 
     else
         Json.Decode.fail ("unknown version " ++ version)
+
+
+{-| Legacy pf1 .gs files are arrays whose first element is a version string
+("0.4.4", "0.4.5", "0.5.x" or "1.0.x"), unlike pathfinder's
+["pathfinder", "1", ...]. The legacy decoders were removed together with the
+old graph tool, so these files can only be recognized, not opened.
+-}
+isLegacyPf1GsFile : Json.Decode.Value -> Bool
+isLegacyPf1GsFile data =
+    Json.Decode.decodeValue (Json.Decode.index 0 Json.Decode.string) data
+        |> Result.map
+            (\version ->
+                String.startsWith "0.4" version
+                    || String.startsWith "0.5" version
+                    || String.startsWith "1." version
+            )
+        |> Result.withDefault False
 
 
 fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )

@@ -37,6 +37,10 @@ Multi Input Cluster Help: Traducción realizada con la versión gratuita del tra
 Pubkey Cluster Help: Las direcciones se han creado a partir de la misma clave (es
   decir, por el mismo propietario).
 pf1_retired_title: Pathfinder 1.0 ha sido retirado
+pf1_gs_file_not_supported: Este archivo .gs fue creado con el antiguo Pathfinder
+  1.0, que ha sido retirado. Los archivos de grafos antiguos ya no son compatibles.
+  ¿Tiene problemas con la retirada del antiguo Pathfinder? Póngase en contacto con
+  el soporte por correo electrónico en contact@iknaio.com.
 pf1_retired_notice: Pathfinder 1.0 ha sido retirado y ya no está disponible. Utilice
   el nuevo Pathfinder en su lugar. ¿Tiene problemas con la retirada del antiguo
   Pathfinder? Póngase en contacto con el servicio de asistencia por correo electrónico

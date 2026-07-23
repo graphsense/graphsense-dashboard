@@ -31,6 +31,10 @@ Multi Input Cluster Help: Adresele au fost folosite în aceeași tranzacție (ad
   de același deținător).
 Pubkey Cluster Help: Adresele au fost create din aceeași cheie (adică de același deținător).
 pf1_retired_title: Pathfinder 1.0 a fost retras
+pf1_gs_file_not_supported: Acest fișier .gs a fost creat cu vechiul Pathfinder 1.0,
+  care a fost retras. Fișierele de grafuri vechi nu mai sunt acceptate. Întâmpinați
+  probleme cu retragerea vechiului pathfinder? Contactați asistența prin e-mail la
+  contact@iknaio.com.
 pf1_retired_notice: Pathfinder 1.0 a fost retras și nu mai este disponibil. Vă rugăm
   să utilizați noul Pathfinder. Întâmpinați probleme cu retragerea versiunii anterioare
   a pathfinder? Contactați asistența prin e-mail la contact@iknaio.com.
