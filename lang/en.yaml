@@ -30,9 +30,11 @@ Add_Tag_description: Help improve our data by reporting an entity linked to this
 Multi Input Cluster Help: Addresses have been used in the same transaction (ie. likely
   by same owner).
 Pubkey Cluster Help: Addresses have been created from the same key (ie. by same owner).
-pf1_deprecation_notice: 'Pathfinder 1.0 is deprecated and will be removed
-  soon. Please switch to the new Pathfinder available from the sidebar. Do you have
-  issues with the retirement of the old pathfinder? Contact support by email at contact@ikna.io.'
+pf1_retired_title: Pathfinder 1.0 has been retired
+pf1_retired_notice: Pathfinder 1.0 has been retired and is no longer available.
+  Please use the new Pathfinder instead. Do you have issues with the retirement
+  of the old pathfinder? Contact support by email at contact@ikna.io.
+Open Pathfinder: Open Pathfinder
 tx-tracing-mode-help-text: In transaction mode, you can trace the flow of funds through
   individual transactions. This mode is useful for following specific transactions
   and understanding their paths.

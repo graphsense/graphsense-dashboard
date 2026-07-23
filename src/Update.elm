@@ -2170,6 +2170,15 @@ updateByUrl plugins uc url model =
                         , []
                         )
 
+                    Route.RetiredGraph ->
+                        ( { model
+                            | page = Model.RetiredGraph
+                            , url = url
+                            , navbarSubMenu = Nothing
+                          }
+                        , []
+                        )
+
                     Route.Pathfinder pfRoute ->
                         let
                             ( pfn, graphEffect ) =
@@ -2447,32 +2456,55 @@ deserialize plugins _ filename data model =
         |> Result.Extra.unpack
             (\err ->
                 let
-                    httpError =
-                        (case err of
-                            Json.Decode.Failure message _ ->
-                                message
-
-                            _ ->
-                                "could not read"
-                        )
-                            |> Http.BadBody
-
-                    ( notifications, notificationEffects ) =
-                        Notification.addHttpError model.notifications Nothing httpError
+                    -- legacy pf1 .gs files are objects with a "version"
+                    -- field, unlike pathfinder's ["pathfinder", "1", ...]
+                    isLegacyPf1File =
+                        Json.Decode.decodeValue
+                            (Json.Decode.field "version" Json.Decode.string)
+                            data
+                            |> Result.Extra.isOk
                 in
-                ( { model
-                    | statusbar =
-                        httpError
-                            |> Just
-                            |> Statusbar.add model.statusbar filename []
-                    , notifications = notifications
-                  }
-                , (Json.Decode.errorToString err
-                    |> Ports.console
-                    |> CmdEffect
-                  )
-                    :: List.map NotificationEffect notificationEffects
-                )
+                if isLegacyPf1File then
+                    let
+                        ( notifications, notificationEffects ) =
+                            Notification.add
+                                (Notification.infoDefault "pf1_retired_notice"
+                                    |> Notification.map (s_title (Just "pf1_retired_title"))
+                                )
+                                model.notifications
+                    in
+                    ( { model | notifications = notifications }
+                    , List.map NotificationEffect notificationEffects
+                    )
+
+                else
+                    let
+                        httpError =
+                            (case err of
+                                Json.Decode.Failure message _ ->
+                                    message
+
+                                _ ->
+                                    "could not read"
+                            )
+                                |> Http.BadBody
+
+                        ( notifications, notificationEffects ) =
+                            Notification.addHttpError model.notifications Nothing httpError
+                    in
+                    ( { model
+                        | statusbar =
+                            httpError
+                                |> Just
+                                |> Statusbar.add model.statusbar filename []
+                        , notifications = notifications
+                      }
+                    , (Json.Decode.errorToString err
+                        |> Ports.console
+                        |> CmdEffect
+                      )
+                        :: List.map NotificationEffect notificationEffects
+                    )
             )
             identity
 

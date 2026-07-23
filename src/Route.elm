@@ -28,12 +28,18 @@ type Route
     | Home
     | Stats
     | Settings
+    | RetiredGraph
     | Plugin ( Plugin.Model.PluginType, String )
 
 
 pathfinderSegment : String
 pathfinderSegment =
     "pathfinder"
+
+
+graphSegment : String
+graphSegment =
+    "graph"
 
 
 statsSegment : String
@@ -57,6 +63,11 @@ parser c =
         [ map Pathfinder (s pathfinderSegment |> slash (Pathfinder.parser c.pathfinder))
         , map Stats (s statsSegment)
         , map Settings (s settingsSegment)
+
+        -- any /graph/* url of the removed legacy graph tool lands on the
+        -- "Pathfinder 1.0 retired" page
+        , map (\_ -> RetiredGraph) (s graphSegment |> slash (remainder Just))
+        , map RetiredGraph (s graphSegment)
         , map Home top
         , map Plugin (remainder Plugin.parseUrl)
         ]
@@ -107,6 +118,9 @@ toUrl route =
 
         Settings ->
             absolute [ settingsSegment ] []
+
+        RetiredGraph ->
+            absolute [ graphSegment ] []
 
         Home ->
             absolute [] []

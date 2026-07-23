@@ -81,6 +81,7 @@ type Page
     | Stats
     | Settings
     | Pathfinder
+    | RetiredGraph
     | Plugin Plugin.PluginType
 
 
