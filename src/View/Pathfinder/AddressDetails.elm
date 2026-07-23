@@ -6,6 +6,7 @@ import Components.InfiniteTable as Inf
 import Components.PagedTable as PagedTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
+import Config
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -1147,9 +1148,17 @@ transactionsOrNeighborsDataTabs vc model id viewState =
             ]
 
         AggregateTracingMode ->
-            [ neighborsDataTab vc model id viewState Outgoing
-            , neighborsDataTab vc model id viewState Incoming
-            ]
+            -- limited networks have no precomputed relations: counterparty
+            -- listing is unavailable, so aggregate mode falls back to the
+            -- transactions tab (pair edges on the graph keep working)
+            if Config.isLimitedNetwork (Id.network id) then
+                [ transactionsDataTab vc model id viewState
+                ]
+
+            else
+                [ neighborsDataTab vc model id viewState Outgoing
+                , neighborsDataTab vc model id viewState Incoming
+                ]
 
 
 tagsList : View.Config -> Pathfinder.Model -> Id -> List (Html Pathfinder.Msg)

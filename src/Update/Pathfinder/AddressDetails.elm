@@ -7,6 +7,7 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
 import Components.TransactionFilter as TransactionFilter
+import Config
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Dict exposing (Dict)
@@ -176,27 +177,33 @@ update uc msg model =
             ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
 
         UserClickedToggleNeighborsTable dir ->
-            getNeighborsTableAndSetter model dir
-                |> Maybe.map
-                    (\{ table, setTable, tableOpen, setTableOpen } ->
-                        let
-                            conf =
-                                neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.address.id dir
+            if Config.isLimitedNetwork (Id.network model.address.id) then
+                -- no counterparty listing on limited networks: the tables are
+                -- not rendered, and no stray message may trigger their fetch
+                n model
 
-                            ( tblNew, eff1 ) =
-                                if tableOpen then
-                                    InfiniteTable.abort conf table
+            else
+                getNeighborsTableAndSetter model dir
+                    |> Maybe.map
+                        (\{ table, setTable, tableOpen, setTableOpen } ->
+                            let
+                                conf =
+                                    neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.address.id dir
 
-                                else
-                                    InfiniteTable.gotoFirstPage conf table
-                        in
-                        ( model
-                            |> setTableOpen (not tableOpen)
-                            |> setTable tblNew
-                        , eff1
+                                ( tblNew, eff1 ) =
+                                    if tableOpen then
+                                        InfiniteTable.abort conf table
+
+                                    else
+                                        InfiniteTable.gotoFirstPage conf table
+                            in
+                            ( model
+                                |> setTableOpen (not tableOpen)
+                                |> setTable tblNew
+                            , eff1
+                            )
                         )
-                    )
-                |> Maybe.withDefault (n model)
+                    |> Maybe.withDefault (n model)
 
         NeighborsTableSubTableMsg dir pm ->
             getNeighborsTableAndSetter model dir
