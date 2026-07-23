@@ -2,7 +2,6 @@ module Config.UserSettings exposing (UserSettings, decoder, default, encoder)
 
 -- import Model.Currency exposing (Currency(..))
 
-import Config.Graph exposing (AddressLabelType, TxLabelType(..), addressLabelToString, stringToAddressLabel)
 import Config.Pathfinder exposing (TracingMode(..))
 import Json.Decode as Decode exposing (Decoder, bool, int, nullable, string)
 import Json.Decode.Extra
@@ -18,12 +17,7 @@ type alias UserSettings =
     , valueDetail : Maybe Model.Locale.ValueDetail
     , preferredFiatCurrency : Maybe String
     , showValuesInFiat : Maybe Bool
-    , addressLabel : Maybe AddressLabelType
-    , edgeLabel : Maybe TxLabelType
-    , showAddressShadowLinks : Maybe Bool
-    , showClusterShadowLinks : Maybe Bool
     , showDatesInUserLocale : Maybe Bool
-    , showZeroValueTxs : Maybe Bool
     , showTimeZoneOffset : Maybe Bool
     , highlightClusterFriends : Maybe Bool
     , showTimestampOnTxEdge : Maybe Bool
@@ -61,29 +55,6 @@ valueDetailToString d =
             "magnitude"
 
 
-edgeLabelToString : TxLabelType -> String
-edgeLabelToString c =
-    case c of
-        NoTxs ->
-            "notxs"
-
-        Value ->
-            "value"
-
-
-stringToEdgeLabel : String -> TxLabelType
-stringToEdgeLabel s =
-    case s of
-        "notxs" ->
-            NoTxs
-
-        "value" ->
-            Value
-
-        _ ->
-            Value
-
-
 fromString : Decoder a -> Decoder a
 fromString dec =
     Decode.string
@@ -102,12 +73,7 @@ decoder =
         |> optional "valueDetail" (Decode.string |> Decode.map stringToValueDetail |> nullable) Nothing
         |> optional "preferredFiatCurrency" (Decode.string |> nullable) Nothing
         |> optional "showValuesInFiat" (nullable bool |> fromString) Nothing
-        |> optional "addressLabel" (Decode.string |> Decode.map stringToAddressLabel) Nothing
-        |> optional "edgeLabel" (Decode.string |> Decode.map stringToEdgeLabel |> nullable) Nothing
-        |> optional "showAddressShadowLinks" (nullable bool |> fromString) Nothing
-        |> optional "showClusterShadowLinks" (nullable bool |> fromString) Nothing
         |> optional "showDatesInUserLocale" (nullable bool |> fromString) Nothing
-        |> optional "showZeroValueTxs" (nullable bool |> fromString) Nothing
         |> optional "showTimeZoneOffset" (nullable bool |> fromString) Nothing
         |> optional "highlightClusterFriends" (nullable bool |> fromString) Nothing
         |> optional "showTimestampOnTxEdge" (nullable bool |> fromString) Nothing
@@ -154,12 +120,7 @@ encoder settings =
         , ( "valueDetail", settings.valueDetail |> Maybe.map valueDetailToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "preferredFiatCurrency", settings.preferredFiatCurrency |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "showValuesInFiat", settings.showValuesInFiat |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
-        , ( "addressLabel", settings.addressLabel |> Maybe.map addressLabelToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
-        , ( "edgeLabel", settings.edgeLabel |> Maybe.map edgeLabelToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
-        , ( "showAddressShadowLinks", settings.showAddressShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
-        , ( "showClusterShadowLinks", settings.showClusterShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showDatesInUserLocale", settings.showDatesInUserLocale |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
-        , ( "showZeroValueTxs", settings.showZeroValueTxs |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showTimeZoneOffset", settings.showTimeZoneOffset |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "highlightClusterFriends", settings.highlightClusterFriends |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showTimestampOnTxEdge", settings.showTimestampOnTxEdge |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
@@ -286,12 +247,7 @@ default locale =
     , valueDetail = Nothing
     , preferredFiatCurrency = Nothing
     , showValuesInFiat = Nothing
-    , addressLabel = Nothing
-    , edgeLabel = Nothing
-    , showAddressShadowLinks = Nothing
-    , showClusterShadowLinks = Nothing
     , showDatesInUserLocale = Nothing
-    , showZeroValueTxs = Nothing
     , showTimeZoneOffset = Nothing
     , highlightClusterFriends = Nothing
     , showTimestampOnTxEdge = Nothing

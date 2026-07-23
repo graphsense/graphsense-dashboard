@@ -28,7 +28,6 @@ import Model exposing (..)
 import Model.Address as Address
 import Model.Dialog as Dialog
 import Model.Graph.Coords exposing (BBox)
-import Model.Graph.Id as Id
 import Model.Locale as Locale
 import Model.Notification as Notification exposing (Notification)
 import Model.Pathfinder
@@ -1668,7 +1667,15 @@ update plugins uc msg model =
                     |> updateByPluginOutMsg plugins uc outMsg
 
         BrowserGotDeserializedGS ( filename, data ) ->
-            pluginNewGraph plugins ( model, [] )
+            let
+                ( newPluginsState, outMsg, cmdp ) =
+                    PluginInterface.Reset
+                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+            in
+            ( { model | plugins = newPluginsState }
+            , [ PluginEffect cmdp ]
+            )
+                |> updateByPluginOutMsg plugins uc outMsg
                 |> (\( mdl, eff ) ->
                         deserialize plugins uc filename data mdl
                             |> mapSecond ((++) eff)
@@ -1882,9 +1889,6 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
         |> List.foldl
             (\msg ( model, eff ) ->
                 case Log.truncate "outMsg" msg of
-                    PluginInterface.ShowBrowser ->
-                        updateGraphByPluginOutMsg model eff msg
-
                     PluginInterface.UpdateAddresses _ _ ->
                         updateGraphByPluginOutMsg model eff msg
 
@@ -1894,33 +1898,11 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                     PluginInterface.UpdateAddressesByEntityPathfinder _ _ ->
                         updateGraphByPluginOutMsg model eff msg
 
-                    PluginInterface.UpdateAddressEntities _ _ ->
-                        updateGraphByPluginOutMsg model eff msg
-
-                    PluginInterface.UpdateEntities _ _ ->
-                        updateGraphByPluginOutMsg model eff msg
-
-                    PluginInterface.UpdateEntitiesByRootAddress _ _ ->
-                        updateGraphByPluginOutMsg model eff msg
-
-                    PluginInterface.LoadAddressIntoGraph _ ->
-                        updateGraphByPluginOutMsg model eff msg
-
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder _ _) ->
                         updateGraphByPluginOutMsg model eff msg
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinderWithConfig _ _ _) ->
                         updateGraphByPluginOutMsg model eff msg
-
-                    PluginInterface.GetAddressDomElement id pmsg ->
-                        ( mo
-                        , Id.addressIdToString id
-                            |> Browser.Dom.getElement
-                            |> Task.attempt (BrowserGotElementForPlugin pmsg)
-                            |> CmdEffect
-                            |> List.singleton
-                            |> (++) eff
-                        )
 
                     PluginInterface.PushUrl url ->
                         ( model
@@ -2013,22 +1995,6 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                                     )
                                         |> updateByPluginOutMsg plugins uc outMsg
                                )
-
-                    PluginInterface.GetSerialized toMsg ->
-                        let
-                            -- The old /graph UI was removed; nothing to serialize here.
-                            serialized =
-                                Json.Encode.null
-
-                            ( new, outMsg, cmd ) =
-                                Plugin.update plugins uc (toMsg serialized) model.plugins
-                        in
-                        ( { model
-                            | plugins = new
-                          }
-                        , PluginEffect cmd :: eff
-                        )
-                            |> updateByPluginOutMsg plugins uc outMsg
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.GetPathfinderGraphJson toMsg) ->
                         let
@@ -2521,20 +2487,6 @@ updatePlugins plugins uc msg model =
     , [ PluginEffect cmd ]
     )
         |> updateByPluginOutMsg plugins uc outMsg
-
-
-pluginNewGraph : Plugins -> ( Model key, List Effect ) -> ( Model key, List Effect )
-pluginNewGraph plugins ( model, eff ) =
-    let
-        ( new, _, cmd ) =
-            Plugin.newGraph plugins model.plugins
-    in
-    ( { model
-        | plugins = new
-      }
-    , PluginEffect cmd
-        :: eff
-    )
 
 
 updateSize : Int -> Int -> { a | size : Maybe BBox } -> { a | size : Maybe BBox }

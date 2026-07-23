@@ -1,13 +1,11 @@
 module PluginInterface.Msg exposing (InMsg(..), InMsgPathfinder(..), OutMsg(..), OutMsgPathfinder(..), mapOutMsg)
 
 import Api.Data
-import Browser.Dom
 import Effect.Api as Api
 import Json.Encode
 import Model.Address exposing (Address)
 import Model.Dialog
 import Model.Entity exposing (Entity)
-import Model.Graph.Id as Id
 import Model.Notification exposing (Notification)
 import Model.Pathfinder.Address as Pathfinder
 import Route.Pathfinder exposing (PathHopType)
@@ -19,21 +17,10 @@ import Update.Dialog
 
 
 type OutMsg msg addressMsg entityMsg
-    = -- popup the graph's browser
-      ShowBrowser
-      -- send addressMsg to all address nodes in the graph which match the one in `Address`
-    | UpdateAddresses Address addressMsg
+    = -- send addressMsg to all address nodes in the graph which match the one in `Address`
+      UpdateAddresses Address addressMsg
     | UpdateAddressesByRootAddress Address addressMsg
     | UpdateAddressesByEntityPathfinder Api.Data.Cluster addressMsg
-      -- send entityMsg to the entity of all address nodes in the graph which match the one in `Address`
-      -- core calls the `update.updateAddress` hook
-    | UpdateAddressEntities Address entityMsg
-      -- send entityMsg to all entity nodes in the graph which match the one in `Entity`
-      -- core calls the `update.updateEntity` hook
-    | UpdateEntities Entity entityMsg
-      -- send entityMsg to all entity nodes in the graph whose root address matches the one in `Address`
-      -- core calls the `update.updateEntity` hook
-    | UpdateEntitiesByRootAddress Address entityMsg
       -- push url to the browser history (updates the URL in the browser address bar)
     | PushUrl String
       -- trigger a browser history step back
@@ -42,12 +29,8 @@ type OutMsg msg addressMsg entityMsg
     | GetEntitiesForAddresses (List Address) (List ( Address, Api.Data.Cluster ) -> msg)
       -- retrieve entities for the given list of entities
     | GetEntities (List Entity) (List Api.Data.Cluster -> msg)
-      -- retrieve a serialized state of the graph
-    | GetSerialized (Json.Encode.Value -> msg)
-      -- load given value as deserialization of graph
+      -- load given value as deserialization of a pathfinder graph
     | Deserialize String Json.Encode.Value
-      -- get address dom element for the given address node id
-    | GetAddressDomElement Id.AddressId (Result Browser.Dom.Error Browser.Dom.Element -> msg)
       -- send value to javascript (further processed in the plugin's root js)
     | SendToPort Json.Encode.Value
       -- send a request to the Graphsense API
@@ -56,8 +39,6 @@ type OutMsg msg addressMsg entityMsg
     | ShowDialog (Model.Dialog.Model msg)
       -- close dialog
     | CloseDialog
-      -- load address into graph
-    | LoadAddressIntoGraph Address
       -- show notification
     | ShowNotification Notification
       -- pathfinder Specific msgs
@@ -95,11 +76,8 @@ type InMsgPathfinder
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
-mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
+mapOutMsg namespace mapMsg mapAddressMsg _ outMsg =
     case outMsg of
-        ShowBrowser ->
-            ShowBrowser
-
         UpdateAddresses a addressMsg ->
             mapAddressMsg addressMsg
                 |> UpdateAddresses a
@@ -111,18 +89,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         UpdateAddressesByEntityPathfinder a addressMsg ->
             mapAddressMsg addressMsg
                 |> UpdateAddressesByEntityPathfinder a
-
-        UpdateEntities e entityMsg ->
-            mapEntityMsg entityMsg
-                |> UpdateEntities e
-
-        UpdateEntitiesByRootAddress a entityMsg ->
-            mapEntityMsg entityMsg
-                |> UpdateEntitiesByRootAddress a
-
-        UpdateAddressEntities a entityMsg ->
-            mapEntityMsg entityMsg
-                |> UpdateAddressEntities a
 
         PushUrl u ->
             PushUrl u
@@ -138,9 +104,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
             (b >> mapMsg)
                 |> GetEntities a
 
-        GetSerialized msg ->
-            (msg >> mapMsg) |> GetSerialized
-
         OutMsgsPathfinder (GetPathfinderGraphJson msg) ->
             ((msg >> mapMsg) |> GetPathfinderGraphJson) |> OutMsgsPathfinder
 
@@ -155,9 +118,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         Deserialize filename json ->
             Deserialize filename json
-
-        GetAddressDomElement element msg ->
-            (msg >> mapMsg) |> GetAddressDomElement element
 
         SendToPort value ->
             [ Json.Encode.string namespace
@@ -176,9 +136,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         CloseDialog ->
             CloseDialog
-
-        LoadAddressIntoGraph a ->
-            LoadAddressIntoGraph a
 
         ShowNotification a ->
             ShowNotification a

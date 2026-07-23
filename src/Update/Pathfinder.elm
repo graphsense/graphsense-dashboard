@@ -4421,9 +4421,6 @@ updateByPluginOutMsg plugins uc outMsgs model =
         |> List.foldl
             (\msg ( mo, eff ) ->
                 case Log.log "outMsgPF" msg of
-                    PluginInterface.ShowBrowser ->
-                        ( mo, eff )
-
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder net paths) ->
                         addPathsToGraph plugins uc mo net { outgoing = True, autolinkInTraceMode = False } paths
                             |> Tuple.mapSecond ((++) eff)
@@ -4481,18 +4478,6 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         , eff
                         )
 
-                    PluginInterface.UpdateAddressEntities _ _ ->
-                        ( mo, eff )
-
-                    PluginInterface.UpdateEntities _ _ ->
-                        ( mo, eff )
-
-                    PluginInterface.UpdateEntitiesByRootAddress _ _ ->
-                        ( mo, eff )
-
-                    PluginInterface.LoadAddressIntoGraph _ ->
-                        ( mo, eff )
-
                     PluginInterface.GetEntitiesForAddresses _ _ ->
                         ( mo, eff )
 
@@ -4505,13 +4490,7 @@ updateByPluginOutMsg plugins uc outMsgs model =
                     PluginInterface.Back _ ->
                         ( mo, eff )
 
-                    PluginInterface.GetSerialized _ ->
-                        ( mo, eff )
-
                     PluginInterface.Deserialize _ _ ->
-                        ( mo, eff )
-
-                    PluginInterface.GetAddressDomElement _ _ ->
                         ( mo, eff )
 
                     PluginInterface.SendToPort _ ->
