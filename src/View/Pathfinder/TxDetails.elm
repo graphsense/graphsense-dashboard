@@ -139,8 +139,16 @@ account vc viewState id txExistsFn =
                 Nothing ->
                     Util.View.loadingSpinner vc Css.View.loadingSpinner
 
+        -- Tron (and other non-eth account networks) show hashes without a 0x prefix, in line with Tronscan
+        txHashPrefix =
+            if String.toLower (Id.network id) == "eth" then
+                "0x"
+
+            else
+                ""
+
         baseTxIdString =
-            ("0x" ++ Id.id id) |> String.split "_" |> List.head |> Maybe.withDefault ""
+            (txHashPrefix ++ Id.id id) |> String.split "_" |> List.head |> Maybe.withDefault ""
     in
     div []
         [ SidePanelComponents.sidePanelEthTransactionWithAttributes
@@ -674,7 +682,7 @@ unsupportedConversionNotice vc conversions =
             Locale.interpolated vc.locale key [ address, network ]
 
 
-ioTableView : View.Config -> IoDirection -> Network -> ComponentsInfiniteTable.Model Api.Data.TxValue -> IoColumnConfig -> Html Pathfinder.Msg
+ioTableView : View.Config -> IoDirection -> Network -> ComponentsInfiniteTable.Model String Api.Data.TxValue -> IoColumnConfig -> Html Pathfinder.Msg
 ioTableView vc dir network table ioColumnConfig =
     let
         isCheckedFn =

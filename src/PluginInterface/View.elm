@@ -8,8 +8,8 @@ import View.Pathfinder.ContextMenuItem exposing (ContextMenuItem)
 
 
 type alias View modelState addressState msg =
-    { -- address context menu item for new pathfinder
-      addressContextMenuNew : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> List (ContextMenuItem msg))
+    { -- address context menu item
+      addressContextMenu : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> List (ContextMenuItem msg))
 
     -- additional strings for the search bar placeholder
     , searchPlaceholder : Maybe (View.Config -> String)
@@ -61,7 +61,7 @@ type alias View modelState addressState msg =
 
 init : View modelState addressState msg
 init =
-    { addressContextMenuNew = Nothing
+    { addressContextMenu = Nothing
     , searchPlaceholder = Nothing
     , searchResultList = Nothing
     , sidebar = Nothing

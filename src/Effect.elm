@@ -31,8 +31,8 @@ perform plugins model statusbarToken apiKey effect =
         NavPushUrlEffect url ->
             Nav.pushUrl model.key url
 
-        NavBackEffect ->
-            Nav.back model.key 1
+        NavBackEffect steps ->
+            Nav.back model.key steps
 
         GetElementEffect { id, msg } ->
             Dom.getElement id

@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addValues, averageFiatValue, isAccountLike, mulValues, negateTxValue, negateValues, normalizeIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addValues, addressCluster, averageFiatValue, isAccountLike, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -29,6 +29,15 @@ averageFiatValue { fiatValues } =
         |> List.sum
     )
         / (toFloat <| List.length fiatValues)
+
+
+{-| The cluster an address belongs to. Prefers the fresh (incrementally
+maintained) cluster id served by REST instances with fresh clustering
+enabled; falls back to the legacy transform's cluster id otherwise.
+-}
+addressCluster : Api.Data.Address -> Int
+addressCluster address =
+    address.freshClusterId |> Maybe.withDefault address.cluster
 
 
 isAccountLike : String -> Bool
@@ -112,6 +121,26 @@ ensure0x s =
 
     else
         "0x" ++ s
+
+
+{-| Lowercase the hex part of an address or tx identifier on networks
+whose identifiers are case-insensitive hex (eth). Only the segment
+before the first "\_" is lowercased: sub-tx markers like "\_T1"/"\_I1"
+are case-sensitive and must be preserved. Other networks (btc, trx)
+use case-sensitive encodings and are returned unchanged.
+-}
+normalizeIdCasing : String -> String -> String
+normalizeIdCasing network identifier =
+    if String.toLower network == "eth" then
+        case String.split "_" identifier of
+            hex :: suffix ->
+                String.join "_" (String.toLower hex :: suffix)
+
+            [] ->
+                identifier
+
+    else
+        identifier
 
 
 normalizeIdentifier : String -> String -> String

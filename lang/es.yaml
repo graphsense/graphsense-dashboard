@@ -346,6 +346,7 @@ popup-address-not-found-no-txs: no hay transacciones asociadas a esta dirección
 popup-address-not-found-typos: hay errores tipográficos
 token-transactions-of: transacciones de tokens de {0} ({1})
 actor: Actor
+actor / Category: Actor / Categoría
 actors: Actores
 Recent searches: Búsquedas recientes
 other Links: Otros enlaces
@@ -587,3 +588,9 @@ transaction-tracing-across-change: Seguimiento de transacción a través de camb
 hint-auto-trace-title: Rastrear fondos automáticamente
 hint-auto-trace-description: Siga el dinero encontrando automáticamente la próxima transacción (a nivel UTXO si el ledger lo admite)
 tooltip-opens-pubkey-related-addresses-table: Direcciones en otras criptomonedas vinculadas por la misma clave pública. Haga clic para abrir la tabla correspondiente a continuación.
+csv-export-capped-title: Exportación CSV limitada
+csv-export-capped-message: "Se recortaron {0} transacción(es) grande(s) en la exportación CSV para mantener un tamaño de archivo manejable; para ellas solo se incluyen los flujos con una dirección en el grafo."
+export-dialog-only-visible-inoutputs: "exportar solo entradas/salidas visibles"
+export-dialog-only-visible-inoutputs-help: "Si está activado, el CSV solo contiene flujos entre entradas y salidas visibles en el grafo. Desactívalo para exportar la matriz completa de entradas/salidas — en transacciones con muchas entradas y salidas esto puede generar un archivo muy grande."
+csv-note-capped: "Transacción demasiado grande: solo se exportaron los flujos con una dirección visible, recortados al límite de exportación."
+csv-note-visible-only: "Solo se exportaron los flujos con una dirección visible."

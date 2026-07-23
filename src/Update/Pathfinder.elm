@@ -10,7 +10,7 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
-import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset)
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), autoLinkContractAddresses, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Decode.Pathfinder1
@@ -274,9 +274,32 @@ closeTooltip msg model =
             n model
 
         _ ->
-            Tooltip.close model.tooltip
-                |> mapFirst (flip s_tooltip model)
-                |> mapSecond (List.map TooltipEffect)
+            if isTableScrollMsg msg then
+                -- Virtual scrolling can detach a tooltip's trigger row before
+                -- its mouseleave fires, leaving the tooltip stuck open. Force a
+                -- real close when an in-table scroll happens.
+                handleTooltipMsg Tooltip.CloseTooltip model
+
+            else
+                Tooltip.close model.tooltip
+                    |> mapFirst (flip s_tooltip model)
+                    |> mapSecond (List.map TooltipEffect)
+
+
+isTableScrollMsg : Msg -> Bool
+isTableScrollMsg msg =
+    case msg of
+        AddressDetailsMsg _ (AddressDetails.TransactionsTableSubTableMsg im) ->
+            InfiniteTable.isScrolling im
+
+        AddressDetailsMsg _ (AddressDetails.NeighborsTableSubTableMsg _ im) ->
+            InfiniteTable.isScrolling im
+
+        AddressDetailsMsg _ (AddressDetails.RelatedAddressesTableSubTableMsg im) ->
+            InfiniteTable.isScrolling im
+
+        _ ->
+            False
 
 
 syncUrl : Model -> ( Model, List Effect )
@@ -662,7 +685,7 @@ updateByMsg plugins uc msg model =
         UserClickedExportGraph _ ->
             n model
 
-        BrowserGotTagSummariesForExportGraphTxsAsCSV area includesBestClusterTag tagSummaries ->
+        BrowserGotTagSummariesForExportGraphTxsAsCSV area onlyVisibleIos includesBestClusterTag tagSummaries ->
             let
                 -- Add received tag summaries to model
                 ( modelWithTags, _ ) =
@@ -676,7 +699,7 @@ updateByMsg plugins uc msg model =
 
                 allAddresses =
                     Dict.values modelWithTags.network.txs
-                        |> getToAndFromAddresses uc
+                        |> getToAndFromAddresses uc onlyVisibleIos
 
                 -- Check if all addresses now have their tag summaries loaded
                 stillMissing =
@@ -690,7 +713,7 @@ updateByMsg plugins uc msg model =
             in
             -- Only generate export when ALL tag summaries are loaded
             if List.isEmpty stillMissing then
-                generateGraphTxsExport uc area modelWithTags
+                generateGraphTxsExport uc area onlyVisibleIos modelWithTags
 
             else
                 -- Still waiting for more tag summaries, just update the model
@@ -826,9 +849,9 @@ updateByMsg plugins uc msg model =
         UserReleasedDeleteKey ->
             deleteSelection model
 
-        UserReleasedNormalKey key ->
-            case ( model.modPressed, key ) of
-                ( True, "a" ) ->
+        UserPressedHotkey key ->
+            case key of
+                "a" ->
                     let
                         allAddresses =
                             Dict.keys model.network.addresses
@@ -843,36 +866,33 @@ updateByMsg plugins uc msg model =
                     in
                     n (multiSelect model allItems False)
 
-                ( True, "z" ) ->
+                "z" ->
                     ( model
                     , [ InternalEffect UserClickedUndo ]
                     )
 
-                ( True, "y" ) ->
+                "y" ->
                     ( model
                     , [ InternalEffect UserClickedRedo ]
                     )
 
-                ( True, "f" ) ->
+                "f" ->
                     ( model
                     , [ InternalEffect UserPressedSearchHotkey ]
                     )
 
-                ( True, "s" ) ->
+                "s" ->
                     ( model
                     , [ InternalEffect (UserClickedSaveGraph Nothing) ]
                     )
 
-                ( True, "e" ) ->
+                "e" ->
                     ( model
                     , [ InternalEffect (UserClickedExportGraph Nothing) ]
                     )
 
                 _ ->
                     n model
-
-        UserPressedNormalKey _ ->
-            n model
 
         BrowserGotAddressDataToRefresh data ->
             let
@@ -1057,12 +1077,26 @@ updateByMsg plugins uc msg model =
                                     Dict.get (AggEdge.initId id addressId) newModel2.network.aggEdges
                                         |> Maybe.map .txs
                                         |> Maybe.withDefault Set.empty
+
+                                -- Skip auto-linking when either endpoint is a smart
+                                -- contract: contract calls add noise to traces.
+                                -- Override with Config.Pathfinder.autoLinkContractAddresses.
+                                isContractInvolved =
+                                    (nbrData.isContract == Just True)
+                                        || (aData
+                                                |> Maybe.andThen .isContract
+                                                |> Maybe.withDefault False
+                                           )
+
+                                autoLink =
+                                    autoLinkInTraceMode
+                                        && (autoLinkContractAddresses || not isContractInvolved)
                             in
                             if model.config.tracingMode == TransactionTracingMode && Set.isEmpty txs then
                                 getNextTxEffects newModel2.network
                                     addressId
                                     (Direction.flip dir)
-                                    { addBetweenLinks = autoLinkInTraceMode && loadBetweenLinks, addAnyLinks = autoLinkInTraceMode }
+                                    { addBetweenLinks = autoLink && loadBetweenLinks, addAnyLinks = autoLink }
                                     (Just id)
 
                             else
@@ -1070,11 +1104,8 @@ updateByMsg plugins uc msg model =
                         )
                     |> pair newModel2
 
-        BrowserGotClusterData _ data ->
+        BrowserGotClusterData clusterId data ->
             let
-                clusterId =
-                    Id.initClusterId data.currency data.cluster
-
                 setServiceType addr =
                     Just data
                         |> getAddressType addr
@@ -3660,7 +3691,7 @@ browserGotAddressData uc plugins providedId position data model =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
 
         clusterId =
-            Id.initClusterId data.currency data.cluster
+            Id.initClusterIdFromAddress data
 
         isSecondAddressFromSameCluster =
             Network.isClusterFriendAlreadyOnGraph clusterId
@@ -3689,10 +3720,16 @@ browserGotAddressData uc plugins providedId position data model =
 
             else
                 ( Dict.insert clusterId RemoteData.Loading model.clusters
-                , [ BrowserGotClusterData id
+                  -- Api.Data.Cluster has no freshClusterId field, so normalize the
+                  -- response's .cluster to the id the request was made with
+                  -- (the fresh-aware Data.addressCluster). This keeps the clusters
+                  -- dict key, plugin messages, the cluster info panel and follow-up
+                  -- entity requests in the same id space, regardless of which id
+                  -- the backend echoes back.
+                , [ (\cluster -> { cluster | cluster = Data.addressCluster data } |> BrowserGotClusterData clusterId)
                         |> Api.GetEntityEffectWithDetails
                             { currency = Id.network id
-                            , entity = data.cluster
+                            , entity = Data.addressCluster data
                             , includeActors = False
                             , includeBestTag = False
                             }
@@ -4408,13 +4445,21 @@ updateByPluginOutMsg plugins uc outMsgs model =
 
                     PluginInterface.UpdateAddressesByRootAddress { currency, address } pmsg ->
                         model.clusters
-                            |> Dict.values
-                            |> List.filterMap RemoteData.toMaybe
+                            |> Dict.toList
+                            |> List.filterMap
+                                (\( cid, cluster ) ->
+                                    cluster
+                                        |> RemoteData.toMaybe
+                                        |> Maybe.map (pair cid)
+                                )
                             |> List.Extra.find
-                                (\e ->
+                                (\( _, e ) ->
                                     e.currency == currency && e.rootAddress == address
                                 )
-                            |> Maybe.map Id.initClusterIdFromRecord
+                            -- use the dict key (the fresh-aware id the cluster
+                            -- was requested with) rather than re-deriving from
+                            -- the record
+                            |> Maybe.map first
                             |> Maybe.map
                                 (\pId ->
                                     ( { mo
@@ -4455,6 +4500,9 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         ( mo, eff )
 
                     PluginInterface.PushUrl _ ->
+                        ( mo, eff )
+
+                    PluginInterface.Back _ ->
                         ( mo, eff )
 
                     PluginInterface.GetSerialized _ ->
@@ -5092,7 +5140,7 @@ addTagSummaryToModel includesBestClusterTag id data m =
                             |> Dict.get id
                             |> Maybe.andThen (.data >> RemoteData.toMaybe)
                             |> Maybe.map
-                                (.cluster
+                                (Data.addressCluster
                                     >> (\entityId ->
                                             Api.GetEntityAddressTagsEffect
                                                 { currency = Id.network id
@@ -5897,22 +5945,105 @@ getTagsForExport addressId table data model =
     )
 
 
+{-| Maximum number of CSV rows a single UTXO transaction may contribute to the
+graph export. Transactions exceeding this are reduced to their on-graph flows
+(and truncated if still larger); see `Tx.utxoTxToAccountTxs`.
+-}
+graphTxsExportRowCap : Int
+graphTxsExportRowCap =
+    1000
+
+
+{-| A single CSV row: a transaction flow plus a free-text note explaining when
+the transaction's rows were cut (capped or filtered to visible in/outputs).
+-}
+type alias GraphTxsCsvRow =
+    { account : Api.Data.TxAccount
+    , note : String
+    }
+
+
+{-| Row-reduction options for the graph CSV export, given the user's choice of
+exporting only visible in/outputs.
+-}
+graphTxsExportOptions : Bool -> { onlyVisibleIos : Bool, rowCap : Maybe Int }
+graphTxsExportOptions onlyVisibleIos =
+    { onlyVisibleIos = onlyVisibleIos
+    , rowCap = Just graphTxsExportRowCap
+    }
+
+
 {-| Generate the graph transactions CSV export with current tag summaries
 -}
-generateGraphTxsExport : Update.Config -> Dialog.ExportArea -> Model -> ( Model, List Effect )
-generateGraphTxsExport uc exportSelection model =
+generateGraphTxsExport : Update.Config -> Dialog.ExportArea -> Bool -> Model -> ( Model, List Effect )
+generateGraphTxsExport uc exportSelection onlyVisibleIos model =
     let
         config =
             makeGraphTxsExportCSVConfig uc model.tagSummaries
 
-        txAccounts =
+        results =
             getTxsByExportSelection uc exportSelection model
-                |> List.concatMap (explodeTxToAccounts uc.locale)
+                |> List.map (\tx -> ( tx, explodeTxToAccounts (graphTxsExportOptions onlyVisibleIos) uc.locale tx ))
+
+        -- Note attached to every row of a transaction whose flows were cut.
+        noteFor r =
+            if r.capped then
+                Locale.string uc.locale "csv-note-capped"
+
+            else if r.reduced then
+                Locale.string uc.locale "csv-note-visible-only"
+
+            else
+                ""
+
+        csvRows =
+            results
+                |> List.concatMap
+                    (\( _, r ) ->
+                        let
+                            note =
+                                noteFor r
+                        in
+                        r.rows |> List.map (\account -> { account = account, note = note })
+                    )
+
+        cappedTxHashes =
+            results
+                |> List.filterMap
+                    (\( tx, r ) ->
+                        if r.capped then
+                            Just (Tx.getRawBaseTxHashForTx tx)
+
+                        else
+                            Nothing
+                    )
 
         ( exportCSV, eff ) =
-            ExportCSV.gotData uc config ( txAccounts, Nothing ) model.exportCSVGraph
+            ExportCSV.gotData uc config ( csvRows, Nothing ) model.exportCSVGraph
+
+        cappingEff =
+            if List.isEmpty cappedTxHashes then
+                []
+
+            else
+                [ cappingNotificationEffect uc.locale cappedTxHashes ]
     in
-    ( { model | exportCSVGraph = exportCSV }, eff )
+    ( { model | exportCSVGraph = exportCSV }, eff ++ cappingEff )
+
+
+{-| Info notification telling the user that large transactions were capped in
+the CSV export, listing the affected transaction hashes as additional details.
+-}
+cappingNotificationEffect : Locale.Model -> List String -> Effect
+cappingNotificationEffect locale cappedTxHashes =
+    Locale.interpolated locale
+        "csv-export-capped-message"
+        [ cappedTxHashes |> List.length |> String.fromInt ]
+        |> Notification.infoDefault
+        |> Notification.map (s_title (Just "csv-export-capped-title"))
+        |> Notification.map (s_moreInfo cappedTxHashes)
+        |> Notification.map (s_showClose True)
+        |> ShowNotificationEffect
 
 
 getTxsByExportSelection : Update.Config -> Dialog.ExportArea -> Model -> List Tx
@@ -5932,13 +6063,13 @@ getTxsByExportSelection uc area model =
 
 {-| Config for exporting all graph transactions as CSV
 -}
-makeGraphTxsExportCSVConfig : Update.Config -> Dict Id HavingTags -> ExportCSV.Config Api.Data.TxAccount Effect
+makeGraphTxsExportCSVConfig : Update.Config -> Dict Id HavingTags -> ExportCSV.Config GraphTxsCsvRow Effect
 makeGraphTxsExportCSVConfig uc tagSummaries =
     ExportCSV.config
         { filename =
             Locale.string uc.locale "graph_transactions"
         , toCsv =
-            txAccountToCsvRow uc.locale tagSummaries
+            graphTxsCsvRowToFields uc.locale tagSummaries
                 >> Maybe.map (List.map (mapFirst (Locale.string uc.locale)))
         , numberOfRows = 10000
         , fetch = \_ -> CmdEffect Cmd.none
@@ -5946,6 +6077,15 @@ makeGraphTxsExportCSVConfig uc tagSummaries =
         , notificationToEff = ShowNotificationEffect
         }
         |> ExportCSV.onCompleted (InternalEffect InternalExportGraphTxsCompleted)
+
+
+{-| Convert a CSV row (flow + note) to its key/value fields, appending the Note
+column that flags whether the transaction's flows were cut.
+-}
+graphTxsCsvRowToFields : Locale.Model -> Dict Id HavingTags -> GraphTxsCsvRow -> Maybe (List ( String, String ))
+graphTxsCsvRowToFields locModel tagSummaries { account, note } =
+    txAccountToCsvRow locModel tagSummaries account
+        |> Maybe.map (\fields -> fields ++ [ ( "Note", Util.Csv.string note ) ])
 
 
 {-| Convert a TxAccount to CSV row format, matching AddressDetails.prepareCSV format
@@ -6006,10 +6146,16 @@ txAccountToCsvRow locModel tagSummaries raw =
         )
 
 
-{-| Explode graph Tx into list of TxAccount records (one per input/output for UTXO)
+{-| Explode graph Tx into TxAccount records (one per input/output flow for UTXO).
+
+`options` bounds and filters the rows a single UTXO tx may produce; see
+`Tx.utxoTxToAccountTxs`. `capped` is `True` when the forced row cap truncated the
+output, `reduced` when fewer than the full product was emitted (cap and/or the
+visible-only filter). Account txs are never capped or reduced.
+
 -}
-explodeTxToAccounts : Locale.Model -> Tx -> List Api.Data.TxAccount
-explodeTxToAccounts locale tx =
+explodeTxToAccounts : { onlyVisibleIos : Bool, rowCap : Maybe Int } -> Locale.Model -> Tx -> { rows : List Api.Data.TxAccount, capped : Bool, reduced : Bool }
+explodeTxToAccounts options locale tx =
     case tx.type_ of
         Tx.Account accountTx ->
             let
@@ -6031,19 +6177,24 @@ explodeTxToAccounts locale tx =
                                     Nothing
                             )
             in
-            raw :: (feeRow |> Maybe.map List.singleton |> Maybe.withDefault [])
+            { rows = raw :: (feeRow |> Maybe.map List.singleton |> Maybe.withDefault [])
+            , capped = False
+            , reduced = False
+            }
 
         Tx.Utxo utxoTx ->
-            Tx.utxoTxToAccountTxs (Just locale) utxoTx
+            Tx.utxoTxToAccountTxs options (Just locale) utxoTx
 
 
-getToAndFromAddresses : Update.Config -> List Tx -> List ( String, String )
-getToAndFromAddresses uc =
+getToAndFromAddresses : Update.Config -> Bool -> List Tx -> List ( String, String )
+getToAndFromAddresses uc onlyVisibleIos =
     let
         feeAddress =
             Locale.string uc.locale "fee"
     in
-    List.concatMap (explodeTxToAccounts uc.locale)
+    -- Reduce consistently with generateGraphTxsExport so we only fetch tag
+    -- summaries for addresses that actually end up in the exported rows.
+    List.concatMap (explodeTxToAccounts (graphTxsExportOptions onlyVisibleIos) uc.locale >> .rows)
         >> List.concatMap (\tx -> [ ( tx.currency, tx.fromAddress ), ( tx.currency, tx.toAddress ) ])
         >> List.filter (\( _, addr ) -> not (String.isEmpty addr) && addr /= feeAddress)
 
@@ -6076,7 +6227,7 @@ exportGraphTxs uc conf model =
     let
         allAddresses =
             getTxsByExportSelection uc conf.area model
-                |> getToAndFromAddresses uc
+                |> getToAndFromAddresses uc conf.onlyVisibleIos
 
         -- Group addresses by network for bulk fetching
         addressesByNetwork =
@@ -6129,13 +6280,13 @@ exportGraphTxs uc conf model =
     in
     if List.isEmpty missingByNetwork then
         -- All tag summaries already loaded, proceed with export
-        generateGraphTxsExport uc conf.area newModel
+        generateGraphTxsExport uc conf.area conf.onlyVisibleIos newModel
 
     else
         -- Need to fetch missing tag summaries first
         let
             toMsg =
-                BrowserGotTagSummariesForExportGraphTxsAsCSV conf.area
+                BrowserGotTagSummariesForExportGraphTxsAsCSV conf.area conf.onlyVisibleIos
 
             fetchEffects =
                 missingByNetwork

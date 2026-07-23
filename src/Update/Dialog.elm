@@ -162,11 +162,13 @@ mapMsg map model =
             , time = conf.time
             , exporting = conf.exporting
             , transparentBackground = conf.transparentBackground
+            , onlyVisibleIos = conf.onlyVisibleIos
             , hasSelections = conf.hasSelections
             }
                 |> Export
 
         Plugin conf ->
             { defaultMsg = map conf.defaultMsg
+            , placement = conf.placement
             }
                 |> Plugin

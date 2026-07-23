@@ -165,7 +165,7 @@ annotationToAttrAndLabel vc node details offset msg ann =
                 |> List.indexedMap
                     (\i line ->
                         Svg.text_
-                            [ css GraphComponents.annotationLabel2Label_details.styles
+                            [ css GraphComponents.annotationLabelLabel_details.styles
                             , Svg.textAnchor "middle"
                             , Svg.dominantBaseline "hanging"
                             , annotationWidth / 2 |> String.fromFloat |> Svg.x

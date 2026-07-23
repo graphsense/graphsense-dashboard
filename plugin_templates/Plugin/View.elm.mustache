@@ -17,6 +17,7 @@ import PluginInterface.View
 import Svg.Styled as Svg exposing (Svg)
 import Tuple exposing (..)
 import View.Pathfinder.ContextMenuItem as ContextMenuItem exposing (ContextMenuItem)
+import Util.View
 
 
 type alias Plugins =
@@ -25,8 +26,8 @@ type alias Plugins =
     }
 
 
-addressContextMenuNew : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (ContextMenuItem Pathfinder.Msg)
-addressContextMenuNew plugins states vc address =
+addressContextMenu : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (ContextMenuItem Pathfinder.Msg)
+addressContextMenu plugins states vc address =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
@@ -34,7 +35,7 @@ addressContextMenuNew plugins states vc address =
                     (\fun ->
                         fun vc address
                     )
-                    plugin.addressContextMenuNew
+                    plugin.addressContextMenu
                     states.{{name}}
                     address.plugins.{{name}}
                     |> Maybe.map (List.map (ContextMenuItem.map Plugin.Msg.{{package}}Msg))

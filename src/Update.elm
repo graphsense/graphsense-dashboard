@@ -66,6 +66,7 @@ import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import Util exposing (n)
+import Util.Data
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale
@@ -743,7 +744,7 @@ update plugins uc msg model =
                 |> updateByPluginOutMsg plugins uc outMsg
 
         UserClickedNavBack ->
-            ( model, NavBackEffect |> List.singleton )
+            ( model, NavBackEffect 1 |> List.singleton )
 
         UserClickedNavHome ->
             ( model, NavPushUrlEffect "/" |> List.singleton )
@@ -1311,7 +1312,7 @@ update plugins uc msg model =
                     pathfinder.network.addresses
                         |> Dict.get id
                         |> Maybe.andThen (.data >> RD.toMaybe)
-                        |> Maybe.map (\addr -> Id.initClusterId addr.currency addr.cluster)
+                        |> Maybe.map Id.initClusterIdFromAddress
                         |> Maybe.andThen (\cid -> Dict.get cid pathfinder.clusters)
                         |> Maybe.andThen RD.toMaybe
                         |> Maybe.map .noAddresses
@@ -1929,6 +1930,13 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                             |> (++) eff
                         )
 
+                    PluginInterface.Back steps ->
+                        ( model
+                        , NavBackEffect steps
+                            |> List.singleton
+                            |> (++) eff
+                        )
+
                     PluginInterface.GetEntitiesForAddresses addresses toMsg ->
                         let
                             -- separate loaded clusters from loading ones
@@ -1942,7 +1950,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                                                         |> Maybe.andThen (.data >> RD.toMaybe)
                                                         |> Maybe.andThen
                                                             (\a ->
-                                                                Dict.get (Id.initClusterId a.currency a.cluster) model.pathfinder.clusters
+                                                                Dict.get (Id.initClusterIdFromAddress a) model.pathfinder.clusters
                                                             )
                                             in
                                             case addr of
@@ -2628,7 +2636,7 @@ fetchClusterTagsEffect id pathfinderModel =
             (\addr ->
                 Effect.Api.GetEntityAddressTagsEffect
                     { currency = PathfinderId.network id
-                    , entity = addr.cluster
+                    , entity = Util.Data.addressCluster addr
                     , pagesize = TagsTable.pagesize
                     , nextpage = Nothing
                     }
@@ -2653,46 +2661,47 @@ clusterTagsFilter _ =
     }
 
 
-addressTagsInfiniteTableConfig : PathfinderId.Id -> InfiniteTable.Config (Effect.Api.Effect Msg)
+addressTagsInfiniteTableConfig : PathfinderId.Id -> InfiniteTable.Config String (Effect.Api.Effect Msg)
 addressTagsInfiniteTableConfig id =
-    { fetch =
-        \_ pagesize nextpage ->
-            Effect.Api.GetAddressTagsEffect
-                { currency = PathfinderId.network id
-                , address = PathfinderId.id id
-                , pagesize = pagesize
-                , nextpage = nextpage
-                , includeBestClusterTag = True
-                }
-                (\tags -> PathfinderMsg (Pathfinder.UserGotMoreAddressTagsForDialog id tags))
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = Effect.Api.effectToTracker
-    , abort = Effect.Api.CancelEffect
-    }
+    let
+        fetchFn =
+            \_ pagesize nextpage ->
+                Effect.Api.GetAddressTagsEffect
+                    { currency = PathfinderId.network id
+                    , address = PathfinderId.id id
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    , includeBestClusterTag = True
+                    }
+                    (\tags -> PathfinderMsg (Pathfinder.UserGotMoreAddressTagsForDialog id tags))
+    in
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort Effect.Api.CancelEffect Effect.Api.effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
 
 
-clusterTagsInfiniteTableConfig : PathfinderId.Id -> Model.Pathfinder.Model -> InfiniteTable.Config (Effect.Api.Effect Msg)
+clusterTagsInfiniteTableConfig : PathfinderId.Id -> Model.Pathfinder.Model -> InfiniteTable.Config String (Effect.Api.Effect Msg)
 clusterTagsInfiniteTableConfig id pathfinderModel =
     let
         entity =
             pathfinderModel.network.addresses
                 |> Dict.get id
                 |> Maybe.andThen (.data >> RD.toMaybe)
-                |> Maybe.map .cluster
+                |> Maybe.map Util.Data.addressCluster
                 |> Maybe.withDefault 0
+
+        fetchFn =
+            \_ pagesize nextpage ->
+                Effect.Api.GetEntityAddressTagsEffect
+                    { currency = PathfinderId.network id
+                    , entity = entity
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    }
+                    (\tags -> PathfinderMsg (Pathfinder.UserGotMoreClusterTagsForDialog id tags))
     in
-    { fetch =
-        \_ pagesize nextpage ->
-            Effect.Api.GetEntityAddressTagsEffect
-                { currency = PathfinderId.network id
-                , entity = entity
-                , pagesize = pagesize
-                , nextpage = nextpage
-                }
-                (\tags -> PathfinderMsg (Pathfinder.UserGotMoreClusterTagsForDialog id tags))
-    , force = False
-    , triggerOffset = 100
-    , effectToTracker = Effect.Api.effectToTracker
-    , abort = Effect.Api.CancelEffect
-    }
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort Effect.Api.CancelEffect Effect.Api.effectToTracker
+        |> InfiniteTable.setTriggerOffset 100

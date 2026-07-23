@@ -32,6 +32,7 @@ type alias RelatedAddressesTableConfig =
     { coinCode : AssetIdentifier
     , isChecked : Id -> Bool
     , hasTags : Id -> HavingTags
+    , actorLabel : String -> Maybe String
     }
 
 
@@ -85,18 +86,23 @@ config styles vc ratc _ =
         , htmlColumnWithSorter Table.unsortable
             styles
             vc
-            (Locale.string vc.locale "Category")
+            (Locale.string vc.locale "Actor / Category")
             (\{ address } -> address)
             (\data ->
                 let
                     withTagSummary ts =
-                        getSortedConceptsByWeight ts
-                            |> List.head
-                            |> Maybe.map
-                                (Tag.conceptItem vc (toId data) AddressDetails.TooltipMsg
-                                    >> List.singleton
-                                )
-                            |> Maybe.withDefault []
+                        case ts.bestActor |> Maybe.andThen (\aid -> ratc.actorLabel aid |> Maybe.map (\label -> ( aid, label ))) of
+                            Just ( aid, label ) ->
+                                [ Tag.actorItem vc (toId data) AddressDetails.TooltipMsg aid label ]
+
+                            Nothing ->
+                                getSortedConceptsByWeight ts
+                                    |> List.head
+                                    |> Maybe.map
+                                        (Tag.conceptItem vc (toId data) AddressDetails.TooltipMsg
+                                            >> List.singleton
+                                        )
+                                    |> Maybe.withDefault []
                 in
                 case toId data |> ratc.hasTags of
                     NoTags ->

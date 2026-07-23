@@ -1,4 +1,4 @@
-module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initExportConfig)
+module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initExportConfig, placement)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -12,6 +12,15 @@ import Model.Pathfinder.Selection as Selection exposing (Selection(..))
 import Model.Search as Search
 import Time
 import View.Locale exposing (makeTimestampFilename)
+
+
+{-| Vertical placement of the dialog within the overlay. `PinnedToTop` keeps
+the dialog's top edge fixed, so the dialog doesn't shift when its content
+grows or shrinks.
+-}
+type Placement
+    = Centered
+    | PinnedToTop
 
 
 type Model msg
@@ -78,12 +87,12 @@ type TagsTab
 type ClusterTagsState
     = ClusterTagsNotLoaded
     | ClusterTagsLoading
-    | ClusterTagsLoaded (InfiniteTable.Model Api.Data.AddressTag)
+    | ClusterTagsLoaded (InfiniteTable.Model String Api.Data.AddressTag)
 
 
 type alias TagListConfig msg =
     { id : Id
-    , addressTagsTable : InfiniteTable.Model Api.Data.AddressTag
+    , addressTagsTable : InfiniteTable.Model String Api.Data.AddressTag
     , clusterTagsState : ClusterTagsState
     , activeTab : TagsTab
     , showAddressTab : Bool
@@ -113,6 +122,11 @@ type alias ExportConfig msg =
     , time : Time.Posix
     , exporting : Bool
     , transparentBackground : Bool
+
+    -- CSV export only: when True, only the inputs/outputs currently visible on
+    -- the graph are exported. Defaults to True to avoid exploding the CSV for
+    -- large transactions (see initExportConfig). Ignored for non-CSV formats.
+    , onlyVisibleIos : Bool
     }
 
 
@@ -143,6 +157,7 @@ exportFormatToString format =
 
 type alias PluginConfig msg =
     { defaultMsg : msg
+    , placement : Placement
     }
 
 
@@ -158,6 +173,16 @@ type alias GeneralErrorConfig =
     , message : String
     , variables : List String
     }
+
+
+placement : Model msg -> Placement
+placement model =
+    case model of
+        Plugin c ->
+            c.placement
+
+        _ ->
+            Centered
 
 
 defaultMsg : Model msg -> msg
@@ -220,5 +245,9 @@ initExportConfig uc { selection, filenameBase, closeMsg, time } =
     , time = time
     , exporting = False
     , transparentBackground = False
+
+    -- Default to exporting only visible inputs/outputs so large transactions
+    -- don't blow up the CSV.
+    , onlyVisibleIos = True
     , hasSelections = selection /= NoSelection
     }

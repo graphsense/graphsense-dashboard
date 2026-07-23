@@ -17,8 +17,8 @@ type alias Model =
     , transactionsTableOpen : Bool
     , tokenBalancesOpen : Bool
     , txs : WebData TransactionTable.Model
-    , neighborsIncoming : WebData (InfiniteTable.Model Api.Data.NeighborAddress)
-    , neighborsOutgoing : WebData (InfiniteTable.Model Api.Data.NeighborAddress)
+    , neighborsIncoming : WebData (InfiniteTable.Model String Api.Data.NeighborAddress)
+    , neighborsOutgoing : WebData (InfiniteTable.Model String Api.Data.NeighborAddress)
     , address : Address
     , relatedAddresses : WebData RelatedAddressesTable.Model
     , relatedAddressesPubkey : WebData RelatedAddressesPubkeyTable.Model

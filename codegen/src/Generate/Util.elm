@@ -7,6 +7,7 @@ import Elm exposing (Expression)
 import Elm.Annotation as Annotation
 import Elm.Op
 import Gen.Css as Css
+import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
 import Gen.Svg.Styled
 import Maybe.Extra
@@ -40,6 +41,13 @@ mm fun =
 mm2 : (a -> b -> List Elm.Expression) -> Maybe a -> Maybe b -> List Elm.Expression -> List Elm.Expression
 mm2 fun a_ b =
     Maybe.map2 fun a_ b
+        |> Maybe.withDefault []
+        |> (++)
+
+
+mm3 : (a -> b -> c -> List Elm.Expression) -> Maybe a -> Maybe b -> Maybe c -> List Elm.Expression -> List Elm.Expression
+mm3 fun a_ b c =
+    Maybe.map3 fun a_ b c
         |> Maybe.withDefault []
         |> (++)
 
@@ -160,8 +168,20 @@ getByNameId ( name, id ) d =
         |> Maybe.Extra.orElse (Dict.get ( name, "" ) d)
 
 
-withVisibility : String -> Dict String ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
-withVisibility componentName def references element =
+withVisibilityHtml : String -> Dict String ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
+withVisibilityHtml =
+    Gen.Html.Styled.text ""
+        |> withVisibility
+
+
+withVisibilitySvg : String -> Dict String ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
+withVisibilitySvg =
+    Gen.Svg.Styled.text ""
+        |> withVisibility
+
+
+withVisibility : Expression -> String -> Dict String ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
+withVisibility default componentName def references element =
     references
         |> Maybe.andThen (Dict.get "visible")
         |> Maybe.andThen
@@ -171,7 +191,7 @@ withVisibility componentName def references element =
             )
         |> Maybe.map
             (\bool ->
-                Gen.Svg.Styled.text ""
+                default
                     |> Elm.ifThen bool element
             )
         |> Maybe.withDefault element

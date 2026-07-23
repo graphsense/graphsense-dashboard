@@ -79,6 +79,14 @@ view vc model =
                         , size = Controls.Small
                         , msg = UserClickedTransparentBackground
                         }
+                    , Controls.checkboxWithLabelAndTitle
+                        { label = Locale.string vc.locale "Export-dialog-only-visible-inoutputs"
+                        , title = Locale.string vc.locale "Export-dialog-only-visible-inoutputs-help"
+                        , checked = model.onlyVisibleIos
+                        , disabled = model.fileFormat /= ExportFormatCSV
+                        , size = Controls.Small
+                        , msg = UserClickedOnlyVisibleInOutputs
+                        }
                     ]
                 }
                 { root = { title = Locale.string vc.locale "Export-dialog-display-title" |> Locale.titleCase vc.locale }
@@ -142,7 +150,7 @@ view vc model =
     in
     Dialogs.dialogGenericWithAttributes
         (Dialogs.dialogGenericAttributes
-            |> Rs.s_iconsCloseBlack [ Util.View.pointer, onClick model.closeMsg ]
+            |> Rs.s_iconsCloseNoPadding [ Util.View.pointer, onClick model.closeMsg ]
         )
         { inputList =
             [ formatSelect
@@ -169,8 +177,11 @@ view vc model =
                 )
                     |> Button.primaryButton vc
             }
-        , root =
-            { header = Locale.string vc.locale "Export-dialog-title" |> Locale.titleCase vc.locale
+        , root = {}
+        , dialogHeader =
+            { showIconsFrame = False
+            , header = Locale.string vc.locale "Export-dialog-title" |> Locale.titleCase vc.locale
             , description = Locale.string vc.locale "Export-dialog-description"
+            , icon = Util.View.none
             }
         }

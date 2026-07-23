@@ -36,6 +36,7 @@ type alias NeighborAddressesTableConfig =
     , coinCode : AssetIdentifier
     , isChecked : ( Id, Id ) -> Bool
     , hasTags : Id -> HavingTags
+    , actorLabel : String -> Maybe String
     , direction : Direction
     }
 
@@ -102,18 +103,23 @@ config styles vc conf =
         , htmlColumnWithSorter Table.unsortable
             styles
             vc
-            (Locale.string vc.locale "Category")
+            (Locale.string vc.locale "Actor / Category")
             (\{ address } -> address.address)
             (\data ->
                 let
                     withTagSummary ts =
-                        getSortedConceptsByWeight ts
-                            |> List.head
-                            |> Maybe.map
-                                (Tag.conceptItem vc (toId data) AddressDetails.TooltipMsg
-                                    >> List.singleton
-                                )
-                            |> Maybe.withDefault []
+                        case ts.bestActor |> Maybe.andThen (\aid -> conf.actorLabel aid |> Maybe.map (Tuple.pair aid)) of
+                            Just ( aid, label ) ->
+                                [ Tag.actorItem vc (toId data) AddressDetails.TooltipMsg aid label ]
+
+                            Nothing ->
+                                getSortedConceptsByWeight ts
+                                    |> List.head
+                                    |> Maybe.map
+                                        (Tag.conceptItem vc (toId data) AddressDetails.TooltipMsg
+                                            >> List.singleton
+                                        )
+                                    |> Maybe.withDefault []
                 in
                 case toId data |> conf.hasTags of
                     NoTags ->

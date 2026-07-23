@@ -320,6 +320,7 @@ popup-addresses-not-found-no-txs: non esistono transazioni associate con questi 
 popup-address-not-found-typos: ci sono errori di battitura
 token-transactions-of: transazioni con token di {0} ({1})
 actor: attore
+actor / Category: Attore / Categoria
 actors: attori
 Recent searches: Ricerche recenti
 other Links: altri collegamenti
@@ -609,3 +610,9 @@ transaction-tracing-across-change: Tracciamento transazione attraverso il resto
 hint-auto-trace-title: Traccia fondi automaticamente
 hint-auto-trace-description: Segui i soldi trovando automaticamente la prossima transazione (a livello UTXO se supportato dal ledger)
 tooltip-opens-pubkey-related-addresses-table: Indirizzi in altre criptovalute collegati dalla stessa chiave pubblica. Fare clic per aprire la tabella corrispondente di seguito.
+csv-export-capped-title: Esportazione CSV limitata
+csv-export-capped-message: "{0} transazione/i di grandi dimensioni sono state ridotte nell'esportazione CSV per mantenere gestibile la dimensione del file; per esse sono inclusi solo i flussi con un indirizzo nel grafo."
+export-dialog-only-visible-inoutputs: "esporta solo input/output visibili"
+export-dialog-only-visible-inoutputs-help: "Se attivato, il CSV contiene solo i flussi tra input e output visibili nel grafo. Disattiva per esportare l'intera matrice di input/output — per transazioni con molti input e output questo può generare un file molto grande."
+csv-note-capped: "Transazione troppo grande: sono stati esportati solo i flussi con un indirizzo visibile, troncati al limite di esportazione."
+csv-note-visible-only: "Sono stati esportati solo i flussi con un indirizzo visibile."

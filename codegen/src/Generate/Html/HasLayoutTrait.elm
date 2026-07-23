@@ -12,7 +12,7 @@ toStyles node =
     [ Css.boxSizing Css.borderBox ]
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
         |> mm2 layoutPositioning node.layoutPositioning node.absoluteBoundingBox
-        |> a3 (width node.minWidth) node.layoutGrow node.layoutSizingHorizontal node.absoluteBoundingBox
+        |> mm3 (width node.minWidth) node.layoutGrow node.layoutSizingHorizontal node.absoluteBoundingBox
         |> a2 (height node.minHeight) node.layoutSizingVertical node.absoluteBoundingBox
         |> a (ifNotZero Css.minWidth) node.minWidth
         |> a (ifNotZero Css.minHeight) node.minHeight
@@ -29,25 +29,28 @@ ifNotZero prop w =
         prop (Css.px w) |> Just
 
 
-width : Maybe Float -> LayoutGrow -> LayoutSizingHorizontal -> Rectangle -> Maybe Elm.Expression
+width : Maybe Float -> LayoutGrow -> LayoutSizingHorizontal -> Rectangle -> List Elm.Expression
 width minW grow sizing r =
     case sizing of
         LayoutSizingHorizontalFIXED ->
             if minW == Nothing || minW == Just 0 then
-                r.width
+                [ r.width
                     |> Css.px
                     |> Css.width
-                    |> Just
+                ]
 
             else
-                Nothing
+                []
 
         LayoutSizingHorizontalFILL ->
-            Css.property "align-self" "stretch"
-                |> Just
+            [ Css.property "align-self" "stretch"
+
+            --, Css.property "flex-grow" "1" -- does not work in all cases
+            , Css.width (Css.pct 100)
+            ]
 
         _ ->
-            Nothing
+            []
 
 
 height : Maybe Float -> LayoutSizingVertical -> Rectangle -> Maybe Elm.Expression

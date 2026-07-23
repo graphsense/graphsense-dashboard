@@ -341,6 +341,7 @@ popup-address-not-found-no-txs: Sie hat bis jetzt noch keine Transaktionen erhal
 popup-address-not-found-typos: Es gibt Tippfehler
 token-transactions-of: Token-Transaktionen von {0} ({1})
 actor: Akteur
+actor / Category: Akteur / Kategorie
 actors: Akteure
 Recent searches: Letzte Sucheingaben
 other Links: Links
@@ -583,3 +584,9 @@ transaction-tracing-across-change: Transaktionsverfolgung über Changes
 hint-auto-trace-title: Vermögenswerte automatisch verfolgen
 hint-auto-trace-description: Verfolgen Sie Vermögenswerte, indem Sie automatisch die nächste Transaktion finden (auf UTXO-Ebene, falls vom Ledger unterstützt)
 tooltip-opens-pubkey-related-addresses-table: Adressen in anderen Crytpo-Währungen, die über denselben öffentlichen Schlüssel verknüpft sind. Klicken, um die entsprechende Tabelle unterhalb zu öffnen.
+csv-export-capped-title: CSV-Export gekürzt
+csv-export-capped-message: "{0} große Transaktion(en) wurden im CSV-Export gekürzt, um die Dateigröße überschaubar zu halten; für sie sind nur Flüsse mit einer Adresse im Graphen enthalten."
+export-dialog-only-visible-inoutputs: "nur sichtbare Ein-/Ausgänge exportieren"
+export-dialog-only-visible-inoutputs-help: "Wenn aktiviert, enthält die CSV nur Flüsse zwischen Ein- und Ausgängen, die im Graphen sichtbar sind. Deaktivieren, um die vollständige Ein-/Ausgangs-Matrix zu exportieren — bei Transaktionen mit vielen Ein- und Ausgängen kann dies eine sehr große Datei erzeugen."
+csv-note-capped: "Transaktion zu groß – nur Flüsse mit einer sichtbaren Adresse wurden exportiert, auf das Exportlimit gekürzt."
+csv-note-visible-only: "Nur Flüsse mit einer sichtbaren Adresse wurden exportiert."

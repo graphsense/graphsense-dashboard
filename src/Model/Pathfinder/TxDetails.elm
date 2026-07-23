@@ -19,14 +19,14 @@ type alias TxValueRefsData =
 type alias Model =
     { inputsTableOpen : Bool
     , outputsTableOpen : Bool
-    , inputsTable : InfiniteTable.Model Api.Data.TxValue
-    , outputsTable : InfiniteTable.Model Api.Data.TxValue
+    , inputsTable : InfiniteTable.Model String Api.Data.TxValue
+    , outputsTable : InfiniteTable.Model String Api.Data.TxValue
     , inputsRefs : IntDict TxValueRefsData
     , outputsRefs : IntDict TxValueRefsData
     , tx : Tx
     , subTxsTableOpen : Bool
     , baseTx : WebData Api.Data.TxAccount
-    , subTxsTable : InfiniteTable.Model Api.Data.TxAccount
+    , subTxsTable : InfiniteTable.Model String Api.Data.TxAccount
     , subTxsTableFilter : TransactionFilter.Model
     }
 

@@ -206,7 +206,7 @@ type Auth
 type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
-    | NavBackEffect
+    | NavBackEffect Int
     | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect

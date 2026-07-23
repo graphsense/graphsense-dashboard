@@ -74,8 +74,7 @@ type Msg
     | UserPressedModKey
     | UserReleasedModKey
     | UserReleasedEscape
-    | UserPressedNormalKey String
-    | UserReleasedNormalKey String
+    | UserPressedHotkey String
     | UserPressedArrowKey Direction
     | UserPressedArrowKeyUp
     | UserPressedArrowKeyDown
@@ -88,6 +87,9 @@ type Msg
     | BrowserGotAddressData AddingAddressConfig Api.Data.Address
     | BrowserGotAddressPubkeyRelations Id Api.Data.RelatedAddresses
     | BrowserGotAddressDataToRefresh Api.Data.Address
+      -- the Id is the cluster id the entity request was made with (fresh-aware,
+      -- via Data.addressCluster) and is the key of the clusters dict; the
+      -- response's .cluster field is normalized to it at the request site
     | BrowserGotClusterData Id Api.Data.Cluster
     | BrowserGotAddressesTags (List Id) (List ( Id, Maybe Api.Data.AddressTag ))
     | BrowserGotTagSummary Bool Id Api.Data.TagSummary
@@ -125,7 +127,7 @@ type Msg
     | UserSelectedAggEdgeFilter Config.Pathfinder.AggEdgeFilter
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraph (Maybe Time.Posix)
-    | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool (List ( Id, Api.Data.TagSummary ))
+    | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool Bool (List ( Id, Api.Data.TagSummary ))
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
     | UserClickedSelectionTool

@@ -3,11 +3,67 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [26.07.0] - Unreleased
+## [26.07.3] - Unreleased
+
+### Changed
+
+- upgrade elm-test-rs
+- remove "Dev" suffix for new figma components
+- add "width:100%" for text nodes
+
+### Fixed
+
+- Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
+
+## [26.07.2] - 2026-07-14
 
 ### Added
 
+- Support for the new backend fresh clustering: addresses now use the fresh cluster id (falling back to the legacy one), so cluster highlighting, sibling hover and cluster lookups work on instances with fresh clustering enabled
+
+### Changed
+
+- Improved Romanian translation based on feedback from Romanian speakers
+- Upgrade to Elm Compiler 0.19.2 (re-applied after the revert in 26.07.1), now guarded so that a build without the patched `elm-safe-virtual-dom` packages fails loudly instead of shipping runtime DOM crashes
+
+### Fixed
+
+- Pathfinder keyboard shortcuts (Ctrl/Cmd + F, S, E, Z, Y, A) sometimes did nothing: they only triggered if the modifier key was still held when the letter was *released*, so lifting Ctrl/Cmd slightly first swallowed the shortcut, and on macOS they rarely fired at all. They now trigger on key press.
+- Infinitely scrolling tables now react to container resizes (e.g. resizing the browser window or side panel), so the visible rows and the loading of further rows stay in sync with the actual table height
+- Stale assets in the build pipeline: generated theme, plugin and public files are now regenerated when their sources change, so builds no longer ship outdated artifacts
+
+## [26.07.1] - 2026-07-13
+
+### Changed
+
+- Reverted the Elm 0.19.2 compiler upgrade of 26.07.0, which caused runtime errors
+
+## [26.07.0] - 2026-07-08
+
+### Added
+
+- Romanian translations
 - Deep link to open a graph by API download id: `?import=<id>` downloads the `.gs` file from the REST `/download/<id>` endpoint and opens it on load
+- Actor is now shown in the address tables (neighbor and related addresses) when available
+- Export dialog option to export only the visible inputs/outputs of a transaction to CSV (enabled by default), with a help tooltip explaining the trade-off
+
+### Changed
+
+- CSV export of very large transactions is now capped to keep file sizes manageable: only flows touching an address visible on the graph are included, a note column marks affected rows, and a notification lists the trimmed transactions
+- Auto-linking in transaction tracing mode now skips smart contract addresses, keeping contract-call noise out of traces
+- Tron transaction hashes are displayed without the `0x` prefix in the transaction details
+- Tags table label and source columns now truncate to the exact pixel width of the column (using per-character widths, scaled for font size and letter spacing) instead of a fixed character count, so labels full of wide glyphs no longer overflow
+- Upgrade to Elm Compiler 0.19.2
+- Removed addressContextMenu plugin hook for Graph
+
+### Fixed
+
+- Sorting of infinitely scrolling tables: fixed a sorting bug and made sorting stable, so rows with equal values no longer jump around
+- Opening `.gs` files containing addresses with mixed casing: addresses are now normalized on load, so nodes and edges match up again
+- Startup crash on hard reloads ("TypeError: stepper is not a function") when a browser extension or embedded iframe dispatched an event into the app during the initial render
+- Actor hover in the address details panel
+- Tags table: the source link now shows the full value in a tooltip when it is shortened
+- Address details no longer shows a tag icon or tag section for addresses that have no tags (previously this could leak in via the pubkey/cross-chain related-addresses section), keeping the details panel consistent with the graph node and the tags list
 
 ## [26.06.1] - 2026-06-02
 

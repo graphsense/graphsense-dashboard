@@ -1,4 +1,4 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg, Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withKeepOpenOnHover, withOpenDelay, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg(..), Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withKeepOpenOnHover, withMaxHeight, withMinWidth, withOpenDelay, withViewport, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
@@ -29,6 +29,8 @@ type alias ModelInternal a =
     , content : a
     , closeDelay : Float
     , keepOpenOnHover : Bool
+    , minWidth : Int
+    , maxHeight : Maybe Int
     }
 
 
@@ -57,6 +59,8 @@ type alias ConfigInternal a msg =
     , openDelay : Float
     , closeDelay : Float
     , keepOpenOnHover : Bool
+    , minWidth : Int
+    , maxHeight : Maybe Int
     }
 
 
@@ -77,6 +81,8 @@ defaultConfig tag =
         , openDelay = 0
         , closeDelay = 0
         , keepOpenOnHover = False
+        , minWidth = 230
+        , maxHeight = Nothing
         }
 
 
@@ -145,8 +151,18 @@ withKeepOpenOnHover (Config c) =
     Config { c | keepOpenOnHover = True }
 
 
+withMinWidth : Int -> Config a msg -> Config a msg
+withMinWidth minWidth (Config c) =
+    Config { c | minWidth = minWidth }
+
+
+withMaxHeight : Int -> Config a msg -> Config a msg
+withMaxHeight maxHeight (Config c) =
+    Config { c | maxHeight = Just maxHeight }
+
+
 type Msg a
-    = OpenTooltip String a Float Float Bool
+    = OpenTooltip String a Float Float Bool Int (Maybe Int)
     | CloseTooltip
     | HovercardMsg Hovercard.Msg
     | DelayPassed
@@ -166,15 +182,31 @@ init =
     Model Nothing
 
 
+{-| Use on the element where the tooltip should appear
+
+@param id The unique identifier for the tooltip element
+@param config Configuration for the tooltip behavior
+@param content The content to display in the tooltip
+@return List of attributes including ID and event handlers
+
+-}
 attributes : String -> Config a msg -> a -> List (Attribute msg)
 attributes id config content =
     Html.Styled.Attributes.id id
         :: eventHandlers id config content
 
 
+{-| Internal function to handle mouse events for the tooltip
+
+@param id The unique identifier for the tooltip element
+@param config Configuration for the tooltip behavior
+@param content The content to display in the tooltip
+@return List of event handler attributes
+
+-}
 eventHandlers : String -> Config a msg -> a -> List (Attribute msg)
-eventHandlers id (Config { tag, openDelay, closeDelay, keepOpenOnHover }) content =
-    [ OpenTooltip id content openDelay closeDelay keepOpenOnHover |> tag |> onMouseOver
+eventHandlers id (Config { tag, openDelay, closeDelay, keepOpenOnHover, minWidth, maxHeight }) content =
+    [ OpenTooltip id content openDelay closeDelay keepOpenOnHover minWidth maxHeight |> tag |> onMouseOver
     , CloseTooltip |> tag |> onMouseLeave
     ]
 
@@ -182,7 +214,7 @@ eventHandlers id (Config { tag, openDelay, closeDelay, keepOpenOnHover }) conten
 update : Msg a -> Model a -> ( Model a, List Effect )
 update msg (Model model) =
     case msg of
-        OpenTooltip id content openDelay closeDelay keepOpenOnHover ->
+        OpenTooltip id content openDelay closeDelay keepOpenOnHover minWidth maxHeight ->
             model
                 |> Maybe.map
                     (\mo ->
@@ -203,6 +235,8 @@ update msg (Model model) =
                                         , closeDelay = closeDelay
                                         , hovercard = Nothing
                                         , id = id
+                                        , minWidth = minWidth
+                                        , maxHeight = maxHeight
                                     }
                                         |> Just
                                         |> Model
@@ -218,6 +252,8 @@ update msg (Model model) =
                      , hovercard = Nothing
                      , closeDelay = closeDelay
                      , keepOpenOnHover = keepOpenOnHover
+                     , minWidth = minWidth
+                     , maxHeight = maxHeight
                      }
                         |> Just
                         |> Model
@@ -329,7 +365,13 @@ view (Config config) (Model model) view_ =
                                 |> div
                                     ([ css
                                         (GraphComponents.tooltipDown_details.styles
-                                            ++ [ Css.minWidth (Css.px 230) ]
+                                            ++ [ Css.minWidth (Css.px (toFloat mo.minWidth))
+                                               , Css.overflow Css.auto
+                                               ]
+                                            ++ (mo.maxHeight
+                                                    |> Maybe.map (\h -> [ Css.maxHeight (Css.px (toFloat h)) ])
+                                                    |> Maybe.withDefault []
+                                               )
                                         )
                                      , ClickTooltip |> config.tag |> onClick
                                      , CloseTooltip |> config.tag |> onMouseLeave

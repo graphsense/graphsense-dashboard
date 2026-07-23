@@ -128,7 +128,7 @@ hasLoadedAddress id network =
 
 getClustersOnGraph : Network -> Set Id
 getClustersOnGraph net =
-    net.addresses |> Dict.values |> List.filterMap (.data >> RemoteData.toMaybe) |> List.map Id.initClusterIdFromRecord |> Set.fromList
+    net.addresses |> Dict.values |> List.filterMap (.data >> RemoteData.toMaybe) |> List.map Id.initClusterIdFromAddress |> Set.fromList
 
 
 isClusterFriendAlreadyOnGraph : Id -> Network -> Bool
@@ -145,7 +145,7 @@ getAddressIdsInCluster cstrId n =
     n.addresses
         |> Dict.values
         |> List.filterMap (.data >> RemoteData.toMaybe)
-        |> List.filter (Id.initClusterIdFromRecord >> (==) cstrId)
+        |> List.filter (Id.initClusterIdFromAddress >> (==) cstrId)
         |> List.map Id.initFromRecord
 
 

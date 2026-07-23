@@ -79,10 +79,7 @@ shallPushHistory plugins msg _ =
         UserReleasedEscape ->
             False
 
-        UserPressedNormalKey _ ->
-            False
-
-        UserReleasedNormalKey _ ->
+        UserPressedHotkey _ ->
             False
 
         UserPressedArrowKey _ ->
@@ -386,7 +383,7 @@ shallPushHistory plugins msg _ =
         UserClickedExportGraph _ ->
             False
 
-        BrowserGotTagSummariesForExportGraphTxsAsCSV _ _ _ ->
+        BrowserGotTagSummariesForExportGraphTxsAsCSV _ _ _ _ ->
             False
 
         UserClickedToolbarDeleteIcon ->
