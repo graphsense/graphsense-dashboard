@@ -10,6 +10,7 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
+import Config
 import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), autoLinkContractAddresses, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
@@ -3404,6 +3405,19 @@ getRelationDetails model id =
 
 fetchEgonet : Id -> Bool -> Api.Data.Address -> Model -> ( Model, List Effect )
 fetchEgonet id autoLinkInTraceMode data model =
+    -- limited networks have no precomputed relations: even the pair-edge
+    -- lookups against visible addresses can take tens of seconds on busy
+    -- addresses, so skip edge discovery entirely (edges appear only from
+    -- expanded transactions)
+    if Config.isLimitedNetwork (Id.network id) then
+        n model
+
+    else
+        fetchEgonetUnlimited id autoLinkInTraceMode data model
+
+
+fetchEgonetUnlimited : Id -> Bool -> Api.Data.Address -> Model -> ( Model, List Effect )
+fetchEgonetUnlimited id autoLinkInTraceMode data model =
     let
         ( outOnlyIds, incOnlyIds ) =
             model.network.addresses
@@ -5689,16 +5703,21 @@ fromDeserialized plugins deserialized model =
             addressIds
                 |> List.concatMap
                     (\id ->
-                        let
-                            others =
-                                addressIds
-                                    |> List.filter
-                                        (\nid ->
-                                            id < nid && Id.network nid == Id.network id
-                                        )
-                        in
-                        getRelations id Outgoing False others
-                            ++ getRelations id Incoming False others
+                        -- limited networks: no pair-edge discovery (see fetchEgonet)
+                        if Config.isLimitedNetwork (Id.network id) then
+                            []
+
+                        else
+                            let
+                                others =
+                                    addressIds
+                                        |> List.filter
+                                            (\nid ->
+                                                id < nid && Id.network nid == Id.network id
+                                            )
+                            in
+                            getRelations id Outgoing False others
+                                ++ getRelations id Incoming False others
                     )
 
         ( newAndEmptyPathfinder, _ ) =
