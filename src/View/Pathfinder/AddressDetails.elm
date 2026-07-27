@@ -1042,6 +1042,16 @@ account plugins pluginStates vc model id viewState address =
             transactionsOrNeighborsDataTabs vc model id viewState
                 ++ relatedAddressesTab
                 |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.address.id))
+
+        -- limited networks serve total received/sent as budget-capped floors or
+        -- not at all (no precomputed aggregates): hide the two rows entirely
+        -- (user decision 2026-07-27)
+        hideOnLimitedNetwork =
+            if Config.isLimitedNetwork (Id.network id) then
+                [ css [ Css.display Css.none ] ]
+
+            else
+                []
     in
     SidePanelComponents.sidePanelEthAddressWithInstances
         (SidePanelComponents.sidePanelEthAddressAttributes
@@ -1081,6 +1091,8 @@ account plugins pluginStates vc model id viewState address =
                  else
                     [ css [ Css.display Css.none ] ]
                 )
+            |> Rs.s_totalReceivedRow hideOnLimitedNetwork
+            |> Rs.s_totalSentRow hideOnLimitedNetwork
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
