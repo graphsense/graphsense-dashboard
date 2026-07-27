@@ -3,7 +3,6 @@ module Update.Graph.History exposing (prune, push, redo, undo)
 import Config.Graph.History as Config
 import List.Extra
 import Model.Graph.History exposing (Model)
-import Model.Graph.History.Entry as Entry
 
 
 undo : Model entry -> entry -> Maybe ( Model entry, entry )

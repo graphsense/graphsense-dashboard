@@ -6,9 +6,6 @@ import {{package}}.Msg
 {{/plugins}}
 import Config.Update as Update
 import Maybe.Extra
-import Model.Graph.Address as Address
-import Model.Graph.Entity as Entity
-import Model.Graph.Id as Id
 import Plugin.Model
 import Plugin.Msg
 import PluginInterface.Msg
@@ -18,7 +15,7 @@ import Tuple3 as T3
 
 
 type alias Plugins =
-    { {{#plugins}}{{name}} : Maybe (PluginInterface.Update.Update {{package}}.Model.Flags {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Msg.Msg {{package}}.Msg.AddressMsg {{package}}.Msg.EntityMsg)
+    { {{#plugins}}{{name}} : Maybe (PluginInterface.Update.Update {{package}}.Model.Flags {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Msg.Msg {{package}}.Msg.AddressMsg {{package}}.Msg.EntityMsg)
     {{^last}}, {{/last}}{{/plugins}}
     }
 
@@ -130,31 +127,6 @@ updateAddress plugins msg address =
                 |> Maybe.withDefault address{{/plugins}}{{/plugins.length}}
 
 
-updateEntity : Plugins -> Plugin.Msg.EntityMsg -> { a | plugins : Plugin.Model.EntityState } -> { a | plugins : Plugin.Model.EntityState }
-updateEntity plugins msg entity =
-    {{^plugins}}entity{{/plugins}}{{#plugins.length}}case msg of{{#plugins}} 
-        Plugin.Msg.{{package}}EntityMsg m ->
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\upd st ->
-                                { entity
-                                    | plugins =
-                                        entity.plugins
-                                            |> (\pl ->
-                                                    { pl
-                                                        | {{name}} = upd m st |> Just
-                                                    }
-                                               )
-                                }
-                            )
-                            plugin.updateEntity
-                            entity.plugins.{{name}}
-                    )
-                |> Maybe.withDefault entity{{/plugins}}{{/plugins.length}}
-
-
 updateByUrl : Plugin.Model.PluginType -> Plugins -> Update.Config -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 updateByUrl ns plugins uc url state =
     {{^plugins}}n state{{/plugins}}{{#plugins.length}}case ns of{{#plugins}} 
@@ -170,28 +142,6 @@ updateByUrl ns plugins uc url state =
                                     |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
                             )
                             plugin.updateByUrl
-                            state.{{name}}
-                    )
-                |> Maybe.withDefault ( state, [], Cmd.none )
-{{/plugins}} 
-{{/plugins.length}} 
-
-
-updateGraphByUrl : Plugin.Model.PluginType -> Plugins -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-updateGraphByUrl ns plugins url state =
-    {{^plugins}}n state{{/plugins}}{{#plugins.length}}case ns of{{#plugins}} 
-        Plugin.Model.{{package}} ->
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\upd st ->
-                                upd url st
-                                    |> T3.mapFirst (\s -> { state | {{name}} = Just s })
-                                    |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
-                                    |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
-                            )
-                            plugin.updateGraphByUrl
                             state.{{name}}
                     )
                 |> Maybe.withDefault ( state, [], Cmd.none )
@@ -234,15 +184,6 @@ initAddress plugins =
     { {{#plugins}}{{name}} =
         plugins.{{name}}
             |> Maybe.andThen .initAddress
-    {{^last}}, {{/last}}{{/plugins}}
-    }
-
-
-initEntity : Plugins -> Plugin.Model.EntityState
-initEntity plugins =
-    { {{#plugins}}{{name}} =
-        plugins.{{name}}
-            |> Maybe.andThen .initEntity
     {{^last}}, {{/last}}{{/plugins}}
     }
 
@@ -321,42 +262,6 @@ updateApiKey plugins apiKeyHash state =
                                     |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
                             )
                             plugin.updateApiKey
-                            state.{{name}}
-                    )
-                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
-{{/plugins}} 
-    in
-    ( { state
-        | {{#plugins}}{{name}} = Maybe.map T3.first {{name}}
-        {{^last}}, {{/last}}{{/plugins}}
-      }
-    , [ {{#plugins}}Maybe.map T3.second {{name}} |> Maybe.withDefault [] 
-      {{^last}}, {{/last}}{{/plugins}}
-      ]
-        |> List.concat
-    , [ {{#plugins}}Maybe.map T3.third {{name}} |> Maybe.withDefault Cmd.none
-      {{^last}}, {{/last}}{{/plugins}}
-      ]
-        |> Cmd.batch
-    )
-{{/plugins.length}} 
-
-
-newGraph : Plugins -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-newGraph plugins state =
-    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
-{{#plugins}}
-        {{name}} =
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\fun model ->
-                                fun model
-                                    |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
-                                    |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
-                            )
-                            plugin.newGraph
                             state.{{name}}
                     )
                 |> Maybe.Extra.orElse (Maybe.map n state.{{name}})

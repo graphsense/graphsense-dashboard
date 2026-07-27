@@ -1,9 +1,8 @@
-module Model.Entity exposing (Entity, Entitylink, decoder, encoder, fromId, isPossibleService, isPossibleServiceUtxo)
+module Model.Entity exposing (Entity, Entitylink, decoder, encoder, isPossibleService, isPossibleServiceUtxo)
 
 import Api.Data
 import Json.Decode
 import Json.Encode
-import Model.Graph.Id as Id exposing (EntityId)
 
 
 type alias Entity =
@@ -16,13 +15,6 @@ type alias Entitylink =
     { currency : String
     , source : Int
     , target : Int
-    }
-
-
-fromId : EntityId -> Entity
-fromId id =
-    { currency = Id.currency id
-    , entity = Id.entityId id
     }
 
 

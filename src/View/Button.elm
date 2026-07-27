@@ -10,7 +10,7 @@ import Html.Styled.Events exposing (keyCode, on, onClick)
 import Json.Decode as Json
 import RecordSetter as Rs
 import Route exposing (toUrl)
-import Route.Graph as Route
+import Route.Pathfinder
 import Theme.Colors as Colors
 import Theme.Html.Buttons as Buttons
 import Theme.Html.Icons as Icons
@@ -67,8 +67,8 @@ actorLink : View.Config -> String -> String -> Html msg
 actorLink vc id label =
     a
         [ href
-            (Route.actorRoute id Nothing
-                |> Route.graphRoute
+            (Route.Pathfinder.Actor id
+                |> Route.pathfinderRoute
                 |> toUrl
             )
         , Css.View.link vc |> css

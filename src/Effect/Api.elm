@@ -1,4 +1,4 @@
-module Effect.Api exposing (Effect(..), SearchRequestConfig, UserInfo, defaultSearchConfig, effectToTracker, getAddressEgonet, getEntityEgonet, isOutgoingToAddressDirection, isOutgoingToDirection, isUserEndpointConfigured, listWithMaybes, map, perform, retryToken, send, withAuthorization)
+module Effect.Api exposing (Effect(..), SearchRequestConfig, UserInfo, defaultSearchConfig, effectToTracker, isOutgoingToAddressDirection, isOutgoingToDirection, isUserEndpointConfigured, listWithMaybes, map, perform, retryToken, send, withAuthorization)
 
 import Api
 import Api.Data
@@ -13,13 +13,10 @@ import Api.Request.Tokens
 import Api.Request.Txs
 import Api.Time exposing (Posix, dateTimeDecoder)
 import Http
-import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
 import Json.Encode.Extra as Encode
 import Model.Direction exposing (Direction(..))
-import Model.Graph.Id as Id exposing (AddressId)
-import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Pathfinder.Id exposing (Id)
 import Sha256
 import Task
@@ -344,68 +341,6 @@ type Effect msg
         }
         (Api.Data.Txs -> msg)
     | CancelEffect String
-
-
-getEntityEgonet :
-    { currency : String, entity : Int }
-    -> (String -> Int -> Bool -> Api.Data.NeighborClusters -> msg)
-    -> IntDict Layer
-    -> List (Effect msg)
-getEntityEgonet { currency, entity } msg layers =
-    let
-        -- TODO optimize which only_ids to get for which direction
-        onlyIds =
-            layers
-                |> Layer.entities
-                |> List.map (.entity >> .cluster)
-
-        effect isOut =
-            msg currency entity isOut
-                |> GetEntityNeighborsEffect
-                    { currency = currency
-                    , entity = entity
-                    , isOutgoing = isOut
-                    , onlyIds = Just onlyIds
-                    , pagesize = max 1 <| List.length onlyIds
-                    , nextpage = Nothing
-                    , includeLabels = False
-                    }
-    in
-    [ effect True
-    , effect False
-    ]
-
-
-getAddressEgonet :
-    AddressId
-    -> (AddressId -> Bool -> Api.Data.NeighborAddresses -> msg)
-    -> IntDict Layer
-    -> List (Effect msg)
-getAddressEgonet id msg layers =
-    let
-        -- TODO optimize which only_ids to get for which direction
-        onlyIds =
-            layers
-                |> Layer.addresses
-                |> List.filter (.address >> .currency >> (==) (Id.currency id))
-                |> List.map (.address >> .address)
-
-        effect isOut =
-            msg id isOut
-                |> GetAddressNeighborsEffect
-                    { currency = Id.currency id
-                    , address = Id.addressId id
-                    , isOutgoing = isOut
-                    , onlyIds = Just onlyIds
-                    , pagesize = max 1 <| List.length onlyIds
-                    , nextpage = Nothing
-                    , includeLabels = False
-                    , includeActors = True
-                    }
-    in
-    [ effect True
-    , effect False
-    ]
 
 
 map : (msgA -> msgB) -> Effect msgA -> Effect msgB

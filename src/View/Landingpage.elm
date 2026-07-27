@@ -11,7 +11,7 @@ import Html.Styled.Events exposing (..)
 import Json.Decode
 import Model exposing (Model, Msg(..))
 import Model.Search
-import Msg.Graph as Graph
+import Msg.Pathfinder as Pathfinder
 import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Colors as Colors
@@ -141,7 +141,7 @@ view plugins vc model =
             ]
         , div
             [ CssLanding.loadBox vc |> css
-            , onClick (GraphMsg Graph.UserClickedImportGS)
+            , onClick (PathfinderMsg Pathfinder.UserClickedOpenGraph)
             ]
             [ div
                 [ CssLanding.loadBoxIcon vc |> css

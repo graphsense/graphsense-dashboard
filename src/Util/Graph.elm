@@ -1,8 +1,5 @@
-module Util.Graph exposing (decodeCoords, filterTxValue, mousedown, rotate, scale, translate)
+module Util.Graph exposing (decodeCoords, mousedown, rotate, scale, translate)
 
-import Api.Data
-import Config.Graph as Graph
-import Dict exposing (Dict)
 import Json.Decode
 import Model.Graph.Coords exposing (Coords)
 import Svg.Styled as Svg
@@ -51,15 +48,3 @@ mousedown msg =
                         Json.Decode.fail "ignore non-left mouse button"
                 )
         )
-
-
-filterTxValue : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> Bool
-filterTxValue gc _ value tokenValues =
-    gc.showZeroTransactions
-        || List.any (.value >> (/=) 0)
-            (tokenValues
-                |> Maybe.map Dict.values
-                |> Maybe.withDefault []
-            )
-        || value.value
-        /= 0

@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, multiSearch, removeAddress, removeAggEdge, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, multiSearch, removeAddress, removeAggEdge, resultLineToRoute, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -94,7 +94,7 @@ import Task
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
-import Update.Graph exposing (draggingToClick)
+import Update.Graph.Coords exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.Address as PathfinderAddress
@@ -4421,9 +4421,6 @@ updateByPluginOutMsg plugins uc outMsgs model =
         |> List.foldl
             (\msg ( mo, eff ) ->
                 case Log.log "outMsgPF" msg of
-                    PluginInterface.ShowBrowser ->
-                        ( mo, eff )
-
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder net paths) ->
                         addPathsToGraph plugins uc mo net { outgoing = True, autolinkInTraceMode = False } paths
                             |> Tuple.mapSecond ((++) eff)
@@ -4481,18 +4478,6 @@ updateByPluginOutMsg plugins uc outMsgs model =
                         , eff
                         )
 
-                    PluginInterface.UpdateAddressEntities _ _ ->
-                        ( mo, eff )
-
-                    PluginInterface.UpdateEntities _ _ ->
-                        ( mo, eff )
-
-                    PluginInterface.UpdateEntitiesByRootAddress _ _ ->
-                        ( mo, eff )
-
-                    PluginInterface.LoadAddressIntoGraph _ ->
-                        ( mo, eff )
-
                     PluginInterface.GetEntitiesForAddresses _ _ ->
                         ( mo, eff )
 
@@ -4505,13 +4490,7 @@ updateByPluginOutMsg plugins uc outMsgs model =
                     PluginInterface.Back _ ->
                         ( mo, eff )
 
-                    PluginInterface.GetSerialized _ ->
-                        ( mo, eff )
-
                     PluginInterface.Deserialize _ _ ->
-                        ( mo, eff )
-
-                    PluginInterface.GetAddressDomElement _ _ ->
                         ( mo, eff )
 
                     PluginInterface.SendToPort _ ->
@@ -5632,6 +5611,23 @@ deserializeByVersion version =
 
     else
         Json.Decode.fail ("unknown version " ++ version)
+
+
+{-| Legacy pf1 .gs files are arrays whose first element is a version string
+("0.4.4", "0.4.5", "0.5.x" or "1.0.x"), unlike pathfinder's
+["pathfinder", "1", ...]. The legacy decoders were removed together with the
+old graph tool, so these files can only be recognized, not opened.
+-}
+isLegacyPf1GsFile : Json.Decode.Value -> Bool
+isLegacyPf1GsFile data =
+    Json.Decode.decodeValue (Json.Decode.index 0 Json.Decode.string) data
+        |> Result.map
+            (\version ->
+                String.startsWith "0.4" version
+                    || String.startsWith "0.5" version
+                    || String.startsWith "1." version
+            )
+        |> Result.withDefault False
 
 
 fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )

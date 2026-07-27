@@ -1,4 +1,4 @@
-module Update.Graph.Transform exposing (delay, move, politeMove, pop, transition, update, updateByBoundingBox, vector, wheel)
+module Update.Graph.Transform exposing (move, politeMove, pop, transition, update, updateByBoundingBox, vector, wheel)
 
 import Basics.Extra exposing (flip)
 import Bounce
@@ -6,10 +6,9 @@ import Ease
 import Init.Graph.Transform exposing (initTransitioning)
 import Model.Graph.Coords as Graph exposing (BBox)
 import Model.Graph.Transform as Transform exposing (..)
-import Msg.Graph as Graph
 import Number.Bounded as Bounded
 import RecordSetter exposing (..)
-import Set exposing (Set)
+import Set
 import Update.Graph.Coords exposing (mergeBoundingBoxes)
 
 
@@ -217,16 +216,6 @@ transition delta model =
                     else
                         Settled t.to
     }
-
-
-delay : Set comparable -> Model comparable -> ( Model comparable, Cmd Graph.Msg )
-delay ids model =
-    ( { model
-        | bounce = Bounce.push model.bounce
-        , collectingAddedEntityIds = Set.union ids model.collectingAddedEntityIds
-      }
-    , Bounce.delay 100 Graph.RuntimeDebouncedAddingEntities
-    )
 
 
 pop : Model comparable -> ( Model comparable, Bool )

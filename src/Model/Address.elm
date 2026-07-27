@@ -1,10 +1,9 @@
-module Model.Address exposing (Address, Addresslink, decoder, encoder, equals, fromId, fromPathfinderId, getExposedAssets)
+module Model.Address exposing (Address, Addresslink, decoder, encoder, equals, fromPathfinderId, getExposedAssets)
 
 import Api.Data
 import Dict
 import Json.Decode
 import Json.Encode
-import Model.Graph.Id as Id exposing (AddressId)
 import Model.Pathfinder.Id as Pathfinder
 import Set
 
@@ -19,13 +18,6 @@ type alias Addresslink =
     { currency : String
     , source : String
     , target : String
-    }
-
-
-fromId : AddressId -> Address
-fromId id =
-    { currency = Id.currency id
-    , address = Id.addressId id
     }
 
 

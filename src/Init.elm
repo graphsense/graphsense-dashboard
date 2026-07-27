@@ -6,7 +6,6 @@ import Config.UserSettings
 import Config.View exposing (characterDimensionsDecoder)
 import Dict
 import Effect.Api
-import Init.Graph as Graph
 import Init.Locale as Locale
 import Init.Notification as Notification
 import Init.Pathfinder as Pathfinder
@@ -67,7 +66,6 @@ init plugins uc flags url key =
             }
       , page = Home
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) settings.recentSearches
-      , graph = Graph.init settings flags.now
       , pathfinder = pathfinderState
       , user =
             { apiKey = ""
