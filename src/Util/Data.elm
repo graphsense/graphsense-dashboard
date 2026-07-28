@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addValues, addressCluster, averageFiatValue, isAccountLike, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addValues, addressCluster, averageFiatValue, isAccountLike, isEvmHexNetwork, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -46,7 +46,20 @@ isAccountLike network =
         currl =
             String.toLower network
     in
-    currl == "eth" || currl == "trx"
+    currl == "eth" || currl == "trx" || currl == "bnb"
+
+
+{-| Networks whose addresses and tx hashes are 0x-prefixed, case-insensitive
+hex (EVM). Tron is account-like but uses case-sensitive base58 identifiers,
+so it is deliberately not in here.
+-}
+isEvmHexNetwork : String -> Bool
+isEvmHexNetwork network =
+    let
+        currl =
+            String.toLower network
+    in
+    currl == "eth" || currl == "bnb"
 
 
 negateValues : Api.Data.Values -> Api.Data.Values
@@ -124,14 +137,14 @@ ensure0x s =
 
 
 {-| Lowercase the hex part of an address or tx identifier on networks
-whose identifiers are case-insensitive hex (eth). Only the segment
+whose identifiers are case-insensitive hex (eth, bnb). Only the segment
 before the first "\_" is lowercased: sub-tx markers like "\_T1"/"\_I1"
 are case-sensitive and must be preserved. Other networks (btc, trx)
 use case-sensitive encodings and are returned unchanged.
 -}
 normalizeIdCasing : String -> String -> String
 normalizeIdCasing network identifier =
-    if String.toLower network == "eth" then
+    if isEvmHexNetwork network then
         case String.split "_" identifier of
             hex :: suffix ->
                 String.join "_" (String.toLower hex :: suffix)
@@ -146,7 +159,7 @@ normalizeIdCasing network identifier =
 normalizeIdentifier : String -> String -> String
 normalizeIdentifier net address =
     String.trim address
-        |> (if net == "eth" then
+        |> (if isEvmHexNetwork net then
                 String.toLower >> ensure0x
 
             else

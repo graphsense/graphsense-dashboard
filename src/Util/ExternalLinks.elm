@@ -24,6 +24,11 @@ blockExplorerLinks =
             -- , ( "https://oko.palkeo.com/", "Palkeo" )
             ]
           )
+        , ( "bnb"
+          , [ ( "https://bscscan.com/address/", "BscScan" )
+            , ( "https://www.oklink.com/bsc/address/", "Oklink" )
+            ]
+          )
         , ( "btc"
           , [ ( "https://www.oklink.com/btc/address/", "Oklink" )
             , ( "https://www.blockchain.com/btc/address/", "Blockchain.com" )
@@ -56,6 +61,11 @@ blockExplorerTransactionLinks =
             , ( "https://www.oklink.com/eth/tx/", "Oklink" )
             , ( "https://www.blockchain.com/eth/tx/", "Blockchain.com" )
             , ( "https://blockchair.com/ethereum/transaction/", "Blockchair" )
+            ]
+          )
+        , ( "bnb"
+          , [ ( "https://bscscan.com/tx/0x", "BscScan" )
+            , ( "https://www.oklink.com/bsc/tx/", "Oklink" )
             ]
           )
         , ( "trx"

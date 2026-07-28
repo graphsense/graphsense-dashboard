@@ -36,6 +36,7 @@ import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Html.TagsComponents as TagsComponents
 import Util.Css exposing (spread)
+import Util.Data
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, timeToCell, truncateLongIdentifierWithLengths)
@@ -139,9 +140,9 @@ account vc viewState id txExistsFn =
                 Nothing ->
                     Util.View.loadingSpinner vc Css.View.loadingSpinner
 
-        -- Tron (and other non-eth account networks) show hashes without a 0x prefix, in line with Tronscan
+        -- Tron (and other non-EVM account networks) show hashes without a 0x prefix, in line with Tronscan
         txHashPrefix =
-            if String.toLower (Id.network id) == "eth" then
+            if Util.Data.isEvmHexNetwork (Id.network id) then
                 "0x"
 
             else

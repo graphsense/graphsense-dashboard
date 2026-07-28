@@ -7,11 +7,12 @@ import Init.Graph.Id as Id
 import Model.Graph.Adding exposing (..)
 import Model.Graph.Id as Id
 import Set
+import Util.Data
 
 
 normalizeEth : String -> String -> String
 normalizeEth currency address =
-    if String.toLower currency == "eth" then
+    if Util.Data.isEvmHexNetwork currency then
         String.toLower address
 
     else
