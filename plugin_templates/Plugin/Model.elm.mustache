@@ -16,6 +16,18 @@ type alias ModelState =
     }
 
 
+{-| No plugin initialized. `Plugin.Update.init` produces this for
+`Plugin.Update.empty`, but it needs a `Flags` record whose shape depends on
+which plugins are registered — so tests, which must behave the same whatever
+config/Config.elm happens to contain locally, take this instead.
+-}
+emptyModelState : ModelState
+emptyModelState =
+    { {{#plugins}}{{name}} = Nothing
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+
 type alias AddressState =
     { {{#plugins}}{{name}} : Maybe {{package}}.Model.AddressState
     {{^last}}, {{/last}}{{/plugins}}

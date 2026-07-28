@@ -155,8 +155,20 @@ $(CODEGEN_RECORDSETTER): $(CODEGEN_SRC)
 		mkdir -p $(GENERATED); \
 		npx setem --output $(GENERATED) && touch $(GENERATED)/RecordSetter.elm
 
-test:
+test: check-lang
 	npx elm-test-rs
+
+# Fails when a locale lost a key the code (or lang/en.yaml) still uses. Known
+# gaps live in lang/untranslated-baseline.json; refresh it with
+# `node tools/check_lang.mjs --update-baseline`.
+check-lang:
+	node tools/check_lang.mjs
+
+# Regenerates tests/Fixtures/Api.elm from the response examples in the OpenAPI
+# spec. The result is committed so `make test` needs no network; re-run this
+# (and `make test`) after every `make openapi`.
+api-fixtures:
+	node tools/gen_api_fixtures.mjs $(OPENAPI_LOCATION)
 
 prepare: check-plugin-folders node_modules elm.json virtual-dom-fix plugins-install theme plugin-themes
 
@@ -333,4 +345,4 @@ tag-version:
 	git tag $(VERSION)
 	@echo "Created version $(VERSION)"
 
-.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet
+.PHONY: openapi serve test check-lang api-fixtures format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet
