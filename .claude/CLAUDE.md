@@ -160,6 +160,22 @@ Translation files in `lang/*.yaml` (en, de, es, it). Plugin translations in `plu
 
 **Write tests for what you change.** The suite runs in about a second (`make test`, which also runs `make check-lang`), so there is no reason to skip it. Almost everything is testable without a browser — see the harnesses below before concluding that something can only be checked by clicking.
 
+### Every bug fix gets a regression test
+
+A fix without a test is a fix that can be undone by the next refactor without anyone noticing. The `### Fixed` entries in `CHANGELOG.md` are, read another way, a list of behaviours that had no test — and some of them broke more than once.
+
+So: **when you fix a bug, add the test in the same commit.** Pick the layer from the table below; it is usually a scenario, and usually about 30 lines.
+
+The test has to actually pin the fix. The cheap way to be sure is to check that it fails without it:
+
+1. write the test, run it, watch it fail for the *right reason*
+2. apply the fix, watch it pass
+3. or, if the fix came first, revert it temporarily and confirm the test goes red
+
+That last step catches assertions that pass for the wrong reason — a real risk here. In `Scenario/AppTest.elm` an early version asserted on the statusbar's `.messages`, which is never written on that path (`Update.Statusbar.add` appends to `.log`), so it would have passed against a completely broken handler. The route-encoding fix is the shape to aim for instead: removing *either* the encode or the decode half fails 8 of the 15 tests.
+
+When a fix is genuinely unreachable from a test — something in `main.js`, or a browser behaviour — say so in the commit message rather than quietly skipping it.
+
 ### Which layer to use
 
 | For | Use | Example |

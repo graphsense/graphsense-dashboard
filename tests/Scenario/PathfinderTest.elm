@@ -17,13 +17,19 @@ import Effect.Pathfinder
 import Expect exposing (Expectation)
 import Fixtures.Api as Fixture
 import Json.Decode
+import Model.Direction exposing (Direction(..))
+import Model.Pathfinder exposing (Details(..))
+import Model.Pathfinder.Address exposing (Txs(..))
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Selection exposing (Selection(..))
+import Model.Search as Search
 import Msg.Pathfinder exposing (Msg(..))
 import Route.Pathfinder as Route
 import Support.App as App exposing (App)
 import Test exposing (Test, describe, test)
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector
+import Update.Pathfinder
 
 
 
@@ -179,6 +185,133 @@ suite =
                                 |> App.html
                                 |> Query.has [ Selector.tag "svg" ]
             ]
+        , describe "picking a search result"
+            -- The search box hands back a ResultLine; the route it maps to is
+            -- what actually puts something on the graph. Getting this mapping
+            -- wrong sends the user to the wrong page with no error.
+            [ test "an address result routes to that address" <|
+                \_ ->
+                    Update.Pathfinder.resultLineToRoute (Search.Address "btc" (Tuple.second addressId))
+                        |> Expect.equal (Route.Network "btc" (Route.Address (Tuple.second addressId) Nothing))
+            , test "a transaction result routes to that transaction" <|
+                \_ ->
+                    Update.Pathfinder.resultLineToRoute (Search.Tx "btc" "abc123")
+                        |> Expect.equal (Route.Network "btc" (Route.Tx "abc123"))
+            , test "a block result routes to that block" <|
+                \_ ->
+                    Update.Pathfinder.resultLineToRoute (Search.Block "btc" 42)
+                        |> Expect.equal (Route.Network "btc" (Route.Block 42))
+            , test "a label result routes to the label page" <|
+                \_ ->
+                    Update.Pathfinder.resultLineToRoute (Search.Label "internet archive")
+                        |> Expect.equal (Route.Label "internet archive")
+            , test "an actor result routes to the actor page" <|
+                \_ ->
+                    Update.Pathfinder.resultLineToRoute (Search.Actor ( "binance", "Binance" ))
+                        |> Expect.equal (Route.Actor "binance")
+            , test "the route it produces fetches the address" <|
+                \_ ->
+                    -- the whole point of the mapping: search, pick, node appears
+                    withAddressFixture <|
+                        \address ->
+                            Update.Pathfinder.resultLineToRoute
+                                (Search.Address "btc" (Tuple.second addressId))
+                                |> App.initAt
+                                |> answerAddress address
+                                |> addressesOnGraph
+                                |> Expect.equal [ addressId ]
+            ]
+        , describe "selecting a node"
+            [ test "marks it as the selection" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            graphWithOneAddress address
+                                |> App.step (UserClickedAddress addressId)
+                                |> App.model
+                                |> .selection
+                                |> Expect.equal (SelectedAddress addressId)
+            , test "opens its details panel" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            graphWithOneAddress address
+                                |> App.step (UserClickedAddress addressId)
+                                |> App.model
+                                |> .details
+                                |> Maybe.map isAddressDetails
+                                |> Expect.equal (Just True)
+            , test "closing the details view clears the selection" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            graphWithOneAddress address
+                                |> App.steps [ UserClickedAddress addressId, UserClosedDetailsView ]
+                                |> App.model
+                                |> (\m -> ( m.selection, m.details ))
+                                |> Expect.equal ( NoSelection, Nothing )
+            , test "deleting the selected node takes the panel with it" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            graphWithOneAddress address
+                                |> App.steps
+                                    [ UserClickedAddress addressId
+                                    , UserClickedRemoveAddressFromGraph addressId
+                                    ]
+                                |> App.model
+                                |> .details
+                                |> Expect.equal Nothing
+            ]
+        , describe "expanding an address"
+            [ test "selects it" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            graphWithOneAddress address
+                                |> App.step (UserClickedAddressExpandHandle addressId Outgoing)
+                                |> App.model
+                                |> .selection
+                                |> Expect.equal (SelectedAddress addressId)
+            , test "asks the API for what to expand into" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            graphWithOneAddress address
+                                |> App.step (UserClickedAddressExpandHandle addressId Outgoing)
+                                |> App.expectEffect "an API request" isAnyApiRequest
+            , test "marks the direction as loading, so the handle cannot be double-fired" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            graphWithOneAddress address
+                                |> App.step (UserClickedAddressExpandHandle addressId Outgoing)
+                                |> App.model
+                                |> .network
+                                |> .addresses
+                                |> Dict.get addressId
+                                |> Maybe.map (.outgoingTxs >> isLoading)
+                                |> Expect.equal (Just True)
+            , test "a second click while loading asks for nothing more" <|
+                \_ ->
+                    -- asserting the second click is silent is only meaningful
+                    -- next to the first one being loud, so compare the two
+                    withAddressFixture <|
+                        \address ->
+                            let
+                                afterFirst =
+                                    graphWithOneAddress address
+                                        |> App.step (UserClickedAddressExpandHandle addressId Outgoing)
+
+                                afterSecond =
+                                    afterFirst
+                                        |> App.step (UserClickedAddressExpandHandle addressId Outgoing)
+                            in
+                            ( List.isEmpty (App.apiEffects afterFirst)
+                            , List.isEmpty (App.apiEffects afterSecond)
+                            )
+                                |> Expect.equal ( False, True )
+            ]
         , describe "the empty graph"
             [ test "starts with nothing on it" <|
                 \_ ->
@@ -188,3 +321,36 @@ suite =
                     App.init |> App.html |> Query.has [ Selector.tag "svg" ]
             ]
         ]
+
+
+isAddressDetails : Details -> Bool
+isAddressDetails details =
+    case details of
+        AddressDetails _ _ ->
+            True
+
+        _ ->
+            False
+
+
+isLoading : Txs -> Bool
+isLoading txs =
+    case txs of
+        TxsLoading ->
+            True
+
+        _ ->
+            False
+
+
+isAnyApiRequest : Effect.Pathfinder.Effect -> Bool
+isAnyApiRequest eff =
+    case eff of
+        Effect.Pathfinder.ApiEffect _ ->
+            True
+
+        Effect.Pathfinder.BatchEffect batched ->
+            List.any isAnyApiRequest batched
+
+        _ ->
+            False
