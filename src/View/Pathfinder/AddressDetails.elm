@@ -1035,8 +1035,17 @@ account plugins pluginStates vc model id viewState address =
                             }
                     )
 
+        onLimitedNetwork =
+            Config.isLimitedNetwork (Id.network id)
+
+        -- limited networks have no cluster/entity data (locally minted ids
+        -- only): no cluster-addresses tab
         relatedAddressesTab =
-            [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
+            if onLimitedNetwork then
+                []
+
+            else
+                [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
 
         relatedDataTabsList =
             transactionsOrNeighborsDataTabs vc model id viewState
@@ -1047,7 +1056,7 @@ account plugins pluginStates vc model id viewState address =
         -- not at all (no precomputed aggregates): hide the two rows entirely
         -- (user decision 2026-07-27)
         hideOnLimitedNetwork =
-            if Config.isLimitedNetwork (Id.network id) then
+            if onLimitedNetwork then
                 [ css [ Css.display Css.none ] ]
 
             else
@@ -1096,8 +1105,23 @@ account plugins pluginStates vc model id viewState address =
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
-            |> Rs.s_totalReceivedRow totalReceivedRundown
-            |> Rs.s_totalSentRow totalSentRundown
+            -- an instance override REPLACES the default row that carries the
+            -- hideOnLimitedNetwork attributes, so it must stay Nothing there
+            -- for the display:none default to render
+            |> Rs.s_totalReceivedRow
+                (if onLimitedNetwork then
+                    Nothing
+
+                 else
+                    totalReceivedRundown
+                )
+            |> Rs.s_totalSentRow
+                (if onLimitedNetwork then
+                    Nothing
+
+                 else
+                    totalSentRundown
+                )
             |> Rs.s_balanceRow balanceRundown
             |> Rs.s_sidePanelEthAddressDetails
                 (viewState.address.data

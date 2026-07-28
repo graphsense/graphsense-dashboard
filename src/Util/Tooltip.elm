@@ -3,6 +3,7 @@ module Util.Tooltip exposing (linkRow, tooltipConfig, tooltipProperties, tooltip
 import Api.Data exposing (Actor, TagSummary)
 import Basics.Extra exposing (flip)
 import Components.Tooltip as Tooltip
+import Config
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder as Css
@@ -391,7 +392,7 @@ address vc tags adr =
         curr =
             View.toCurrency vc
     in
-    [ tooltipRow
+    (tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
         , tooltipRowValue =
             Addr.getBalance adr
@@ -403,31 +404,39 @@ address vc tags adr =
                 |> Maybe.withDefault ""
                 |> val vc
         }
-    , tooltipRow
-        { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
-        , tooltipRowValue =
-            Addr.getTotalReceived adr
-                |> Maybe.map
-                    (pair (assetFromBase net)
-                        >> List.singleton
-                        >> Locale.currency curr vc.locale
-                    )
-                |> Maybe.withDefault ""
-                |> val vc
-        }
-    , tooltipRow
-        { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
-        , tooltipRowValue =
-            Addr.getTotalSpent adr
-                |> Maybe.map
-                    (pair (assetFromBase net)
-                        >> List.singleton
-                        >> Locale.currency curr vc.locale
-                    )
-                |> Maybe.withDefault ""
-                |> val vc
-        }
-    ]
+        :: -- limited networks serve totals as budget-capped floors: hide them
+           -- here like in the side panel (user decision 2026-07-27)
+           (if Config.isLimitedNetwork net then
+                []
+
+            else
+                [ tooltipRow
+                    { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
+                    , tooltipRowValue =
+                        Addr.getTotalReceived adr
+                            |> Maybe.map
+                                (pair (assetFromBase net)
+                                    >> List.singleton
+                                    >> Locale.currency curr vc.locale
+                                )
+                            |> Maybe.withDefault ""
+                            |> val vc
+                    }
+                , tooltipRow
+                    { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
+                    , tooltipRowValue =
+                        Addr.getTotalSpent adr
+                            |> Maybe.map
+                                (pair (assetFromBase net)
+                                    >> List.singleton
+                                    >> Locale.currency curr vc.locale
+                                )
+                            |> Maybe.withDefault ""
+                            |> val vc
+                    }
+                ]
+           )
+    )
         ++ (case tags of
                 Just ts ->
                     [ tooltipRow
