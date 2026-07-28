@@ -46,26 +46,16 @@ picture, which is what you want when testing the core.
 
 -}
 
-import Config
-import Config.Update
-import Config.UserSettings
-import Config.View
-import Dict
 import Effect.Api
 import Effect.Pathfinder exposing (Effect(..))
 import Expect exposing (Expectation)
 import Html.Styled
-import Init.Locale
 import Init.Pathfinder
-import Model.Graph.Coords exposing (BBox)
-import Model.Locale
 import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg)
-import Plugin
 import Plugin.Model
-import Plugin.Update
-import Plugin.View
 import Route.Pathfinder exposing (Route)
+import Support.Env as Env
 import Test.Html.Query as Query
 import Update.Pathfinder
 import View.Pathfinder
@@ -98,66 +88,6 @@ effects (App app) =
 -- SETUP
 
 
-plugins : Plugin.Update.Plugins
-plugins =
-    Plugin.Update.empty
-
-
-viewPlugins : Plugin.View.Plugins
-viewPlugins =
-    Plugin.viewPlugins Config.plugins
-
-
-locale : Model.Locale.Model
-locale =
-    Config.UserSettings.default "en"
-        |> Init.Locale.init
-        |> Tuple.first
-
-
-{-| Same shape `Main.main` builds.
--}
-updateConfig : Config.Update.Config
-updateConfig =
-    { defaultColor = Config.config.theme.graph.defaultColor
-    , categoryToColor = Config.config.theme.graph.categoryToColor
-    , highlightsColorScheme = Config.config.theme.graph.highlightsColorScheme
-    , locale = locale
-    , size = Just viewport
-    , allConcepts = []
-    , abuseConcepts = []
-    }
-
-
-{-| A fixed viewport, so nothing about a test depends on the machine it runs on.
-`View.Pathfinder.graph` renders nothing at all when `size` is `Nothing`.
--}
-viewport : BBox
-viewport =
-    { x = 0, y = 0, width = 1920, height = 1080 }
-
-
-viewConfig : Config.View.Config
-viewConfig =
-    { theme = Config.config.theme
-    , locale = locale
-    , lightmode = True
-    , size = Just viewport
-    , showDatesInUserLocale = True
-    , showTimeZoneOffset = False
-    , showTimestampOnTxEdge = True
-    , preferredFiatCurrency = "usd"
-    , showValuesInFiat = False
-    , showHash = False
-    , showLabelsInTaggingOverview = False
-    , showConversionEdges = True
-    , allConcepts = []
-    , abuseConcepts = []
-    , characterDimensions = Dict.empty
-    , showBothValues = False
-    }
-
-
 {-| An empty graph, as the user gets on a bare `/pathfinder`.
 -}
 init : App
@@ -182,7 +112,7 @@ initAt route =
             init
 
         ( routed, produced ) =
-            Update.Pathfinder.updateByRoute plugins updateConfig route app.model_
+            Update.Pathfinder.updateByRoute Env.updatePlugins Env.updateConfig route app.model_
     in
     App { model_ = routed, effects_ = produced }
 
@@ -198,7 +128,7 @@ step : Msg -> App -> App
 step msg (App app) =
     let
         ( next, produced ) =
-            Update.Pathfinder.update plugins updateConfig msg app.model_
+            Update.Pathfinder.update Env.updatePlugins Env.updateConfig msg app.model_
     in
     App { model_ = next, effects_ = produced }
 
@@ -322,7 +252,7 @@ the output does not depend on the local plugin configuration.
 -}
 html : App -> Query.Single Msg
 html (App app) =
-    View.Pathfinder.view viewPlugins Plugin.Model.emptyModelState viewConfig app.model_
+    View.Pathfinder.view Env.viewPlugins Plugin.Model.emptyModelState Env.viewConfig app.model_
         |> .contents
         |> Html.Styled.div []
         |> Html.Styled.toUnstyled

@@ -14,7 +14,9 @@ make compile-quiet      # Compile the project (recommended for agents - token fr
 make compile            # Compile the project (verbose output)
 make serve              # Start dev server (localhost:3000) — runs prepare + codegen + vite
 make build              # Production build to ./dist
-make test               # Run Elm tests (elm-test-rs)
+make test               # Run Elm tests (elm-test-rs) + check-lang
+make check-lang         # Check translation files against each other and the code
+make api-fixtures       # Regenerate tests/Fixtures/Api.elm (after every `make openapi`)
 make format             # Format Elm code (elm-format)
 make lint               # Lint with elm-review
 make lint-fix           # Auto-fix lint issues
@@ -156,7 +158,50 @@ Translation files in `lang/*.yaml` (en, de, es, it). Plugin translations in `plu
 
 ## Testing
 
-The test suite is small but growing. When adding or changing logic — especially pure functions, data transformations, and parsing — write tests for it. Easy-to-test logic should always be tested. Run tests with `make test`.
+**Write tests for what you change.** The suite runs in about a second (`make test`, which also runs `make check-lang`), so there is no reason to skip it. Almost everything is testable without a browser — see the harnesses below before concluding that something can only be checked by clicking.
+
+### Which layer to use
+
+| For | Use | Example |
+|---|---|---|
+| Pure functions, decoders, encoders, routes, formatting | a plain `elm-test` module | `tests/Locale/FormattingTest.elm` |
+| A user flow through the Pathfinder | `Support.App` | `tests/Scenario/PathfinderTest.elm` |
+| Page routing, statusbar, notifications, dialogs, settings | `Support.MainApp` | `tests/Scenario/AppTest.elm` |
+| A response shape the API promises | `tests/Api/DecoderContractTest.elm` | |
+
+### The headless harnesses
+
+`Update.update` and `View.view` are pure and `Model` is parameterised over its navigation key, so the app runs in `elm-test` with `key = ()` — no browser, no ports. Effects are data, and every `Effect.Api.Effect` carries the function that turns a response into a `Msg`, so faking an API call is "find the effect, hand it a fixture, feed the `Msg` back in":
+
+```elm
+App.initAt (Route.addressRoute { network = "btc", address = someAddress })
+    |> App.respond
+        (\eff ->
+            case eff of
+                Effect.Api.GetAddressEffect _ toMsg -> Just (toMsg addressFixture)
+                _ -> Nothing
+        )
+    |> App.html
+    |> Query.has [ Selector.text "1Archive…z8dN" ]
+```
+
+Both harnesses share `Support.Env` (locale, viewport, config) so scenarios cannot drift apart. They use `Plugin.Update.empty` and `Plugin.Model.emptyModelState`, so results do not depend on what `config/Config.elm` registers locally. They start a scenario differently: `Support.App.initAt` takes a `Route.Pathfinder.Route`, `Support.MainApp.initAt` a URL path.
+
+**Do not try to call `Init.init` from a test.** It takes a `Plugin.Model.Flags` record whose *shape* is generated per registered plugin — several locally, none in CI — and no value of that type can be written portably. `Support.MainApp` mirrors the model `Init.elm` builds instead. The consequence: the harness starts *after* boot, so the effects `Init.init` fires (statistics, taxonomies, translations, plugin commands) are invisible. Assert on what the app does with a response, not on the boot request.
+
+### Fixtures
+
+`tests/Fixtures/Api.elm` is generated from the response examples in the OpenAPI spec by `make api-fixtures` — **re-run it after every `make openapi`**. It is committed, so tests need no network and no API key.
+
+`tests/Api/DecoderContractTest.elm` feeds those examples to the generated decoders. Its `knownDrift` group lists payloads the client currently rejects and asserts the *failure*, so it fails loudly once the drift is fixed rather than rotting.
+
+### Translations
+
+`make check-lang` (part of `make test`) fails when a locale lost a key that `lang/en.yaml` or a `View.Locale` call still uses. Note that `en.yaml` is an *override* map, not a full key list — a lookup that misses falls back to the key itself, which is the English text. Known gaps are baselined in `lang/untranslated-baseline.json`; refresh with `node tools/check_lang.mjs --update-baseline`. The baseline also fails once a key in it gets translated, so it shrinks instead of rotting.
+
+### Writing tests that are worth having
+
+A round-trip test that compares an encoder against its own decoder passes even when both drop the same field. `tests/Serialization/RoundTripTest.elm` therefore also pins the exact bytes of a golden `.gs` file. When a test could pass for the wrong reason, break the code on purpose and check that it fails.
 
 ## Key Configuration
 
