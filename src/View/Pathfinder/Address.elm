@@ -33,7 +33,7 @@ import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.Tooltip
 import Util.TooltipType as TooltipType
-import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLengths)
+import Util.View exposing (none, onClickWithStop, testId, testKey, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
@@ -219,7 +219,9 @@ view plugins vc pc searchHighlight address annotation =
         (GraphComponents.addressNodeWithAttributes
             (GraphComponents.addressNodeAttributes
                 |> Rs.s_root
-                    ([ A.animate address.clock address.opacity
+                    ([ testId "gs-address-node"
+                     , testKey (Id.toString address.id)
+                     , A.animate address.clock address.opacity
                         |> String.fromFloat
                         |> opacity
                      , UserClickedAddress address.id |> onClickWithStop

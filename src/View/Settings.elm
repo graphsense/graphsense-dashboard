@@ -34,7 +34,8 @@ view plugins vc m =
         (Sp.settingsPageAttributes
             |> Rs.s_backToDashboard backBtnAttributes
             |> Rs.s_root
-                [ css
+                [ Util.View.testId "gs-settings-page"
+                , css
                     [ Css.flexGrow <| Css.num 1
                     , Css.width Css.auto
                     , Css.height Css.auto

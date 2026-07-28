@@ -23,7 +23,7 @@ import Theme.Html.ErrorMessagesAlerts as Msg
 import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
 import Util.Css
-import Util.View exposing (fixFillRule, none, onClickWithStop)
+import Util.View exposing (fixFillRule, none, onClickWithStop, testId)
 import View.Locale as Locale
 
 
@@ -133,6 +133,7 @@ view vc model =
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
                     |> Rs.s_infoboxTitle titleAttr
+                    |> Rs.s_root [ testId "gs-notification" ]
                 )
                 { header =
                     { iconInstance = icon
@@ -159,6 +160,7 @@ view vc model =
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
                     |> Rs.s_infoboxTitle titleAttr
+                    |> Rs.s_root [ testId "gs-notification" ]
                 )
                 { header =
                     { iconInstance = icon
@@ -189,6 +191,7 @@ view vc model =
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
                     |> Rs.s_infoboxTitle titleAttr
+                    |> Rs.s_root [ testId "gs-notification" ]
                 )
                 { header =
                     { iconInstance = icon

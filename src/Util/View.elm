@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, conditionalHide, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, conditionalHide, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -14,7 +14,7 @@ import Hovercard
 import Html as BHtml
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (classList, css, src, title)
+import Html.Styled.Attributes exposing (attribute, classList, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import List.Extra
@@ -29,6 +29,46 @@ import Tuple exposing (pair)
 import Util.Css
 import Util.Data as Data
 import View.Locale as Locale
+
+
+{-| A stable hook for browser tests, naming what an element _is_.
+
+Names are prefixed `gs-` because plugins render into this same DOM from their
+own repositories; the prefix keeps their hooks and ours from colliding. Write
+the prefix out at the call site rather than adding it here, so a name found in
+`e2e/` can be grepped for in `src/` and vice versa.
+
+A name describes a kind, not an instance: several nodes share `gs-address-node`.
+Playwright's strict mode fails an assertion whose locator matches more than one
+element, so pair it with [`testKey`](#testKey) when a test needs a particular
+one.
+
+The markup is generated from Figma and styled with elm-css, so class names are
+content hashes that change with any styling tweak, and visible text is
+translated and truncated. Neither survives as a selector. This attribute exists
+only so `e2e/` can find an element; it has no effect at runtime.
+
+Add one at the _call site_ of a generated component (its `WithAttributes`
+variant takes an attribute list per node) — never inside `generated/`, which the
+next codegen run overwrites.
+
+-}
+testId : String -> Attribute msg
+testId =
+    attribute "data-testid"
+
+
+{-| Identifies _which_ of a kind an element is, for tests that need one in
+particular:
+
+    [ testId "gs-address-node", testKey (Id.toString address.id) ]
+
+selects with `[data-testid="gs-address-node"][data-testkey="btc1Archive…"]`.
+
+-}
+testKey : String -> Attribute msg
+testKey =
+    attribute "data-testkey"
 
 
 none : Html msg

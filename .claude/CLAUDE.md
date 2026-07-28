@@ -16,6 +16,7 @@ make serve              # Start dev server (localhost:3000) — runs prepare + c
 make build              # Production build to ./dist
 make test               # Run Elm tests (elm-test-rs) + check-lang
 make check-lang         # Check translation files against each other and the code
+make e2e                # Browser tests (Playwright); make e2e-install once first
 make api-fixtures       # Regenerate tests/Fixtures/Api.elm (after every `make openapi`)
 make format             # Format Elm code (elm-format)
 make lint               # Lint with elm-review
@@ -184,6 +185,13 @@ When a fix is genuinely unreachable from a test — something in `main.js`, or a
 | A user flow through the Pathfinder | `Support.App` | `tests/Scenario/PathfinderTest.elm` |
 | Page routing, statusbar, notifications, dialogs, settings | `Support.MainApp` | `tests/Scenario/AppTest.elm` |
 | A response shape the API promises | `tests/Api/DecoderContractTest.elm` | |
+| Ports, downloads, the browser itself | Playwright, `e2e/` | `e2e/ports.spec.ts` |
+
+**Anything expressible in `elm-test` belongs there, not in `e2e/`.** The browser
+layer is slower, needs a build, and is the only layer that can be flaky. It
+earns its place only for what `Update`/`View` cannot reach: `src/main.js`, the
+ports, real downloads and file pickers, keyboard chords the browser competes
+for, and whether the shipped bundle boots at all.
 
 ### The headless harnesses
 
@@ -216,6 +224,43 @@ A spec example can also be incomplete: `stats` and `address_tag` omit fields a l
 ### Translations
 
 `make check-lang` (part of `make test`) fails when a locale lost a key that `lang/en.yaml` or a `View.Locale` call still uses. Note that `en.yaml` is an *override* map, not a full key list — a lookup that misses falls back to the key itself, which is the English text. Known gaps are baselined in `lang/untranslated-baseline.json`; refresh with `node tools/check_lang.mjs --update-baseline`. The baseline also fails once a key in it gets translated, so it shrinks instead of rotting.
+
+### The browser layer (`e2e/`)
+
+```bash
+make e2e-install    # once: fetch the browser
+make e2e            # build + run
+make e2e-ui         # the same, in Playwright's UI mode
+```
+
+`make e2e` builds with `VITE_GS_REST_URL` pointed at a port nothing listens on and
+passes it as a *make variable* — a plain environment variable loses to the
+`-include .env` at the top of the Makefile. `e2e/fixtures.ts` then answers every
+request that leaves the preview origin, matching on **path** rather than origin so
+the suite does not depend on whatever is in your `.env`.
+
+Fixture bodies must be complete enough to decode. The client rejects a whole
+response over one missing required field and logs it, and `boot.spec.ts` asserts
+the console is clean — so a lazy stub shows up as a failing boot test rather
+than a passing lie. Collection endpoints have suffix-matched defaults (`/tags`,
+`/neighbors`, `/txs`, …) so a new view does not mean a new fixture entry.
+
+`boot.spec.ts` is the one to keep working above all others: it asserts no
+uncaught exceptions, no console errors, and `document.body.elmTree` — the marker
+only the patched elm/virtual-dom sets. Building against unpatched packages makes
+it fail, which is the check `make check-virtual-dom-fix` cannot do (that one
+inspects the clones, not the bundle that ships).
+
+Selectors come from `Util.View.testId`, applied at component **call sites**.
+elm-css class names are content hashes and visible text is translated and
+truncated, so neither works as a selector; `generated/` must never be edited.
+
+Names are prefixed `gs-` so plugin hooks, rendered into the same DOM from other
+repositories, cannot collide with ours; write the prefix out at the call site so
+a name is greppable from `e2e/` to `src/` and back. A name describes a *kind*, so
+several nodes share `gs-address-node` — pair it with `Util.View.testKey` and the
+`addressNode()` helper when a test means one particular element. Playwright fails
+any single-element assertion whose locator matches more than one.
 
 ### Writing tests that are worth having
 
@@ -271,7 +316,7 @@ Four ways they used to fall out of the build silently — and all four are now c
 Two guards, both loud:
 
 - `make check-virtual-dom-fix` (run automatically by `virtual-dom-fix`, hence by `prepare`) **fails the build** if the kernel the compiler reads lacks `_VirtualDom_createTNode`, a function only the fork defines.
-- `elmSafeVirtualDomCheckPlugin` in `vite.config.mjs` warns if that marker is missing from the *compiled* Elm — the last word on what actually ships.
+- `elmSafeVirtualDomCheckPlugin` in `vite.config.mjs` **fails the build** if that marker is missing from the *compiled* Elm — the last word on what actually ships. `check-virtual-dom-fix` inspects the clones and keeps passing while the output has no patch in it, so this is the check that matters. The usual trigger is a stale `elm-stuff` after `tools/generate.js` rewrites `elm.json` (which happens whenever the active plugin set changes); the fix it prints is `rm -rf elm-stuff && make build`.
 
 Symptom of a build without the patches: `TypeError: Node.removeChild: Argument 1 is not an object` from `_VirtualDom_applyPatch`. `_VirtualDom_applyPatchesHelp` in a stack trace is itself the tell — the fork does not have that function.
 

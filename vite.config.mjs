@@ -80,6 +80,16 @@ function elmStepperGuardPlugin() {
 // compiler — an elm upgrade moves the package cache to a new directory, a
 // stale elm-stuff keeps the old artifacts — and the app is then one extension
 // away from "Node.removeChild: Argument 1 is not an object". So: check.
+// This is the last word on what actually ships: `make check-virtual-dom-fix`
+// inspects the *clones*, so it keeps passing while the compiled output has no
+// patch in it at all. That combination has shipped unpatched bundles more than
+// once — the most reliable trigger is a stale elm-stuff after tools/generate.js
+// rewrites elm.json, which happens whenever the active plugin set changes.
+//
+// It fails the build rather than warning: a warning scrolls past in vite's
+// output, and the consequence of missing it is a runtime crash
+// ("Node.removeChild: Argument 1 is not an object") the first time a browser
+// extension or a keyed list touches the DOM.
 function elmSafeVirtualDomCheckPlugin() {
   const marker = '_VirtualDom_createTNode'
   const filter = createFilter(/\.elm$/)
@@ -89,7 +99,14 @@ function elmSafeVirtualDomCheckPlugin() {
     transform(code, id) {
       if (!filter(id)) return
       if (!code.includes(marker)) {
-        this.warn('elm-safe-virtual-dom is NOT in this build — run `make virtual-dom-fix` (it may be cloned into the package directory of an older elm version, or elm-stuff may be stale)')
+        this.error(
+          'elm-safe-virtual-dom is NOT in this build.\n\n' +
+            '  Without it the app crashes whenever anything outside Elm touches the DOM.\n' +
+            '  Usually a stale build cache — try:\n\n' +
+            '    rm -rf elm-stuff && make build\n\n' +
+            '  If that does not help, the patched packages may be missing or cloned into\n' +
+            '  the package directory of a different elm version: run `make virtual-dom-fix`.'
+        )
       }
     }
   }

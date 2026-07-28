@@ -164,6 +164,24 @@ test: check-lang
 check-lang:
 	node tools/check_lang.mjs
 
+# Browser tests. Builds with a REST url nothing listens on, so an un-mocked
+# request fails loudly instead of reaching a real backend; the value is passed
+# as a make variable because a plain env var loses to the `-include .env` above.
+# `make e2e-install` once, to fetch the browser.
+E2E_REST_URL=http://127.0.0.1:19999/api
+
+e2e: build-e2e
+	npx playwright test
+
+e2e-ui: build-e2e
+	npx playwright test --ui
+
+build-e2e:
+	$(MAKE) build VITE_GS_REST_URL=$(E2E_REST_URL)
+
+e2e-install:
+	npx playwright install --with-deps chromium
+
 # Regenerates tests/Fixtures/Api.elm from the response examples in the OpenAPI
 # spec. The result is committed so `make test` needs no network; re-run this
 # (and `make test`) after every `make openapi`.
@@ -345,4 +363,4 @@ tag-version:
 	git tag $(VERSION)
 	@echo "Created version $(VERSION)"
 
-.PHONY: openapi serve test check-lang api-fixtures format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet
+.PHONY: openapi serve test check-lang api-fixtures e2e e2e-ui build-e2e e2e-install format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet

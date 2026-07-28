@@ -16,6 +16,7 @@ import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.SettingsComponents as Sc
+import Util.View
 import Util.View.Rule exposing (rule)
 import View.Locale as Locale
 import View.Search
@@ -41,7 +42,8 @@ searchBoxView plugins vc model =
     Sc.searchBarFieldStateTypingWithInstances
         (Sc.searchBarFieldStateTypingAttributes
             |> Rs.s_root
-                [ css
+                [ Util.View.testId "gs-landing-search"
+                , css
                     [ Css.alignItems Css.stretch |> Css.important
                     , Css.rem 23 |> Css.width |> Css.important
                     ]
