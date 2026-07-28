@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [26.08.0] - Unreleased
 
+### Changed
+
+- Production builds minify with rolldown's oxc minifier (vite 8's default) instead of terser, cutting minification from 16.5s to 4.1s per bundle. Shipped size is unchanged in practice: 5.7% smaller uncompressed, within 1.6% gzipped
+
 ### Removed
 
 - Pathfinder 1.0, the legacy graph tool. Any `/graph/*` URL now lands on a dedicated "Pathfinder 1.0 retired" page linking to the current Pathfinder, and opening a legacy pf1 `.gs` file shows that notice instead of a generic decode error

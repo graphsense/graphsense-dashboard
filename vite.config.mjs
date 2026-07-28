@@ -127,7 +127,15 @@ export default defineConfig(({ command }) => ({
   build: {
     manifest: true,
     outDir: 'dist',
-    minify: 'terser',
+    // Rolldown's oxc minifier, which is vite 8's default. The explicit
+    // 'terser' this replaces dates from the vite 5 era, when the choice was
+    // terser or esbuild and terser won on size; the rolldown switch in vite 8
+    // changed the default underneath it and the override was never revisited.
+    // Measured on the all-plugins bundle: 4.1s vs terser's 16.5s, output 5.7%
+    // smaller raw and within 1.6% gzipped. Note the saving is almost entirely
+    // in the non-elm chunks (jspdf, html2canvas, the svg-to-pdf worker) — the
+    // elm bundle itself came out 0.6% smaller, i.e. minified near-identically.
+    minify: true,
     sourcemap: false
   },
 
