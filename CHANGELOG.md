@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.08.0] - Unreleased
+
+### Removed
+
+- Pathfinder 1.0, the legacy graph tool. Any `/graph/*` URL now lands on a dedicated "Pathfinder 1.0 retired" page linking to the current Pathfinder, and opening a legacy pf1 `.gs` file shows that notice instead of a generic decode error
+
+### Fixed
+
+- The open-graph dialog did nothing: the removed `exportGraphics` port was still wired up in `main.js` and threw during startup, which silently killed every subscription registered after it — file open, plugin ports and settings persistence included
+- Search missed hits when the query was pasted from a PDF: letter pairs such as `ff` arrive as single ligature glyphs, which are now folded where the query enters the model, so the request, prefix filter, highlighting and Enter-navigation all agree
+- Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
+
 ## [26.07.3] - 2026-07-17
 
 ### Changed
@@ -10,10 +22,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - upgrade elm-test-rs
 - remove "Dev" suffix for new figma components
 - add "width:100%" for text nodes
-
-### Fixed
-
-- Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
 
 ## [26.07.2] - 2026-07-14
 
