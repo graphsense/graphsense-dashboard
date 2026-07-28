@@ -24,18 +24,18 @@ address =
     "{\"address\":\"1Archive1n2C579dMsAu3iC6tWzuQJz8dN\",\"balance\":{\"fiat_values\":[{\"code\":\"eur\",\"value\":10},{\"code\":\"usd\",\"value\":20}],\"value\":1000000},\"cluster\":264711,\"currency\":\"btc\",\"entity\":264711,\"first_tx\":{\"height\":47,\"timestamp\":123456789,\"tx_hash\":\"04d92601677d62a985310b61a301e74870fa942c8be0648e16b1db23b996a8cd\"},\"fresh_cluster_id\":264800,\"in_degree\":100,\"last_tx\":{\"height\":47,\"timestamp\":123456789,\"tx_hash\":\"04d92601677d62a985310b61a301e74870fa942c8be0648e16b1db23b996a8cd\"},\"no_incoming_txs\":200,\"no_outgoing_txs\":100,\"out_degree\":50,\"status\":\"clean\",\"total_received\":{\"fiat_values\":[{\"code\":\"eur\",\"value\":10},{\"code\":\"usd\",\"value\":20}],\"value\":1000000},\"total_spent\":{\"fiat_values\":[{\"code\":\"eur\",\"value\":10},{\"code\":\"usd\",\"value\":20}],\"value\":1000000}}"
 
 
-{-| `components.schemas.address_tag.example`
+{-| `components.schemas.address_tag.example`, plus the field(s) a live instance sends but the example omits (see `EXAMPLE_PATCHES`)
 -}
 addressTag : String
 addressTag =
-    "{\"address\":\"1Archive1n2C579dMsAu3iC6tWzuQJz8dN\",\"category\":\"organization\",\"cluster\":264711,\"confidence\":\"service_data\",\"confidence_level\":50,\"currency\":\"BTC\",\"entity\":264711,\"is_cluster_definer\":true,\"label\":\"internet archive\",\"lastmod\":1636675200,\"source\":\"https://archive.org/donate/cryptocurrency\",\"tagpack_creator\":\"GraphSense Core Team\",\"tagpack_is_public\":true,\"tagpack_title\":\"GraphSense Demo TagPack\",\"tagpack_uri\":\"https://github.com/graphsense/graphsense-tagpacks/tree/master/packs/demo.yaml\"}"
+    "{\"address\":\"1Archive1n2C579dMsAu3iC6tWzuQJz8dN\",\"category\":\"organization\",\"cluster\":264711,\"confidence\":\"service_data\",\"confidence_level\":50,\"currency\":\"BTC\",\"entity\":264711,\"is_cluster_definer\":true,\"label\":\"internet archive\",\"lastmod\":1636675200,\"source\":\"https://archive.org/donate/cryptocurrency\",\"tagpack_creator\":\"GraphSense Core Team\",\"tagpack_is_public\":true,\"tagpack_title\":\"GraphSense Demo TagPack\",\"tagpack_uri\":\"https://github.com/graphsense/graphsense-tagpacks/tree/master/packs/demo.yaml\",\"tag_type\":\"actor\"}"
 
 
-{-| `components.schemas.address_tags.example`
+{-| `components.schemas.address_tags.example`, plus the field(s) a live instance sends but the example omits (see `EXAMPLE_PATCHES`)
 -}
 addressTags : String
 addressTags =
-    "{\"address_tags\":[{\"address\":\"1Archive1n2C579dMsAu3iC6tWzuQJz8dN\",\"category\":\"organization\",\"cluster\":264711,\"confidence\":\"service_data\",\"confidence_level\":50,\"currency\":\"BTC\",\"entity\":264711,\"is_cluster_definer\":true,\"label\":\"internet archive\",\"lastmod\":1636675200,\"source\":\"https://archive.org/donate/cryptocurrency\",\"tagpack_creator\":\"GraphSense Core Team\",\"tagpack_is_public\":true,\"tagpack_title\":\"GraphSense Demo TagPack\",\"tagpack_uri\":\"https://github.com/graphsense/graphsense-tagpacks/tree/master/packs/demo.yaml\"}]}"
+    "{\"address_tags\":[{\"address\":\"1Archive1n2C579dMsAu3iC6tWzuQJz8dN\",\"category\":\"organization\",\"cluster\":264711,\"confidence\":\"service_data\",\"confidence_level\":50,\"currency\":\"BTC\",\"entity\":264711,\"is_cluster_definer\":true,\"label\":\"internet archive\",\"lastmod\":1636675200,\"source\":\"https://archive.org/donate/cryptocurrency\",\"tagpack_creator\":\"GraphSense Core Team\",\"tagpack_is_public\":true,\"tagpack_title\":\"GraphSense Demo TagPack\",\"tagpack_uri\":\"https://github.com/graphsense/graphsense-tagpacks/tree/master/packs/demo.yaml\",\"tag_type\":\"actor\"}]}"
 
 
 {-| `components.schemas.address_tx_utxo.example`
@@ -143,11 +143,11 @@ searchResultByCurrency =
     "{\"addresses\":[\"1Archive1n2C579dMsAu3iC6tWzuQJz8dN\",\"1ArchiveisY6i4Hpostivemate1sVRhQ71\"],\"currency\":\"btc\",\"txs\":[]}"
 
 
-{-| `components.schemas.stats.example`
+{-| `components.schemas.stats.example`, plus the field(s) a live instance sends but the example omits (see `EXAMPLE_PATCHES`)
 -}
 stats : String
 stats =
-    "{\"currencies\":[{\"name\":\"btc\",\"no_address_relations\":1000000,\"no_addresses\":500000,\"no_blocks\":750000,\"no_entities\":200000,\"no_labels\":10000,\"no_tagged_addresses\":5000,\"no_txs\":800000,\"schema_type\":\"utxo\",\"timestamp\":1625703347}],\"version\":\"1.0.0\"}"
+    "{\"currencies\":[{\"name\":\"btc\",\"no_address_relations\":1000000,\"no_addresses\":500000,\"no_blocks\":750000,\"no_entities\":200000,\"no_labels\":10000,\"no_tagged_addresses\":5000,\"no_txs\":800000,\"schema_type\":\"utxo\",\"timestamp\":1625703347}],\"version\":\"1.0.0\",\"request_timestamp\":\"2026-07-28T00:00:00\"}"
 
 
 {-| `components.schemas.tag_summary.example`

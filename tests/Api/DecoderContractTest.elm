@@ -20,41 +20,6 @@ import Json.Decode exposing (Decoder)
 import Test exposing (Test, describe, test)
 
 
-{-| A fixture the client currently cannot decode, together with the field it
-trips over.
-
-This asserts the _failure_, so the entry cannot rot: the day the client is
-regenerated (or the spec example is completed) this test fails and forces
-somebody to look at it — the same idea as `review/suppressed/`.
-
--}
-knownDrift : String -> String -> Decoder a -> String -> Test
-knownDrift name missingField decoder json =
-    test (name ++ " (known drift: missing " ++ missingField ++ ")") <|
-        \_ ->
-            case Json.Decode.decodeString decoder json of
-                Ok _ ->
-                    Expect.fail
-                        (name
-                            ++ " decodes again — the drift on `"
-                            ++ missingField
-                            ++ "` is gone. Move it up to the `decodes` list."
-                        )
-
-                Err error ->
-                    Json.Decode.errorToString error
-                        |> String.contains missingField
-                        |> Expect.equal True
-                        |> Expect.onFail
-                            ("expected "
-                                ++ name
-                                ++ " to fail on the missing `"
-                                ++ missingField
-                                ++ "`, but it failed differently:\n"
-                                ++ Json.Decode.errorToString error
-                            )
-
-
 {-| Decoding must succeed _and_ the error must be readable when it does not.
 -}
 decodes : String -> Decoder a -> String -> Test
@@ -81,6 +46,8 @@ suite =
     describe "Api.Data decoders accept the documented responses"
         [ describe "every spec example decodes"
             [ decodes "address" Api.Data.addressDecoder Fixture.address
+            , decodes "address_tag" Api.Data.addressTagDecoder Fixture.addressTag
+            , decodes "address_tags" Api.Data.addressTagsDecoder Fixture.addressTags
             , decodes "address_tx_utxo" Api.Data.addressTxUtxoDecoder Fixture.addressTxUtxo
             , decodes "address_txs" Api.Data.addressTxsDecoder Fixture.addressTxs
             , decodes "block" Api.Data.blockDecoder Fixture.block
@@ -96,6 +63,7 @@ suite =
             , decodes "rates" Api.Data.ratesDecoder Fixture.rates
             , decodes "search_result" Api.Data.searchResultDecoder Fixture.searchResult
             , decodes "search_result_by_currency" Api.Data.searchResultByCurrencyDecoder Fixture.searchResultByCurrency
+            , decodes "stats" Api.Data.statsDecoder Fixture.stats
             , decodes "tag_summary" Api.Data.tagSummaryDecoder Fixture.tagSummary
             , decodes "token_config" Api.Data.tokenConfigDecoder Fixture.tokenConfig
             , decodes "token_configs" Api.Data.tokenConfigsDecoder Fixture.tokenConfigs
@@ -106,16 +74,25 @@ suite =
             , decodes "tx_value" Api.Data.txValueDecoder Fixture.txValue
             , decodes "values" Api.Data.valuesDecoder Fixture.values
             ]
-        , describe "known drift between the client and the spec"
-            -- The generated client declares these fields required while the
-            -- current spec (2.15.0) neither marks them required nor puts them in
-            -- its own response example. If the API really omits one, the whole
-            -- response is rejected and the panel stays empty — worth confirming
-            -- against a live instance and then either regenerating the client or
-            -- completing the spec upstream.
-            [ knownDrift "address_tag" "tag_type" Api.Data.addressTagDecoder Fixture.addressTag
-            , knownDrift "address_tags" "tag_type" Api.Data.addressTagsDecoder Fixture.addressTags
-            , knownDrift "stats" "request_timestamp" Api.Data.statsDecoder Fixture.stats
+        , describe "the client is stricter than the spec about nulls"
+            -- The spec types both of these `anyOf: [string, null]`, the client
+            -- as a plain String. A live instance does send them (checked
+            -- 2026-07-28), which is why they are in the list above — but an
+            -- explicit null would still take down the whole response. These
+            -- pin that gap: if the client is ever regenerated faithfully the
+            -- fields become Maybe, and these two tests go red to say so.
+            [ test "a null tag_type is rejected" <|
+                \_ ->
+                    """{"address":"a","currency":"btc","is_cluster_definer":false,"label":"l","tag_type":null,"tagpack_creator":"c","tagpack_is_public":true,"tagpack_title":"t"}"""
+                        |> Json.Decode.decodeString Api.Data.addressTagDecoder
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
+            , test "a null request_timestamp is rejected" <|
+                \_ ->
+                    """{"currencies":[],"version":"1.0.0","request_timestamp":null}"""
+                        |> Json.Decode.decodeString Api.Data.statsDecoder
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
             ]
         , describe "the fields the UI reads actually arrive"
             -- Decoding to a record full of Nothings would still pass above, so

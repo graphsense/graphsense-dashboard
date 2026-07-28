@@ -56,6 +56,28 @@ const FIXTURES = {
   values: 'values'
 }
 
+// Fields a live instance sends but the spec's own example omits, checked
+// against a real instance on 2026-07-28. Without them the generated client -
+// which requires both - rejects the documented example, which reads like a
+// client bug when it is a gap in the spec's examples. Drop an entry here once
+// the example upstream carries the field.
+const TAG_TYPE = 'actor'
+const REQUEST_TIMESTAMP = '2026-07-28T00:00:00'
+
+const EXAMPLE_PATCHES = {
+  stats: (example) => ({ ...example, request_timestamp: REQUEST_TIMESTAMP }),
+  address_tag: (example) => ({ ...example, tag_type: TAG_TYPE }),
+  address_tags: (example) => ({
+    ...example,
+    address_tags: (example.address_tags || []).map((tag) => ({ ...tag, tag_type: TAG_TYPE }))
+  })
+}
+
+function exampleFor (schemaName, schema) {
+  const patch = EXAMPLE_PATCHES[schemaName]
+  return patch ? patch(schema.example) : schema.example
+}
+
 async function readSpec (source) {
   if (!source) source = DEFAULT_SPEC
   if (/^https?:/.test(source)) {
@@ -97,8 +119,8 @@ async function main () {
   const body = entries
     .map(([schema, name]) => {
       return (
-        `{-| \`components.schemas.${schema}.example\`\n-}\n` +
-        `${name} : String\n${name} =\n    ${elmString(schemas[schema].example)}\n`
+        `{-| \`components.schemas.${schema}.example\`${EXAMPLE_PATCHES[schema] ? ', plus the field(s) a live instance sends but the example omits (see `EXAMPLE_PATCHES`)' : ''}\n-}\n` +
+        `${name} : String\n${name} =\n    ${elmString(exampleFor(schema, schemas[schema]))}\n`
       )
     })
     .join('\n\n')

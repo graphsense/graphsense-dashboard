@@ -46,19 +46,9 @@ url path =
             }
 
 
-{-| `Fixtures.Api.stats` is one of the known-drift fixtures — the spec example
-omits `request_timestamp`, which the generated client requires (see
-`Api.DecoderContractTest`). Patch it in rather than block this suite on that.
--}
-statsJson : String
-statsJson =
-    Fixture.stats
-        |> String.replace "{\"currencies\"" "{\"request_timestamp\":\"2026-07-28T00:00:00\",\"currencies\""
-
-
 withStats : (Api.Data.Stats -> Expectation) -> Expectation
 withStats f =
-    case Json.Decode.decodeString Api.Data.statsDecoder statsJson of
+    case Json.Decode.decodeString Api.Data.statsDecoder Fixture.stats of
         Ok stats ->
             f stats
 

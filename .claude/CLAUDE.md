@@ -209,7 +209,9 @@ Both harnesses share `Support.Env` (locale, viewport, config) so scenarios canno
 
 `tests/Fixtures/Api.elm` is generated from the response examples in the OpenAPI spec by `make api-fixtures` — **re-run it after every `make openapi`**. It is committed, so tests need no network and no API key.
 
-`tests/Api/DecoderContractTest.elm` feeds those examples to the generated decoders. Its `knownDrift` group lists payloads the client currently rejects and asserts the *failure*, so it fails loudly once the drift is fixed rather than rotting.
+`tests/Api/DecoderContractTest.elm` feeds those examples to the generated decoders. When the client and the spec disagree, write the test so it asserts the *current* behaviour — including a failure, if that is what happens — rather than skipping the case: it then goes red once the disagreement is resolved instead of rotting. The `null` tests at the bottom of that module are the pattern.
+
+A spec example can also be incomplete: `stats` and `address_tag` omit fields a live instance really sends. `EXAMPLE_PATCHES` in `tools/gen_api_fixtures.mjs` fills those in, so the gap lives in one documented place instead of looking like a client bug.
 
 ### Translations
 
