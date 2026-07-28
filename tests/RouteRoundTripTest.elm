@@ -58,6 +58,20 @@ identifier =
         |> Fuzz.map String.fromList
 
 
+{-| What a tag label or actor id can actually contain: it comes from a tagpack
+or a search result, not from a hash function. The reserved characters are the
+point — `/` used to widen the path by a segment and lose the route, `?` used to
+truncate it.
+-}
+freeText : Fuzzer String
+freeText =
+    "abcXYZ019 /?#%&=+:@\"'<>\\[]{}|^`~.,;!$()*-_äöüßéè€"
+        |> String.toList
+        |> Fuzz.oneOfValues
+        |> Fuzz.listOfLengthBetween 1 30
+        |> Fuzz.map String.fromList
+
+
 {-| Whole milliseconds between 1970 and 2100 — `Iso8601` is exact there.
 -}
 posix : Fuzzer Time.Posix
@@ -103,8 +117,8 @@ pathfinderRoute : Fuzzer Pathfinder.Route
 pathfinderRoute =
     Fuzz.oneOf
         [ Fuzz.constant Pathfinder.Root
-        , Fuzz.map Pathfinder.Actor identifier
-        , Fuzz.map Pathfinder.Label identifier
+        , Fuzz.map Pathfinder.Actor freeText
+        , Fuzz.map Pathfinder.Label freeText
         , Fuzz.map2 Pathfinder.Network network thing
 
         -- an empty hop list has no URL representation, see "known boundaries"
@@ -176,29 +190,41 @@ suite =
                         |> Route.toUrl
                         |> parse
                         |> Expect.equal Nothing
-            , test "a space in an identifier is fine" <|
+            ]
+        , describe "free text in labels and actor ids"
+            -- These are not hashes: a label comes from a tagpack and reaches
+            -- toUrl straight off a search result. Both ends percent-encode, so
+            -- reserved characters survive rather than reshaping the URL.
+            [ test "a space" <|
+                \_ -> roundTrips (Route.Pathfinder (Pathfinder.Label "foo bar"))
+            , test "a slash, which used to lose the route entirely" <|
+                \_ -> roundTrips (Route.Pathfinder (Pathfinder.Label "foo/bar"))
+            , test "a question mark, which used to truncate the label" <|
+                \_ -> roundTrips (Route.Pathfinder (Pathfinder.Label "foo?bar"))
+            , test "a hash, which used to become a fragment" <|
+                \_ -> roundTrips (Route.Pathfinder (Pathfinder.Label "foo#bar"))
+            , test "a percent sign, so the encoding is not ambiguous" <|
+                \_ -> roundTrips (Route.Pathfinder (Pathfinder.Label "100% sure"))
+            , test "an actor id with a slash" <|
+                \_ -> roundTrips (Route.Pathfinder (Pathfinder.Actor "some/actor"))
+            , test "the encoded url keeps one segment after /label" <|
                 \_ ->
-                    Pathfinder.Label "foo bar"
-                        |> Route.Pathfinder
-                        |> roundTrips
-            , test "a slash in an identifier loses the route" <|
-                \_ ->
-                    -- Neither side escapes path segments: Url.Builder.absolute
-                    -- joins them raw and Util.Url.Parser.preparePath splits them
-                    -- raw. Addresses and tx hashes are alphanumeric so this never
-                    -- bites there, but labels and actor ids are free text.
                     Pathfinder.Label "foo/bar"
                         |> Route.Pathfinder
                         |> Route.toUrl
-                        |> parse
-                        |> Expect.equal Nothing
-            , test "a question mark in an identifier truncates it" <|
+                        |> Expect.equal "/pathfinder/label/foo%2Fbar"
+            , test "a url-safe label is unchanged by the encoding" <|
                 \_ ->
-                    -- everything after it is read as the query string
-                    Pathfinder.Label "foo?bar"
+                    Pathfinder.Label "internetarchive"
                         |> Route.Pathfinder
                         |> Route.toUrl
-                        |> parse
-                        |> Expect.equal (Just (Route.Pathfinder (Pathfinder.Label "foo")))
+                        |> Expect.equal "/pathfinder/label/internetarchive"
+            , test "links written before the encoding still open" <|
+                \_ ->
+                    -- toUrl used to emit the label raw, so bookmarks and shared
+                    -- links carry an unencoded space. percentDecode leaves those
+                    -- alone, so they keep resolving to the same label.
+                    parse "/pathfinder/label/internet archive"
+                        |> Expect.equal (Just (Route.Pathfinder (Pathfinder.Label "internet archive")))
             ]
         ]

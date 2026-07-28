@@ -4,6 +4,7 @@ import Iso8601
 import List.Extra
 import Model.DateFilter as DateFilter exposing (DateFilterRaw)
 import Plugin.Model
+import Url
 import Url.Builder exposing (QueryParameter, absolute, string)
 import Util.Url.Parser as P exposing (Parser, map, oneOf, s)
 import Util.Url.Parser.Query as Q
@@ -81,11 +82,16 @@ toUrl r =
         Root ->
             absolute [] []
 
+        -- Actor ids and tag labels are free text: a label like "Foo / Bar"
+        -- would otherwise widen the path by a segment and lose the route
+        -- entirely, and a "?" would truncate it. Neither Url.Builder nor
+        -- Util.Url.Parser touches percent encoding on its own, so both ends
+        -- do it here (see freeText).
         Actor s ->
-            absolute [ "actor", s ] []
+            absolute [ "actor", Url.percentEncode s ] []
 
         Label s ->
-            absolute [ "label", s ] []
+            absolute [ "label", Url.percentEncode s ] []
 
         Network c si ->
             let
@@ -135,10 +141,20 @@ parser c =
     oneOf
         [ map Network (parseCurrency c |> P.slash thing)
         , map Path (parseCurrency c |> P.slash (P.s pathSegment) |> P.slash parsePath)
-        , map Label (P.s "label" |> P.slash P.string)
-        , map Actor (P.s "actor" |> P.slash P.string)
+        , map Label (P.s "label" |> P.slash freeText)
+        , map Actor (P.s "actor" |> P.slash freeText)
         , map Root P.top
         ]
+
+
+{-| A path segment holding free text, percent-decoded — the counterpart of the
+`Url.percentEncode` in `toUrl`. `P.string` hands the segment back raw, which is
+right for identifiers that are URL-safe by construction (addresses, hashes) and
+wrong for anything a user or a tagpack can write.
+-}
+freeText : Parser (String -> a) a
+freeText =
+    P.custom "FREETEXT" Url.percentDecode
 
 
 addressSegment : String

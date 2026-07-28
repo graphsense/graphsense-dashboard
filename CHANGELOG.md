@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The open-graph dialog did nothing: the removed `exportGraphics` port was still wired up in `main.js` and threw during startup, which silently killed every subscription registered after it — file open, plugin ports and settings persistence included
 - Search missed hits when the query was pasted from a PDF: letter pairs such as `ff` arrive as single ligature glyphs, which are now folded where the query enters the model, so the request, prefix filter, highlighting and Enter-navigation all agree
 - Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
+- Opening a tag label or actor whose name contains `/`, `?` or `#` did not work: the name went into the URL unescaped, so a slash silently dropped the route and a question mark truncated the name. Labels and actor ids are now percent-encoded in the URL and decoded when it is read; links written before this still open
 
 ## [26.07.3] - 2026-07-17
 
