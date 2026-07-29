@@ -3856,49 +3856,56 @@ userClickedAddressCheckboxInTable plugins id model =
 
 userClickedAggEdgeCheckboxInTable : Plugins -> Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
 userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
-    let
-        id =
-            Id.init data.address.currency data.address.address
-
-        flippedDir =
-            Direction.flip dir
-
-        aggEdgeId =
-            AggEdge.initId id anchorId
-    in
-    if Network.hasAddress id model.network then
-        if Network.hasAggEdge aggEdgeId model.network then
-            removeAggEdge aggEdgeId model
-                |> and
-                    (\newModel ->
-                        if Dict.member id newModel.network.addressAggEdgeMap then
-                            n newModel
-
-                        else
-                            removeAddress id newModel
-                    )
-
-        else
-            ( model.network
-                |> Network.upsertAggEdgeData model.config anchorId dir data
-                |> flip s_network model
-            , BrowserGotRelationsToVisibleNeighbors { id = anchorId, dir = flippedDir, requestIds = [ id ], autoLinkInTraceMode = True }
-                |> Api.GetAddressNeighborsEffect
-                    { currency = Id.network anchorId
-                    , address = Id.id anchorId
-                    , isOutgoing = flippedDir == Outgoing
-                    , onlyIds = Just [ data.address.address ]
-                    , includeLabels = False
-                    , includeActors = False
-                    , pagesize = 1
-                    , nextpage = Nothing
-                    }
-                |> ApiEffect
-                |> List.singleton
-            )
+    -- limited networks: the neighbors endpoint is fully disabled server-side
+    -- (501, 2026-07-29) — never fire the flipped-direction pair request. The
+    -- neighbors table is hidden there anyway; this guards leftover paths.
+    if Config.isLimitedNetwork (Id.network anchorId) then
+        n model
 
     else
-        loadAddressWithPosition plugins True (NextTo ( dir, anchorId )) id model
+        let
+            id =
+                Id.init data.address.currency data.address.address
+
+            flippedDir =
+                Direction.flip dir
+
+            aggEdgeId =
+                AggEdge.initId id anchorId
+        in
+        if Network.hasAddress id model.network then
+            if Network.hasAggEdge aggEdgeId model.network then
+                removeAggEdge aggEdgeId model
+                    |> and
+                        (\newModel ->
+                            if Dict.member id newModel.network.addressAggEdgeMap then
+                                n newModel
+
+                            else
+                                removeAddress id newModel
+                        )
+
+            else
+                ( model.network
+                    |> Network.upsertAggEdgeData model.config anchorId dir data
+                    |> flip s_network model
+                , BrowserGotRelationsToVisibleNeighbors { id = anchorId, dir = flippedDir, requestIds = [ id ], autoLinkInTraceMode = True }
+                    |> Api.GetAddressNeighborsEffect
+                        { currency = Id.network anchorId
+                        , address = Id.id anchorId
+                        , isOutgoing = flippedDir == Outgoing
+                        , onlyIds = Just [ data.address.address ]
+                        , includeLabels = False
+                        , includeActors = False
+                        , pagesize = 1
+                        , nextpage = Nothing
+                        }
+                    |> ApiEffect
+                    |> List.singleton
+                )
+
+        else
+            loadAddressWithPosition plugins True (NextTo ( dir, anchorId )) id model
 
 
 userClickedTx : Id -> Model -> ( Model, List Effect )
