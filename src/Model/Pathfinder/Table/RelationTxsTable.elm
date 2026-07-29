@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table.RelationTxsTable exposing (Model, filter, titleHash, titleTimestamp, titleValue)
+module Model.Pathfinder.Table.RelationTxsTable exposing (Model, filter, titleTimestamp, titleValue)
 
 import Api.Data
 import Api.Request.Addresses
@@ -15,11 +15,6 @@ type alias Model =
     , filter : TransactionFilter.Model
     , exportCSV : ExportCSV.Model
     }
-
-
-titleHash : String
-titleHash =
-    "TxHash"
 
 
 titleValue : String

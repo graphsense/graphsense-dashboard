@@ -1,7 +1,6 @@
 module Support.App exposing
     ( App
     , apiEffects
-    , effects
     , expectEffect
     , html
     , init
@@ -77,11 +76,6 @@ type App
 model : App -> Model
 model (App app) =
     app.model_
-
-
-effects : App -> List Effect
-effects (App app) =
-    app.effects_
 
 
 

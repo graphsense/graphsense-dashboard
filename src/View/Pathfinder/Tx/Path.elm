@@ -1,4 +1,4 @@
-module View.Pathfinder.Tx.Path exposing (inPath, inPathColored, inPathColoredHovered, inPathHovered, labelsSep, outPath, outPathColored, outPathColoredHovered, outPathHovered, pickPathFunction)
+module View.Pathfinder.Tx.Path exposing (labelsSep, pickPathFunction)
 
 import Bezier
 import Css

@@ -1,4 +1,4 @@
-module View.Pathfinder.Legend exposing (ItemType, legendItem, legendView)
+module View.Pathfinder.Legend exposing (ItemType, legendView)
 
 import Config.View as View
 import Css

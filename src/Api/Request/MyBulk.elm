@@ -1,4 +1,4 @@
-module Api.Request.MyBulk exposing (Operation(..), bulkJson, operationVariants, stringFromOperation)
+module Api.Request.MyBulk exposing (Operation(..), bulkJson)
 
 import Api
 import Json.Decode
@@ -24,29 +24,6 @@ type Operation
     | OperationGetTxIo
     | OperationGetExchangeRates
     | OperationGetAddressTagSummary
-
-
-operationVariants : List Operation
-operationVariants =
-    [ OperationGetBlock
-    , OperationListBlockTxs
-    , OperationGetAddress
-    , OperationListAddressTxs
-    , OperationListTagsByAddress
-    , OperationListAddressNeighbors
-    , OperationGetAddressEntity
-    , OperationListAddressLinks
-    , OperationGetEntity
-    , OperationListTagsByEntity
-    , OperationListEntityNeighbors
-    , OperationListEntityTxs
-    , OperationListEntityLinks
-    , OperationListEntityAddresses
-    , OperationGetTx
-    , OperationGetTxIo
-    , OperationGetExchangeRates
-    , OperationGetAddressTagSummary
-    ]
 
 
 stringFromOperation : Operation -> String

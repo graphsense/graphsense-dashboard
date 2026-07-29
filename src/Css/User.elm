@@ -1,12 +1,7 @@
-module Css.User exposing (hovercardRoot, logoutButton, requestLimit, requestLimitRoot, requestReset, root)
+module Css.User exposing (hovercardRoot, logoutButton, requestLimit, requestLimitRoot, requestReset)
 
 import Config.View exposing (Config)
 import Css exposing (..)
-
-
-root : Config -> List Style
-root vc =
-    vc.theme.user.root vc.lightmode
 
 
 hovercardRoot : Config -> List Style

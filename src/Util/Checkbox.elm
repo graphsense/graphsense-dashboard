@@ -3,7 +3,6 @@ module Util.Checkbox exposing
     , bigSize
     , checkbox
     , disabledState
-    , removeState
     , smallSize
     , stateFromBool
     )
@@ -34,11 +33,6 @@ stateFromBool checked =
 disabledState : CheckboxesState
 disabledState =
     CheckboxesStateDisabled
-
-
-removeState : CheckboxesState
-removeState =
-    CheckboxesStateRemove
 
 
 smallSize : CheckboxesSize

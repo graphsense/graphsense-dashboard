@@ -1,4 +1,4 @@
-module View.Pathfinder exposing (annotationHovercardView, bottomCenterPanel, contextMenuView, detailsView, drawDragSelector, dropShadowEdgeHighlight, graph, graphActionsView, graphSvg, originShiftX, searchBoxView, settingsHovercardView, toolbarHovercardView, topCenterPanel, topRightPanel, view)
+module View.Pathfinder exposing (originShiftX, view)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV

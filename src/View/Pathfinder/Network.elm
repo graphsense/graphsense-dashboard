@@ -1,7 +1,6 @@
-module View.Pathfinder.Network exposing (ClusterContext, addresses, relations)
+module View.Pathfinder.Network exposing (addresses, relations)
 
 import Animation
-import Api.Data
 import Basics.Extra exposing (uncurry)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
@@ -18,7 +17,7 @@ import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
 import Plugin.View exposing (Plugins)
-import RemoteData exposing (WebData)
+import RemoteData
 import Set exposing (Set)
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
@@ -30,13 +29,6 @@ import View.Pathfinder.AggEdge as AggEdge
 import View.Pathfinder.ConversionEdge as ConversionEdge
 import View.Pathfinder.Tx as Tx
 import View.Pathfinder.Tx.Utxo exposing (RenderLevel(..))
-
-
-type alias ClusterContext =
-    { clusters : Dict Id (WebData Api.Data.Cluster)
-    , hoveredAddressId : Maybe Id
-    , hoveredClusterId : Maybe Id
-    }
 
 
 addresses : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg

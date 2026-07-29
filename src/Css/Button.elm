@@ -1,4 +1,4 @@
-module Css.Button exposing (button, danger, disabled, iconButton, neutral, primary)
+module Css.Button exposing (button, danger, iconButton, neutral, primary)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -22,11 +22,6 @@ neutral vc =
 danger : Config -> List Style
 danger vc =
     button vc ++ vc.theme.button.danger vc.lightmode
-
-
-disabled : Config -> List Style
-disabled vc =
-    button vc ++ [ cursor notAllowed ] ++ vc.theme.button.disabled vc.lightmode
 
 
 iconButton : Config -> List Style

@@ -1,12 +1,11 @@
-module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, checkboxWithLabelAndTitle, lightModeToggle, radio, radioSmall, tabs, tabsSmallItems, toggle, toggleCell, toggleWithIcons, toggleWithText)
+module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, checkboxWithLabelAndTitle, lightModeToggle, radio, radioSmall, toggle, toggleWithText)
 
 import Css
-import Html.Styled exposing (Html, div)
+import Html.Styled exposing (Html)
 import Html.Styled.Attributes exposing (css, title)
 import Html.Styled.Events exposing (onClick)
 import RecordSetter as Rs
 import Theme.Html.SelectionControls as Sc
-import Theme.Html.SettingsPage as Sp
 import Util.Checkbox as Checkbox
 import Util.View
 
@@ -211,11 +210,6 @@ lightModeToggle { selectedA, msg } =
     toggleWithIconsInternal { selectedA = selectedA, iconA = Nothing, iconB = Nothing, msg = msg }
 
 
-toggleWithIcons : { selectedA : Bool, iconA : Html msg, iconB : Html msg, msg : msg } -> Html msg
-toggleWithIcons { selectedA, iconA, iconB, msg } =
-    toggleWithIconsInternal { selectedA = selectedA, iconA = Just iconA, iconB = Just iconB, msg = msg }
-
-
 toggleWithIconsInternal : { selectedA : Bool, iconA : Maybe (Html msg), iconB : Maybe (Html msg), msg : msg } -> Html msg
 toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
     let
@@ -290,36 +284,3 @@ toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
                 |> Rs.s_iconsDarkMode b
             )
             {}
-
-
-viewTab : Sc.SingleTabSize -> { a | msg : msg, selected : Bool, title : String } -> Html msg
-viewTab size t =
-    Sc.singleTabWithAttributes
-        (Sc.singleTabAttributes
-            |> Rs.s_root [ Util.View.onClickWithStop t.msg, css [ Css.cursor Css.pointer ] ]
-        )
-        { root =
-            { state =
-                if t.selected then
-                    Sc.SingleTabStateSelected
-
-                else
-                    Sc.SingleTabStateNeutral
-            , size = size
-            , tabLabel = t.title
-            }
-        }
-
-
-tabs : Sc.SingleTabSize -> List { title : String, selected : Bool, msg : msg } -> Html msg
-tabs size tbs =
-    div
-        [ Html.Styled.Attributes.css
-            Sp.settingsPageSettingsTabsSettingsTabs_details.styles
-        ]
-        (tbs |> List.map (viewTab size))
-
-
-tabsSmallItems : List { title : String, selected : Bool, msg : msg } -> List (Html msg)
-tabsSmallItems =
-    List.map (viewTab Sc.SingleTabSizeSmall)

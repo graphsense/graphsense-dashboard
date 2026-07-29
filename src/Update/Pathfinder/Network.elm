@@ -21,7 +21,6 @@ module Update.Pathfinder.Network exposing
     , insertFetchedEdge
     , resolveOverlaps
     , resolveOverlapsExcept
-    , resolveOverlapsOnly
     , rupsertAggEdge
     , snapToGrid
     , trySetHoverConversionLoop

@@ -1,6 +1,5 @@
 module Support.Env exposing
-    ( locale
-    , updateConfig
+    ( updateConfig
     , updatePlugins
     , viewConfig
     , viewPlugins

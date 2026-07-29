@@ -1,12 +1,11 @@
-module View.Dialog exposing (body, headRow, part, view)
+module View.Dialog exposing (part, view)
 
 import Config.View exposing (Config)
 import Css.Dialog as Css
 import Css.View
-import FontAwesome
-import Html.Styled exposing (Html, button, div, h4, li, span, text, ul)
+import Html.Styled exposing (Html, div, h4, li, text, ul)
 import Html.Styled.Attributes exposing (css)
-import Html.Styled.Events exposing (onClick, stopPropagationOn)
+import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import Model exposing (Msg(..))
 import Model.Dialog exposing (ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig, PluginConfig)
@@ -152,41 +151,6 @@ part vc title content =
             ]
             :: content
         )
-
-
-headRow : Config -> String -> Maybe msg -> Html msg
-headRow vc title onClose =
-    div
-        [ Css.headRow vc |> css
-        ]
-        [ title
-            |> Locale.string vc.locale
-            |> text
-            |> List.singleton
-            |> span
-                [ Css.headRowText vc |> css
-                ]
-        , onClose
-            |> Maybe.map
-                (\click ->
-                    button
-                        [ Css.headRowClose vc |> css
-                        , onClick click
-                        ]
-                        [ FontAwesome.icon FontAwesome.times
-                            |> Html.Styled.fromUnstyled
-                        ]
-                )
-            |> Maybe.withDefault Util.View.none
-        ]
-
-
-body : Config -> { onSubmit : msg } -> List (Html msg) -> Html msg
-body vc { onSubmit } =
-    Html.Styled.form
-        [ Css.body vc |> css
-        , Html.Styled.Events.onSubmit onSubmit
-        ]
 
 
 error : Config -> ErrorConfig Msg -> Html Msg

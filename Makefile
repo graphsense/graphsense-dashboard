@@ -205,8 +205,29 @@ format-plugins:
 lint: 
 	npx elm-review
 
-lint-fix: 
+lint-fix:
 	npx elm-review --fix-all
+
+# Dead-code analysis (unused exports, type constructors and constructor args).
+# Deliberately separate from `lint`: elm.json's source-directories are generated
+# from $(CONFIG), so elm-review only sees the plugins that are actually checked
+# out. With none registered — as in CI, which uses config/Config.elm.tmp — the
+# ~40 src/ exports that only plugins use are reported as dead, and removing them
+# breaks the plugin repositories. So refuse to run in that case.
+lint-deadcode: lint-deadcode-guard
+	npx elm-review --config review-deadcode
+
+lint-deadcode-fix: lint-deadcode-guard
+	npx elm-review --config review-deadcode --fix-all
+
+lint-deadcode-guard:
+	@if [ -z "$(PLUGINS)" ]; then \
+		echo "lint-deadcode: no plugins registered in $(CONFIG)."; \
+		echo "Dead-code analysis needs a checkout with every plugin present,"; \
+		echo "otherwise exports used only by plugins are reported as unused."; \
+		exit 1; \
+	fi
+	@echo "lint-deadcode: analysing with plugins: $(PLUGINS)"
 
 lint-plugins:
 	@for p in $(PLUGINS); do \
@@ -363,4 +384,4 @@ tag-version:
 	git tag $(VERSION)
 	@echo "Created version $(VERSION)"
 
-.PHONY: openapi serve test check-lang api-fixtures e2e e2e-ui build-e2e e2e-install format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet
+.PHONY: openapi serve test check-lang api-fixtures e2e e2e-ui build-e2e e2e-install format format-plugins lint lint-fix lint-deadcode lint-deadcode-fix lint-deadcode-guard lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet

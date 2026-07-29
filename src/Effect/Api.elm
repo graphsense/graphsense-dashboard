@@ -1,4 +1,4 @@
-module Effect.Api exposing (Effect(..), SearchRequestConfig, UserInfo, defaultSearchConfig, effectToTracker, isOutgoingToAddressDirection, isOutgoingToDirection, isUserEndpointConfigured, listWithMaybes, map, perform, retryToken, send, withAuthorization)
+module Effect.Api exposing (Effect(..), SearchRequestConfig, UserInfo, defaultSearchConfig, effectToTracker, isUserEndpointConfigured, map, perform, retryToken)
 
 import Api
 import Api.Data
@@ -1419,15 +1419,6 @@ isOutgoingToDirection isOutgoing =
 
     else
         Api.Request.Clusters.DirectionIn
-
-
-isOutgoingToAddressDirection : Bool -> Api.Request.Addresses.Direction
-isOutgoingToAddressDirection isOutgoing =
-    if isOutgoing then
-        Api.Request.Addresses.DirectionOut
-
-    else
-        Api.Request.Addresses.DirectionIn
 
 
 userInfoDecoder : Json.Decode.Decoder UserInfo

@@ -1,4 +1,4 @@
-module Model.Graph.Browser exposing (Row(..), ScrollPos, TableLink, Value(..))
+module Model.Graph.Browser exposing (Row(..), TableLink, Value(..))
 
 {-| Slim, reusable property-box primitives.
 
@@ -44,10 +44,3 @@ type Row r i msg
     | Image (Maybe String)
     | Rule
     | OptionalRow (Row r i msg) Bool
-
-
-type alias ScrollPos =
-    { scrollTop : Float
-    , contentHeight : Int
-    , containerHeight : Int
-    }

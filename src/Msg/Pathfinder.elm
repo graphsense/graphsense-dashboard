@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TextTooltipConfig)
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -168,17 +168,6 @@ type Msg
     | TooltipMsg (Tooltip.Msg TooltipType)
     | RepositionTooltip
     | InternalExpandSpecificTxAndAddress Id Id Direction Int
-
-
-type alias TextTooltipConfig =
-    { domId : String, text : String }
-
-
-type alias ChangeTooltipConfig =
-    { domId : String
-    , confidence : Float
-    , heuristics : List String
-    }
 
 
 type OverlayWindows

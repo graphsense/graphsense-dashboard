@@ -1,12 +1,7 @@
-module Css.Stats exposing (currency, currencyBackground, currencyBackgroundPath, currencyHeading, loadingSpinner, root, stats, statsBadge, statsBadgeContainer, statsTable, statsTableCellKey, statsTableCellValue, statsTableInnerWrapper, statsTableRow, statsTableWrapper)
+module Css.Stats exposing (currency, currencyBackground, currencyBackgroundPath, currencyHeading, loadingSpinner, stats, statsBadge, statsBadgeContainer, statsTable, statsTableCellKey, statsTableCellValue, statsTableInnerWrapper, statsTableRow, statsTableWrapper)
 
 import Config.View exposing (Config)
 import Css exposing (..)
-
-
-root : Config -> List Style
-root vc =
-    vc.theme.stats.root
 
 
 stats : Config -> List Style

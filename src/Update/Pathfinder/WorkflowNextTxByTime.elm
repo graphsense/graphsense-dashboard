@@ -1,4 +1,4 @@
-module Update.Pathfinder.WorkflowNextTxByTime exposing (Config, Error(..), Msg, Workflow, start, startBetween, startByHeight, startByTime, update)
+module Update.Pathfinder.WorkflowNextTxByTime exposing (Config, Error(..), Msg, Workflow, start, startBetween, startByHeight, update)
 
 import Api.Data
 import Api.Request.Addresses exposing (Order_(..))
@@ -7,7 +7,6 @@ import Effect.Api as Api
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import RecordSetter exposing (s_value)
-import Time
 import Workflow
 
 
@@ -30,17 +29,6 @@ type Error
 
 type alias Workflow =
     Workflow.Workflow Api.Data.Tx Msg Error
-
-
-startByTime : String -> Time.Posix -> Workflow
-startByTime network timestamp =
-    BrowserGotBlockHeight
-        |> Api.GetBlockByDateEffect
-            { currency = network
-            , datetime = timestamp
-            }
-        |> List.singleton
-        |> Workflow.Next
 
 
 startByHeight : Config -> Int -> String -> Workflow

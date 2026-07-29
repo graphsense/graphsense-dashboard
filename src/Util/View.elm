@@ -1,11 +1,10 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, conditionalHide, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyableLongIdentifier, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, makeValuesList, noTextSelection, none, onClickWithStop, p, pointer, switch, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Color as BColor
 import Config.View as View
 import Css exposing (Color, Style, paddingLeft, px)
-import Css.Graph
 import Css.View as Css
 import Dict
 import FontAwesome
@@ -14,7 +13,7 @@ import Hovercard
 import Html as BHtml
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (attribute, classList, css, src, title)
+import Html.Styled.Attributes exposing (attribute, css, src, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import List.Extra
@@ -74,16 +73,6 @@ testKey =
 none : Html msg
 none =
     span [] []
-
-
-nona : Attribute msg
-nona =
-    classList []
-
-
-aa : (a -> Attribute msg) -> Maybe a -> List (Attribute msg) -> List (Attribute msg)
-aa toAttr value =
-    (++) (value |> Maybe.map (toAttr >> List.singleton) |> Maybe.withDefault [])
 
 
 toCssColor : BColor.Color -> Color
@@ -160,30 +149,6 @@ truncateLongIdentifierWithLengths start end str =
         str
 
 
-setAlpha : Float -> BColor.Color -> BColor.Color
-setAlpha alpha =
-    BColor.toRgba
-        >> (\c -> { c | alpha = alpha })
-        >> BColor.fromRgba
-
-
-hovercardFullViewPort : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
-hovercardFullViewPort vc element zIndex =
-    Hovercard.view
-        (Hovercard.defaultConfig
-            |> Hovercard.withTickLength 16
-            |> Hovercard.withZIndex zIndex
-            |> Hovercard.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
-            |> Hovercard.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
-            |> Hovercard.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
-        )
-        element
-        (Css.hovercard vc
-            |> List.map (\( k, v ) -> Html.Attributes.style k v)
-        )
-        >> Html.Styled.fromUnstyled
-
-
 hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
 hovercard vc element zIndex =
     Hovercard.view
@@ -205,11 +170,6 @@ hovercard vc element zIndex =
 switch : View.Config -> List (Attribute msg) -> String -> Html msg
 switch =
     switchInternal False
-
-
-onOffSwitch : View.Config -> List (Attribute msg) -> String -> Html msg
-onOffSwitch =
-    switchInternal True
 
 
 switchInternal : Bool -> View.Config -> List (Attribute msg) -> String -> Html msg
@@ -267,11 +227,6 @@ addDot s =
     s ++ "."
 
 
-contextMenuRule : View.Config -> List (Html msg)
-contextMenuRule vc =
-    [ Html.Styled.hr [ Css.Graph.contextMenuRule vc |> css ] [] ]
-
-
 copyableLongIdentifier : View.Config -> List (Attribute msg) -> String -> Html msg
 copyableLongIdentifier vc attr identifier =
     span
@@ -284,21 +239,6 @@ copyableLongIdentifier vc attr identifier =
                     :: attr
                 )
         , copyIcon vc identifier
-        ]
-
-
-copyableLongIdentifierPathfinder : View.Config -> List (Attribute msg) -> String -> Html msg
-copyableLongIdentifierPathfinder vc attr identifier =
-    span
-        [ Css.longIdentifier vc |> css
-        ]
-        [ text (truncateLongIdentifierWithLengths 8 4 identifier)
-            |> List.singleton
-            |> span
-                (title identifier
-                    :: attr
-                )
-        , copyIconPathfinder vc identifier
         ]
 
 
@@ -320,11 +260,6 @@ copyIconPathfinderFixed =
 copyIconPathfinderAbove : View.Config -> String -> Html msg
 copyIconPathfinderAbove =
     copyIconWithAttrPathfinderInternal False Above False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
-
-
-copyIconWithoutHint : View.Config -> String -> Html msg
-copyIconWithoutHint =
-    copyIconWithAttrPathfinder True (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
 
 
 copyIconWithAttrPathfinder : Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
@@ -501,15 +436,6 @@ copyIconWithAttr attr vc value =
             [ FontAwesome.icon FontAwesome.clone
                 |> Html.Styled.fromUnstyled
             ]
-        ]
-
-
-longIdentifier : View.Config -> String -> Html msg
-longIdentifier vc address =
-    span
-        [ Css.longIdentifier vc |> css
-        ]
-        [ text (truncateLongIdentifier address)
         ]
 
 

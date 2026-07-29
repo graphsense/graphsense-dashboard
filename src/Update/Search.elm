@@ -1,4 +1,4 @@
-module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, triggerSearch, update)
+module Update.Search exposing (clear, filterByPrefix, triggerSearch, update)
 
 import Api.Data
 import Autocomplete

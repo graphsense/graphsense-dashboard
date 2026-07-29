@@ -1,4 +1,4 @@
-module Components.ResizeSensor exposing (Size, decoder, view)
+module Components.ResizeSensor exposing (Size, view)
 
 {-| Invisible sensor that reports size changes of its parent element.
 
@@ -10,7 +10,7 @@ you want to track; it does not affect layout.
 The observer also fires once right after mounting, so consumers receive the
 initial size without a separate measurement.
 
-@docs Size, decoder, view
+@docs Size, view
 
 -}
 

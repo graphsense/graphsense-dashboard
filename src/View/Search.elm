@@ -1,4 +1,4 @@
-module View.Search exposing (SearchConfig, SearchConfigWithMoreCss, default, search, searchWithMoreCss)
+module View.Search exposing (SearchConfigWithMoreCss, default, searchWithMoreCss)
 
 import Autocomplete
 import Autocomplete.Styled as Autocomplete
@@ -23,14 +23,6 @@ import Util.Data as Data
 import Util.View exposing (loadingSpinner)
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
-
-
-type alias SearchConfig =
-    { css : String -> List Style
-    , resultsAsLink : Bool
-    , multiline : Bool
-    , showIcon : Bool
-    }
 
 
 type alias SearchConfigWithMoreCss msg =
@@ -72,30 +64,6 @@ default =
     , dropdownResult = []
     , inputAttributes = []
     }
-
-
-search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
-search plugins vc sc model =
-    searchWithMoreCss plugins
-        vc
-        { css = sc.css
-        , resultsAsLink = sc.resultsAsLink
-        , multiline = sc.multiline
-        , showIcon = sc.showIcon
-        , formCss = []
-        , frameCss = []
-        , button = []
-        , resultLine = []
-        , resultLineHighlighted = []
-        , resultGroup = []
-        , resultGroupTitle = []
-        , resultLineIcon = []
-        , resultTextEmphasized = []
-        , dropdownFrame = []
-        , dropdownResult = []
-        , inputAttributes = []
-        }
-        model
 
 
 searchWithMoreCss : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg

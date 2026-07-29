@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (loadFirstTxsPage, makeExportCSVConfig, prepareCSV, syncByAddress, update, updateTransactionTable)
+module Update.Pathfinder.AddressDetails exposing (makeExportCSVConfig, syncByAddress, update)
 
 import Api.Data
 import Api.Request.Addresses
@@ -1073,10 +1073,3 @@ prepareCSV locModel network data =
                 |> Util.Csv.string
              )
            ]
-
-
-updateTransactionTable : (TransactionTable.Model -> TransactionTable.Model) -> Model -> Model
-updateTransactionTable f model =
-    model.txs
-        |> RemoteData.map (\txs -> { model | txs = f txs |> RemoteData.Success })
-        |> RemoteData.withDefault model

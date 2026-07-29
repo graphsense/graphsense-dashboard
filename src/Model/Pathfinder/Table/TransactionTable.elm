@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table.TransactionTable exposing (MaxChangeHopsLimitData, Model, filter, getQuickFilters, maxChangeHopsLimit, quickFilterFromTx, titleHash, titleTimestamp, titleValue)
+module Model.Pathfinder.Table.TransactionTable exposing (MaxChangeHopsLimitData, Model, filter, getQuickFilters, quickFilterFromTx, titleTimestamp, titleValue)
 
 import Api.Data
 import Api.Request.Addresses
@@ -26,16 +26,6 @@ type alias Model =
     , filter : TransactionFilter.Model
     , maxChangeHopsLimit : Maybe MaxChangeHopsLimitData
     }
-
-
-maxChangeHopsLimit : Model -> Maybe MaxChangeHopsLimitData
-maxChangeHopsLimit model =
-    model.maxChangeHopsLimit
-
-
-titleHash : String
-titleHash =
-    "TxHash"
 
 
 titleValue : String

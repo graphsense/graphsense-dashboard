@@ -3,7 +3,6 @@
   "automatically created by": "elm-review suppress",
   "learn more": "elm-review suppress --help",
   "suppressions": [
-    { "count": 3, "filePath": "src/Log.elm" },
-    { "count": 1, "filePath": "src/Config/Graph.elm" }
+    { "count": 2, "filePath": "src/Log.elm" }
   ]
 }

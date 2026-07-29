@@ -1,4 +1,4 @@
-module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, addressRouteWithFilter, aggEdgeRoute, parser, pathRoute, pluginRoute, toUrl, txRoute)
+module Route.Pathfinder exposing (AddressHopType(..), Config, PathHopType(..), Route(..), Thing(..), addressRoute, addressRouteWithFilter, aggEdgeRoute, parser, pathRoute, toUrl, txRoute)
 
 import Iso8601
 import List.Extra
@@ -247,21 +247,3 @@ aggEdgeRoute : { network : String, a : String, b : String } -> Route
 aggEdgeRoute { network, a, b } =
     Relation a b
         |> Network network
-
-
-pluginRoute : ( String, String ) -> Route
-pluginRoute ( ns, url ) =
-    ns
-        |> Plugin.Model.namespaceToPluginType
-        |> Maybe.map
-            (\type_ ->
-                ( type_
-                , if String.startsWith "/" url then
-                    String.dropLeft 1 url
-
-                  else
-                    url
-                )
-                    |> Plugin
-            )
-        |> Maybe.withDefault Root

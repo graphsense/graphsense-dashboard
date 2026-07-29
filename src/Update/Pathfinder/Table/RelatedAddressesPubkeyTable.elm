@@ -1,4 +1,4 @@
-module Update.Pathfinder.Table.RelatedAddressesPubkeyTable exposing (appendAddresses, itemsPerPage, loadData, loadFirstPage, tableConfig, updateTable)
+module Update.Pathfinder.Table.RelatedAddressesPubkeyTable exposing (appendAddresses, loadFirstPage, tableConfig, updateTable)
 
 import Api.Data
 import Api.Request.Addresses

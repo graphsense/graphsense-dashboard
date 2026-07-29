@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.TagsTable exposing (config, styles)
+module View.Pathfinder.Table.TagsTable exposing (config)
 
 import Api.Data
 import Basics.Extra exposing (flip)

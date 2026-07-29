@@ -1,6 +1,5 @@
-module Components.Table exposing (Filter, Table, UpdateSearchTerm(..), appendData, asCsv, filterData, filterTable, filterTheData, init, initSorted, initUnsorted, searchData, setData, sortBy)
+module Components.Table exposing (Filter, Table, UpdateSearchTerm(..), appendData, filterTable, initUnsorted, setData, sortBy)
 
-import Csv.Encode
 import Table
 
 
@@ -17,22 +16,6 @@ type alias Table a =
 type alias Filter a =
     { search : String -> a -> Bool
     , filter : a -> Bool
-    }
-
-
-init : String -> Table a
-init =
-    initSorted True
-
-
-initSorted : Bool -> String -> Table a
-initSorted asc col =
-    { data = []
-    , filtered = []
-    , loading = False
-    , state = Table.sortBy col asc
-    , nextpage = Nothing
-    , searchTerm = Nothing
     }
 
 
@@ -81,39 +64,6 @@ setData config data table =
 type UpdateSearchTerm
     = Update (Maybe String)
     | Keep
-
-
-searchData : Filter a -> UpdateSearchTerm -> Table a -> Table a
-searchData config searchTerm table =
-    let
-        t =
-            { table
-                | searchTerm =
-                    case searchTerm of
-                        Update st ->
-                            st
-
-                        Keep ->
-                            table.searchTerm
-            }
-    in
-    filterData config t
-
-
-filterData : Filter a -> Table a -> Table a
-filterData config table =
-    { table
-        | filtered = filterTheData config table table.data
-    }
-
-
-asCsv : (a -> List ( String, String )) -> Table a -> String
-asCsv prepare { filtered } =
-    filtered
-        |> Csv.Encode.encode
-            { encoder = Csv.Encode.withFieldNames prepare
-            , fieldSeparator = ','
-            }
 
 
 filterTable : (a -> Bool) -> Table a -> Table a

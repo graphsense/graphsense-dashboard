@@ -1,4 +1,4 @@
-module Init.Pathfinder.TxDetails exposing (dummyIoTableConfig, init, initIoTable, initSubTxTable)
+module Init.Pathfinder.TxDetails exposing (dummyIoTableConfig, init)
 
 import Api.Data
 import Basics.Extra exposing (flip)

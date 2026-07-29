@@ -1,4 +1,4 @@
-module View.Graph.Browser exposing (browseRow, browseValue, frame, properties, propertyBox, tableLink, tableSeparator)
+module View.Graph.Browser exposing (properties, propertyBox)
 
 {-| Slim, reusable property-box renderer.
 
@@ -28,31 +28,6 @@ import Util.Flags exposing (getFlagEmoji)
 import Util.Graph
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Locale as Locale
-
-
-frame : View.Config -> Bool -> List (Html msg) -> Html msg
-frame vc visible =
-    let
-        width =
-            vc.size
-                |> Maybe.map .width
-                |> Maybe.withDefault 0
-    in
-    List.intersperse (tableSeparator vc)
-        >> div
-            [ Css.frame vc visible
-                |> css
-            ]
-        >> List.singleton
-        >> div [ Css.root vc width |> css ]
-
-
-tableSeparator : View.Config -> Html msg
-tableSeparator vc =
-    div
-        [ Css.tableSeparator vc |> css
-        ]
-        []
 
 
 propertyBox : View.Config -> List (Html msg) -> Html msg

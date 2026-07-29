@@ -1,21 +1,19 @@
-module Components.Tooltip exposing (Config, Effect, Model, Msg(..), Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, tooltipRow, tooltipRowCustomValue, update, val, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withKeepOpenOnHover, withMaxHeight, withMinWidth, withOpenDelay, withViewport, withZIndex)
+module Components.Tooltip exposing (Config, Effect, Model, Msg(..), Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, update, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withKeepOpenOnHover, withMaxHeight, withMinWidth, withOpenDelay, withZIndex)
 
 import Basics.Extra exposing (flip)
 import Color exposing (Color)
-import Config.View as View exposing (Config)
+import Config.View exposing (Config)
 import Css
 import Hovercard
 import Html.Styled exposing (Attribute, Html, div, toUnstyled)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick, onMouseLeave, onMouseOver)
 import Process
-import RecordSetter as Rs
 import Task
 import Theme.Html.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util exposing (n)
 import Util.View exposing (none)
-import View.Locale as Locale
 
 
 type Model a
@@ -120,11 +118,6 @@ withBackgroundColor backgroundColor (Config cfg) =
 withBorderWidth : Float -> Config a msg -> Config a msg
 withBorderWidth borderWidth (Config cfg) =
     Config { cfg | borderWidth = borderWidth }
-
-
-withViewport : Viewport -> Config a msg -> Config a msg
-withViewport vp (Config c) =
-    Config { c | viewport = Just vp }
 
 
 withFixed : Config a msg -> Config a msg
@@ -402,42 +395,6 @@ view (Config config) (Model model) view_ =
                         )
             )
         |> Maybe.withDefault none
-
-
-val : View.Config -> String -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
-val vc str =
-    { firstRowText = Locale.string vc.locale str
-    , secondRowText = ""
-    , secondRowVisible = False
-    }
-
-
-baseRowStyle : List Css.Style
-baseRowStyle =
-    [ Css.width (Css.pct 100) ]
-
-
-tooltipRow : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRowText : String, secondRowVisible : Bool, secondRowText : String } } -> Html msg
-tooltipRow =
-    GraphComponents.tooltipRowWithAttributes
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_root [ css baseRowStyle ]
-            |> Rs.s_tooltipRowLabel [ css [ Css.minWidth (Css.px 90) ] ]
-            |> Rs.s_firstValue [ css [ Css.property "white-space" "wrap", Css.textAlign Css.right ] ]
-        )
-
-
-tooltipRowCustomValue : String -> Html msg -> Html msg
-tooltipRowCustomValue title rowValue =
-    GraphComponents.tooltipRowWithInstances
-        (GraphComponents.tooltipRowAttributes
-            |> Rs.s_root [ css baseRowStyle ]
-        )
-        (GraphComponents.tooltipRowInstances |> Rs.s_tooltipRowValue (Just rowValue))
-        { tooltipRowLabel = { title = title }
-        , tooltipRowValue =
-            { firstRowText = "", secondRowText = "", secondRowVisible = False }
-        }
 
 
 perform : Effect -> Cmd (Msg a)

@@ -1,14 +1,12 @@
-module Update.Graph.Transform exposing (move, politeMove, pop, transition, update, updateByBoundingBox, vector, wheel)
+module Update.Graph.Transform exposing (move, politeMove, transition, update, updateByBoundingBox, vector, wheel)
 
 import Basics.Extra exposing (flip)
-import Bounce
 import Ease
 import Init.Graph.Transform exposing (initTransitioning)
 import Model.Graph.Coords as Graph exposing (BBox)
 import Model.Graph.Transform as Transform exposing (..)
 import Number.Bounded as Bounded
 import RecordSetter exposing (..)
-import Set
 import Update.Graph.Coords exposing (mergeBoundingBoxes)
 
 
@@ -216,25 +214,3 @@ transition delta model =
                     else
                         Settled t.to
     }
-
-
-pop : Model comparable -> ( Model comparable, Bool )
-pop model =
-    let
-        newBounce =
-            Bounce.pop model.bounce
-
-        isSteady =
-            Bounce.steady newBounce
-    in
-    ( { model
-        | bounce = newBounce
-        , collectingAddedEntityIds =
-            if isSteady then
-                Set.empty
-
-            else
-                model.collectingAddedEntityIds
-      }
-    , isSteady
-    )

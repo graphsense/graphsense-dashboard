@@ -1,4 +1,4 @@
-module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, rule, setDisabled, view)
+module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, setDisabled, view)
 
 import Config.View as View
 import Css
@@ -30,21 +30,6 @@ type alias ContextMenuItemInternal msg =
     , action : ContextMenuItemActions msg
     , disabled : Bool
     }
-
-
-rule : View.Config -> Html msg
-rule _ =
-    Html.hr
-        [ css
-            [ Css.property "border" "none"
-            , Css.property "background-color" Colors.grey50
-            , Css.width (Css.pct 95)
-            , Css.height (Css.px 1)
-            , Css.marginTop (Css.px 3)
-            , Css.marginBottom (Css.px 2)
-            ]
-        ]
-        []
 
 
 view : View.Config -> ContextMenuItem msg -> Html msg

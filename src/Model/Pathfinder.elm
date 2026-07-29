@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -13,7 +13,6 @@ import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords, isInBBox)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
-import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
@@ -140,11 +139,6 @@ getImageExport ex =
 
         ExportingImage e ->
             e
-
-
-getLoadedAddress : Model -> Id -> Maybe Address
-getLoadedAddress m id =
-    Dict.get id m.network.addresses
 
 
 getHavingTags : Model -> Id -> HavingTags

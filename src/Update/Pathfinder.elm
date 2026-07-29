@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (addMarginPathfinder, bboxWithUnit, continueImageExport, deserialize, endExportRendering, exportGraph, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, multiSearch, removeAddress, removeAggEdge, resultLineToRoute, unselect, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (continueImageExport, deserialize, endExportRendering, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, multiSearch, resultLineToRoute, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data

@@ -1,4 +1,4 @@
-module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, errorDefault, fromHttpError, fromHttpErrorWithMoreInfo, getMoved, infoDefault, map, peek, perform, pop, setMoved, successDefault, update)
+module Model.Notification exposing (Effect, Model, Msg, Notification(..), NotificationData, add, addMany, empty, errorDefault, fromHttpError, fromHttpErrorWithMoreInfo, getMoved, infoDefault, map, peek, perform, pop, successDefault, update)
 
 import Basics.Extra exposing (flip)
 import Http

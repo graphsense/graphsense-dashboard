@@ -1,5 +1,5 @@
 module Util.Url.Parser.Query exposing
-    ( Parser, string, int
+    ( Parser, string
     , map
     )
 
@@ -20,7 +20,7 @@ parameter by the `&` character.
 
 # Parse Query Parameters
 
-@docs Parser, string, int
+@docs Parser, string
 
 
 # Mapping
@@ -70,35 +70,6 @@ string key =
             case stringList of
                 [ str ] ->
                     Just str
-
-                _ ->
-                    Nothing
-
-
-{-| Handle `Int` parameters. Maybe you want to show paginated search results:
-
-
-    page : Parser (Maybe Int)
-    page =
-        int "page"
-
-    -- ?page=2        == Just 2
-    -- ?page=17       == Just 17
-    -- ?page=two      == Nothing
-    -- ?sort=date     == Nothing
-    -- ?page=2&page=3 == Nothing
-
-Check out [`custom`](#custom) if you need to handle multiple `page` parameters
-or something like that.
-
--}
-int : String -> Parser (Maybe Int)
-int key =
-    custom key <|
-        \stringList ->
-            case stringList of
-                [ str ] ->
-                    String.toInt str
 
                 _ ->
                     Nothing

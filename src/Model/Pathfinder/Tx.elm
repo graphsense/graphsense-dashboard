@@ -6,12 +6,8 @@ module Model.Pathfinder.Tx exposing
     , TxType(..)
     , UnsupportedConversion
     , UtxoTx
-    , addressToCoords
-    , avg
-    , calcCoords
     , getAccountTx
     , getAccountTxRaw
-    , getAsset
     , getAssetFromRawTx
     , getCoords
     , getInputAddressIds
@@ -21,10 +17,7 @@ module Model.Pathfinder.Tx exposing
     , getOutputAddressIds
     , getOutputValueForAddressFromRawTx
     , getOutputs
-    , getRawBaseNetworkForTxType
     , getRawBaseTxHashForTx
-    , getRawBaseTxHashForTxType
-    , getRawBaseTxIdForTxType
     , getRawTimestamp
     , getRawTimestampForRelationTx
     , getRawTx
@@ -34,7 +27,6 @@ module Model.Pathfinder.Tx exposing
     , getTxIdForTx
     , getTxIdForTxType
     , getUtxoTx
-    , hasAddress
     , hasInput
     , hasOutput
     , ioToId
@@ -52,12 +44,10 @@ import Api.Data
 import Dict exposing (Dict)
 import Init.Pathfinder.Id as Id
 import List.Extra
-import List.Nonempty as NList
 import Model.Direction exposing (Direction(..))
-import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Graph.Coords exposing (Coords)
 import Model.Locale as Locale
 import Model.Pathfinder.Address exposing (Address)
-import Model.Pathfinder.Error exposing (Error(..), InternalError(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Set
 import Tuple exposing (pair)
@@ -134,16 +124,6 @@ getRawTx tx =
             Api.Data.TxTxUtxo raw
 
 
-getAsset : Tx -> String
-getAsset tx =
-    case tx.type_ of
-        Account { raw } ->
-            raw.currency
-
-        Utxo { raw } ->
-            raw.currency
-
-
 getAssetFromRawTx : Api.Data.Tx -> String
 getAssetFromRawTx tx =
     case tx of
@@ -157,11 +137,6 @@ getAssetFromRawTx tx =
 getNetwork : Tx -> String
 getNetwork tx =
     getRawBaseNetworkForTxType tx.type_
-
-
-hasAddress : Id -> Tx -> Bool
-hasAddress id tx =
-    hasOutput id tx || hasInput id tx
 
 
 isRawInFlow : Id -> Tx -> Bool
@@ -282,38 +257,10 @@ getOutputAddressIds tx =
                 |> List.map (Id.init raw.currency)
 
 
-calcCoords : NList.Nonempty Address -> Coords
-calcCoords =
-    NList.map addressToCoords >> Coords.avg
-
-
 getCoords : Tx -> Maybe Coords
 getCoords tx =
     Coords tx.x (Animation.animate tx.clock tx.y)
         |> Just
-
-
-avg : (Address -> Float) -> List Address -> Result Error Float
-avg field items =
-    if List.isEmpty items then
-        items
-            |> List.map (.id >> AddressNotFoundInDict >> InternalError)
-            |> Errors
-            |> Err
-
-    else
-        let
-            its =
-                List.map field items
-        in
-        List.sum its
-            / toFloat (List.length its)
-            |> Ok
-
-
-addressToCoords : Address -> Coords
-addressToCoords =
-    toFinalCoords
 
 
 toFinalCoords : { t | x : Float, y : Animation } -> Coords
@@ -409,13 +356,6 @@ getRawBaseNetworkForTxType tx =
 
         Utxo t ->
             t.raw.currency
-
-
-getRawBaseTxIdForTxType : TxType -> Id
-getRawBaseTxIdForTxType type_ =
-    getRawBaseTxHashForTxType type_
-        |> Id.init
-            (getRawBaseNetworkForTxType type_)
 
 
 getTxIdForAddressTx : Api.Data.AddressTx -> Id

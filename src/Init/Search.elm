@@ -1,8 +1,7 @@
-module Init.Search exposing (init, initSearchAddressAndTxs, initSearchAll, initWithRecents)
+module Init.Search exposing (init, initSearchAddressAndTxs, initWithRecents)
 
-import Api.Data
 import Autocomplete
-import Model.Search exposing (Model, ResultLine, SearchType(..), getLatestBlocks, minSearchInputLength)
+import Model.Search exposing (Model, ResultLine, SearchType(..), minSearchInputLength)
 
 
 init : SearchType -> Model
@@ -18,14 +17,6 @@ initWithRecents searchType recents =
     , recentSearches = recents
     , userInitiatedFocus = False
     }
-
-
-initSearchAll : Maybe Api.Data.Stats -> SearchType
-initSearchAll stats =
-    SearchAll
-        { latestBlocks = Maybe.map getLatestBlocks stats |> Maybe.withDefault []
-        , pickingCurrency = False
-        }
 
 
 initSearchAddressAndTxs : Maybe (List String) -> SearchType

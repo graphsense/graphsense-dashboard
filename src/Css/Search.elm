@@ -1,4 +1,4 @@
-module Css.Search exposing (button, form, frame, resultGroup, resultGroupList, resultGroupTitle, resultLine, resultLineHighlighted, resultLineIcon, textarea)
+module Css.Search exposing (button, form, frame, resultGroup, resultGroupList, resultGroupTitle, resultLine, resultLineHighlighted, resultLineIcon)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -17,15 +17,6 @@ form vc flex =
 frame : Config -> List Style
 frame vc =
     vc.theme.search.frame
-
-
-textarea : Config -> String -> List Style
-textarea vc input =
-    [ overflow hidden
-    , resize none
-    , rem 25 |> width
-    ]
-        ++ vc.theme.search.textarea vc.lightmode input
 
 
 resultGroup : Config -> List Style

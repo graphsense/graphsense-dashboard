@@ -1,7 +1,6 @@
 module Route exposing
     ( Config
     , Route(..)
-    , homeRoute
     , parse
     , pathfinderRoute
     , pluginRoute
@@ -71,11 +70,6 @@ parser c =
         , map Home top
         , map Plugin (remainder Plugin.parseUrl)
         ]
-
-
-homeRoute : Route
-homeRoute =
-    Home
 
 
 statsRoute : Route

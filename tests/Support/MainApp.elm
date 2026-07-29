@@ -1,13 +1,9 @@
 module Support.MainApp exposing
     ( App
-    , apiEffects
-    , effects
     , expectEffect
     , html
-    , init
     , initAt
     , model
-    , respond
     , step
     , steps
     , title
@@ -43,16 +39,13 @@ not on the boot request that asked for it.
 
 import Browser
 import Dict
-import Effect.Api
-import Effect.Pathfinder
-import Effect.Search
 import Expect exposing (Expectation)
 import Html
 import Init.Notification
 import Init.Pathfinder
 import Init.Search
 import Init.Statusbar
-import Model exposing (Auth(..), Effect(..), Model, Msg(..), Page(..))
+import Model exposing (Auth(..), Effect(..), Model, Msg, Page(..))
 import Model.Locale
 import Plugin.Model
 import RemoteData
@@ -81,11 +74,6 @@ type App
 model : App -> Model ()
 model (App app) =
     app.model_
-
-
-effects : App -> List Effect
-effects (App app) =
-    app.effects_
 
 
 
@@ -145,13 +133,6 @@ initialModel url =
     }
 
 
-{-| The app on the landing page, before any navigation.
--}
-init : App
-init =
-    App { model_ = initialModel (toUrl "/"), effects_ = [] }
-
-
 {-| The app opened at `path`, which is what `Main.main` does on boot: build the
 model, then hand the URL to `Update.updateByUrl`.
 -}
@@ -196,62 +177,6 @@ step msg (App app) =
 steps : List Msg -> App -> App
 steps msgs app =
     List.foldl step app msgs
-
-
-{-| Answers the pending API requests. The callback sees every API effect the
-last step produced and returns the `Msg` that response would produce, typically
-by matching the effect constructor and applying the continuation it carries to a
-fixture. Effects it ignores are dropped.
--}
-respond : (Effect.Api.Effect Msg -> Maybe Msg) -> App -> App
-respond toMsg app =
-    apiEffects app
-        |> List.filterMap toMsg
-        |> (\msgs -> steps msgs app)
-
-
-{-| Every API request the last step asked for, including the ones nested inside
-Pathfinder and search effects, mapped into the top-level `Msg`.
--}
-apiEffects : App -> List (Effect.Api.Effect Msg)
-apiEffects (App app) =
-    List.concatMap fromEffect app.effects_
-
-
-fromEffect : Effect -> List (Effect.Api.Effect Msg)
-fromEffect eff =
-    case eff of
-        ApiEffect apiEff ->
-            [ apiEff ]
-
-        PathfinderEffect pathfinderEff ->
-            fromPathfinderEffect pathfinderEff
-
-        SearchEffect toMsg (Effect.Search.SearchEffect search) ->
-            [ Effect.Api.SearchEffect
-                { query = search.query
-                , currency = search.currency
-                , limit = search.limit
-                , config = search.config
-                }
-                (search.toMsg >> toMsg)
-            ]
-
-        _ ->
-            []
-
-
-fromPathfinderEffect : Effect.Pathfinder.Effect -> List (Effect.Api.Effect Msg)
-fromPathfinderEffect eff =
-    case eff of
-        Effect.Pathfinder.ApiEffect apiEff ->
-            [ Effect.Api.map PathfinderMsg apiEff ]
-
-        Effect.Pathfinder.BatchEffect batched ->
-            List.concatMap fromPathfinderEffect batched
-
-        _ ->
-            []
 
 
 

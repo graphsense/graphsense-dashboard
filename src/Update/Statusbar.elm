@@ -1,4 +1,4 @@
-module Update.Statusbar exposing (add, clearRetry, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
+module Update.Statusbar exposing (add, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
 
 import Api.Data
 import Api.Request.Clusters
@@ -214,16 +214,6 @@ cancelled or superseded in the meantime — see the `retries` field docs on
 setRetry : String -> Int -> Model -> Model
 setRetry key attempt sb =
     { sb | retries = Dict.insert key attempt sb.retries }
-
-
-{-| Drop any retry bookkeeping for `key`. Use this when a request is
-cancelled or otherwise abandoned outside the normal `update` path; the
-regular `update` function already clears the entry alongside the message
-when a final result arrives.
--}
-clearRetry : String -> Model -> Model
-clearRetry key sb =
-    { sb | retries = Dict.remove key sb.retries }
 
 
 updateLastBlocks : Api.Data.Stats -> Model -> Model

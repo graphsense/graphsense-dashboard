@@ -1,16 +1,12 @@
-module View.Button exposing (BtnConfig, actorLink, button, buttonWithAttributes, defaultConfig, linkButtonBlue, linkButtonUnderlinedGray, primaryButton, primaryButtonGreen, secondaryButton, threeDots, tool)
+module View.Button exposing (BtnConfig, button, buttonWithAttributes, defaultConfig, linkButtonBlue, linkButtonUnderlinedGray, primaryButton, primaryButtonGreen, secondaryButton, threeDots)
 
 import Config.View as View
 import Css
-import Css.View
-import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (keyCode, on, onClick)
 import Json.Decode as Json
 import RecordSetter as Rs
-import Route exposing (toUrl)
-import Route.Pathfinder
 import Theme.Colors as Colors
 import Theme.Html.Buttons as Buttons
 import Theme.Html.Icons as Icons
@@ -44,45 +40,6 @@ defaultConfig =
     , onClickWithStop = False
     , tabindex = 0
     }
-
-
-tool :
-    View.Config
-    ->
-        { icon : FontAwesome.Icon
-        }
-    -> List (Attribute msg)
-    -> Html msg
-tool vc { icon } attr =
-    FontAwesome.icon icon
-        |> Html.Styled.fromUnstyled
-        |> List.singleton
-        |> span
-            ((Css.View.tool vc |> css)
-                :: attr
-            )
-
-
-actorLink : View.Config -> String -> String -> Html msg
-actorLink vc id label =
-    a
-        [ href
-            (Route.Pathfinder.Actor id
-                |> Route.pathfinderRoute
-                |> toUrl
-            )
-        , Css.View.link vc |> css
-        ]
-        [ span []
-            [ FontAwesome.icon FontAwesome.user
-                |> Html.Styled.fromUnstyled
-            ]
-        , span
-            [ css
-                [ Css.paddingLeft (Css.rem 0.2) ]
-            ]
-            [ text label ]
-        ]
 
 
 button : View.Config -> BtnConfig msg -> Html msg
