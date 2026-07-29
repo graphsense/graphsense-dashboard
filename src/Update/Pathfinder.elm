@@ -5961,14 +5961,31 @@ getTagsForExport addressId table data model =
                 AddressDetails.BrowserGotBulkTagsForExport table data includesBestClusterTag result
                     |> AddressDetailsMsg addressId
     in
-    ( model
-    , data
-        |> first
-        |> List.concatMap (\tx -> [ tx.fromAddress, tx.toAddress ])
-        |> Set.fromList
-        |> Set.toList
-        |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
-    )
+    if Config.isLimitedNetwork (Id.network addressId) then
+        -- limited networks: bulk tag summaries answer 501 (tags are delegated
+        -- upstream, which does not index these networks), so requesting them
+        -- kills the export. The empty-addresses effect resolves immediately
+        -- with [] and the export proceeds without actor columns.
+        ( model
+        , [ toMsg True
+                |> Api.BulkGetAddressTagSummaryEffect
+                    { currency = Id.network addressId
+                    , addresses = []
+                    , includeBestClusterTag = True
+                    }
+                |> ApiEffect
+          ]
+        )
+
+    else
+        ( model
+        , data
+            |> first
+            |> List.concatMap (\tx -> [ tx.fromAddress, tx.toAddress ])
+            |> Set.fromList
+            |> Set.toList
+            |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
+        )
 
 
 {-| Maximum number of CSV rows a single UTXO transaction may contribute to the
