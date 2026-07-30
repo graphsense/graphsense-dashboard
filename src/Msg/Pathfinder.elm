@@ -1,4 +1,4 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, DisplaySettingsMsg(..), Msg(..), OutMsg(..), OverlayWindows(..))
 
 import Api.Data
 import Color exposing (Color)
@@ -165,6 +165,37 @@ type Msg
     | TooltipMsg (Tooltip.Msg TooltipType)
     | RepositionTooltip
     | InternalExpandSpecificTxAndAddress Id Id Direction Int
+
+
+{-| Work the Pathfinder needs the application shell to do.
+
+`Update.Pathfinder` cannot open a dialog, persist user settings or reset the app:
+those live on the top-level `Model`. It used to be `Update.elm` that reached in
+the other direction, intercepting a dozen `PathfinderMsg` variants _before_ they
+reached `Update.Pathfinder` -- which made dispatch depend on the order of case
+branches across two files, with three different conventions for whether the
+intercepted message was also delegated. Two Pathfinder handlers were unreachable
+as a result.
+
+Now every Pathfinder message reaches `updateByMsg`, and anything needing the shell
+is returned as one of these instead. See `appLevelOutMsgs`, which is the single
+place that decides.
+
+-}
+type OutMsg
+    = ShowLegendDialog
+    | ConfirmRestart
+    | Restart
+    | SaveUserSettings
+    | ChangedDisplaySettings DisplaySettingsMsg
+    | OpenTagsListDialog Id Api.Data.AddressTags
+    | SetClusterTagsInDialog Id Api.Data.AddressTags
+    | AppendAddressTagsInDialog Id Api.Data.AddressTags
+    | AppendClusterTagsInDialog Id Api.Data.AddressTags
+    | OpenAddTagDialog Id
+    | OpenExportDialog (Maybe Time.Posix)
+    | CloseExportDialog
+    | CloseTopmostOverlay
 
 
 type OverlayWindows

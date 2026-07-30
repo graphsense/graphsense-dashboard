@@ -71,6 +71,7 @@ import Msg.Pathfinder
         ( AddingTxConfig
         , DisplaySettingsMsg(..)
         , Msg(..)
+        , OutMsg(..)
         , OverlayWindows(..)
         )
 import Msg.Pathfinder.AddressDetails as AddressDetails
@@ -211,17 +212,101 @@ matchCoords id network =
                 |> Maybe.map (\t -> ( t.x + t.dx, A.getTo t.y + t.dy ))
 
 
-update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
+update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect, List OutMsg )
 update plugins uc msg model =
-    model
-        |> pushHistory plugins msg
-        |> and (updateByMsg plugins uc msg)
-        |> and syncUrl
-        |> and (syncSidePanel uc)
-        |> and dispatchEventualMessages
-        |> and refreshSearchMatches
-        |> and (closeSearchOnNodeClick msg)
-        |> and (closeTooltip msg)
+    let
+        ( updated, effects ) =
+            model
+                |> pushHistory plugins msg
+                |> and (updateByMsg plugins uc msg)
+                |> and syncUrl
+                |> and (syncSidePanel uc)
+                |> and dispatchEventualMessages
+                |> and refreshSearchMatches
+                |> and (closeSearchOnNodeClick msg)
+                |> and (closeTooltip msg)
+    in
+    ( updated, effects, appLevelOutMsgs msg model )
+
+
+{-| Re-run the whole update pipeline for a message the Pathfinder raises itself.
+
+`updateByMsg` has no channel for `OutMsg`, so anything the inner message wanted from
+the application shell would be dropped here. That is safe only while such messages
+return `[]` from `appLevelOutMsgs` -- check there before dispatching a new one this
+way. If it does need the shell, emit the `OutMsg` for the _outer_ message instead.
+
+-}
+updateInternally : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
+updateInternally plugins uc msg model =
+    let
+        ( updated, effects, _ ) =
+            update plugins uc msg model
+    in
+    ( updated, effects )
+
+
+{-| The one place that decides which messages also need the application shell.
+
+Read on the _incoming_ model, deliberately: the only decision that inspects state
+is `UserClickedRestart`, which asks whether there is unsaved work to warn about.
+Everything else is a classification of the message itself, and the shell reads the
+already-updated model when it handles the result -- `OpenTagsListDialog` in
+particular depends on the tag summaries `updateByMsg` just stored.
+
+Adding a branch here is the _only_ thing needed to reach the shell. Nothing has to
+change in `Update.elm` beyond handling the new `OutMsg`, and `updateByMsg` still
+runs for the message either way.
+
+-}
+appLevelOutMsgs : Msg -> Model -> List OutMsg
+appLevelOutMsgs msg model =
+    case msg of
+        UserClickedShowLegend ->
+            [ ShowLegendDialog ]
+
+        UserClickedRestart ->
+            if model.isDirty then
+                [ ConfirmRestart ]
+
+            else
+                [ Restart ]
+
+        UserClickedRestartYes ->
+            [ Restart ]
+
+        UserClickedToggleTracingMode ->
+            [ SaveUserSettings ]
+
+        ChangedDisplaySettingsMsg dsm ->
+            [ ChangedDisplaySettings dsm ]
+
+        UserGotDataForTagsListDialog id tags ->
+            [ OpenTagsListDialog id tags ]
+
+        UserGotClusterTagsForDialog id tags ->
+            [ SetClusterTagsInDialog id tags ]
+
+        UserGotMoreAddressTagsForDialog id tags ->
+            [ AppendAddressTagsInDialog id tags ]
+
+        UserGotMoreClusterTagsForDialog id tags ->
+            [ AppendClusterTagsInDialog id tags ]
+
+        UserOpensDialogWindow (AddTags id) ->
+            [ OpenAddTagDialog id ]
+
+        UserClickedExportGraph time ->
+            [ OpenExportDialog time ]
+
+        InternalExportGraphTxsCompleted ->
+            [ CloseExportDialog ]
+
+        UserReleasedEscape ->
+            [ CloseTopmostOverlay ]
+
+        _ ->
+            []
 
 
 refreshSearchMatches : Model -> ( Model, List Effect )
@@ -656,30 +741,35 @@ updateByMsg plugins uc msg model =
                     )
 
                 AddTags _ ->
-                    -- Managed Upstream
+                    -- The dialog is the shell's; see OpenAddTagDialog.
                     n model
 
         UserGotDataForTagsListDialog _ _ ->
-            -- handled in src/Update.elm
+            -- Pathfinder keeps no state for this; the shell does the work,
+            -- via appLevelOutMsgs.
             n model
 
         UserGotMoreAddressTagsForDialog _ _ ->
-            -- handled in src/Update.elm
+            -- Pathfinder keeps no state for this; the shell does the work,
+            -- via appLevelOutMsgs.
             n model
 
         UserGotClusterTagsForDialog _ _ ->
-            -- handled in src/Update.elm
+            -- Pathfinder keeps no state for this; the shell does the work,
+            -- via appLevelOutMsgs.
             n model
 
         UserGotMoreClusterTagsForDialog _ _ ->
-            -- handled in src/Update.elm
+            -- Pathfinder keeps no state for this; the shell does the work,
+            -- via appLevelOutMsgs.
             n model
 
         RuntimePostponedUpdateByRoute route ->
             updateByRoute plugins uc route model
 
         PluginMsg _ ->
-            -- handled in src/Update.elm
+            -- Pathfinder keeps no state for this; the shell does the work,
+            -- via appLevelOutMsgs.
             n model
 
         UserClickedExportGraph _ ->
@@ -1541,11 +1631,12 @@ updateByMsg plugins uc msg model =
                             (AddressDetails.update uc subm)
 
         UserClickedRestart ->
-            -- Handled upstream
+            -- Nothing to do here: the reset itself is the shell's, via
+            -- ConfirmRestart / Restart from appLevelOutMsgs.
             n model
 
         UserClickedRestartYes ->
-            -- Handled upstream
+            -- See UserClickedRestart.
             n model
 
         UserClickedUndo ->
@@ -2005,7 +2096,7 @@ updateByMsg plugins uc msg model =
                                         focusNeighborAddress uc id direction model
 
                                     _ ->
-                                        update plugins uc (UserClickedAddressExpandHandle id direction) model
+                                        updateInternally plugins uc (UserClickedAddressExpandHandle id direction) model
                             )
                         |> Maybe.withDefault (n model)
 
@@ -2817,7 +2908,7 @@ updateByMsg plugins uc msg model =
                 |> flip setTracingMode model
 
         InternalPathfinderAddedAddress _ ->
-            -- handled upstream
+            -- Handled by the shell; see appLevelOutMsgs.
             n model
 
         UserClickedConversionEdge id _ ->
@@ -2919,7 +3010,7 @@ updateByMsg plugins uc msg model =
             )
 
         InternalExportGraphTxsCompleted ->
-            -- handled upstream
+            -- Handled by the shell; see appLevelOutMsgs.
             n model
 
         InternalChangedTxFilter id filter ->

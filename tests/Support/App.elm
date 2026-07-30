@@ -6,6 +6,7 @@ module Support.App exposing
     , init
     , initAt
     , model
+    , outMsgs
     , respond
     , step
     , steps
@@ -51,7 +52,7 @@ import Expect exposing (Expectation)
 import Html.Styled
 import Init.Pathfinder
 import Model.Pathfinder exposing (Model)
-import Msg.Pathfinder exposing (Msg)
+import Msg.Pathfinder exposing (Msg, OutMsg)
 import Plugin.Model
 import Route.Pathfinder exposing (Route)
 import Support.Env as Env
@@ -70,6 +71,7 @@ type App
     = App
         { model_ : Model
         , effects_ : List Effect
+        , outMsgs_ : List OutMsg
         }
 
 
@@ -94,7 +96,7 @@ init =
         , recentSearches = []
         }
         |> Tuple.first
-        |> (\m -> App { model_ = m, effects_ = [] })
+        |> (\m -> App { model_ = m, effects_ = [], outMsgs_ = [] })
 
 
 {-| The same, but deep-linked to `route` — what opening a Pathfinder URL does.
@@ -108,23 +110,35 @@ initAt route =
         ( routed, produced ) =
             Update.Pathfinder.updateByRoute Env.updatePlugins Env.updateConfig route app.model_
     in
-    App { model_ = routed, effects_ = produced }
+    App { model_ = routed, effects_ = produced, outMsgs_ = [] }
 
 
 
 -- DRIVING
 
 
-{-| One `Update.Pathfinder.update`, replacing the recorded effects with the new
-ones.
+{-| One `Update.Pathfinder.update`, replacing the recorded effects and out-messages
+with the new ones.
 -}
 step : Msg -> App -> App
 step msg (App app) =
     let
-        ( next, produced ) =
+        ( next, produced, out ) =
             Update.Pathfinder.update Env.updatePlugins Env.updateConfig msg app.model_
     in
-    App { model_ = next, effects_ = produced }
+    App { model_ = next, effects_ = produced, outMsgs_ = out }
+
+
+{-| What the last step asked the application shell to do.
+
+This harness has no shell -- it drives the Pathfinder alone -- so nothing acts on
+these. Asserting on them is how a test pins that a message reaches the shell at all,
+which is precisely what used to be decided by case-branch order in `Update.elm`.
+
+-}
+outMsgs : App -> List OutMsg
+outMsgs (App app) =
+    app.outMsgs_
 
 
 steps : List Msg -> App -> App
