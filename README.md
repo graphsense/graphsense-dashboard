@@ -28,7 +28,8 @@ cp env.template .env                       # then set VITE_GS_REST_URL
 ```
 
 `.env` needs at least `VITE_GS_REST_URL`, pointing at a [graphsense-lib Web API][graphsense-rest]
-instance. Without it the app builds but every request fails. See
+instance. Without it the app builds but every request fails. The full list is under
+[Environment variables](#environment-variables). See
 [Using the Iknaio backend via a proxy](#using-the-iknaio-backend-via-a-proxy) if you want
 to develop against the upstream API.
 
@@ -292,6 +293,55 @@ Notes:
   uses. Change the origin in the script if you serve from elsewhere.
 * The proxy's port 8080 collides with `DASHBOARD_PORT` from the template. Change one of
   them if you run both at once.
+
+## Environment variables
+
+All of these live in `.env` (start from `env.template`). The Makefile does
+`-include .env`, so the non-`VITE_` ones become make variables — which is why build
+tooling settings sit in the same file as runtime ones.
+
+### Runtime — compiled into the bundle
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `VITE_GS_REST_URL` | The [Web API][graphsense-rest] the app talks to. **Required** — without it the app builds but every request fails | none |
+| `VITE_GS_USER_ENDPOINT_URL` | Path for the initial user-info request, e.g. `/user`. Leave empty to skip that call | none (skipped) |
+| `VITE_LOGOUT_URL` | Where the logout button sends the user; substituted into `config/Config.elm` | none |
+
+These are substituted at **build** time, not read at run time — changing one means
+rebuilding. That is also why passing them to `docker run` has no effect.
+
+### Build tooling — only needed for specific targets
+
+| Variable | Needed for | Default |
+|---|---|---|
+| `OPENAPI_LOCATION` | `make openapi`, `make api-fixtures` — the spec to generate from, either a URL or a local path | `https://api.iknaio.com/openapi.json` |
+| `REST_URL` | `make openapi` only | `https://app.iknaio.com` |
+| `FIGMA_FILE_ID` | `make theme-refresh` | none |
+| `FIGMA_API_TOKEN` | `make theme-refresh` | none |
+
+Both defaults apply whether the variable is unset *or* set to an empty value, which
+matters because `env.template` ships `OPENAPI_LOCATION=` blank.
+
+`REST_URL` is not a backend setting despite the name: `make openapi` writes it into the
+spec's `servers` list so the generator emits it as the client's base path, then replaces
+it with the `{{VITE_GS_REST_URL}}` placeholder. The value is arbitrary and you can leave
+it unset.
+
+Neither Figma variable is needed for a normal build — `theme/figma.json` is committed, and
+only `make theme-refresh` contacts Figma.
+
+### Docker Compose
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `DASHBOARD_PORT` | Host port to publish; the container listens on 8000 | none — `docker-compose up` fails without it |
+| `DOCKER_IMAGE_NAME` | Image name | `graphsense-dashboard` |
+| `DOCKER_CONTAINER_NAME` | Container name | `graphsense-dashboard` |
+| `DOCKER_HOSTNAME` | Container hostname | `graphsense-dashboard` |
+
+Plugins bring their own `VITE_*` variables for their backends; those are documented by the
+plugin that reads them.
 
 ## Troubleshooting
 

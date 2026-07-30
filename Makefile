@@ -2,7 +2,24 @@
 
 
 API_ELM=openapi/src/Api.elm
-REST_URL?=https://app.ikna.io
+# Only a round-trip marker for `make openapi`: mangle-openapi.py writes it into
+# the spec's `servers` list so the generator emits it as the client's base path,
+# and generate-openapi.sh then substitutes it for the {{VITE_GS_REST_URL}}
+# placeholder. The value is arbitrary; it just has to survive generation intact.
+REST_URL?=https://app.iknaio.com
+
+# Where `make openapi` and `make api-fixtures` read the spec from -- a URL or a
+# local path. `?=` alone is not enough: env.template ships `OPENAPI_LOCATION=` as
+# an empty-but-defined assignment and `-include .env` runs first, so ?= would
+# leave it blank and `make openapi` would fail on a fresh checkout. Fall back
+# whenever the value is blank, not only when it is unset. Keep in step with
+# DEFAULT_SPEC in tools/gen_api_fixtures.mjs, which is the fallback when that
+# script is run directly.
+DEFAULT_OPENAPI_LOCATION=https://api.iknaio.com/openapi.json
+OPENAPI_LOCATION?=$(DEFAULT_OPENAPI_LOCATION)
+ifeq ($(strip $(OPENAPI_LOCATION)),)
+OPENAPI_LOCATION=$(DEFAULT_OPENAPI_LOCATION)
+endif
 CONFIG=./config/Config.elm
 CODEGEN_CONFIG=$(CODEGEN)/$(CONFIG)
 FIGMA_JSON=./theme/figma.json
@@ -200,7 +217,9 @@ build-docker:
 	docker build . -t graphsense-dashboard
 
 serve-docker: build-docker
-	docker run -it --network='host' -e REST_URL=http://localhost:9000 localhost/graphsense-dashboard:latest
+	# No backend env var here: VITE_GS_REST_URL is compiled into the bundle when
+	# the image is built, so passing one at run time would have no effect.
+	docker run -it --network='host' localhost/graphsense-dashboard:latest
 
 format:
 	npx elm-format --yes src tests 

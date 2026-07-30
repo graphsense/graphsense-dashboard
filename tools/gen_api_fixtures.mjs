@@ -20,7 +20,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const DEFAULT_SPEC = 'https://api.ikna.io/openapi.json'
+const DEFAULT_SPEC = 'https://api.iknaio.com/openapi.json'
 const OUT = path.join('tests', 'Fixtures', 'Api.elm')
 
 // schema name in the spec -> Elm constant name. Only the payloads the dashboard
