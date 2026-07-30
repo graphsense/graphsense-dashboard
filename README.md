@@ -222,6 +222,31 @@ Two rules of thumb:
 This protects a plugin-used symbol from being *deleted*, not from its signature changing. A
 changed signature still breaks plugins at their next build.
 
+#### The long-term fix, if this becomes painful
+
+`PluginApi.elm` only *declares* the surface; plugins still import around 59 core modules
+directly, so nothing stops the coupling growing. Turning it into a real **facade** would
+close that: generate one `PluginApi.<Module>` per core module, mirroring the paths, and have
+plugins import those instead — a one-line import change per plugin file.
+
+The prize is not the boundary but the type annotations. Written out, the facade becomes a
+compile-checked contract, so a changed core signature fails the build *in core, at commit
+time* rather than surfacing in a plugin weeks later. Without annotations you get the
+boundary and not the drift detection, which is the smaller half.
+
+Two things to know before starting:
+
+- **Elm cannot re-export another module's type constructors.** About 22 of them, across
+  six modules, would need smart constructors in core (`Model.Dialog.centered` instead of
+  exposing `Centered`) or a permanent allowlist.
+- **Nothing enforces it.** Elm has no visibility rules inside an application, so a lint
+  check would have to live in the plugin repositories — the only place that sees a new
+  import at the moment it is written.
+
+Not done, and not obviously worth it at the current rate of breakage (roughly one
+`adapt to new <X> interface` commit every two months). Recorded so the option is not
+rediscovered from scratch.
+
 ## Releases and versioning
 
 Versions are calendar-based (`v26.08.0`, with `-dev.N` tags leading up to a release) and
