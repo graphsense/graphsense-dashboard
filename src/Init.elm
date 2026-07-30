@@ -1,10 +1,10 @@
-module Init exposing (init)
+module Init exposing (init, viewConfigFromSettings)
 
 import Config exposing (config)
 import Config.Update as Update
 import Config.UserSettings
 import Config.View exposing (characterDimensionsDecoder)
-import Dict
+import Dict exposing (Dict)
 import Effect.Api
 import Init.Locale as Locale
 import Init.Notification as Notification
@@ -46,24 +46,7 @@ init plugins uc flags url key =
     in
     ( { url = url
       , key = key
-      , config =
-            { locale = locale
-            , theme = config.theme
-            , lightmode = settings.lightMode |> Maybe.withDefault True
-            , size = Nothing
-            , showDatesInUserLocale = settings.showDatesInUserLocale |> Maybe.withDefault True
-            , showTimeZoneOffset = settings.showTimeZoneOffset |> Maybe.withDefault False
-            , showTimestampOnTxEdge = settings.showTimestampOnTxEdge |> Maybe.withDefault True
-            , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
-            , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
-            , showHash = settings.showHash |> Maybe.withDefault False
-            , showLabelsInTaggingOverview = False
-            , allConcepts = []
-            , abuseConcepts = []
-            , showConversionEdges = True
-            , characterDimensions = cd
-            , showBothValues = False
-            }
+      , config = viewConfigFromSettings locale cd settings
       , page = Home
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) settings.recentSearches
       , pathfinder = pathfinderState
@@ -107,3 +90,36 @@ getStatistics ( model, eff ) =
 
     else
         ( model, eff )
+
+
+{-| Restore the view config from the settings the last session saved.
+
+Split out of `init` so it can be tested: `init` takes a `Plugin.Model.Flags`
+record whose shape is generated per registered plugin, so no value of that type
+can be written portably and the function cannot be called from a test at all.
+This part needs none of it.
+
+Worth keeping honest -- a field that is persisted by
+`Model.userSettingsFromMainModel` but hardcoded here is saved on every change and
+then silently dropped at the next boot, which is what `showBothValues` did.
+
+-}
+viewConfigFromSettings : Locale.Model -> Dict String Config.View.CharacterDimension -> Config.UserSettings.UserSettings -> Config.View.Config
+viewConfigFromSettings locale characterDimensions settings =
+    { locale = locale
+    , theme = config.theme
+    , lightmode = settings.lightMode |> Maybe.withDefault True
+    , size = Nothing
+    , showDatesInUserLocale = settings.showDatesInUserLocale |> Maybe.withDefault True
+    , showTimeZoneOffset = settings.showTimeZoneOffset |> Maybe.withDefault False
+    , showTimestampOnTxEdge = settings.showTimestampOnTxEdge |> Maybe.withDefault True
+    , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
+    , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
+    , showHash = settings.showHash |> Maybe.withDefault False
+    , showLabelsInTaggingOverview = False
+    , allConcepts = []
+    , abuseConcepts = []
+    , showConversionEdges = True
+    , characterDimensions = characterDimensions
+    , showBothValues = settings.showBothValues |> Maybe.withDefault False
+    }
