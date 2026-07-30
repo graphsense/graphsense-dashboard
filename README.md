@@ -32,6 +32,43 @@ plugins =
 
 Run `make serve`. It starts Vite's development server.
 
+### Testing
+
+There are two layers. Run both before pushing; the pre-commit hook runs the first.
+
+```bash
+make test           # Elm tests — fast, no browser, no network
+make e2e-install    # once, to fetch the browser
+make e2e            # browser tests (Playwright) — builds first
+make e2e-ui         # the same, in Playwright's interactive mode
+```
+
+**`make test`** runs the Elm suite in about a second. `Update.update` and `View.view` are
+pure and effects are plain data, so almost everything — user flows through the Pathfinder,
+routing, decoders, formatting — is testable without a browser. Prefer this layer:
+anything expressible here belongs here.
+
+**`make e2e`** covers only what the Elm layer cannot reach: `src/main.js`, the ports, real
+downloads and file pickers, keyboard chords the browser competes for, and whether the
+bundle boots at all. Today that means
+
+- the shipped bundle starts with no console errors and no uncaught exceptions,
+- the elm-safe-virtual-dom patches are genuinely present in the build (without them the
+  app crashes whenever a browser extension touches the DOM),
+- saving a `.gs` file and reading it back, including via Ctrl/Cmd+S,
+- settings surviving a reload, which proves the localStorage port ran.
+
+It needs no API key and never reaches a real backend: the build points
+`VITE_GS_REST_URL` at a port nothing listens on, and `e2e/fixtures.ts` answers every
+outgoing request, matching on path rather than origin so the suite does not depend on
+your `.env`. Fixture bodies must be complete enough to decode — the Elm client rejects a
+whole response over one missing required field and logs it, and the boot test asserts the
+console is clean, so a lazy stub fails loudly instead of passing quietly.
+
+Selectors come from `Util.View.testId`, applied at component call sites and prefixed
+`gs-`. elm-css class names are content hashes and visible text is translated and
+truncated, so neither works as a selector.
+
 ## Production build
 
 Run `make build`. It builds the app together with all configured plugins to `./dist`.

@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [26.08.0] - Unreleased
 
+### Added
+
+- A browser test layer (`make e2e`, Playwright) covering what `Update`/`View` cannot reach: that the shipped bundle boots without console errors or uncaught exceptions, that the elm-safe-virtual-dom patches are actually present in the build, and that the ports work end to end — saving a `.gs` file and reading it back, the Ctrl/Cmd+S chord the browser competes for, and settings surviving a reload via localStorage. All backend requests are answered by fixtures matched on path, so the suite needs no API key and cannot reach a real instance
+- The production build now fails when it would ship without the elm-safe-virtual-dom patches, which previously produced runtime DOM crashes that no check caught: the existing guard inspects the patched package clones, not the compiled output
+
 ### Changed
 
 - Production builds minify with rolldown's oxc minifier (vite 8's default) instead of terser, cutting minification from 16.5s to 4.1s per bundle. Shipped size is unchanged in practice: 5.7% smaller uncompressed, within 1.6% gzipped
