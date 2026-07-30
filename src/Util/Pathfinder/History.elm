@@ -117,9 +117,6 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleNeighborsTable _ ->
                     False
 
-                AddressDetails.UserClickedToggleTokenBalancesSelect ->
-                    False
-
                 AddressDetails.UserClickedToggleTransactionTable ->
                     False
 
@@ -136,9 +133,6 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.UserClickedToggleClusterDetailsOpen ->
-                    False
-
-                AddressDetails.UserClickedToggleDisplayAllTagsInDetails ->
                     False
 
                 AddressDetails.UserClickedShowPubkeyRelatedAddresses ->
@@ -374,9 +368,6 @@ shallPushHistory plugins msg _ =
         UserPushesLeftMouseButtonOnAggEdgeLabel _ _ _ ->
             False
 
-        UserSelectedAggEdgeFilter _ ->
-            False
-
         ToolbarHovercardMsg _ ->
             False
 
@@ -463,9 +454,6 @@ shallPushHistory plugins msg _ =
 
         ConversionDetailsMsg _ _ ->
             False
-
-        UserClickedContextMenuAlignVertically ->
-            True
 
         UserClickedContextMenuAlignHorizontally ->
             True

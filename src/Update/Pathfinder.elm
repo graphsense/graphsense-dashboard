@@ -2649,13 +2649,6 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        UserSelectedAggEdgeFilter f ->
-            let
-                cfg =
-                    model.config
-            in
-            n { model | config = { cfg | aggEdgeFilter = f } }
-
         UserOpensContextMenu coordsNew cmtype ->
             case model.contextMenu of
                 Nothing ->
@@ -2806,70 +2799,6 @@ updateByMsg plugins uc msg model =
 
                         newNetwork =
                             List.foldl moveToMedianY model.network selections
-                                |> Network.resolveOverlaps Network.Spacious
-                    in
-                    n { model | network = newNetwork, contextMenu = Nothing }
-
-                _ ->
-                    n { model | contextMenu = Nothing }
-
-        UserClickedContextMenuAlignVertically ->
-            case model.selection of
-                MultiSelect selections ->
-                    let
-                        -- Collect x coordinates from selected addresses and transactions
-                        getXCoords sel =
-                            case sel of
-                                MSelectedAddress id ->
-                                    Dict.get id model.network.addresses
-                                        |> Maybe.map .x
-
-                                MSelectedTx id ->
-                                    Dict.get id model.network.txs
-                                        |> Maybe.map .x
-
-                        xCoords =
-                            selections
-                                |> List.filterMap getXCoords
-                                |> List.sort
-
-                        -- Calculate median x coordinate
-                        medianX =
-                            let
-                                len =
-                                    List.length xCoords
-                            in
-                            if len == 0 then
-                                0
-
-                            else if modBy 2 len == 1 then
-                                -- Odd number: take middle element
-                                List.drop (len // 2) xCoords
-                                    |> List.head
-                                    |> Maybe.withDefault 0
-
-                            else
-                                -- Even number: average of two middle elements
-                                let
-                                    mid1 =
-                                        List.drop (len // 2 - 1) xCoords |> List.head |> Maybe.withDefault 0
-
-                                    mid2 =
-                                        List.drop (len // 2) xCoords |> List.head |> Maybe.withDefault 0
-                                in
-                                (mid1 + mid2) / 2
-
-                        -- Move each selected node to the median x coordinate
-                        moveToMedianX sel net =
-                            case sel of
-                                MSelectedAddress id ->
-                                    Network.updateAddress id (Node.setX medianX) net
-
-                                MSelectedTx id ->
-                                    Network.updateTx id (Node.setX medianX) net
-
-                        newNetwork =
-                            List.foldl moveToMedianX model.network selections
                                 |> Network.resolveOverlaps Network.Spacious
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }

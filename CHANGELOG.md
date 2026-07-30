@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Production builds minify with rolldown's oxc minifier (vite 8's default) instead of terser, cutting minification from 16.5s to 4.1s per bundle. Shipped size is unchanged in practice: 5.7% smaller uncompressed, within 1.6% gzipped
+- Dead-code detection (unused exports, type constructors and constructor arguments) now runs in CI, and about 3,400 lines of already-unreachable code are gone: pf1 leftovers, 16 modules nothing imported, and four features whose messages nothing could send. Detection was previously impossible to run reliably because plugins live in separate repositories and are not always checked out, so a core function only a plugin used looked dead; `src/PluginApi.elm` now records that surface
 
 ### Removed
 

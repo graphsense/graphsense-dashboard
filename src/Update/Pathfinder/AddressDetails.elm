@@ -172,9 +172,6 @@ update uc msg model =
         UserClickedToggleTotalSpentDetails ->
             ( model |> s_totalSentDetailsOpen (not model.totalSentDetailsOpen), [] )
 
-        UserClickedToggleTokenBalancesSelect ->
-            ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
-
         UserClickedToggleNeighborsTable dir ->
             getNeighborsTableAndSetter model dir
                 |> Maybe.map
@@ -553,11 +550,6 @@ update uc msg model =
         UserClickedToggleClusterDetailsOpen ->
             not model.isClusterDetailsOpen
                 |> flip s_isClusterDetailsOpen model
-                |> n
-
-        UserClickedToggleDisplayAllTagsInDetails ->
-            not model.displayAllTagsInDetails
-                |> flip s_displayAllTagsInDetails model
                 |> n
 
         ExportCSVMsg _ _ ->

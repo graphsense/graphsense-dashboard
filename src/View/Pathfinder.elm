@@ -217,20 +217,6 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                                         True
                                 )
                             |> ContextMenuItem.view vc
-
-                        -- , { msg = UserClickedContextMenuAlignVertically
-                        --   , icon = HIcons.iconsLine {}
-                        --   , text = Locale.string vc.locale "align vertically"
-                        --   }
-                        --     |> ContextMenuItem.init
-                        --     |> ContextMenuItem.setDisabled
-                        --         (case model.selection of
-                        --             Pathfinder.MultiSelect _ ->
-                        --                 False
-                        --             _ ->
-                        --                 True
-                        --         )
-                        --     |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuAlignHorizontally
                           , icon = HIcons.iconsHorizontalAlign {}
                           , text = Locale.string vc.locale "Align horizontally"
@@ -321,20 +307,6 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
-
-                        -- , { msg = UserClickedContextMenuAlignVertically
-                        --   , icon = HIcons.iconsLine {}
-                        --   , text = Locale.string vc.locale "align vertically"
-                        --   }
-                        --     |> ContextMenuItem.init
-                        --     |> ContextMenuItem.setDisabled
-                        --         (case model.selection of
-                        --             Pathfinder.MultiSelect _ ->
-                        --                 False
-                        --             _ ->
-                        --                 True
-                        --         )
-                        --     |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuAlignHorizontally
                           , icon = HIcons.iconsHorizontalAlign {}
                           , text = Locale.string vc.locale "align horizontally"
