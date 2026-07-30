@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "automatically created by": "elm-review suppress",
+  "learn more": "elm-review suppress --help",
+  "suppressions": [
+    { "count": 17, "filePath": "src/Model/Graph/Browser.elm" },
+    { "count": 15, "filePath": "src/Effect/Api.elm" },
+    { "count": 10, "filePath": "src/Api/Request/MyBulk.elm" },
+    { "count": 8, "filePath": "src/Model/Graph/Tool.elm" },
+    { "count": 6, "filePath": "src/Config/Graph.elm" },
+    { "count": 5, "filePath": "src/Model/Pathfinder/Error.elm" },
+    { "count": 5, "filePath": "src/Msg/Pathfinder/AddressDetails.elm" },
+    { "count": 4, "filePath": "src/Model.elm" },
+    { "count": 4, "filePath": "src/Model/Node.elm" },
+    { "count": 3, "filePath": "src/Components/TransactionFilter.elm" },
+    { "count": 2, "filePath": "src/Components/Table.elm" },
+    { "count": 2, "filePath": "src/Model/Search.elm" },
+    { "count": 2, "filePath": "src/Msg/Pathfinder.elm" },
+    { "count": 2, "filePath": "src/Msg/Search.elm" },
+    { "count": 1, "filePath": "src/Components/InfiniteTable.elm" },
+    { "count": 1, "filePath": "src/Effect/Pathfinder.elm" },
+    { "count": 1, "filePath": "src/Effect/Search.elm" },
+    { "count": 1, "filePath": "src/Model/Dialog.elm" },
+    { "count": 1, "filePath": "src/Model/Pathfinder/Network.elm" },
+    { "count": 1, "filePath": "src/Msg/Pathfinder/RelationDetails.elm" },
+    { "count": 1, "filePath": "src/Msg/Pathfinder/TxDetails.elm" },
+    { "count": 1, "filePath": "src/Route/Pathfinder.elm" },
+    { "count": 1, "filePath": "src/Update/Pathfinder/WorkflowNextTxByTime.elm" },
+    { "count": 1, "filePath": "src/View/Controls.elm" },
+    { "count": 1, "filePath": "src/View/Pathfinder/Table/TagsTable.elm" }
+  ]
+}

@@ -57,6 +57,40 @@ Plugins can hook into the dashboard functionality in order to extend it.
 Plugin's hook implementations need to be set in your plugin's root module which was derived from `./Stub.elm`.
 Please see the comments in the respective files of `./src/PluginInterface` for detailed documentation.
 
+### Plugins and dead-code detection
+
+`make lint` reports unused exports in the core. That check has a blind spot: plugins live
+in separate repositories and are not always checked out, and `elm.json` is generated from
+whichever plugins are registered in `config/Config.elm`. A core function that *only* a
+plugin uses therefore looks unused whenever that plugin is absent — and CI has no plugins
+at all. Delete it on that evidence and the plugin stops compiling.
+
+`src/PluginApi.elm` resolves this. It is generated, contains no logic, and only
+*references* every core symbol the plugins use, which is enough to keep those symbols
+counted as used no matter what is checked out. As a side effect it is also the written
+record of what plugins depend on.
+
+What the tooling does for you:
+
+| | |
+|---|---|
+| `make plugin-api` | Adds newly-used core symbols to `src/PluginApi.elm`. Only ever adds, so it is safe to run with plugins missing. |
+| `make check-plugin-api` | Fails if a plugin uses a core symbol not yet listed. Runs as a pre-commit hook. |
+| `make plugin-api-prune` | Removes entries that are no longer used. Refuses unless every registered plugin is present. |
+| `make lint` | Prints a note when plugins are not linked, warning that unused-export findings may be plugin-facing. |
+
+Two rules of thumb:
+
+- **Keep the symlink in `plugins/` even when you comment a plugin out of
+  `config/Config.elm`.** The build follows the registration, the dead-code tooling follows
+  the directory — so you get a fast build *and* accurate analysis.
+- **If a plugin starts calling a new core function, run `make plugin-api` and commit the
+  result.** Otherwise the next cleanup pass has no way to know that function is needed.
+
+Caveat worth knowing: this protects against a plugin-used symbol being *deleted*, not
+against its signature changing. A changed signature still breaks plugins at their next
+build.
+
 ## Docker build
 
 ### Prerequisites

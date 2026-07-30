@@ -9,7 +9,7 @@ import Update.Pathfinder
 suite : Test
 suite =
     describe "deserialize"
-        [ -- plugins (e.g. Casemgm) send this envelope with empty lists to reset the
+        [ -- plugins send this envelope with empty lists to reset the
           -- pathfinder graph when opening a case that has no stored graph
           test "deserialize accepts an empty pathfinder graph envelope" <|
             \_ ->

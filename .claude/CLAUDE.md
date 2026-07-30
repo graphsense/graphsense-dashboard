@@ -19,8 +19,10 @@ make check-lang         # Check translation files against each other and the cod
 make e2e                # Browser tests (Playwright); make e2e-install once first
 make api-fixtures       # Regenerate tests/Fixtures/Api.elm (after every `make openapi`)
 make format             # Format Elm code (elm-format)
-make lint               # Lint with elm-review
-make lint-fix           # Auto-fix lint issues
+make lint               # Lint with elm-review (incl. dead code); notes if plugins are unlinked
+make lint-fix           # Auto-fix lint issues (needs every registered plugin linked)
+make plugin-api         # Add newly-used core symbols to src/PluginApi.elm
+make check-plugin-api   # Fail if a plugin uses core symbols not yet listed there
 
 # Setup (first time)
 npm install
@@ -146,6 +148,71 @@ Plugins live in `plugins/` (often symlinks to external repos). Each plugin can h
 Plugins hook into the app through `src/PluginInterface/` interfaces (View, Update, Effects, Routes).
 
 Plugin folders have their own Git repositories.
+
+### Plugins vs. dead-code detection
+
+`make lint` includes `NoUnused.Exports`, `NoUnused.CustomTypeConstructors` and
+`NoUnused.CustomTypeConstructorArgs`. Those rules ask "does anything use this?" — and
+core cannot answer it on its own, because plugins are the other half of the answer and
+they are not always there. `elm.json` is generated, gaining one `source-directories`
+entry per plugin registered in `config/Config.elm`, so elm-review only ever sees the
+plugins that happen to be present. CI registers none at all.
+
+**`src/PluginApi.elm` closes that gap.** It is generated, has no behaviour, and does
+nothing but *reference* every core symbol the plugins use (`ref Util.View.colorToHex`,
+plus `type alias` re-declarations for types, which cannot be passed as values). Because
+core references them, they count as used whatever is checked out. It doubles as the
+written plugin contract, and `tests/PluginApiTest.elm` imports it so `make test`
+type-checks the whole list — nothing in `src/` imports it, so without that test it would
+never reach the compiler.
+
+Two properties matter and are easy to get wrong:
+
+- **Detection is by what is on disk in `plugins/`**, not by what is registered in
+  `config/Config.elm`. The build is the other way round.
+- **`make plugin-api` only ever adds.** A plugin missing from your tree contributes
+  nothing and cannot shrink the list. Only `make plugin-api-prune` removes entries, and
+  it refuses unless every registered plugin is present.
+
+#### The workflow
+
+**Working on core without some plugins** — normal, and faster. Comment the plugin out in
+`config/Config.elm` **but keep the symlink in `plugins/`**. The build then ignores it
+(registration drives `elm.json`) while the dead-code tooling still sees it (detection
+reads the directory). You get the fast build and full coverage. Deleting the symlink
+costs you the coverage.
+
+**A plugin starts using a new core function** — `make check-plugin-api` fails with the
+missing entry; run `make plugin-api` and commit `src/PluginApi.elm`. It is a pre-commit
+hook, but note it can only fire on a machine where that plugin is linked.
+
+**Before deleting a core export that `make lint` reports as unused** — check the note
+`make lint` prints. With no plugins linked it cannot tell a plugin-only export from dead
+code, and it says so. Link the plugins and run `make plugin-api` to confirm.
+
+**Never run `tools/gen_plugin_api.py --prune` directly.** It bypasses the guard on
+`make plugin-api-prune`; on a partial tree it silently drops the absent plugins' symbols,
+after which CI reports them as dead and someone deletes them. This has already happened
+once.
+
+#### Known limits
+
+- Signature changes are **not** caught — `ref` accepts any type. Only deletion and
+  renaming are. The `adapt to new <X> interface` commits in the plugin repos are this
+  gap.
+- A plugin that is linked nowhere is invisible to every check. The only real fixes are a
+  check inside the plugin repos, or a CI job that checks out all of them.
+- Exempt from the dead-code rules: `src/PluginApi.elm` (its consumers are other repos),
+  `src/Util/Debug.elm` (hand-wired debugging helper), `src/Util/Nullable.elm` (core, but
+  imports `OpenApi.Common` from a plugin's generated api directory, so referencing it
+  breaks the build wherever that plugin is absent — it should move into that plugin), and
+  `themes/` (not covered by `make format`, so an auto-fix would reformat a
+  hand-maintained file).
+- The ~220 findings in `review/suppressed/` are a shrinking baseline, not a to-do list.
+  Clearing an entry is a deletion, so the note above applies.
+
+Plugin names must not appear in this repository — they are private. `theme/figma.json`
+still contains some, inherited from component names in the Figma file.
 
 ### API Layer
 
