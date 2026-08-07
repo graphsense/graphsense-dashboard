@@ -14,7 +14,7 @@ import Init.Statusbar as Statusbar
 import Json.Decode
 import Model exposing (..)
 import Model.Locale as Locale
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update as Plugin
 import RemoteData exposing (RemoteData(..))
 import Tuple exposing (first)
 import Update exposing (updateByPluginOutMsg)
@@ -22,8 +22,8 @@ import Url exposing (Url)
 import Util.ThemedSelectBox as TSelectBox
 
 
-init : Plugins -> Update.Config -> Flags -> Url -> key -> ( Model key, List Effect )
-init plugins uc flags url key =
+init : Update.Config -> Flags -> Url -> key -> ( Model key, List Effect )
+init uc flags url key =
     let
         settings =
             flags.localStorage
@@ -39,7 +39,7 @@ init plugins uc flags url key =
             Locale.init settings
 
         ( pluginStates, outMsgs, cmd ) =
-            Plugin.init plugins flags.pluginFlags
+            Plugin.init flags.pluginFlags
 
         ( pathfinderState, pathfinderCmd ) =
             Pathfinder.init settings
@@ -78,7 +78,7 @@ init plugins uc flags url key =
            ]
     )
         |> getStatistics
-        |> updateByPluginOutMsg plugins uc outMsgs
+        |> updateByPluginOutMsg uc outMsgs
 
 
 getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )

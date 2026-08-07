@@ -46,23 +46,20 @@ main =
             , abuseConcepts = []
             , allConcepts = []
             }
-
-        updPlug =
-            Plugin.updatePlugins plugins
     in
     Browser.application
         { init =
             \flags url key ->
                 let
                     ( model, effects ) =
-                        init updPlug uc flags url key
+                        init uc flags url key
                 in
-                updateByUrl updPlug uc url model
+                updateByUrl uc url model
                     |> mapSecond ((++) effects)
                     |> performEffect
         , update =
             \msg model ->
-                update updPlug
+                update
                     { uc
                         | locale = model.config.locale
                         , size = model.config.size

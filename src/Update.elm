@@ -39,7 +39,7 @@ import Msg.Locale as LocaleMsg
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
 import Plugin.Msg as Plugin
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update as Plugin
 import PluginInterface.Msg as PluginInterface
 import PluginInterface.Update as PluginInterface
 import Ports
@@ -134,8 +134,8 @@ isTransientHttpError err =
             False
 
 
-update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
-update plugins uc msg model =
+update : Config -> Msg -> Model key -> ( Model key, List Effect )
+update uc msg model =
     case Log.log "msg" msg of
         NoOp ->
             n model
@@ -171,16 +171,16 @@ update plugins uc msg model =
                     )
 
         BrowserChangedUrl url ->
-            updateByUrl plugins uc url model
+            updateByUrl uc url model
 
         RuntimePostponedUpdateByUrl url ->
-            updateByUrl plugins uc url model
+            updateByUrl uc url model
 
         BrowserGotStatistics stats ->
             let
                 ( newPluginsState, outMsg, cmd ) =
                     PluginInterface.CoreGotStatsUpdate stats
-                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+                        |> Plugin.updateByCoreMsg uc model.plugins
 
                 tokenCurrencyEffects =
                     stats.currencies
@@ -203,7 +203,7 @@ update plugins uc msg model =
                     , plugins = newPluginsState
                 }
                 |> Tuple.mapSecond (\effects -> PluginEffect cmd :: (tokenCurrencyEffects ++ effects))
-                |> updateByPluginOutMsg plugins uc outMsg
+                |> updateByPluginOutMsg uc outMsg
 
         -- Plugin handling
         BrowserGotEntityTaxonomy concepts ->
@@ -475,7 +475,7 @@ update plugins uc msg model =
                         , dialog = dialogAfterError
                         , notifications = notifications
                     }
-                        |> handleResponse plugins
+                        |> handleResponse
                             uc
                             result
                         |> mapSecond ((++) (List.map NotificationEffect notificationEffects))
@@ -661,8 +661,8 @@ update plugins uc msg model =
                                 []
 
                     ( new, outMsg, cmd ) =
-                        Plugin.updateApiKeyHash plugins (Sha256.sha256 model.user.apiKey) model.plugins
-                            |> PluginInterface.andThen (Plugin.updateApiKey plugins model.user.apiKey)
+                        Plugin.updateApiKeyHash (Sha256.sha256 model.user.apiKey) model.plugins
+                            |> PluginInterface.andThen (Plugin.updateApiKey model.user.apiKey)
                 in
                 ( { model
                     | user =
@@ -686,7 +686,7 @@ update plugins uc msg model =
                 , PluginEffect cmd
                     :: effs
                 )
-                    |> updateByPluginOutMsg plugins uc outMsg
+                    |> updateByPluginOutMsg uc outMsg
 
         BrowserGotContentsElement result ->
             result
@@ -726,9 +726,9 @@ update plugins uc msg model =
             let
                 ( new, outMsg, cmd ) =
                     PluginInterface.ClickedOnNeutralGround
-                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+                        |> Plugin.updateByCoreMsg uc model.plugins
             in
-            clearSearch plugins
+            clearSearch
                 { model
                     | user =
                         model.user
@@ -738,7 +738,7 @@ update plugins uc msg model =
                     , navbarSubMenu = Nothing
                 }
                 |> Tuple.mapSecond ((::) (PluginEffect cmd))
-                |> updateByPluginOutMsg plugins uc outMsg
+                |> updateByPluginOutMsg uc outMsg
 
         UserClickedNavBack ->
             ( model, NavBackEffect 1 |> List.singleton )
@@ -790,7 +790,7 @@ update plugins uc msg model =
                         |> s_visible True
                         |> Search.triggerSearch str
             in
-            update plugins uc (Search.UserFocusSearch |> SearchMsg) model
+            update uc (Search.UserFocusSearch |> SearchMsg) model
                 |> mapFirst (s_search search)
                 |> mapSecond
                     ((++)
@@ -800,7 +800,7 @@ update plugins uc msg model =
         UserClickedLogout ->
             let
                 ( new, outMsg, cmd ) =
-                    Plugin.logout plugins model.plugins
+                    Plugin.logout model.plugins
             in
             ( { model
                 | plugins = new
@@ -820,10 +820,10 @@ update plugins uc msg model =
               , LogoutEffect
               ]
             )
-                |> updateByPluginOutMsg plugins uc outMsg
+                |> updateByPluginOutMsg uc outMsg
 
         BrowserGotElementForPlugin pmsg element ->
-            updatePlugins plugins uc (pmsg element) model
+            updatePlugins uc (pmsg element) model
 
         LocaleMsg m ->
             let
@@ -971,7 +971,7 @@ update plugins uc msg model =
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
-                    updatePlugins plugins uc ms model
+                    updatePlugins uc ms model
 
                 Search.UserClicksRecentResultLine rl ->
                     let
@@ -1097,7 +1097,7 @@ update plugins uc msg model =
                                         )
 
                 Search.UserClickedCloseCurrencyPicker ->
-                    clearSearch plugins { model | dialog = Nothing }
+                    clearSearch { model | dialog = Nothing }
 
                 Search.UserPicksCurrency currency ->
                     let
@@ -1133,7 +1133,7 @@ update plugins uc msg model =
                         ( search, searchEffects ) =
                             Search.update m model.search
                     in
-                    clearSearch plugins { model | search = search, dialog = Nothing }
+                    clearSearch { model | search = search, dialog = Nothing }
                         |> mapSecond ((++) pathfinderEffects)
                         |> mapSecond ((++) (List.map (SearchEffect SearchMsg) searchEffects))
 
@@ -1152,14 +1152,14 @@ update plugins uc msg model =
                     model.pathfinder
 
                 ( pathfinder, pathfinderEffects, outMsgs ) =
-                    Pathfinder.update plugins uc m model.pathfinder
+                    Pathfinder.update uc m model.pathfinder
 
                 ( newModel, newEffects ) =
                     ( { model | pathfinder = pathfinder }
                     , List.map PathfinderEffect pathfinderEffects
                     )
-                        |> applyPathfinderOutMsgs plugins uc outMsgs
-                        |> notifyPluginsOfPathfinderMsg plugins uc m
+                        |> applyPathfinderOutMsgs uc outMsgs
+                        |> notifyPluginsOfPathfinderMsg uc m
                         |> syncRecentSearches pathfinderOld
             in
             if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
@@ -1169,37 +1169,37 @@ update plugins uc msg model =
                 let
                     ( newPluginsState, outMsg, cmd ) =
                         (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
-                            |> Plugin.updateByCoreMsg plugins uc model.plugins
+                            |> Plugin.updateByCoreMsg uc model.plugins
                 in
                 ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
-                    |> updateByPluginOutMsg plugins uc outMsg
+                    |> updateByPluginOutMsg uc outMsg
 
         BrowserGotDeserializedGS ( filename, data ) ->
             let
                 ( newPluginsState, outMsg, cmdp ) =
                     PluginInterface.Reset
-                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+                        |> Plugin.updateByCoreMsg uc model.plugins
             in
             ( { model | plugins = newPluginsState }
             , [ PluginEffect cmdp ]
             )
-                |> updateByPluginOutMsg plugins uc outMsg
+                |> updateByPluginOutMsg uc outMsg
                 |> (\( mdl, eff ) ->
-                        deserialize plugins uc filename data mdl
+                        deserialize uc filename data mdl
                             |> mapSecond ((++) eff)
                    )
 
         UserClickedConfirm ms ->
-            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
+            update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         UserClickedOption ms ->
-            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
+            update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         UserClickedOutsideDialog ms ->
-            update plugins uc ms model |> Tuple.mapFirst (s_dialog Nothing)
+            update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         PluginMsg msgValue ->
-            updatePlugins plugins uc msgValue model
+            updatePlugins uc msgValue model
 
         UserClosesNotification ->
             n { model | notifications = Notification.pop model.notifications }
@@ -1314,7 +1314,7 @@ update plugins uc msg model =
                     )
 
         DebouncePluginOutMsg outMsg ->
-            updateByPluginOutMsg plugins uc [ outMsg ] ( model, [] )
+            updateByPluginOutMsg uc [ outMsg ] ( model, [] )
 
 
 apiRateExceededError : Locale.Model -> Auth -> Notification
@@ -1387,13 +1387,13 @@ before they reached the Pathfinder at all, which meant dispatch depended on the
 order of case branches in two files -- and left two Pathfinder handlers unreachable.
 
 -}
-applyPathfinderOutMsgs : Plugins -> Config -> List Pathfinder.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
-applyPathfinderOutMsgs plugins uc outMsgs acc =
-    List.foldl (applyPathfinderOutMsg plugins uc) acc outMsgs
+applyPathfinderOutMsgs : Config -> List Pathfinder.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
+applyPathfinderOutMsgs uc outMsgs acc =
+    List.foldl (applyPathfinderOutMsg uc) acc outMsgs
 
 
-applyPathfinderOutMsg : Plugins -> Config -> Pathfinder.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
-applyPathfinderOutMsg plugins uc pathfinderOutMsg ( model, effects ) =
+applyPathfinderOutMsg : Config -> Pathfinder.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
+applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
     (case pathfinderOutMsg of
         Pathfinder.ShowLegendDialog ->
             let
@@ -1433,12 +1433,12 @@ applyPathfinderOutMsg plugins uc pathfinderOutMsg ( model, effects ) =
 
                 ( newPluginsState, outMsg, cmdp ) =
                     PluginInterface.Reset
-                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+                        |> Plugin.updateByCoreMsg uc model.plugins
             in
             ( { model | pathfinder = m, plugins = newPluginsState }
             , [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ]
             )
-                |> updateByPluginOutMsg plugins uc outMsg
+                |> updateByPluginOutMsg uc outMsg
                 |> Tuple.mapSecond
                     ((++)
                         [ PluginEffect cmdp
@@ -1510,10 +1510,10 @@ applyPathfinderOutMsg plugins uc pathfinderOutMsg ( model, effects ) =
                     ( newModel, [ saveUserSettings newModel ] )
 
                 Pathfinder.UserClickedToggleValueDisplay ->
-                    update plugins uc (UserToggledValueDisplay |> SettingsMsg) model
+                    update uc (UserToggledValueDisplay |> SettingsMsg) model
 
                 Pathfinder.UserClickedToggleBothValueDisplay ->
-                    update plugins uc (UserToggledBothValueDisplay |> SettingsMsg) model
+                    update uc (UserToggledBothValueDisplay |> SettingsMsg) model
 
         Pathfinder.OpenTagsListDialog id tags ->
             let
@@ -1767,8 +1767,8 @@ Reads the message rather than an `OutMsg` because the payload is the message's o
 these are core-to-plugin notifications, not requests from the Pathfinder.
 
 -}
-notifyPluginsOfPathfinderMsg : Plugins -> Config -> Pathfinder.Msg -> ( Model key, List Effect ) -> ( Model key, List Effect )
-notifyPluginsOfPathfinderMsg plugins uc msg ( model, effects ) =
+notifyPluginsOfPathfinderMsg : Config -> Pathfinder.Msg -> ( Model key, List Effect ) -> ( Model key, List Effect )
+notifyPluginsOfPathfinderMsg uc msg ( model, effects ) =
     case msg of
         Pathfinder.BrowserGotBulkAddresses addresses ->
             let
@@ -1776,10 +1776,10 @@ notifyPluginsOfPathfinderMsg plugins uc msg ( model, effects ) =
                     addresses
                         |> List.map (\x -> { address = x.address, currency = x.currency })
                         |> PluginInterface.AddressesAdded
-                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+                        |> Plugin.updateByCoreMsg uc model.plugins
             in
             ( { model | plugins = new }, PluginEffect cmd :: effects )
-                |> updateByPluginOutMsg plugins uc outMsg
+                |> updateByPluginOutMsg uc outMsg
 
         Pathfinder.InternalPathfinderAddedAddress addressId ->
             let
@@ -1788,10 +1788,10 @@ notifyPluginsOfPathfinderMsg plugins uc msg ( model, effects ) =
                         |> Address.fromPathfinderId
                         |> List.singleton
                         |> PluginInterface.AddressesAdded
-                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+                        |> Plugin.updateByCoreMsg uc model.plugins
             in
             ( { model | plugins = new }, PluginEffect cmd :: effects )
-                |> updateByPluginOutMsg plugins uc outMsg
+                |> updateByPluginOutMsg uc outMsg
 
         Pathfinder.BrowserGotClusterData _ data ->
             let
@@ -1799,14 +1799,14 @@ notifyPluginsOfPathfinderMsg plugins uc msg ( model, effects ) =
                     { currency = data.currency, entity = data.cluster }
                         |> List.singleton
                         |> PluginInterface.EntitiesAdded
-                        |> Plugin.updateByCoreMsg plugins uc model.plugins
+                        |> Plugin.updateByCoreMsg uc model.plugins
             in
             ( { model | plugins = new }, PluginEffect cmd :: effects )
-                |> updateByPluginOutMsg plugins uc outMsg
+                |> updateByPluginOutMsg uc outMsg
 
         Pathfinder.PluginMsg ms ->
             -- Routed through the Pathfinder first, so undo/redo sees it.
-            updatePlugins plugins uc ms model
+            updatePlugins uc ms model
                 |> Tuple.mapSecond ((++) effects)
 
         _ ->
@@ -1834,13 +1834,13 @@ syncRecentSearches pathfinderOld ( model, effects ) =
         ( synced, effects ++ [ saveUserSettings synced ] )
 
 
-updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
-updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
+updateByPluginOutMsg : Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
+updateByPluginOutMsg uc outMsgs ( mo, effects ) =
     let
         updateGraphByPluginOutMsg model eff subMsg =
             let
                 ( pathfinder, pathfinderEffect ) =
-                    Pathfinder.updateByPluginOutMsg plugins uc [ subMsg ] model.pathfinder
+                    Pathfinder.updateByPluginOutMsg uc [ subMsg ] model.pathfinder
             in
             ( { model
                 | pathfinder = pathfinder
@@ -1915,7 +1915,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                             |> (\entities ->
                                     let
                                         ( new, outMsg, cmd ) =
-                                            Plugin.update plugins uc (toMsg entities) model.plugins
+                                            Plugin.update uc (toMsg entities) model.plugins
 
                                         tryAgain =
                                             if List.isEmpty loading then
@@ -1940,7 +1940,7 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                                         :: eff
                                         ++ tryAgain
                                     )
-                                        |> updateByPluginOutMsg plugins uc outMsg
+                                        |> updateByPluginOutMsg uc outMsg
                                )
 
                     PluginInterface.GetEntities _ toMsg ->
@@ -1950,14 +1950,14 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                             |> (\ents ->
                                     let
                                         ( new, outMsg, cmd ) =
-                                            Plugin.update plugins uc (toMsg ents) model.plugins
+                                            Plugin.update uc (toMsg ents) model.plugins
                                     in
                                     ( { model
                                         | plugins = new
                                       }
                                     , PluginEffect cmd :: eff
                                     )
-                                        |> updateByPluginOutMsg plugins uc outMsg
+                                        |> updateByPluginOutMsg uc outMsg
                                )
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.GetPathfinderGraphJson toMsg) ->
@@ -1966,14 +1966,14 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                                 Pathfinder.encode model.pathfinder
 
                             ( new, outMsg, cmd ) =
-                                Plugin.update plugins uc (toMsg serialized) model.plugins
+                                Plugin.update uc (toMsg serialized) model.plugins
                         in
                         ( { model
                             | plugins = new
                           }
                         , PluginEffect cmd :: eff
                         )
-                            |> updateByPluginOutMsg plugins uc outMsg
+                            |> updateByPluginOutMsg uc outMsg
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.GetAddressesShown toMsg) ->
                         let
@@ -1981,17 +1981,17 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
                                 model.pathfinder.network.addresses |> Dict.values
 
                             ( new, outMsg, cmd ) =
-                                Plugin.update plugins uc (toMsg data) model.plugins
+                                Plugin.update uc (toMsg data) model.plugins
                         in
                         ( { model
                             | plugins = new
                           }
                         , PluginEffect cmd :: eff
                         )
-                            |> updateByPluginOutMsg plugins uc outMsg
+                            |> updateByPluginOutMsg uc outMsg
 
                     PluginInterface.Deserialize filename data ->
-                        deserialize plugins uc filename data model
+                        deserialize uc filename data model
                             |> mapSecond ((++) eff)
 
                     PluginInterface.SendToPort value ->
@@ -2038,8 +2038,8 @@ updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
             ( mo, effects )
 
 
-updateByUrl : Plugins -> Config -> Url -> Model key -> ( Model key, List Effect )
-updateByUrl plugins uc url model =
+updateByUrl : Config -> Url -> Model key -> ( Model key, List Effect )
+updateByUrl uc url model =
     let
         routeConfig =
             model.stats
@@ -2112,7 +2112,7 @@ updateByUrl plugins uc url model =
                     Route.Pathfinder pfRoute ->
                         let
                             ( pfn, graphEffect ) =
-                                Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
+                                Pathfinder.updateByRoute uc pfRoute model.pathfinder
 
                             -- Skip the search auto-focus when the URL loads an
                             -- address/tx — the focused search input swallows
@@ -2158,7 +2158,7 @@ updateByUrl plugins uc url model =
                     Route.Plugin ( pluginType, urlValue ) ->
                         let
                             ( new, outMsg, cmd ) =
-                                Plugin.updateByUrl pluginType plugins uc urlValue model.plugins
+                                Plugin.updateByUrl pluginType uc urlValue model.plugins
                         in
                         ( { model
                             | plugins = new
@@ -2168,7 +2168,7 @@ updateByUrl plugins uc url model =
                           }
                         , [ PluginEffect cmd ]
                         )
-                            |> updateByPluginOutMsg plugins uc outMsg
+                            |> updateByPluginOutMsg uc outMsg
             )
             (Route.parse routeConfig model.url
                 -- in case url is invalid, assume root url
@@ -2247,8 +2247,8 @@ updateRequestLimit headers model =
     }
 
 
-handleResponse : Plugins -> Config -> Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ) -> Model key -> ( Model key, List Effect )
-handleResponse plugins uc result model =
+handleResponse : Config -> Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ) -> Model key -> ( Model key, List Effect )
+handleResponse uc result model =
     case result of
         Ok ( headers, message ) ->
             let
@@ -2263,7 +2263,7 @@ handleResponse plugins uc result model =
                            )
 
                 ( nextModel, nextEffects ) =
-                    update plugins
+                    update
                         uc
                         message
                         { model
@@ -2350,11 +2350,11 @@ handleResponse plugins uc result model =
             n model
 
 
-clearSearch : Plugins -> Model key -> ( Model key, List Effect )
-clearSearch plugins model =
+clearSearch : Model key -> ( Model key, List Effect )
+clearSearch model =
     let
         new =
-            Plugin.clearSearch plugins model.plugins
+            Plugin.clearSearch model.plugins
 
         pf =
             model.pathfinder
@@ -2367,14 +2367,14 @@ clearSearch plugins model =
         |> n
 
 
-deserialize : Plugins -> Config -> String -> Value -> Model key -> ( Model key, List Effect )
-deserialize plugins _ filename data model =
+deserialize : Config -> String -> Value -> Model key -> ( Model key, List Effect )
+deserialize _ filename data model =
     Pathfinder.deserialize data
         |> Result.map
             (\deser ->
                 let
                     ( pathfinder, pathfinderEffects ) =
-                        Pathfinder.fromDeserialized plugins deser model.pathfinder
+                        Pathfinder.fromDeserialized deser model.pathfinder
                 in
                 ( { model
                     | pathfinder = pathfinder
@@ -2430,18 +2430,18 @@ deserialize plugins _ filename data model =
             identity
 
 
-updatePlugins : Plugins -> Config -> Plugin.Msg -> Model key -> ( Model key, List Effect )
-updatePlugins plugins uc msg model =
+updatePlugins : Config -> Plugin.Msg -> Model key -> ( Model key, List Effect )
+updatePlugins uc msg model =
     let
         ( new, outMsg, cmd ) =
-            Plugin.update plugins uc msg model.plugins
+            Plugin.update uc msg model.plugins
     in
     ( { model
         | plugins = new
       }
     , [ PluginEffect cmd ]
     )
-        |> updateByPluginOutMsg plugins uc outMsg
+        |> updateByPluginOutMsg uc outMsg
 
 
 updateSize : Int -> Int -> { a | size : Maybe BBox } -> { a | size : Maybe BBox }

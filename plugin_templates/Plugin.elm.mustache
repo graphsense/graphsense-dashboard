@@ -38,13 +38,6 @@ effectsPlugins plugins =
     }
 
 
-updatePlugins : Plugins -> Plugin.Update.Plugins
-updatePlugins plugins =
-    { {{#plugins}}{{name}} = Maybe.map .update plugins.{{name}}
-    {{^last}}, {{/last}}{{/plugins}}
-    }
-
-
 viewPlugins : Plugin.View.Plugins
 viewPlugins =
     { {{#plugins}}{{name}} = {{package}}.Interface.View.plugin

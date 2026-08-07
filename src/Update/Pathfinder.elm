@@ -82,7 +82,7 @@ import Msg.Pathfinder.TxDetails as TxDetails
 import Msg.Search as Search
 import Number.Bounded exposing (value)
 import Plugin.Msg as Plugin
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update as Plugin
 import PluginInterface.Msg as PluginInterface
 import Ports
 import Process
@@ -212,13 +212,13 @@ matchCoords id network =
                 |> Maybe.map (\t -> ( t.x + t.dx, A.getTo t.y + t.dy ))
 
 
-update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect, List OutMsg )
-update plugins uc msg model =
+update : Update.Config -> Msg -> Model -> ( Model, List Effect, List OutMsg )
+update uc msg model =
     let
         ( updated, effects ) =
             model
-                |> pushHistory plugins msg
-                |> and (updateByMsg plugins uc msg)
+                |> pushHistory msg
+                |> and (updateByMsg uc msg)
                 |> and syncUrl
                 |> and (syncSidePanel uc)
                 |> and dispatchEventualMessages
@@ -237,11 +237,11 @@ return `[]` from `appLevelOutMsgs` -- check there before dispatching a new one t
 way. If it does need the shell, emit the `OutMsg` for the _outer_ message instead.
 
 -}
-updateInternally : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
-updateInternally plugins uc msg model =
+updateInternally : Update.Config -> Msg -> Model -> ( Model, List Effect )
+updateInternally uc msg model =
     let
         ( updated, effects, _ ) =
-            update plugins uc msg model
+            update uc msg model
     in
     ( updated, effects )
 
@@ -693,11 +693,11 @@ resultLineToId search =
             Nothing
 
 
-updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
-updateByMsg plugins uc msg model =
+updateByMsg : Update.Config -> Msg -> Model -> ( Model, List Effect )
+updateByMsg uc msg model =
     case Log.truncate "msg" msg of
         ConversionDetailsMsg _ (ConversionDetails.UserClickedTxCheckboxInTable txId) ->
-            addOrRemoveTx plugins Nothing txId model
+            addOrRemoveTx Nothing txId model
                 |> and (setTracingMode TransactionTracingMode)
 
         ConversionDetailsMsg _ smsg ->
@@ -765,7 +765,7 @@ updateByMsg plugins uc msg model =
             n model
 
         RuntimePostponedUpdateByRoute route ->
-            updateByRoute plugins uc route model
+            updateByRoute uc route model
 
         PluginMsg _ ->
             -- Pathfinder keeps no state for this; the shell does the work,
@@ -1011,14 +1011,14 @@ updateByMsg plugins uc msg model =
                         condFetchEgonet model
                 in
                 if List.isEmpty eff then
-                    browserGotAddressData uc plugins id Auto data newModel
+                    browserGotAddressData uc id Auto data newModel
                         |> and condFetchEgonet
 
                 else
                     ( newModel, eff )
 
             else
-                browserGotAddressData uc plugins id pos data model
+                browserGotAddressData uc id pos data model
                     |> and condFetchEgonet
 
         BrowserGotAddressPubkeyRelations id x ->
@@ -1120,7 +1120,7 @@ updateByMsg plugins uc msg model =
                             newModel2.checkingNeighbors
                                 |> CheckingNeighbors.removeAll id
                                 |> flip s_checkingNeighbors newModel2
-                                |> browserGotAddressData uc plugins id (NextTo ( Direction.flip dir, nid )) data
+                                |> browserGotAddressData uc id (NextTo ( Direction.flip dir, nid )) data
                         )
                         (List.head neighborIds)
                     |> Maybe.withDefault (n newModel2)
@@ -1130,7 +1130,7 @@ updateByMsg plugins uc msg model =
                     -- in newModel2 it's already empty
                     |> Maybe.map
                         (\data ->
-                            browserGotAddressData uc plugins id Auto data newModel2
+                            browserGotAddressData uc id Auto data newModel2
                         )
                     |> Maybe.withDefault (n newModel2)
 
@@ -1218,10 +1218,10 @@ updateByMsg plugins uc msg model =
                                 |> (\t -> AtViewportCenter (t.x / unit) (t.y / unit))
 
                         addAccAddr aId ( x, eff ) =
-                            loadAddressWithPosition plugins True viewportCenter aId x |> Tuple.mapSecond ((++) eff)
+                            loadAddressWithPosition True viewportCenter aId x |> Tuple.mapSecond ((++) eff)
 
                         addAccTxs aId ( x, eff ) =
-                            loadTxWithPosition viewportCenter True True plugins aId x |> Tuple.mapSecond ((++) eff)
+                            loadTxWithPosition viewportCenter True True aId x |> Tuple.mapSecond ((++) eff)
 
                         addressesToAdd =
                             result.currencies
@@ -1317,7 +1317,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         TxDetailsMsg (TxDetails.UserClickedTxInSubTxsTable tx) ->
-            addOrRemoveTx plugins (Just (Id.init tx.network tx.fromAddress)) (Id.init tx.network tx.identifier) model
+            addOrRemoveTx (Just (Id.init tx.network tx.fromAddress)) (Id.init tx.network tx.identifier) model
                 |> and (setTracingMode TransactionTracingMode)
 
         TxDetailsMsg submsg ->
@@ -1335,7 +1335,7 @@ updateByMsg plugins uc msg model =
         RelationDetailsMsg id submsg ->
             (case submsg of
                 RelationDetails.UserClickedTxCheckboxInTable tx ->
-                    addOrRemoveTx plugins Nothing (Tx.getTxIdForRelationTx tx) model
+                    addOrRemoveTx Nothing (Tx.getTxIdForRelationTx tx) model
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTx txId ->
@@ -1354,7 +1354,7 @@ updateByMsg plugins uc msg model =
                                     |> .table
                                     |> InfiniteTable.getPage
                                     |> List.map Tx.getTxIdForRelationTx
-                                    |> flip (checkAllTxs plugins uc Nothing) model
+                                    |> flip (checkAllTxs uc Nothing) model
                                     |> and (setTracingMode TransactionTracingMode)
                             )
                         |> Maybe.withDefault (n model)
@@ -1426,10 +1426,10 @@ updateByMsg plugins uc msg model =
                             (AddressDetails.update uc subm)
 
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
-                    userClickedAddressCheckboxInTable plugins id model
+                    userClickedAddressCheckboxInTable id model
 
                 AddressDetails.UserClickedAggEdgeCheckboxInTable dir anchorId data ->
-                    userClickedAggEdgeCheckboxInTable plugins dir anchorId data model
+                    userClickedAggEdgeCheckboxInTable dir anchorId data model
 
                 AddressDetails.UserClickedAllTxCheckboxInTable ->
                     case model.details of
@@ -1439,7 +1439,7 @@ updateByMsg plugins uc msg model =
                                     (.table
                                         >> InfiniteTable.getPage
                                         >> List.map Tx.getTxIdForAddressTx
-                                        >> flip (checkAllTxs plugins uc (Just addressId)) model
+                                        >> flip (checkAllTxs uc (Just addressId)) model
                                     )
                                 |> RemoteData.withDefault (n model)
 
@@ -1447,7 +1447,7 @@ updateByMsg plugins uc msg model =
                             n model
 
                 AddressDetails.UserClickedTxCheckboxInTable tx ->
-                    addOrRemoveTx plugins (Just addressId) (Tx.getTxIdForAddressTx tx) model
+                    addOrRemoveTx (Just addressId) (Tx.getTxIdForAddressTx tx) model
 
                 AddressDetails.UserClickedTx id ->
                     userClickedTx id model
@@ -2096,7 +2096,7 @@ updateByMsg plugins uc msg model =
                                         focusNeighborAddress uc id direction model
 
                                     _ ->
-                                        updateInternally plugins uc (UserClickedAddressExpandHandle id direction) model
+                                        updateInternally uc (UserClickedAddressExpandHandle id direction) model
                             )
                         |> Maybe.withDefault (n model)
 
@@ -2135,10 +2135,10 @@ updateByMsg plugins uc msg model =
                 )
 
         UserClickedCrosschainAddress id ->
-            loadAddress plugins False id model
+            loadAddress False id model
 
         UserClickedAddressCheckboxInTable id ->
-            userClickedAddressCheckboxInTable plugins id model
+            userClickedAddressCheckboxInTable id model
 
         UserClickedAllAddressCheckboxInTable dir ->
             case model.details of
@@ -2167,7 +2167,7 @@ updateByMsg plugins uc msg model =
                             removeAddress aId m |> Tuple.mapSecond ((++) eff)
 
                         addAcc aId ( m, eff ) =
-                            loadAddress plugins True aId m |> Tuple.mapSecond ((++) eff)
+                            loadAddress True aId m |> Tuple.mapSecond ((++) eff)
                     in
                     if allChecked then
                         idsTable
@@ -2299,7 +2299,7 @@ updateByMsg plugins uc msg model =
                 |> checkSelection uc
                 |> and
                     (if newTx then
-                        autoLoadAddresses plugins False ntx
+                        autoLoadAddresses False ntx
 
                      else
                         n
@@ -2391,13 +2391,13 @@ updateByMsg plugins uc msg model =
                     |> and (selectTx txId)
 
             else
-                browserGotTx plugins uc loadTxConfig tx model
+                browserGotTx uc loadTxConfig tx model
 
         BrowserGotTxFlow loadTxConfig originalTx txs ->
             txs.nextPage
                 |> Maybe.map
                     (\_ ->
-                        browserGotTx plugins uc loadTxConfig originalTx model
+                        browserGotTx uc loadTxConfig originalTx model
                     )
                 |> Maybe.Extra.orElseLazy
                     (\_ ->
@@ -2407,12 +2407,12 @@ updateByMsg plugins uc msg model =
                                 (\tx ->
                                     n model
                                         |> and (selectTx (Tx.getTxId tx))
-                                        |> and (browserGotTx plugins uc loadTxConfig tx)
+                                        |> and (browserGotTx uc loadTxConfig tx)
                                 )
                     )
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
-                        browserGotTx plugins uc loadTxConfig originalTx model
+                        browserGotTx uc loadTxConfig originalTx model
                     )
 
         UserClickedSelectionTool ->
@@ -2573,11 +2573,11 @@ updateByMsg plugins uc msg model =
 
         WorkflowNextUtxoTx config neighborId wm ->
             WorkflowNextUtxoTx.update config wm
-                |> flip (handleWorkflowNextUtxo plugins uc config neighborId) model
+                |> flip (handleWorkflowNextUtxo uc config neighborId) model
 
         WorkflowNextTxByTime config neighborId wm ->
             WorkflowNextTxByTime.update config wm
-                |> flip (handleWorkflowNextTxByTime plugins uc config neighborId) model
+                |> flip (handleWorkflowNextTxByTime uc config neighborId) model
 
         BrowserGotTagSummaries includesBestClusterTag data ->
             List.foldl
@@ -2693,7 +2693,7 @@ updateByMsg plugins uc msg model =
             addresses
                 |> List.foldl
                     (\address mod ->
-                        and (browserGotAddressData uc plugins (Id.init address.currency address.address) Auto address) mod
+                        and (browserGotAddressData uc (Id.init address.currency address.address) Auto address) mod
                     )
                     (n model)
 
@@ -2705,7 +2705,7 @@ updateByMsg plugins uc msg model =
             -- Load Conversion Edges for new loaded transactions
             updatedModel.network.txs
                 |> Dict.values
-                |> List.foldl (\tx acc -> acc |> and (autoLoadConversions plugins tx)) ( updatedModel, [] )
+                |> List.foldl (\tx acc -> acc |> and (autoLoadConversions tx)) ( updatedModel, [] )
 
         UserClickedOpenGraph ->
             ( model
@@ -3192,8 +3192,8 @@ finishImageExport error model =
     )
 
 
-browserGotTx : Plugins -> Update.Config -> AddingTxConfig -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTx plugins uc { pos, loadAddresses, autoLinkInTraceMode } tx model =
+browserGotTx : Update.Config -> AddingTxConfig -> Api.Data.Tx -> Model -> ( Model, List Effect )
+browserGotTx uc { pos, loadAddresses, autoLinkInTraceMode } tx model =
     if Dict.member (Tx.getTxId tx) model.network.txs then
         n model
 
@@ -3207,12 +3207,12 @@ browserGotTx plugins uc { pos, loadAddresses, autoLinkInTraceMode } tx model =
             |> checkSelection uc
             |> and
                 (if loadAddresses then
-                    autoLoadAddresses plugins autoLinkInTraceMode newTx
+                    autoLoadAddresses autoLinkInTraceMode newTx
 
                  else
                     n
                 )
-            |> and (autoLoadConversions plugins newTx)
+            |> and (autoLoadConversions newTx)
 
 
 addFeeRows : Update.Config -> Id -> List Api.Data.TxAccount -> List Api.Data.TxAccount
@@ -3340,15 +3340,15 @@ mergeAddressTxsAndTxs uc address addressTxs txs =
         |> List.concat
 
 
-checkAllTxs : Plugins -> Update.Config -> Maybe Id -> List Id -> Model -> ( Model, List Effect )
-checkAllTxs plugins uc addressId txIds model =
+checkAllTxs : Update.Config -> Maybe Id -> List Id -> Model -> ( Model, List Effect )
+checkAllTxs uc addressId txIds model =
     let
         allChecked =
             txIds
                 |> List.all (flip Dict.member model.network.txs)
 
         addOrRemoveAcc txId =
-            and (addOrRemoveTx plugins addressId txId)
+            and (addOrRemoveTx addressId txId)
 
         notify message =
             String.fromInt
@@ -3516,8 +3516,8 @@ getRelations id dir autoLinkInTraceMode onlyIds =
             |> List.singleton
 
 
-handleTx : Plugins -> Update.Config -> { a | direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
-handleTx plugins uc config neighborId tx model =
+handleTx : Update.Config -> { a | direction : Direction, addressId : Id } -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
+handleTx uc config neighborId tx model =
     case neighborId of
         Just nid ->
             let
@@ -3526,10 +3526,10 @@ handleTx plugins uc config neighborId tx model =
                         |> flip s_checkingNeighbors model
             in
             if GTx.hasAddress config.direction (Id.id nid) tx then
-                addTx plugins uc config.addressId config.direction (Just nid) tx newModel
+                addTx uc config.addressId config.direction (Just nid) tx newModel
 
             else
-                placeNeighborIfError plugins uc config nid model
+                placeNeighborIfError uc config nid model
 
         Nothing ->
             let
@@ -3543,7 +3543,7 @@ handleTx plugins uc config neighborId tx model =
                 hasIncomingAnchorAdjacency
                     || hasOutgoingAnchorAdjacency
             then
-                addTx plugins uc config.addressId config.direction Nothing tx model
+                addTx uc config.addressId config.direction Nothing tx model
 
             else
                 ( model
@@ -3555,8 +3555,8 @@ handleTx plugins uc config neighborId tx model =
                 )
 
 
-placeNeighborIfError : Plugins -> Update.Config -> { a | direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
-placeNeighborIfError plugins uc config nid model =
+placeNeighborIfError : Update.Config -> { a | direction : Direction, addressId : Id } -> Id -> Model -> ( Model, List Effect )
+placeNeighborIfError uc config nid model =
     let
         newModel =
             CheckingNeighbors.remove nid config.addressId model.checkingNeighbors
@@ -3566,7 +3566,7 @@ placeNeighborIfError plugins uc config nid model =
         CheckingNeighbors.getData nid model.checkingNeighbors
             |> Maybe.map
                 (\data ->
-                    browserGotAddressData uc plugins nid (NextTo ( config.direction, config.addressId )) data newModel
+                    browserGotAddressData uc nid (NextTo ( config.direction, config.addressId )) data newModel
                         |> mapSecond
                             ((::)
                                 (NoAdjacentTxForAddressAndNeighborFound config.addressId nid
@@ -3581,14 +3581,14 @@ placeNeighborIfError plugins uc config nid model =
         n newModel
 
 
-handleWorkflowNextUtxo : Plugins -> Update.Config -> WorkflowNextUtxoTx.Config -> Maybe Id -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
-handleWorkflowNextUtxo plugins uc config neighborId wf model =
+handleWorkflowNextUtxo : Update.Config -> WorkflowNextUtxoTx.Config -> Maybe Id -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
+handleWorkflowNextUtxo uc config neighborId wf model =
     case wf of
         Workflow.Ok { tx, skippedCount, skippedHashes } ->
             let
                 ( newModel, eff ) =
                     Api.Data.TxTxUtxo tx
-                        |> flip (handleTx plugins uc config neighborId) model
+                        |> flip (handleTx uc config neighborId) model
 
                 txId =
                     Id.init tx.currency tx.txHash
@@ -3648,7 +3648,7 @@ handleWorkflowNextUtxo plugins uc config neighborId wf model =
         Workflow.Err err ->
             case neighborId of
                 Just nid ->
-                    placeNeighborIfError plugins uc config nid model
+                    placeNeighborIfError uc config nid model
 
                 Nothing ->
                     case err of
@@ -3677,11 +3677,11 @@ handleWorkflowNextUtxo plugins uc config neighborId wf model =
                             )
 
 
-handleWorkflowNextTxByTime : Plugins -> Update.Config -> WorkflowNextTxByTime.Config -> Maybe Id -> WorkflowNextTxByTime.Workflow -> Model -> ( Model, List Effect )
-handleWorkflowNextTxByTime plugins uc config neighborId wf model =
+handleWorkflowNextTxByTime : Update.Config -> WorkflowNextTxByTime.Config -> Maybe Id -> WorkflowNextTxByTime.Workflow -> Model -> ( Model, List Effect )
+handleWorkflowNextTxByTime uc config neighborId wf model =
     case wf of
         Workflow.Ok tx ->
-            handleTx plugins uc config neighborId tx model
+            handleTx uc config neighborId tx model
 
         Workflow.Next eff ->
             eff
@@ -3692,7 +3692,7 @@ handleWorkflowNextTxByTime plugins uc config neighborId wf model =
         Workflow.Err WorkflowNextTxByTime.NoTxFound ->
             case neighborId of
                 Just nid ->
-                    placeNeighborIfError plugins uc config nid model
+                    placeNeighborIfError uc config nid model
 
                 Nothing ->
                     ( model
@@ -3704,8 +3704,8 @@ handleWorkflowNextTxByTime plugins uc config neighborId wf model =
                     )
 
 
-browserGotAddressData : Update.Config -> Plugins -> Id -> FindPosition -> Api.Data.Address -> Model -> ( Model, List Effect )
-browserGotAddressData uc plugins providedId position data model =
+browserGotAddressData : Update.Config -> Id -> FindPosition -> Api.Data.Address -> Model -> ( Model, List Effect )
+browserGotAddressData uc providedId position data model =
     let
         id =
             providedId |> Tuple.mapSecond (Data.normalizeIdentifier (Id.network providedId))
@@ -3730,7 +3730,7 @@ browserGotAddressData uc plugins providedId position data model =
                 |> Maybe.map .color
 
         ( newAddress, net ) =
-            Network.addAddressWithPosition plugins model.config position id model.network
+            Network.addAddressWithPosition model.config position id model.network
                 |> mapSecond (Network.updateAddress id (s_data (Success data)))
                 |> mapSecond (Network.updateAddressesByClusterId clusterId (s_clusterColor clusterColor))
 
@@ -3851,17 +3851,17 @@ updateAddressRelatedData id x model =
     }
 
 
-userClickedAddressCheckboxInTable : Plugins -> Id -> Model -> ( Model, List Effect )
-userClickedAddressCheckboxInTable plugins id model =
+userClickedAddressCheckboxInTable : Id -> Model -> ( Model, List Effect )
+userClickedAddressCheckboxInTable id model =
     if Dict.member id model.network.addresses then
         removeAddress id model
 
     else
-        loadAddress plugins True id model
+        loadAddress True id model
 
 
-userClickedAggEdgeCheckboxInTable : Plugins -> Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
-userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
+userClickedAggEdgeCheckboxInTable : Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
+userClickedAggEdgeCheckboxInTable dir anchorId data model =
     let
         id =
             Id.init data.address.currency data.address.address
@@ -3904,7 +3904,7 @@ userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
             )
 
     else
-        loadAddressWithPosition plugins True (NextTo ( dir, anchorId )) id model
+        loadAddressWithPosition True (NextTo ( dir, anchorId )) id model
 
 
 userClickedTx : Id -> Model -> ( Model, List Effect )
@@ -4184,8 +4184,8 @@ getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } ne
             )
 
 
-updateByRoute : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
-updateByRoute plugins uc route model =
+updateByRoute : Update.Config -> Route -> Model -> ( Model, List Effect )
+updateByRoute uc route model =
     let
         pathfinderReady =
             uc.size /= Nothing
@@ -4208,27 +4208,27 @@ updateByRoute plugins uc route model =
                 else
                     forcePushHistory
                )
-            |> and (updateByRoute_ plugins uc route)
+            |> and (updateByRoute_ uc route)
             |> and (syncSidePanel uc)
 
 
-addPathsToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool, autolinkInTraceMode : Bool } -> List (List PathHopType) -> ( Model, List Effect )
-addPathsToGraph plugins uc model net config listOfPaths =
+addPathsToGraph : Update.Config -> Model -> String -> { x | outgoing : Bool, autolinkInTraceMode : Bool } -> List (List PathHopType) -> ( Model, List Effect )
+addPathsToGraph uc model net config listOfPaths =
     let
         baseModelUnselected =
             unselect model
     in
     List.foldl
         (\paths ( m, eff ) ->
-            addPathToGraph plugins uc m net config paths
+            addPathToGraph uc m net config paths
                 |> Tuple.mapSecond ((++) eff)
         )
         baseModelUnselected
         listOfPaths
 
 
-addPathToGraph : Plugins -> Update.Config -> Model -> String -> { x | outgoing : Bool, autolinkInTraceMode : Bool } -> List PathHopType -> ( Model, List Effect )
-addPathToGraph plugins uc model net config list =
+addPathToGraph : Update.Config -> Model -> String -> { x | outgoing : Bool, autolinkInTraceMode : Bool } -> List PathHopType -> ( Model, List Effect )
+addPathToGraph uc model net config list =
     let
         getAddress adr =
             case adr of
@@ -4333,10 +4333,10 @@ addPathToGraph plugins uc model net config list =
                 action =
                     case a of
                         Route.AddressHop _ adr ->
-                            loadAddressWithPosition plugins config.autolinkInTraceMode (Fixed x_ y_) ( net, Data.normalizeIdentifier net adr )
+                            loadAddressWithPosition config.autolinkInTraceMode (Fixed x_ y_) ( net, Data.normalizeIdentifier net adr )
 
                         Route.TxHop h ->
-                            loadTxWithPosition (Fixed x_ y_) config.autolinkInTraceMode False plugins ( net, h )
+                            loadTxWithPosition (Fixed x_ y_) config.autolinkInTraceMode False ( net, h )
 
                 annotations =
                     case a of
@@ -4381,8 +4381,8 @@ addPathToGraph plugins uc model net config list =
     ( result.m |> (\m -> multiSelect m newSelections True) |> fitGraph uc, result.eff )
 
 
-updateByRoute_ : Plugins -> Update.Config -> Route -> Model -> ( Model, List Effect )
-updateByRoute_ plugins uc route model =
+updateByRoute_ : Update.Config -> Route -> Model -> ( Model, List Effect )
+updateByRoute_ uc route model =
     let
         -- Compute viewport center in graph coordinates for placing new nodes
         viewportCenter =
@@ -4399,7 +4399,7 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddressWithPosition plugins True viewportCenter id
+                |> loadAddressWithPosition True viewportCenter id
                 |> and (selectAddress id)
 
         Route.Network network (Route.Tx a) ->
@@ -4408,7 +4408,7 @@ updateByRoute_ plugins uc route model =
                     Id.init network a
             in
             { model | network = Network.clearSelection model.network }
-                |> loadTxWithPosition viewportCenter True True plugins id
+                |> loadTxWithPosition viewportCenter True True id
                 |> and (selectTx id)
 
         Route.Network network (Route.Relation a b) ->
@@ -4423,30 +4423,30 @@ updateByRoute_ plugins uc route model =
                     AggEdge.initId aId bId
             in
             { model | network = Network.clearSelection model.network }
-                |> loadAddressWithPosition plugins True viewportCenter aId
-                |> and (loadAddressWithPosition plugins True viewportCenter bId)
+                |> loadAddressWithPosition True viewportCenter aId
+                |> and (loadAddressWithPosition True viewportCenter bId)
                 |> and (selectAggEdge uc edgeId)
                 |> and (setTracingMode AggregateTracingMode)
 
         Route.Path net list ->
-            addPathToGraph plugins uc model net { outgoing = True, autolinkInTraceMode = True } list
+            addPathToGraph uc model net { outgoing = True, autolinkInTraceMode = True } list
 
         _ ->
             n model
 
 
-updateByPluginOutMsg : Plugins -> Update.Config -> List Plugin.OutMsg -> Model -> ( Model, List Effect )
-updateByPluginOutMsg plugins uc outMsgs model =
+updateByPluginOutMsg : Update.Config -> List Plugin.OutMsg -> Model -> ( Model, List Effect )
+updateByPluginOutMsg uc outMsgs model =
     outMsgs
         |> List.foldl
             (\msg ( mo, eff ) ->
                 case Log.log "outMsgPF" msg of
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinder net paths) ->
-                        addPathsToGraph plugins uc mo net { outgoing = True, autolinkInTraceMode = False } paths
+                        addPathsToGraph uc mo net { outgoing = True, autolinkInTraceMode = False } paths
                             |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.OutMsgsPathfinder (PluginInterface.ShowPathsInPathfinderWithConfig net c paths) ->
-                        addPathsToGraph plugins uc mo net { outgoing = c.outgoing, autolinkInTraceMode = False } paths
+                        addPathsToGraph uc mo net { outgoing = c.outgoing, autolinkInTraceMode = False } paths
                             |> Tuple.mapSecond ((++) eff)
 
                     PluginInterface.UpdateAddresses { currency, address } pmsg ->
@@ -4455,7 +4455,7 @@ updateByPluginOutMsg plugins uc outMsgs model =
                                 ( currency, address )
                         in
                         ( { mo
-                            | network = Network.updateAddress pId (Plugin.updateAddress plugins pmsg) mo.network
+                            | network = Network.updateAddress pId (Plugin.updateAddress pmsg) mo.network
                           }
                         , eff
                         )
@@ -4480,7 +4480,7 @@ updateByPluginOutMsg plugins uc outMsgs model =
                             |> Maybe.map
                                 (\pId ->
                                     ( { mo
-                                        | network = Network.updateAddressesByClusterId pId (Plugin.updateAddress plugins pmsg) mo.network
+                                        | network = Network.updateAddressesByClusterId pId (Plugin.updateAddress pmsg) mo.network
                                       }
                                     , eff
                                     )
@@ -4493,7 +4493,7 @@ updateByPluginOutMsg plugins uc outMsgs model =
                                 Id.initClusterIdFromRecord e
                         in
                         ( { mo
-                            | network = Network.updateAddressesByClusterId pId (Plugin.updateAddress plugins pmsg) mo.network
+                            | network = Network.updateAddressesByClusterId pId (Plugin.updateAddress pmsg) mo.network
                           }
                         , eff
                         )
@@ -4534,13 +4534,13 @@ updateByPluginOutMsg plugins uc outMsgs model =
             ( model, [] )
 
 
-loadAddress : Plugins -> Bool -> Id -> Model -> ( Model, List Effect )
-loadAddress plugins autoLinkTxInTraceMode =
-    loadAddressWithPosition plugins autoLinkTxInTraceMode Auto
+loadAddress : Bool -> Id -> Model -> ( Model, List Effect )
+loadAddress autoLinkTxInTraceMode =
+    loadAddressWithPosition autoLinkTxInTraceMode Auto
 
 
-loadAddressWithPosition : Plugins -> Bool -> FindPosition -> Id -> Model -> ( Model, List Effect )
-loadAddressWithPosition _ autoLinkTxInTraceMode position id model =
+loadAddressWithPosition : Bool -> FindPosition -> Id -> Model -> ( Model, List Effect )
+loadAddressWithPosition autoLinkTxInTraceMode position id model =
     let
         request =
             ( -- don't add the address here because it is not loaded yet
@@ -4576,8 +4576,8 @@ loadAddressWithPosition _ autoLinkTxInTraceMode position id model =
         |> Maybe.withDefault request
 
 
-loadTxWithPosition : FindPosition -> Bool -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
-loadTxWithPosition pos autoLinkInTraceMode loadAddresses _ id model =
+loadTxWithPosition : FindPosition -> Bool -> Bool -> Id -> Model -> ( Model, List Effect )
+loadTxWithPosition pos autoLinkInTraceMode loadAddresses id model =
     ( model
     , BrowserGotTx
         { pos = pos
@@ -4596,7 +4596,7 @@ loadTxWithPosition pos autoLinkInTraceMode loadAddresses _ id model =
     )
 
 
-loadTx : Bool -> Bool -> Plugins -> Id -> Model -> ( Model, List Effect )
+loadTx : Bool -> Bool -> Id -> Model -> ( Model, List Effect )
 loadTx =
     loadTxWithPosition Auto
 
@@ -4910,9 +4910,9 @@ unhover model =
         |> s_hovered NoHover
 
 
-pushHistory : Plugins -> Msg -> Model -> ( Model, List Effect )
-pushHistory plugins msg model =
-    if History.shallPushHistory plugins msg model then
+pushHistory : Msg -> Model -> ( Model, List Effect )
+pushHistory msg model =
+    if History.shallPushHistory msg model then
         forcePushHistory model
 
     else
@@ -5261,8 +5261,8 @@ getAddressForDirection tx direction exceptAddress =
                 |> Just
 
 
-addTx : Plugins -> Update.Config -> Id -> Direction -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
-addTx plugins uc anchorAddressId direction addressId tx model =
+addTx : Update.Config -> Id -> Direction -> Maybe Id -> Api.Data.Tx -> Model -> ( Model, List Effect )
+addTx uc anchorAddressId direction addressId tx model =
     if Dict.member (Tx.getTxId tx) model.network.txs then
         -- Tx is already on the graph. Skip the layout work, but still link
         -- this tx to the anchor address's tx-set so a TxsLoading state
@@ -5335,10 +5335,10 @@ addTx plugins uc anchorAddressId direction addressId tx model =
                         position =
                             NextTo ( direction, newTx.id )
                     in
-                    loadAddressWithPosition plugins True position a newmodel
+                    loadAddressWithPosition True position a newmodel
                 )
             |> Maybe.withDefault (n newmodel)
-            |> and (autoLoadConversions plugins newTx)
+            |> and (autoLoadConversions newTx)
 
 
 checkSelection : Update.Config -> Model -> ( Model, List Effect )
@@ -5650,8 +5650,8 @@ isLegacyPf1GsFile data =
         |> Result.withDefault False
 
 
-fromDeserialized : Plugins -> Deserialized -> Model -> ( Model, List Effect )
-fromDeserialized plugins deserialized model =
+fromDeserialized : Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized deserialized model =
     let
         groupByNetworkWithField field =
             List.map field
@@ -5728,7 +5728,7 @@ fromDeserialized plugins deserialized model =
     in
     ( { newAndEmptyPathfinder
         | network =
-            ingestAddresses plugins model.config Network.init deserialized.addresses
+            ingestAddresses model.config Network.init deserialized.addresses
                 |> ingestAggEdges model.config deserialized.aggEdges
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
@@ -5740,8 +5740,8 @@ fromDeserialized plugins deserialized model =
     )
 
 
-autoLoadConversions : Plugins -> Tx -> Model -> ( Model, List Effect )
-autoLoadConversions _ tx model =
+autoLoadConversions : Tx -> Model -> ( Model, List Effect )
+autoLoadConversions tx model =
     let
         ( currency, txHash ) =
             case tx.type_ of
@@ -5762,15 +5762,15 @@ autoLoadConversions _ tx model =
     )
 
 
-autoLoadAddresses : Plugins -> Bool -> Tx -> Model -> ( Model, List Effect )
-autoLoadAddresses plugins autoLinkInTraceMode tx model =
+autoLoadAddresses : Bool -> Tx -> Model -> ( Model, List Effect )
+autoLoadAddresses autoLinkInTraceMode tx model =
     let
         addresses =
             Tx.listAddressesForTx tx
                 |> List.map first
 
         aggAddressAdd ( d, addressId ) =
-            and (loadAddressWithPosition plugins autoLinkInTraceMode (NextTo ( d, tx.id )) addressId)
+            and (loadAddressWithPosition autoLinkInTraceMode (NextTo ( d, tx.id )) addressId)
 
         src =
             if List.member Incoming addresses then
@@ -5878,8 +5878,8 @@ upsertTagSummary id newTagSummary dict =
         Dict.insert id newTagSummary dict
 
 
-addOrRemoveTx : Plugins -> Maybe Id -> Id -> Model -> ( Model, List Effect )
-addOrRemoveTx plugins addressId txId model =
+addOrRemoveTx : Maybe Id -> Id -> Model -> ( Model, List Effect )
+addOrRemoveTx addressId txId model =
     Dict.get txId model.network.txs
         |> Maybe.map
             (\t ->
@@ -5906,7 +5906,7 @@ addOrRemoveTx plugins addressId txId model =
                         |> n
             )
         |> Maybe.Extra.withDefaultLazy
-            (\_ -> loadTx False (addressId /= Nothing) plugins txId model)
+            (\_ -> loadTx False (addressId /= Nothing) txId model)
 
 
 addMarginPathfinder : BBox -> BBox
