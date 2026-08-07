@@ -3,6 +3,7 @@ module Plugin.View exposing (..)
 {{#plugins}}
 import {{package}}.Model
 import {{package}}.Msg
+import {{package}}.Interface.View
 {{/plugins}}
 import Config.View as View
 import Html.Styled as Html exposing (Html)
@@ -26,16 +27,14 @@ type alias Plugins =
     }
 
 
-addressContextMenu : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (ContextMenuItem Pathfinder.Msg)
-addressContextMenu plugins states vc address =
-    [ {{#plugins}}plugins.{{name}}
+addressContextMenu : Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (ContextMenuItem Pathfinder.Msg)
+addressContextMenu states vc address =
+    [ {{#plugins}}{{package}}.Interface.View.plugin.addressContextMenu
         |> Maybe.andThen
-            (\plugin ->
-                Maybe.map3
-                    (\fun ->
-                        fun vc address
+            (\fun ->
+                Maybe.map2
+                    (fun vc address
                     )
-                    plugin.addressContextMenu
                     states.{{name}}
                     address.plugins.{{name}}
                     |> Maybe.map (List.map (ContextMenuItem.map Plugin.Msg.{{package}}Msg))

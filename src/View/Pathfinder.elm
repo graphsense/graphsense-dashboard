@@ -101,14 +101,14 @@ graph plugins pluginStates vc gc model =
                 |> Maybe.withDefault []
            )
         ++ (model.contextMenu
-                |> Maybe.map (contextMenuView plugins pluginStates vc model)
+                |> Maybe.map (contextMenuView pluginStates vc model)
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
 
 
-contextMenuView : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
-contextMenuView plugins pluginStates vc model ( coords, menu ) =
+contextMenuView : ModelState -> View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
+contextMenuView pluginStates vc model ( coords, menu ) =
     let
         contextMenuWidth =
             180
@@ -186,7 +186,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     pluginsList =
                         Dict.get id model.network.addresses
                             |> Maybe.map
-                                (Plugin.addressContextMenu plugins pluginStates vc
+                                (Plugin.addressContextMenu pluginStates vc
                                     >> List.map (ContextMenuItem.view vc)
                                 )
                             |> Maybe.withDefault []
