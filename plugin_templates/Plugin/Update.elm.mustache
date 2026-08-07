@@ -28,26 +28,22 @@ empty =
 n m =
   (m, [], Cmd.none)
 
-update : Plugins -> Update.Config -> Plugin.Msg.Msg -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-update plugins uc msg state =
+update : Update.Config -> Plugin.Msg.Msg -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+update uc msg state =
     case msg of
         Plugin.Msg.NoOp ->
             ( state, [], Cmd.none ){{#plugins}} 
 
         Plugin.Msg.{{package}}Msg m ->
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\upd st ->
-                                upd uc m st
-                                    |> T3.mapFirst (\s -> { state | {{name}} = Just s })
-                                    |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
-                                    |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
-                            )
-                            plugin.update
-                            state.{{name}}
-                    )
+            Maybe.map2
+                (\upd st ->
+                    upd uc m st
+                        |> T3.mapFirst (\s -> { state | {{name}} = Just s })
+                        |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
+                        |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
+                )
+                {{package}}.Interface.Update.plugin.update
+                state.{{name}}
                 |> Maybe.withDefault ( state, [], Cmd.none ){{/plugins}} 
 
 
