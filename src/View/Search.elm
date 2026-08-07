@@ -15,7 +15,7 @@ import Json.Decode
 import List.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import String.Extra
 import Theme.Colors as TColor
 import Util exposing (removeLeading0x)
@@ -66,8 +66,8 @@ default =
     }
 
 
-searchWithMoreCss : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
-searchWithMoreCss plugins vc sc model =
+searchWithMoreCss : Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
+searchWithMoreCss vc sc model =
     let
         { inputEvents } =
             Autocomplete.events
@@ -104,7 +104,7 @@ searchWithMoreCss plugins vc sc model =
                             SearchAll _ ->
                                 [ "Address", "transaction", "label", "block", "actor" ]
                                     |> List.map (Locale.string vc.locale)
-                                    |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
+                                    |> (\st -> st ++ Plugin.searchPlaceholder vc)
                                     |> String.join ", "
                                     |> placeholder
                                     |> List.singleton
@@ -112,7 +112,7 @@ searchWithMoreCss plugins vc sc model =
                             SearchAddressAndTx _ ->
                                 [ "Address", "transaction" ]
                                     |> List.map (Locale.string vc.locale)
-                                    |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
+                                    |> (\st -> st ++ Plugin.searchPlaceholder vc)
                                     |> String.join ", "
                                     |> placeholder
                                     |> List.singleton
@@ -130,7 +130,7 @@ searchWithMoreCss plugins vc sc model =
                     ++ sc.inputAttributes
                 )
                 []
-            , searchResult plugins vc sc model
+            , searchResult vc sc model
             ]
         , if sc.showIcon then
             button
@@ -151,8 +151,8 @@ searchWithMoreCss plugins vc sc model =
         ]
 
 
-searchResult : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
-searchResult plugins vc sc model =
+searchResult : Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
+searchResult vc sc model =
     let
         viewState =
             Autocomplete.viewState model.autocomplete
@@ -214,7 +214,7 @@ searchResult plugins vc sc model =
                 config2
 
     else if model.visible then
-        resultList plugins vc sc model
+        resultList vc sc model
             |> Autocomplete.dropdownStyled
                 config1
                 vc
@@ -375,8 +375,8 @@ recentList vc sc model =
             :: groups
 
 
-resultList : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
-resultList _ vc sc { autocomplete, searchType } =
+resultList : Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
+resultList vc sc { autocomplete, searchType } =
     let
         choices =
             Autocomplete.choices autocomplete

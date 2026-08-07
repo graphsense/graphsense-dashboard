@@ -16,7 +16,6 @@ import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder exposing (Msg)
-import Plugin.View exposing (Plugins)
 import RemoteData
 import Set exposing (Set)
 import Svg.Styled as Svg exposing (..)
@@ -31,13 +30,13 @@ import View.Pathfinder.Tx as Tx
 import View.Pathfinder.Tx.Utxo exposing (RenderLevel(..))
 
 
-addresses : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses plugins vc pc searchBox annotations =
+addresses : View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses vc pc searchBox annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
             , Annotations.getAnnotation id annotations
-                |> Svg.lazy6 Address.view plugins vc pc (SearchBox.highlightFor searchBox id) address
+                |> Svg.lazy5 Address.view vc pc (SearchBox.highlightFor searchBox id) address
             )
                 :: svg
         )
@@ -61,8 +60,8 @@ suspect this swap before suspecting the model: the keyed children below are the
 part of the view whose structure changes underneath elm.
 
 -}
-relations : Plugins -> View.Config -> Pathfinder.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-relations plugins vc gc showAggLabels hovered selection searchBox annotations txs agg conversions =
+relations : View.Config -> Pathfinder.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+relations vc gc showAggLabels hovered selection searchBox annotations txs agg conversions =
     case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
             -- Exactly at Svg.Styled.Lazy's lazy7 limit. Adding another argument
@@ -70,7 +69,7 @@ relations plugins vc gc showAggLabels hovered selection searchBox annotations tx
             Svg.lazy7 aggRelations vc showAggLabels hovered selection searchBox txs agg
 
         Pathfinder.TransactionTracingMode ->
-            Svg.lazy7 txRelations plugins vc gc searchBox annotations txs conversions
+            Svg.lazy6 txRelations vc gc searchBox annotations txs conversions
 
 
 {-| Render aggregate-mode edges.
@@ -331,8 +330,8 @@ avgTxY txs txIds =
             Just (List.sum ys / toFloat (List.length ys))
 
 
-txRelations : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-txRelations plugins vc gc searchBox annotations txs conversions =
+txRelations : View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+txRelations vc gc searchBox annotations txs conversions =
     let
         txs_ =
             Dict.values txs
@@ -351,7 +350,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
             |> List.concatMap (uncurry (::) >> List.indexedMap Tuple.pair)
             |> List.map
                 (\( i, ( conversion, a, b ) ) ->
-                    conversionEdge plugins vc gc searchBox conversion i a b
+                    conversionEdge vc gc searchBox conversion i a b
                 )
             |> Keyed.node "g" []
         ]
@@ -364,7 +363,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "te"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
+                            |> Svg.lazy6 Tx.edge vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -373,7 +372,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tl"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
+                            |> Svg.lazy6 Tx.edge vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -382,7 +381,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tn"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
+                            |> Svg.lazy5 Tx.view vc gc (SearchBox.highlightFor searchBox tx.id) tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -391,7 +390,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "teh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
+                            |> Svg.lazy6 Tx.edge vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -400,7 +399,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tlh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy7 Tx.edge plugins vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
+                            |> Svg.lazy6 Tx.edge vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -409,7 +408,7 @@ txRelations plugins vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tnh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy6 Tx.view plugins vc gc (SearchBox.highlightFor searchBox tx.id) tx
+                            |> Svg.lazy5 Tx.view vc gc (SearchBox.highlightFor searchBox tx.id) tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -464,8 +463,8 @@ aggEdgeEdge vc dimmed offset edge aAddress bAddress =
     )
 
 
-conversionEdge : Plugins -> View.Config -> Pathfinder.Config -> SearchBox.Model -> ConversionEdge -> Int -> Address -> Address -> ( String, Svg Msg )
-conversionEdge _ vc _ searchBox conversion displacementIndex aAddress bAddress =
+conversionEdge : View.Config -> Pathfinder.Config -> SearchBox.Model -> ConversionEdge -> Int -> Address -> Address -> ( String, Svg Msg )
+conversionEdge vc _ searchBox conversion displacementIndex aAddress bAddress =
     let
         ( inputTxId, outputTxId ) =
             conversion.id

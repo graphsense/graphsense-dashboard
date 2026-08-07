@@ -10,15 +10,15 @@ import Html.Styled.Events as Events exposing (onClick, onInput)
 import Json.Decode
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), UserModel)
 import Model.Locale as Locale
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import Time
 import Util.View exposing (loadingSpinner, none, switch)
 import View.Dialog as Dialog
 import View.Locale as Locale
 
 
-hovercard : Plugins -> Config -> Model key -> UserModel -> List (Html Msg)
-hovercard plugins vc appModel model =
+hovercard : Config -> Model key -> UserModel -> List (Html Msg)
+hovercard vc appModel model =
     (case model.auth of
         Authorized auth ->
             [ auth.requestLimit |> requestLimit vc
@@ -30,7 +30,7 @@ hovercard plugins vc appModel model =
 
         Unauthorized loading _ ->
             apiKeyForm vc loading model
-                :: Plugin.login plugins appModel.plugins vc
+                :: Plugin.login appModel.plugins vc
     )
         ++ [ Dialog.part vc "Language" [ localeSwitch vc ]
            , Dialog.part vc
@@ -49,7 +49,7 @@ hovercard plugins vc appModel model =
                         ]
                 ]
            ]
-        ++ (Plugin.profile plugins appModel.plugins vc
+        ++ (Plugin.profile appModel.plugins vc
                 |> List.map
                     (\( title, part ) ->
                         Dialog.part vc title [ part ]

@@ -9,7 +9,7 @@ import List.Extra
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel, requestLimitIntervalToString)
 import Model.Locale as Locale
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import RecordSetter as Rs
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
@@ -22,8 +22,8 @@ import View.Controls as Vc
 import View.Locale as Locale
 
 
-view : Plugins -> Config -> Model x -> Html Model.Msg
-view plugins vc m =
+view : Config -> Model x -> Html Model.Msg
+view vc m =
     let
         backBtnAttributes =
             [ css [ Css.cursor Css.pointer ]
@@ -60,14 +60,14 @@ view plugins vc m =
             }
         , navbarPageTitle = { productLabel = Locale.string vc.locale "settings" }
         , root =
-            { instance = generalSettings plugins vc m }
+            { instance = generalSettings vc m }
         , singleTab1 = { variant = Util.View.none }
         , singleTab2 = { variant = Util.View.none }
         }
 
 
-generalSettings : Plugins -> Config -> Model x -> Html Model.Msg
-generalSettings plugins vc m =
+generalSettings : Config -> Model x -> Html Model.Msg
+generalSettings vc m =
     let
         eurSelected =
             vc.preferredFiatCurrency == "eur"
@@ -143,7 +143,7 @@ generalSettings plugins vc m =
             }
 
         pluginProfiles =
-            Plugin.profile plugins m.plugins vc
+            Plugin.profile m.plugins vc
     in
     Sp.settingsPageGeneralWithInstances
         (Sp.settingsPageGeneralAttributes

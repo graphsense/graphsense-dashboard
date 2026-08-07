@@ -10,7 +10,7 @@ import Json.Decode
 import Model exposing (Msg(..))
 import Model.Dialog exposing (ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig, PluginConfig)
 import Plugin.Model
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import RecordSetter as Rs
 import Theme.Html.ErrorMessagesAlerts
     exposing
@@ -33,8 +33,8 @@ import View.Pathfinder.ExportDialog as ExportDialog
 import View.Pathfinder.TagDetailsList as TagsDetailList
 
 
-view : Plugins -> Plugin.Model.ModelState -> Config -> Model Msg -> Html Msg
-view plugins pluginStates vc model =
+view : Plugin.Model.ModelState -> Config -> Model Msg -> Html Msg
+view pluginStates vc model =
     div
         [ stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         ]
@@ -61,13 +61,13 @@ view plugins pluginStates vc model =
                 TagsDetailList.view vc conf
 
             AddTag conf ->
-                AddTagDialog.view plugins vc conf
+                AddTagDialog.view vc conf
 
             Export conf ->
                 ExportDialog.view vc conf
 
             Plugin conf ->
-                plugin plugins pluginStates vc conf
+                plugin pluginStates vc conf
         ]
 
 
@@ -317,7 +317,7 @@ customWithVc vc { html } =
     html vc
 
 
-plugin : Plugins -> Plugin.Model.ModelState -> Config -> PluginConfig Msg -> Html Msg
-plugin plugins pluginStates vc _ =
-    Plugin.dialog plugins pluginStates vc
+plugin : Plugin.Model.ModelState -> Config -> PluginConfig Msg -> Html Msg
+plugin pluginStates vc _ =
+    Plugin.dialog pluginStates vc
         |> Maybe.withDefault none

@@ -68,7 +68,6 @@ import Util.TextDimensions
 import Util.ThemedSelectBox
 import Util.Tooltip
 import Util.View
-import View
 import View.Autocomplete
 import View.Button
 import View.Controls
@@ -79,6 +78,7 @@ import View.Graph.Table
 import View.Locale
 import View.Pathfinder.ContextMenuItem
 import View.Pathfinder.InfiniteTable
+import View.Sidebar
 
 
 
@@ -404,9 +404,6 @@ surface =
     , ref Util.View.truncateLongIdentifier
     , ref Util.View.truncateLongIdentifierWithLengths
 
-    -- View
-    , ref View.sidebarMenuItem
-
     -- View.Autocomplete
     , ref View.Autocomplete.dropdown
     , ref View.Autocomplete.dropdownStyled
@@ -475,4 +472,7 @@ surface =
     -- View.Pathfinder.InfiniteTable
     , ref View.Pathfinder.InfiniteTable.loadingPlaceholderAbove
     , ref View.Pathfinder.InfiniteTable.loadingPlaceholderBelow
+
+    -- View.Sidebar
+    , ref View.Sidebar.sidebarMenuItem
     ]

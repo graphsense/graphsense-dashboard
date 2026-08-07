@@ -7,7 +7,6 @@ import Html.Styled.Attributes exposing (css, id)
 import Model exposing (Msg(..), UserModel)
 import Model.Search as Search
 import Plugin.Model exposing (ModelState)
-import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.SettingsComponents as SettingsComponents
@@ -22,8 +21,8 @@ type alias HeaderConfig =
     }
 
 
-header : Plugins -> ModelState -> Config -> HeaderConfig -> Html Msg
-header plugins _ vc hc =
+header : ModelState -> Config -> HeaderConfig -> Html Msg
+header _ vc hc =
     Html.Styled.header
         [ css
             [ Css.position Css.absolute
@@ -53,7 +52,7 @@ header plugins _ vc hc =
                 )
                 (SettingsComponents.searchBarFieldStateTypingInstances
                     |> Rs.s_searchInputField
-                        (Search.searchWithMoreCss plugins
+                        (Search.searchWithMoreCss
                             vc
                             (Search.default
                                 |> Rs.s_css

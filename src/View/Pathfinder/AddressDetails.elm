@@ -37,7 +37,7 @@ import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import RecordSetter as Rs
 import RemoteData exposing (WebData)
 import Set
@@ -71,18 +71,18 @@ import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 
 
-view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
-view plugins pluginStates vc model id viewState =
+view : ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
+view pluginStates vc model id viewState =
     div []
         [ model.network.addresses
             |> Dict.get id
             |> Maybe.map
                 (\address ->
                     if Data.isAccountLike (Id.network id) then
-                        account plugins pluginStates vc model id viewState address
+                        account pluginStates vc model id viewState address
 
                     else
-                        utxo plugins pluginStates vc model id viewState address
+                        utxo pluginStates vc model id viewState address
                 )
             |> Maybe.withDefault none
         ]
@@ -93,8 +93,8 @@ categoriesMaxWidth =
     300
 
 
-utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
-utxo plugins pluginStates vc model id viewState address =
+utxo : ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
+utxo pluginStates vc model id viewState address =
     let
         crosschainTargets =
             crosschainLedgerTargets id address
@@ -128,10 +128,10 @@ utxo plugins pluginStates vc model id viewState address =
             makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         pluginList =
-            Plugin.addressSidePanelHeader plugins pluginStates vc address
+            Plugin.addressSidePanelHeader pluginStates vc address
 
         pluginTagsList =
-            Plugin.addressSidePanelHeaderTags plugins pluginStates vc address
+            Plugin.addressSidePanelHeaderTags pluginStates vc address
 
         cluster =
             viewState.address.data
@@ -891,8 +891,8 @@ accountValueRundown vc conf =
             }
 
 
-account : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
-account plugins pluginStates vc model id viewState address =
+account : ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
+account pluginStates vc model id viewState address =
     let
         crosschainTargets =
             crosschainLedgerTargets id address
@@ -920,10 +920,10 @@ account plugins pluginStates vc model id viewState address =
                 ++ [ crosschainMoreInfoButton vc id ]
 
         pluginList =
-            Plugin.addressSidePanelHeader plugins pluginStates vc address
+            Plugin.addressSidePanelHeader pluginStates vc address
 
         pluginTagsList =
-            Plugin.addressSidePanelHeaderTags plugins pluginStates vc address
+            Plugin.addressSidePanelHeaderTags pluginStates vc address
 
         pluginTagsVisible =
             List.length pluginTagsList > 0

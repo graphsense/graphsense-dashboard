@@ -257,7 +257,7 @@ name eff =
 
 document : App -> Browser.Document Msg
 document (App app) =
-    View.view Env.viewPlugins app.model_.config app.model_
+    View.view app.model_.config app.model_
 
 
 {-| The browser tab title, which the app assembles from the page and plugins.

@@ -12,7 +12,6 @@ import Json.Decode
 import Model exposing (Model, Msg(..))
 import Model.Search
 import Msg.Pathfinder as Pathfinder
-import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.SettingsComponents as Sc
@@ -37,8 +36,8 @@ frame vc =
             ]
 
 
-searchBoxView : Plugins -> View.Config -> Model.Search.Model -> Html Msg
-searchBoxView plugins vc model =
+searchBoxView : View.Config -> Model.Search.Model -> Html Msg
+searchBoxView vc model =
     Sc.searchBarFieldStateTypingWithInstances
         (Sc.searchBarFieldStateTypingAttributes
             |> Rs.s_root
@@ -51,7 +50,7 @@ searchBoxView plugins vc model =
         )
         (Sc.searchBarFieldStateTypingInstances
             |> Rs.s_searchInputField
-                (View.Search.searchWithMoreCss plugins
+                (View.Search.searchWithMoreCss
                     vc
                     (View.Search.default
                         |> Rs.s_css
@@ -97,15 +96,15 @@ searchBoxView plugins vc model =
         {}
 
 
-view : Plugins -> View.Config -> Model key -> Html Msg
-view plugins vc model =
+view : View.Config -> Model key -> Html Msg
+view vc model =
     frame vc
         [ h2
             [ Css.View.heading2 vc |> css
             ]
             [ Locale.text vc.locale "Landingpage-start-new"
             ]
-        , searchBoxView plugins vc model.search
+        , searchBoxView vc model.search
             |> List.singleton
             |> div
                 [ CssLanding.searchRoot vc |> css

@@ -1,4 +1,4 @@
-module View exposing (sidebarMenuItem, view)
+module View exposing (view)
 
 import Browser exposing (Document)
 import Config.View exposing (Config)
@@ -8,38 +8,35 @@ import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
-import Model exposing (Auth(..), Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..))
+import Model exposing (Auth(..), Model, Msg(..), NavbarSubMenuType(..), Page(..))
 import Model.Dialog as Dialog
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import RecordSetter as Rs
 import Route
 import Route.Pathfinder as Pathfinder
 import Theme.Colors
 import Theme.ColorsDark
-import Theme.Html.GraphComponents as GraphComponents
-import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
 import Util.Css
-import Util.View exposing (fixFillRule, hovercard, onClickWithStop)
+import Util.View exposing (hovercard)
 import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
 import View.Main as Main
 import View.Notification as Notification
-import View.Pathfinder.ContextMenuItem as ContextMenuItem
+import View.Sidebar as Sidebar
 import View.Statusbar as Statusbar
 import View.User as User
 
 
 view :
-    Plugins
-    -> Config
+    Config
     -> Model key
     -> Document Msg
-view plugins vc model =
+view vc model =
     { title =
         Locale.string vc.locale "Iknaio Analytics Platform"
-            :: Plugin.title plugins model.plugins vc
+            :: Plugin.title model.plugins vc
             |> List.reverse
             |> String.join " | "
     , body =
@@ -73,23 +70,21 @@ view plugins vc model =
            .gs-markdown em,
            .gs-markdown i { font-style: italic; }
            """ ] |> toUnstyled
-        , body plugins vc model |> toUnstyled
+        , body vc model |> toUnstyled
         ]
     }
 
 
 body :
-    Plugins
-    -> Config
+    Config
     -> Model key
     -> Html Msg
-body plugins vc model =
+body vc model =
     div
         [ Css.View.body vc |> css
         , onClick UserClickedLayout
         ]
         ([ Header.header
-            plugins
             model.plugins
             vc
             { search = model.search
@@ -99,8 +94,8 @@ body plugins vc model =
          , section
             [ Css.View.sectionBelowHeader vc |> css
             ]
-            [ sidebar plugins vc model
-            , Main.view plugins vc model
+            [ sidebar vc model
+            , Main.view vc model
             ]
          , footer
             [ Css.View.footer vc |> css
@@ -108,149 +103,21 @@ body plugins vc model =
             [ Statusbar.view vc model.statusbar
             ]
          ]
-            ++ hovercards plugins vc model
-            ++ overlay plugins vc model
+            ++ hovercards vc model
+            ++ overlay vc model
             ++ [ Notification.view vc model.notifications ]
-            ++ Maybe.withDefault [] (Plugin.tooltip plugins model.plugins vc)
+            ++ Maybe.withDefault [] (Plugin.tooltip model.plugins vc)
         )
 
 
-navbarSubMenuView : Config -> Model key -> NavbarSubMenu -> Html Msg
-navbarSubMenuView vc _ { type_ } =
-    div
-        [ [ Css.left (Css.px (Nb.navbarMenuNew_details.renderedWidth - 5))
-          , Css.top (Css.px 0)
-          , Css.position Css.absolute
-          , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 1))
-          ]
-            |> css
-        , onClickWithStop UserClosesNavbarSubMenu
-        , Util.View.noTextSelection
-        ]
-        ((case type_ of
-            NavbarMore ->
-                GraphComponents.rightClickMenuWithAttributes
-                    (GraphComponents.rightClickMenuAttributes
-                        |> Rs.s_dividerLine [ [ Css.display Css.none ] |> css ]
-                    )
-                    { shortcutList =
-                        []
-                    , pluginsList =
-                        [ { link = "https://www.iknaio.com/learning#pathfinder20"
-                          , icon = Icons.iconsVideoS {}
-                          , text1 = "Watch tutorials"
-                          , text2 = Nothing
-                          , blank = True
-                          }
-                            |> ContextMenuItem.initLink2
-                            |> ContextMenuItem.view vc
-                        , { link = "https://www.iknaio.com/services"
-                          , icon = Icons.iconsGoToS {}
-                          , text1 = "All our services"
-                          , text2 = Nothing
-                          , blank = True
-                          }
-                            |> ContextMenuItem.initLink2
-                            |> ContextMenuItem.view vc
-                        ]
-                    }
-                    {}
-         )
-            |> List.singleton
-        )
-
-
-sidebarMenuItemWithSubMenu : Config -> Model key -> Msg -> Html Msg -> String -> Bool -> Bool -> Html Msg
-sidebarMenuItemWithSubMenu vc model toggleMsg img label selected new =
-    div
-        [ onClickWithStop toggleMsg
-        , [ Css.position Css.relative ] |> css
-        , Util.View.pointer
-        ]
-        (sidebarMenuItemPlain img (Locale.string vc.locale label) selected new
-            :: (model.navbarSubMenu
-                    |> Maybe.map (navbarSubMenuView vc model >> List.singleton)
-                    |> Maybe.withDefault []
-               )
-        )
-
-
-sidebarMenuItem : Html msg -> String -> String -> Bool -> String -> Html msg
-sidebarMenuItem img label titleStr selected link =
-    sidebarMenuItemWithNewParam img label titleStr selected link False
-
-
-sidebarMenuItemPlain : Html msg -> String -> Bool -> Bool -> Html msg
-sidebarMenuItemPlain img label selected new =
-    let
-        ifNewAddEvenOdd =
-            if new then
-                fixFillRule
-                    |> List.singleton
-                    |> Rs.s_subtract
-
-            else
-                identity
-    in
-    Nb.navbarProductItemWithAttributes
-        (Nb.navbarProductItemAttributes
-            |> Rs.s_pathfinder [ [ Css.hover Nb.navbarProductItemStateHoverPathfinder_details.styles ] |> css ]
-            |> Rs.s_root
-                (if not selected then
-                    [ Css.hover
-                        (Util.Css.overrideBlack Theme.Colors.sidebarHovered
-                            :: Nb.navbarProductItemStateHover_details.styles
-                        )
-                    ]
-                        |> css
-                        |> List.singleton
-
-                 else
-                    []
-                )
-            |> ifNewAddEvenOdd
-        )
-        { root =
-            { iconInstance = img
-            , productLabel = label
-            , newLabelVisible = new
-            , state =
-                if not selected then
-                    Nb.NavbarProductItemStateNeutral
-
-                else
-                    Nb.NavbarProductItemStateSelected
-            }
-        }
-
-
-sidebarMenuItemWithNewParam : Html msg -> String -> String -> Bool -> String -> Bool -> Html msg
-sidebarMenuItemWithNewParam img label titleStr selected link new =
-    sidebarMenuItemPlain img label selected new
-        |> (\x ->
-                if selected then
-                    x
-
-                else
-                    x
-                        |> List.singleton
-                        |> a
-                            [ title titleStr
-                            , link
-                                |> href
-                            , css [ Css.textDecoration Css.none ]
-                            ]
-           )
-
-
-sidebar : Plugins -> Config -> Model key -> Html Msg
-sidebar plugins vc model =
+sidebar : Config -> Model key -> Html Msg
+sidebar vc model =
     let
         products =
             -- [ sidebarMenuItem (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Graph) (model.graph.route |> Route.graphRoute |> Route.toUrl)
-            sidebarMenuItemWithNewParam (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl) False
-                :: Plugin.sidebar plugins model.plugins model.page vc
-                ++ [ sidebarMenuItemWithSubMenu vc model (UserToggledNavbarSubMenu NavbarMore) (Nb.iconsMoreHorizL {}) (Locale.string vc.locale "More") False False
+            Sidebar.sidebarMenuItemWithNewParam (Nb.iconsPathfinder10 {}) "Pathfinder" "Pathfinder" (model.page == Pathfinder) (Route.pathfinderRoute Pathfinder.Root |> Route.toUrl) False
+                :: Plugin.sidebar model.plugins model.page vc
+                ++ [ Sidebar.sidebarMenuItemWithSubMenu vc model (UserToggledNavbarSubMenu NavbarMore) (Nb.iconsMoreHorizL {}) (Locale.string vc.locale "More") False False
                    ]
 
         statsLinkItem =
@@ -340,12 +207,12 @@ sidebar plugins vc model =
         }
 
 
-hovercards : Plugins -> Config -> Model key -> List (Html Msg)
-hovercards plugins vc model =
+hovercards : Config -> Model key -> List (Html Msg)
+hovercards vc model =
     model.user.hovercard
         |> Maybe.map
             (\hc ->
-                User.hovercard plugins vc model model.user
+                User.hovercard vc model model.user
                     |> List.map Html.Styled.toUnstyled
                     |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
                     |> List.singleton
@@ -353,8 +220,8 @@ hovercards plugins vc model =
         |> Maybe.withDefault []
 
 
-overlay : Plugins -> Config -> Model key -> List (Html Msg)
-overlay plugins vc model =
+overlay : Config -> Model key -> List (Html Msg)
+overlay vc model =
     let
         ov placement onClickOutside =
             List.singleton
@@ -369,7 +236,7 @@ overlay plugins vc model =
             model.user.hovercard
                 |> Maybe.map
                     (\hc ->
-                        User.hovercard plugins vc model model.user
+                        User.hovercard vc model model.user
                             |> List.map Html.Styled.toUnstyled
                             |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
                     )
@@ -379,7 +246,7 @@ overlay plugins vc model =
         _ ->
             case model.dialog of
                 Just dialog ->
-                    Dialog.view plugins model.plugins vc dialog
+                    Dialog.view model.plugins vc dialog
                         |> ov (Dialog.placement dialog) (Dialog.defaultMsg dialog)
 
                 Nothing ->

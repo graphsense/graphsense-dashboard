@@ -7,7 +7,6 @@ import Browser
 import Browser.Dom
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
-import Config
 import Config.Update exposing (Config)
 import Dict exposing (Dict)
 import Effect.Api
@@ -39,7 +38,6 @@ import Msg.ExportDialog as ExportDialog
 import Msg.Locale as LocaleMsg
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
-import Plugin
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -1401,15 +1399,12 @@ applyPathfinderOutMsg plugins uc pathfinderOutMsg ( model, effects ) =
             let
                 closemsg =
                     UserClosesDialog
-
-                viewPlugins =
-                    Plugin.viewPlugins Config.plugins
             in
             n
                 { model
                     | dialog =
                         Just
-                            ({ html = legendView viewPlugins model.config closemsg
+                            ({ html = legendView model.config closemsg
                              , defaultMsg = closemsg
                              }
                                 |> Dialog.Custom

@@ -6,7 +6,7 @@ import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (Model, Msg(..), Page(..))
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import Route
 import Route.Pathfinder
 import Util.View
@@ -18,15 +18,14 @@ import View.Stats as Stats
 
 
 view :
-    Plugins
-    -> View.Config
+    View.Config
     -> Model key
     -> Html Msg
-view plugins vc model =
+view vc model =
     case model.page of
         Home ->
             { navbar = []
-            , contents = [ Landingpage.view plugins vc model ]
+            , contents = [ Landingpage.view vc model ]
             }
                 |> main_ vc
 
@@ -34,10 +33,10 @@ view plugins vc model =
             Stats.stats vc model.stats model.supportedTokens
 
         Settings ->
-            Settings.view plugins vc model
+            Settings.view vc model
 
         Pathfinder ->
-            Pathfinder.view plugins model.plugins vc model.pathfinder
+            Pathfinder.view model.plugins vc model.pathfinder
                 |> (\{ navbar, contents } ->
                         { navbar = List.map (Html.Styled.map PathfinderMsg) navbar
                         , contents = List.map (Html.Styled.map PathfinderMsg) contents
@@ -52,12 +51,12 @@ view plugins vc model =
                 |> main_ vc
 
         Plugin type_ ->
-            Plugin.contents plugins model.plugins type_ vc
+            Plugin.contents model.plugins type_ vc
                 |> Maybe.map
                     (\contents ->
                         main_ vc
                             { navbar =
-                                Plugin.navbar plugins model.plugins type_ vc
+                                Plugin.navbar model.plugins type_ vc
                                     |> Maybe.withDefault []
                             , contents = contents
                             }
