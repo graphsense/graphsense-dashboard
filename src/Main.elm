@@ -9,18 +9,12 @@ import Effect exposing (perform)
 import Init exposing (init)
 import Init.Locale as Locale
 import Model exposing (Flags, Model, Msg(..))
-import Plugin
 import Sub exposing (subscriptions)
 import Tuple exposing (..)
 import Update exposing (update, updateByUrl)
 import Update.Notification as Notification
 import Update.Statusbar as Statusbar
 import View exposing (view)
-
-
-plugins : Plugin.Plugins
-plugins =
-    Config.plugins
 
 
 main : Program Flags (Model Nav.Key) Msg
@@ -32,7 +26,7 @@ main =
                 |> mapSecond
                     (List.map
                         (\( statusbarToken, eff ) ->
-                            perform (Plugin.effectsPlugins plugins) model statusbarToken model.user.apiKey eff
+                            perform model statusbarToken model.user.apiKey eff
                         )
                     )
                 |> mapSecond Cmd.batch
