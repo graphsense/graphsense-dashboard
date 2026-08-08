@@ -22,15 +22,15 @@ import Dict
 import Init.Locale
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale
-import Plugin.Update
+import Plugin
 
 
-{-| `Plugin.Update.empty` rather than `Plugin.updatePlugins Config.plugins`: the
+{-| `Plugin.empty` rather than `Plugin.updatePlugins Config.plugins`: the
 update path must not depend on the local plugin configuration.
 -}
-updatePlugins : Plugin.Update.Plugins
+updatePlugins : Plugin.Plugins
 updatePlugins =
-    Plugin.Update.empty
+    Plugin.empty
 
 
 {-| `Init.Locale.init` leaves `mapping` empty — translations are fetched over

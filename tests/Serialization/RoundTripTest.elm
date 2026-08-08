@@ -138,7 +138,7 @@ reopen : Model -> Result Json.Decode.Error ( Model, List Effect.Pathfinder.Effec
 reopen model =
     Encode.Pathfinder.encode model
         |> Update.Pathfinder.deserialize
-        |> Result.map (\d -> Update.Pathfinder.fromDeserialized Plugin.empty d emptyModel)
+        |> Result.map (\d -> Update.Pathfinder.fromDeserialized d emptyModel)
 
 
 expectStableFile : Model -> Expect.Expectation

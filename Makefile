@@ -96,7 +96,7 @@ compile: prepare gen
 compile-quiet: SHELL := /bin/bash
 compile-quiet:
 	@$(MAKE) prepare gen > /dev/null
-	@elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
+	@npx elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
 
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \

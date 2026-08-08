@@ -143,7 +143,7 @@ initAt path =
             toUrl path
 
         ( routed, produced ) =
-            Update.updateByUrl Env.updatePlugins Env.updateConfig url (initialModel url)
+            Update.updateByUrl Env.updateConfig url (initialModel url)
     in
     App { model_ = routed, effects_ = produced }
 
@@ -169,7 +169,7 @@ step msg (App app) =
             }
 
         ( next, produced ) =
-            Update.update Env.updatePlugins config msg app.model_
+            Update.update config msg app.model_
     in
     App { model_ = next, effects_ = produced }
 
