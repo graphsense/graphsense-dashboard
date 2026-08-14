@@ -395,6 +395,10 @@ elm.json: elm.json.base
 
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
+force-gen: 
+	rm $(GENERATED_PLUGIN_ELM)
+	$(MAKE) $(GENERATED_PLUGIN_ELM)
+
 $(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
 	node $(GENERATE_JS) $(PLUGINS) 
 
