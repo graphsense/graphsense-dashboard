@@ -242,7 +242,7 @@ usernameAndExpirationRows vc username expirationText =
             { root =
                 { secondaryTextVisible = False
                 , secondaryValueText = ""
-                , titleText = Locale.string vc.locale "username"
+                , titleText = Locale.string vc.locale "Username"
                 , valueText = username
                 }
             }

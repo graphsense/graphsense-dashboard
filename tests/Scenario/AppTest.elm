@@ -224,6 +224,15 @@ suite =
                         |> App.html
                         |> Query.hasNot
                             [ Selector.attribute (Attributes.attribute "data-testid" "gs-settings-username") ]
+            , test "labels the username row like the rows around it" <|
+                \_ ->
+                    -- the label is capitalized by View.Locale.string from the
+                    -- case of the key, so a lowercase "username" key rendered
+                    -- a lowercase label next to "Expires on"
+                    settingsPageWith { expiration = Nothing, username = Just "alice" }
+                        |> App.html
+                        |> Query.find [ Selector.attribute (Attributes.attribute "data-testid" "gs-settings-username") ]
+                        |> Query.has [ Selector.text "Username" ]
             , test "keeps the expiration row next to it" <|
                 \_ ->
                     settingsPageWith { expiration = Nothing, username = Just "alice" }
