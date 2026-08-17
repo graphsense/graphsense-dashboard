@@ -403,7 +403,7 @@ plugin-gen:
 	rm $(GENERATED_PLUGIN_ELM)
 	$(MAKE) $(GENERATED_PLUGIN_ELM) FLAGS=--skip-elm-json
 
-$(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
+$(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
 	node $(GENERATE_JS) $(FLAGS) $(PLUGINS) 
 
 # Mirror ./public and every plugin's public/ into generated/public. A `cp -r` into
