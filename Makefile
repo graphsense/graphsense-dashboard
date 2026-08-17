@@ -83,8 +83,11 @@ export NODE_OPTIONS=--max-old-space-size=8192
 serve: prepare gen
 	npm run dev
 
-build: prepare gen
+npm-build:
 	npm run build
+
+build: prepare gen
+	$(MAKE) npm-build
 
 compile: prepare gen
 	npm run compile
@@ -395,12 +398,12 @@ elm.json: elm.json.base
 
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
-force-gen: 
+plugin-gen: 
 	rm $(GENERATED_PLUGIN_ELM)
-	$(MAKE) $(GENERATED_PLUGIN_ELM)
+	$(MAKE) $(GENERATED_PLUGIN_ELM) FLAGS=--skip-elm-json
 
 $(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
-	node $(GENERATE_JS) $(PLUGINS) 
+	node $(GENERATE_JS) $(FLAGS) $(PLUGINS) 
 
 # Mirror ./public and every plugin's public/ into generated/public. A `cp -r` into
 # the already existing target nested the whole tree a second time as
