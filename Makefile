@@ -37,7 +37,8 @@ PLUGINS_DIR=./plugins
 # `--` is the elm comment marker: skip commented-out plugin registrations. Pass it
 # after `--` instead of escaping it; `\-` is not a valid escape and makes every
 # single make invocation print "grep: warning: stray \ before -".
-PLUGINS=$(shell grep -v -e '--' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
+#PLUGINS=$(shell grep -v -e '--' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
+PLUGINS=$(shell ls -1 $(PLUGINS_DIR) 2>/dev/null | grep -v -e '^EMPTY$$' | tr -d ' ')
 SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm -not -path '*/node_modules/*')
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
